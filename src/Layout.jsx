@@ -242,7 +242,7 @@ export default function Layout({ children, currentPageName }) {
       {/* Footer */}
       <footer className="bg-[#1a1a2e] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
             {/* Brand */}
             <div className="md:col-span-2">
               <div className="flex items-center gap-3 mb-4">
@@ -268,6 +268,16 @@ export default function Layout({ children, currentPageName }) {
                 <li><Link to={createPageUrl("Engineers")} className="hover:text-[#d4a574] transition-colors">المهندسين</Link></li>
                 <li><Link to={createPageUrl("Projects")} className="hover:text-[#d4a574] transition-colors">المشاريع</Link></li>
                 <li><Link to={createPageUrl("Gallery")} className="hover:text-[#d4a574] transition-colors">معرض الأعمال</Link></li>
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h3 className="font-semibold mb-4 text-[#d4a574]">الشروط والسياسات</h3>
+              <ul className="space-y-2 text-sm text-slate-300">
+                <li><Link to={createPageUrl("Terms")} className="hover:text-[#d4a574] transition-colors">الشروط والأحكام</Link></li>
+                <li><Link to={createPageUrl("Privacy")} className="hover:text-[#d4a574] transition-colors">سياسة الخصوصية</Link></li>
+                <li><Link to={createPageUrl("Copyright")} className="hover:text-[#d4a574] transition-colors">اتفاقية حفظ الحقوق</Link></li>
               </ul>
             </div>
 
