@@ -8,6 +8,11 @@ import EngineerProfile from './pages/EngineerProfile';
 import Projects from './pages/Projects';
 import Gallery from './pages/Gallery';
 import Messages from './pages/Messages';
+import Dashboard from './pages/Dashboard';
+import Wallet from './pages/Wallet';
+import CreateProject from './pages/CreateProject';
+import AddPortfolio from './pages/AddPortfolio';
+import Settings from './pages/Settings';
 import __Layout from './Layout.jsx';
 
 
@@ -22,6 +27,11 @@ export const PAGES = {
     "Projects": Projects,
     "Gallery": Gallery,
     "Messages": Messages,
+    "Dashboard": Dashboard,
+    "Wallet": Wallet,
+    "CreateProject": CreateProject,
+    "AddPortfolio": AddPortfolio,
+    "Settings": Settings,
 }
 
 export const pagesConfig = {
