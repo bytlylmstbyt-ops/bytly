@@ -16,6 +16,9 @@ import Settings from './pages/Settings';
 import ProjectDetails from './pages/ProjectDetails';
 import Notifications from './pages/Notifications';
 import Subscription from './pages/Subscription';
+import Terms from './pages/Terms';
+import Privacy from './pages/Privacy';
+import Copyright from './pages/Copyright';
 import __Layout from './Layout.jsx';
 
 
@@ -38,6 +41,9 @@ export const PAGES = {
     "ProjectDetails": ProjectDetails,
     "Notifications": Notifications,
     "Subscription": Subscription,
+    "Terms": Terms,
+    "Privacy": Privacy,
+    "Copyright": Copyright,
 }
 
 export const pagesConfig = {
