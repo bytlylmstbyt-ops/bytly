@@ -13,6 +13,9 @@ import Wallet from './pages/Wallet';
 import CreateProject from './pages/CreateProject';
 import AddPortfolio from './pages/AddPortfolio';
 import Settings from './pages/Settings';
+import ProjectDetails from './pages/ProjectDetails';
+import Notifications from './pages/Notifications';
+import Subscription from './pages/Subscription';
 import __Layout from './Layout.jsx';
 
 
@@ -32,6 +35,9 @@ export const PAGES = {
     "CreateProject": CreateProject,
     "AddPortfolio": AddPortfolio,
     "Settings": Settings,
+    "ProjectDetails": ProjectDetails,
+    "Notifications": Notifications,
+    "Subscription": Subscription,
 }
 
 export const pagesConfig = {
