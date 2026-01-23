@@ -1,0 +1,217 @@
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { base44 } from "@/api/base44Client";
+import { motion } from "framer-motion";
+import { 
+  User, Mail, Phone, MapPin, Upload, 
+  Loader2, CheckCircle, Briefcase
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+export default function RegisterClient() {
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+    city: "",
+    country: "",
+    profile_image: ""
+  });
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsLoading(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    handleInputChange("profile_image", file_url);
+    setIsLoading(false);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    await base44.entities.Client.create({
+      ...formData,
+      wallet_balance: 0,
+      total_projects: 0
+    });
+
+    setIsLoading(false);
+    navigate(createPageUrl("RegistrationSuccess"));
+  };
+
+  const isFormValid = formData.full_name && formData.email && formData.phone;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-12">
+      <div className="max-w-lg mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8"
+        >
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center mb-4">
+            <Briefcase className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e] mb-2">
+            التسجيل كصاحب مشروع
+          </h1>
+          <p className="text-slate-600">أنشئ حسابك وابدأ في طرح مشاريعك</p>
+        </motion.div>
+
+        {/* Form Card */}
+        <Card className="border-0 shadow-xl">
+          <CardHeader>
+            <CardTitle className="text-xl">معلومات الحساب</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="full_name">الاسم الكامل *</Label>
+                <div className="relative">
+                  <User className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Input
+                    id="full_name"
+                    value={formData.full_name}
+                    onChange={(e) => handleInputChange("full_name", e.target.value)}
+                    className="pr-10"
+                    placeholder="أدخل اسمك الكامل"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">البريد الإلكتروني *</Label>
+                <div className="relative">
+                  <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    className="pr-10"
+                    placeholder="example@email.com"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">رقم الهاتف *</Label>
+                <div className="relative">
+                  <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    className="pr-10"
+                    placeholder="+966 5xx xxx xxx"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="country">الدولة</Label>
+                  <div className="relative">
+                    <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <Input
+                      id="country"
+                      value={formData.country}
+                      onChange={(e) => handleInputChange("country", e.target.value)}
+                      className="pr-10"
+                      placeholder="مثال: السعودية"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="city">المدينة</Label>
+                  <Input
+                    id="city"
+                    value={formData.city}
+                    onChange={(e) => handleInputChange("city", e.target.value)}
+                    placeholder="مثال: الرياض"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>صورة شخصية (اختياري)</Label>
+                <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#d4a574] transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="profile_image"
+                  />
+                  <label htmlFor="profile_image" className="cursor-pointer">
+                    {formData.profile_image ? (
+                      <img src={formData.profile_image} alt="Profile" className="w-24 h-24 rounded-full mx-auto object-cover" />
+                    ) : (
+                      <>
+                        <Upload className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+                        <p className="text-sm text-slate-500">اضغط لرفع صورة</p>
+                      </>
+                    )}
+                  </label>
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={!isFormValid || isLoading}
+                className="w-full bg-gradient-to-r from-amber-500 to-orange-500 text-white py-6 text-lg"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin ml-2" />
+                    جاري التسجيل...
+                  </>
+                ) : (
+                  <>
+                    إنشاء الحساب
+                    <CheckCircle className="w-5 h-5 mr-2" />
+                  </>
+                )}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="text-center mt-6"
+        >
+          <p className="text-slate-500">
+            لديك حساب بالفعل؟{" "}
+            <button 
+              onClick={() => base44.auth.redirectToLogin()}
+              className="text-[#d4a574] font-medium hover:underline"
+            >
+              تسجيل الدخول
+            </button>
+          </p>
+        </motion.div>
+      </div>
+    </div>
+  );
+}
