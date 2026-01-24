@@ -243,154 +243,218 @@ export default function ContractPage() {
                   <FileText className="w-5 h-5 text-[#d4a574]" />
                   بنود العقد
                 </h3>
+                
+                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border-r-4 border-blue-500 p-6 rounded-lg mb-6">
+                  <h4 className="font-bold text-blue-900 mb-3">أطراف العقد:</h4>
+                  <ul className="space-y-2 text-blue-800">
+                    <li>• <span className="font-semibold">المصمم:</span> {engineer?.full_name}</li>
+                    <li>• <span className="font-semibold">العميل:</span> {client?.full_name}</li>
+                    <li>• <span className="font-semibold">الوسيط:</span> تطبيق "بيتلي" (Bytly)</li>
+                  </ul>
+                </div>
+
                 <div className="space-y-4">
                   <div>
-                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة الأولى: موضوع العقد</h4>
-                    <p className="mr-4">
-                      يتعهد الطرف الثاني (مقدم الخدمة) بتقديم خدمات {engineer?.specialization} 
-                      للطرف الأول (صاحب المشروع) وفقاً للمواصفات والمتطلبات المتفق عليها في وصف المشروع.
-                    </p>
-                  </div>
-
-                  <div>
-                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة الثانية: نطاق الأعمال</h4>
+                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة الأولى: نطاق العمل ومدته</h4>
                     <ul className="mr-8 space-y-2 list-disc">
-                      <li>إعداد التصاميم والمخططات الهندسية المطلوبة</li>
-                      <li>تقديم الاستشارات الفنية اللازمة</li>
-                      <li>إجراء التعديلات المطلوبة (حتى 3 مراجعات)</li>
-                      <li>تسليم جميع الملفات المصدرية والنهائية</li>
-                      <li>تقديم الدعم الفني لمدة 30 يوماً بعد التسليم</li>
+                      <li>يلتزم المصمم بتنفيذ الخدمات الموضحة في "عرض السعر" المقبول من العميل.</li>
+                      <li>مدة التنفيذ هي ({Math.ceil((new Date(contract?.delivery_date || project?.deadline) - new Date(contract?.start_date || new Date())) / (1000 * 60 * 60 * 24))} يوم) تبدأ من تاريخ اكتمال شروط بدء المشروع.</li>
+                      <li>وصف الخدمة: {project?.description}</li>
                     </ul>
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة الثالثة: قيمة العقد والدفع</h4>
-                    <div className="mr-4 space-y-2 bg-amber-50 p-4 rounded-lg">
-                      <p>
-                        <span className="font-semibold">القيمة الإجمالية:</span> 
-                        <span className="text-xl font-bold text-[#1a1a2e] mr-2">
-                          {contract?.total_amount?.toLocaleString() || project?.escrow_amount?.toLocaleString()} ريال سعودي
-                        </span>
-                      </p>
-                      <p className="text-sm text-slate-600">شاملة ضريبة القيمة المضافة (15%)</p>
-                    </div>
-                    <div className="mr-4 mt-3">
-                      <p className="font-semibold mb-2">شروط الدفع:</p>
-                      <ul className="space-y-1 text-sm">
-                        <li>• 30% دفعة مقدمة عند توقيع العقد</li>
-                        <li>• 40% عند تسليم التصاميم الأولية</li>
-                        <li>• 30% عند التسليم النهائي والموافقة</li>
+                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة الثانية: شروط بدء المشروع (لحظة الصفر)</h4>
+                    <div className="bg-amber-50 border-r-4 border-amber-500 p-4 rounded-lg mr-4">
+                      <p className="font-semibold text-amber-900 mb-3">⏱️ لا يبدأ احتساب مدة التنفيذ إلا بعد تحقق الشرطين التاليين:</p>
+                      <ul className="space-y-2 text-amber-800">
+                        <li><span className="font-semibold">أولاً:</span> قيام العميل بسداد كامل قيمة المشروع (أو الدفعة الأولى المتفق عليها) وإيداعها في حساب الضمان التابع للمنصة.</li>
+                        <li><span className="font-semibold">ثانياً:</span> قيام العميل بتسليم كافة البيانات، المخططات، والمتطلبات الفنية اللازمة لبدء التصميم عبر شات التطبيق.</li>
                       </ul>
-                      <p className="text-sm text-blue-600 mt-3 flex items-center gap-2">
-                        <Shield className="w-4 h-4" />
-                        يتم حجز المبالغ في نظام الدفع الضامن (Escrow) لحماية الطرفين
+                      <p className="text-sm text-amber-700 mt-3">
+                        ⚠️ أي تأخير من قبل العميل في تسليم المتطلبات يؤدي تلقائياً إلى إيقاف احتساب المدة الزمنية، 
+                        ولا يتحمل المصمم مسؤولية هذا التأخير.
                       </p>
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة الرابعة: المدة الزمنية</h4>
+                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة الثالثة: آلية الدفع والضمان</h4>
+                    <div className="mr-4 space-y-3">
+                      <div className="bg-green-50 border-r-4 border-green-500 p-4 rounded-lg">
+                        <p className="font-semibold text-green-900 mb-2">💰 القيمة الإجمالية:</p>
+                        <p className="text-2xl font-bold text-[#1a1a2e]">
+                          {contract?.total_amount?.toLocaleString() || project?.escrow_amount?.toLocaleString()} ريال سعودي
+                        </p>
+                        <p className="text-sm text-green-700 mt-1">شاملة ضريبة القيمة المضافة (15%)</p>
+                      </div>
+                      
+                      <div className="bg-blue-50 border-r-4 border-blue-500 p-4 rounded-lg">
+                        <p className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                          <Shield className="w-5 h-5" />
+                          نظام الضمان:
+                        </p>
+                        <ul className="space-y-2 text-blue-800 text-sm">
+                          <li>• يقر الطرفان بأن تطبيق "بيتلي" هو الوسيط المالي، حيث تظل الأموال محجوزة لدى التطبيق طوال فترة التنفيذ.</li>
+                          <li>• يتم تحويل المبلغ للمصمم (بعد خصم عمولة المنصة 10%) فور ضغط العميل على زر "اعتماد التسليم النهائي".</li>
+                          <li>• الأموال محمية بنظام Escrow ولا يمكن سحبها إلا بعد اكتمال المشروع أو الاتفاق المتبادل.</li>
+                        </ul>
+                      </div>
+
+                      <div>
+                        <p className="font-semibold mb-2">شروط الدفع:</p>
+                        <p className="text-sm text-slate-600">{contract?.payment_terms || "30% دفعة مقدمة، 40% عند التصاميم الأولية، 30% عند التسليم النهائي"}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة الرابعة: احتساب مدة التسليم وإشعار البدء</h4>
+                    <div className="mr-4 space-y-3">
+                      <div className="bg-slate-50 border-r-4 border-slate-400 p-4 rounded-lg">
+                        <p className="font-semibold text-slate-900 mb-2">⏰ المدة الزمنية:</p>
+                        <ul className="space-y-2 text-slate-700 text-sm">
+                          <li>• تبدأ الفترة الزمنية المحددة للتسليم من تاريخ اليوم التالي لتحقق شروط التفعيل المذكورة في المادة الثانية.</li>
+                          <li>• أي تأخير من قبل العميل في تسليم المتطلبات يؤدي تلقائياً إلى إيقاف احتساب المدة الزمنية.</li>
+                          <li>• لا يتحمل المصمم مسؤولية التأخير الناتج عن عدم توفر المتطلبات.</li>
+                        </ul>
+                      </div>
+                      
+                      <div>
+                        <p><span className="font-semibold">تاريخ البدء الفعلي:</span> {contract?.start_date ? new Date(contract.start_date).toLocaleDateString("ar") : "بعد اكتمال الشروط"}</p>
+                        <p><span className="font-semibold">تاريخ التسليم المتوقع:</span> {contract?.delivery_date || project?.deadline ? new Date(contract?.delivery_date || project?.deadline).toLocaleDateString("ar") : "حسب الاتفاق"}</p>
+                      </div>
+                      
+                      <div className="bg-purple-50 border-r-4 border-purple-500 p-4 rounded-lg">
+                        <p className="font-semibold text-purple-900 mb-2">📱 إشعار البدء التلقائي:</p>
+                        <p className="text-sm text-purple-800">
+                          يقوم النظام آلياً بإرسال تنبيه للطرفين (Push Notification) وعبر البريد الإلكتروني 
+                          يفيد بـ "بدء العمل على المشروع رسمياً" وتحديد تاريخ التسليم المتوقع بناءً على ذلك.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة الخامسة: التعديلات والإضافات</h4>
                     <div className="mr-4 space-y-2">
-                      <p>
-                        <span className="font-semibold">تاريخ البدء:</span> 
-                        {contract?.start_date 
-                          ? new Date(contract.start_date).toLocaleDateString("ar")
-                          : new Date().toLocaleDateString("ar")
-                        }
-                      </p>
-                      <p>
-                        <span className="font-semibold">تاريخ التسليم المتوقع:</span> 
-                        {contract?.delivery_date || project?.deadline
-                          ? new Date(contract?.delivery_date || project?.deadline).toLocaleDateString("ar")
-                          : "حسب الاتفاق"
-                        }
-                      </p>
-                      <p className="text-sm text-slate-600">
-                        • في حالة التأخير لأسباب قاهرة، يتم الاتفاق على تمديد المدة
-                      </p>
+                      <div className="bg-yellow-50 border-r-4 border-yellow-500 p-4 rounded-lg">
+                        <ul className="space-y-2 text-yellow-900 text-sm">
+                          <li>• يشمل العقد عدد <span className="font-bold text-lg">3 تعديلات مجانية</span> على التصاميم المقدمة.</li>
+                          <li>• التعديلات المجانية تكون ضمن نطاق العمل المتفق عليه فقط.</li>
+                          <li>• أي طلبات إضافية خارج نطاق العمل المتفق عليه (مثل: تصاميم جديدة، غرف إضافية، تغيير كامل في المفهوم) تخضع لاتفاق مالي جديد منفصل.</li>
+                          <li>• يتم الاتفاق على قيمة التعديلات الإضافية قبل البدء فيها.</li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
-
+                  
                   <div>
-                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة الخامسة: التزامات الطرف الأول (العميل)</h4>
+                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة السادسة: التزامات الطرف الأول (العميل)</h4>
                     <ul className="mr-8 space-y-2 list-disc">
-                      <li>توفير جميع المعلومات والمستندات المطلوبة للمشروع</li>
-                      <li>سداد المستحقات المالية في المواعيد المتفق عليها</li>
+                      <li>توفير جميع المعلومات والمستندات المطلوبة للمشروع عبر شات التطبيق</li>
+                      <li>سداد المستحقات المالية كاملة قبل بدء العمل</li>
                       <li>الرد على الاستفسارات خلال مدة معقولة (3 أيام عمل)</li>
                       <li>إبداء الملاحظات على التصاميم بشكل واضح ومفصل</li>
-                      <li>الموافقة النهائية على التصاميم خلال 7 أيام من التسليم</li>
+                      <li>الضغط على زر "اعتماد التسليم النهائي" خلال 7 أيام من التسليم</li>
+                      <li>عدم طلب تعديلات خارج نطاق العمل المتفق عليه دون الاتفاق على رسوم إضافية</li>
                     </ul>
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة السادسة: التزامات الطرف الثاني (المهندس)</h4>
+                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة السابعة: التزامات الطرف الثاني (المصمم)</h4>
                     <ul className="mr-8 space-y-2 list-disc">
-                      <li>تنفيذ الأعمال بجودة عالية وحرفية مهنية</li>
-                      <li>الالتزام بالمواصفات والمعايير الهندسية المعتمدة</li>
-                      <li>تسليم الأعمال في المواعيد المحددة</li>
-                      <li>إجراء التعديلات المطلوبة ضمن الحد المتفق عليه</li>
-                      <li>تسليم جميع الملفات المصدرية والوثائق الفنية</li>
-                      <li>الحفاظ على سرية معلومات المشروع</li>
+                      <li>تنفيذ الأعمال بجودة عالية وحرفية مهنية وفقاً للمواصفات المتفق عليها</li>
+                      <li>الالتزام بالمواصفات والمعايير الهندسية المعتمدة في المملكة</li>
+                      <li>البدء في التنفيذ فوراً بعد اكتمال شروط بدء المشروع (لحظة الصفر)</li>
+                      <li>تسليم الأعمال في المواعيد المحددة حسب المدة المتفق عليها</li>
+                      <li>إجراء التعديلات المطلوبة (حتى 3 تعديلات مجانية) ضمن نطاق العمل المتفق عليه</li>
+                      <li>تسليم جميع الملفات المصدرية والوثائق الفنية بصيغ قابلة للتعديل</li>
+                      <li>الحفاظ على سرية معلومات المشروع وعدم مشاركتها مع أي طرف ثالث</li>
+                      <li>التواصل الدوري مع العميل عبر شات التطبيق لإطلاعه على تقدم العمل</li>
                     </ul>
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة السابعة: حقوق الملكية الفكرية</h4>
+                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة الثامنة: فض النزاعات</h4>
+                    <div className="mr-4">
+                      <div className="bg-red-50 border-r-4 border-red-500 p-4 rounded-lg">
+                        <p className="font-semibold text-red-900 mb-2">⚖️ آلية حل النزاعات:</p>
+                        <ul className="space-y-2 text-red-800 text-sm">
+                          <li>• في حال وجود خلاف بين الطرفين، يلتزم الطرفان باللجوء لخدمة "حل النزاعات" داخل تطبيق "بيتلي" للتحكيم بينهما قبل اتخاذ أي إجراء خارجي.</li>
+                          <li>• تقوم إدارة المنصة بمراجعة الحالة والاستماع لكلا الطرفين وفحص الأدلة المقدمة.</li>
+                          <li>• قرار المنصة في النزاع يكون ملزماً للطرفين ونهائياً.</li>
+                          <li>• في حالة رفض أي طرف للحل، يتم اللجوء للجهات القضائية المختصة في المملكة.</li>
+                          <li>• القانون الساري هو قانون المملكة العربية السعودية.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة التاسعة: حقوق الملكية الفكرية</h4>
                     <ul className="mr-8 space-y-2 list-disc">
-                      <li>تنتقل جميع حقوق الملكية الفكرية للتصاميم المسلمة للطرف الأول بعد السداد الكامل</li>
-                      <li>يحق للطرف الثاني عرض التصاميم في معرض أعماله بعد موافقة الطرف الأول</li>
-                      <li>لا يجوز للطرف الأول المطالبة بحقوق الملكية قبل إتمام الدفع</li>
-                      <li>يحتفظ الطرف الثاني بحق توقيع أعماله باسمه</li>
+                      <li>تنتقل جميع حقوق الملكية الفكرية للتصاميم المسلمة للطرف الأول بعد السداد الكامل واعتماد التسليم النهائي</li>
+                      <li>يحق للطرف الثاني (المصمم) عرض التصاميم في معرض أعماله على المنصة بعد موافقة الطرف الأول</li>
+                      <li>لا يجوز للطرف الأول المطالبة بحقوق الملكية أو الملفات النهائية قبل إتمام الدفع الكامل</li>
+                      <li>يحتفظ الطرف الثاني بحق توقيع أعماله باسمه المهني</li>
                     </ul>
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة الثامنة: إنهاء العقد</h4>
+                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة العاشرة: إنهاء العقد</h4>
                     <ul className="mr-8 space-y-2 list-disc">
-                      <li>يحق لأي من الطرفين إنهاء العقد بإشعار كتابي قبل 7 أيام</li>
-                      <li>في حالة الإنهاء، يتم احتساب قيمة الأعمال المنجزة فقط</li>
-                      <li>يُعاد باقي المبلغ المدفوع للطرف الأول خلال 14 يوم عمل</li>
-                      <li>في حالة إخلال أحد الطرفين بالتزاماته، يحق للطرف الآخر إنهاء العقد فوراً</li>
+                      <li>يحق لأي من الطرفين إنهاء العقد بإشعار كتابي عبر المنصة قبل 7 أيام</li>
+                      <li>في حالة الإنهاء، يتم احتساب قيمة الأعمال المنجزة فقط بناءً على تقدير المنصة</li>
+                      <li>يُعاد باقي المبلغ المحجوز للطرف الأول خلال 14 يوم عمل</li>
+                      <li>في حالة إخلال أحد الطرفين بالتزاماته، يحق للطرف الآخر إنهاء العقد فوراً والمطالبة بالتعويض</li>
                     </ul>
                   </div>
 
-                  <div>
-                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة التاسعة: حل النزاعات</h4>
-                    <ul className="mr-8 space-y-2 list-disc">
-                      <li>يلتزم الطرفان بمحاولة حل أي نزاع بالطرق الودية أولاً</li>
-                      <li>في حالة عدم التوصل لحل، يتم اللجوء إلى إدارة منصة بيتلي للوساطة</li>
-                      <li>قرار منصة بيتلي في النزاعات يكون ملزماً للطرفين</li>
-                      <li>في حالة الاستمرار، يتم اللجوء للجهات القضائية المختصة في المملكة</li>
-                      <li>القانون الساري هو قانون المملكة العربية السعودية</li>
-                    </ul>
-                  </div>
+
 
                   <div>
-                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة العاشرة: السرية</h4>
+                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة الحادية عشرة: السرية</h4>
                     <p className="mr-4">
                       يلتزم الطرفان بالحفاظ على سرية جميع المعلومات والوثائق المتبادلة 
-                      وعدم الإفصاح عنها لأي طرف ثالث دون موافقة كتابية مسبقة. 
+                      وعدم الإفصاح عنها لأي طرف ثالث دون موافقة كتابية مسبقة عبر المنصة. 
                       يستمر هذا الالتزام حتى بعد انتهاء العقد.
                     </p>
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة الحادية عشرة: القوة القاهرة</h4>
+                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة الثانية عشرة: القوة القاهرة</h4>
                     <p className="mr-4">
                       لا يُسأل أي من الطرفين عن التأخير أو عدم تنفيذ الالتزامات بسبب ظروف قاهرة 
-                      خارجة عن الإرادة (كوارث طبيعية، حروب، أوبئة، إلخ). 
-                      يجب إخطار الطرف الآخر فوراً وتقديم الإثباتات اللازمة.
+                      خارجة عن الإرادة (كوارث طبيعية، حروب، أوبئة، انقطاع الخدمات، إلخ). 
+                      يجب إخطار الطرف الآخر فوراً عبر المنصة وتقديم الإثباتات اللازمة.
                     </p>
                   </div>
 
                   <div>
-                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة الثانية عشرة: أحكام عامة</h4>
+                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة الثالثة عشرة: سريان العقد</h4>
+                    <div className="mr-4">
+                      <div className="bg-indigo-50 border-r-4 border-indigo-500 p-4 rounded-lg">
+                        <p className="font-semibold text-indigo-900 mb-2">📜 نفاذ العقد:</p>
+                        <ul className="space-y-2 text-indigo-800 text-sm">
+                          <li>• يُعتبر هذا العقد سارياً ونافذاً فور توقيع الطرفين إلكترونياً عبر المنصة.</li>
+                          <li>• التوقيع الإلكتروني له نفس القوة القانونية للتوقيع اليدوي وفقاً لأنظمة المملكة.</li>
+                          <li>• يبدأ المصمم في التنفيذ الفعلي فقط بعد تحقق شروط بدء المشروع (المادة الثانية).</li>
+                          <li>• تُحفظ نسخة إلكترونية من العقد لدى كل طرف ولدى المنصة كمرجع موثق.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-[#1a1a2e] mb-2">المادة الرابعة عشرة: أحكام عامة</h4>
                     <ul className="mr-8 space-y-2 list-disc">
-                      <li>هذا العقد يمثل الاتفاق الكامل بين الطرفين</li>
-                      <li>أي تعديل على العقد يجب أن يكون كتابياً وموقعاً من الطرفين</li>
-                      <li>بطلان أي بند من بنود العقد لا يؤثر على صحة البنود الأخرى</li>
-                      <li>تُحرر نسختان من العقد، لكل طرف نسخة</li>
-                      <li>جميع المراسلات تتم عبر منصة بيتلي كمرجع موثق</li>
+                      <li>هذا العقد يمثل الاتفاق الكامل بين الطرفين ويلغي أي اتفاقات سابقة شفهية أو كتابية</li>
+                      <li>أي تعديل على العقد يجب أن يكون كتابياً وموقعاً إلكترونياً من الطرفين عبر المنصة</li>
+                      <li>بطلان أي بند من بنود العقد لا يؤثر على صحة ونفاذ البنود الأخرى</li>
+                      <li>تُحفظ نسخة رقمية من العقد لدى كل طرف ولدى منصة بيتلي</li>
+                      <li>جميع المراسلات والإشعارات تتم عبر منصة بيتلي فقط وتُعتبر مرجعاً موثقاً</li>
+                      <li>يخضع هذا العقد لأنظمة وقوانين المملكة العربية السعودية</li>
                     </ul>
                   </div>
                 </div>

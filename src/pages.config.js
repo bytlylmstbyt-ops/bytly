@@ -1,4 +1,6 @@
 import AddPortfolio from './pages/AddPortfolio';
+import Contract from './pages/Contract';
+import Copyright from './pages/Copyright';
 import CreateProject from './pages/CreateProject';
 import Dashboard from './pages/Dashboard';
 import EngineerProfile from './pages/EngineerProfile';
@@ -7,6 +9,7 @@ import Gallery from './pages/Gallery';
 import Home from './pages/Home';
 import Messages from './pages/Messages';
 import Notifications from './pages/Notifications';
+import Privacy from './pages/Privacy';
 import ProjectDetails from './pages/ProjectDetails';
 import Projects from './pages/Projects';
 import RegisterChoice from './pages/RegisterChoice';
@@ -15,16 +18,15 @@ import RegisterEngineer from './pages/RegisterEngineer';
 import RegistrationSuccess from './pages/RegistrationSuccess';
 import Settings from './pages/Settings';
 import Subscription from './pages/Subscription';
-import Wallet from './pages/Wallet';
 import Terms from './pages/Terms';
-import Privacy from './pages/Privacy';
-import Copyright from './pages/Copyright';
-import Contract from './pages/Contract';
+import Wallet from './pages/Wallet';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AddPortfolio": AddPortfolio,
+    "Contract": Contract,
+    "Copyright": Copyright,
     "CreateProject": CreateProject,
     "Dashboard": Dashboard,
     "EngineerProfile": EngineerProfile,
@@ -33,6 +35,7 @@ export const PAGES = {
     "Home": Home,
     "Messages": Messages,
     "Notifications": Notifications,
+    "Privacy": Privacy,
     "ProjectDetails": ProjectDetails,
     "Projects": Projects,
     "RegisterChoice": RegisterChoice,
@@ -41,11 +44,8 @@ export const PAGES = {
     "RegistrationSuccess": RegistrationSuccess,
     "Settings": Settings,
     "Subscription": Subscription,
-    "Wallet": Wallet,
     "Terms": Terms,
-    "Privacy": Privacy,
-    "Copyright": Copyright,
-    "Contract": Contract,
+    "Wallet": Wallet,
 }
 
 export const pagesConfig = {
