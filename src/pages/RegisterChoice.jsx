@@ -30,6 +30,15 @@ export default function RegisterChoice() {
       link: createPageUrl("RegisterEngineer") + "?type=painter"
     },
     {
+      id: "consultant",
+      icon: Star,
+      title: "مستشار فني",
+      description: "انضم كمستشار معماري أو إنشائي معتمد",
+      features: ["مراجعة المشاريع", "تقديم استشارات فنية", "اعتماد الدفعات المالية"],
+      color: "from-green-500 to-emerald-500",
+      link: createPageUrl("RegisterConsultant")
+    },
+    {
       id: "client",
       icon: Briefcase,
       title: "صاحب مشروع",
@@ -56,7 +65,7 @@ export default function RegisterChoice() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {options.map((option, index) => (
             <motion.div
               key={option.id}
