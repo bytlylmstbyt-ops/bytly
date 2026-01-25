@@ -85,6 +85,12 @@ export default function AdminWalletPage() {
   };
 
   const handleApproveWithdrawal = async (request) => {
+    // Check consultant approval
+    if (!request.consultant_approval) {
+      alert("⚠️ يجب اعتماد المستشار الفني أولاً قبل الموافقة على طلب السحب");
+      return;
+    }
+
     if (!confirm(`هل تريد الموافقة على طلب السحب بمبلغ ${request.amount} ريال؟`)) {
       return;
     }
@@ -361,7 +367,7 @@ export default function AdminWalletPage() {
                               <p className="text-sm text-slate-600 mb-2">
                                 {engineer?.email}
                               </p>
-                              <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div className="grid grid-cols-2 gap-4 text-sm mb-3">
                                 <div>
                                   <p className="text-slate-500">المبلغ</p>
                                   <p className="font-bold text-slate-900">
@@ -381,12 +387,24 @@ export default function AdminWalletPage() {
                                   <p>{request.account_holder_name}</p>
                                 </div>
                               </div>
+                              
+                              {/* Consultant Approval Status */}
+                              {request.consultant_approval ? (
+                                <Badge className="bg-green-100 text-green-800">
+                                  ✓ معتمد من المستشار الفني
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-red-100 text-red-800">
+                                  ⚠️ في انتظار اعتماد المستشار
+                                </Badge>
+                              )}
                             </div>
                           </div>
                           <div className="flex gap-2">
                             <Button
                               onClick={() => handleApproveWithdrawal(request)}
-                              className="flex-1 bg-green-600 hover:bg-green-700"
+                              disabled={!request.consultant_approval}
+                              className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50"
                             >
                               <CheckCircle className="w-4 h-4 ml-2" />
                               الموافقة

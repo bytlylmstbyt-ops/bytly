@@ -22,6 +22,7 @@ import Settings from './pages/Settings';
 import Subscription from './pages/Subscription';
 import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
+import RegisterConsultant from './pages/RegisterConsultant';
 import __Layout from './Layout.jsx';
 
 
@@ -50,6 +51,7 @@ export const PAGES = {
     "Subscription": Subscription,
     "Terms": Terms,
     "Wallet": Wallet,
+    "RegisterConsultant": RegisterConsultant,
 }
 
 export const pagesConfig = {
