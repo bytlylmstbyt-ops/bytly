@@ -9,6 +9,7 @@ import Gallery from './pages/Gallery';
 import Home from './pages/Home';
 import Messages from './pages/Messages';
 import Notifications from './pages/Notifications';
+import Packages from './pages/Packages';
 import Privacy from './pages/Privacy';
 import ProjectDetails from './pages/ProjectDetails';
 import Projects from './pages/Projects';
@@ -20,7 +21,7 @@ import Settings from './pages/Settings';
 import Subscription from './pages/Subscription';
 import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
-import Packages from './pages/Packages';
+import AdminWallet from './pages/AdminWallet';
 import __Layout from './Layout.jsx';
 
 
@@ -36,6 +37,7 @@ export const PAGES = {
     "Home": Home,
     "Messages": Messages,
     "Notifications": Notifications,
+    "Packages": Packages,
     "Privacy": Privacy,
     "ProjectDetails": ProjectDetails,
     "Projects": Projects,
@@ -47,7 +49,7 @@ export const PAGES = {
     "Subscription": Subscription,
     "Terms": Terms,
     "Wallet": Wallet,
-    "Packages": Packages,
+    "AdminWallet": AdminWallet,
 }
 
 export const pagesConfig = {
