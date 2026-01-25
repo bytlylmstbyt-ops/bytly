@@ -1,4 +1,5 @@
 import AddPortfolio from './pages/AddPortfolio';
+import AdminWallet from './pages/AdminWallet';
 import Contract from './pages/Contract';
 import Copyright from './pages/Copyright';
 import CreateProject from './pages/CreateProject';
@@ -21,12 +22,12 @@ import Settings from './pages/Settings';
 import Subscription from './pages/Subscription';
 import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
-import AdminWallet from './pages/AdminWallet';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AddPortfolio": AddPortfolio,
+    "AdminWallet": AdminWallet,
     "Contract": Contract,
     "Copyright": Copyright,
     "CreateProject": CreateProject,
@@ -49,7 +50,6 @@ export const PAGES = {
     "Subscription": Subscription,
     "Terms": Terms,
     "Wallet": Wallet,
-    "AdminWallet": AdminWallet,
 }
 
 export const pagesConfig = {

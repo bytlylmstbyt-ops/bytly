@@ -90,21 +90,8 @@ export default function WalletPage() {
         {/* Wallet Overview */}
         <WalletOverview engineer={engineer} />
 
-        {/* Tabs */}
-        <Tabs defaultValue="withdrawal" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="withdrawal">سحب الرصيد</TabsTrigger>
-            <TabsTrigger value="transactions">سجل المعاملات</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="withdrawal">
-            <WithdrawalForm engineer={engineer} onSuccess={loadWalletData} />
-          </TabsContent>
-
-          <TabsContent value="transactions">
-            <TransactionHistory transactions={transactions} />
-          </TabsContent>
-        </Tabs>
+        {/* Transactions */}
+        <TransactionHistory transactions={transactions} />
       </div>
     </div>
   );
