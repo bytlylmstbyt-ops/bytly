@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import { 
   Palette, Building2, PenTool, Briefcase, 
-  ArrowLeft, CheckCircle, Star
+  ArrowLeft, CheckCircle, Star, Scale
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,15 @@ export default function RegisterChoice() {
       link: createPageUrl("RegisterConsultant")
     },
     {
+      id: "legal",
+      icon: Scale,
+      title: "مستشار قانوني",
+      description: "انضم لحماية حقوق المصممين والعملاء",
+      features: ["صياغة العقود", "حل النزاعات", "حماية الملكية الفكرية"],
+      color: "from-blue-600 to-indigo-600",
+      link: createPageUrl("RegisterLegalConsultant")
+    },
+    {
       id: "client",
       icon: Briefcase,
       title: "صاحب مشروع",
@@ -65,7 +74,7 @@ export default function RegisterChoice() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           {options.map((option, index) => (
             <motion.div
               key={option.id}
