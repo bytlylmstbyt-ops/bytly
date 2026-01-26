@@ -16,13 +16,14 @@ import ProjectDetails from './pages/ProjectDetails';
 import Projects from './pages/Projects';
 import RegisterChoice from './pages/RegisterChoice';
 import RegisterClient from './pages/RegisterClient';
+import RegisterConsultant from './pages/RegisterConsultant';
 import RegisterEngineer from './pages/RegisterEngineer';
 import RegistrationSuccess from './pages/RegistrationSuccess';
 import Settings from './pages/Settings';
 import Subscription from './pages/Subscription';
 import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
-import RegisterConsultant from './pages/RegisterConsultant';
+import ConsultantApproval from './pages/ConsultantApproval';
 import __Layout from './Layout.jsx';
 
 
@@ -45,13 +46,14 @@ export const PAGES = {
     "Projects": Projects,
     "RegisterChoice": RegisterChoice,
     "RegisterClient": RegisterClient,
+    "RegisterConsultant": RegisterConsultant,
     "RegisterEngineer": RegisterEngineer,
     "RegistrationSuccess": RegistrationSuccess,
     "Settings": Settings,
     "Subscription": Subscription,
     "Terms": Terms,
     "Wallet": Wallet,
-    "RegisterConsultant": RegisterConsultant,
+    "ConsultantApproval": ConsultantApproval,
 }
 
 export const pagesConfig = {

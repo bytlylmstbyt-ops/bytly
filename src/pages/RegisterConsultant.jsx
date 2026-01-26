@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Loader2, CheckCircle } from "lucide-react";
+import { Upload, Loader2, CheckCircle, FileText } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { motion } from "framer-motion";
 
 export default function RegisterConsultantPage() {
@@ -29,16 +30,25 @@ export default function RegisterConsultantPage() {
     years_experience: "",
     certificates: []
   });
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!termsAccepted) {
+      alert("يجب الموافقة على الشروط والأحكام للمتابعة");
+      return;
+    }
+    
     setLoading(true);
 
     try {
       await base44.entities.Consultant.create({
         ...formData,
         years_experience: parseInt(formData.years_experience) || 0,
-        status: "pending"
+        status: "pending",
+        terms_accepted: true,
+        terms_accepted_date: new Date().toISOString()
       });
 
       alert("تم تقديم طلب التسجيل بنجاح! سيتم مراجعته من قبل الإدارة.");
@@ -265,10 +275,40 @@ export default function RegisterConsultantPage() {
                   </div>
                 </div>
 
+                {/* Terms and Conditions */}
+                <div className="space-y-4 border-t pt-6">
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      id="terms"
+                      checked={termsAccepted}
+                      onCheckedChange={setTermsAccepted}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor="terms" className="cursor-pointer font-semibold text-slate-900">
+                        أوافق على الشروط والأحكام الخاصة بالمستشارين الفنيين *
+                      </Label>
+                      <div className="mt-3 p-4 bg-amber-50 rounded-lg border border-amber-200 space-y-2 text-sm text-slate-700">
+                        <p className="font-semibold text-slate-900 flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-amber-600" />
+                          بصفتي مستشاراً فنياً في منصة بيتلي، ألتزم بالآتي:
+                        </p>
+                        <ul className="space-y-2 mr-4">
+                          <li><strong>١. دقة المراجعة:</strong> أقر بمسؤوليتي المهنية عن مراجعة المخططات والتصاميم وفقاً لكود البناء السعودي والمعايير الهندسية المعتمدة.</li>
+                          <li><strong>٢. النزاهة والحياد:</strong> ألتزم بتقديم تقييم فني عادل ومحايد للمخرجات دون تحيز للمصمم أو العميل.</li>
+                          <li><strong>٣. سرية المعلومات:</strong> أتعهد بعدم مشاركة أو تسريب أي مخططات أو بيانات خاصة بالمشاريع التي أطلع عليها خارج نطاق المنصة.</li>
+                          <li><strong>٤. الالتزام بالوقت:</strong> ألتزم بالرد على طلبات المراجعة خلال (48 ساعة) من استلام الإشعار لضمان سير العمل.</li>
+                          <li><strong>٥. الأتعاب والرسوم:</strong> أوافق على آلية تحصيل الأتعاب المبرمجة آلياً داخل المنصة بعد اعتماد الجودة النهائي.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <Button
                   type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574]"
+                  disabled={loading || !termsAccepted}
+                  className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] disabled:opacity-50"
                 >
                   {loading ? (
                     <>
