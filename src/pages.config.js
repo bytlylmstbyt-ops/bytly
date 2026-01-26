@@ -24,6 +24,7 @@ import Subscription from './pages/Subscription';
 import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
 import ConsultantApproval from './pages/ConsultantApproval';
+import ConsultantDashboard from './pages/ConsultantDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -54,6 +55,7 @@ export const PAGES = {
     "Terms": Terms,
     "Wallet": Wallet,
     "ConsultantApproval": ConsultantApproval,
+    "ConsultantDashboard": ConsultantDashboard,
 }
 
 export const pagesConfig = {
