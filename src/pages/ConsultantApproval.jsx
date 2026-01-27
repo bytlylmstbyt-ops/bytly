@@ -40,18 +40,35 @@ export default function ConsultantApprovalPage() {
     try {
       const user = await base44.auth.me();
       
-      // Load consultant profile
-      const consultants = await base44.entities.Consultant.filter({ 
-        email: user.email 
-      });
-      
-      if (consultants.length === 0) {
-        alert("غير مصرح لك بالوصول لهذه الصفحة");
-        navigate(-1);
-        return;
+      // Allow admin access
+      if (user.role === "admin") {
+        // Admin can view - use first available consultant for demo
+        const allConsultants = await base44.entities.Consultant.filter({ status: "approved" });
+        if (allConsultants.length > 0) {
+          setConsultant(allConsultants[0]);
+        } else {
+          // Create dummy consultant for admin view
+          setConsultant({
+            id: "admin-view",
+            email: user.email,
+            wallet_balance: 0,
+            total_reviews: 0
+          });
+        }
+      } else {
+        // Load consultant profile
+        const consultants = await base44.entities.Consultant.filter({ 
+          email: user.email 
+        });
+        
+        if (consultants.length === 0) {
+          alert("غير مصرح لك بالوصول لهذه الصفحة");
+          navigate(-1);
+          return;
+        }
+        
+        setConsultant(consultants[0]);
       }
-      
-      setConsultant(consultants[0]);
       
       // Load withdrawal request
       const withdrawalData = await base44.entities.WithdrawalRequest.filter({ 
