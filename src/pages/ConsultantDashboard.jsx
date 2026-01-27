@@ -35,17 +35,36 @@ export default function ConsultantDashboard() {
       const user = await base44.auth.me();
       
       // Load consultant profile
-      const consultants = await base44.entities.Consultant.filter({ 
-        email: user.email 
-      });
-      
-      if (consultants.length === 0) {
-        alert("غير مصرح لك بالوصول لهذه الصفحة");
-        return;
+      // Allow admin access
+      if (user.role === "admin") {
+        // Admin can view - use first available consultant for demo
+        const allConsultants = await base44.entities.Consultant.filter({ status: "approved" });
+        if (allConsultants.length > 0) {
+          setConsultant(allConsultants[0]);
+        } else {
+          // Create dummy consultant for admin view
+          setConsultant({
+            id: "admin-view",
+            full_name: "عرض المدير",
+            email: user.email,
+            consultant_type: "architectural",
+            wallet_balance: 0,
+            total_reviews: 0
+          });
+        }
+      } else {
+        const consultants = await base44.entities.Consultant.filter({ 
+          email: user.email 
+        });
+        
+        if (consultants.length === 0) {
+          alert("غير مصرح لك بالوصول لهذه الصفحة");
+          return;
+        }
+        
+        const consultantData = consultants[0];
+        setConsultant(consultantData);
       }
-      
-      const consultantData = consultants[0];
-      setConsultant(consultantData);
       
       // Load pending withdrawal requests for review
       const allRequests = await base44.entities.WithdrawalRequest.list();
