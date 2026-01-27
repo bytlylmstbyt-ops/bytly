@@ -103,27 +103,8 @@ export default function ProjectDetails() {
   };
 
   const handleAcceptProposal = async (proposal) => {
-    setIsSubmitting(true);
-
-    // Update proposal status
-    await base44.entities.Proposal.update(proposal.id, { status: "accepted" });
-
-    // Update project
-    await base44.entities.Project.update(projectId, {
-      status: "in_progress",
-      assigned_engineer_id: proposal.engineer_id,
-      escrow_amount: proposal.price
-    });
-
-    // Reject other proposals
-    for (const p of proposals) {
-      if (p.id !== proposal.id && p.status === "pending") {
-        await base44.entities.Proposal.update(p.id, { status: "rejected" });
-      }
-    }
-
-    setIsSubmitting(false);
-    loadData();
+    // Redirect to payment page
+    window.location.href = createPageUrl("Payment") + `?project=${projectId}&proposal=${proposal.id}`;
   };
 
   const categories = {

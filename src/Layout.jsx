@@ -150,6 +150,12 @@ export default function Layout({ children, currentPageName }) {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link to={createPageUrl("MyPurchasedProjects")} className="flex items-center gap-2">
+                          <Briefcase className="w-4 h-4" />
+                          مشاريعي المشتراة
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to={createPageUrl("Wallet")} className="flex items-center gap-2">
                           <Wallet className="w-4 h-4" />
                           المحفظة

@@ -1,5 +1,8 @@
 import AddPortfolio from './pages/AddPortfolio';
 import AdminWallet from './pages/AdminWallet';
+import Complaints from './pages/Complaints';
+import ConsultantApproval from './pages/ConsultantApproval';
+import ConsultantDashboard from './pages/ConsultantDashboard';
 import Contract from './pages/Contract';
 import Copyright from './pages/Copyright';
 import CreateProject from './pages/CreateProject';
@@ -18,22 +21,24 @@ import RegisterChoice from './pages/RegisterChoice';
 import RegisterClient from './pages/RegisterClient';
 import RegisterConsultant from './pages/RegisterConsultant';
 import RegisterEngineer from './pages/RegisterEngineer';
+import RegisterLegalConsultant from './pages/RegisterLegalConsultant';
 import RegistrationSuccess from './pages/RegistrationSuccess';
 import Settings from './pages/Settings';
 import Subscription from './pages/Subscription';
+import Support from './pages/Support';
 import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
-import ConsultantApproval from './pages/ConsultantApproval';
-import ConsultantDashboard from './pages/ConsultantDashboard';
-import RegisterLegalConsultant from './pages/RegisterLegalConsultant';
-import Complaints from './pages/Complaints';
-import Support from './pages/Support';
+import Payment from './pages/Payment';
+import MyPurchasedProjects from './pages/MyPurchasedProjects';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AddPortfolio": AddPortfolio,
     "AdminWallet": AdminWallet,
+    "Complaints": Complaints,
+    "ConsultantApproval": ConsultantApproval,
+    "ConsultantDashboard": ConsultantDashboard,
     "Contract": Contract,
     "Copyright": Copyright,
     "CreateProject": CreateProject,
@@ -52,16 +57,15 @@ export const PAGES = {
     "RegisterClient": RegisterClient,
     "RegisterConsultant": RegisterConsultant,
     "RegisterEngineer": RegisterEngineer,
+    "RegisterLegalConsultant": RegisterLegalConsultant,
     "RegistrationSuccess": RegistrationSuccess,
     "Settings": Settings,
     "Subscription": Subscription,
+    "Support": Support,
     "Terms": Terms,
     "Wallet": Wallet,
-    "ConsultantApproval": ConsultantApproval,
-    "ConsultantDashboard": ConsultantDashboard,
-    "RegisterLegalConsultant": RegisterLegalConsultant,
-    "Complaints": Complaints,
-    "Support": Support,
+    "Payment": Payment,
+    "MyPurchasedProjects": MyPurchasedProjects,
 }
 
 export const pagesConfig = {
