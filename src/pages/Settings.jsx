@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { 
   User, Mail, Phone, MapPin, Camera, Save, 
   Loader2, Shield, Bell, Lock, Eye, EyeOff
@@ -276,6 +278,23 @@ export default function Settings() {
                 <CardTitle>إعدادات الإشعارات</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                  <div className="flex items-start gap-3 mb-3">
+                    <Bell className="w-5 h-5 text-blue-600 mt-1" />
+                    <div>
+                      <h3 className="font-medium text-blue-900">إعدادات التنبيهات المتقدمة</h3>
+                      <p className="text-sm text-blue-700 mt-1">
+                        تخصيص كامل لأنواع التنبيهات وتوقيت التذكيرات
+                      </p>
+                    </div>
+                  </div>
+                  <Link to={createPageUrl("NotificationSettings")}>
+                    <Button className="bg-blue-600 hover:bg-blue-700">
+                      فتح إعدادات التنبيهات
+                    </Button>
+                  </Link>
+                </div>
+
                 <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
                   <div>
                     <h3 className="font-medium">إشعارات البريد الإلكتروني</h3>
