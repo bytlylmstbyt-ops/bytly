@@ -104,8 +104,6 @@ export default function Notifications() {
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   if (loading) {
