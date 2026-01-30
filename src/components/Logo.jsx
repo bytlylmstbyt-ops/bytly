@@ -9,25 +9,22 @@ export default function Logo({ className = "", size = "default", isDark = false 
   };
   
   const currentSize = sizes[size] || sizes.default;
-  const brownColor = '#4A3F35';
-  const boxBgColor = '#8B7355'; // لون بني فاتح مطابق للصورة
-  const textColor = isDark ? '#ffffff' : brownColor;
-  const borderColor = isDark ? '#C9A66B' : brownColor;
+  const boxBgColor = '#8B7355';
+  const textColor = isDark ? '#ffffff' : '#4A3F35';
   
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      {/* Icon with brown border and bytly text below */}
+      {/* Icon with bytly text below */}
       <div className="flex flex-col items-center gap-1">
         <div 
-          className={`${currentSize.iconBox} flex items-center justify-center rounded-lg border-2`}
+          className={`${currentSize.iconBox} flex items-center justify-center rounded-xl`}
           style={{ 
-            borderColor: borderColor,
             backgroundColor: boxBgColor
           }}
         >
           <Home 
             size={currentSize.icon} 
-            style={{ color: isDark ? brownColor : '#ffffff' }}
+            style={{ color: '#ffffff' }}
             strokeWidth={2.5}
           />
         </div>
