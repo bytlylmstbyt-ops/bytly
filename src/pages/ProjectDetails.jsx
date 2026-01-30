@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { 
   MapPin, Calendar, DollarSign, Clock, Users, 
   FileText, MessageSquare, Send, Loader2, CheckCircle,
-  Star, Download, Eye, ArrowLeft, Scale, Upload, X, Paperclip
+  Star, Download, Eye, ArrowLeft, Scale, Upload, X, Paperclip, Kanban
 } from "lucide-react";
 import ContractGenerator from "@/components/contracts/ContractGenerator";
 import { Button } from "@/components/ui/button";
@@ -596,25 +596,44 @@ export default function ProjectDetails() {
                 </CardContent>
               </Card>
 
+              {/* Kanban Board - For in progress projects */}
+               {project?.status === "in_progress" && (
+                 <Link to={createPageUrl("ProjectKanban") + `?id=${project.id}`}>
+                   <Card className="border-0 shadow-lg mb-6 hover:shadow-xl transition-shadow cursor-pointer">
+                     <CardContent className="p-4">
+                       <div className="flex items-center gap-3">
+                         <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                           <Kanban className="w-5 h-5 text-purple-600" />
+                         </div>
+                         <div>
+                           <h4 className="font-semibold text-[#1a1a2e]">لوحة المشروع</h4>
+                           <p className="text-sm text-slate-500">إدارة المهام والتقدم</p>
+                         </div>
+                       </div>
+                     </CardContent>
+                   </Card>
+                 </Link>
+               )}
+
               {/* Contract Generator - Only for assigned engineer or client */}
-              {project?.status === "in_progress" && engineer && client && (
-                <Card className="border-0 shadow-lg mb-6">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      <Scale className="w-5 h-5 text-purple-500" />
-                      <div>
-                        <h4 className="font-semibold text-[#1a1a2e]">العقد القانوني</h4>
-                        <p className="text-sm text-slate-500">أنشئ عقداً رسمياً للمشروع</p>
-                      </div>
-                    </div>
-                    <ContractGenerator 
-                      project={project} 
-                      engineer={engineer} 
-                      client={client} 
-                    />
-                  </CardContent>
-                </Card>
-              )}
+               {project?.status === "in_progress" && engineer && client && (
+                 <Card className="border-0 shadow-lg mb-6">
+                   <CardContent className="p-4">
+                     <div className="flex items-center gap-3 mb-3">
+                       <Scale className="w-5 h-5 text-purple-500" />
+                       <div>
+                         <h4 className="font-semibold text-[#1a1a2e]">العقد القانوني</h4>
+                         <p className="text-sm text-slate-500">أنشئ عقداً رسمياً للمشروع</p>
+                       </div>
+                     </div>
+                     <ContractGenerator 
+                       project={project} 
+                       engineer={engineer} 
+                       client={client} 
+                     />
+                   </CardContent>
+                 </Card>
+               )}
 
               <Link to={createPageUrl("Projects")}>
                 <Button variant="outline" className="w-full gap-2">
