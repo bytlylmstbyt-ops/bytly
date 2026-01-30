@@ -96,6 +96,7 @@ import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
 import ContractTemplates from './pages/ContractTemplates';
 import ContractAmendments from './pages/ContractAmendments';
+import NotificationSettings from './pages/NotificationSettings';
 import __Layout from './Layout.jsx';
 
 
@@ -149,6 +150,7 @@ export const PAGES = {
     "Wallet": Wallet,
     "ContractTemplates": ContractTemplates,
     "ContractAmendments": ContractAmendments,
+    "NotificationSettings": NotificationSettings,
 }
 
 export const pagesConfig = {
