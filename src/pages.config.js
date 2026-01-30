@@ -99,6 +99,7 @@ import ContractAmendments from './pages/ContractAmendments';
 import NotificationSettings from './pages/NotificationSettings';
 import InvoiceManager from './pages/InvoiceManager';
 import LegalConsultantProfile from './pages/LegalConsultantProfile';
+import ProjectKanban from './pages/ProjectKanban';
 import __Layout from './Layout.jsx';
 
 
@@ -155,6 +156,7 @@ export const PAGES = {
     "NotificationSettings": NotificationSettings,
     "InvoiceManager": InvoiceManager,
     "LegalConsultantProfile": LegalConsultantProfile,
+    "ProjectKanban": ProjectKanban,
 }
 
 export const pagesConfig = {
