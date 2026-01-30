@@ -87,7 +87,8 @@ export default function Layout({ children, currentPageName }) {
               <img 
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69741d7bf3195aeab86a1582/c7b55d4ed_.jpg" 
                 alt="Bytly Logo" 
-                className="w-[180px] h-auto object-contain"
+                className="w-[160px] h-auto object-contain"
+                style={{ mixBlendMode: 'multiply' }}
               />
             </Link>
 
@@ -254,7 +255,8 @@ export default function Layout({ children, currentPageName }) {
                 <img 
                   src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69741d7bf3195aeab86a1582/c7b55d4ed_.jpg" 
                   alt="Bytly Logo" 
-                  className="h-16 w-auto object-contain mb-2 brightness-0 invert"
+                  className="h-20 w-auto object-contain mb-2"
+                  style={{ filter: 'brightness(0) invert(1)', mixBlendMode: 'screen' }}
                 />
               </div>
               <p className="text-slate-300 text-sm leading-relaxed max-w-md">
