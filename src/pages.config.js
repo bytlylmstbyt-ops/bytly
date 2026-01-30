@@ -90,6 +90,8 @@ import AdminEngineers from './pages/AdminEngineers';
 import MyFavorites from './pages/MyFavorites';
 import PaymentSuccess from './pages/PaymentSuccess';
 import ProjectMilestones from './pages/ProjectMilestones';
+import EngineerProjects from './pages/EngineerProjects';
+import ProjectWorkspace from './pages/ProjectWorkspace';
 import __Layout from './Layout.jsx';
 
 
@@ -137,6 +139,8 @@ export const PAGES = {
     "MyFavorites": MyFavorites,
     "PaymentSuccess": PaymentSuccess,
     "ProjectMilestones": ProjectMilestones,
+    "EngineerProjects": EngineerProjects,
+    "ProjectWorkspace": ProjectWorkspace,
 }
 
 export const pagesConfig = {
