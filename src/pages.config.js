@@ -102,6 +102,7 @@ import LegalConsultantProfile from './pages/LegalConsultantProfile';
 import ProjectKanban from './pages/ProjectKanban';
 import WorkflowBuilder from './pages/WorkflowBuilder';
 import ProjectChat from './pages/ProjectChat';
+import ClientOnboarding from './pages/ClientOnboarding';
 import __Layout from './Layout.jsx';
 
 
@@ -161,6 +162,7 @@ export const PAGES = {
     "ProjectKanban": ProjectKanban,
     "WorkflowBuilder": WorkflowBuilder,
     "ProjectChat": ProjectChat,
+    "ClientOnboarding": ClientOnboarding,
 }
 
 export const pagesConfig = {
