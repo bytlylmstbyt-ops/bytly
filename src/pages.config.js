@@ -98,6 +98,7 @@ import ContractTemplates from './pages/ContractTemplates';
 import ContractAmendments from './pages/ContractAmendments';
 import NotificationSettings from './pages/NotificationSettings';
 import InvoiceManager from './pages/InvoiceManager';
+import LegalConsultantProfile from './pages/LegalConsultantProfile';
 import __Layout from './Layout.jsx';
 
 
@@ -153,6 +154,7 @@ export const PAGES = {
     "ContractAmendments": ContractAmendments,
     "NotificationSettings": NotificationSettings,
     "InvoiceManager": InvoiceManager,
+    "LegalConsultantProfile": LegalConsultantProfile,
 }
 
 export const pagesConfig = {
