@@ -7,12 +7,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Scale, Loader2 } from "lucide-react";
+import { Scale, Loader2, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import LegalTermsSection from "../components/LegalTermsSection";
 
 export default function RegisterLegalConsultantPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState({
+    confidentiality: false,
+    responsibility: false,
+    intellectual_property: false,
+    all_terms: false
+  });
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
@@ -26,13 +33,26 @@ export default function RegisterLegalConsultantPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!termsAccepted.all_terms) {
+      alert("يجب الموافقة على جميع الشروط والأحكام القانونية لإكمال التسجيل");
+      return;
+    }
+
     setLoading(true);
 
     try {
       await base44.entities.LegalConsultant.create({
         ...formData,
         years_experience: parseInt(formData.years_experience) || 0,
-        status: "pending"
+        status: "pending",
+        terms_and_conditions: {
+          confidentiality_clause: "تم الموافقة",
+          responsibility_clause: "تم الموافقة",
+          intellectual_property_clause: "تم الموافقة",
+          accepted: true,
+          accepted_date: new Date().toISOString()
+        }
       });
 
       alert("تم تقديم طلب التسجيل بنجاح! سيتم مراجعته من قبل الإدارة.");
@@ -167,27 +187,45 @@ export default function RegisterLegalConsultantPage() {
                       placeholder="اكتب نبذة عن خبرتك القانونية..."
                     />
                   </div>
-                </div>
+                  </div>
 
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600"
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin ml-2" />
-                      جاري التسجيل...
-                    </>
-                  ) : (
-                    "تقديم طلب التسجيل"
+                  <LegalTermsSection 
+                  onAcceptanceChange={setTermsAccepted}
+                  isEditMode={false}
+                  />
+
+                  {!termsAccepted.all_terms && (
+                  <motion.div
+                   initial={{ opacity: 0 }}
+                   animate={{ opacity: 1 }}
+                   className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg"
+                  >
+                   <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                   <p className="text-sm text-red-700">
+                     يجب الموافقة على جميع الشروط والأحكام القانونية لإكمال التسجيل
+                   </p>
+                  </motion.div>
                   )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    </div>
-  );
-}
+
+                  <Button
+                  type="submit"
+                  disabled={loading || !termsAccepted.all_terms}
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 disabled:opacity-50"
+                  >
+                  {loading ? (
+                   <>
+                     <Loader2 className="w-5 h-5 animate-spin ml-2" />
+                     جاري التسجيل...
+                   </>
+                  ) : (
+                   "تقديم طلب التسجيل"
+                  )}
+                  </Button>
+                  </form>
+                  </CardContent>
+                  </Card>
+                  </motion.div>
+                  </div>
+                  </div>
+                  );
+                  }
