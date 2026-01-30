@@ -15,35 +15,38 @@ import { Elements, CardElement, useStripe, useElements } from "@stripe/react-str
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "");
 
-function StripePaymentForm({ amount, onSuccess, processing, setProcessing }) {
-  const stripe = useStripe();
-  const elements = useElements();
+function StripePaymentForm({ amount, onSuccess, processing, setProcessing, projectId, proposalId, projectTitle }) {
   const [error, setError] = useState(null);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!stripe || !elements) return;
+  const handleStripeCheckout = async () => {
+    // Check if running in iframe
+    if (window.self !== window.top) {
+      alert("الدفع بالبطاقة يعمل فقط من التطبيق المنشور. الرجاء فتح التطبيق في نافذة جديدة.");
+      return;
+    }
 
     setProcessing(true);
     setError(null);
 
     try {
-      const cardElement = elements.getElement(CardElement);
-      const { error: stripeError, paymentMethod } = await stripe.createPaymentMethod({
-        type: "card",
-        card: cardElement
+      const response = await base44.functions.invoke('createStripeCheckout', {
+        amount,
+        projectId,
+        proposalId,
+        projectTitle
       });
 
-      if (stripeError) {
-        setError(stripeError.message);
+      if (response.data.url) {
+        // Process escrow setup first
+        await onSuccess();
+        // Redirect to Stripe checkout
+        window.location.href = response.data.url;
+      } else {
+        setError("فشل إنشاء جلسة الدفع");
         setProcessing(false);
-        return;
       }
-
-      // Here you would send paymentMethod.id to your backend
-      // For now, we'll simulate success
-      await onSuccess();
     } catch (err) {
+      console.error("Stripe checkout error:", err);
       setError("حدث خطأ في معالجة الدفع");
       setProcessing(false);
     }
@@ -56,46 +59,36 @@ function StripePaymentForm({ amount, onSuccess, processing, setProcessing }) {
     >
       <Card>
         <CardHeader>
-          <CardTitle>معلومات البطاقة</CardTitle>
+          <CardTitle>الدفع ببطاقة الائتمان</CardTitle>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="p-4 border rounded-lg">
-              <CardElement
-                options={{
-                  style: {
-                    base: {
-                      fontSize: "16px",
-                      color: "#1a1a2e",
-                      "::placeholder": { color: "#94a3b8" }
-                    }
-                  }
-                }}
-              />
+        <CardContent className="space-y-4">
+          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              سيتم تحويلك إلى صفحة دفع آمنة لإتمام العملية
+            </p>
+          </div>
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+              {error}
             </div>
-            {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-                {error}
-              </div>
+          )}
+          <Button
+            onClick={handleStripeCheckout}
+            disabled={processing}
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-6 text-lg"
+          >
+            {processing ? (
+              <>
+                <Loader2 className="w-6 h-6 animate-spin ml-2" />
+                جاري المعالجة...
+              </>
+            ) : (
+              <>
+                <CreditCard className="w-6 h-6 ml-2" />
+                الدفع بالبطاقة ({amount.toLocaleString('ar-SA')} ريال)
+              </>
             )}
-            <Button
-              type="submit"
-              disabled={!stripe || processing}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-6 text-lg"
-            >
-              {processing ? (
-                <>
-                  <Loader2 className="w-6 h-6 animate-spin ml-2" />
-                  جاري المعالجة...
-                </>
-              ) : (
-                <>
-                  <CreditCard className="w-6 h-6 ml-2" />
-                  دفع {amount.toLocaleString('ar-SA')} ريال
-                </>
-              )}
-            </Button>
-          </form>
+          </Button>
         </CardContent>
       </Card>
     </motion.div>
@@ -631,14 +624,15 @@ export default function PaymentPage() {
 
         {/* Stripe Payment Form */}
         {paymentMethod === "stripe" ? (
-          <Elements stripe={stripePromise}>
-            <StripePaymentForm
-              amount={fees.totalAmount}
-              onSuccess={handlePayment}
-              processing={processing}
-              setProcessing={setProcessing}
-            />
-          </Elements>
+          <StripePaymentForm
+            amount={fees.totalAmount}
+            onSuccess={handlePayment}
+            processing={processing}
+            setProcessing={setProcessing}
+            projectId={projectId}
+            proposalId={proposalId}
+            projectTitle={project.title}
+          />
         ) : (
           /* Action Buttons */
           <motion.div
