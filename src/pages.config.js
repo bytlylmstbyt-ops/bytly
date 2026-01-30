@@ -100,6 +100,7 @@ import NotificationSettings from './pages/NotificationSettings';
 import InvoiceManager from './pages/InvoiceManager';
 import LegalConsultantProfile from './pages/LegalConsultantProfile';
 import ProjectKanban from './pages/ProjectKanban';
+import WorkflowBuilder from './pages/WorkflowBuilder';
 import __Layout from './Layout.jsx';
 
 
@@ -157,6 +158,7 @@ export const PAGES = {
     "InvoiceManager": InvoiceManager,
     "LegalConsultantProfile": LegalConsultantProfile,
     "ProjectKanban": ProjectKanban,
+    "WorkflowBuilder": WorkflowBuilder,
 }
 
 export const pagesConfig = {
