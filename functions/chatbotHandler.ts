@@ -36,11 +36,23 @@ Deno.serve(async (req) => {
       }
     } else {
       // Use LLM for intelligent response
-      const systemPrompt = `أنت مساعد بيتلي (Bytly Assistant)، مساعد ذكي متخصص في منصة تصميم معماري وداخلي.
-استجب بمهنية وودية للعربية. 
-نوع المستخدم: ${user_type || 'زائر'}
-إذا لم تكن متأكداً من الإجابة، اطلب من المستخدم التواصل مع فريق الدعم الفني.
-كن موجزاً وعملياً في الردود.`;
+      // Check for onboarding keywords
+const onboardingKeywords = ['مشروع جديد', 'بدء مشروع', 'أريد تصميم', 'احتاج مهندس', 'onboarding'];
+const isOnboarding = onboardingKeywords.some(kw => messageLower.includes(kw));
+
+if (isOnboarding && user_type === 'visitor') {
+  const onboardingResponse = {
+    response: `مرحباً! 👋 أرى أنك مهتم ببدء مشروع جديد. لدينا معالج ذكي يساعدك في:
+✓ تحديد احتياجات مشروعك
+✓ اختيار الفئة المناسبة
+✓ الحصول على اقتراحات مهندسين متخصصين
+
+هل تريد البدء الآن؟`,
+    shouldRedirect: true,
+    redirectPage: 'ClientOnboarding'
+  };
+  return Response.json(onboardingResponse);
+}
 
       try {
         const llmResponse = await base44.integrations.Core.InvokeLLM({
@@ -103,7 +115,8 @@ Deno.serve(async (req) => {
       success: true,
       response: botResponse,
       shouldEscalate,
-      suggestedEngineers
+      suggestedEngineers,
+      shouldRedirect: false
     });
   } catch (error) {
     console.error('Chatbot handler error:', error);
