@@ -5,9 +5,102 @@ import { createPageUrl } from "../utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, ShieldCheck, CreditCard, AlertCircle, CheckCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, ShieldCheck, CreditCard, AlertCircle, CheckCircle, Plus, Trash2, ListOrdered } from "lucide-react";
 import { motion } from "framer-motion";
 import { sendNotification } from "@/components/notifications/NotificationHelper";
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "");
+
+function StripePaymentForm({ amount, onSuccess, processing, setProcessing }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [error, setError] = useState(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    setProcessing(true);
+    setError(null);
+
+    try {
+      const cardElement = elements.getElement(CardElement);
+      const { error: stripeError, paymentMethod } = await stripe.createPaymentMethod({
+        type: "card",
+        card: cardElement
+      });
+
+      if (stripeError) {
+        setError(stripeError.message);
+        setProcessing(false);
+        return;
+      }
+
+      // Here you would send paymentMethod.id to your backend
+      // For now, we'll simulate success
+      await onSuccess();
+    } catch (err) {
+      setError("حدث خطأ في معالجة الدفع");
+      setProcessing(false);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+    >
+      <Card>
+        <CardHeader>
+          <CardTitle>معلومات البطاقة</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="p-4 border rounded-lg">
+              <CardElement
+                options={{
+                  style: {
+                    base: {
+                      fontSize: "16px",
+                      color: "#1a1a2e",
+                      "::placeholder": { color: "#94a3b8" }
+                    }
+                  }
+                }}
+              />
+            </div>
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                {error}
+              </div>
+            )}
+            <Button
+              type="submit"
+              disabled={!stripe || processing}
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-6 text-lg"
+            >
+              {processing ? (
+                <>
+                  <Loader2 className="w-6 h-6 animate-spin ml-2" />
+                  جاري المعالجة...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="w-6 h-6 ml-2" />
+                  دفع {amount.toLocaleString('ar-SA')} ريال
+                </>
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
 
 export default function PaymentPage() {
   const navigate = useNavigate();
@@ -21,6 +114,13 @@ export default function PaymentPage() {
   const [proposal, setProposal] = useState(null);
   const [engineer, setEngineer] = useState(null);
   const [client, setClient] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("wallet"); // wallet, stripe
+  const [useMilestones, setUseMilestones] = useState(false);
+  const [milestones, setMilestones] = useState([
+    { title: "المرحلة الأولى - التصميم الأولي", percentage: 30, description: "" },
+    { title: "المرحلة الثانية - التصميم النهائي", percentage: 40, description: "" },
+    { title: "المرحلة الثالثة - التسليم", percentage: 30, description: "" }
+  ]);
 
   useEffect(() => {
     loadData();
@@ -63,11 +163,35 @@ export default function PaymentPage() {
     };
   };
 
+  const addMilestone = () => {
+    setMilestones([...milestones, { title: "", percentage: 0, description: "" }]);
+  };
+
+  const removeMilestone = (index) => {
+    setMilestones(milestones.filter((_, i) => i !== index));
+  };
+
+  const updateMilestone = (index, field, value) => {
+    const updated = [...milestones];
+    updated[index][field] = value;
+    setMilestones(updated);
+  };
+
   const handlePayment = async () => {
     setProcessing(true);
 
     try {
       const fees = calculateFees();
+
+      // Validate milestones if enabled
+      if (useMilestones) {
+        const totalPercentage = milestones.reduce((sum, m) => sum + Number(m.percentage), 0);
+        if (totalPercentage !== 100) {
+          alert("يجب أن يكون مجموع نسب المراحل 100%");
+          setProcessing(false);
+          return;
+        }
+      }
 
       // 1. Update proposal status
       await base44.entities.Proposal.update(proposalId, { status: "accepted" });
@@ -85,22 +209,54 @@ export default function PaymentPage() {
         payment_status: "escrowed"
       });
 
-      // 3. Deduct from client wallet
-      await base44.entities.Client.update(client.id, {
-        wallet_balance: (client.wallet_balance || 0) - fees.totalAmount
-      });
+      // 3. Handle payment based on method
+      if (paymentMethod === "wallet") {
+        // Deduct from client wallet
+        await base44.entities.Client.update(client.id, {
+          wallet_balance: (client.wallet_balance || 0) - fees.totalAmount
+        });
 
-      // 4. Create escrow transaction
-      await base44.entities.Transaction.create({
-        user_id: client.email,
-        type: "escrow_hold",
-        amount: fees.totalAmount,
-        status: "completed",
-        description: `حجز مبلغ مشروع: ${project.title}`,
-        project_id: projectId,
-        balance_before: client.wallet_balance || 0,
-        balance_after: (client.wallet_balance || 0) - fees.totalAmount
-      });
+        // Create escrow transaction
+        await base44.entities.Transaction.create({
+          user_id: client.email,
+          type: "escrow_hold",
+          amount: fees.totalAmount,
+          status: "completed",
+          description: `حجز مبلغ مشروع: ${project.title}`,
+          project_id: projectId,
+          payment_method: "wallet",
+          balance_before: client.wallet_balance || 0,
+          balance_after: (client.wallet_balance || 0) - fees.totalAmount
+        });
+      } else if (paymentMethod === "stripe") {
+        // Stripe payment will be handled in StripePaymentForm
+        // Create pending transaction
+        await base44.entities.Transaction.create({
+          user_id: client.email,
+          type: "escrow_hold",
+          amount: fees.totalAmount,
+          status: "pending",
+          description: `حجز مبلغ مشروع: ${project.title}`,
+          project_id: projectId,
+          payment_method: "stripe"
+        });
+      }
+
+      // 4. Create milestones if enabled
+      if (useMilestones) {
+        for (let i = 0; i < milestones.length; i++) {
+          const milestone = milestones[i];
+          await base44.entities.ProjectMilestone.create({
+            project_id: projectId,
+            title: milestone.title,
+            description: milestone.description,
+            amount: (fees.totalAmount * milestone.percentage) / 100,
+            percentage: milestone.percentage,
+            order: i + 1,
+            status: "pending"
+          });
+        }
+      }
 
       // 5. Assign random technical consultant
       const consultants = await base44.entities.Consultant.filter({ status: "approved" });
@@ -336,38 +492,187 @@ export default function PaymentPage() {
           </Card>
         </motion.div>
 
-        {/* Action Buttons */}
+        {/* Payment Method Selection */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex gap-4"
         >
-          <Button
-            onClick={handlePayment}
-            disabled={processing}
-            className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-6 text-lg"
-          >
-            {processing ? (
-              <>
-                <Loader2 className="w-6 h-6 animate-spin ml-2" />
-                جاري المعالجة...
-              </>
-            ) : (
-              <>
-                <CreditCard className="w-6 h-6 ml-2" />
-                تأكيد الدفع ({fees.totalAmount.toLocaleString('ar-SA')} ريال)
-              </>
-            )}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate(-1)}
-            disabled={processing}
-            className="px-8 py-6"
-          >
-            إلغاء
-          </Button>
+          <Card>
+            <CardHeader>
+              <CardTitle>طريقة الدفع</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div
+                  onClick={() => setPaymentMethod("wallet")}
+                  className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                    paymentMethod === "wallet" 
+                      ? "border-green-500 bg-green-50" 
+                      : "border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      paymentMethod === "wallet" ? "border-green-500" : "border-slate-300"
+                    }`}>
+                      {paymentMethod === "wallet" && (
+                        <div className="w-3 h-3 rounded-full bg-green-500" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold">المحفظة</p>
+                      <p className="text-sm text-slate-600">
+                        الرصيد: {(client?.wallet_balance || 0).toLocaleString('ar-SA')} ريال
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  onClick={() => setPaymentMethod("stripe")}
+                  className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                    paymentMethod === "stripe" 
+                      ? "border-blue-500 bg-blue-50" 
+                      : "border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      paymentMethod === "stripe" ? "border-blue-500" : "border-slate-300"
+                    }`}>
+                      {paymentMethod === "stripe" && (
+                        <div className="w-3 h-3 rounded-full bg-blue-500" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold">بطاقة ائتمان</p>
+                      <p className="text-sm text-slate-600">Visa, Mastercard, mada</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
+
+        {/* Milestones Option */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ListOrdered className="w-5 h-5" />
+                تقسيم المشروع إلى مراحل
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={useMilestones}
+                  onChange={(e) => setUseMilestones(e.target.checked)}
+                  className="w-5 h-5 rounded border-slate-300"
+                />
+                <label className="text-sm text-slate-600">
+                  تقسيم الدفعات على مراحل (يتم تحرير كل دفعة بعد موافقتك على المرحلة)
+                </label>
+              </div>
+
+              {useMilestones && (
+                <div className="space-y-3 mt-4">
+                  {milestones.map((milestone, index) => (
+                    <div key={index} className="p-4 border rounded-lg space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 space-y-3">
+                          <Input
+                            placeholder="عنوان المرحلة"
+                            value={milestone.title}
+                            onChange={(e) => updateMilestone(index, "title", e.target.value)}
+                          />
+                          <Input
+                            type="number"
+                            placeholder="النسبة %"
+                            value={milestone.percentage}
+                            onChange={(e) => updateMilestone(index, "percentage", e.target.value)}
+                            min="0"
+                            max="100"
+                          />
+                        </div>
+                        {milestones.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeMilestone(index)}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  <Button
+                    variant="outline"
+                    onClick={addMilestone}
+                    className="w-full"
+                  >
+                    <Plus className="w-4 h-4 ml-2" />
+                    إضافة مرحلة
+                  </Button>
+                  <p className="text-sm text-slate-500 text-center">
+                    المجموع: {milestones.reduce((sum, m) => sum + Number(m.percentage), 0)}%
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Stripe Payment Form */}
+        {paymentMethod === "stripe" ? (
+          <Elements stripe={stripePromise}>
+            <StripePaymentForm
+              amount={fees.totalAmount}
+              onSuccess={handlePayment}
+              processing={processing}
+              setProcessing={setProcessing}
+            />
+          </Elements>
+        ) : (
+          /* Action Buttons */
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex gap-4"
+          >
+            <Button
+              onClick={handlePayment}
+              disabled={processing || (client?.wallet_balance || 0) < fees.totalAmount}
+              className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-6 text-lg"
+            >
+              {processing ? (
+                <>
+                  <Loader2 className="w-6 h-6 animate-spin ml-2" />
+                  جاري المعالجة...
+                </>
+              ) : (
+                <>
+                  <CreditCard className="w-6 h-6 ml-2" />
+                  تأكيد الدفع ({fees.totalAmount.toLocaleString('ar-SA')} ريال)
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate(-1)}
+              disabled={processing}
+              className="px-8 py-6"
+            >
+              إلغاء
+            </Button>
+          </motion.div>
+        )}
       </div>
     </div>
   );
