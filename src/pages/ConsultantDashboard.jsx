@@ -486,12 +486,22 @@ export default function ConsultantDashboard() {
                                 </span>
                               </div>
                             </div>
-                            <Link to={createPageUrl("ProjectDetails") + `?id=${project.id}`}>
-                              <Button variant="outline">
-                                <Eye className="w-4 h-4 ml-2" />
-                                عرض التفاصيل
-                              </Button>
-                            </Link>
+                            <div className="flex gap-2">
+                              <Link to={createPageUrl("ProjectDetails") + `?id=${project.id}`}>
+                                <Button variant="outline">
+                                  <Eye className="w-4 h-4 ml-2" />
+                                  عرض التفاصيل
+                                </Button>
+                              </Link>
+                              {project.status === "awaiting_technical_review" && (
+                                <Link to={createPageUrl("TechnicalReviewPage") + `?projectId=${project.id}`}>
+                                  <Button className="bg-gradient-to-r from-green-600 to-emerald-600">
+                                    <FileCheck className="w-4 h-4 ml-2" />
+                                    مراجعة فنية
+                                  </Button>
+                                </Link>
+                              )}
+                            </div>
                           </div>
                         </div>
                       ))}
