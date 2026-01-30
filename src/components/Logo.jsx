@@ -22,7 +22,7 @@ export default function Logo({ className = "", size = "default", isDark = false 
           className={`${currentSize.iconBox} flex items-center justify-center rounded-lg border-2`}
           style={{ 
             borderColor: borderColor,
-            backgroundColor: brownColor
+            backgroundColor: boxBgColor
           }}
         >
           <Home 
