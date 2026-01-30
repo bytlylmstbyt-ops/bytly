@@ -96,6 +96,23 @@ export default function ContractPage() {
 
     if (bothSigned) {
       updates.status = "active";
+      
+      // Send notification to both parties
+      await base44.entities.Notification.create({
+        recipient_email: client.email,
+        title: "تم توقيع العقد",
+        message: `تم توقيع عقد المشروع "${project?.title}" من قبل الطرفين وأصبح ساري المفعول`,
+        type: "project_update",
+        related_project_id: contract.project_id
+      });
+
+      await base44.entities.Notification.create({
+        recipient_email: engineer.email,
+        title: "تم توقيع العقد",
+        message: `تم توقيع عقد المشروع "${project?.title}" من قبل الطرفين وأصبح ساري المفعول`,
+        type: "project_update",
+        related_project_id: contract.project_id
+      });
     } else {
       updates.status = "pending_signature";
     }
@@ -134,10 +151,12 @@ export default function ContractPage() {
               <Printer className="w-4 h-4 ml-2" />
               طباعة
             </Button>
-            <Button variant="outline">
-              <Download className="w-4 h-4 ml-2" />
-              تحميل PDF
-            </Button>
+            <Link to={createPageUrl("ContractArchive")}>
+              <Button variant="outline">
+                <FileText className="w-4 h-4 ml-2" />
+                أرشيف العقود
+              </Button>
+            </Link>
           </div>
         </div>
 

@@ -170,6 +170,12 @@ export default function Dashboard() {
                   </Button>
                 </Link>
               )}
+              <Link to={createPageUrl("ContractArchive")}>
+                <Button variant="outline">
+                  <FileText className="w-5 h-5 ml-2" />
+                  العقود
+                </Button>
+              </Link>
               <Link to={createPageUrl("Settings")}>
                 <Button variant="outline">
                   <Settings className="w-5 h-5" />

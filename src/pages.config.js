@@ -92,6 +92,7 @@ import PaymentSuccess from './pages/PaymentSuccess';
 import ProjectMilestones from './pages/ProjectMilestones';
 import EngineerProjects from './pages/EngineerProjects';
 import ProjectWorkspace from './pages/ProjectWorkspace';
+import ContractArchive from './pages/ContractArchive';
 import __Layout from './Layout.jsx';
 
 
@@ -141,6 +142,7 @@ export const PAGES = {
     "ProjectMilestones": ProjectMilestones,
     "EngineerProjects": EngineerProjects,
     "ProjectWorkspace": ProjectWorkspace,
+    "ContractArchive": ContractArchive,
 }
 
 export const pagesConfig = {
