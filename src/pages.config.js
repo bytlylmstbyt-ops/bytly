@@ -47,6 +47,7 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import AddEngineer from './pages/AddEngineer';
 import AddPortfolio from './pages/AddPortfolio';
 import AdminWallet from './pages/AdminWallet';
 import CertificationPage from './pages/CertificationPage';
@@ -80,11 +81,11 @@ import Subscription from './pages/Subscription';
 import Support from './pages/Support';
 import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
-import AddEngineer from './pages/AddEngineer';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AddEngineer": AddEngineer,
     "AddPortfolio": AddPortfolio,
     "AdminWallet": AdminWallet,
     "CertificationPage": CertificationPage,
@@ -118,7 +119,6 @@ export const PAGES = {
     "Support": Support,
     "Terms": Terms,
     "Wallet": Wallet,
-    "AddEngineer": AddEngineer,
 }
 
 export const pagesConfig = {
