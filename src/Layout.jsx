@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "./utils";
 import { base44 } from "@/api/base44Client";
+import ChatbotWidget from "@/components/chatbot/ChatbotWidget";
 import { 
   Search, MessageSquare, User, Menu, X, 
   LogOut, Briefcase, Settings, Wallet, Bell, 
@@ -240,6 +241,9 @@ export default function Layout({ children, currentPageName }) {
       <main className="pt-16 md:pt-20 min-h-screen">
         {children}
       </main>
+
+      {/* Chatbot Widget */}
+      <ChatbotWidget />
 
       {/* Footer */}
       <footer className="bg-[#4A3F35] text-white">
