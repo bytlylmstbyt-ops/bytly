@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Settings, BarChart3 } from "lucide-react";
+import { Plus, Settings, BarChart3, Workflow } from "lucide-react";
 import KanbanColumn from "@/components/kanban/KanbanColumn";
 import TaskDetailModal from "@/components/kanban/TaskDetailModal";
 
@@ -154,6 +154,12 @@ export default function ProjectKanban() {
               <p className="text-slate-600">{project.description}</p>
             </div>
             <div className="flex gap-2">
+              <Link to={createPageUrl("WorkflowBuilder") + `?id=${projectId}`}>
+                <Button variant="outline" className="gap-2">
+                  <Workflow className="w-4 h-4" />
+                  سير العمل
+                </Button>
+              </Link>
               <Button variant="outline" className="gap-2">
                 <BarChart3 className="w-4 h-4" />
                 التقارير
