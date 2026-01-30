@@ -106,6 +106,8 @@ export default function Notifications() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -113,8 +115,6 @@ export default function Notifications() {
       </div>
     );
   }
-
-  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8">
