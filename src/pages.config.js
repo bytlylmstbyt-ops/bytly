@@ -103,6 +103,7 @@ import ProjectKanban from './pages/ProjectKanban';
 import WorkflowBuilder from './pages/WorkflowBuilder';
 import ProjectChat from './pages/ProjectChat';
 import ClientOnboarding from './pages/ClientOnboarding';
+import CRMDashboard from './pages/CRMDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -163,6 +164,7 @@ export const PAGES = {
     "WorkflowBuilder": WorkflowBuilder,
     "ProjectChat": ProjectChat,
     "ClientOnboarding": ClientOnboarding,
+    "CRMDashboard": CRMDashboard,
 }
 
 export const pagesConfig = {
