@@ -49,6 +49,10 @@
  */
 import AddEngineer from './pages/AddEngineer';
 import AddPortfolio from './pages/AddPortfolio';
+import AdminCategories from './pages/AdminCategories';
+import AdminClients from './pages/AdminClients';
+import AdminEngineers from './pages/AdminEngineers';
+import AdminReports from './pages/AdminReports';
 import AdminWallet from './pages/AdminWallet';
 import AllCertifications from './pages/AllCertifications';
 import AllWithdrawalRequests from './pages/AllWithdrawalRequests';
@@ -57,20 +61,26 @@ import Complaints from './pages/Complaints';
 import ConsultantApproval from './pages/ConsultantApproval';
 import ConsultantDashboard from './pages/ConsultantDashboard';
 import Contract from './pages/Contract';
+import ContractArchive from './pages/ContractArchive';
 import Copyright from './pages/Copyright';
 import CreateProject from './pages/CreateProject';
 import Dashboard from './pages/Dashboard';
 import EngineerProfile from './pages/EngineerProfile';
+import EngineerProjects from './pages/EngineerProjects';
 import Engineers from './pages/Engineers';
 import Gallery from './pages/Gallery';
 import Home from './pages/Home';
 import Messages from './pages/Messages';
+import MyFavorites from './pages/MyFavorites';
 import MyPurchasedProjects from './pages/MyPurchasedProjects';
 import Notifications from './pages/Notifications';
 import Packages from './pages/Packages';
 import Payment from './pages/Payment';
+import PaymentSuccess from './pages/PaymentSuccess';
 import Privacy from './pages/Privacy';
 import ProjectDetails from './pages/ProjectDetails';
+import ProjectMilestones from './pages/ProjectMilestones';
+import ProjectWorkspace from './pages/ProjectWorkspace';
 import Projects from './pages/Projects';
 import RegisterChoice from './pages/RegisterChoice';
 import RegisterClient from './pages/RegisterClient';
@@ -81,25 +91,21 @@ import RegistrationSuccess from './pages/RegistrationSuccess';
 import Settings from './pages/Settings';
 import Subscription from './pages/Subscription';
 import Support from './pages/Support';
+import TechnicalReviewPage from './pages/TechnicalReviewPage';
 import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
-import AdminReports from './pages/AdminReports';
-import AdminCategories from './pages/AdminCategories';
-import AdminClients from './pages/AdminClients';
-import AdminEngineers from './pages/AdminEngineers';
-import MyFavorites from './pages/MyFavorites';
-import PaymentSuccess from './pages/PaymentSuccess';
-import ProjectMilestones from './pages/ProjectMilestones';
-import EngineerProjects from './pages/EngineerProjects';
-import ProjectWorkspace from './pages/ProjectWorkspace';
-import ContractArchive from './pages/ContractArchive';
-import TechnicalReviewPage from './pages/TechnicalReviewPage';
+import ContractTemplates from './pages/ContractTemplates';
+import ContractAmendments from './pages/ContractAmendments';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AddEngineer": AddEngineer,
     "AddPortfolio": AddPortfolio,
+    "AdminCategories": AdminCategories,
+    "AdminClients": AdminClients,
+    "AdminEngineers": AdminEngineers,
+    "AdminReports": AdminReports,
     "AdminWallet": AdminWallet,
     "AllCertifications": AllCertifications,
     "AllWithdrawalRequests": AllWithdrawalRequests,
@@ -108,20 +114,26 @@ export const PAGES = {
     "ConsultantApproval": ConsultantApproval,
     "ConsultantDashboard": ConsultantDashboard,
     "Contract": Contract,
+    "ContractArchive": ContractArchive,
     "Copyright": Copyright,
     "CreateProject": CreateProject,
     "Dashboard": Dashboard,
     "EngineerProfile": EngineerProfile,
+    "EngineerProjects": EngineerProjects,
     "Engineers": Engineers,
     "Gallery": Gallery,
     "Home": Home,
     "Messages": Messages,
+    "MyFavorites": MyFavorites,
     "MyPurchasedProjects": MyPurchasedProjects,
     "Notifications": Notifications,
     "Packages": Packages,
     "Payment": Payment,
+    "PaymentSuccess": PaymentSuccess,
     "Privacy": Privacy,
     "ProjectDetails": ProjectDetails,
+    "ProjectMilestones": ProjectMilestones,
+    "ProjectWorkspace": ProjectWorkspace,
     "Projects": Projects,
     "RegisterChoice": RegisterChoice,
     "RegisterClient": RegisterClient,
@@ -132,19 +144,11 @@ export const PAGES = {
     "Settings": Settings,
     "Subscription": Subscription,
     "Support": Support,
+    "TechnicalReviewPage": TechnicalReviewPage,
     "Terms": Terms,
     "Wallet": Wallet,
-    "AdminReports": AdminReports,
-    "AdminCategories": AdminCategories,
-    "AdminClients": AdminClients,
-    "AdminEngineers": AdminEngineers,
-    "MyFavorites": MyFavorites,
-    "PaymentSuccess": PaymentSuccess,
-    "ProjectMilestones": ProjectMilestones,
-    "EngineerProjects": EngineerProjects,
-    "ProjectWorkspace": ProjectWorkspace,
-    "ContractArchive": ContractArchive,
-    "TechnicalReviewPage": TechnicalReviewPage,
+    "ContractTemplates": ContractTemplates,
+    "ContractAmendments": ContractAmendments,
 }
 
 export const pagesConfig = {

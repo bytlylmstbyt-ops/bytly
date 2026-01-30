@@ -28,14 +28,40 @@ export default function ContractGenerator({ project, engineer, client }) {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [templates, setTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [contractData, setContractData] = useState({
     contract_type: "service_agreement",
     total_amount: project?.escrow_amount || 0,
     start_date: new Date().toISOString().split("T")[0],
     delivery_date: project?.deadline || "",
     payment_terms: "30% دفعة مقدمة، 40% عند التصاميم الأولية، 30% عند التسليم النهائي",
-    additional_terms: ""
+    additional_terms: "",
+    custom_clauses: []
   });
+
+  useEffect(() => {
+    loadTemplates();
+  }, []);
+
+  const loadTemplates = async () => {
+    const data = await base44.entities.ContractTemplate.filter({ is_active: true });
+    setTemplates(data);
+  };
+
+  const handleTemplateSelect = (templateId) => {
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      setSelectedTemplate(template);
+      setContractData({
+        ...contractData,
+        contract_type: template.contract_type,
+        payment_terms: template.default_payment_terms || contractData.payment_terms,
+        additional_terms: template.default_terms || "",
+        custom_clauses: template.custom_clauses || []
+      });
+    }
+  };
 
   const handleInputChange = (field, value) => {
     setContractData(prev => ({ ...prev, [field]: value }));
@@ -77,6 +103,30 @@ export default function ContractGenerator({ project, engineer, client }) {
           <DialogTitle>إنشاء عقد جديد</DialogTitle>
         </DialogHeader>
         <div className="space-y-6 mt-4">
+          {/* Template Selection */}
+          {templates.length > 0 && (
+            <div className="space-y-2">
+              <Label>استخدام قالب جاهز (اختياري)</Label>
+              <Select onValueChange={handleTemplateSelect}>
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر قالب..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {templates.map(template => (
+                    <SelectItem key={template.id} value={template.id}>
+                      {template.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedTemplate && (
+                <p className="text-sm text-slate-600">
+                  {selectedTemplate.description}
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>نوع العقد</Label>
             <Select

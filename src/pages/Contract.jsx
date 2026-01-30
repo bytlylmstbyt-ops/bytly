@@ -157,6 +157,14 @@ export default function ContractPage() {
                 أرشيف العقود
               </Button>
             </Link>
+            {(contract?.status === "active" || contract?.status === "signed") && (
+              <Link to={createPageUrl("ContractAmendments") + `?id=${contractId}`}>
+                <Button variant="outline" className="border-blue-500 text-blue-600">
+                  <FileText className="w-4 h-4 ml-2" />
+                  التعديلات ({contract?.contract_version || 1})
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 

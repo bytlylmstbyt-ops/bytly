@@ -176,6 +176,14 @@ export default function Dashboard() {
                   العقود
                 </Button>
               </Link>
+              {(userType === "client" || isAdmin) && (
+                <Link to={createPageUrl("ContractTemplates")}>
+                  <Button variant="outline">
+                    <FileText className="w-5 h-5 ml-2" />
+                    القوالب
+                  </Button>
+                </Link>
+              )}
               <Link to={createPageUrl("Settings")}>
                 <Button variant="outline">
                   <Settings className="w-5 h-5" />
