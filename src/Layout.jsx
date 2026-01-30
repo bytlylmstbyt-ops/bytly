@@ -87,7 +87,7 @@ export default function Layout({ children, currentPageName }) {
               <img 
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69741d7bf3195aeab86a1582/c7b55d4ed_.jpg" 
                 alt="Bytly Logo" 
-                className="h-10 md:h-14 w-auto object-contain"
+                className="w-[180px] h-auto object-contain"
               />
             </Link>
 
