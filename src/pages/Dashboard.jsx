@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { 
   Briefcase, Wallet, Star, MessageSquare, Eye, 
   TrendingUp, Clock, CheckCircle, Plus, ArrowLeft,
-  Upload, Settings, Grid3X3, FileText, DollarSign
+  Upload, Settings, Grid3X3, FileText, DollarSign, Award
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,9 @@ export default function Dashboard() {
   const [stats, setStats] = useState({});
   const [recentProjects, setRecentProjects] = useState([]);
   const [recentProposals, setRecentProposals] = useState([]);
+  const [approvedProjects, setApprovedProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -32,6 +34,16 @@ export default function Dashboard() {
     setIsLoading(true);
     const currentUser = await base44.auth.me();
     setUser(currentUser);
+    
+    // Check if user is Admin
+    if (currentUser.role === 'Admin') {
+      setIsAdmin(true);
+      // Load approved projects for admin
+      const approved = await base44.entities.Project.filter({ 
+        status: "technical_approved" 
+      });
+      setApprovedProjects(approved);
+    }
 
     // Check if user is engineer or client
     const [engineerData, clientData] = await Promise.all([
@@ -403,6 +415,65 @@ export default function Dashboard() {
                     </Link>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Admin Section - Approved Projects */}
+        {isAdmin && approvedProjects.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <Card className="border-0 shadow-lg border-t-4 border-t-[#d4a574]">
+              <CardHeader className="bg-gradient-to-r from-amber-50 to-green-50">
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="w-6 h-6 text-[#d4a574]" />
+                  المشاريع المعتمدة - لوحة الإدارة
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  {approvedProjects.slice(0, 5).map(project => (
+                    <Link 
+                      key={project.id} 
+                      to={createPageUrl("CertificationPage") + `?id=${project.id}`}
+                      className="block"
+                    >
+                      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl hover:shadow-md transition-shadow border border-green-200">
+                        <div className="flex-1">
+                          <p className="font-bold text-[#1a1a2e]">{project.title}</p>
+                          <p className="text-sm text-slate-600 mt-1">
+                            العميل: {project.client_id?.slice(0, 8)}... | المبلغ: {project.escrow_amount?.toLocaleString()} ر.س
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Badge className="bg-green-100 text-green-700">
+                            معتمد فنياً
+                          </Badge>
+                          <Button 
+                            size="sm" 
+                            className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
+                          >
+                            <Award className="w-4 h-4 ml-2" />
+                            عرض الشهادة
+                          </Button>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+                {approvedProjects.length > 5 && (
+                  <div className="text-center mt-4">
+                    <Link to={createPageUrl("Projects") + "?status=technical_approved"}>
+                      <Button variant="outline" className="text-[#d4a574]">
+                        عرض جميع المشاريع المعتمدة ({approvedProjects.length})
+                      </Button>
+                    </Link>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
