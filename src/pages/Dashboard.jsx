@@ -487,6 +487,48 @@ export default function Dashboard() {
                     </Card>
                   </Link>
                 </div>
+
+                {/* Management Section */}
+                <div className="mt-8">
+                  <h2 className="text-xl font-bold text-[#1a1a2e] mb-4">إدارة البيانات</h2>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    <Link to={createPageUrl("AdminCategories")}>
+                      <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-slate-200 hover:border-slate-400">
+                        <CardContent className="p-6 text-center">
+                          <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                            <Settings className="w-8 h-8 text-slate-600" />
+                          </div>
+                          <h3 className="font-bold text-lg mb-2">إدارة التصنيفات</h3>
+                          <p className="text-sm text-slate-600">تخصيص أنواع المشاريع</p>
+                        </CardContent>
+                      </Card>
+                    </Link>
+
+                    <Link to={createPageUrl("AdminClients")}>
+                      <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-slate-200 hover:border-slate-400">
+                        <CardContent className="p-6 text-center">
+                          <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                            <Users className="w-8 h-8 text-slate-600" />
+                          </div>
+                          <h3 className="font-bold text-lg mb-2">إدارة العملاء</h3>
+                          <p className="text-sm text-slate-600">عرض وتعديل حسابات العملاء</p>
+                        </CardContent>
+                      </Card>
+                    </Link>
+
+                    <Link to={createPageUrl("AdminEngineers")}>
+                      <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-slate-200 hover:border-slate-400">
+                        <CardContent className="p-6 text-center">
+                          <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                            <Award className="w-8 h-8 text-slate-600" />
+                          </div>
+                          <h3 className="font-bold text-lg mb-2">إدارة المهندسين</h3>
+                          <p className="text-sm text-slate-600">قبول وتعديل حسابات المهندسين</p>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </motion.div>

@@ -84,6 +84,9 @@ import Support from './pages/Support';
 import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
 import AdminReports from './pages/AdminReports';
+import AdminCategories from './pages/AdminCategories';
+import AdminClients from './pages/AdminClients';
+import AdminEngineers from './pages/AdminEngineers';
 import __Layout from './Layout.jsx';
 
 
@@ -125,6 +128,9 @@ export const PAGES = {
     "Terms": Terms,
     "Wallet": Wallet,
     "AdminReports": AdminReports,
+    "AdminCategories": AdminCategories,
+    "AdminClients": AdminClients,
+    "AdminEngineers": AdminEngineers,
 }
 
 export const pagesConfig = {
