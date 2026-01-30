@@ -3,7 +3,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { event } = await req.json();
+    const payload = await req.json();
+    const event = payload.event;
 
     if (event.type !== 'update') {
       return Response.json({ message: 'Skipped: not an update event' });

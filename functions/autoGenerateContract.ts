@@ -3,7 +3,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { proposalId } = await req.json();
+    const payload = await req.json();
+    
+    // Handle automation payload
+    const proposalId = payload.proposalId || payload.event?.entity_id;
 
     if (!proposalId) {
       return Response.json({ error: 'Proposal ID is required' }, { status: 400 });
@@ -11,8 +14,13 @@ Deno.serve(async (req) => {
 
     // Get proposal details
     const [proposal] = await base44.asServiceRole.entities.Proposal.filter({ id: proposalId });
-    if (!proposal || proposal.status !== 'accepted') {
-      return Response.json({ error: 'Proposal not found or not accepted' }, { status: 404 });
+    if (!proposal) {
+      return Response.json({ error: 'Proposal not found' }, { status: 404 });
+    }
+
+    // Only generate contract if proposal was just accepted
+    if (proposal.status !== 'accepted') {
+      return Response.json({ message: 'Proposal not accepted yet, skipping' });
     }
 
     // Get project details
