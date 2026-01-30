@@ -176,6 +176,12 @@ export default function Dashboard() {
                   العقود
                 </Button>
               </Link>
+              <Link to={createPageUrl("InvoiceManager")}>
+                <Button variant="outline">
+                  <DollarSign className="w-5 h-5 ml-2" />
+                  الفواتير
+                </Button>
+              </Link>
               {(userType === "client" || isAdmin) && (
                 <Link to={createPageUrl("ContractTemplates")}>
                   <Button variant="outline">
