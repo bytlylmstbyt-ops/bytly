@@ -144,6 +144,19 @@ export default function ProjectDetails() {
   };
 
   const handleAcceptProposal = async (proposal) => {
+    // Send notification to engineer
+    const engineer = engineers[proposal.engineer_id];
+    if (engineer) {
+      await base44.entities.Notification.create({
+        recipient_email: engineer.email,
+        title: "تم قبول عرضك!",
+        message: `تهانينا! تم قبول عرضك على مشروع "${project.title}" بقيمة ${proposal.price} ريال. سيتم التواصل معك قريباً.`,
+        type: "approval",
+        related_project_id: projectId,
+        priority: "high"
+      });
+    }
+
     // Redirect to payment page
     window.location.href = createPageUrl("Payment") + `?project=${projectId}&proposal=${proposal.id}`;
   };
