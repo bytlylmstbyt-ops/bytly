@@ -248,7 +248,7 @@ export default function Layout({ children, currentPageName }) {
             {/* Brand */}
             <div className="md:col-span-2">
               <div className="mb-4">
-                <Logo size="large" className="text-white [&>svg]:text-white [&>span]:text-white" />
+                <Logo size="large" isDark={true} />
               </div>
               <p className="text-slate-300 text-sm leading-relaxed max-w-md">
                 منصة احترافية تجمع مهندسي التصميم الداخلي والمعماريين والرسامين مع أصحاب المشاريع. 

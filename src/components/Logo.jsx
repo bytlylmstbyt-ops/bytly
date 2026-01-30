@@ -1,7 +1,7 @@
 import React from 'react';
 import { Home } from 'lucide-react';
 
-export default function Logo({ className = "", size = "default" }) {
+export default function Logo({ className = "", size = "default", isDark = false }) {
   const sizes = {
     small: { icon: 20, iconBox: "w-12 h-12", arabic: "text-lg", english: "text-xs", subtitle: "text-[10px]" },
     default: { icon: 24, iconBox: "w-14 h-14", arabic: "text-xl", english: "text-sm", subtitle: "text-xs" },
@@ -9,25 +9,31 @@ export default function Logo({ className = "", size = "default" }) {
   };
   
   const currentSize = sizes[size] || sizes.default;
+  const brownColor = '#4A3F35';
+  const textColor = isDark ? '#ffffff' : brownColor;
+  const borderColor = isDark ? '#C9A66B' : brownColor;
   
   return (
     <div className={`flex items-center gap-3 ${className}`}>
-      {/* Icon with border and text below */}
+      {/* Icon with brown border and bytly text below */}
       <div className="flex flex-col items-center gap-1">
         <div 
-          className={`${currentSize.iconBox} flex items-center justify-center rounded-lg border-2 border-[#6B5D4F]`}
-          style={{ borderColor: '#6B5D4F' }}
+          className={`${currentSize.iconBox} flex items-center justify-center rounded-lg border-2`}
+          style={{ 
+            borderColor: borderColor,
+            backgroundColor: 'transparent'
+          }}
         >
           <Home 
             size={currentSize.icon} 
-            className="text-[#6B5D4F]"
+            style={{ color: textColor }}
             strokeWidth={2.5}
           />
         </div>
         <span 
           className={`font-semibold ${currentSize.subtitle}`}
           style={{ 
-            color: '#6B5D4F',
+            color: textColor,
             fontFamily: 'system-ui, sans-serif',
             letterSpacing: '0.5px'
           }}
@@ -41,17 +47,18 @@ export default function Logo({ className = "", size = "default" }) {
         <span 
           className={`font-bold ${currentSize.arabic}`}
           style={{ 
-            color: '#6B5D4F',
+            color: textColor,
             fontFamily: 'Cairo, system-ui, sans-serif'
           }}
         >
           بيتلي
         </span>
         <span 
-          className={`font-medium ${currentSize.english} opacity-80`}
+          className={`font-medium ${currentSize.english}`}
           style={{ 
-            color: '#C9A66B',
-            fontFamily: 'Cairo, system-ui, sans-serif'
+            color: isDark ? '#C9A66B' : '#C9A66B',
+            fontFamily: 'Cairo, system-ui, sans-serif',
+            opacity: isDark ? 1 : 0.8
           }}
         >
           لمسة بيت
