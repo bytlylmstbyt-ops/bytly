@@ -6,7 +6,8 @@ import { motion } from "framer-motion";
 import { 
   Briefcase, Wallet, Star, MessageSquare, Eye, 
   TrendingUp, Clock, CheckCircle, Plus, ArrowLeft,
-  Upload, Settings, Grid3X3, FileText, DollarSign, Award
+  Upload, Settings, Grid3X3, FileText, DollarSign, Award,
+  Shield, Users, FileCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,7 +37,7 @@ export default function Dashboard() {
     setUser(currentUser);
     
     // Check if user is Admin
-    if (currentUser.role === 'Admin') {
+    if (currentUser.role === 'admin') {
       setIsAdmin(true);
       // Load approved projects for admin
       const approved = await base44.entities.Project.filter({ 
@@ -414,6 +415,63 @@ export default function Dashboard() {
                       </Button>
                     </Link>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Admin Quick Links */}
+        {isAdmin && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <Card className="border-0 shadow-lg border-t-4 border-t-blue-600">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="w-6 h-6 text-blue-600" />
+                  لوحة الإدارة - روابط سريعة
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <div className="grid md:grid-cols-3 gap-4">
+                  <Link to={createPageUrl("ConsultantApproval")}>
+                    <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-blue-200 hover:border-blue-400">
+                      <CardContent className="p-6 text-center">
+                        <div className="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                          <FileCheck className="w-8 h-8 text-blue-600" />
+                        </div>
+                        <h3 className="font-bold text-lg mb-2">موافقة الاستشاري</h3>
+                        <p className="text-sm text-slate-600">مراجعة واعتماد طلبات الاستشاريين</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+
+                  <Link to={createPageUrl("CertificationPage")}>
+                    <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-green-200 hover:border-green-400">
+                      <CardContent className="p-6 text-center">
+                        <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
+                          <Award className="w-8 h-8 text-green-600" />
+                        </div>
+                        <h3 className="font-bold text-lg mb-2">شهادات الجودة</h3>
+                        <p className="text-sm text-slate-600">مراجعة الشهادات والاعتمادات</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+
+                  <Link to={createPageUrl("AdminWallet")}>
+                    <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-purple-200 hover:border-purple-400">
+                      <CardContent className="p-6 text-center">
+                        <div className="w-16 h-16 mx-auto bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                          <Wallet className="w-8 h-8 text-purple-600" />
+                        </div>
+                        <h3 className="font-bold text-lg mb-2">إدارة المحافظ</h3>
+                        <p className="text-sm text-slate-600">مراجعة طلبات السحب</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
