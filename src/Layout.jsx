@@ -3,10 +3,11 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "./utils";
 import { base44 } from "@/api/base44Client";
 import { 
-  Home, Search, MessageSquare, User, Menu, X, 
+  Search, MessageSquare, User, Menu, X, 
   LogOut, Briefcase, Settings, Wallet, Bell, 
   PlusCircle, ChevronDown, Instagram, Facebook, Mail, Phone
 } from "lucide-react";
+import Logo from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -84,17 +85,7 @@ export default function Layout({ children, currentPageName }) {
           <div className="flex justify-between items-center h-16 md:h-20">
             {/* Logo */}
             <Link to={createPageUrl("Home")} className="flex items-center">
-              <img 
-                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69741d7bf3195aeab86a1582/c7b55d4ed_.jpg" 
-                alt="Bytly Logo" 
-                className="max-h-[60px] w-auto object-contain"
-                style={{ 
-                  mixBlendMode: 'multiply',
-                  filter: 'contrast(1.1) brightness(1.05)',
-                  padding: 0,
-                  margin: 0
-                }}
-              />
+              <Logo size="default" />
             </Link>
 
             {/* Desktop Navigation */}
@@ -257,18 +248,7 @@ export default function Layout({ children, currentPageName }) {
             {/* Brand */}
             <div className="md:col-span-2">
               <div className="mb-4">
-                <img 
-                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69741d7bf3195aeab86a1582/c7b55d4ed_.jpg" 
-                  alt="Bytly Logo" 
-                  className="max-h-[70px] w-auto object-contain mb-2"
-                  style={{ 
-                    filter: 'brightness(0) invert(1)',
-                    mixBlendMode: 'screen',
-                    padding: 0,
-                    margin: 0,
-                    marginBottom: '0.5rem'
-                  }}
-                />
+                <Logo size="large" className="text-white [&>svg]:text-white [&>span]:text-white" />
               </div>
               <p className="text-slate-300 text-sm leading-relaxed max-w-md">
                 منصة احترافية تجمع مهندسي التصميم الداخلي والمعماريين والرسامين مع أصحاب المشاريع. 
