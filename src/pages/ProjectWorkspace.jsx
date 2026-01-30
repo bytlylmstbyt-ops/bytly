@@ -39,6 +39,12 @@ export default function ProjectWorkspace() {
   const loadData = async () => {
     try {
       const [projectData] = await base44.entities.Project.filter({ id: projectId });
+      if (!projectData) {
+        console.error("Project not found");
+        setLoading(false);
+        return;
+      }
+      
       setProject(projectData);
       setNewStatus(projectData.status);
 
@@ -140,6 +146,20 @@ export default function ProjectWorkspace() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-12 h-12 animate-spin text-[#d4a574]" />
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card>
+          <CardContent className="pt-6 text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">المشروع غير موجود</h3>
+            <p className="text-slate-600">لم يتم العثور على المشروع المطلوب</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
