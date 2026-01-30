@@ -50,6 +50,8 @@
 import AddEngineer from './pages/AddEngineer';
 import AddPortfolio from './pages/AddPortfolio';
 import AdminWallet from './pages/AdminWallet';
+import AllCertifications from './pages/AllCertifications';
+import AllWithdrawalRequests from './pages/AllWithdrawalRequests';
 import CertificationPage from './pages/CertificationPage';
 import Complaints from './pages/Complaints';
 import ConsultantApproval from './pages/ConsultantApproval';
@@ -81,8 +83,7 @@ import Subscription from './pages/Subscription';
 import Support from './pages/Support';
 import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
-import AllWithdrawalRequests from './pages/AllWithdrawalRequests';
-import AllCertifications from './pages/AllCertifications';
+import AdminReports from './pages/AdminReports';
 import __Layout from './Layout.jsx';
 
 
@@ -90,6 +91,8 @@ export const PAGES = {
     "AddEngineer": AddEngineer,
     "AddPortfolio": AddPortfolio,
     "AdminWallet": AdminWallet,
+    "AllCertifications": AllCertifications,
+    "AllWithdrawalRequests": AllWithdrawalRequests,
     "CertificationPage": CertificationPage,
     "Complaints": Complaints,
     "ConsultantApproval": ConsultantApproval,
@@ -121,8 +124,7 @@ export const PAGES = {
     "Support": Support,
     "Terms": Terms,
     "Wallet": Wallet,
-    "AllWithdrawalRequests": AllWithdrawalRequests,
-    "AllCertifications": AllCertifications,
+    "AdminReports": AdminReports,
 }
 
 export const pagesConfig = {

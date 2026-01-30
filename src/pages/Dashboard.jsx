@@ -7,7 +7,7 @@ import {
   Briefcase, Wallet, Star, MessageSquare, Eye, 
   TrendingUp, Clock, CheckCircle, Plus, ArrowLeft,
   Upload, Settings, Grid3X3, FileText, DollarSign, Award,
-  Shield, Users, FileCheck
+  Shield, Users, FileCheck, BarChart3
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -469,6 +469,20 @@ export default function Dashboard() {
                         </div>
                         <h3 className="font-bold text-lg mb-2">إدارة المحافظ</h3>
                         <p className="text-sm text-slate-600">مراجعة طلبات السحب</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </div>
+                
+                <div className="mt-4">
+                  <Link to={createPageUrl("AdminReports")}>
+                    <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-amber-200 hover:border-amber-400">
+                      <CardContent className="p-6 text-center">
+                        <div className="w-16 h-16 mx-auto bg-amber-100 rounded-full flex items-center justify-center mb-4">
+                          <BarChart3 className="w-8 h-8 text-amber-600" />
+                        </div>
+                        <h3 className="font-bold text-lg mb-2">التقارير والإحصائيات</h3>
+                        <p className="text-sm text-slate-600">تقارير شاملة عن أداء المنصة</p>
                       </CardContent>
                     </Card>
                   </Link>
