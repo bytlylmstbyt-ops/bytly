@@ -9,8 +9,9 @@ export default function Logo({ className = "", size = "default", isDark = false 
   };
   
   const currentSize = sizes[size] || sizes.default;
-  const boxBgColor = '#8B7355';
-  const textColor = isDark ? '#ffffff' : '#4A3F35';
+  const boxBgColor = '#8B7355'; // بني متوسط للخلفية
+  const mainTextColor = isDark ? '#ffffff' : '#3D3935'; // بني داكن للنص الرئيسي
+  const subTextColor = isDark ? '#C9A66B' : '#9B8B7E'; // بيج/رمادي للنص الثانوي
   
   return (
     <div className={`flex items-center gap-3 ${className}`}>
@@ -31,7 +32,7 @@ export default function Logo({ className = "", size = "default", isDark = false 
         <span 
           className={`font-semibold ${currentSize.subtitle}`}
           style={{ 
-            color: textColor,
+            color: mainTextColor,
             fontFamily: 'system-ui, sans-serif',
             letterSpacing: '0.5px'
           }}
@@ -45,7 +46,7 @@ export default function Logo({ className = "", size = "default", isDark = false 
         <span 
           className={`font-bold ${currentSize.arabic}`}
           style={{ 
-            color: textColor,
+            color: mainTextColor,
             fontFamily: 'Cairo, system-ui, sans-serif'
           }}
         >
@@ -54,9 +55,8 @@ export default function Logo({ className = "", size = "default", isDark = false 
         <span 
           className={`font-medium ${currentSize.english}`}
           style={{ 
-            color: isDark ? '#C9A66B' : '#C9A66B',
-            fontFamily: 'Cairo, system-ui, sans-serif',
-            opacity: isDark ? 1 : 0.8
+            color: subTextColor,
+            fontFamily: 'Cairo, system-ui, sans-serif'
           }}
         >
           لمسة بيت
