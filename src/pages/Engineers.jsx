@@ -89,6 +89,7 @@ export default function Engineers() {
     { value: "all", label: "الكل", icon: Users },
     { value: "engineer", label: "مهندسين", icon: Building2 },
     { value: "architect", label: "معماريين", icon: Palette },
+    { value: "civil", label: "مهندس مدني", icon: Building2 },
     { value: "painter", label: "رسامين", icon: PenTool }
   ];
 
