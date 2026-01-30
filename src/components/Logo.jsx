@@ -21,12 +21,12 @@ export default function Logo({ className = "", size = "default", isDark = false 
           className={`${currentSize.iconBox} flex items-center justify-center rounded-lg border-2`}
           style={{ 
             borderColor: borderColor,
-            backgroundColor: 'transparent'
+            backgroundColor: brownColor
           }}
         >
           <Home 
             size={currentSize.icon} 
-            style={{ color: textColor }}
+            style={{ color: isDark ? brownColor : '#ffffff' }}
             strokeWidth={2.5}
           />
         </div>
