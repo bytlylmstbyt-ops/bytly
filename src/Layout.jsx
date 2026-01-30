@@ -76,23 +76,6 @@ export default function Layout({ children, currentPageName }) {
           transform: translateY(-2px);
           box-shadow: 0 10px 40px rgba(107, 93, 79, 0.15);
         }
-
-        .logo-header {
-          mix-blend-mode: multiply;
-          filter: contrast(1.2) brightness(0.95);
-          padding: 0;
-          margin: 0;
-          display: block;
-        }
-
-        .logo-footer {
-          filter: brightness(0) invert(1) contrast(1.2);
-          mix-blend-mode: screen;
-          padding: 0;
-          margin: 0;
-          margin-bottom: 0.5rem;
-          display: block;
-        }
       `}</style>
 
       {/* Header */}
@@ -104,7 +87,13 @@ export default function Layout({ children, currentPageName }) {
               <img 
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69741d7bf3195aeab86a1582/c7b55d4ed_.jpg" 
                 alt="Bytly Logo" 
-                className="max-h-[60px] w-auto object-contain logo-header"
+                className="max-h-[60px] w-auto object-contain"
+                style={{ 
+                  mixBlendMode: 'multiply',
+                  filter: 'contrast(1.1) brightness(1.05)',
+                  padding: 0,
+                  margin: 0
+                }}
               />
             </Link>
 
@@ -271,7 +260,14 @@ export default function Layout({ children, currentPageName }) {
                 <img 
                   src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69741d7bf3195aeab86a1582/c7b55d4ed_.jpg" 
                   alt="Bytly Logo" 
-                  className="max-h-[70px] w-auto object-contain mb-2 logo-footer"
+                  className="max-h-[70px] w-auto object-contain mb-2"
+                  style={{ 
+                    filter: 'brightness(0) invert(1)',
+                    mixBlendMode: 'screen',
+                    padding: 0,
+                    margin: 0,
+                    marginBottom: '0.5rem'
+                  }}
                 />
               </div>
               <p className="text-slate-300 text-sm leading-relaxed max-w-md">
