@@ -34,7 +34,14 @@ export default function AddPortfolio() {
     location: "",
     year: new Date().getFullYear(),
     images: [],
-    is_featured: false
+    is_featured: false,
+    budget: "",
+    duration_days: "",
+    start_date: "",
+    completion_date: "",
+    client_name: "",
+    team_size: "",
+    tags: []
   });
 
   useEffect(() => {
@@ -91,7 +98,10 @@ export default function AddPortfolio() {
     await base44.entities.Portfolio.create({
       ...formData,
       engineer_id: engineer.id,
-      year: parseInt(formData.year)
+      year: parseInt(formData.year),
+      budget: formData.budget ? parseFloat(formData.budget) : undefined,
+      duration_days: formData.duration_days ? parseInt(formData.duration_days) : undefined,
+      team_size: formData.team_size ? parseInt(formData.team_size) : undefined
     });
 
     setIsLoading(false);
@@ -104,7 +114,10 @@ export default function AddPortfolio() {
     { value: "painting", label: "رسم هندسي" },
     { value: "landscape", label: "تنسيق حدائق" },
     { value: "furniture", label: "تصميم أثاث" },
-    { value: "lighting", label: "تصميم إضاءة" }
+    { value: "lighting", label: "تصميم إضاءة" },
+    { value: "civil_engineering", label: "هندسة مدنية" },
+    { value: "structural_design", label: "تصميم إنشائي" },
+    { value: "executive_drawing", label: "رسومات تنفيذية" }
   ];
 
   const projectTypes = [
@@ -269,6 +282,79 @@ export default function AddPortfolio() {
                       max={new Date().getFullYear()}
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Budget and Duration */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="budget">الميزانية (ريال)</Label>
+                  <Input
+                    id="budget"
+                    type="number"
+                    value={formData.budget}
+                    onChange={(e) => handleInputChange("budget", e.target.value)}
+                    placeholder="50000"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="duration_days">مدة التنفيذ (أيام)</Label>
+                  <Input
+                    id="duration_days"
+                    type="number"
+                    value={formData.duration_days}
+                    onChange={(e) => handleInputChange("duration_days", e.target.value)}
+                    placeholder="60"
+                  />
+                </div>
+              </div>
+
+              {/* Dates */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="start_date">تاريخ البدء</Label>
+                  <Input
+                    id="start_date"
+                    type="date"
+                    value={formData.start_date}
+                    onChange={(e) => handleInputChange("start_date", e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="completion_date">تاريخ الإنجاز</Label>
+                  <Input
+                    id="completion_date"
+                    type="date"
+                    value={formData.completion_date}
+                    onChange={(e) => handleInputChange("completion_date", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Client and Team */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="client_name">اسم العميل (اختياري)</Label>
+                  <Input
+                    id="client_name"
+                    value={formData.client_name}
+                    onChange={(e) => handleInputChange("client_name", e.target.value)}
+                    placeholder="اسم العميل"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="team_size">عدد أفراد الفريق</Label>
+                  <Input
+                    id="team_size"
+                    type="number"
+                    value={formData.team_size}
+                    onChange={(e) => handleInputChange("team_size", e.target.value)}
+                    placeholder="5"
+                    min="1"
+                  />
                 </div>
               </div>
 
