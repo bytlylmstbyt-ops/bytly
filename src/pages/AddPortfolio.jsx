@@ -136,8 +136,8 @@ export default function AddPortfolio() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Images Upload */}
               <div className="space-y-2">
-                <Label>صور العمل *</Label>
-                <div className="grid grid-cols-3 gap-4">
+                <Label>صور العمل * (يمكن رفع حتى 10 صور)</Label>
+                <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
                   {formData.images.map((url, index) => (
                     <div key={index} className="relative group aspect-square">
                       <img 
@@ -152,27 +152,33 @@ export default function AddPortfolio() {
                       >
                         <X className="w-4 h-4" />
                       </button>
+                      <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/70 text-white text-xs rounded">
+                        {index + 1}
+                      </div>
                     </div>
                   ))}
                   
-                  <label className="aspect-square border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#d4a574] transition-colors">
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                    />
-                    {isUploading ? (
-                      <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
-                    ) : (
-                      <>
-                        <Plus className="w-8 h-8 text-slate-400 mb-2" />
-                        <span className="text-sm text-slate-500">إضافة صور</span>
-                      </>
-                    )}
-                  </label>
+                  {formData.images.length < 10 && (
+                    <label className="aspect-square border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#d4a574] transition-colors">
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                      {isUploading ? (
+                        <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
+                      ) : (
+                        <>
+                          <Plus className="w-8 h-8 text-slate-400 mb-2" />
+                          <span className="text-xs text-slate-500 text-center px-2">إضافة صور</span>
+                        </>
+                      )}
+                    </label>
+                  )}
                 </div>
+                <p className="text-xs text-slate-500">رفعت {formData.images.length} من 10 صور</p>
               </div>
 
               <div className="space-y-2">

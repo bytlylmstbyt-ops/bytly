@@ -49,6 +49,7 @@
  */
 import AddPortfolio from './pages/AddPortfolio';
 import AdminWallet from './pages/AdminWallet';
+import CertificationPage from './pages/CertificationPage';
 import Complaints from './pages/Complaints';
 import ConsultantApproval from './pages/ConsultantApproval';
 import ConsultantDashboard from './pages/ConsultantDashboard';
@@ -79,13 +80,14 @@ import Subscription from './pages/Subscription';
 import Support from './pages/Support';
 import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
-import CertificationPage from './pages/CertificationPage';
+import AddEngineer from './pages/AddEngineer';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AddPortfolio": AddPortfolio,
     "AdminWallet": AdminWallet,
+    "CertificationPage": CertificationPage,
     "Complaints": Complaints,
     "ConsultantApproval": ConsultantApproval,
     "ConsultantDashboard": ConsultantDashboard,
@@ -116,7 +118,7 @@ export const PAGES = {
     "Support": Support,
     "Terms": Terms,
     "Wallet": Wallet,
-    "CertificationPage": CertificationPage,
+    "AddEngineer": AddEngineer,
 }
 
 export const pagesConfig = {

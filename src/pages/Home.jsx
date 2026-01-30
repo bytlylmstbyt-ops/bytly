@@ -27,10 +27,26 @@ export default function Home() {
   const loadData = async () => {
     setIsLoading(true);
     const [engineersData, portfoliosData] = await Promise.all([
-      base44.entities.Engineer.filter({ status: "approved" }, "-rating", 6),
+      base44.entities.Engineer.filter({ status: "approved", is_verified: true }, "-rating", 6),
       base44.entities.Portfolio.filter({ is_featured: true }, "-created_date", 8)
     ]);
-    setEngineers(engineersData);
+    
+    // Load portfolios for each engineer to show as background
+    const engineersWithPortfolios = await Promise.all(
+      engineersData.map(async (engineer) => {
+        const engineerPortfolios = await base44.entities.Portfolio.filter(
+          { engineer_id: engineer.id }, 
+          "-created_date", 
+          1
+        );
+        return {
+          ...engineer,
+          featured_portfolio: engineerPortfolios[0]?.images?.[0] || engineer.cover_image
+        };
+      })
+    );
+    
+    setEngineers(engineersWithPortfolios);
     setPortfolios(portfoliosData);
     setIsLoading(false);
   };
@@ -273,9 +289,20 @@ export default function Home() {
                   <Link to={createPageUrl("EngineerProfile") + `?id=${engineer.id}`}>
                     <Card className="hover-lift cursor-pointer overflow-hidden border-0 shadow-lg">
                       <div className="relative h-32 bg-gradient-to-br from-[#1a1a2e] to-[#d4a574]">
-                        {engineer.cover_image && (
-                          <img src={engineer.cover_image} alt="" className="w-full h-full object-cover opacity-50" />
-                        )}
+                        {engineer.featured_portfolio ? (
+                          <img 
+                            src={engineer.featured_portfolio} 
+                            alt="" 
+                            className="w-full h-full object-cover opacity-60" 
+                          />
+                        ) : engineer.cover_image ? (
+                          <img 
+                            src={engineer.cover_image} 
+                            alt="" 
+                            className="w-full h-full object-cover opacity-50" 
+                          />
+                        ) : null}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                       </div>
                       <CardContent className="relative p-6 pt-0">
                         <Avatar className="w-20 h-20 border-4 border-white -mt-10 shadow-lg">
