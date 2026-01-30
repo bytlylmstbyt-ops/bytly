@@ -1,77 +1,124 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
   Bell, CheckCircle, MessageSquare, Briefcase, 
-  Star, DollarSign, Settings, Trash2
+  Star, DollarSign, Settings, Trash2, Loader2, AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import moment from "moment";
+import "moment/locale/ar";
+
+moment.locale("ar");
 
 export default function Notifications() {
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: "message",
-      title: "رسالة جديدة",
-      description: "لديك رسالة جديدة من أحمد محمد",
-      time: "منذ 5 دقائق",
-      read: false
-    },
-    {
-      id: 2,
-      type: "project",
-      title: "عرض جديد على مشروعك",
-      description: "تلقيت عرضاً جديداً على مشروع تصميم الفيلا",
-      time: "منذ ساعة",
-      read: false
-    },
-    {
-      id: 3,
-      type: "payment",
-      title: "تم استلام الدفع",
-      description: "تم إيداع 5,000 ر.س في محفظتك",
-      time: "منذ 3 ساعات",
-      read: true
-    },
-    {
-      id: 4,
-      type: "review",
-      title: "تقييم جديد",
-      description: "حصلت على تقييم 5 نجوم من عميل",
-      time: "أمس",
-      read: true
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
+  const loadNotifications = async () => {
+    try {
+      const currentUser = await base44.auth.me();
+      setUser(currentUser);
+
+      const notificationsData = await base44.entities.Notification.filter({
+        recipient_email: currentUser.email
+      }, "-created_date", 50);
+
+      setNotifications(notificationsData);
+    } catch (error) {
+      console.error("Error loading notifications:", error);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
   const getIcon = (type) => {
     switch (type) {
-      case "message":
-        return <MessageSquare className="w-5 h-5 text-blue-500" />;
-      case "project":
+      case "project_update":
         return <Briefcase className="w-5 h-5 text-purple-500" />;
       case "payment":
         return <DollarSign className="w-5 h-5 text-green-500" />;
       case "review":
         return <Star className="w-5 h-5 text-amber-500" />;
+      case "complaint":
+        return <AlertCircle className="w-5 h-5 text-red-500" />;
+      case "approval":
+        return <CheckCircle className="w-5 h-5 text-green-500" />;
+      case "system":
+        return <Bell className="w-5 h-5 text-blue-500" />;
       default:
         return <Bell className="w-5 h-5 text-slate-500" />;
     }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case "urgent":
+        return "bg-red-100 text-red-700";
+      case "high":
+        return "bg-orange-100 text-orange-700";
+      case "medium":
+        return "bg-blue-100 text-blue-700";
+      case "low":
+        return "bg-slate-100 text-slate-700";
+      default:
+        return "bg-slate-100 text-slate-700";
+    }
   };
 
-  const deleteNotification = (id) => {
-    setNotifications(notifications.filter(n => n.id !== id));
+  const markAllAsRead = async () => {
+    try {
+      await Promise.all(
+        notifications
+          .filter(n => !n.is_read)
+          .map(n => base44.entities.Notification.update(n.id, { is_read: true }))
+      );
+      await loadNotifications();
+    } catch (error) {
+      console.error("Error marking as read:", error);
+    }
+  };
+
+  const markAsRead = async (notification) => {
+    if (!notification.is_read) {
+      await base44.entities.Notification.update(notification.id, { is_read: true });
+      await loadNotifications();
+    }
+  };
+
+  const deleteNotification = async (id) => {
+    try {
+      await base44.entities.Notification.delete(id);
+      await loadNotifications();
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+    }
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-12 h-12 animate-spin text-[#d4a574]" />
+      </div>
+    );
+  }
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -101,34 +148,54 @@ export default function Notifications() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className={`p-4 flex items-start gap-4 hover:bg-slate-50 transition-colors ${
-                        !notification.read ? "bg-amber-50/50" : ""
+                      className={`p-4 hover:bg-slate-50 transition-colors cursor-pointer ${
+                        !notification.is_read ? "bg-amber-50/50" : ""
                       }`}
+                      onClick={() => {
+                        markAsRead(notification);
+                        if (notification.related_project_id) {
+                          window.location.href = createPageUrl("ProjectDetails") + `?id=${notification.related_project_id}`;
+                        }
+                      }}
                     >
-                      <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center">
-                        {getIcon(notification.type)}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h3 className="font-medium text-[#1a1a2e]">
-                              {notification.title}
-                              {!notification.read && (
-                                <Badge className="mr-2 bg-[#d4a574] text-white text-xs">جديد</Badge>
-                              )}
-                            </h3>
-                            <p className="text-sm text-slate-600 mt-1">
-                              {notification.description}
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => deleteNotification(notification.id)}
-                            className="p-1 hover:bg-slate-200 rounded transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4 text-slate-400" />
-                          </button>
+                      <div className="flex items-start gap-4">
+                        <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0">
+                          {getIcon(notification.type)}
                         </div>
-                        <p className="text-xs text-slate-400 mt-2">{notification.time}</p>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-medium text-[#1a1a2e] flex items-center gap-2 flex-wrap">
+                                {notification.title}
+                                {!notification.is_read && (
+                                  <Badge className="bg-[#d4a574] text-white text-xs">جديد</Badge>
+                                )}
+                                {notification.priority && notification.priority !== "medium" && (
+                                  <Badge className={`text-xs ${getPriorityColor(notification.priority)}`}>
+                                    {notification.priority === "urgent" ? "عاجل" :
+                                     notification.priority === "high" ? "مهم" :
+                                     notification.priority === "low" ? "منخفض" : ""}
+                                  </Badge>
+                                )}
+                              </h3>
+                              <p className="text-sm text-slate-600 mt-1 break-words">
+                                {notification.message}
+                              </p>
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNotification(notification.id);
+                              }}
+                              className="p-1 hover:bg-slate-200 rounded transition-colors flex-shrink-0"
+                            >
+                              <Trash2 className="w-4 h-4 text-slate-400" />
+                            </button>
+                          </div>
+                          <p className="text-xs text-slate-400 mt-2">
+                            {moment(notification.created_date).fromNow()}
+                          </p>
+                        </div>
                       </div>
                     </motion.div>
                   ))}
