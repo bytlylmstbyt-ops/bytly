@@ -13,9 +13,10 @@ import {
   Phone, Mail, MessageSquare, Plus, TrendingUp, TrendingDown,
   AlertCircle, CheckCircle2, Clock, Filter, Download
 } from "lucide-react";
-import CRMInteractionForm from "@/components/crm/CRMInteractionForm.js";
-import InteractionTimeline from "@/components/crm/InteractionTimeline.js";
-import SentimentAnalyzer from "@/components/crm/SentimentAnalyzer.js";
+// Inline components instead of imports
+const CRMInteractionForm = React.lazy(() => import("@/components/crm/CRMInteractionForm"));
+const InteractionTimeline = React.lazy(() => import("@/components/crm/InteractionTimeline"));
+const SentimentAnalyzer = React.lazy(() => import("@/components/crm/SentimentAnalyzer"));
 
 export default function CRMDashboard() {
   const navigate = useNavigate();
