@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { sendNotification } from "@/components/notifications/NotificationHelper";
+import jsPDF from "jspdf";
 
 export default function CertificationPage() {
   const navigate = useNavigate();
@@ -93,6 +94,115 @@ export default function CertificationPage() {
 
   const handleStarClick = (type, value) => {
     setRatings({ ...ratings, [type]: value });
+  };
+
+  const generateCertificatePDF = () => {
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Set RTL for Arabic
+    doc.setR2L(true);
+
+    // Header - Gold Border
+    doc.setDrawColor(201, 166, 107);
+    doc.setLineWidth(3);
+    doc.rect(10, 10, 190, 277);
+    
+    doc.setLineWidth(1);
+    doc.rect(15, 15, 180, 267);
+
+    // Logo placeholder circle
+    doc.setFillColor(201, 166, 107);
+    doc.circle(105, 40, 15, 'F');
+    doc.setFillColor(255, 255, 255);
+    doc.circle(105, 40, 12, 'F');
+
+    // Title
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text('شهادة مطابقة واعتماد جودة', 105, 70, { align: 'center' });
+
+    doc.setFontSize(16);
+    doc.setTextColor(107, 93, 79);
+    doc.text('منصة بيتلي للاستشارات والتصاميم الهندسية', 105, 80, { align: 'center' });
+
+    // Divider
+    doc.setDrawColor(201, 166, 107);
+    doc.setLineWidth(0.5);
+    doc.line(30, 90, 180, 90);
+
+    // Certificate Body
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'normal');
+
+    const bodyText = `تشهد منصة (بيتلي) وبناءً على المراجعة الفنية الدقيقة والمستقلة التي قام بها المستشار الفني المختص،`;
+    const bodyText2 = `بأن المشروع رقم (${projectId}) والمقدم من المصمم (${engineer?.full_name || 'غير محدد'})`;
+    const bodyText3 = `لصالح العميل (${client?.full_name || 'غير محدد'})، قد اجتاز كافة معايير الجودة المعتمدة في المنصة.`;
+
+    doc.text(bodyText, 105, 105, { align: 'center', maxWidth: 160 });
+    doc.text(bodyText2, 105, 115, { align: 'center', maxWidth: 160 });
+    doc.text(bodyText3, 105, 125, { align: 'center', maxWidth: 160 });
+
+    // Technical Section
+    doc.setFillColor(245, 245, 245);
+    doc.rect(25, 140, 160, 80, 'F');
+
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(107, 93, 79);
+    doc.text('البنود الفنية والقانونية', 105, 150, { align: 'center' });
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    
+    doc.text('• المطابقة الفنية:', 175, 160, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text('تم التأكد من سلامة المخططات وموافقتها للمعايير الهندسية المطلوبة.', 170, 167, { align: 'right', maxWidth: 135 });
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('• حقوق الملكية:', 175, 180, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text('تنتقل ملكية كافة التصاميم والمخططات المرفقة للعميل فور صدور هذه الشهادة.', 170, 187, { align: 'right', maxWidth: 135 });
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('• التوثيق:', 175, 200, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
+    doc.text('تعتبر هذه الشهادة وثيقة رسمية صادرة عن النظام الإلكتروني لبيتلي ومسجلة في قاعدة البيانات.', 170, 207, { align: 'right', maxWidth: 135 });
+
+    // Footer Section
+    doc.setDrawColor(201, 166, 107);
+    doc.line(30, 235, 180, 235);
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(107, 93, 79);
+    doc.text(`يُعتمد من قبل: ${consultant?.full_name || 'المستشار الفني'}`, 105, 245, { align: 'center' });
+    doc.text('تحت إشراف: إدارة منصة بيتلي', 105, 252, { align: 'center' });
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`التاريخ: ${new Date().toLocaleDateString('ar-SA', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    })}`, 105, 260, { align: 'center' });
+
+    // Electronic Stamp
+    doc.setDrawColor(201, 166, 107);
+    doc.setLineWidth(2);
+    doc.circle(105, 275, 8);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.text('ختم إلكتروني', 105, 275, { align: 'center' });
+    doc.text('بيتلي', 105, 280, { align: 'center' });
+
+    // Save PDF
+    doc.save(`شهادة_جودة_${projectId}.pdf`);
   };
 
   const handleSubmitRating = async () => {
@@ -387,13 +497,7 @@ export default function CertificationPage() {
 
           <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-green-200 hover:border-green-400">
             <CardContent className="pt-6">
-              <a 
-                href={technicalReview?.report_file} 
-                download 
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block"
-              >
+              <div onClick={generateCertificatePDF} className="block cursor-pointer">
                 <div className="text-center space-y-4">
                   <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center">
                     <Award className="w-8 h-8 text-green-600" />
@@ -405,7 +509,7 @@ export default function CertificationPage() {
                     تحميل الآن
                   </Button>
                 </div>
-              </a>
+              </div>
             </CardContent>
           </Card>
         </motion.div>
