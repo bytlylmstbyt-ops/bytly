@@ -49,31 +49,32 @@ export default function Layout({ children, currentPageName }) {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30" dir="rtl">
       <style>{`
         :root {
-          --primary: #1a1a2e;
-          --primary-light: #16213e;
-          --accent: #d4a574;
-          --accent-light: #e8c9a8;
-          --gold: #c9a227;
+          --primary: #6B5D4F;
+          --primary-dark: #4A3F35;
+          --accent: #C9A66B;
+          --accent-light: #E5D4B8;
+          --gold: #B8936D;
+          --bronze: #A07D5C;
         }
-        
+
         .glass-effect {
-          background: rgba(255, 255, 255, 0.8);
+          background: rgba(255, 255, 255, 0.85);
           backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.3);
+          border: 1px solid rgba(201, 166, 107, 0.2);
         }
-        
+
         .gradient-text {
-          background: linear-gradient(135deg, #1a1a2e 0%, #d4a574 100%);
+          background: linear-gradient(135deg, #6B5D4F 0%, #C9A66B 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
-        
+
         .hover-lift {
           transition: all 0.3s ease;
         }
         .hover-lift:hover {
           transform: translateY(-2px);
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+          box-shadow: 0 10px 40px rgba(107, 93, 79, 0.15);
         }
       `}</style>
 
@@ -83,38 +84,36 @@ export default function Layout({ children, currentPageName }) {
           <div className="flex justify-between items-center h-16 md:h-20">
             {/* Logo */}
             <Link to={createPageUrl("Home")} className="flex items-center gap-3">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] flex items-center justify-center">
-                <Home className="w-5 h-5 md:w-6 md:h-6 text-white" />
-              </div>
-              <div className="hidden sm:block">
-                <h1 className="text-xl md:text-2xl font-bold gradient-text">بيتلي</h1>
-                <p className="text-xs text-slate-500">لمسة بيت</p>
-              </div>
+              <img 
+                src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69741d7bf3195aeab86a1582/c7b55d4ed_.jpg" 
+                alt="Bytly Logo" 
+                className="h-10 md:h-14 w-auto object-contain"
+              />
             </Link>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-8">
               <Link 
                 to={createPageUrl("Home")} 
-                className={`text-sm font-medium transition-colors hover:text-[#d4a574] ${currentPageName === 'Home' ? 'text-[#d4a574]' : 'text-slate-700'}`}
+                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'Home' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
                 الرئيسية
               </Link>
               <Link 
                 to={createPageUrl("Engineers")} 
-                className={`text-sm font-medium transition-colors hover:text-[#d4a574] ${currentPageName === 'Engineers' ? 'text-[#d4a574]' : 'text-slate-700'}`}
+                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'Engineers' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
                 المهندسين
               </Link>
               <Link 
                 to={createPageUrl("Projects")} 
-                className={`text-sm font-medium transition-colors hover:text-[#d4a574] ${currentPageName === 'Projects' ? 'text-[#d4a574]' : 'text-slate-700'}`}
+                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'Projects' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
                 المشاريع
               </Link>
               <Link 
                 to={createPageUrl("Gallery")} 
-                className={`text-sm font-medium transition-colors hover:text-[#d4a574] ${currentPageName === 'Gallery' ? 'text-[#d4a574]' : 'text-slate-700'}`}
+                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'Gallery' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
                 معرض الأعمال
               </Link>
@@ -135,9 +134,9 @@ export default function Layout({ children, currentPageName }) {
                       <Button variant="ghost" className="flex items-center gap-2 px-2">
                         <Avatar className="w-8 h-8">
                           <AvatarImage src={user.profile_image} />
-                          <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] text-white">
-                            {user.full_name?.charAt(0) || user.email?.charAt(0)}
-                          </AvatarFallback>
+                          <AvatarFallback className="bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] text-white">
+                              {user.full_name?.charAt(0) || user.email?.charAt(0)}
+                            </AvatarFallback>
                         </Avatar>
                         <ChevronDown className="w-4 h-4 text-slate-500" />
                       </Button>
@@ -180,12 +179,12 @@ export default function Layout({ children, currentPageName }) {
                   <Button
                     variant="ghost"
                     onClick={() => base44.auth.redirectToLogin()}
-                    className="text-slate-700 hover:text-[#d4a574]"
+                    className="text-[#6B5D4F] hover:text-[#C9A66B]"
                   >
                     تسجيل الدخول
                   </Button>
                   <Link to={createPageUrl("RegisterChoice")}>
-                    <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white hover:opacity-90">
+                    <Button className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white hover:opacity-90">
                       انضم إلينا
                     </Button>
                   </Link>
@@ -246,19 +245,17 @@ export default function Layout({ children, currentPageName }) {
       </main>
 
       {/* Footer */}
-      <footer className="bg-[#1a1a2e] text-white">
+      <footer className="bg-[#4A3F35] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-6 gap-8">
             {/* Brand */}
             <div className="md:col-span-2">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white/20 to-[#d4a574] flex items-center justify-center">
-                  <Home className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold">بيتلي</h2>
-                  <p className="text-sm text-slate-300">لمسة بيت</p>
-                </div>
+              <div className="mb-4">
+                <img 
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69741d7bf3195aeab86a1582/c7b55d4ed_.jpg" 
+                  alt="Bytly Logo" 
+                  className="h-16 w-auto object-contain mb-2 brightness-0 invert"
+                />
               </div>
               <p className="text-slate-300 text-sm leading-relaxed max-w-md">
                 منصة احترافية تجمع مهندسي التصميم الداخلي والمعماريين والرسامين مع أصحاب المشاريع. 
@@ -268,58 +265,58 @@ export default function Layout({ children, currentPageName }) {
 
             {/* Links */}
             <div>
-              <h3 className="font-semibold mb-4 text-[#d4a574]">روابط سريعة</h3>
+              <h3 className="font-semibold mb-4 text-[#C9A66B]">روابط سريعة</h3>
               <ul className="space-y-2 text-sm text-slate-300">
-                <li><Link to={createPageUrl("Home")} className="hover:text-[#d4a574] transition-colors">الرئيسية</Link></li>
-                <li><Link to={createPageUrl("Engineers")} className="hover:text-[#d4a574] transition-colors">المهندسين</Link></li>
-                <li><Link to={createPageUrl("Projects")} className="hover:text-[#d4a574] transition-colors">المشاريع</Link></li>
-                <li><Link to={createPageUrl("Gallery")} className="hover:text-[#d4a574] transition-colors">معرض الأعمال</Link></li>
+                <li><Link to={createPageUrl("Home")} className="hover:text-[#C9A66B] transition-colors">الرئيسية</Link></li>
+                <li><Link to={createPageUrl("Engineers")} className="hover:text-[#C9A66B] transition-colors">المهندسين</Link></li>
+                <li><Link to={createPageUrl("Projects")} className="hover:text-[#C9A66B] transition-colors">المشاريع</Link></li>
+                <li><Link to={createPageUrl("Gallery")} className="hover:text-[#C9A66B] transition-colors">معرض الأعمال</Link></li>
               </ul>
             </div>
 
             {/* Legal */}
             <div>
-              <h3 className="font-semibold mb-4 text-[#d4a574]">الشروط والسياسات</h3>
+              <h3 className="font-semibold mb-4 text-[#C9A66B]">الشروط والسياسات</h3>
               <ul className="space-y-2 text-sm text-slate-300">
-                <li><Link to={createPageUrl("Terms")} className="hover:text-[#d4a574] transition-colors">الشروط والأحكام</Link></li>
-                <li><Link to={createPageUrl("Privacy")} className="hover:text-[#d4a574] transition-colors">سياسة الخصوصية</Link></li>
-                <li><Link to={createPageUrl("Copyright")} className="hover:text-[#d4a574] transition-colors">اتفاقية حفظ الحقوق</Link></li>
+                <li><Link to={createPageUrl("Terms")} className="hover:text-[#C9A66B] transition-colors">الشروط والأحكام</Link></li>
+                <li><Link to={createPageUrl("Privacy")} className="hover:text-[#C9A66B] transition-colors">سياسة الخصوصية</Link></li>
+                <li><Link to={createPageUrl("Copyright")} className="hover:text-[#C9A66B] transition-colors">اتفاقية حفظ الحقوق</Link></li>
               </ul>
             </div>
 
             {/* Support */}
             <div>
-              <h3 className="font-semibold mb-4 text-[#d4a574]">الدعم والمساعدة</h3>
+              <h3 className="font-semibold mb-4 text-[#C9A66B]">الدعم والمساعدة</h3>
               <ul className="space-y-2 text-sm text-slate-300">
-                <li><Link to={createPageUrl("Complaints")} className="hover:text-[#d4a574] transition-colors">الشكاوى والاقتراحات</Link></li>
-                <li><Link to={createPageUrl("Support")} className="hover:text-[#d4a574] transition-colors">الدعم الفني</Link></li>
+                <li><Link to={createPageUrl("Complaints")} className="hover:text-[#C9A66B] transition-colors">الشكاوى والاقتراحات</Link></li>
+                <li><Link to={createPageUrl("Support")} className="hover:text-[#C9A66B] transition-colors">الدعم الفني</Link></li>
               </ul>
             </div>
 
             {/* Contact */}
             <div>
-              <h3 className="font-semibold mb-4 text-[#d4a574]">تواصل معنا</h3>
+              <h3 className="font-semibold mb-4 text-[#C9A66B]">تواصل معنا</h3>
               <ul className="space-y-3 text-sm text-slate-300">
                 <li className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-[#d4a574]" />
-                  <a href="mailto:bytlylmstbyt@gmail.com" className="hover:text-[#d4a574]">
+                  <Mail className="w-4 h-4 text-[#C9A66B]" />
+                  <a href="mailto:bytlylmstbyt@gmail.com" className="hover:text-[#C9A66B]">
                     bytlylmstbyt@gmail.com
                   </a>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Instagram className="w-4 h-4 text-[#d4a574]" />
+                  <Instagram className="w-4 h-4 text-[#C9A66B]" />
                   <a 
                     href="https://www.instagram.com/bytlylmstbyt" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="hover:text-[#d4a574]"
+                    className="hover:text-[#C9A66B]"
                   >
                     @bytlylmstbyt
                   </a>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Facebook className="w-4 h-4 text-[#d4a574]" />
-                  <a href="#" className="hover:text-[#d4a574]">بيتلي</a>
+                  <Facebook className="w-4 h-4 text-[#C9A66B]" />
+                  <a href="#" className="hover:text-[#C9A66B]">بيتلي</a>
                 </li>
               </ul>
             </div>
