@@ -65,7 +65,13 @@ export default function ConsultantApprovalPage() {
         setConsultant(consultants[0]);
       }
       
-      // Load withdrawal request
+      // Load withdrawal request - if no ID, show all requests for admin
+      if (!withdrawalId) {
+        // No specific request, redirect to all requests page
+        navigate(createPageUrl("AllWithdrawalRequests"));
+        return;
+      }
+      
       const withdrawalData = await base44.entities.WithdrawalRequest.filter({ 
         id: withdrawalId 
       });

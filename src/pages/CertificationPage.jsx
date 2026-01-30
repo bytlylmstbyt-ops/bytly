@@ -40,6 +40,9 @@ export default function CertificationPage() {
     try {
       const user = await base44.auth.me();
       
+      // Admin has unrestricted access to view all projects
+      const isAdmin = user.role === "admin";
+      
       const [projectData] = await base44.entities.Project.filter({ id: projectId });
       if (!projectData) {
         alert("المشروع غير موجود");
@@ -47,9 +50,8 @@ export default function CertificationPage() {
         return;
       }
 
-      // Allow admin full access to all projects
-      if (user.role !== "admin") {
-        // Check if project is approved for non-admin users
+      // Only check project status for non-admin users
+      if (!isAdmin) {
         if (projectData.status !== "technical_approved" && projectData.status !== "pending_client_approval") {
           alert("المشروع لم يتم اعتماده بعد");
           navigate(-1);

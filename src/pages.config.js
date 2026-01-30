@@ -82,6 +82,7 @@ import Support from './pages/Support';
 import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
 import AllWithdrawalRequests from './pages/AllWithdrawalRequests';
+import AllCertifications from './pages/AllCertifications';
 import __Layout from './Layout.jsx';
 
 
@@ -121,6 +122,7 @@ export const PAGES = {
     "Terms": Terms,
     "Wallet": Wallet,
     "AllWithdrawalRequests": AllWithdrawalRequests,
+    "AllCertifications": AllCertifications,
 }
 
 export const pagesConfig = {

@@ -449,14 +449,14 @@ export default function Dashboard() {
                     </Card>
                   </Link>
 
-                  <Link to={createPageUrl("CertificationPage")}>
+                  <Link to={createPageUrl("AllCertifications")}>
                     <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-green-200 hover:border-green-400">
                       <CardContent className="p-6 text-center">
                         <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
                           <Award className="w-8 h-8 text-green-600" />
                         </div>
                         <h3 className="font-bold text-lg mb-2">شهادات الجودة</h3>
-                        <p className="text-sm text-slate-600">مراجعة الشهادات والاعتمادات</p>
+                        <p className="text-sm text-slate-600">جميع المشاريع المعتمدة</p>
                       </CardContent>
                     </Card>
                   </Link>
