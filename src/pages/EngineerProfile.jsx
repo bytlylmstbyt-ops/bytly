@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { 
   MapPin, Star, CheckCircle, Briefcase, Award, Clock,
   MessageSquare, Share2, Heart, Grid3X3, ExternalLink,
-  Calendar, Phone, Mail, ChevronLeft, ChevronRight
+  Calendar, Phone, Mail, ChevronLeft, ChevronRight, HeartOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +30,8 @@ export default function EngineerProfile() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [currentClient, setCurrentClient] = useState(null);
 
   useEffect(() => {
     if (engineerId) {
@@ -39,6 +41,21 @@ export default function EngineerProfile() {
 
   const loadData = async () => {
     setIsLoading(true);
+    
+    const user = await base44.auth.me();
+    const clientData = await base44.entities.Client.filter({ email: user.email });
+    
+    if (clientData.length > 0) {
+      setCurrentClient(clientData[0]);
+      
+      // Check if favorited
+      const favorites = await base44.entities.Favorite.filter({
+        client_id: clientData[0].id,
+        engineer_id: engineerId
+      });
+      setIsFavorited(favorites.length > 0);
+    }
+
     const [engineerData, portfolioData, reviewData] = await Promise.all([
       base44.entities.Engineer.filter({ id: engineerId }),
       base44.entities.Portfolio.filter({ engineer_id: engineerId }, "-created_date"),
@@ -49,6 +66,32 @@ export default function EngineerProfile() {
     setPortfolios(portfolioData);
     setReviews(reviewData);
     setIsLoading(false);
+  };
+
+  const toggleFavorite = async () => {
+    if (!currentClient) {
+      alert("يجب تسجيل الدخول كعميل لإضافة المفضلة");
+      return;
+    }
+
+    if (isFavorited) {
+      // Remove from favorites
+      const favorites = await base44.entities.Favorite.filter({
+        client_id: currentClient.id,
+        engineer_id: engineerId
+      });
+      if (favorites.length > 0) {
+        await base44.entities.Favorite.delete(favorites[0].id);
+      }
+      setIsFavorited(false);
+    } else {
+      // Add to favorites
+      await base44.entities.Favorite.create({
+        client_id: currentClient.id,
+        engineer_id: engineerId
+      });
+      setIsFavorited(true);
+    }
   };
 
   const allImages = portfolios.flatMap(p => p.images || []);
@@ -183,9 +226,19 @@ export default function EngineerProfile() {
                     </Button>
                   </Link>
                   <div className="flex gap-2">
-                    <Button variant="outline" className="flex-1">
-                      <Heart className="w-5 h-5" />
-                    </Button>
+                    {currentClient && (
+                      <Button 
+                        variant={isFavorited ? "default" : "outline"}
+                        className={`flex-1 ${isFavorited ? "bg-red-500 hover:bg-red-600" : ""}`}
+                        onClick={toggleFavorite}
+                      >
+                        {isFavorited ? (
+                          <Heart className="w-5 h-5 fill-current" />
+                        ) : (
+                          <Heart className="w-5 h-5" />
+                        )}
+                      </Button>
+                    )}
                     <Button variant="outline" className="flex-1">
                       <Share2 className="w-5 h-5" />
                     </Button>

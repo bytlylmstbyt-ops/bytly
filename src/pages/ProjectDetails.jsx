@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { 
   MapPin, Calendar, DollarSign, Clock, Users, 
   FileText, MessageSquare, Send, Loader2, CheckCircle,
-  Star, Download, Eye, ArrowLeft, Scale
+  Star, Download, Eye, ArrowLeft, Scale, Upload, X, Paperclip
 } from "lucide-react";
 import ContractGenerator from "@/components/contracts/ContractGenerator";
 import { Button } from "@/components/ui/button";
@@ -39,8 +39,11 @@ export default function ProjectDetails() {
   const [proposalData, setProposalData] = useState({
     price: "",
     delivery_days: "",
-    cover_letter: ""
+    cover_letter: "",
+    attachments: [],
+    portfolio_items: []
   });
+  const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
 
   useEffect(() => {
     if (projectId) {
@@ -88,6 +91,8 @@ export default function ProjectDetails() {
       price: parseFloat(proposalData.price),
       delivery_days: parseInt(proposalData.delivery_days),
       cover_letter: proposalData.cover_letter,
+      attachments: proposalData.attachments,
+      portfolio_items: proposalData.portfolio_items,
       status: "pending"
     });
 
@@ -96,10 +101,46 @@ export default function ProjectDetails() {
       total_proposals: (project.total_proposals || 0) + 1
     });
 
+    // Notify client about new proposal
+    await base44.entities.Notification.create({
+      recipient_email: project.created_by,
+      title: "عرض جديد على مشروعك",
+      message: `قدم ${userEngineer.full_name} عرضاً جديداً على مشروع "${project.title}" بسعر ${proposalData.price} ريال.`,
+      type: "project_update",
+      related_project_id: projectId,
+      priority: "high"
+    });
+
     setIsSubmitting(false);
     setShowProposalForm(false);
-    setProposalData({ price: "", delivery_days: "", cover_letter: "" });
+    setProposalData({ price: "", delivery_days: "", cover_letter: "", attachments: [], portfolio_items: [] });
     loadData();
+  };
+
+  const handleUploadAttachment = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    setIsUploadingAttachment(true);
+    const uploadedUrls = [];
+    
+    for (const file of files) {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      uploadedUrls.push(file_url);
+    }
+    
+    setProposalData(prev => ({
+      ...prev,
+      attachments: [...prev.attachments, ...uploadedUrls]
+    }));
+    setIsUploadingAttachment(false);
+  };
+
+  const removeAttachment = (index) => {
+    setProposalData(prev => ({
+      ...prev,
+      attachments: prev.attachments.filter((_, i) => i !== index)
+    }));
   };
 
   const handleAcceptProposal = async (proposal) => {
@@ -218,6 +259,55 @@ export default function ProjectDetails() {
                         placeholder="اشرح لماذا أنت الأنسب لهذا المشروع..."
                         rows={4}
                       />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>المرفقات (معرض أعمال، مستندات)</Label>
+                      <div className="border-2 border-dashed rounded-xl p-4 text-center hover:border-[#d4a574] transition-colors">
+                        <input
+                          type="file"
+                          multiple
+                          onChange={handleUploadAttachment}
+                          className="hidden"
+                          id="proposal-attachments"
+                          accept="image/*,.pdf,.dwg"
+                        />
+                        <label htmlFor="proposal-attachments" className="cursor-pointer">
+                          {isUploadingAttachment ? (
+                            <Loader2 className="w-8 h-8 text-slate-400 mx-auto animate-spin" />
+                          ) : (
+                            <>
+                              <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                              <p className="text-sm text-slate-500">أضف ملفات توضيحية</p>
+                            </>
+                          )}
+                        </label>
+                      </div>
+
+                      {proposalData.attachments.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {proposalData.attachments.map((url, index) => (
+                            <div key={index} className="relative group">
+                              <div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-100">
+                                {url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                  <img src={url} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <FileText className="w-6 h-6 text-slate-400" />
+                                  </div>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => removeAttachment(index)}
+                                className="absolute -top-2 -left-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <Button
                       onClick={handleSubmitProposal}
@@ -354,6 +444,34 @@ export default function ProjectDetails() {
                               <p className="mt-3 text-slate-600 text-sm">
                                 {proposal.cover_letter}
                               </p>
+                            )}
+
+                            {proposal.attachments?.length > 0 && (
+                              <div className="mt-3">
+                                <p className="text-xs text-slate-500 mb-2 flex items-center gap-1">
+                                  <Paperclip className="w-3 h-3" />
+                                  المرفقات ({proposal.attachments.length})
+                                </p>
+                                <div className="flex flex-wrap gap-2">
+                                  {proposal.attachments.map((url, idx) => (
+                                    <a
+                                      key={idx}
+                                      href={url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 hover:ring-2 hover:ring-[#d4a574] transition-all"
+                                    >
+                                      {url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                        <img src={url} alt="" className="w-full h-full object-cover" />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center">
+                                          <FileText className="w-5 h-5 text-slate-400" />
+                                        </div>
+                                      )}
+                                    </a>
+                                  ))}
+                                </div>
+                              </div>
                             )}
 
                             <div className="flex items-center justify-between mt-4">

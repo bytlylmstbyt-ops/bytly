@@ -87,7 +87,7 @@ export default function CreateProject() {
 
     setIsLoading(true);
     
-    await base44.entities.Project.create({
+    const newProject = await base44.entities.Project.create({
       ...formData,
       client_id: client.id,
       budget_min: parseFloat(formData.budget_min) || 0,
@@ -100,6 +100,36 @@ export default function CreateProject() {
     await base44.entities.Client.update(client.id, {
       total_projects: (client.total_projects || 0) + 1
     });
+
+    // Send notifications to matching engineers
+    const matchingEngineers = await base44.entities.Engineer.filter({
+      status: "approved"
+    });
+
+    const notificationsToSend = matchingEngineers
+      .filter(eng => {
+        // Match by category or user_type
+        if (formData.category === "interior" && eng.user_type === "engineer") return true;
+        if (formData.category === "architecture" && eng.user_type === "architect") return true;
+        if (formData.category === "painting" && eng.user_type === "painter") return true;
+        if (formData.category === "civil_engineering" && eng.user_type === "civil") return true;
+        return false;
+      })
+      .map(eng => ({
+        recipient_email: eng.email,
+        title: "مشروع جديد مطابق لتخصصك",
+        message: `تم نشر مشروع جديد: ${formData.title}. الميزانية: ${formData.budget_min}-${formData.budget_max} ريال.`,
+        type: "project_update",
+        related_project_id: newProject.id,
+        priority: "high"
+      }));
+
+    // Create notifications in bulk
+    if (notificationsToSend.length > 0) {
+      await Promise.all(
+        notificationsToSend.map(notif => base44.entities.Notification.create(notif))
+      );
+    }
 
     setIsLoading(false);
     navigate(createPageUrl("Projects"));

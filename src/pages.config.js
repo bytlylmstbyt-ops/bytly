@@ -87,6 +87,7 @@ import AdminReports from './pages/AdminReports';
 import AdminCategories from './pages/AdminCategories';
 import AdminClients from './pages/AdminClients';
 import AdminEngineers from './pages/AdminEngineers';
+import MyFavorites from './pages/MyFavorites';
 import __Layout from './Layout.jsx';
 
 
@@ -131,6 +132,7 @@ export const PAGES = {
     "AdminCategories": AdminCategories,
     "AdminClients": AdminClients,
     "AdminEngineers": AdminEngineers,
+    "MyFavorites": MyFavorites,
 }
 
 export const pagesConfig = {
