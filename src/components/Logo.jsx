@@ -20,7 +20,7 @@ export default function Logo({ className = "", size = "default", isDark = false 
         <div 
           className={`${currentSize.iconBox} flex items-center justify-center rounded-xl`}
           style={{ 
-            backgroundColor: boxBgColor
+            background: 'linear-gradient(to top, #A89178, #6B5D4F)'
           }}
         >
           <Home 
