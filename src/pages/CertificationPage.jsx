@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { sendNotification } from "@/components/notifications/NotificationHelper";
-import jsPDF from "jspdf";
+import { jsPDF } from "jspdf";
 
 export default function CertificationPage() {
   const navigate = useNavigate();
