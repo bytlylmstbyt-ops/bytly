@@ -83,12 +83,17 @@ export default function Layout({ children, currentPageName }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 md:h-20">
             {/* Logo */}
-            <Link to={createPageUrl("Home")} className="flex items-center gap-3">
+            <Link to={createPageUrl("Home")} className="flex items-center">
               <img 
                 src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69741d7bf3195aeab86a1582/c7b55d4ed_.jpg" 
                 alt="Bytly Logo" 
-                className="w-[160px] h-auto object-contain"
-                style={{ mixBlendMode: 'multiply' }}
+                className="max-h-[60px] w-auto object-contain"
+                style={{ 
+                  mixBlendMode: 'multiply',
+                  filter: 'contrast(1.1) brightness(1.05)',
+                  padding: 0,
+                  margin: 0
+                }}
               />
             </Link>
 
@@ -255,8 +260,14 @@ export default function Layout({ children, currentPageName }) {
                 <img 
                   src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/69741d7bf3195aeab86a1582/c7b55d4ed_.jpg" 
                   alt="Bytly Logo" 
-                  className="h-20 w-auto object-contain mb-2"
-                  style={{ filter: 'brightness(0) invert(1)', mixBlendMode: 'screen' }}
+                  className="max-h-[70px] w-auto object-contain mb-2"
+                  style={{ 
+                    filter: 'brightness(0) invert(1)',
+                    mixBlendMode: 'screen',
+                    padding: 0,
+                    margin: 0,
+                    marginBottom: '0.5rem'
+                  }}
                 />
               </div>
               <p className="text-slate-300 text-sm leading-relaxed max-w-md">
