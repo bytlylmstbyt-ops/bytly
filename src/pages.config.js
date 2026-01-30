@@ -1,3 +1,52 @@
+/**
+ * pages.config.js - Page routing configuration
+ * 
+ * This file is AUTO-GENERATED. Do not add imports or modify PAGES manually.
+ * Pages are auto-registered when you create files in the ./pages/ folder.
+ * 
+ * THE ONLY EDITABLE VALUE: mainPage
+ * This controls which page is the landing page (shown when users visit the app).
+ * 
+ * Example file structure:
+ * 
+ *   import HomePage from './pages/HomePage';
+ *   import Dashboard from './pages/Dashboard';
+ *   import Settings from './pages/Settings';
+ *   
+ *   export const PAGES = {
+ *       "HomePage": HomePage,
+ *       "Dashboard": Dashboard,
+ *       "Settings": Settings,
+ *   }
+ *   
+ *   export const pagesConfig = {
+ *       mainPage: "HomePage",
+ *       Pages: PAGES,
+ *   };
+ * 
+ * Example with Layout (wraps all pages):
+ *
+ *   import Home from './pages/Home';
+ *   import Settings from './pages/Settings';
+ *   import __Layout from './Layout.jsx';
+ *
+ *   export const PAGES = {
+ *       "Home": Home,
+ *       "Settings": Settings,
+ *   }
+ *
+ *   export const pagesConfig = {
+ *       mainPage: "Home",
+ *       Pages: PAGES,
+ *       Layout: __Layout,
+ *   };
+ *
+ * To change the main page from HomePage to Dashboard, use find_replace:
+ *   Old: mainPage: "HomePage",
+ *   New: mainPage: "Dashboard",
+ *
+ * The mainPage value must match a key in the PAGES object exactly.
+ */
 import AddPortfolio from './pages/AddPortfolio';
 import AdminWallet from './pages/AdminWallet';
 import Complaints from './pages/Complaints';
@@ -12,8 +61,10 @@ import Engineers from './pages/Engineers';
 import Gallery from './pages/Gallery';
 import Home from './pages/Home';
 import Messages from './pages/Messages';
+import MyPurchasedProjects from './pages/MyPurchasedProjects';
 import Notifications from './pages/Notifications';
 import Packages from './pages/Packages';
+import Payment from './pages/Payment';
 import Privacy from './pages/Privacy';
 import ProjectDetails from './pages/ProjectDetails';
 import Projects from './pages/Projects';
@@ -28,8 +79,7 @@ import Subscription from './pages/Subscription';
 import Support from './pages/Support';
 import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
-import Payment from './pages/Payment';
-import MyPurchasedProjects from './pages/MyPurchasedProjects';
+import CertificationPage from './pages/CertificationPage';
 import __Layout from './Layout.jsx';
 
 
@@ -48,8 +98,10 @@ export const PAGES = {
     "Gallery": Gallery,
     "Home": Home,
     "Messages": Messages,
+    "MyPurchasedProjects": MyPurchasedProjects,
     "Notifications": Notifications,
     "Packages": Packages,
+    "Payment": Payment,
     "Privacy": Privacy,
     "ProjectDetails": ProjectDetails,
     "Projects": Projects,
@@ -64,8 +116,7 @@ export const PAGES = {
     "Support": Support,
     "Terms": Terms,
     "Wallet": Wallet,
-    "Payment": Payment,
-    "MyPurchasedProjects": MyPurchasedProjects,
+    "CertificationPage": CertificationPage,
 }
 
 export const pagesConfig = {
