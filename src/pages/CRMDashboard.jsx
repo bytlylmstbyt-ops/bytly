@@ -13,9 +13,9 @@ import {
   Phone, Mail, MessageSquare, Plus, TrendingUp, TrendingDown,
   AlertCircle, CheckCircle2, Clock, Filter, Download
 } from "lucide-react";
-import CRMInteractionForm from "@/components/crm/CRMInteractionForm";
-import InteractionTimeline from "@/components/crm/InteractionTimeline";
-import SentimentAnalyzer from "@/components/crm/SentimentAnalyzer";
+import CRMInteractionForm from "@/components/crm/CRMInteractionForm.js";
+import InteractionTimeline from "@/components/crm/InteractionTimeline.js";
+import SentimentAnalyzer from "@/components/crm/SentimentAnalyzer.js";
 
 export default function CRMDashboard() {
   const navigate = useNavigate();
