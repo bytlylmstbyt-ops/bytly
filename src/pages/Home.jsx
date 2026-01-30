@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { 
   Search, ArrowLeft, Star, CheckCircle, Users, 
   Briefcase, Award, Shield, Palette, Building2,
-  PenTool, Sparkles, ChevronLeft
+  PenTool, Sparkles, ChevronLeft, Ruler
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +55,7 @@ export default function Home() {
     { icon: Palette, title: "تصميم داخلي", count: "500+", color: "from-rose-500 to-orange-500" },
     { icon: Building2, title: "تصميم معماري", count: "300+", color: "from-blue-500 to-cyan-500" },
     { icon: PenTool, title: "رسم هندسي", count: "200+", color: "from-violet-500 to-purple-500" },
+    { icon: Ruler, title: "رسم تنفيذي", count: "150+", color: "from-emerald-500 to-teal-500" },
     { icon: Sparkles, title: "ديكور وإكسسوارات", count: "400+", color: "from-amber-500 to-yellow-500" },
   ];
 
@@ -208,7 +209,7 @@ export default function Home() {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
             {categories.map((category, index) => (
               <motion.div
                 key={index}
