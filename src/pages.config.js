@@ -81,6 +81,7 @@ import Subscription from './pages/Subscription';
 import Support from './pages/Support';
 import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
+import AllWithdrawalRequests from './pages/AllWithdrawalRequests';
 import __Layout from './Layout.jsx';
 
 
@@ -119,6 +120,7 @@ export const PAGES = {
     "Support": Support,
     "Terms": Terms,
     "Wallet": Wallet,
+    "AllWithdrawalRequests": AllWithdrawalRequests,
 }
 
 export const pagesConfig = {

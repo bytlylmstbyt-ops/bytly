@@ -40,23 +40,18 @@ export default function ConsultantApprovalPage() {
     try {
       const user = await base44.auth.me();
       
-      // Allow admin access
+      // Allow full admin access
       if (user.role === "admin") {
-        // Admin can view - use first available consultant for demo
-        const allConsultants = await base44.entities.Consultant.filter({ status: "approved" });
-        if (allConsultants.length > 0) {
-          setConsultant(allConsultants[0]);
-        } else {
-          // Create dummy consultant for admin view
-          setConsultant({
-            id: "admin-view",
-            email: user.email,
-            wallet_balance: 0,
-            total_reviews: 0
-          });
-        }
+        // Admin has full access - create admin consultant profile
+        setConsultant({
+          id: "admin",
+          full_name: user.full_name || "المدير العام",
+          email: user.email,
+          wallet_balance: 0,
+          total_reviews: 0
+        });
       } else {
-        // Load consultant profile
+        // Load consultant profile for non-admin
         const consultants = await base44.entities.Consultant.filter({ 
           email: user.email 
         });

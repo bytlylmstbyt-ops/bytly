@@ -437,14 +437,14 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="grid md:grid-cols-3 gap-4">
-                  <Link to={createPageUrl("ConsultantApproval")}>
+                  <Link to={createPageUrl("AllWithdrawalRequests")}>
                     <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-blue-200 hover:border-blue-400">
                       <CardContent className="p-6 text-center">
                         <div className="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-4">
                           <FileCheck className="w-8 h-8 text-blue-600" />
                         </div>
-                        <h3 className="font-bold text-lg mb-2">موافقة الاستشاري</h3>
-                        <p className="text-sm text-slate-600">مراجعة واعتماد طلبات الاستشاريين</p>
+                        <h3 className="font-bold text-lg mb-2">طلبات السحب</h3>
+                        <p className="text-sm text-slate-600">مراجعة واعتماد جميع طلبات السحب</p>
                       </CardContent>
                     </Card>
                   </Link>

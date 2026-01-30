@@ -47,11 +47,14 @@ export default function CertificationPage() {
         return;
       }
 
-      // Check if project is approved
-      if (projectData.status !== "technical_approved" && projectData.status !== "pending_client_approval") {
-        alert("المشروع لم يتم اعتماده بعد");
-        navigate(-1);
-        return;
+      // Allow admin full access to all projects
+      if (user.role !== "admin") {
+        // Check if project is approved for non-admin users
+        if (projectData.status !== "technical_approved" && projectData.status !== "pending_client_approval") {
+          alert("المشروع لم يتم اعتماده بعد");
+          navigate(-1);
+          return;
+        }
       }
 
       setProject(projectData);
