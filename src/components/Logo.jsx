@@ -10,6 +10,7 @@ export default function Logo({ className = "", size = "default", isDark = false 
   
   const currentSize = sizes[size] || sizes.default;
   const brownColor = '#4A3F35';
+  const boxBgColor = '#8B7355'; // لون بني فاتح مطابق للصورة
   const textColor = isDark ? '#ffffff' : brownColor;
   const borderColor = isDark ? '#C9A66B' : brownColor;
   
