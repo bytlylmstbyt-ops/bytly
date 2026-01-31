@@ -123,6 +123,18 @@ export default function AdminDisputeManage() {
     );
   }
 
+  if (!dispute) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6 text-center">
+            <p className="text-slate-600">النزاع غير موجود</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8">
       <div className="max-w-6xl mx-auto px-4">
