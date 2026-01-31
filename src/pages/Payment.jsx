@@ -13,7 +13,7 @@ import { sendNotification } from "@/components/notifications/NotificationHelper"
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "");
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 function StripePaymentForm({ amount, onSuccess, processing, setProcessing, projectId, proposalId, projectTitle }) {
   const [error, setError] = useState(null);
