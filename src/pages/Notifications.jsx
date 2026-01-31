@@ -5,11 +5,12 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
   Bell, CheckCircle, MessageSquare, Briefcase, 
-  Star, DollarSign, Settings, Trash2, Loader2, AlertCircle
+  Star, DollarSign, Settings, Trash2, Loader2, AlertCircle, ShieldAlert
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import moment from "moment";
 import "moment/locale/ar";
 
@@ -19,9 +20,31 @@ export default function Notifications() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [filter, setFilter] = useState("all");
 
   useEffect(() => {
     loadNotifications();
+    
+    // Real-time subscription for new notifications
+    const setupSubscription = async () => {
+      const currentUser = await base44.auth.me();
+      const unsubscribe = base44.entities.Notification.subscribe((event) => {
+        if (event.type === 'create' && event.data.recipient_email === currentUser.email) {
+          setNotifications(prev => [event.data, ...prev]);
+        } else if (event.type === 'update') {
+          setNotifications(prev => prev.map(n => n.id === event.id ? event.data : n));
+        } else if (event.type === 'delete') {
+          setNotifications(prev => prev.filter(n => n.id !== event.id));
+        }
+      });
+      return unsubscribe;
+    };
+
+    const subscription = setupSubscription();
+
+    return () => {
+      subscription.then(unsub => unsub?.());
+    };
   }, []);
 
   const loadNotifications = async () => {
@@ -55,6 +78,8 @@ export default function Notifications() {
         return <CheckCircle className="w-5 h-5 text-green-500" />;
       case "system":
         return <Bell className="w-5 h-5 text-blue-500" />;
+      case "dispute_update":
+        return <ShieldAlert className="w-5 h-5 text-orange-500" />;
       default:
         return <Bell className="w-5 h-5 text-slate-500" />;
     }
@@ -106,6 +131,12 @@ export default function Notifications() {
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
+  const filteredNotifications = notifications.filter(n => {
+    if (filter === "unread") return !n.is_read;
+    if (filter === "read") return n.is_read;
+    return true;
+  });
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -128,19 +159,31 @@ export default function Notifications() {
                 <p className="text-slate-500">{unreadCount} إشعار جديد</p>
               )}
             </div>
-            {unreadCount > 0 && (
-              <Button variant="outline" onClick={markAllAsRead}>
-                <CheckCircle className="w-4 h-4 ml-2" />
-                تعليم الكل كمقروء
-              </Button>
-            )}
+            <div className="flex gap-2">
+              <Select value={filter} onValueChange={setFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">الكل</SelectItem>
+                  <SelectItem value="unread">غير مقروء</SelectItem>
+                  <SelectItem value="read">مقروء</SelectItem>
+                </SelectContent>
+              </Select>
+              {unreadCount > 0 && (
+                <Button variant="outline" onClick={markAllAsRead}>
+                  <CheckCircle className="w-4 h-4 ml-2" />
+                  تعليم الكل كمقروء
+                </Button>
+              )}
+            </div>
           </div>
 
           <Card className="border-0 shadow-lg">
             <CardContent className="p-0">
-              {notifications.length > 0 ? (
+              {filteredNotifications.length > 0 ? (
                 <div className="divide-y">
-                  {notifications.map((notification, index) => (
+                  {filteredNotifications.map((notification, index) => (
                     <motion.div
                       key={notification.id}
                       initial={{ opacity: 0, x: -20 }}
@@ -151,7 +194,9 @@ export default function Notifications() {
                       }`}
                       onClick={() => {
                         markAsRead(notification);
-                        if (notification.related_project_id) {
+                        if (notification.link) {
+                          window.location.href = notification.link;
+                        } else if (notification.related_project_id) {
                           window.location.href = createPageUrl("ProjectDetails") + `?id=${notification.related_project_id}`;
                         }
                       }}
