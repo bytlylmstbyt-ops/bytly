@@ -25,7 +25,20 @@ export default function Settings() {
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({});
   const [notificationSettings, setNotificationSettings] = useState({
-    email_notifications: true
+    email_notifications: true,
+    in_app_notifications: true,
+    notification_preferences: {
+      project_updates: true,
+      contract_updates: true,
+      payment_reminders: true,
+      milestone_reminders: true,
+      new_proposals: true,
+      deadline_reminders: true,
+      system_notifications: true,
+      dispute_updates: true,
+      new_messages: true,
+      review_requests: true
+    }
   });
 
   useEffect(() => {
@@ -59,7 +72,20 @@ export default function Settings() {
     
     if (notifSettings.length > 0) {
       setNotificationSettings({
-        email_notifications: notifSettings[0].email_notifications ?? true
+        email_notifications: notifSettings[0].email_notifications ?? true,
+        in_app_notifications: notifSettings[0].in_app_notifications ?? true,
+        notification_preferences: notifSettings[0].notification_preferences || {
+          project_updates: true,
+          contract_updates: true,
+          payment_reminders: true,
+          milestone_reminders: true,
+          new_proposals: true,
+          deadline_reminders: true,
+          system_notifications: true,
+          dispute_updates: true,
+          new_messages: true,
+          review_requests: true
+        }
       });
     }
 
@@ -93,13 +119,11 @@ export default function Settings() {
       });
       
       if (existingSettings.length > 0) {
-        await base44.entities.NotificationSettings.update(existingSettings[0].id, {
-          email_notifications: notificationSettings.email_notifications
-        });
+        await base44.entities.NotificationSettings.update(existingSettings[0].id, notificationSettings);
       } else {
         await base44.entities.NotificationSettings.create({
           user_email: user.email,
-          email_notifications: notificationSettings.email_notifications
+          ...notificationSettings
         });
       }
       
@@ -318,21 +342,18 @@ export default function Settings() {
                 <CardTitle>إعدادات الإشعارات</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
-                  <div className="flex items-start gap-3 mb-3">
-                    <Bell className="w-5 h-5 text-blue-600 mt-1" />
-                    <div>
-                      <h3 className="font-medium text-blue-900">إعدادات التنبيهات المتقدمة</h3>
-                      <p className="text-sm text-blue-700 mt-1">
-                        تخصيص كامل لأنواع التنبيهات وتوقيت التذكيرات
-                      </p>
-                    </div>
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+                  <div>
+                    <h3 className="font-medium">إشعارات داخل التطبيق</h3>
+                    <p className="text-sm text-slate-500">إشعارات فورية داخل المنصة</p>
                   </div>
-                  <Link to={createPageUrl("NotificationSettings")}>
-                    <Button className="bg-blue-600 hover:bg-blue-700">
-                      فتح إعدادات التنبيهات
-                    </Button>
-                  </Link>
+                  <Switch 
+                    checked={notificationSettings.in_app_notifications}
+                    onCheckedChange={(checked) => setNotificationSettings(prev => ({ 
+                      ...prev, 
+                      in_app_notifications: checked 
+                    }))}
+                  />
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
@@ -349,28 +370,36 @@ export default function Settings() {
                   />
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-                  <div>
-                    <h3 className="font-medium">إشعارات الرسائل الجديدة</h3>
-                    <p className="text-sm text-slate-500">تنبيه عند استلام رسالة</p>
+                <div className="border-t pt-4 mt-4">
+                  <h4 className="font-medium mb-3">تخصيص أنواع الإشعارات</h4>
+                  <div className="space-y-2">
+                    {[
+                      { key: 'project_updates', label: 'تحديثات المشاريع' },
+                      { key: 'contract_updates', label: 'تحديثات العقود' },
+                      { key: 'payment_reminders', label: 'تذكيرات الدفع' },
+                      { key: 'milestone_reminders', label: 'تذكيرات المعالم' },
+                      { key: 'new_proposals', label: 'عروض جديدة' },
+                      { key: 'deadline_reminders', label: 'تذكيرات المواعيد' },
+                      { key: 'dispute_updates', label: 'تحديثات النزاعات' },
+                      { key: 'new_messages', label: 'رسائل جديدة' },
+                      { key: 'review_requests', label: 'طلبات التقييم' },
+                      { key: 'system_notifications', label: 'إشعارات النظام' }
+                    ].map(item => (
+                      <div key={item.key} className="flex items-center justify-between p-2 hover:bg-slate-50 rounded">
+                        <span className="text-sm">{item.label}</span>
+                        <Switch 
+                          checked={notificationSettings.notification_preferences[item.key]}
+                          onCheckedChange={(checked) => setNotificationSettings(prev => ({ 
+                            ...prev, 
+                            notification_preferences: {
+                              ...prev.notification_preferences,
+                              [item.key]: checked
+                            }
+                          }))}
+                        />
+                      </div>
+                    ))}
                   </div>
-                  <Switch defaultChecked />
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-                  <div>
-                    <h3 className="font-medium">إشعارات المشاريع</h3>
-                    <p className="text-sm text-slate-500">تحديثات عن مشاريعك</p>
-                  </div>
-                  <Switch defaultChecked />
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-                  <div>
-                    <h3 className="font-medium">النشرة الإخبارية</h3>
-                    <p className="text-sm text-slate-500">آخر الأخبار والعروض</p>
-                  </div>
-                  <Switch />
                 </div>
               </CardContent>
             </Card>
