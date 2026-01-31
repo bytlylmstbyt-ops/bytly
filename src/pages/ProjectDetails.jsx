@@ -44,12 +44,27 @@ export default function ProjectDetails() {
     portfolio_items: []
   });
   const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewData, setReviewData] = useState({
+    rating: 5,
+    quality_rating: 5,
+    communication_rating: 5,
+    delivery_rating: 5,
+    comment: ""
+  });
+  const [existingReview, setExistingReview] = useState(null);
 
   useEffect(() => {
     if (projectId) {
       loadData();
     }
   }, [projectId]);
+
+  useEffect(() => {
+    if (project?.status === 'completed' && user) {
+      checkExistingReview();
+    }
+  }, [project, user]);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -78,6 +93,43 @@ export default function ProjectDetails() {
     }
 
     setIsLoading(false);
+  };
+
+  const checkExistingReview = async () => {
+    try {
+      const reviews = await base44.entities.Review.filter({ project_id: projectId });
+      if (reviews.length > 0) {
+        setExistingReview(reviews[0]);
+      }
+    } catch (error) {
+      console.error("Error checking review:", error);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    setIsSubmitting(true);
+    try {
+      const clientData = await base44.entities.Client.filter({ email: user.email });
+      const client = clientData[0];
+
+      await base44.entities.Review.create({
+        engineer_id: project.assigned_engineer_id,
+        client_id: client?.id,
+        project_id: projectId,
+        rating: reviewData.rating,
+        quality_rating: reviewData.quality_rating,
+        communication_rating: reviewData.communication_rating,
+        delivery_rating: reviewData.delivery_rating,
+        comment: reviewData.comment
+      });
+
+      setShowReviewForm(false);
+      checkExistingReview();
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSubmitProposal = async () => {
@@ -345,6 +397,110 @@ export default function ProjectDetails() {
               <Badge className="bg-green-100 text-green-700 py-2 px-4">
                 <CheckCircle className="w-4 h-4 ml-2" />
                 تم تقديم عرضك
+              </Badge>
+            )}
+
+            {project.status === 'completed' && user && project.created_by === user.email && !existingReview && (
+              <Dialog open={showReviewForm} onOpenChange={setShowReviewForm}>
+                <DialogTrigger asChild>
+                  <Button className="bg-gradient-to-r from-amber-500 to-amber-600 text-white gap-2">
+                    <Star className="w-5 h-5" />
+                    قيّم المشروع
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>قيّم تجربتك مع المهندس</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <div className="space-y-2">
+                      <Label>التقييم العام</Label>
+                      <div className="flex gap-2 justify-center">
+                        {[1, 2, 3, 4, 5].map(star => (
+                          <button
+                            key={star}
+                            type="button"
+                            onClick={() => setReviewData(prev => ({ ...prev, rating: star }))}
+                            className="transition-transform hover:scale-110"
+                          >
+                            <Star
+                              className={`w-8 h-8 ${
+                                star <= reviewData.rating
+                                  ? "fill-amber-400 text-amber-400"
+                                  : "text-slate-300"
+                              }`}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <Label className="text-xs">الجودة</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="5"
+                          value={reviewData.quality_rating}
+                          onChange={(e) => setReviewData(prev => ({ ...prev, quality_rating: parseInt(e.target.value) }))}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">التواصل</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="5"
+                          value={reviewData.communication_rating}
+                          onChange={(e) => setReviewData(prev => ({ ...prev, communication_rating: parseInt(e.target.value) }))}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">التسليم</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="5"
+                          value={reviewData.delivery_rating}
+                          onChange={(e) => setReviewData(prev => ({ ...prev, delivery_rating: parseInt(e.target.value) }))}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>تعليقك</Label>
+                      <Textarea
+                        value={reviewData.comment}
+                        onChange={(e) => setReviewData(prev => ({ ...prev, comment: e.target.value }))}
+                        placeholder="شاركنا تجربتك مع المهندس..."
+                        rows={4}
+                      />
+                    </div>
+
+                    <Button
+                      onClick={handleSubmitReview}
+                      disabled={isSubmitting}
+                      className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin ml-2" />
+                          جاري الإرسال...
+                        </>
+                      ) : (
+                        "إرسال التقييم"
+                      )}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+
+            {existingReview && (
+              <Badge className="bg-amber-100 text-amber-700 py-2 px-4">
+                <Star className="w-4 h-4 ml-2 fill-amber-600" />
+                تم التقييم ({existingReview.rating}/5)
               </Badge>
             )}
           </div>
