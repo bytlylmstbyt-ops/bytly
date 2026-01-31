@@ -110,6 +110,7 @@ import MyDisputes from './pages/MyDisputes';
 import DisputeDetails from './pages/DisputeDetails';
 import AdminDisputes from './pages/AdminDisputes';
 import AdminDisputeManage from './pages/AdminDisputeManage';
+import EngineerDashboard from './pages/EngineerDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -177,6 +178,7 @@ export const PAGES = {
     "DisputeDetails": DisputeDetails,
     "AdminDisputes": AdminDisputes,
     "AdminDisputeManage": AdminDisputeManage,
+    "EngineerDashboard": EngineerDashboard,
 }
 
 export const pagesConfig = {
