@@ -3,7 +3,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { project_id } = await req.json();
+    const payload = await req.json();
+    
+    // Handle automation payload
+    const project_id = payload.project_id || payload.event?.entity_id;
 
     if (!project_id) {
       return Response.json({ error: 'project_id is required' }, { status: 400 });
@@ -17,9 +20,12 @@ Deno.serve(async (req) => {
 
     const project = projects[0];
 
-    // Check if project is completed
+    // Check if project is completed (only proceed if status is completed)
     if (project.status !== 'completed') {
-      return Response.json({ error: 'Project is not completed yet' }, { status: 400 });
+      return Response.json({ 
+        message: 'Project is not completed yet, skipping review request',
+        skipped: true 
+      });
     }
 
     // Check if review already exists

@@ -3,7 +3,10 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { engineer_id } = await req.json();
+    const payload = await req.json();
+    
+    // Handle automation payload or direct call
+    const engineer_id = payload.engineer_id || payload.data?.engineer_id;
 
     if (!engineer_id) {
       return Response.json({ error: 'engineer_id is required' }, { status: 400 });
