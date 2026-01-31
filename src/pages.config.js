@@ -56,12 +56,16 @@ import AdminReports from './pages/AdminReports';
 import AdminWallet from './pages/AdminWallet';
 import AllCertifications from './pages/AllCertifications';
 import AllWithdrawalRequests from './pages/AllWithdrawalRequests';
+import CRMDashboard from './pages/CRMDashboard';
 import CertificationPage from './pages/CertificationPage';
+import ClientOnboarding from './pages/ClientOnboarding';
 import Complaints from './pages/Complaints';
 import ConsultantApproval from './pages/ConsultantApproval';
 import ConsultantDashboard from './pages/ConsultantDashboard';
 import Contract from './pages/Contract';
+import ContractAmendments from './pages/ContractAmendments';
 import ContractArchive from './pages/ContractArchive';
+import ContractTemplates from './pages/ContractTemplates';
 import Copyright from './pages/Copyright';
 import CreateProject from './pages/CreateProject';
 import Dashboard from './pages/Dashboard';
@@ -70,15 +74,20 @@ import EngineerProjects from './pages/EngineerProjects';
 import Engineers from './pages/Engineers';
 import Gallery from './pages/Gallery';
 import Home from './pages/Home';
+import InvoiceManager from './pages/InvoiceManager';
+import LegalConsultantProfile from './pages/LegalConsultantProfile';
 import Messages from './pages/Messages';
 import MyFavorites from './pages/MyFavorites';
 import MyPurchasedProjects from './pages/MyPurchasedProjects';
+import NotificationSettings from './pages/NotificationSettings';
 import Notifications from './pages/Notifications';
 import Packages from './pages/Packages';
 import Payment from './pages/Payment';
 import PaymentSuccess from './pages/PaymentSuccess';
 import Privacy from './pages/Privacy';
+import ProjectChat from './pages/ProjectChat';
 import ProjectDetails from './pages/ProjectDetails';
+import ProjectKanban from './pages/ProjectKanban';
 import ProjectMilestones from './pages/ProjectMilestones';
 import ProjectWorkspace from './pages/ProjectWorkspace';
 import Projects from './pages/Projects';
@@ -94,16 +103,7 @@ import Support from './pages/Support';
 import TechnicalReviewPage from './pages/TechnicalReviewPage';
 import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
-import ContractTemplates from './pages/ContractTemplates';
-import ContractAmendments from './pages/ContractAmendments';
-import NotificationSettings from './pages/NotificationSettings';
-import InvoiceManager from './pages/InvoiceManager';
-import LegalConsultantProfile from './pages/LegalConsultantProfile';
-import ProjectKanban from './pages/ProjectKanban';
 import WorkflowBuilder from './pages/WorkflowBuilder';
-import ProjectChat from './pages/ProjectChat';
-import ClientOnboarding from './pages/ClientOnboarding';
-import CRMDashboard from './pages/CRMDashboard';
 import AdminReviews from './pages/AdminReviews';
 import __Layout from './Layout.jsx';
 
@@ -118,12 +118,16 @@ export const PAGES = {
     "AdminWallet": AdminWallet,
     "AllCertifications": AllCertifications,
     "AllWithdrawalRequests": AllWithdrawalRequests,
+    "CRMDashboard": CRMDashboard,
     "CertificationPage": CertificationPage,
+    "ClientOnboarding": ClientOnboarding,
     "Complaints": Complaints,
     "ConsultantApproval": ConsultantApproval,
     "ConsultantDashboard": ConsultantDashboard,
     "Contract": Contract,
+    "ContractAmendments": ContractAmendments,
     "ContractArchive": ContractArchive,
+    "ContractTemplates": ContractTemplates,
     "Copyright": Copyright,
     "CreateProject": CreateProject,
     "Dashboard": Dashboard,
@@ -132,15 +136,20 @@ export const PAGES = {
     "Engineers": Engineers,
     "Gallery": Gallery,
     "Home": Home,
+    "InvoiceManager": InvoiceManager,
+    "LegalConsultantProfile": LegalConsultantProfile,
     "Messages": Messages,
     "MyFavorites": MyFavorites,
     "MyPurchasedProjects": MyPurchasedProjects,
+    "NotificationSettings": NotificationSettings,
     "Notifications": Notifications,
     "Packages": Packages,
     "Payment": Payment,
     "PaymentSuccess": PaymentSuccess,
     "Privacy": Privacy,
+    "ProjectChat": ProjectChat,
     "ProjectDetails": ProjectDetails,
+    "ProjectKanban": ProjectKanban,
     "ProjectMilestones": ProjectMilestones,
     "ProjectWorkspace": ProjectWorkspace,
     "Projects": Projects,
@@ -156,16 +165,7 @@ export const PAGES = {
     "TechnicalReviewPage": TechnicalReviewPage,
     "Terms": Terms,
     "Wallet": Wallet,
-    "ContractTemplates": ContractTemplates,
-    "ContractAmendments": ContractAmendments,
-    "NotificationSettings": NotificationSettings,
-    "InvoiceManager": InvoiceManager,
-    "LegalConsultantProfile": LegalConsultantProfile,
-    "ProjectKanban": ProjectKanban,
     "WorkflowBuilder": WorkflowBuilder,
-    "ProjectChat": ProjectChat,
-    "ClientOnboarding": ClientOnboarding,
-    "CRMDashboard": CRMDashboard,
     "AdminReviews": AdminReviews,
 }
 

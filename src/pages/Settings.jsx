@@ -24,6 +24,9 @@ export default function Settings() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({});
+  const [notificationSettings, setNotificationSettings] = useState({
+    email_notifications: true
+  });
 
   useEffect(() => {
     loadUserData();
@@ -49,6 +52,17 @@ export default function Settings() {
       setFormData(clientData[0]);
     }
 
+    // Load notification settings
+    const notifSettings = await base44.entities.NotificationSettings.filter({
+      user_email: currentUser.email
+    });
+    
+    if (notifSettings.length > 0) {
+      setNotificationSettings({
+        email_notifications: notifSettings[0].email_notifications ?? true
+      });
+    }
+
     setIsLoading(false);
   };
 
@@ -69,12 +83,34 @@ export default function Settings() {
   const handleSave = async () => {
     setIsSaving(true);
     
-    const entityType = userType === "engineer" ? "Engineer" : "Client";
-    await base44.entities[entityType].update(profile.id, formData);
-    
-    toast.success("تم حفظ التغييرات بنجاح");
-    setIsSaving(false);
-    loadUserData();
+    try {
+      const entityType = userType === "engineer" ? "Engineer" : "Client";
+      await base44.entities[entityType].update(profile.id, formData);
+      
+      // Save notification settings
+      const existingSettings = await base44.entities.NotificationSettings.filter({
+        user_email: user.email
+      });
+      
+      if (existingSettings.length > 0) {
+        await base44.entities.NotificationSettings.update(existingSettings[0].id, {
+          email_notifications: notificationSettings.email_notifications
+        });
+      } else {
+        await base44.entities.NotificationSettings.create({
+          user_email: user.email,
+          email_notifications: notificationSettings.email_notifications
+        });
+      }
+      
+      toast.success("تم حفظ التغييرات بنجاح");
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("حدث خطأ أثناء الحفظ");
+    } finally {
+      setIsSaving(false);
+      loadUserData();
+    }
   };
 
   if (isLoading) {
@@ -110,6 +146,10 @@ export default function Settings() {
             <TabsTrigger value="notifications" className="gap-2">
               <Bell className="w-4 h-4" />
               الإشعارات
+            </TabsTrigger>
+            <TabsTrigger value="email" className="gap-2">
+              <Mail className="w-4 h-4" />
+              البريد الإلكتروني
             </TabsTrigger>
           </TabsList>
 
@@ -300,7 +340,13 @@ export default function Settings() {
                     <h3 className="font-medium">إشعارات البريد الإلكتروني</h3>
                     <p className="text-sm text-slate-500">استلم تحديثات على بريدك</p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={notificationSettings.email_notifications}
+                    onCheckedChange={(checked) => setNotificationSettings(prev => ({ 
+                      ...prev, 
+                      email_notifications: checked 
+                    }))}
+                  />
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
@@ -326,6 +372,102 @@ export default function Settings() {
                   </div>
                   <Switch />
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="email">
+            <Card className="border-0 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-[#C9A66B]" />
+                  إعدادات البريد الإلكتروني
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between p-4 rounded-lg border bg-slate-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] flex items-center justify-center">
+                      <Bell className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-900">تفعيل إرسال التنبيهات</p>
+                      <p className="text-sm text-slate-500">استلم نسخة من كل تنبيه على بريدك الإلكتروني</p>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={notificationSettings.email_notifications}
+                    onCheckedChange={(checked) => setNotificationSettings(prev => ({ 
+                      ...prev, 
+                      email_notifications: checked 
+                    }))}
+                  />
+                </div>
+
+                {user?.role === 'admin' && (
+                  <div className="p-5 rounded-lg border-2 bg-gradient-to-br from-amber-50 to-amber-100/50 border-amber-200">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] flex items-center justify-center">
+                        <Mail className="w-4 h-4 text-white" />
+                      </div>
+                      <p className="font-semibold text-amber-900">البريد الإداري الرئيسي</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border border-amber-300 mb-4">
+                      <p className="text-sm text-slate-600 mb-2">البريد المستخدم للإشعارات الإدارية:</p>
+                      <p className="font-mono text-[#6B5D4F] font-bold text-lg">bytlylmstbyt@gmail.com</p>
+                    </div>
+                    <div className="space-y-3">
+                      <p className="text-sm text-slate-700 font-semibold flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                        أنواع الإشعارات المفعّلة:
+                      </p>
+                      <ul className="space-y-2 text-sm text-slate-600 mr-6">
+                        <li className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#C9A66B]"></span>
+                          تسجيل مهندس جديد
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#C9A66B]"></span>
+                          رفع شهادة جودة واعتماد للمشاريع
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#C9A66B]"></span>
+                          استفسار جديد عبر الشات بوت
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
+                  <div className="flex items-start gap-3">
+                    <Mail className="w-5 h-5 text-blue-600 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-medium text-blue-900 mb-1">هوية الرسائل</p>
+                      <p className="text-blue-700">
+                        جميع رسائل البريد الإلكتروني تحمل شعار <strong>بيتلي</strong> البني والتنسيق الرسمي للمنصة، مع تدرج لوني من البني إلى الذهبي.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin ml-2" />
+                      جاري الحفظ...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-5 h-5 ml-2" />
+                      حفظ التغييرات
+                    </>
+                  )}
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
