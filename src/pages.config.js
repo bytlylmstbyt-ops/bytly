@@ -111,6 +111,7 @@ import TechnicalReviewPage from './pages/TechnicalReviewPage';
 import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
 import WorkflowBuilder from './pages/WorkflowBuilder';
+import ProjectTools from './pages/ProjectTools';
 import __Layout from './Layout.jsx';
 
 
@@ -179,6 +180,7 @@ export const PAGES = {
     "Terms": Terms,
     "Wallet": Wallet,
     "WorkflowBuilder": WorkflowBuilder,
+    "ProjectTools": ProjectTools,
 }
 
 export const pagesConfig = {
