@@ -112,6 +112,7 @@ import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
 import WorkflowBuilder from './pages/WorkflowBuilder';
 import ProjectTools from './pages/ProjectTools';
+import Analytics from './pages/Analytics';
 import __Layout from './Layout.jsx';
 
 
@@ -181,6 +182,7 @@ export const PAGES = {
     "Wallet": Wallet,
     "WorkflowBuilder": WorkflowBuilder,
     "ProjectTools": ProjectTools,
+    "Analytics": Analytics,
 }
 
 export const pagesConfig = {
