@@ -105,6 +105,11 @@ import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
 import WorkflowBuilder from './pages/WorkflowBuilder';
 import AdminReviews from './pages/AdminReviews';
+import FileDispute from './pages/FileDispute';
+import MyDisputes from './pages/MyDisputes';
+import DisputeDetails from './pages/DisputeDetails';
+import AdminDisputes from './pages/AdminDisputes';
+import AdminDisputeManage from './pages/AdminDisputeManage';
 import __Layout from './Layout.jsx';
 
 
@@ -167,6 +172,11 @@ export const PAGES = {
     "Wallet": Wallet,
     "WorkflowBuilder": WorkflowBuilder,
     "AdminReviews": AdminReviews,
+    "FileDispute": FileDispute,
+    "MyDisputes": MyDisputes,
+    "DisputeDetails": DisputeDetails,
+    "AdminDisputes": AdminDisputes,
+    "AdminDisputeManage": AdminDisputeManage,
 }
 
 export const pagesConfig = {
