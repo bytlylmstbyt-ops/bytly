@@ -105,6 +105,18 @@ export default function ProjectMilestones() {
     );
   }
 
+  if (!project) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6 text-center">
+            <p className="text-slate-600">المشروع غير موجود</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const completedMilestones = milestones.filter(m => m.status === "approved").length;
   const progress = milestones.length > 0 ? (completedMilestones / milestones.length) * 100 : 0;
 

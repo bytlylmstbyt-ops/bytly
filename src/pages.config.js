@@ -51,8 +51,11 @@ import AddEngineer from './pages/AddEngineer';
 import AddPortfolio from './pages/AddPortfolio';
 import AdminCategories from './pages/AdminCategories';
 import AdminClients from './pages/AdminClients';
+import AdminDisputeManage from './pages/AdminDisputeManage';
+import AdminDisputes from './pages/AdminDisputes';
 import AdminEngineers from './pages/AdminEngineers';
 import AdminReports from './pages/AdminReports';
+import AdminReviews from './pages/AdminReviews';
 import AdminWallet from './pages/AdminWallet';
 import AllCertifications from './pages/AllCertifications';
 import AllWithdrawalRequests from './pages/AllWithdrawalRequests';
@@ -69,14 +72,18 @@ import ContractTemplates from './pages/ContractTemplates';
 import Copyright from './pages/Copyright';
 import CreateProject from './pages/CreateProject';
 import Dashboard from './pages/Dashboard';
+import DisputeDetails from './pages/DisputeDetails';
+import EngineerDashboard from './pages/EngineerDashboard';
 import EngineerProfile from './pages/EngineerProfile';
 import EngineerProjects from './pages/EngineerProjects';
 import Engineers from './pages/Engineers';
+import FileDispute from './pages/FileDispute';
 import Gallery from './pages/Gallery';
 import Home from './pages/Home';
 import InvoiceManager from './pages/InvoiceManager';
 import LegalConsultantProfile from './pages/LegalConsultantProfile';
 import Messages from './pages/Messages';
+import MyDisputes from './pages/MyDisputes';
 import MyFavorites from './pages/MyFavorites';
 import MyPurchasedProjects from './pages/MyPurchasedProjects';
 import NotificationSettings from './pages/NotificationSettings';
@@ -104,13 +111,6 @@ import TechnicalReviewPage from './pages/TechnicalReviewPage';
 import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
 import WorkflowBuilder from './pages/WorkflowBuilder';
-import AdminReviews from './pages/AdminReviews';
-import FileDispute from './pages/FileDispute';
-import MyDisputes from './pages/MyDisputes';
-import DisputeDetails from './pages/DisputeDetails';
-import AdminDisputes from './pages/AdminDisputes';
-import AdminDisputeManage from './pages/AdminDisputeManage';
-import EngineerDashboard from './pages/EngineerDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -119,8 +119,11 @@ export const PAGES = {
     "AddPortfolio": AddPortfolio,
     "AdminCategories": AdminCategories,
     "AdminClients": AdminClients,
+    "AdminDisputeManage": AdminDisputeManage,
+    "AdminDisputes": AdminDisputes,
     "AdminEngineers": AdminEngineers,
     "AdminReports": AdminReports,
+    "AdminReviews": AdminReviews,
     "AdminWallet": AdminWallet,
     "AllCertifications": AllCertifications,
     "AllWithdrawalRequests": AllWithdrawalRequests,
@@ -137,14 +140,18 @@ export const PAGES = {
     "Copyright": Copyright,
     "CreateProject": CreateProject,
     "Dashboard": Dashboard,
+    "DisputeDetails": DisputeDetails,
+    "EngineerDashboard": EngineerDashboard,
     "EngineerProfile": EngineerProfile,
     "EngineerProjects": EngineerProjects,
     "Engineers": Engineers,
+    "FileDispute": FileDispute,
     "Gallery": Gallery,
     "Home": Home,
     "InvoiceManager": InvoiceManager,
     "LegalConsultantProfile": LegalConsultantProfile,
     "Messages": Messages,
+    "MyDisputes": MyDisputes,
     "MyFavorites": MyFavorites,
     "MyPurchasedProjects": MyPurchasedProjects,
     "NotificationSettings": NotificationSettings,
@@ -172,13 +179,6 @@ export const PAGES = {
     "Terms": Terms,
     "Wallet": Wallet,
     "WorkflowBuilder": WorkflowBuilder,
-    "AdminReviews": AdminReviews,
-    "FileDispute": FileDispute,
-    "MyDisputes": MyDisputes,
-    "DisputeDetails": DisputeDetails,
-    "AdminDisputes": AdminDisputes,
-    "AdminDisputeManage": AdminDisputeManage,
-    "EngineerDashboard": EngineerDashboard,
 }
 
 export const pagesConfig = {
