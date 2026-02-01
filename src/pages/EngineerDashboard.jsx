@@ -50,6 +50,7 @@ export default function EngineerDashboard() {
       setProjects(projectsData);
       setPortfolio(portfolioData.slice(0, 6));
       setReviews(reviewsData);
+      setProposals(proposalsData);
       
       const engineerDisputes = disputesData.filter(
         d => d.raised_by === currentUser.email || d.raised_against === currentUser.email
