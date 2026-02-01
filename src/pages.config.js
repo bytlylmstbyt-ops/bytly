@@ -59,6 +59,7 @@ import AdminReviews from './pages/AdminReviews';
 import AdminWallet from './pages/AdminWallet';
 import AllCertifications from './pages/AllCertifications';
 import AllWithdrawalRequests from './pages/AllWithdrawalRequests';
+import Analytics from './pages/Analytics';
 import CRMDashboard from './pages/CRMDashboard';
 import CertificationPage from './pages/CertificationPage';
 import ClientOnboarding from './pages/ClientOnboarding';
@@ -96,6 +97,7 @@ import ProjectChat from './pages/ProjectChat';
 import ProjectDetails from './pages/ProjectDetails';
 import ProjectKanban from './pages/ProjectKanban';
 import ProjectMilestones from './pages/ProjectMilestones';
+import ProjectTools from './pages/ProjectTools';
 import ProjectWorkspace from './pages/ProjectWorkspace';
 import Projects from './pages/Projects';
 import RegisterChoice from './pages/RegisterChoice';
@@ -111,8 +113,8 @@ import TechnicalReviewPage from './pages/TechnicalReviewPage';
 import Terms from './pages/Terms';
 import Wallet from './pages/Wallet';
 import WorkflowBuilder from './pages/WorkflowBuilder';
-import ProjectTools from './pages/ProjectTools';
-import Analytics from './pages/Analytics';
+import RoleManagement from './pages/RoleManagement';
+import UserRoleAssignment from './pages/UserRoleAssignment';
 import __Layout from './Layout.jsx';
 
 
@@ -129,6 +131,7 @@ export const PAGES = {
     "AdminWallet": AdminWallet,
     "AllCertifications": AllCertifications,
     "AllWithdrawalRequests": AllWithdrawalRequests,
+    "Analytics": Analytics,
     "CRMDashboard": CRMDashboard,
     "CertificationPage": CertificationPage,
     "ClientOnboarding": ClientOnboarding,
@@ -166,6 +169,7 @@ export const PAGES = {
     "ProjectDetails": ProjectDetails,
     "ProjectKanban": ProjectKanban,
     "ProjectMilestones": ProjectMilestones,
+    "ProjectTools": ProjectTools,
     "ProjectWorkspace": ProjectWorkspace,
     "Projects": Projects,
     "RegisterChoice": RegisterChoice,
@@ -181,8 +185,8 @@ export const PAGES = {
     "Terms": Terms,
     "Wallet": Wallet,
     "WorkflowBuilder": WorkflowBuilder,
-    "ProjectTools": ProjectTools,
-    "Analytics": Analytics,
+    "RoleManagement": RoleManagement,
+    "UserRoleAssignment": UserRoleAssignment,
 }
 
 export const pagesConfig = {
