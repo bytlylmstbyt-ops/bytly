@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
   Briefcase, MapPin, Calendar, DollarSign, 
-  Upload, X, Loader2, CheckCircle, FileText
+  Upload, X, Loader2, CheckCircle, FileText, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,8 +33,11 @@ export default function CreateProject() {
     budget_max: "",
     location: "",
     deadline: "",
-    attachments: []
+    attachments: [],
+    milestones: []
   });
+  
+  const [showMilestones, setShowMilestones] = useState(false);
 
   useEffect(() => {
     loadUserData();
@@ -78,6 +81,34 @@ export default function CreateProject() {
     }));
   };
 
+  const addMilestone = () => {
+    const newMilestone = {
+      title: "",
+      description: "",
+      percentage: 0,
+      due_days: 7
+    };
+    setFormData(prev => ({
+      ...prev,
+      milestones: [...prev.milestones, newMilestone]
+    }));
+  };
+
+  const updateMilestone = (index, field, value) => {
+    const updatedMilestones = [...formData.milestones];
+    updatedMilestones[index][field] = value;
+    setFormData(prev => ({ ...prev, milestones: updatedMilestones }));
+  };
+
+  const removeMilestone = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      milestones: prev.milestones.filter((_, i) => i !== index)
+    }));
+  };
+
+  const totalPercentage = formData.milestones.reduce((sum, m) => sum + (parseFloat(m.percentage) || 0), 0);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!client) {
@@ -85,16 +116,47 @@ export default function CreateProject() {
       return;
     }
 
+    if (showMilestones && totalPercentage !== 100) {
+      alert("يجب أن يكون مجموع نسب المراحل 100%");
+      return;
+    }
+
     setIsLoading(true);
     
     const newProject = await base44.entities.Project.create({
-      ...formData,
-      client_id: client.id,
+      title: formData.title,
+      description: formData.description,
+      category: formData.category,
       budget_min: parseFloat(formData.budget_min) || 0,
       budget_max: parseFloat(formData.budget_max) || 0,
+      location: formData.location,
+      deadline: formData.deadline,
+      attachments: formData.attachments,
+      client_id: client.id,
       status: "open",
       total_proposals: 0
     });
+
+    // Create milestones if defined
+    if (showMilestones && formData.milestones.length > 0) {
+      const projectBudget = parseFloat(formData.budget_max) || parseFloat(formData.budget_min) || 0;
+      
+      for (let i = 0; i < formData.milestones.length; i++) {
+        const milestone = formData.milestones[i];
+        const milestoneAmount = (projectBudget * parseFloat(milestone.percentage)) / 100;
+        
+        await base44.entities.ProjectMilestone.create({
+          project_id: newProject.id,
+          title: milestone.title,
+          description: milestone.description,
+          amount: milestoneAmount,
+          percentage: parseFloat(milestone.percentage),
+          order: i + 1,
+          status: "pending",
+          due_date: new Date(Date.now() + milestone.due_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        });
+      }
+    }
 
     // Update client's total projects
     await base44.entities.Client.update(client.id, {
@@ -306,6 +368,101 @@ export default function CreateProject() {
                         </button>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Milestones Section */}
+              <div className="space-y-3 border-t pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>تحديد مراحل المشروع (اختياري)</Label>
+                    <p className="text-xs text-slate-500 mt-1">
+                      قسّم المشروع لمراحل لضمان دفع آمن ومتدرج
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant={showMilestones ? "default" : "outline"}
+                    onClick={() => setShowMilestones(!showMilestones)}
+                    size="sm"
+                  >
+                    {showMilestones ? "إخفاء المراحل" : "إضافة مراحل"}
+                  </Button>
+                </div>
+
+                {showMilestones && (
+                  <div className="space-y-3">
+                    {formData.milestones.map((milestone, index) => (
+                      <Card key={index} className="p-4 border-[#d4a574]/30">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium text-sm">المرحلة {index + 1}</h4>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeMilestone(index)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          
+                          <Input
+                            placeholder="عنوان المرحلة"
+                            value={milestone.title}
+                            onChange={(e) => updateMilestone(index, "title", e.target.value)}
+                          />
+                          
+                          <Textarea
+                            placeholder="وصف المرحلة والمخرجات المطلوبة"
+                            value={milestone.description}
+                            onChange={(e) => updateMilestone(index, "description", e.target.value)}
+                            rows={2}
+                          />
+                          
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-xs">النسبة من المبلغ %</Label>
+                              <Input
+                                type="number"
+                                placeholder="0"
+                                value={milestone.percentage}
+                                onChange={(e) => updateMilestone(index, "percentage", e.target.value)}
+                                min="0"
+                                max="100"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-xs">المدة بالأيام</Label>
+                              <Input
+                                type="number"
+                                placeholder="7"
+                                value={milestone.due_days}
+                                onChange={(e) => updateMilestone(index, "due_days", e.target.value)}
+                                min="1"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                    
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addMilestone}
+                      className="w-full border-dashed"
+                    >
+                      + إضافة مرحلة جديدة
+                    </Button>
+                    
+                    {formData.milestones.length > 0 && (
+                      <div className={`text-sm p-3 rounded-lg ${totalPercentage === 100 ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
+                        إجمالي النسب: {totalPercentage}% {totalPercentage === 100 ? '✓' : '(يجب أن يساوي 100%)'}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

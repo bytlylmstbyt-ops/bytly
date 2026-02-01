@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, CheckCircle, Clock, Upload, DollarSign } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, CheckCircle, Clock, Upload, DollarSign, XCircle, FileUp, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { sendNotification } from "@/components/notifications/NotificationHelper";
 
@@ -21,6 +22,9 @@ export default function ProjectMilestones() {
   const [isEngineer, setIsEngineer] = useState(false);
   const [engineer, setEngineer] = useState(null);
   const [client, setClient] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [submittingMilestone, setSubmittingMilestone] = useState(null);
+  const [revisionNotes, setRevisionNotes] = useState("");
 
   useEffect(() => {
     loadData();
@@ -57,12 +61,70 @@ export default function ProjectMilestones() {
     }
   };
 
-  const approveMilestone = async (milestone) => {
+  const submitMilestone = async (milestone) => {
+    if (!milestone.deliverable_files || milestone.deliverable_files.length === 0) {
+      alert("يرجى رفع ملفات التسليم أولاً");
+      return;
+    }
+
     try {
       await base44.entities.ProjectMilestone.update(milestone.id, {
+        status: "submitted",
+        submitted_date: new Date().toISOString()
+      });
+
+      // Notify client
+      await sendNotification({
+        recipientEmail: client.email,
+        title: "تم تقديم مرحلة جديدة",
+        message: `قام المهندس بتقديم: ${milestone.title}. يرجى المراجعة والموافقة`,
+        type: "milestone",
+        projectId: projectId,
+        priority: "high"
+      });
+
+      setSubmittingMilestone(null);
+      await loadData();
+    } catch (error) {
+      console.error("Error submitting milestone:", error);
+      alert("حدث خطأ في تقديم المرحلة");
+    }
+  };
+
+  const uploadDeliverable = async (milestone, files) => {
+    setUploading(true);
+    try {
+      const uploadedUrls = [];
+      for (const file of files) {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        uploadedUrls.push(file_url);
+      }
+
+      await base44.entities.ProjectMilestone.update(milestone.id, {
+        deliverable_files: [...(milestone.deliverable_files || []), ...uploadedUrls],
+        status: "in_progress"
+      });
+
+      await loadData();
+    } catch (error) {
+      console.error("Error uploading:", error);
+      alert("حدث خطأ في رفع الملفات");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const approveMilestone = async (milestone) => {
+    try {
+      const now = new Date().toISOString();
+      
+      await base44.entities.ProjectMilestone.update(milestone.id, {
         client_approved: true,
+        client_approval_date: now,
         payment_released: true,
-        status: "approved"
+        payment_release_date: now,
+        status: "approved",
+        completion_date: now
       });
 
       // Update engineer balance
@@ -94,6 +156,37 @@ export default function ProjectMilestones() {
     } catch (error) {
       console.error("Error approving milestone:", error);
       alert("حدث خطأ في الموافقة");
+    }
+  };
+
+  const requestRevision = async (milestone) => {
+    if (!revisionNotes.trim()) {
+      alert("يرجى إدخال ملاحظات التعديل");
+      return;
+    }
+
+    try {
+      await base44.entities.ProjectMilestone.update(milestone.id, {
+        status: "revision_requested",
+        revision_notes: revisionNotes,
+        revision_count: (milestone.revision_count || 0) + 1
+      });
+
+      // Notify engineer
+      await sendNotification({
+        recipientEmail: engineer.email,
+        title: "طلب تعديل على مرحلة",
+        message: `طلب العميل تعديلات على: ${milestone.title}`,
+        type: "milestone",
+        projectId: projectId,
+        priority: "high"
+      });
+
+      setRevisionNotes("");
+      await loadData();
+    } catch (error) {
+      console.error("Error requesting revision:", error);
+      alert("حدث خطأ في طلب التعديل");
     }
   };
 
@@ -178,6 +271,18 @@ export default function ProjectMilestones() {
                               قيد التنفيذ
                             </Badge>
                           )}
+                          {milestone.status === "submitted" && (
+                            <Badge className="bg-purple-600 text-white text-xs">
+                              <FileUp className="w-3 h-3 ml-1" />
+                              تم التقديم - بانتظار الموافقة
+                            </Badge>
+                          )}
+                          {milestone.status === "revision_requested" && (
+                            <Badge className="bg-amber-600 text-white text-xs">
+                              <AlertCircle className="w-3 h-3 ml-1" />
+                              مطلوب تعديل
+                            </Badge>
+                          )}
                         </div>
                         <CardTitle className="text-lg">{milestone.title}</CardTitle>
                         {milestone.description && (
@@ -193,34 +298,98 @@ export default function ProjectMilestones() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    {milestone.deliverable_url && (
-                      <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                        <p className="text-sm text-blue-800 mb-2">المخرج النهائي:</p>
-                        <a
-                          href={milestone.deliverable_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-blue-600 hover:underline"
-                        >
-                          عرض الملف
-                        </a>
+                    {/* Revision Notes */}
+                    {milestone.status === "revision_requested" && milestone.revision_notes && (
+                      <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p className="text-sm font-medium text-amber-800 mb-1">ملاحظات التعديل:</p>
+                        <p className="text-sm text-amber-700">{milestone.revision_notes}</p>
                       </div>
                     )}
 
-                    {!isEngineer && milestone.deliverable_url && !milestone.client_approved && (
-                      <Button
-                        onClick={() => approveMilestone(milestone)}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white"
-                      >
-                        <CheckCircle className="w-4 h-4 ml-2" />
-                        الموافقة وتحرير الدفعة
-                      </Button>
+                    {/* Deliverable Files */}
+                    {milestone.deliverable_files && milestone.deliverable_files.length > 0 && (
+                      <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                        <p className="text-sm text-blue-800 mb-2 font-medium">الملفات المقدمة:</p>
+                        <div className="space-y-2">
+                          {milestone.deliverable_files.map((url, idx) => (
+                            <a
+                              key={idx}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-blue-600 hover:underline block"
+                            >
+                              📎 ملف {idx + 1}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
                     )}
 
+                    {/* Engineer Actions */}
+                    {isEngineer && (milestone.status === "pending" || milestone.status === "in_progress" || milestone.status === "revision_requested") && (
+                      <div className="space-y-3">
+                        <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                          <input
+                            type="file"
+                            multiple
+                            onChange={(e) => uploadDeliverable(milestone, Array.from(e.target.files))}
+                            className="hidden"
+                            id={`upload-${milestone.id}`}
+                          />
+                          <label htmlFor={`upload-${milestone.id}`} className="cursor-pointer">
+                            <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                            <p className="text-sm text-slate-600">رفع ملفات المرحلة</p>
+                          </label>
+                        </div>
+                        
+                        {milestone.deliverable_files && milestone.deliverable_files.length > 0 && milestone.status !== "submitted" && (
+                          <Button
+                            onClick={() => submitMilestone(milestone)}
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            <FileUp className="w-4 h-4 ml-2" />
+                            تقديم المرحلة للعميل
+                          </Button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Client Actions */}
+                    {!isEngineer && milestone.status === "submitted" && !milestone.client_approved && (
+                      <div className="space-y-3">
+                        <Button
+                          onClick={() => approveMilestone(milestone)}
+                          className="w-full bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          <CheckCircle className="w-4 h-4 ml-2" />
+                          الموافقة وتحرير الدفعة ({milestone.amount.toLocaleString('ar-SA')} ريال)
+                        </Button>
+                        
+                        <div className="space-y-2">
+                          <Textarea
+                            placeholder="ملاحظات التعديل المطلوبة..."
+                            value={revisionNotes}
+                            onChange={(e) => setRevisionNotes(e.target.value)}
+                            rows={3}
+                          />
+                          <Button
+                            onClick={() => requestRevision(milestone)}
+                            variant="outline"
+                            className="w-full border-amber-500 text-amber-700 hover:bg-amber-50"
+                          >
+                            <XCircle className="w-4 h-4 ml-2" />
+                            طلب تعديلات
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Payment Released Status */}
                     {milestone.payment_released && (
-                      <div className="flex items-center gap-2 text-green-600 text-sm">
+                      <div className="flex items-center gap-2 text-green-600 text-sm bg-green-50 p-3 rounded-lg">
                         <DollarSign className="w-4 h-4" />
-                        <span>تم تحرير الدفعة للمهندس</span>
+                        <span>تم تحرير الدفعة للمهندس في {new Date(milestone.payment_release_date).toLocaleDateString('ar-SA')}</span>
                       </div>
                     )}
                   </CardContent>
