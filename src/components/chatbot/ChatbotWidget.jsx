@@ -15,7 +15,11 @@ export default function ChatbotWidget() {
   const [currentUser, setCurrentUser] = useState(null);
   const [conversationId, setConversationId] = useState(null);
   const [visitorId, setVisitorId] = useState(null);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const messagesEndRef = useRef(null);
+  const widgetRef = useRef(null);
 
   useEffect(() => {
     initializeChatbot();
@@ -116,12 +120,50 @@ export default function ChatbotWidget() {
     }
   };
 
+  const handleMouseDown = (e) => {
+    if (e.target.closest('.chat-window-content')) return;
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    });
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    const newX = e.clientX - dragStart.x;
+    const newY = e.clientY - dragStart.y;
+    
+    const maxX = window.innerWidth - (widgetRef.current?.offsetWidth || 384);
+    const maxY = window.innerHeight - (widgetRef.current?.offsetHeight || 600);
+    
+    setPosition({
+      x: Math.max(0, Math.min(newX, maxX)),
+      y: Math.max(0, Math.min(newY, maxY))
+    });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, dragStart]);
+
   return (
     <>
       {/* Widget Button */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-[#d4a574] to-[#1a1a2e] text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all"
+        className="fixed bottom-6 left-6 z-[9999] bg-gradient-to-r from-[#d4a574] to-[#1a1a2e] text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
       >
@@ -136,24 +178,32 @@ export default function ChatbotWidget() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            ref={widgetRef}
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-24 right-6 z-40 w-96 max-h-[600px] flex flex-col"
+            style={{
+              left: position.x || '24px',
+              bottom: position.y || '96px',
+              right: 'auto',
+              cursor: isDragging ? 'grabbing' : 'auto'
+            }}
+            className="fixed z-[9999] w-96 max-h-[600px] flex flex-col"
+            onMouseDown={handleMouseDown}
           >
             <Card className="h-full shadow-2xl flex flex-col">
               {/* Header */}
-              <CardHeader className="border-b bg-gradient-to-r from-[#d4a574] to-[#1a1a2e] text-white rounded-t-xl">
+              <CardHeader className="border-b bg-gradient-to-r from-[#d4a574] to-[#1a1a2e] text-white rounded-t-xl cursor-grab active:cursor-grabbing">
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-white">مساعد بيتلي</CardTitle>
-                    <p className="text-xs text-white/80 mt-1">متاح 24/7</p>
+                    <p className="text-xs text-white/80 mt-1">متاح 24/7 • اسحبني لتحريكي</p>
                   </div>
                 </div>
               </CardHeader>
 
               {/* Messages */}
-              <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
+              <CardContent className="chat-window-content flex-1 overflow-y-auto p-4 space-y-4">
                 {messages.map((msg, idx) => (
                   <motion.div
                     key={idx}
@@ -195,7 +245,7 @@ export default function ChatbotWidget() {
               </CardContent>
 
               {/* Input */}
-              <div className="border-t p-3 flex gap-2">
+              <div className="chat-window-content border-t p-3 flex gap-2">
                 <Input
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
