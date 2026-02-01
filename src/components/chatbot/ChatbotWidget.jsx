@@ -122,6 +122,7 @@ export default function ChatbotWidget() {
 
   const handleMouseDown = (e) => {
     if (e.target.closest('.chat-window-content')) return;
+    e.preventDefault();
     setIsDragging(true);
     setDragStart({
       x: e.clientX - position.x,
@@ -131,11 +132,16 @@ export default function ChatbotWidget() {
 
   const handleMouseMove = (e) => {
     if (!isDragging) return;
+    e.preventDefault();
+    
     const newX = e.clientX - dragStart.x;
     const newY = e.clientY - dragStart.y;
     
-    const maxX = window.innerWidth - (widgetRef.current?.offsetWidth || 384);
-    const maxY = window.innerHeight - (widgetRef.current?.offsetHeight || 600);
+    const widgetWidth = widgetRef.current?.offsetWidth || 384;
+    const widgetHeight = widgetRef.current?.offsetHeight || 600;
+    
+    const maxX = window.innerWidth - widgetWidth;
+    const maxY = window.innerHeight - widgetHeight;
     
     setPosition({
       x: Math.max(0, Math.min(newX, maxX)),
@@ -149,14 +155,14 @@ export default function ChatbotWidget() {
 
   useEffect(() => {
     if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
       return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, dragStart]);
+  }, [isDragging, dragStart, position]);
 
   return (
     <>
@@ -183,17 +189,20 @@ export default function ChatbotWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             style={{
-              left: position.x || '24px',
-              bottom: position.y || '96px',
+              left: `${position.x || 24}px`,
+              top: `${position.y || 80}px`,
               right: 'auto',
-              cursor: isDragging ? 'grabbing' : 'auto'
+              bottom: 'auto'
             }}
             className="fixed z-[9999] w-96 max-h-[600px] flex flex-col"
-            onMouseDown={handleMouseDown}
           >
             <Card className="h-full shadow-2xl flex flex-col">
               {/* Header */}
-              <CardHeader className="border-b bg-gradient-to-r from-[#d4a574] to-[#1a1a2e] text-white rounded-t-xl cursor-grab active:cursor-grabbing">
+              <CardHeader 
+                className="border-b bg-gradient-to-r from-[#d4a574] to-[#1a1a2e] text-white rounded-t-xl cursor-grab active:cursor-grabbing select-none"
+                onMouseDown={handleMouseDown}
+                style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-white">مساعد بيتلي</CardTitle>
