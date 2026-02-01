@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Loader2, Star, Briefcase, ShieldAlert, Bell, 
   MapPin, Mail, Phone, Plus, TrendingUp, DollarSign,
-  CheckCircle, Clock, AlertCircle, Edit
+  CheckCircle, Clock, AlertCircle, Edit, FileText, Wallet
 } from "lucide-react";
 
 export default function EngineerDashboard() {
@@ -21,6 +21,7 @@ export default function EngineerDashboard() {
   const [reviews, setReviews] = useState([]);
   const [disputes, setDisputes] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [proposals, setProposals] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -31,36 +32,42 @@ export default function EngineerDashboard() {
     const currentUser = await base44.auth.me();
     setUser(currentUser);
 
-    const [engineerData, projectsData, portfolioData, reviewsData, disputesData, notificationsData] = await Promise.all([
-      base44.entities.Engineer.filter({ email: currentUser.email }),
-      base44.entities.Project.filter({ assigned_engineer_email: currentUser.email }),
-      base44.entities.Portfolio.filter({ engineer_id: currentUser.id }),
-      base44.entities.Review.filter({ engineer_email: currentUser.email }),
-      base44.entities.Dispute.list("-created_date"),
-      base44.entities.Notification.filter({ recipient_email: currentUser.email }, "-created_date", 5)
-    ]);
+    const [engineerData] = await base44.entities.Engineer.filter({ email: currentUser.email });
 
     if (engineerData.length > 0) {
-      setEngineer(engineerData[0]);
-    }
+      const eng = engineerData[0];
+      setEngineer(eng);
 
-    setProjects(projectsData);
-    setPortfolio(portfolioData.slice(0, 6));
-    setReviews(reviewsData);
-    
-    const engineerDisputes = disputesData.filter(
-      d => d.raised_by === currentUser.email || d.raised_against === currentUser.email
-    );
-    setDisputes(engineerDisputes);
-    setNotifications(notificationsData);
+      const [projectsData, portfolioData, reviewsData, disputesData, notificationsData, proposalsData] = await Promise.all([
+        base44.entities.Project.filter({ assigned_engineer_id: eng.id }),
+        base44.entities.Portfolio.filter({ engineer_id: eng.id }),
+        base44.entities.Review.filter({ engineer_id: eng.id }),
+        base44.entities.Dispute.list("-created_date"),
+        base44.entities.Notification.filter({ recipient_email: currentUser.email }, "-created_date", 5),
+        base44.entities.Proposal.filter({ engineer_id: eng.id })
+      ]);
+
+      setProjects(projectsData);
+      setPortfolio(portfolioData.slice(0, 6));
+      setReviews(reviewsData);
+      
+      const engineerDisputes = disputesData.filter(
+        d => d.raised_by === currentUser.email || d.raised_against === currentUser.email
+      );
+      setDisputes(engineerDisputes);
+      setNotifications(notificationsData);
+    }
     
     setIsLoading(false);
   };
 
-  const activeProjects = projects.filter(p => p.status === 'in_progress' || p.status === 'pending');
+  const activeProjects = projects.filter(p => p.status === 'in_progress');
   const completedProjects = projects.filter(p => p.status === 'completed');
   const pendingDisputes = disputes.filter(d => !['resolved', 'closed'].includes(d.status));
   const unreadNotifications = notifications.filter(n => !n.is_read);
+  const pendingProposals = proposals.filter(p => p.status === 'pending');
+  const acceptedProposals = proposals.filter(p => p.status === 'accepted');
+  const totalEarnings = completedProjects.reduce((sum, p) => sum + (p.engineer_payment || 0), 0);
 
   const averageRating = reviews.length > 0 
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
@@ -166,16 +173,16 @@ export default function EngineerDashboard() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-2">
                 <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
                   <Briefcase className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-slate-900">{activeProjects.length}</p>
-                  <p className="text-sm text-slate-600">مشاريع نشطة</p>
+                  <p className="text-sm text-slate-600">قيد التنفيذ</p>
                 </div>
               </div>
             </CardContent>
@@ -183,13 +190,13 @@ export default function EngineerDashboard() {
 
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-2">
                 <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
                   <CheckCircle className="w-6 h-6 text-green-600" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-slate-900">{completedProjects.length}</p>
-                  <p className="text-sm text-slate-600">مشاريع مكتملة</p>
+                  <p className="text-sm text-slate-600">مكتملة</p>
                 </div>
               </div>
             </CardContent>
@@ -197,9 +204,23 @@ export default function EngineerDashboard() {
 
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-2">
                 <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <Star className="w-6 h-6 text-amber-600" />
+                  <FileText className="w-6 h-6 text-amber-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-slate-900">{pendingProposals.length}</p>
+                  <p className="text-sm text-slate-600">عروض معلقة</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col gap-2">
+                <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <Star className="w-6 h-6 text-purple-600" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-slate-900">{averageRating}</p>
@@ -211,17 +232,33 @@ export default function EngineerDashboard() {
 
           <Card>
             <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <DollarSign className="w-6 h-6 text-purple-600" />
+              <div className="flex flex-col gap-2">
+                <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-slate-900">{engineer.available_balance || 0}</p>
-                  <p className="text-sm text-slate-600">رصيد متاح</p>
+                  <p className="text-2xl font-bold text-slate-900">{totalEarnings.toLocaleString('ar-SA')}</p>
+                  <p className="text-sm text-slate-600">إجمالي الأرباح</p>
                 </div>
               </div>
             </CardContent>
           </Card>
+
+          <Link to={createPageUrl("Wallet")} className="block">
+            <Card className="h-full hover:shadow-lg transition-shadow">
+              <CardContent className="pt-6">
+                <div className="flex flex-col gap-2">
+                  <div className="w-12 h-12 rounded-lg bg-indigo-100 flex items-center justify-center">
+                    <Wallet className="w-6 h-6 text-indigo-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-900">{(engineer.available_balance || 0).toLocaleString('ar-SA')}</p>
+                    <p className="text-sm text-slate-600">رصيد متاح</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         {/* Alerts */}
@@ -275,6 +312,7 @@ export default function EngineerDashboard() {
         <Tabs defaultValue="projects" className="space-y-6">
           <TabsList className="bg-white shadow-sm">
             <TabsTrigger value="projects">المشاريع</TabsTrigger>
+            <TabsTrigger value="proposals">العروض المقدمة</TabsTrigger>
             <TabsTrigger value="portfolio">معرض الأعمال</TabsTrigger>
             <TabsTrigger value="reviews">التقييمات</TabsTrigger>
           </TabsList>
@@ -282,32 +320,111 @@ export default function EngineerDashboard() {
           <TabsContent value="projects">
             <Card>
               <CardHeader>
-                <CardTitle>المشاريع النشطة</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  <span>المشاريع قيد التنفيذ</span>
+                  <Link to={createPageUrl("Projects")}>
+                    <Button variant="ghost" size="sm">تصفح المزيد</Button>
+                  </Link>
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {activeProjects.length === 0 ? (
                   <div className="text-center py-12">
                     <Briefcase className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-600">لا توجد مشاريع نشطة حالياً</p>
+                    <p className="text-slate-600 mb-3">لا توجد مشاريع قيد التنفيذ</p>
+                    <Link to={createPageUrl("Projects")}>
+                      <Button variant="outline">تصفح المشاريع المتاحة</Button>
+                    </Link>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {activeProjects.map(project => (
-                      <div key={project.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
-                        <div className="flex-1">
-                          <h3 className="font-medium text-slate-900">{project.title}</h3>
-                          <p className="text-sm text-slate-600">{project.client_email}</p>
+                      <Link
+                        key={project.id}
+                        to={createPageUrl("ProjectDetails") + `?id=${project.id}`}
+                        className="block p-4 rounded-xl border hover:border-[#C9A66B] hover:shadow-md transition-all"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-slate-900">{project.title}</h3>
+                            <p className="text-sm text-slate-600 mt-1">{project.description?.slice(0, 100)}...</p>
+                          </div>
+                          <Badge className="bg-blue-100 text-blue-700">قيد التنفيذ</Badge>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <Badge>
-                            {project.status === 'in_progress' ? 'قيد التنفيذ' : 'معلق'}
-                          </Badge>
-                          <Link to={createPageUrl(`ProjectDetails?id=${project.id}`)}>
-                            <Button size="sm" variant="outline">عرض</Button>
-                          </Link>
+                        <div className="flex items-center gap-4 text-sm text-slate-500 mt-3">
+                          <span className="flex items-center gap-1">
+                            <DollarSign className="w-4 h-4" />
+                            {project.budget_max?.toLocaleString('ar-SA')} ر.س
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            {project.deadline ? new Date(project.deadline).toLocaleDateString('ar-SA') : 'غير محدد'}
+                          </span>
                         </div>
-                      </div>
+                      </Link>
                     ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="proposals">
+            <Card>
+              <CardHeader>
+                <CardTitle>عروضي المقدمة</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {proposals.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                    <p className="text-slate-600 mb-3">لم تقدم أي عروض بعد</p>
+                    <Link to={createPageUrl("Projects")}>
+                      <Button variant="outline">تصفح المشاريع</Button>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {proposals.map(proposal => {
+                      const project = projects.find(p => p.id === proposal.project_id);
+                      return (
+                        <div
+                          key={proposal.id}
+                          className="p-4 rounded-xl border"
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex-1">
+                              <Link 
+                                to={createPageUrl("ProjectDetails") + `?id=${proposal.project_id}`}
+                                className="font-semibold text-slate-900 hover:text-[#C9A66B]"
+                              >
+                                {project?.title || 'مشروع محذوف'}
+                              </Link>
+                              <p className="text-sm text-slate-600 mt-1">{proposal.cover_letter?.slice(0, 100)}...</p>
+                            </div>
+                            <Badge className={
+                              proposal.status === "accepted" ? "bg-green-100 text-green-700" :
+                              proposal.status === "rejected" ? "bg-red-100 text-red-700" :
+                              "bg-amber-100 text-amber-700"
+                            }>
+                              {proposal.status === "accepted" ? "مقبول ✓" :
+                               proposal.status === "rejected" ? "مرفوض" : "قيد المراجعة"}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm">
+                            <span className="font-bold text-green-600">
+                              {proposal.price?.toLocaleString('ar-SA')} ر.س
+                            </span>
+                            <span className="text-slate-500">
+                              {proposal.delivery_days} يوم
+                            </span>
+                            <span className="text-slate-400 text-xs">
+                              {new Date(proposal.created_date).toLocaleDateString('ar-SA')}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
