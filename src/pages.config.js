@@ -106,15 +106,15 @@ import RegisterConsultant from './pages/RegisterConsultant';
 import RegisterEngineer from './pages/RegisterEngineer';
 import RegisterLegalConsultant from './pages/RegisterLegalConsultant';
 import RegistrationSuccess from './pages/RegistrationSuccess';
+import RoleManagement from './pages/RoleManagement';
 import Settings from './pages/Settings';
 import Subscription from './pages/Subscription';
 import Support from './pages/Support';
 import TechnicalReviewPage from './pages/TechnicalReviewPage';
 import Terms from './pages/Terms';
+import UserRoleAssignment from './pages/UserRoleAssignment';
 import Wallet from './pages/Wallet';
 import WorkflowBuilder from './pages/WorkflowBuilder';
-import RoleManagement from './pages/RoleManagement';
-import UserRoleAssignment from './pages/UserRoleAssignment';
 import __Layout from './Layout.jsx';
 
 
@@ -178,15 +178,15 @@ export const PAGES = {
     "RegisterEngineer": RegisterEngineer,
     "RegisterLegalConsultant": RegisterLegalConsultant,
     "RegistrationSuccess": RegistrationSuccess,
+    "RoleManagement": RoleManagement,
     "Settings": Settings,
     "Subscription": Subscription,
     "Support": Support,
     "TechnicalReviewPage": TechnicalReviewPage,
     "Terms": Terms,
+    "UserRoleAssignment": UserRoleAssignment,
     "Wallet": Wallet,
     "WorkflowBuilder": WorkflowBuilder,
-    "RoleManagement": RoleManagement,
-    "UserRoleAssignment": UserRoleAssignment,
 }
 
 export const pagesConfig = {
