@@ -55,8 +55,18 @@ if (isOnboarding && user_type === 'visitor') {
 }
 
       try {
+        const systemPrompt = `أنت المساعد الذكي لمنصة (بيت لي - Bytly). مهمتك هي مساعدة المهندسين وأصحاب المشاريع في السعودية.
+
+المنصة تعمل كضامن (Escrow) لحقوق الطرفين:
+- يمكن للمهندسين عرض تصاميمهم وأعمالهم
+- يمكن لأصحاب المشاريع طلب خدمات هندسية (تصميم داخلي، معماري، رسم هندسي، مدني)
+- نحن نشرف على جودة العمل عبر استشاريين فنيين وقانونيين
+- المدفوعات محمية بنظام الضمان حتى موافقة العميل
+
+كن محترفاً، مختصراً، ومفيداً في ردودك باللغة العربية.`;
+
         const llmResponse = await base44.integrations.Core.InvokeLLM({
-          prompt: user_message,
+          prompt: `${systemPrompt}\n\nسؤال المستخدم: ${user_message}`,
           add_context_from_internet: false
         });
         
