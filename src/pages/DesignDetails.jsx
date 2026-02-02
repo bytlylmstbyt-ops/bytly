@@ -10,7 +10,6 @@ import {
   FileText, Edit3, Loader2, Wallet
 } from "lucide-react";
 import PaymentMethodChoice from "@/components/payment/PaymentMethodChoice";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
