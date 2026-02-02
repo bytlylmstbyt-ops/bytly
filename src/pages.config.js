@@ -62,6 +62,7 @@ import AllWithdrawalRequests from './pages/AllWithdrawalRequests';
 import Analytics from './pages/Analytics';
 import CRMDashboard from './pages/CRMDashboard';
 import CertificationPage from './pages/CertificationPage';
+import ClientDashboard from './pages/ClientDashboard';
 import ClientOnboarding from './pages/ClientOnboarding';
 import Complaints from './pages/Complaints';
 import ConsultantApproval from './pages/ConsultantApproval';
@@ -115,7 +116,8 @@ import Terms from './pages/Terms';
 import UserRoleAssignment from './pages/UserRoleAssignment';
 import Wallet from './pages/Wallet';
 import WorkflowBuilder from './pages/WorkflowBuilder';
-import ClientDashboard from './pages/ClientDashboard';
+import RegisterFirm from './pages/RegisterFirm';
+import FirmDashboard from './pages/FirmDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -135,6 +137,7 @@ export const PAGES = {
     "Analytics": Analytics,
     "CRMDashboard": CRMDashboard,
     "CertificationPage": CertificationPage,
+    "ClientDashboard": ClientDashboard,
     "ClientOnboarding": ClientOnboarding,
     "Complaints": Complaints,
     "ConsultantApproval": ConsultantApproval,
@@ -188,7 +191,8 @@ export const PAGES = {
     "UserRoleAssignment": UserRoleAssignment,
     "Wallet": Wallet,
     "WorkflowBuilder": WorkflowBuilder,
-    "ClientDashboard": ClientDashboard,
+    "RegisterFirm": RegisterFirm,
+    "FirmDashboard": FirmDashboard,
 }
 
 export const pagesConfig = {
