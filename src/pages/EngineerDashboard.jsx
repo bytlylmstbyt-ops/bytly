@@ -32,9 +32,9 @@ export default function EngineerDashboard() {
     const currentUser = await base44.auth.me();
     setUser(currentUser);
 
-    const [engineerData] = await base44.entities.Engineer.filter({ email: currentUser.email });
+    const engineerData = await base44.entities.Engineer.filter({ email: currentUser.email });
 
-    if (engineerData.length > 0) {
+    if (engineerData && engineerData.length > 0) {
       const eng = engineerData[0];
       setEngineer(eng);
 
