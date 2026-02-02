@@ -133,6 +133,7 @@ import DesignDetails from './pages/DesignDetails';
 import AddDesign from './pages/AddDesign';
 import DesignPurchaseSuccess from './pages/DesignPurchaseSuccess';
 import MyPurchasedDesigns from './pages/MyPurchasedDesigns';
+import AdminRevenueReport from './pages/AdminRevenueReport';
 import __Layout from './Layout.jsx';
 
 
@@ -223,6 +224,7 @@ export const PAGES = {
     "AddDesign": AddDesign,
     "DesignPurchaseSuccess": DesignPurchaseSuccess,
     "MyPurchasedDesigns": MyPurchasedDesigns,
+    "AdminRevenueReport": AdminRevenueReport,
 }
 
 export const pagesConfig = {

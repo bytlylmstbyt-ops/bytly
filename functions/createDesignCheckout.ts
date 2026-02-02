@@ -33,8 +33,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Design already purchased' }, { status: 400 });
     }
 
-    // Calculate amounts
-    const platformCommissionRate = 0.15; // 15%
+    // Calculate amounts (25% commission for design marketplace)
+    const platformCommissionRate = 0.25; // 25%
     const platformCommission = design.price * platformCommissionRate;
     const sellerEarnings = design.price - platformCommission;
 

@@ -320,6 +320,7 @@ export default function DesignDetails() {
                     {design.price?.toLocaleString('ar-SA')} ر.س
                   </p>
                   <p className="text-sm text-slate-500">شراء فوري وتحميل مباشر</p>
+                  <p className="text-xs text-slate-400 mt-1">(شامل 25% عمولة منصة)</p>
                 </div>
 
                 {hasPurchased ? (

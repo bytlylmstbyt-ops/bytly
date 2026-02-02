@@ -274,6 +274,9 @@ export default function AddDesign() {
                     placeholder="5000"
                     required
                   />
+                  <p className="text-xs text-amber-600">
+                    💡 سيُخصم 25% عمولة منصة من كل عملية بيع
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="modification_fee">رسوم التعديل (ر.س)</Label>
@@ -286,6 +289,24 @@ export default function AddDesign() {
                   />
                 </div>
               </div>
+              
+              {/* Revenue Breakdown */}
+              {formData.price && (
+                <div className="p-4 bg-slate-50 rounded-lg space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">سعر البيع:</span>
+                    <span className="font-semibold">{parseFloat(formData.price).toLocaleString('ar-SA')} ر.س</span>
+                  </div>
+                  <div className="flex justify-between text-red-600">
+                    <span>عمولة المنصة (25%):</span>
+                    <span>- {(parseFloat(formData.price) * 0.25).toLocaleString('ar-SA')} ر.س</span>
+                  </div>
+                  <div className="flex justify-between pt-2 border-t text-green-600 font-bold">
+                    <span>صافي أرباحك:</span>
+                    <span>{(parseFloat(formData.price) * 0.75).toLocaleString('ar-SA')} ر.س</span>
+                  </div>
+                </div>
+              )}
 
               {/* Specifications */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

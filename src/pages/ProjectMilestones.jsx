@@ -125,7 +125,7 @@ export default function ProjectMilestones() {
     try {
       const now = new Date().toISOString();
       
-      // Calculate commission (15% platform fee)
+      // Calculate commission (15% platform fee for projects)
       const commissionRate = 0.15;
       const commissionAmount = milestone.amount * commissionRate;
       const netAmount = milestone.amount - commissionAmount;
@@ -158,7 +158,7 @@ export default function ProjectMilestones() {
         commission_amount: commissionAmount,
         net_amount: netAmount,
         status: "completed",
-        description: `تحرير دفعة: ${milestone.title}`,
+        description: `تحرير دفعة: ${milestone.title} (بعد خصم 15% عمولة)`,
         project_id: projectId,
         milestone_id: milestone.id,
         from_wallet: "escrow",
@@ -172,11 +172,25 @@ export default function ProjectMilestones() {
         type: "commission",
         amount: commissionAmount,
         status: "completed",
-        description: `عمولة المنصة - ${milestone.title}`,
+        description: `عمولة المنصة (15%) - ${milestone.title}`,
         project_id: projectId,
         milestone_id: milestone.id,
         from_wallet: engineer.email,
         to_wallet: "platform"
+      });
+
+      // Create platform revenue record
+      await base44.entities.PlatformRevenue.create({
+        source_type: "project_milestone",
+        project_id: projectId,
+        milestone_id: milestone.id,
+        total_amount: milestone.amount,
+        commission_rate: commissionRate,
+        commission_amount: commissionAmount,
+        seller_email: engineer.email,
+        seller_earnings: netAmount,
+        status: "collected",
+        payment_date: now
       });
 
       // Deduct from client's locked funds
@@ -189,11 +203,11 @@ export default function ProjectMilestones() {
         escrow_amount: (project.escrow_amount || 0) - milestone.amount
       });
 
-      // Notify engineer
+      // Notify engineer with net amount breakdown
       await sendNotification({
         recipientEmail: engineer.email,
         title: "تم تحرير دفعة مرحلة",
-        message: `تم تحرير ${netAmount.toLocaleString('ar-SA')} ريال (بعد خصم العمولة) لمرحلة: ${milestone.title}`,
+        message: `تم تحرير ${netAmount.toLocaleString('ar-SA')} ريال (${milestone.amount.toLocaleString('ar-SA')} - 15% عمولة منصة) لمرحلة: ${milestone.title}`,
         type: "payment",
         projectId: projectId,
         priority: "high"
@@ -399,6 +413,14 @@ export default function ProjectMilestones() {
                     {/* Client Payment Action */}
                     {!isEngineer && milestone.status === "pending" && !milestone.payment_released && (
                       <div className="mb-4">
+                        <div className="mb-3 p-3 bg-blue-50 rounded-lg text-sm">
+                          <p className="text-blue-800 mb-2">💡 نظام الدفع الآمن:</p>
+                          <ul className="text-xs text-blue-700 space-y-1">
+                            <li>• يُحجز المبلغ في نظام الضمان (Escrow)</li>
+                            <li>• يُحرّر للمهندس بعد موافقتك على العمل</li>
+                            <li>• يُخصم 15% عمولة منصة تلقائياً</li>
+                          </ul>
+                        </div>
                         <Button
                           onClick={() => handlePayMilestone(milestone)}
                           className="w-full bg-blue-600 hover:bg-blue-700 text-white"
@@ -406,9 +428,6 @@ export default function ProjectMilestones() {
                           <DollarSign className="w-4 h-4 ml-2" />
                           دفع المرحلة ({milestone.amount.toLocaleString('ar-SA')} ريال)
                         </Button>
-                        <p className="text-xs text-slate-500 mt-2 text-center">
-                          سيتم حجز المبلغ في الضمان حتى اعتماد العمل
-                        </p>
                       </div>
                     )}
 
@@ -476,12 +495,26 @@ export default function ProjectMilestones() {
                           </div>
                         )}
 
+                        <div className="mb-3 p-3 bg-slate-50 rounded-lg text-sm space-y-1">
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">المبلغ الإجمالي:</span>
+                            <span className="font-semibold">{milestone.amount.toLocaleString('ar-SA')} ريال</span>
+                          </div>
+                          <div className="flex justify-between text-red-600">
+                            <span>عمولة المنصة (15%):</span>
+                            <span>- {(milestone.amount * 0.15).toLocaleString('ar-SA')} ريال</span>
+                          </div>
+                          <div className="flex justify-between pt-2 border-t text-green-600 font-bold">
+                            <span>صافي المهندس:</span>
+                            <span>{(milestone.amount * 0.85).toLocaleString('ar-SA')} ريال</span>
+                          </div>
+                        </div>
                         <Button
                           onClick={() => approveMilestone(milestone)}
                           className="w-full bg-green-600 hover:bg-green-700 text-white"
                         >
                           <CheckCircle className="w-4 h-4 ml-2" />
-                          الموافقة وتحرير الدفعة ({milestone.amount.toLocaleString('ar-SA')} ريال)
+                          الموافقة وتحرير الدفعة
                         </Button>
                         
                         <div className="space-y-2">
