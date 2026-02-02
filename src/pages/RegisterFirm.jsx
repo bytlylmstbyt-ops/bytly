@@ -129,7 +129,7 @@ export default function RegisterFirm() {
         email: user.email
       });
 
-      toast.success("تم تسجيل الشركة بنجاح! في انتظار الموافقة من الإدارة");
+      toast.success("تم تسجيل الشركة الاستشارية بنجاح! في انتظار الموافقة من الإدارة");
       navigate(createPageUrl("RegistrationSuccess"));
     } catch (error) {
       console.error("Error:", error);
@@ -147,8 +147,8 @@ export default function RegisterFirm() {
             <div className="w-16 h-16 bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] rounded-2xl flex items-center justify-center mx-auto mb-4">
               <Building2 className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-3xl">تسجيل شركة هندسية</CardTitle>
-            <p className="text-slate-600">انضم إلى شبكة الشركات الهندسية الرائدة</p>
+            <CardTitle className="text-3xl">تسجيل شركة هندسية استشارية</CardTitle>
+<parameter name="p">انضم إلى شبكة الشركات الهندسية الاستشارية المعتمدة
           </CardHeader>
 
           <CardContent>
@@ -379,7 +379,7 @@ export default function RegisterFirm() {
                       جاري التسجيل...
                     </>
                   ) : (
-                    "تسجيل الشركة"
+                    "تسجيل الشركة الاستشارية"
                   )}
                 </Button>
               </div>

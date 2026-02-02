@@ -23,8 +23,8 @@ export default function RegisterChoice() {
     {
       id: "firm",
       icon: Building2,
-      title: "شركة هندسية",
-      description: "سجل شركتك واطرح مشاريع كبرى وابحث عن المواهب",
+      title: "شركة هندسية استشارية",
+      description: "سجل شركتك الاستشارية واطرح مشاريع كبرى وابحث عن المواهب",
       features: ["إدارة الفريق", "مشاريع كبرى", "عضوية مميزة"],
       color: "from-indigo-600 to-purple-600",
       link: createPageUrl("RegisterFirm")

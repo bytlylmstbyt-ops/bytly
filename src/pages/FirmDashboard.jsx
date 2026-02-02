@@ -62,9 +62,9 @@ export default function FirmDashboard() {
       <div className="min-h-screen flex items-center justify-center">
         <Card className="max-w-md">
           <CardContent className="pt-6 text-center">
-            <p className="text-slate-600 mb-4">لم يتم العثور على حساب الشركة</p>
+            <p className="text-slate-600 mb-4">لم يتم العثور على حساب الشركة الاستشارية</p>
             <Link to={createPageUrl("RegisterFirm")}>
-              <Button>إنشاء حساب شركة</Button>
+              <Button>إنشاء حساب شركة استشارية</Button>
             </Link>
           </CardContent>
         </Card>
