@@ -13,16 +13,31 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import WelcomeSlides from "@/components/onboarding/WelcomeSlides";
+import CorePillarsSection from "@/components/home/CorePillarsSection";
+import HowItWorksSection from "@/components/home/HowItWorksSection";
 
 export default function Home() {
   const [engineers, setEngineers] = useState([]);
   const [portfolios, setPortfolios] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     loadData();
+    
+    // Show welcome slides for first-time visitors
+    const hasSeenWelcome = localStorage.getItem('bytly_seen_welcome');
+    if (!hasSeenWelcome) {
+      setShowWelcome(true);
+    }
   }, []);
+
+  const handleWelcomeComplete = () => {
+    localStorage.setItem('bytly_seen_welcome', 'true');
+    setShowWelcome(false);
+  };
 
   const loadData = async () => {
     setIsLoading(true);
@@ -69,6 +84,14 @@ export default function Home() {
 
   return (
     <div className="overflow-hidden">
+      {/* Welcome Onboarding */}
+      {showWelcome && (
+        <WelcomeSlides 
+          onComplete={handleWelcomeComplete}
+          onSkip={handleWelcomeComplete}
+        />
+      )}
+
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex items-center">
         {/* Background */}
@@ -415,59 +438,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Why Choose Us */}
-      <section className="py-20 bg-[#1a1a2e]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              لماذا بيتلي؟
-            </h2>
-            <p className="text-slate-300 max-w-2xl mx-auto">
-              نقدم لك تجربة فريدة في عالم التصميم والهندسة
-            </p>
-          </motion.div>
+      {/* Core Pillars */}
+      <CorePillarsSection />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: Shield,
-                title: "دفع آمن",
-                description: "نظام دفع ضامن يحمي حقوقك حتى استلام التصميم"
-              },
-              {
-                icon: Users,
-                title: "مهندسون معتمدون",
-                description: "جميع المهندسين موثقون ومعتمدون بشهادات رسمية"
-              },
-              {
-                icon: Award,
-                title: "جودة عالية",
-                description: "معرض أعمال احترافي يضمن لك أعلى معايير الجودة"
-              }
-            ].map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="text-center"
-              >
-                <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-[#d4a574] to-[#c9a227] flex items-center justify-center mb-6">
-                  <feature.icon className="w-10 h-10 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
-                <p className="text-slate-400">{feature.description}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* How It Works */}
+      <HowItWorksSection />
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-[#d4a574] to-[#c9a227]">
