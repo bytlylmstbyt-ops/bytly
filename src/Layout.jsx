@@ -115,6 +115,12 @@ export default function Layout({ children, currentPageName }) {
               >
                 معرض الأعمال
               </Link>
+              <Link 
+                to={createPageUrl("DesignMarketplace")} 
+                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'DesignMarketplace' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
+              >
+                متجر التصاميم
+              </Link>
             </nav>
 
             {/* Actions */}
@@ -231,6 +237,13 @@ export default function Layout({ children, currentPageName }) {
                 onClick={() => setIsMenuOpen(false)}
               >
                 معرض الأعمال
+              </Link>
+              <Link 
+                to={createPageUrl("DesignMarketplace")} 
+                className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                متجر التصاميم
               </Link>
             </div>
           </div>

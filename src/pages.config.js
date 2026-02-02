@@ -128,6 +128,11 @@ import UserRoleAssignment from './pages/UserRoleAssignment';
 import Wallet from './pages/Wallet';
 import WorkflowBuilder from './pages/WorkflowBuilder';
 import InvestorHub from './pages/InvestorHub';
+import DesignMarketplace from './pages/DesignMarketplace';
+import DesignDetails from './pages/DesignDetails';
+import AddDesign from './pages/AddDesign';
+import DesignPurchaseSuccess from './pages/DesignPurchaseSuccess';
+import MyPurchasedDesigns from './pages/MyPurchasedDesigns';
 import __Layout from './Layout.jsx';
 
 
@@ -213,6 +218,11 @@ export const PAGES = {
     "Wallet": Wallet,
     "WorkflowBuilder": WorkflowBuilder,
     "InvestorHub": InvestorHub,
+    "DesignMarketplace": DesignMarketplace,
+    "DesignDetails": DesignDetails,
+    "AddDesign": AddDesign,
+    "DesignPurchaseSuccess": DesignPurchaseSuccess,
+    "MyPurchasedDesigns": MyPurchasedDesigns,
 }
 
 export const pagesConfig = {
