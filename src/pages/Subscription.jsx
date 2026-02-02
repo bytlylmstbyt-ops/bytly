@@ -27,10 +27,18 @@ export default function Subscription() {
   const loadEngineerData = async () => {
     setIsLoading(true);
     const user = await base44.auth.me();
-    const engineerData = await base44.entities.Engineer.filter({ email: user.email });
+    
+    const [engineerData, firmData] = await Promise.all([
+      base44.entities.Engineer.filter({ email: user.email }).catch(() => []),
+      base44.entities.EngineeringFirm.filter({ email: user.email }).catch(() => [])
+    ]);
+    
     if (engineerData.length > 0) {
       setEngineer(engineerData[0]);
+    } else if (firmData.length > 0) {
+      setEngineer(firmData[0]);
     }
+    
     setIsLoading(false);
   };
 
@@ -66,11 +74,19 @@ export default function Subscription() {
       description: `اشتراك ${planType === "monthly" ? "شهري" : "سنوي"}`
     });
 
-    // Update engineer
-    await base44.entities.Engineer.update(engineer.id, {
-      subscription_type: planType,
-      subscription_end_date: endDate.toISOString().split("T")[0]
-    });
+    // Update engineer or firm
+    const engineerCheck = await base44.entities.Engineer.filter({ id: engineer.id }).catch(() => []);
+    if (engineerCheck.length > 0) {
+      await base44.entities.Engineer.update(engineer.id, {
+        subscription_type: planType,
+        subscription_end_date: endDate.toISOString().split("T")[0]
+      });
+    } else {
+      await base44.entities.EngineeringFirm.update(engineer.id, {
+        subscription_type: planType,
+        subscription_end_date: endDate.toISOString().split("T")[0]
+      });
+    }
 
     setIsProcessing(false);
     navigate(createPageUrl("Dashboard"));
