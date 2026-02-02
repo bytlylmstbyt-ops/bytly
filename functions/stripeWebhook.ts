@@ -104,7 +104,92 @@ Deno.serve(async (req) => {
 
         console.log(`Payment processed for milestone ${milestone_id}: ${milestone.amount} SAR held in escrow`);
       }
+
+      // Handle design purchase payment
+      if (metadata.type === 'design_purchase') {
+        const { purchase_id, design_id, buyer_email } = metadata;
+
+        const [purchase] = await base44.asServiceRole.entities.DesignPurchase.filter({ id: purchase_id });
+        const [design] = await base44.asServiceRole.entities.ReadyMadeDesign.filter({ id: design_id });
+
+        if (!purchase || !design) {
+          console.error('Missing design or purchase data');
+          return Response.json({ error: 'Missing data' }, { status: 400 });
+        }
+
+        // Calculate commission (25-30% for design marketplace)
+        const commissionRate = 0.25; // 25%
+        const commissionAmount = design.price * commissionRate;
+        const sellerEarnings = design.price - commissionAmount;
+
+        // Update purchase record
+        await base44.asServiceRole.entities.DesignPurchase.update(purchase_id, {
+          payment_status: "completed",
+          stripe_payment_intent: session.payment_intent,
+          download_url: design.design_files?.[0] || null,
+          platform_commission: commissionAmount,
+          seller_earnings: sellerEarnings
+        });
+
+        // Update design stats
+        await base44.asServiceRole.entities.ReadyMadeDesign.update(design_id, {
+          total_purchases: (design.total_purchases || 0) + 1
+        });
+
+        // Add to seller's available balance
+        const sellers = design.seller_type === "engineer" 
+          ? await base44.asServiceRole.entities.Engineer.filter({ id: design.seller_id })
+          : await base44.asServiceRole.entities.EngineeringFirm.filter({ id: design.seller_id });
+        
+        const seller = sellers[0];
+        if (seller) {
+          const entityName = design.seller_type === "engineer" ? "Engineer" : "EngineeringFirm";
+          await base44.asServiceRole.entities[entityName].update(seller.id, {
+            available_balance: (seller.available_balance || 0) + sellerEarnings
+          });
+
+          // Create transaction for seller
+          await base44.asServiceRole.entities.Transaction.create({
+            user_email: design.created_by,
+            user_type: design.seller_type,
+            type: 'payment',
+            amount: sellerEarnings,
+            commission_amount: commissionAmount,
+            net_amount: sellerEarnings,
+            status: 'completed',
+            description: `مبيعات تصميم: ${design.title}`,
+            reference_id: session.payment_intent,
+            payment_method: 'card'
+          });
+        }
+
+        // Create platform revenue record
+        await base44.asServiceRole.entities.PlatformRevenue.create({
+          source_type: "design_purchase",
+          design_id: design_id,
+          total_amount: design.price,
+          commission_rate: commissionRate,
+          commission_amount: commissionAmount,
+          seller_email: design.created_by,
+          seller_earnings: sellerEarnings,
+          status: "collected",
+          payment_date: new Date().toISOString(),
+          stripe_payment_intent: session.payment_intent
+        });
+
+        // Notify seller
+        await base44.asServiceRole.entities.Notification.create({
+          recipient_email: design.created_by,
+          title: "تم بيع تصميمك!",
+          message: `تهانينا! تم بيع تصميم "${design.title}" بمبلغ ${design.price.toLocaleString()} ر.س. صافي أرباحك: ${sellerEarnings.toLocaleString()} ر.س`,
+          type: "payment",
+          priority: "high"
+        });
+
+        console.log(`Design purchase completed: ${design.title} - Commission: ${commissionAmount} SAR`);
+      }
     }
+  
 
     return Response.json({ received: true });
 
