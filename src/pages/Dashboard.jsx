@@ -15,6 +15,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import InvestorClientDashboard from "@/components/client/InvestorClientDashboard";
+import IndividualClientDashboard from "@/components/client/IndividualClientDashboard";
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -80,12 +82,15 @@ export default function Dashboard() {
       // Load client stats
       const projects = await base44.entities.Project.filter({ client_id: clientData[0].id });
 
+      const totalSpent = projects.reduce((sum, p) => sum + (p.escrow_amount || 0), 0);
+
       setStats({
         totalProjects: projects.length,
         openProjects: projects.filter(p => p.status === "open").length,
         inProgressProjects: projects.filter(p => p.status === "in_progress").length,
         completedProjects: projects.filter(p => p.status === "completed").length,
-        walletBalance: clientData[0].wallet_balance || 0
+        walletBalance: clientData[0].wallet_balance || 0,
+        totalSpent
       });
 
       setRecentProjects(projects.slice(0, 5));
@@ -118,6 +123,17 @@ export default function Dashboard() {
         </Card>
       </div>
     );
+  }
+
+  // Redirect investors to InvestorHub
+  if (userType === "client" && profile?.client_type === "investor") {
+    window.location.href = createPageUrl("InvestorHub");
+    return null;
+  }
+
+  // Render specialized dashboard for individual clients
+  if (userType === "client" && profile?.client_type === "individual") {
+    return <IndividualClientDashboard client={profile} stats={stats} recentProjects={recentProjects} />;
   }
 
   return (

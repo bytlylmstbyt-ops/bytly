@@ -51,12 +51,16 @@ import AddEngineer from './pages/AddEngineer';
 import AddPortfolio from './pages/AddPortfolio';
 import AdminCategories from './pages/AdminCategories';
 import AdminClients from './pages/AdminClients';
+import AdminCommissionSettings from './pages/AdminCommissionSettings';
 import AdminDisputeManage from './pages/AdminDisputeManage';
 import AdminDisputes from './pages/AdminDisputes';
 import AdminEngineers from './pages/AdminEngineers';
+import AdminRefundControl from './pages/AdminRefundControl';
 import AdminReports from './pages/AdminReports';
 import AdminReviews from './pages/AdminReviews';
+import AdminSubscriptionControl from './pages/AdminSubscriptionControl';
 import AdminWallet from './pages/AdminWallet';
+import AdminWalletDashboard from './pages/AdminWalletDashboard';
 import AllCertifications from './pages/AllCertifications';
 import AllWithdrawalRequests from './pages/AllWithdrawalRequests';
 import Analytics from './pages/Analytics';
@@ -64,6 +68,7 @@ import CRMDashboard from './pages/CRMDashboard';
 import CertificationPage from './pages/CertificationPage';
 import ClientDashboard from './pages/ClientDashboard';
 import ClientOnboarding from './pages/ClientOnboarding';
+import ClientProfile from './pages/ClientProfile';
 import Complaints from './pages/Complaints';
 import ConsultantApproval from './pages/ConsultantApproval';
 import ConsultantDashboard from './pages/ConsultantDashboard';
@@ -82,6 +87,8 @@ import Engineers from './pages/Engineers';
 import FileDispute from './pages/FileDispute';
 import FirmDashboard from './pages/FirmDashboard';
 import FirmMilestoneControl from './pages/FirmMilestoneControl';
+import FirmProfile from './pages/FirmProfile';
+import FirmSettings from './pages/FirmSettings';
 import Gallery from './pages/Gallery';
 import Home from './pages/Home';
 import InvoiceManager from './pages/InvoiceManager';
@@ -90,6 +97,7 @@ import Messages from './pages/Messages';
 import MyDisputes from './pages/MyDisputes';
 import MyFavorites from './pages/MyFavorites';
 import MyPurchasedProjects from './pages/MyPurchasedProjects';
+import NotificationCenter from './pages/NotificationCenter';
 import NotificationSettings from './pages/NotificationSettings';
 import Notifications from './pages/Notifications';
 import Packages from './pages/Packages';
@@ -119,14 +127,7 @@ import Terms from './pages/Terms';
 import UserRoleAssignment from './pages/UserRoleAssignment';
 import Wallet from './pages/Wallet';
 import WorkflowBuilder from './pages/WorkflowBuilder';
-import NotificationCenter from './pages/NotificationCenter';
-import FirmProfile from './pages/FirmProfile';
-import FirmSettings from './pages/FirmSettings';
-import ClientProfile from './pages/ClientProfile';
-import AdminWalletDashboard from './pages/AdminWalletDashboard';
-import AdminCommissionSettings from './pages/AdminCommissionSettings';
-import AdminSubscriptionControl from './pages/AdminSubscriptionControl';
-import AdminRefundControl from './pages/AdminRefundControl';
+import InvestorHub from './pages/InvestorHub';
 import __Layout from './Layout.jsx';
 
 
@@ -135,12 +136,16 @@ export const PAGES = {
     "AddPortfolio": AddPortfolio,
     "AdminCategories": AdminCategories,
     "AdminClients": AdminClients,
+    "AdminCommissionSettings": AdminCommissionSettings,
     "AdminDisputeManage": AdminDisputeManage,
     "AdminDisputes": AdminDisputes,
     "AdminEngineers": AdminEngineers,
+    "AdminRefundControl": AdminRefundControl,
     "AdminReports": AdminReports,
     "AdminReviews": AdminReviews,
+    "AdminSubscriptionControl": AdminSubscriptionControl,
     "AdminWallet": AdminWallet,
+    "AdminWalletDashboard": AdminWalletDashboard,
     "AllCertifications": AllCertifications,
     "AllWithdrawalRequests": AllWithdrawalRequests,
     "Analytics": Analytics,
@@ -148,6 +153,7 @@ export const PAGES = {
     "CertificationPage": CertificationPage,
     "ClientDashboard": ClientDashboard,
     "ClientOnboarding": ClientOnboarding,
+    "ClientProfile": ClientProfile,
     "Complaints": Complaints,
     "ConsultantApproval": ConsultantApproval,
     "ConsultantDashboard": ConsultantDashboard,
@@ -166,6 +172,8 @@ export const PAGES = {
     "FileDispute": FileDispute,
     "FirmDashboard": FirmDashboard,
     "FirmMilestoneControl": FirmMilestoneControl,
+    "FirmProfile": FirmProfile,
+    "FirmSettings": FirmSettings,
     "Gallery": Gallery,
     "Home": Home,
     "InvoiceManager": InvoiceManager,
@@ -174,6 +182,7 @@ export const PAGES = {
     "MyDisputes": MyDisputes,
     "MyFavorites": MyFavorites,
     "MyPurchasedProjects": MyPurchasedProjects,
+    "NotificationCenter": NotificationCenter,
     "NotificationSettings": NotificationSettings,
     "Notifications": Notifications,
     "Packages": Packages,
@@ -203,14 +212,7 @@ export const PAGES = {
     "UserRoleAssignment": UserRoleAssignment,
     "Wallet": Wallet,
     "WorkflowBuilder": WorkflowBuilder,
-    "NotificationCenter": NotificationCenter,
-    "FirmProfile": FirmProfile,
-    "FirmSettings": FirmSettings,
-    "ClientProfile": ClientProfile,
-    "AdminWalletDashboard": AdminWalletDashboard,
-    "AdminCommissionSettings": AdminCommissionSettings,
-    "AdminSubscriptionControl": AdminSubscriptionControl,
-    "AdminRefundControl": AdminRefundControl,
+    "InvestorHub": InvestorHub,
 }
 
 export const pagesConfig = {
