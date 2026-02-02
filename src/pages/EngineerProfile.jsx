@@ -252,8 +252,8 @@ export default function EngineerProfile() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Bio */}
-            {engineer.bio && (
+            {/* Service Catalog */}
+            {engineer.services_offered?.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -261,10 +261,94 @@ export default function EngineerProfile() {
               >
                 <Card className="border-0 shadow-lg">
                   <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Briefcase className="w-5 h-5 text-[#d4a574]" />
+                      كتالوج الخدمات
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {engineer.services_offered.map((service, idx) => (
+                        <div key={idx} className="p-4 border rounded-lg hover:border-[#d4a574] transition-all">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-[#1a1a2e] mb-1">{service.service_name}</h4>
+                              <p className="text-sm text-slate-600 mb-2">{service.description}</p>
+                              <div className="flex items-center gap-4 text-xs text-slate-500">
+                                {service.delivery_time && (
+                                  <span className="flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    {service.delivery_time}
+                                  </span>
+                                )}
+                                {service.price_range && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {service.price_range}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Bio */}
+            {engineer.bio && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+              >
+                <Card className="border-0 shadow-lg">
+                  <CardHeader>
                     <CardTitle>نبذة عني</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-slate-600 leading-relaxed">{engineer.bio}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* Firm Ratings */}
+            {engineer.firm_ratings?.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.18 }}
+              >
+                <Card className="border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-purple-600" />
+                      تقييمات الشركات الاستشارية
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {engineer.firm_ratings.map((rating, idx) => (
+                        <div key={idx} className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium text-purple-900">{rating.firm_name}</span>
+                            <div className="flex items-center gap-1">
+                              <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                              <span className="font-bold">{rating.rating}</span>
+                            </div>
+                          </div>
+                          {rating.comment && (
+                            <p className="text-sm text-purple-700">{rating.comment}</p>
+                          )}
+                          <p className="text-xs text-purple-600 mt-1">
+                            {new Date(rating.date).toLocaleDateString('ar-SA')}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>

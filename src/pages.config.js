@@ -122,6 +122,7 @@ import WorkflowBuilder from './pages/WorkflowBuilder';
 import NotificationCenter from './pages/NotificationCenter';
 import FirmProfile from './pages/FirmProfile';
 import FirmSettings from './pages/FirmSettings';
+import ClientProfile from './pages/ClientProfile';
 import __Layout from './Layout.jsx';
 
 
@@ -201,6 +202,7 @@ export const PAGES = {
     "NotificationCenter": NotificationCenter,
     "FirmProfile": FirmProfile,
     "FirmSettings": FirmSettings,
+    "ClientProfile": ClientProfile,
 }
 
 export const pagesConfig = {
