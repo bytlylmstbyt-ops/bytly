@@ -165,6 +165,12 @@ export default function Layout({ children, currentPageName }) {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link to={createPageUrl("WalletTopup")} className="flex items-center gap-2 text-blue-600">
+                          <PlusCircle className="w-4 h-4" />
+                          شحن المحفظة
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to={createPageUrl("Settings")} className="flex items-center gap-2">
                           <Settings className="w-4 h-4" />
                           الإعدادات

@@ -1,102 +1,156 @@
 import React from "react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Smartphone, Wallet } from "lucide-react";
+import { 
+  Wallet, CreditCard, FileText, Apple, 
+  Smartphone, CheckCircle, Shield 
+} from "lucide-react";
 
-export default function PaymentMethodSelector({ selectedGateway, onSelect }) {
-  const gateways = [
-    {
-      id: 'tap',
-      name: 'Tap Payments',
-      description: 'ادفع باستخدام مدى، Apple Pay، STC Pay، أو البطاقات الائتمانية',
-      icon: Wallet,
-      recommended: true,
-      methods: [
-        { name: 'مدى', icon: '💳' },
-        { name: 'Apple Pay', icon: '🍎' },
-        { name: 'STC Pay', icon: '📱' },
-        { name: 'Visa/Mastercard', icon: '💳' }
-      ]
-    },
-    {
-      id: 'stripe',
-      name: 'Stripe',
-      description: 'ادفع باستخدام البطاقات الائتمانية الدولية',
-      icon: CreditCard,
-      recommended: false,
-      methods: [
-        { name: 'Visa', icon: '💳' },
-        { name: 'Mastercard', icon: '💳' },
-        { name: 'Amex', icon: '💳' }
-      ]
-    }
-  ];
+export default function PaymentMethodSelector({ 
+  amount, 
+  walletBalance = 0,
+  onPayWithWallet, 
+  onPayWithStripe,
+  onPayWithInvoice,
+  isProcessing = false,
+  showInvoiceOption = false
+}) {
+  const hasEnoughBalance = walletBalance >= amount;
 
   return (
     <div className="space-y-4">
-      <div className="text-sm font-medium text-slate-700 mb-3">
-        اختر طريقة الدفع المناسبة:
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {gateways.map((gateway) => {
-          const Icon = gateway.icon;
-          const isSelected = selectedGateway === gateway.id;
-          
-          return (
-            <Card
-              key={gateway.id}
-              className={`cursor-pointer transition-all hover-lift ${
-                isSelected 
-                  ? 'ring-2 ring-[#C9A66B] border-[#C9A66B] bg-amber-50/50' 
-                  : 'hover:border-[#C9A66B]/50'
-              }`}
-              onClick={() => onSelect(gateway.id)}
+      {/* Wallet Payment */}
+      <Card className={`cursor-pointer border-2 transition-all ${
+        hasEnoughBalance 
+          ? "border-blue-600 bg-blue-50 hover:shadow-lg" 
+          : "border-slate-200 opacity-50"
+      }`}>
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
+                <Wallet className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="font-semibold text-[#1a1a2e]">الدفع من المحفظة</p>
+                <p className="text-sm text-slate-500">
+                  رصيدك: {walletBalance.toLocaleString('ar-SA')} ر.س
+                </p>
+                {hasEnoughBalance && (
+                  <Badge className="bg-green-100 text-green-700 mt-1">
+                    <Zap className="w-3 h-3 ml-1" />
+                    فوري
+                  </Badge>
+                )}
+              </div>
+            </div>
+            <Button
+              onClick={onPayWithWallet}
+              disabled={!hasEnoughBalance || isProcessing}
+              className="bg-blue-600 hover:bg-blue-700"
             >
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${
-                      isSelected ? 'bg-[#C9A66B]' : 'bg-slate-100'
-                    }`}>
-                      <Icon className={`w-5 h-5 ${
-                        isSelected ? 'text-white' : 'text-slate-600'
-                      }`} />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-900">{gateway.name}</h3>
-                      {gateway.recommended && (
-                        <Badge className="mt-1 bg-green-100 text-green-800 text-xs">
-                          موصى به للسوق السعودي
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  
-                  {isSelected && (
-                    <div className="w-5 h-5 bg-[#C9A66B] rounded-full flex items-center justify-center">
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
-                  )}
+              {hasEnoughBalance ? "ادفع الآن" : "رصيد غير كافٍ"}
+            </Button>
+          </div>
+          {!hasEnoughBalance && (
+            <p className="text-xs text-amber-600 mt-3">
+              💡 يمكنك شحن محفظتك من صفحة المحفظة
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Card Payment (Stripe) */}
+      <Card className="cursor-pointer border-2 border-slate-200 hover:border-purple-600 hover:shadow-lg transition-all">
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-purple-600 flex items-center justify-center">
+                <CreditCard className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="font-semibold text-[#1a1a2e]">بطاقة الدفع</p>
+                <div className="flex gap-2 mt-1">
+                  <Badge variant="outline" className="text-xs">مدى</Badge>
+                  <Badge variant="outline" className="text-xs">Visa</Badge>
+                  <Badge variant="outline" className="text-xs">Mastercard</Badge>
                 </div>
-                
-                <p className="text-sm text-slate-600 mb-3">{gateway.description}</p>
-                
-                <div className="flex flex-wrap gap-2">
-                  {gateway.methods.map((method, idx) => (
-                    <div 
-                      key={idx}
-                      className="flex items-center gap-1 px-2 py-1 bg-white border border-slate-200 rounded text-xs"
-                    >
-                      <span>{method.icon}</span>
-                      <span className="text-slate-600">{method.name}</span>
-                    </div>
-                  ))}
+              </div>
+            </div>
+            <Button
+              onClick={onPayWithStripe}
+              disabled={isProcessing}
+              variant="outline"
+            >
+              متابعة
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Apple Pay & Google Pay */}
+      <Card className="cursor-pointer border-2 border-slate-200 hover:border-green-600 hover:shadow-lg transition-all">
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center">
+                <Apple className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <p className="font-semibold text-[#1a1a2e]">المحافظ الرقمية</p>
+                <div className="flex gap-2 mt-1">
+                  <Badge variant="outline" className="text-xs">Apple Pay</Badge>
+                  <Badge variant="outline" className="text-xs">Google Pay</Badge>
+                  <Badge variant="outline" className="text-xs">STC Pay</Badge>
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+              </div>
+            </div>
+            <Button
+              onClick={onPayWithStripe}
+              disabled={isProcessing}
+              variant="outline"
+            >
+              متابعة
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Invoice Payment (For Companies) */}
+      {showInvoiceOption && (
+        <Card className="cursor-pointer border-2 border-slate-200 hover:border-amber-600 hover:shadow-lg transition-all">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-amber-600 flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold text-[#1a1a2e]">إصدار فاتورة</p>
+                  <p className="text-sm text-slate-500">للشركات (دفع آجل)</p>
+                  <Badge variant="outline" className="mt-1 text-xs">
+                    <Building className="w-3 h-3 ml-1" />
+                    30 يوم
+                  </Badge>
+                </div>
+              </div>
+              <Button
+                onClick={onPayWithInvoice}
+                disabled={isProcessing}
+                variant="outline"
+              >
+                إصدار
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Security Badge */}
+      <div className="flex items-center justify-center gap-2 text-sm text-slate-500 pt-2">
+        <Shield className="w-4 h-4 text-green-600" />
+        <span>جميع المعاملات مؤمنة ومشفرة</span>
       </div>
     </div>
   );

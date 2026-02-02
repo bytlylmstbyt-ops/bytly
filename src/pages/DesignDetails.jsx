@@ -38,6 +38,8 @@ export default function DesignDetails() {
   const [showModificationRequest, setShowModificationRequest] = useState(false);
   const [modificationNotes, setModificationNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPaymentOptions, setShowPaymentOptions] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [currentClient, setCurrentClient] = useState(null);
 
