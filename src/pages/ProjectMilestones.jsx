@@ -379,13 +379,20 @@ export default function ProjectMilestones() {
                     ) && !milestone.client_approved && (
                       <div className="space-y-3">
                         {project.project_type === "full_construction" && (
-                          <div className="p-3 bg-green-50 border border-green-200 rounded-lg mb-3">
-                            <p className="text-sm text-green-800 font-medium">
-                              ✅ تم اعتماد المرحلة من الشركة الاستشارية
-                            </p>
-                            <p className="text-xs text-green-700 mt-1">
-                              الشركة: {milestone.firm_name || "شركة استشارية معتمدة"}
-                            </p>
+                          <div className="p-4 bg-green-50 border border-green-200 rounded-lg mb-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <CheckCircle className="w-5 h-5 text-green-600" />
+                              <p className="text-sm text-green-800 font-semibold">
+                                تم اعتماد المطابقة الفنية (SBC)
+                              </p>
+                            </div>
+                            <div className="text-xs text-green-700 space-y-1">
+                              <p>الشركة: {milestone.firm_name || "شركة استشارية معتمدة"}</p>
+                              {milestone.balady_permit_number && (
+                                <p>رقم الرخصة: {milestone.balady_permit_number}</p>
+                              )}
+                              <p>التاريخ: {new Date(milestone.firm_approval_date).toLocaleDateString('ar-SA')}</p>
+                            </div>
                           </div>
                         )}
 

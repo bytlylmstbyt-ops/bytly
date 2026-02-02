@@ -21,6 +21,8 @@ export default function FirmMilestoneControl() {
   const [firm, setFirm] = useState(null);
   const [revisionNotes, setRevisionNotes] = useState({});
   const [uploadingStamps, setUploadingStamps] = useState({});
+  const [baladyPermit, setBaladyPermit] = useState({});
+  const [complianceNotes, setComplianceNotes] = useState({});
 
   useEffect(() => {
     loadData();
@@ -88,6 +90,12 @@ export default function FirmMilestoneControl() {
       return;
     }
 
+    const permitNumber = baladyPermit[milestone.id];
+    if (!permitNumber?.trim()) {
+      toast.error("يجب إدخال رقم رخصة البلدية أولاً");
+      return;
+    }
+
     setProcessing(true);
     try {
       const now = new Date().toISOString();
@@ -98,7 +106,7 @@ export default function FirmMilestoneControl() {
         actor_name: firm.company_name,
         actor_email: firm.email,
         timestamp: now,
-        notes: "تم اعتماد المرحلة من قبل الشركة الاستشارية"
+        notes: `تم اعتماد المطابقة الفنية (SBC) - رقم الرخصة: ${permitNumber}`
       };
 
       await base44.entities.ProjectMilestone.update(milestone.id, {
@@ -106,11 +114,28 @@ export default function FirmMilestoneControl() {
         firm_approval_date: now,
         firm_id: firm.id,
         firm_name: firm.company_name,
+        balady_permit_number: permitNumber,
+        technical_compliance_notes: complianceNotes[milestone.id] || "",
         status: "firm_approved",
         audit_log: [...(milestone.audit_log || []), auditEntry]
       });
 
-      toast.success(`تم اعتماد المرحلة: ${milestone.title}`);
+      // Send notification to client
+      const clientData = await base44.entities.Client.filter({ id: project.client_id });
+      if (clientData.length > 0) {
+        await base44.entities.Notification.create({
+          recipient_email: clientData[0].email,
+          title: "✅ تم اعتماد المرحلة فنياً",
+          message: `تم التحقق من المطابقة الفنية للمرحلة: ${milestone.title}. المشروع جاهز للمرحلة التالية.`,
+          type: "milestone_approved",
+          related_project_id: project.id,
+          priority: "high"
+        });
+      }
+
+      toast.success(`تم اعتماد المرحلة وإشعار العميل: ${milestone.title}`);
+      setBaladyPermit(prev => ({ ...prev, [milestone.id]: "" }));
+      setComplianceNotes(prev => ({ ...prev, [milestone.id]: "" }));
       await loadData();
     } catch (error) {
       console.error("Error approving:", error);
@@ -148,8 +173,21 @@ export default function FirmMilestoneControl() {
         audit_log: [...(milestone.audit_log || []), auditEntry]
       });
 
+      // Notify engineer about revision request
+      const engineerData = await base44.entities.Engineer.filter({ id: project.assigned_engineer_id });
+      if (engineerData.length > 0) {
+        await base44.entities.Notification.create({
+          recipient_email: engineerData[0].email,
+          title: "🔄 طلب تعديل من الشركة الاستشارية",
+          message: `طلبت الشركة الاستشارية تعديلات على المرحلة: ${milestone.title}`,
+          type: "revision_requested",
+          related_project_id: project.id,
+          priority: "high"
+        });
+      }
+
       setRevisionNotes(prev => ({ ...prev, [milestone.id]: "" }));
-      toast.success("تم طلب التعديلات وإعادة المرحلة للمهندس");
+      toast.success("تم طلب التعديلات وإشعار المهندس");
       await loadData();
     } catch (error) {
       console.error("Error requesting revision:", error);
@@ -304,10 +342,17 @@ export default function FirmMilestoneControl() {
 
                     {/* Actions for submitted milestones */}
                     {milestone.status === "submitted" && !milestone.firm_approved && (
-                      <div className="space-y-3 pt-4 border-t">
+                      <div className="space-y-4 pt-4 border-t">
+                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                          <p className="text-sm font-medium text-amber-800 flex items-center gap-2">
+                            <Clock className="w-4 h-4" />
+                            الدفعة محجوزة - بانتظار اعتماد المطابقة الفنية
+                          </p>
+                        </div>
+
                         {/* Upload Stamped Drawings */}
                         <div>
-                          <Label className="text-sm mb-2 block">رفع المخططات المختومة (مطلوب)</Label>
+                          <Label className="text-sm mb-2 block">1. رفع المخططات المختومة (مطلوب)</Label>
                           <div className="border-2 border-dashed rounded-lg p-4 text-center">
                             <input
                               type="file"
@@ -329,10 +374,31 @@ export default function FirmMilestoneControl() {
                           </div>
                         </div>
 
+                        {/* Balady Permit Number */}
+                        <div>
+                          <Label className="text-sm mb-2 block">2. رقم رخصة البلدية (Balady Permit) *</Label>
+                          <Input
+                            placeholder="أدخل رقم الرخصة البلدية"
+                            value={baladyPermit[milestone.id] || ""}
+                            onChange={(e) => setBaladyPermit(prev => ({ ...prev, [milestone.id]: e.target.value }))}
+                          />
+                        </div>
+
+                        {/* Technical Compliance Notes */}
+                        <div>
+                          <Label className="text-sm mb-2 block">3. ملاحظات المطابقة الفنية (SBC)</Label>
+                          <Textarea
+                            placeholder="اكتب ملاحظاتك حول المطابقة مع كود البناء السعودي..."
+                            value={complianceNotes[milestone.id] || ""}
+                            onChange={(e) => setComplianceNotes(prev => ({ ...prev, [milestone.id]: e.target.value }))}
+                            rows={3}
+                          />
+                        </div>
+
                         {/* Approve Button */}
                         <Button
                           onClick={() => approveMilestone(milestone)}
-                          disabled={processing || !milestone.stamped_drawings?.length}
+                          disabled={processing || !milestone.stamped_drawings?.length || !baladyPermit[milestone.id]?.trim()}
                           className="w-full bg-green-600 hover:bg-green-700 text-white"
                         >
                           {processing ? (
@@ -343,7 +409,7 @@ export default function FirmMilestoneControl() {
                           ) : (
                             <>
                               <CheckCircle className="w-4 h-4 ml-2" />
-                              اعتماد المرحلة وفتح الدفع
+                              اعتماد المطابقة الفنية وتحرير الدفع
                             </>
                           )}
                         </Button>
@@ -372,14 +438,23 @@ export default function FirmMilestoneControl() {
 
                     {/* Approval Info */}
                     {milestone.firm_approved && (
-                      <div className="flex items-center gap-2 text-green-600 text-sm bg-green-50 p-3 rounded-lg">
-                        <CheckCircle className="w-4 h-4" />
-                        <div>
-                          <p className="font-medium">معتمد من: {milestone.firm_name}</p>
-                          <p className="text-xs text-green-600/80">
-                            {new Date(milestone.firm_approval_date).toLocaleString('ar-SA')}
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-2">
+                        <div className="flex items-center gap-2 text-green-700">
+                          <CheckCircle className="w-5 h-5" />
+                          <p className="font-semibold">✅ تم اعتماد المطابقة الفنية (SBC)</p>
+                        </div>
+                        <div className="text-sm text-green-700 space-y-1">
+                          <p>الشركة المعتمدة: {milestone.firm_name}</p>
+                          <p>رقم الرخصة: {milestone.balady_permit_number || "غير محدد"}</p>
+                          <p className="text-xs">
+                            التاريخ: {new Date(milestone.firm_approval_date).toLocaleString('ar-SA')}
                           </p>
                         </div>
+                        {milestone.technical_compliance_notes && (
+                          <p className="text-xs text-green-600 mt-2 pt-2 border-t border-green-200">
+                            {milestone.technical_compliance_notes}
+                          </p>
+                        )}
                       </div>
                     )}
                   </CardContent>
