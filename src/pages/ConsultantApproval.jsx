@@ -40,7 +40,7 @@ export default function ConsultantApprovalPage() {
     try {
       const user = await base44.auth.me();
       
-      // Allow full admin access
+      // Allow full admin access OR Engineering Consulting Firm
       if (user.role === "admin") {
         // Admin has full access - create admin consultant profile
         setConsultant({
@@ -51,18 +51,23 @@ export default function ConsultantApprovalPage() {
           total_reviews: 0
         });
       } else {
-        // Load consultant profile for non-admin
+        // Load Engineering Firm profile
+        const firms = await base44.entities.EngineeringFirm.filter({ 
+          email: user.email 
+        });
+        
+        // Fallback to old Consultant entity for backward compatibility
         const consultants = await base44.entities.Consultant.filter({ 
           email: user.email 
         });
         
-        if (consultants.length === 0) {
-          alert("غير مصرح لك بالوصول لهذه الصفحة");
+        if (firms.length === 0 && consultants.length === 0) {
+          alert("غير مصرح لك بالوصول لهذه الصفحة. يجب أن تكون شركة هندسية استشارية معتمدة.");
           navigate(-1);
           return;
         }
         
-        setConsultant(consultants[0]);
+        setConsultant(firms[0] || consultants[0]);
       }
       
       // Load withdrawal request - if no ID, show all requests for admin
@@ -168,11 +173,20 @@ export default function ConsultantApprovalPage() {
           description: `أتعاب استشارية - مراجعة طلب سحب رقم ${withdrawal.id}`
         });
 
-        // Update consultant wallet
-        await base44.entities.Consultant.update(consultant.id, {
-          wallet_balance: (consultant.wallet_balance || 0) + consultantFee,
-          total_reviews: (consultant.total_reviews || 0) + 1
-        });
+        // Update firm wallet (if it's an engineering firm)
+        const isFirm = consultant.company_name !== undefined;
+        if (isFirm) {
+          await base44.entities.EngineeringFirm.update(consultant.id, {
+            wallet_balance: (consultant.wallet_balance || 0) + consultantFee,
+            total_projects: (consultant.total_projects || 0) + 1
+          });
+        } else {
+          // Fallback for old consultant entity
+          await base44.entities.Consultant.update(consultant.id, {
+            wallet_balance: (consultant.wallet_balance || 0) + consultantFee,
+            total_reviews: (consultant.total_reviews || 0) + 1
+          });
+        }
       }
 
       alert(
@@ -215,7 +229,7 @@ export default function ConsultantApprovalPage() {
             اعتماد طلب السحب
           </h1>
           <p className="text-slate-600">
-            مراجعة واعتماد الطلب وفقاً للمعايير الهندسية
+            مراجعة واعتماد الطلب من قبل الشركة الهندسية الاستشارية المعتمدة
           </p>
         </motion.div>
 

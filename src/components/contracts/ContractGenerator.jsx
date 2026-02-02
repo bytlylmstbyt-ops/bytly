@@ -139,6 +139,7 @@ export default function ContractGenerator({ project, engineer, client }) {
               <SelectContent>
                 <SelectItem value="project_start">عقد بدء مشروع</SelectItem>
                 <SelectItem value="service_agreement">عقد اتفاق تقديم خدمات</SelectItem>
+                <SelectItem value="consulting_firm_agreement">عقد شركة هندسية استشارية</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -201,8 +202,8 @@ export default function ContractGenerator({ project, engineer, client }) {
 
           <div className="bg-blue-50 border-r-4 border-blue-500 p-4 rounded-lg">
             <p className="text-sm text-blue-800">
-              سيتم إنشاء عقد قانوني ملزم بين الطرفين. 
-              بعد إنشاء العقد، سيتم إرساله للتوقيع من كلا الطرفين.
+              سيتم إنشاء عقد قانوني ملزم بين الطرفين وفقاً للمعايير السعودية (بلدي و SBC). 
+              بعد إنشاء العقد، سيتم إرساله للتوقيع من كلا الطرفين واعتماده من شركة هندسية استشارية معتمدة.
             </p>
           </div>
 

@@ -47,13 +47,20 @@ export default function TechnicalReviewPage() {
     try {
       const user = await base44.auth.me();
       
-      // Load consultant
-      const [consultantData] = await base44.entities.Consultant.filter({ 
+      // Load Engineering Consulting Firm
+      const firms = await base44.entities.EngineeringFirm.filter({ 
         email: user.email 
       });
       
+      // Fallback to old Consultant entity for backward compatibility
+      const consultants = await base44.entities.Consultant.filter({ 
+        email: user.email 
+      });
+      
+      const consultantData = firms[0] || consultants[0];
+      
       if (!consultantData) {
-        alert("غير مصرح لك بالوصول");
+        alert("غير مصرح لك بالوصول. يجب أن تكون شركة هندسية استشارية معتمدة.");
         return;
       }
       
@@ -131,7 +138,8 @@ export default function TechnicalReviewPage() {
       // Update project status
       await base44.entities.Project.update(project.id, {
         status: "awaiting_technical_review",
-        technical_consultant_id: consultant.id
+        technical_consultant_id: consultant.id,
+        technical_consultant_type: consultant.company_name ? "engineering_firm" : "consultant"
       });
 
       alert("تم حفظ المراجعة الفنية بنجاح");
@@ -227,6 +235,9 @@ export default function TechnicalReviewPage() {
                   المراجعة الفنية للمشروع
                 </CardTitle>
                 <p className="text-slate-600">{project.title}</p>
+                <p className="text-sm text-slate-500 mt-1">
+                  معتمدة من: {consultant?.company_name || consultant?.full_name}
+                </p>
               </div>
               <Badge className={
                 existingReview?.approval_status === "approved" 
