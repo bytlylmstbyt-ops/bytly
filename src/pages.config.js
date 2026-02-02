@@ -120,6 +120,8 @@ import UserRoleAssignment from './pages/UserRoleAssignment';
 import Wallet from './pages/Wallet';
 import WorkflowBuilder from './pages/WorkflowBuilder';
 import NotificationCenter from './pages/NotificationCenter';
+import FirmProfile from './pages/FirmProfile';
+import FirmSettings from './pages/FirmSettings';
 import __Layout from './Layout.jsx';
 
 
@@ -197,6 +199,8 @@ export const PAGES = {
     "Wallet": Wallet,
     "WorkflowBuilder": WorkflowBuilder,
     "NotificationCenter": NotificationCenter,
+    "FirmProfile": FirmProfile,
+    "FirmSettings": FirmSettings,
 }
 
 export const pagesConfig = {
