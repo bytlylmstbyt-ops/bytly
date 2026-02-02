@@ -2,8 +2,9 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Wallet, Lock, DollarSign, TrendingUp, AlertCircle } from "lucide-react";
+import { Wallet, Lock, DollarSign, TrendingUp, AlertCircle, PieChartIcon } from "lucide-react";
 import { motion } from "framer-motion";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import TransactionHistory from "./TransactionHistory";
 
 export default function ClientWalletView({ client, transactions, projects, onRefresh }) {
@@ -19,6 +20,12 @@ export default function ClientWalletView({ client, transactions, projects, onRef
 
   const totalBalance = client.wallet_balance || 0;
   const availableBalance = totalBalance - lockedFunds;
+
+  // Chart data
+  const chartData = [
+    { name: "متاح", value: availableBalance, color: "#10b981" },
+    { name: "محجوز", value: lockedFunds, color: "#f59e0b" }
+  ].filter(item => item.value > 0);
 
   return (
     <div className="space-y-6">
@@ -81,6 +88,67 @@ export default function ClientWalletView({ client, transactions, projects, onRef
           </Card>
         </motion.div>
       </div>
+
+      {/* Balance Distribution Chart */}
+      {totalBalance > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PieChartIcon className="w-5 h-5 text-blue-600" />
+                توزيع الأرصدة
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                <div className="w-full md:w-1/2">
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie
+                        data={chartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {chartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value) => `${value.toLocaleString('ar-SA')} ر.س`}
+                        contentStyle={{ direction: 'rtl' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="w-full md:w-1/2 space-y-3">
+                  {chartData.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className="text-sm font-medium">{item.name}</span>
+                      </div>
+                      <span className="text-sm font-bold">
+                        {item.value.toLocaleString('ar-SA')} ر.س
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Active Projects with Escrow */}
       {activeProjects.length > 0 && (
