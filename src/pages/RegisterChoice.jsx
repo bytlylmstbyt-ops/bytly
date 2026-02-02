@@ -21,6 +21,24 @@ export default function RegisterChoice() {
       link: createPageUrl("RegisterEngineer") + "?type=engineer"
     },
     {
+      id: "firm",
+      icon: Building2,
+      title: "شركة هندسية",
+      description: "سجل شركتك واطرح مشاريع كبرى وابحث عن المواهب",
+      features: ["إدارة الفريق", "مشاريع كبرى", "عضوية مميزة"],
+      color: "from-indigo-600 to-purple-600",
+      link: createPageUrl("RegisterFirm")
+    },
+    {
+      id: "client",
+      icon: Briefcase,
+      title: "صاحب مشروع",
+      description: "ابحث عن أفضل المصممين لمشروعك",
+      features: ["طرح مشاريع مجاناً", "مقارنة العروض", "دفع آمن"],
+      color: "from-amber-500 to-orange-500",
+      link: createPageUrl("RegisterClient")
+    },
+    {
       id: "painter",
       icon: PenTool,
       title: "رسام هندسي",
@@ -46,15 +64,6 @@ export default function RegisterChoice() {
       features: ["صياغة العقود", "حل النزاعات", "حماية الملكية الفكرية"],
       color: "from-blue-600 to-indigo-600",
       link: createPageUrl("RegisterLegalConsultant")
-    },
-    {
-      id: "client",
-      icon: Briefcase,
-      title: "صاحب مشروع",
-      description: "ابحث عن أفضل المصممين لمشروعك",
-      features: ["طرح مشاريع مجاناً", "مقارنة العروض", "دفع آمن"],
-      color: "from-amber-500 to-orange-500",
-      link: createPageUrl("RegisterClient")
     }
   ];
 
