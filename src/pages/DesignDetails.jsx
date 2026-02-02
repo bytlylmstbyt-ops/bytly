@@ -10,6 +10,7 @@ import {
   FileText, Edit3, Loader2, Wallet
 } from "lucide-react";
 import PaymentMethodChoice from "@/components/payment/PaymentMethodChoice";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -482,19 +483,13 @@ export default function DesignDetails() {
                       disabled={isSubmitting}
                       className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white text-lg py-6"
                     >
-                      {isSubmitting ? (
-                        <Loader2 className="w-6 h-6 animate-spin ml-2" />
-                      ) : (
-                        <>
-                          <ShoppingCart className="w-6 h-6 ml-2" />
-                          اشتر الآن
-                        </>
-                      )}
+                      <ShoppingCart className="w-6 h-6 ml-2" />
+                      اشتر الآن
                     </Button>
 
                     {/* Payment Method Dialog */}
                     <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-                      <DialogContent>
+                      <DialogContent className="max-w-lg">
                         <DialogHeader>
                           <DialogTitle>اختر طريقة الدفع</DialogTitle>
                         </DialogHeader>

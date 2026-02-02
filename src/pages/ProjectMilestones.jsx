@@ -8,6 +8,12 @@ import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, CheckCircle, Clock, Upload, DollarSign, XCircle, FileUp, AlertCircle, Wallet } from "lucide-react";
 import PaymentMethodChoice from "@/components/payment/PaymentMethodChoice";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { motion } from "framer-motion";
 import { sendNotification } from "@/components/notifications/NotificationHelper";
 
@@ -507,25 +513,13 @@ export default function ProjectMilestones() {
                           </ul>
                         </div>
 
-                        {showPaymentOptions === milestone.id ? (
-                          <PaymentMethodSelector
-                            amount={milestone.amount}
-                            walletBalance={client?.wallet_balance || 0}
-                            onPayWithWallet={() => handlePayMilestone(milestone, 'wallet')}
-                            onPayWithStripe={() => handlePayMilestone(milestone, 'stripe')}
-                            onPayWithInvoice={() => handlePayMilestone(milestone, 'invoice')}
-                            isProcessing={processingPayment}
-                            showInvoiceOption={client?.client_type === "investor"}
-                          />
-                        ) : (
-                          <Button
-                            onClick={() => setShowPaymentOptions(milestone.id)}
-                            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
-                          >
-                            <DollarSign className="w-4 h-4 ml-2" />
-                            اختر طريقة الدفع ({milestone.amount.toLocaleString('ar-SA')} ريال)
-                          </Button>
-                        )}
+                        <Button
+                          onClick={() => handlePayMilestone(milestone)}
+                          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
+                        >
+                          <DollarSign className="w-4 h-4 ml-2" />
+                          اختر طريقة الدفع ({milestone.amount.toLocaleString('ar-SA')} ريال)
+                        </Button>
                       </div>
                     )}
 
