@@ -486,7 +486,7 @@ export default function Home() {
             </p>
             <Link to={createPageUrl("RegisterChoice")}>
               <Button size="lg" className="bg-white text-[#1a1a2e] hover:bg-white/90 px-8 py-6 text-lg">
-                انضم إلى بيتلي
+                انضم لـ بيتلي
                 <ArrowLeft className="w-5 h-5 mr-2" />
               </Button>
             </Link>

@@ -195,7 +195,7 @@ export default function Layout({ children, currentPageName }) {
                   </Button>
                   <Link to={createPageUrl("RegisterChoice")}>
                     <Button className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white hover:opacity-90">
-                      انضم إلينا
+                      انضم لـ بيتلي
                     </Button>
                   </Link>
                 </div>
