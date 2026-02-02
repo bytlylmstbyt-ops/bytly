@@ -45,6 +45,12 @@ export default function CreateProject() {
     loadUserData();
   }, []);
 
+  useEffect(() => {
+    if (preselectedEngineerId) {
+      loadPreselectedEngineer();
+    }
+  }, [preselectedEngineerId]);
+
   const loadUserData = async () => {
     const currentUser = await base44.auth.me();
     setUser(currentUser);

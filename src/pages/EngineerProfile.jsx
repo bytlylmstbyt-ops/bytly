@@ -219,6 +219,12 @@ export default function EngineerProfile() {
 
                 {/* Actions */}
                 <div className="flex flex-col gap-3 min-w-[200px]">
+                  <Link to={createPageUrl("CreateProject") + `?engineer=${engineer.id}`}>
+                    <Button className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white">
+                      <Briefcase className="w-5 h-5 ml-2" />
+                      طلب خدمة خاصة
+                    </Button>
+                  </Link>
                   <Link to={createPageUrl("Messages") + `?engineer=${engineer.id}`}>
                     <Button className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
                       <MessageSquare className="w-5 h-5 ml-2" />

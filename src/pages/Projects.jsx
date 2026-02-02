@@ -27,12 +27,25 @@ export default function Projects() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("open");
 
+  const [currentUser, setCurrentUser] = useState(null);
+  const [currentEngineer, setCurrentEngineer] = useState(null);
+
   useEffect(() => {
     loadProjects();
   }, [statusFilter]);
 
   const loadProjects = async () => {
     setIsLoading(true);
+    
+    // Get current user and engineer profile
+    const user = await base44.auth.me();
+    setCurrentUser(user);
+    
+    const engineerData = await base44.entities.Engineer.filter({ email: user.email });
+    if (engineerData && engineerData.length > 0) {
+      setCurrentEngineer(engineerData[0]);
+    }
+    
     const filter = statusFilter ? { status: statusFilter } : {};
     const data = await base44.entities.Project.filter(filter, "-created_date", 50);
     setProjects(data);
@@ -44,6 +57,26 @@ export default function Projects() {
       project.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       project.description?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = !categoryFilter || project.category === categoryFilter;
+    
+    // Smart filtering based on engineer specialization
+    if (currentEngineer) {
+      const engineerType = currentEngineer.user_type;
+      const specialization = currentEngineer.specialization?.toLowerCase() || "";
+      
+      // Filter projects based on engineer type
+      const relevantCategories = {
+        'architect': ['architecture'],
+        'engineer': ['interior', 'furniture', 'lighting'],
+        'painter': ['painting'],
+        'civil': ['civil_engineering']
+      };
+      
+      const allowedCategories = relevantCategories[engineerType] || [];
+      const matchesSpecialization = allowedCategories.length === 0 || allowedCategories.includes(project.category);
+      
+      return matchesSearch && matchesCategory && matchesSpecialization;
+    }
+    
     return matchesSearch && matchesCategory;
   });
 
@@ -186,16 +219,21 @@ export default function Projects() {
                 <Link to={createPageUrl("ProjectDetails") + `?id=${project.id}`}>
                   <Card className="hover-lift cursor-pointer border-0 shadow-lg h-full">
                     <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge className={project.project_type === "full_construction" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}>
+                              {project.project_type === "full_construction" ? "مشروع إنشائي" : "خدمة سريعة"}
+                            </Badge>
+                            <Badge className={statusColors[project.status]}>
+                              {statusLabels[project.status]}
+                            </Badge>
+                          </div>
                           <h3 className="text-lg font-bold text-[#1a1a2e] mb-1">
                             {project.title}
                           </h3>
-                          <Badge className={statusColors[project.status]}>
-                            {statusLabels[project.status]}
-                          </Badge>
                         </div>
-                        <Badge variant="secondary" className="bg-slate-100">
+                        <Badge variant="secondary" className="bg-amber-50 text-amber-700">
                           <Tag className="w-3 h-3 ml-1" />
                           {categories.find(c => c.value === project.category)?.label || project.category}
                         </Badge>
