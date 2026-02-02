@@ -233,21 +233,3 @@ export default function ClientProfile() {
               </CardContent>
             </Card>
           )}
-
-          {/* Bio */}
-          {engineer.bio && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <Card className="border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle>نبذة عني</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-slate-600 leading-relaxed">{engineer.bio}</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
