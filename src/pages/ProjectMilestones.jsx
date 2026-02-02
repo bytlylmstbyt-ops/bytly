@@ -124,6 +124,12 @@ export default function ProjectMilestones() {
     try {
       const now = new Date().toISOString();
       
+      // Calculate commission (15% platform fee)
+      const commissionRate = 0.15;
+      const commissionAmount = milestone.amount * commissionRate;
+      const netAmount = milestone.amount - commissionAmount;
+
+      // Update milestone status
       await base44.entities.ProjectMilestone.update(milestone.id, {
         client_approved: true,
         client_approval_date: now,
@@ -133,26 +139,60 @@ export default function ProjectMilestones() {
         completion_date: now
       });
 
-      // Update engineer balance
+      // Move from pending to available balance (after commission)
+      const currentPending = engineer.pending_balance || 0;
+      const currentAvailable = engineer.available_balance || 0;
+
       await base44.entities.Engineer.update(engineer.id, {
-        available_balance: (engineer.available_balance || 0) + milestone.amount
+        pending_balance: currentPending - milestone.amount,
+        available_balance: currentAvailable + netAmount
       });
 
-      // Create transaction
+      // Create escrow release transaction
       await base44.entities.Transaction.create({
-        user_id: engineer.email,
+        user_email: engineer.email,
+        user_type: "engineer",
         type: "escrow_release",
         amount: milestone.amount,
+        commission_amount: commissionAmount,
+        net_amount: netAmount,
         status: "completed",
         description: `تحرير دفعة: ${milestone.title}`,
-        project_id: projectId
+        project_id: projectId,
+        milestone_id: milestone.id,
+        from_wallet: "escrow",
+        to_wallet: engineer.email
+      });
+
+      // Create commission transaction for platform
+      await base44.entities.Transaction.create({
+        user_email: "platform@bytly.com",
+        user_type: "platform",
+        type: "commission",
+        amount: commissionAmount,
+        status: "completed",
+        description: `عمولة المنصة - ${milestone.title}`,
+        project_id: projectId,
+        milestone_id: milestone.id,
+        from_wallet: engineer.email,
+        to_wallet: "platform"
+      });
+
+      // Deduct from client's locked funds
+      await base44.entities.Client.update(client.id, {
+        wallet_balance: (client.wallet_balance || 0) - milestone.amount
+      });
+
+      // Update project escrow
+      await base44.entities.Project.update(projectId, {
+        escrow_amount: (project.escrow_amount || 0) - milestone.amount
       });
 
       // Notify engineer
       await sendNotification({
         recipientEmail: engineer.email,
         title: "تم تحرير دفعة مرحلة",
-        message: `تم تحرير ${milestone.amount.toLocaleString('ar-SA')} ريال لمرحلة: ${milestone.title}`,
+        message: `تم تحرير ${netAmount.toLocaleString('ar-SA')} ريال (بعد خصم العمولة) لمرحلة: ${milestone.title}`,
         type: "payment",
         projectId: projectId,
         priority: "high"

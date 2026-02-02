@@ -123,6 +123,7 @@ import NotificationCenter from './pages/NotificationCenter';
 import FirmProfile from './pages/FirmProfile';
 import FirmSettings from './pages/FirmSettings';
 import ClientProfile from './pages/ClientProfile';
+import AdminWalletDashboard from './pages/AdminWalletDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -203,6 +204,7 @@ export const PAGES = {
     "FirmProfile": FirmProfile,
     "FirmSettings": FirmSettings,
     "ClientProfile": ClientProfile,
+    "AdminWalletDashboard": AdminWalletDashboard,
 }
 
 export const pagesConfig = {
