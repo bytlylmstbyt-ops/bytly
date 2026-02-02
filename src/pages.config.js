@@ -118,6 +118,7 @@ import Wallet from './pages/Wallet';
 import WorkflowBuilder from './pages/WorkflowBuilder';
 import RegisterFirm from './pages/RegisterFirm';
 import FirmDashboard from './pages/FirmDashboard';
+import FirmMilestoneControl from './pages/FirmMilestoneControl';
 import __Layout from './Layout.jsx';
 
 
@@ -193,6 +194,7 @@ export const PAGES = {
     "WorkflowBuilder": WorkflowBuilder,
     "RegisterFirm": RegisterFirm,
     "FirmDashboard": FirmDashboard,
+    "FirmMilestoneControl": FirmMilestoneControl,
 }
 
 export const pagesConfig = {
