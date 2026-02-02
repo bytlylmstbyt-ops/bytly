@@ -120,10 +120,11 @@ export default function WalletPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl md:text-4xl font-bold gradient-text">
-              المحفظة الإلكترونية
-            </h1>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl md:text-4xl font-bold gradient-text">
+                المحفظة الإلكترونية
+              </h1>
             {userType === "engineer" && (
               <div className="flex items-center gap-1 text-sm text-slate-600">
                 <UserIcon className="w-4 h-4" />
@@ -136,6 +137,13 @@ export default function WalletPage() {
                 <span>شركة استشارية</span>
               </div>
             )}
+            </div>
+            <Link to={createPageUrl("WalletRecharge")}>
+              <Button className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
+                <Plus className="w-5 h-5 ml-2" />
+                شحن المحفظة
+              </Button>
+            </Link>
           </div>
           <p className="text-slate-600">إدارة رصيدك ومعاملاتك المالية</p>
         </motion.div>

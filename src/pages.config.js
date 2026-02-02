@@ -136,9 +136,6 @@ import Wallet from './pages/Wallet';
 import WorkflowBuilder from './pages/WorkflowBuilder';
 import WalletRecharge from './pages/WalletRecharge';
 import WalletRechargeSuccess from './pages/WalletRechargeSuccess';
-import WalletTopup from './pages/WalletTopup';
-import WalletTopupSuccess from './pages/WalletTopupSuccess';
-import InvoicePayment from './pages/InvoicePayment';
 import __Layout from './Layout.jsx';
 
 
@@ -232,9 +229,6 @@ export const PAGES = {
     "WorkflowBuilder": WorkflowBuilder,
     "WalletRecharge": WalletRecharge,
     "WalletRechargeSuccess": WalletRechargeSuccess,
-    "WalletTopup": WalletTopup,
-    "WalletTopupSuccess": WalletTopupSuccess,
-    "InvoicePayment": InvoicePayment,
 }
 
 export const pagesConfig = {
