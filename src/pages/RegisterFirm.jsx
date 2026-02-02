@@ -148,8 +148,8 @@ export default function RegisterFirm() {
               <Building2 className="w-8 h-8 text-white" />
             </div>
             <CardTitle className="text-3xl">تسجيل شركة هندسية استشارية</CardTitle>
-<parameter name="p">انضم إلى شبكة الشركات الهندسية الاستشارية المعتمدة
-          </CardHeader>
+            <p className="text-slate-600">انضم إلى شبكة الشركات الهندسية الاستشارية المعتمدة</p>
+            </CardHeader>
 
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
