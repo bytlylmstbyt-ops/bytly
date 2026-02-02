@@ -47,6 +47,7 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import AddDesign from './pages/AddDesign';
 import AddEngineer from './pages/AddEngineer';
 import AddPortfolio from './pages/AddPortfolio';
 import AdminCategories from './pages/AdminCategories';
@@ -57,6 +58,7 @@ import AdminDisputes from './pages/AdminDisputes';
 import AdminEngineers from './pages/AdminEngineers';
 import AdminRefundControl from './pages/AdminRefundControl';
 import AdminReports from './pages/AdminReports';
+import AdminRevenueReport from './pages/AdminRevenueReport';
 import AdminReviews from './pages/AdminReviews';
 import AdminSubscriptionControl from './pages/AdminSubscriptionControl';
 import AdminWallet from './pages/AdminWallet';
@@ -79,6 +81,9 @@ import ContractTemplates from './pages/ContractTemplates';
 import Copyright from './pages/Copyright';
 import CreateProject from './pages/CreateProject';
 import Dashboard from './pages/Dashboard';
+import DesignDetails from './pages/DesignDetails';
+import DesignMarketplace from './pages/DesignMarketplace';
+import DesignPurchaseSuccess from './pages/DesignPurchaseSuccess';
 import DisputeDetails from './pages/DisputeDetails';
 import EngineerDashboard from './pages/EngineerDashboard';
 import EngineerProfile from './pages/EngineerProfile';
@@ -91,11 +96,13 @@ import FirmProfile from './pages/FirmProfile';
 import FirmSettings from './pages/FirmSettings';
 import Gallery from './pages/Gallery';
 import Home from './pages/Home';
+import InvestorHub from './pages/InvestorHub';
 import InvoiceManager from './pages/InvoiceManager';
 import LegalConsultantProfile from './pages/LegalConsultantProfile';
 import Messages from './pages/Messages';
 import MyDisputes from './pages/MyDisputes';
 import MyFavorites from './pages/MyFavorites';
+import MyPurchasedDesigns from './pages/MyPurchasedDesigns';
 import MyPurchasedProjects from './pages/MyPurchasedProjects';
 import NotificationCenter from './pages/NotificationCenter';
 import NotificationSettings from './pages/NotificationSettings';
@@ -127,17 +134,13 @@ import Terms from './pages/Terms';
 import UserRoleAssignment from './pages/UserRoleAssignment';
 import Wallet from './pages/Wallet';
 import WorkflowBuilder from './pages/WorkflowBuilder';
-import InvestorHub from './pages/InvestorHub';
-import DesignMarketplace from './pages/DesignMarketplace';
-import DesignDetails from './pages/DesignDetails';
-import AddDesign from './pages/AddDesign';
-import DesignPurchaseSuccess from './pages/DesignPurchaseSuccess';
-import MyPurchasedDesigns from './pages/MyPurchasedDesigns';
-import AdminRevenueReport from './pages/AdminRevenueReport';
+import WalletRecharge from './pages/WalletRecharge';
+import WalletRechargeSuccess from './pages/WalletRechargeSuccess';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AddDesign": AddDesign,
     "AddEngineer": AddEngineer,
     "AddPortfolio": AddPortfolio,
     "AdminCategories": AdminCategories,
@@ -148,6 +151,7 @@ export const PAGES = {
     "AdminEngineers": AdminEngineers,
     "AdminRefundControl": AdminRefundControl,
     "AdminReports": AdminReports,
+    "AdminRevenueReport": AdminRevenueReport,
     "AdminReviews": AdminReviews,
     "AdminSubscriptionControl": AdminSubscriptionControl,
     "AdminWallet": AdminWallet,
@@ -170,6 +174,9 @@ export const PAGES = {
     "Copyright": Copyright,
     "CreateProject": CreateProject,
     "Dashboard": Dashboard,
+    "DesignDetails": DesignDetails,
+    "DesignMarketplace": DesignMarketplace,
+    "DesignPurchaseSuccess": DesignPurchaseSuccess,
     "DisputeDetails": DisputeDetails,
     "EngineerDashboard": EngineerDashboard,
     "EngineerProfile": EngineerProfile,
@@ -182,11 +189,13 @@ export const PAGES = {
     "FirmSettings": FirmSettings,
     "Gallery": Gallery,
     "Home": Home,
+    "InvestorHub": InvestorHub,
     "InvoiceManager": InvoiceManager,
     "LegalConsultantProfile": LegalConsultantProfile,
     "Messages": Messages,
     "MyDisputes": MyDisputes,
     "MyFavorites": MyFavorites,
+    "MyPurchasedDesigns": MyPurchasedDesigns,
     "MyPurchasedProjects": MyPurchasedProjects,
     "NotificationCenter": NotificationCenter,
     "NotificationSettings": NotificationSettings,
@@ -218,13 +227,8 @@ export const PAGES = {
     "UserRoleAssignment": UserRoleAssignment,
     "Wallet": Wallet,
     "WorkflowBuilder": WorkflowBuilder,
-    "InvestorHub": InvestorHub,
-    "DesignMarketplace": DesignMarketplace,
-    "DesignDetails": DesignDetails,
-    "AddDesign": AddDesign,
-    "DesignPurchaseSuccess": DesignPurchaseSuccess,
-    "MyPurchasedDesigns": MyPurchasedDesigns,
-    "AdminRevenueReport": AdminRevenueReport,
+    "WalletRecharge": WalletRecharge,
+    "WalletRechargeSuccess": WalletRechargeSuccess,
 }
 
 export const pagesConfig = {

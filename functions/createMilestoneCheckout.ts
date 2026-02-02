@@ -30,9 +30,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized: Not project owner' }, { status: 403 });
     }
 
-    // Create Stripe checkout session
+    // Create Stripe checkout session with Apple Pay and Google Pay
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
+      payment_method_options: {
+        card: {
+          request_three_d_secure: 'automatic'
+        }
+      },
       line_items: [
         {
           price_data: {

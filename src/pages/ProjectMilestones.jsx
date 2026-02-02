@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, CheckCircle, Clock, Upload, DollarSign, XCircle, FileUp, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle, Clock, Upload, DollarSign, XCircle, FileUp, AlertCircle, Wallet } from "lucide-react";
+import PaymentMethodChoice from "@/components/payment/PaymentMethodChoice";
 import { motion } from "framer-motion";
 import { sendNotification } from "@/components/notifications/NotificationHelper";
 
@@ -26,6 +27,8 @@ export default function ProjectMilestones() {
   const [submittingMilestone, setSubmittingMilestone] = useState(null);
   const [revisionNotes, setRevisionNotes] = useState("");
   const [processingPayment, setProcessingPayment] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [selectedMilestone, setSelectedMilestone] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -221,24 +224,105 @@ export default function ProjectMilestones() {
   };
 
   const handlePayMilestone = async (milestone) => {
+    setSelectedMilestone(milestone);
+    setShowPaymentDialog(true);
+  };
+
+  const payWithWallet = async () => {
+    const milestone = selectedMilestone;
+    
+    if (client.wallet_balance < milestone.amount) {
+      alert("رصيد المحفظة غير كافٍ");
+      return;
+    }
+
+    setProcessingPayment(true);
+    try {
+      const now = new Date().toISOString();
+
+      // Deduct from wallet and hold in escrow
+      await base44.entities.Client.update(client.id, {
+        wallet_balance: client.wallet_balance - milestone.amount
+      });
+
+      await base44.entities.ProjectMilestone.update(milestone.id, {
+        status: 'in_progress',
+        start_date: now
+      });
+
+      await base44.entities.Project.update(projectId, {
+        escrow_amount: (project.escrow_amount || 0) + milestone.amount,
+        escrow_status: 'held'
+      });
+
+      await base44.entities.Engineer.update(engineer.id, {
+        pending_balance: (engineer.pending_balance || 0) + milestone.amount
+      });
+
+      await base44.entities.Transaction.create({
+        user_email: client.email,
+        user_type: 'client',
+        type: 'escrow_hold',
+        amount: milestone.amount,
+        status: 'held_in_escrow',
+        description: `حجز دفعة (من المحفظة): ${milestone.title}`,
+        project_id: projectId,
+        milestone_id: milestone.id,
+        payment_method: 'wallet',
+        balance_before: client.wallet_balance,
+        balance_after: client.wallet_balance - milestone.amount
+      });
+
+      setShowPaymentDialog(false);
+      await loadData();
+    } catch (error) {
+      console.error("Error paying with wallet:", error);
+      alert("حدث خطأ في الدفع");
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  const payWithStripe = async () => {
     setProcessingPayment(true);
     try {
       const response = await base44.functions.invoke('createMilestoneCheckout', {
-        milestone_id: milestone.id,
+        milestone_id: selectedMilestone.id,
         project_id: projectId,
         success_url: `${window.location.origin}/payment-success?project_id=${projectId}`,
         cancel_url: `${window.location.origin}/project-milestones?id=${projectId}`
       });
 
       if (response.data.url) {
-        // Redirect to Stripe checkout
         window.location.href = response.data.url;
-      } else {
-        throw new Error('No checkout URL received');
       }
     } catch (error) {
-      console.error("Error creating payment:", error);
       alert("حدث خطأ في إنشاء الدفع");
+      setProcessingPayment(false);
+    }
+  };
+
+  const requestInvoice = async () => {
+    const milestone = selectedMilestone;
+    
+    setProcessingPayment(true);
+    try {
+      await base44.entities.Invoice.create({
+        client_id: client.id,
+        client_email: client.email,
+        project_id: projectId,
+        milestone_id: milestone.id,
+        amount: milestone.amount,
+        description: `فاتورة دفع مرحلة: ${milestone.title}`,
+        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        status: "pending"
+      });
+
+      alert("تم إرسال طلب الفاتورة. سيتم التواصل معك قريباً");
+      setShowPaymentDialog(false);
+    } catch (error) {
+      alert("حدث خطأ");
+    } finally {
       setProcessingPayment(false);
     }
   };
@@ -430,6 +514,25 @@ export default function ProjectMilestones() {
                         </Button>
                       </div>
                     )}
+
+                    {/* Payment Method Dialog */}
+                    <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>اختر طريقة الدفع</DialogTitle>
+                        </DialogHeader>
+                        {selectedMilestone && client && (
+                          <PaymentMethodChoice
+                            amount={selectedMilestone.amount}
+                            walletBalance={client.wallet_balance || 0}
+                            showInvoiceOption={client.client_type === "investor"}
+                            onWalletPay={payWithWallet}
+                            onStripePay={payWithStripe}
+                            onInvoiceRequest={requestInvoice}
+                          />
+                        )}
+                      </DialogContent>
+                    </Dialog>
 
                     {/* Engineer Actions */}
                     {isEngineer && (milestone.status === "pending" || milestone.status === "in_progress" || milestone.status === "revision_requested") && (

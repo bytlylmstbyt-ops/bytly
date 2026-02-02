@@ -51,9 +51,14 @@ Deno.serve(async (req) => {
       payment_status: "pending"
     });
 
-    // Create Stripe checkout session
+    // Create Stripe checkout session with Apple Pay and Google Pay
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
+      payment_method_options: {
+        card: {
+          request_three_d_secure: 'automatic'
+        }
+      },
       line_items: [
         {
           price_data: {

@@ -7,8 +7,9 @@ import {
   ShoppingCart, Star, Download, Ruler, Layers, 
   Bed, Bath, Home, Check, ArrowLeft, MessageSquare,
   Zap, CheckCircle, Shield, Award, ChevronLeft, ChevronRight,
-  FileText, Edit3, Loader2
+  FileText, Edit3, Loader2, Wallet
 } from "lucide-react";
+import PaymentMethodChoice from "@/components/payment/PaymentMethodChoice";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +38,8 @@ export default function DesignDetails() {
   const [showModificationRequest, setShowModificationRequest] = useState(false);
   const [modificationNotes, setModificationNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [currentClient, setCurrentClient] = useState(null);
 
   useEffect(() => {
     if (designId) {
@@ -49,6 +52,9 @@ export default function DesignDetails() {
     
     const currentUser = await base44.auth.me();
     setUser(currentUser);
+
+    const [clientData] = await base44.entities.Client.filter({ email: currentUser.email });
+    setCurrentClient(clientData);
 
     const [designData] = await base44.entities.ReadyMadeDesign.filter({ id: designId });
     setDesign(designData);
@@ -77,11 +83,71 @@ export default function DesignDetails() {
     setIsLoading(false);
   };
 
-  const handlePurchase = async () => {
+  const handlePurchase = () => {
+    setShowPaymentDialog(true);
+  };
+
+  const payWithWallet = async () => {
+    if (!currentClient || currentClient.wallet_balance < design.price) {
+      alert("رصيد المحفظة غير كافٍ");
+      return;
+    }
+
     setIsSubmitting(true);
-    
     try {
-      // Create checkout session
+      const commissionRate = 0.25;
+      const commissionAmount = design.price * commissionRate;
+      const sellerEarnings = design.price - commissionAmount;
+
+      // Create purchase record
+      const purchase = await base44.entities.DesignPurchase.create({
+        design_id: designId,
+        buyer_email: user.email,
+        buyer_name: user.full_name,
+        buyer_id: currentClient.id,
+        seller_id: design.seller_id,
+        seller_email: design.created_by,
+        amount_paid: design.price,
+        platform_commission: commissionAmount,
+        seller_earnings: sellerEarnings,
+        payment_status: "completed",
+        payment_method: "wallet",
+        download_url: design.design_files?.[0] || null
+      });
+
+      // Deduct from buyer wallet
+      await base44.entities.Client.update(currentClient.id, {
+        wallet_balance: currentClient.wallet_balance - design.price
+      });
+
+      // Add to seller balance
+      const sellers = design.seller_type === "engineer" 
+        ? await base44.entities.Engineer.filter({ id: design.seller_id })
+        : await base44.entities.EngineeringFirm.filter({ id: design.seller_id });
+      
+      const seller = sellers[0];
+      if (seller) {
+        const entityName = design.seller_type === "engineer" ? "Engineer" : "EngineeringFirm";
+        await base44.entities[entityName].update(seller.id, {
+          available_balance: (seller.available_balance || 0) + sellerEarnings
+        });
+      }
+
+      // Update design stats
+      await base44.entities.ReadyMadeDesign.update(designId, {
+        total_purchases: (design.total_purchases || 0) + 1
+      });
+
+      window.location.href = createPageUrl("DesignPurchaseSuccess") + `?purchase_id=${purchase.id}`;
+    } catch (error) {
+      alert("حدث خطأ في الدفع");
+      setIsSubmitting(false);
+    }
+  };
+
+  const payWithStripe = async () => {
+    setIsSubmitting(true);
+    try {
       const response = await base44.functions.invoke('createDesignCheckout', {
         design_id: designId,
         buyer_email: user.email
@@ -92,6 +158,28 @@ export default function DesignDetails() {
       }
     } catch (error) {
       alert("حدث خطأ في إنشاء عملية الدفع");
+      setIsSubmitting(false);
+    }
+  };
+
+  const requestInvoice = async () => {
+    setIsSubmitting(true);
+    try {
+      await base44.entities.Invoice.create({
+        client_id: currentClient.id,
+        client_email: user.email,
+        design_id: designId,
+        amount: design.price,
+        description: `فاتورة شراء تصميم: ${design.title}`,
+        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        status: "pending"
+      });
+
+      alert("تم إرسال طلب الفاتورة. سيتم التواصل معك خلال 24 ساعة");
+      setShowPaymentDialog(false);
+    } catch (error) {
+      alert("حدث خطأ");
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -386,20 +474,41 @@ export default function DesignDetails() {
                     )}
                   </div>
                 ) : (
-                  <Button 
-                    onClick={handlePurchase}
-                    disabled={isSubmitting}
-                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white text-lg py-6"
-                  >
-                    {isSubmitting ? (
-                      <Loader2 className="w-6 h-6 animate-spin ml-2" />
-                    ) : (
-                      <>
-                        <ShoppingCart className="w-6 h-6 ml-2" />
-                        اشتر الآن
-                      </>
-                    )}
-                  </Button>
+                  <>
+                    <Button 
+                      onClick={handlePurchase}
+                      disabled={isSubmitting}
+                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white text-lg py-6"
+                    >
+                      {isSubmitting ? (
+                        <Loader2 className="w-6 h-6 animate-spin ml-2" />
+                      ) : (
+                        <>
+                          <ShoppingCart className="w-6 h-6 ml-2" />
+                          اشتر الآن
+                        </>
+                      )}
+                    </Button>
+
+                    {/* Payment Method Dialog */}
+                    <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>اختر طريقة الدفع</DialogTitle>
+                        </DialogHeader>
+                        {currentClient && (
+                          <PaymentMethodChoice
+                            amount={design.price}
+                            walletBalance={currentClient.wallet_balance || 0}
+                            showInvoiceOption={currentClient.client_type === "investor"}
+                            onWalletPay={payWithWallet}
+                            onStripePay={payWithStripe}
+                            onInvoiceRequest={requestInvoice}
+                          />
+                        )}
+                      </DialogContent>
+                    </Dialog>
+                  </>
                 )}
 
                 <div className="mt-4 space-y-2 text-sm text-slate-600">
