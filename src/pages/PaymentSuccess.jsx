@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Loader2 } from "lucide-react";
@@ -10,76 +9,81 @@ import confetti from "canvas-confetti";
 
 export default function PaymentSuccess() {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
   const urlParams = new URLSearchParams(window.location.search);
+  const projectId = urlParams.get("project_id");
   const sessionId = urlParams.get("session_id");
-  const projectId = urlParams.get("project");
-  const [processing, setProcessing] = useState(true);
 
   useEffect(() => {
+    // Trigger confetti
     confetti({
       particleCount: 100,
       spread: 70,
       origin: { y: 0.6 }
     });
 
-    setTimeout(() => {
-      setProcessing(false);
-    }, 2000);
+    // Wait a bit to show success
+    setTimeout(() => setLoading(false), 1500);
   }, []);
 
-  if (processing) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50">
-        <div className="text-center">
-          <Loader2 className="w-16 h-16 animate-spin text-green-600 mx-auto mb-4" />
-          <p className="text-slate-600">جاري تأكيد الدفع...</p>
-        </div>
-      </div>
-    );
-  }
+  const handleContinue = () => {
+    if (projectId) {
+      navigate(createPageUrl("ProjectMilestones") + `?id=${projectId}`);
+    } else {
+      navigate(createPageUrl("Dashboard"));
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50/30 flex items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="max-w-lg w-full"
+        transition={{ duration: 0.5 }}
       >
-        <Card className="border-2 border-green-200 shadow-2xl">
+        <Card className="max-w-md shadow-2xl border-0">
           <CardContent className="pt-12 pb-8 text-center">
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", delay: 0.2 }}
-            >
-              <CheckCircle className="w-24 h-24 text-green-600 mx-auto mb-6" />
-            </motion.div>
+            {loading ? (
+              <div className="space-y-4">
+                <Loader2 className="w-16 h-16 animate-spin text-green-600 mx-auto" />
+                <p className="text-slate-600">جاري معالجة الدفع...</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                >
+                  <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="w-12 h-12 text-green-600" />
+                  </div>
+                </motion.div>
 
-            <h1 className="text-3xl font-bold text-green-900 mb-3">
-              تم الدفع بنجاح!
-            </h1>
-            <p className="text-lg text-slate-600 mb-2">
-              تم حجز المبلغ في حساب الضمان
-            </p>
-            <p className="text-sm text-slate-500 mb-8">
-              سيتم تحرير المبلغ للمهندس بعد موافقتك على العمل النهائي
-            </p>
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
+                    تم الدفع بنجاح! 🎉
+                  </h1>
+                  <p className="text-slate-600">
+                    تم حجز المبلغ في الضمان وسيتم تحريره للمهندس بعد اعتماد العمل
+                  </p>
+                </div>
 
-            <div className="space-y-3">
-              <Button
-                onClick={() => navigate(createPageUrl("ProjectDetails") + `?id=${projectId}`)}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-6 text-lg"
-              >
-                عرض تفاصيل المشروع
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate(createPageUrl("Dashboard"))}
-                className="w-full py-6"
-              >
-                العودة للوحة التحكم
-              </Button>
-            </div>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <p className="text-sm text-green-800">
+                    <strong>ملاحظة:</strong> المبلغ محفوظ في نظام الضمان الخاص بنا وسيتم تحريره للمهندس فقط بعد اعتماد العمل من قبل الشركة الاستشارية (للمشاريع الكاملة) أو الموافقة المباشرة (للخدمات السريعة).
+                  </p>
+                </div>
+
+                <Button
+                  onClick={handleContinue}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  size="lg"
+                >
+                  متابعة إلى المشروع
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>

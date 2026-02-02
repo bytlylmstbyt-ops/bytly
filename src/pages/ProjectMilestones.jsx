@@ -25,6 +25,7 @@ export default function ProjectMilestones() {
   const [uploading, setUploading] = useState(false);
   const [submittingMilestone, setSubmittingMilestone] = useState(null);
   const [revisionNotes, setRevisionNotes] = useState("");
+  const [processingPayment, setProcessingPayment] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -205,6 +206,29 @@ export default function ProjectMilestones() {
     }
   };
 
+  const handlePayMilestone = async (milestone) => {
+    setProcessingPayment(true);
+    try {
+      const response = await base44.functions.invoke('createMilestoneCheckout', {
+        milestone_id: milestone.id,
+        project_id: projectId,
+        success_url: `${window.location.origin}/payment-success?project_id=${projectId}`,
+        cancel_url: `${window.location.origin}/project-milestones?id=${projectId}`
+      });
+
+      if (response.data.url) {
+        // Redirect to Stripe checkout
+        window.location.href = response.data.url;
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (error) {
+      console.error("Error creating payment:", error);
+      alert("حدث خطأ في إنشاء الدفع");
+      setProcessingPayment(false);
+    }
+  };
+
   const requestRevision = async (milestone) => {
     if (!revisionNotes.trim()) {
       alert("يرجى إدخال ملاحظات التعديل");
@@ -369,6 +393,22 @@ export default function ProjectMilestones() {
                             </a>
                           ))}
                         </div>
+                      </div>
+                    )}
+
+                    {/* Client Payment Action */}
+                    {!isEngineer && milestone.status === "pending" && !milestone.payment_released && (
+                      <div className="mb-4">
+                        <Button
+                          onClick={() => handlePayMilestone(milestone)}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          <DollarSign className="w-4 h-4 ml-2" />
+                          دفع المرحلة ({milestone.amount.toLocaleString('ar-SA')} ريال)
+                        </Button>
+                        <p className="text-xs text-slate-500 mt-2 text-center">
+                          سيتم حجز المبلغ في الضمان حتى اعتماد العمل
+                        </p>
                       </div>
                     )}
 

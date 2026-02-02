@@ -1,8 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 import Stripe from 'npm:stripe@17.5.0';
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY"), {
-  apiVersion: '2024-12-18.acacia'
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'), {
+  apiVersion: '2024-11-20.acacia'
 });
 
 Deno.serve(async (req) => {
@@ -13,36 +13,106 @@ Deno.serve(async (req) => {
   try {
     const body = await req.text();
     
-    const event = await stripe.webhooks.constructEventAsync(
-      body,
-      signature,
-      webhookSecret
-    );
+    let event;
+    try {
+      event = await stripe.webhooks.constructEventAsync(
+        body,
+        signature,
+        webhookSecret
+      );
+    } catch (err) {
+      console.error('Webhook signature verification failed:', err.message);
+      return Response.json({ error: 'Invalid signature' }, { status: 400 });
+    }
 
+    console.log(`Webhook received: ${event.type}`);
+
+    // Handle successful payment
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
-      const { project_id, proposal_id, user_email } = session.metadata;
+      const metadata = session.metadata;
 
-      // Update transaction to completed
-      const transactions = await base44.asServiceRole.entities.Transaction.filter({
-        project_id: project_id,
-        type: "escrow_hold",
-        status: "pending"
-      });
+      if (metadata.type === 'milestone_payment') {
+        const { milestone_id, project_id, client_id, client_email } = metadata;
 
-      if (transactions.length > 0) {
-        await base44.asServiceRole.entities.Transaction.update(transactions[0].id, {
-          status: "completed",
-          reference_id: session.payment_intent
+        // Get milestone and project
+        const [milestone] = await base44.asServiceRole.entities.ProjectMilestone.filter({ id: milestone_id });
+        const [project] = await base44.asServiceRole.entities.Project.filter({ id: project_id });
+        const [client] = await base44.asServiceRole.entities.Client.filter({ id: client_id });
+        const [engineer] = await base44.asServiceRole.entities.Engineer.filter({ id: project.assigned_engineer_id });
+
+        if (!milestone || !project || !client || !engineer) {
+          console.error('Missing entities for payment processing');
+          return Response.json({ error: 'Missing data' }, { status: 400 });
+        }
+
+        // Hold funds in escrow
+        const now = new Date().toISOString();
+
+        // Update milestone status to pending (payment received, held in escrow)
+        await base44.asServiceRole.entities.ProjectMilestone.update(milestone_id, {
+          status: 'in_progress',
+          start_date: now
         });
-      }
 
-      console.log(`Payment completed for project ${project_id}`);
+        // Update client wallet - deduct from balance
+        await base44.asServiceRole.entities.Client.update(client_id, {
+          wallet_balance: (client.wallet_balance || 0) + milestone.amount
+        });
+
+        // Update project escrow amount
+        await base44.asServiceRole.entities.Project.update(project_id, {
+          escrow_amount: (project.escrow_amount || 0) + milestone.amount,
+          escrow_status: 'held'
+        });
+
+        // Update engineer pending balance (in escrow)
+        await base44.asServiceRole.entities.Engineer.update(engineer.id, {
+          pending_balance: (engineer.pending_balance || 0) + milestone.amount
+        });
+
+        // Create escrow hold transaction for client
+        await base44.asServiceRole.entities.Transaction.create({
+          user_email: client_email,
+          user_type: 'client',
+          type: 'escrow_hold',
+          amount: milestone.amount,
+          status: 'held_in_escrow',
+          description: `حجز دفعة مرحلة: ${milestone.title}`,
+          project_id: project_id,
+          milestone_id: milestone_id,
+          reference_id: session.payment_intent,
+          payment_method: 'card',
+          from_wallet: client_email,
+          to_wallet: 'escrow'
+        });
+
+        // Create pending transaction for engineer
+        await base44.asServiceRole.entities.Transaction.create({
+          user_email: engineer.email,
+          user_type: 'engineer',
+          type: 'escrow_hold',
+          amount: milestone.amount,
+          status: 'held_in_escrow',
+          description: `دفعة معلقة: ${milestone.title}`,
+          project_id: project_id,
+          milestone_id: milestone_id,
+          reference_id: session.payment_intent,
+          from_wallet: 'escrow',
+          to_wallet: engineer.email
+        });
+
+        console.log(`Payment processed for milestone ${milestone_id}: ${milestone.amount} SAR held in escrow`);
+      }
     }
 
     return Response.json({ received: true });
+
   } catch (error) {
     console.error('Webhook error:', error);
-    return Response.json({ error: error.message }, { status: 400 });
+    return Response.json({ 
+      error: 'Webhook processing failed',
+      details: error.message 
+    }, { status: 500 });
   }
 });

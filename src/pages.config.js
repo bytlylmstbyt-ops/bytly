@@ -124,6 +124,7 @@ import FirmProfile from './pages/FirmProfile';
 import FirmSettings from './pages/FirmSettings';
 import ClientProfile from './pages/ClientProfile';
 import AdminWalletDashboard from './pages/AdminWalletDashboard';
+import AdminCommissionSettings from './pages/AdminCommissionSettings';
 import __Layout from './Layout.jsx';
 
 
@@ -205,6 +206,7 @@ export const PAGES = {
     "FirmSettings": FirmSettings,
     "ClientProfile": ClientProfile,
     "AdminWalletDashboard": AdminWalletDashboard,
+    "AdminCommissionSettings": AdminCommissionSettings,
 }
 
 export const pagesConfig = {
