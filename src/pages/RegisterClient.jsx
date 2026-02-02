@@ -5,12 +5,13 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
   User, Mail, Phone, MapPin, Upload, 
-  Loader2, CheckCircle, Briefcase
+  Loader2, CheckCircle, Briefcase, Home, Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function RegisterClient() {
   const navigate = useNavigate();
@@ -21,7 +22,9 @@ export default function RegisterClient() {
     phone: "",
     city: "",
     country: "",
-    profile_image: ""
+    profile_image: "",
+    client_type: "individual",
+    company_name: ""
   });
 
   const handleInputChange = (field, value) => {
@@ -79,6 +82,55 @@ export default function RegisterClient() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Client Type Selection */}
+              <div className="space-y-3">
+                <Label>نوع الحساب *</Label>
+                <RadioGroup
+                  value={formData.client_type}
+                  onValueChange={(value) => handleInputChange("client_type", value)}
+                  className="grid grid-cols-2 gap-4"
+                >
+                  <div>
+                    <RadioGroupItem value="individual" id="individual" className="peer sr-only" />
+                    <Label
+                      htmlFor="individual"
+                      className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-[#d4a574] peer-data-[state=checked]:bg-[#d4a574]/5 cursor-pointer"
+                    >
+                      <Home className="mb-3 h-8 w-8" />
+                      <div className="text-center">
+                        <p className="font-semibold">صاحب منزل</p>
+                        <p className="text-xs text-muted-foreground mt-1">مشروع شخصي واحد</p>
+                      </div>
+                    </Label>
+                  </div>
+                  <div>
+                    <RadioGroupItem value="investor" id="investor" className="peer sr-only" />
+                    <Label
+                      htmlFor="investor"
+                      className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-[#d4a574] peer-data-[state=checked]:bg-[#d4a574]/5 cursor-pointer"
+                    >
+                      <Building2 className="mb-3 h-8 w-8" />
+                      <div className="text-center">
+                        <p className="font-semibold">مستثمر/مطور</p>
+                        <p className="text-xs text-muted-foreground mt-1">مشاريع متعددة</p>
+                      </div>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              {formData.client_type === "investor" && (
+                <div className="space-y-2">
+                  <Label htmlFor="company_name">اسم الشركة</Label>
+                  <Input
+                    id="company_name"
+                    value={formData.company_name}
+                    onChange={(e) => handleInputChange("company_name", e.target.value)}
+                    placeholder="أدخل اسم شركتك أو مؤسستك"
+                  />
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="full_name">الاسم الكامل *</Label>
                 <div className="relative">
