@@ -139,16 +139,26 @@ export default function InvestorHub() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30 py-8" dir="rtl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-3xl md:text-4xl font-bold gradient-text mb-2">
-            مركز المستثمر
-          </h1>
-          <p className="text-slate-600 mb-8">
-            إدارة محفظة مشاريعك وتتبع التقدم المالي
-          </p>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold gradient-text mb-2">
+                مركز المستثمر
+              </h1>
+              <p className="text-slate-600">
+                إدارة محفظة مشاريعك وتتبع التقدم المالي من لوحة واحدة
+              </p>
+            </div>
+            <Link to={createPageUrl("CreateProject")}>
+              <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+                <Plus className="w-4 h-4 ml-2" />
+                مشروع جديد
+              </Button>
+            </Link>
+          </div>
         </motion.div>
 
         {/* Overview Counters */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid md:grid-cols-4 gap-6 mb-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-0 shadow-lg">
               <CardContent className="pt-6">
@@ -192,13 +202,27 @@ export default function InvestorHub() {
               </CardContent>
             </Card>
           </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+            <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-0 shadow-lg">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center">
+                    <Wallet className="w-7 h-7 text-purple-600" />
+                  </div>
+                </div>
+                <p className="text-sm text-slate-600 mb-1">رصيد المحفظة</p>
+                <p className="text-2xl font-bold text-purple-900">{(client?.wallet_balance || 0).toLocaleString('ar-SA')} ر.س</p>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
         <Tabs defaultValue="projects" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-2xl">
+          <TabsList className="grid w-full grid-cols-4 max-w-3xl">
             <TabsTrigger value="projects">
               <Building2 className="w-4 h-4 ml-2" />
-              الإشارات الضوئية
+              نظرة شاملة
             </TabsTrigger>
             <TabsTrigger value="payments">
               <DollarSign className="w-4 h-4 ml-2" />
@@ -208,21 +232,17 @@ export default function InvestorHub() {
               <FolderOpen className="w-4 h-4 ml-2" />
               المستندات
             </TabsTrigger>
+            <TabsTrigger value="analytics">
+              <TrendingUp className="w-4 h-4 ml-2" />
+              التحليلات
+            </TabsTrigger>
           </TabsList>
 
           {/* Project Traffic Lights */}
           <TabsContent value="projects">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>نظام الإشارات الضوئية للمشاريع</CardTitle>
-                  <Link to={createPageUrl("CreateProject")}>
-                    <Button size="sm">
-                      <Plus className="w-4 h-4 ml-2" />
-                      مشروع جديد
-                    </Button>
-                  </Link>
-                </div>
+                <CardTitle>نظرة شاملة على جميع المشاريع</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -483,6 +503,107 @@ export default function InvestorHub() {
                       </div>
                     );
                   })}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>ملخص الأداء المالي</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                      <span className="text-sm text-slate-600">إجمالي الاستثمار</span>
+                      <span className="text-xl font-bold text-blue-900">
+                        {projects.reduce((sum, p) => sum + (p.budget_max || 0), 0).toLocaleString('ar-SA')} ر.س
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                      <span className="text-sm text-slate-600">المدفوع حتى الآن</span>
+                      <span className="text-xl font-bold text-green-900">
+                        {totalEscrow.toLocaleString('ar-SA')} ر.س
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+                      <span className="text-sm text-slate-600">معدل الإنجاز</span>
+                      <span className="text-xl font-bold text-purple-900">
+                        {projects.length > 0 
+                          ? Math.round((allMilestones.filter(m => m.status === "completed").length / allMilestones.length) * 100)
+                          : 0}%
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>توزيع حالات المشاريع</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-green-500" />
+                        <span className="text-sm text-slate-600">يسير حسب الخطة</span>
+                      </div>
+                      <span className="font-bold text-slate-900">
+                        {projects.filter(p => getProjectStatus(p) === "green").length}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                        <span className="text-sm text-slate-600">يحتاج انتباهك</span>
+                      </div>
+                      <span className="font-bold text-slate-900">
+                        {projects.filter(p => getProjectStatus(p) === "yellow").length}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-red-500" />
+                        <span className="text-sm text-slate-600">تأخير أو مشكلة</span>
+                      </div>
+                      <span className="font-bold text-slate-900">
+                        {projects.filter(p => getProjectStatus(p) === "red").length}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Quick Actions */}
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>إجراءات سريعة</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <Link to={createPageUrl("WalletTopup")}>
+                    <Button variant="outline" className="w-full justify-start">
+                      <Wallet className="w-4 h-4 ml-2" />
+                      شحن المحفظة
+                    </Button>
+                  </Link>
+                  <Link to={createPageUrl("InvoiceManager")}>
+                    <Button variant="outline" className="w-full justify-start">
+                      <FileText className="w-4 h-4 ml-2" />
+                      إدارة الفواتير
+                    </Button>
+                  </Link>
+                  <Link to={createPageUrl("Wallet")}>
+                    <Button variant="outline" className="w-full justify-start">
+                      <Download className="w-4 h-4 ml-2" />
+                      كشف حساب
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
