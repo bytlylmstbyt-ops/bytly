@@ -139,6 +139,7 @@ import WalletRechargeSuccess from './pages/WalletRechargeSuccess';
 import WalletTopup from './pages/WalletTopup';
 import WalletTopupSuccess from './pages/WalletTopupSuccess';
 import InvoicePayment from './pages/InvoicePayment';
+import DevelopmentRoadmap from './pages/DevelopmentRoadmap';
 import __Layout from './Layout.jsx';
 
 
@@ -235,6 +236,7 @@ export const PAGES = {
     "WalletTopup": WalletTopup,
     "WalletTopupSuccess": WalletTopupSuccess,
     "InvoicePayment": InvoicePayment,
+    "DevelopmentRoadmap": DevelopmentRoadmap,
 }
 
 export const pagesConfig = {
