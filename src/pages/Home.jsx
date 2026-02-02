@@ -102,8 +102,8 @@ export default function Home() {
               </h1>
               
               <p className="text-lg text-slate-300 mb-8 max-w-lg">
-                اكتشف أفضل مهندسي التصميم الداخلي والمعماريين والرسامين. 
-                منصة واحدة تجمع الإبداع والاحترافية لتحقيق رؤيتك.
+                سواء كنت صاحب منزل، مستثمر عقاري، أو مهندس محترف - 
+                بيتلي هي منصتك الموثوقة لإنجاز مشاريعك بجودة واحترافية.
               </p>
 
               {/* Search Box */}
@@ -478,15 +478,15 @@ export default function Home() {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-              هل أنت مهندس أو مصمم؟
+              انضم إلى بيتلي اليوم
             </h2>
             <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
-              انضم إلى منصة بيتلي واعرض أعمالك لآلاف العملاء المحتملين. 
-              ابدأ اليوم واحصل على فرص عمل جديدة.
+              سواء كنت تبحث عن تصميم منزلك، أو مهندس تريد عرض خدماتك، 
+              أو شركة استشارية ترغب في تقديم خدماتك - بيتلي هي منصتك المثالية.
             </p>
             <Link to={createPageUrl("RegisterChoice")}>
               <Button size="lg" className="bg-white text-[#1a1a2e] hover:bg-white/90 px-8 py-6 text-lg">
-                انضم كمهندس
+                انضم إلى بيتلي
                 <ArrowLeft className="w-5 h-5 mr-2" />
               </Button>
             </Link>
