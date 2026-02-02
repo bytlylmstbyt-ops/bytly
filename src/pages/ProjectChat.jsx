@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, MessageCircle, Search, Archive, Loader2 } from "lucide-react";
-import ChatWindow from "@/components/chat/ChatWindow";
+import EnhancedChatWindow from "@/components/chat/EnhancedChatWindow";
 import {
   Dialog,
   DialogContent,
@@ -45,10 +45,28 @@ export default function ProjectChat() {
       const [projectData] = await base44.entities.Project.filter({ id: projectId });
       setProject(projectData);
 
-      const convs = await base44.entities.Conversation.filter({
+      let convs = await base44.entities.Conversation.filter({
         project_id: projectId,
         is_archived: false
       });
+
+      // Create main room if it doesn't exist
+      const mainRoom = convs.find(c => c.is_main_room);
+      if (!mainRoom && projectData.project_type === "full_construction") {
+        const participants = [projectData.client_id];
+        if (projectData.assigned_engineer_id) participants.push(projectData.assigned_engineer_id);
+        
+        const newMainRoom = await base44.entities.Conversation.create({
+          project_id: projectId,
+          type: "three_way",
+          name: "غرفة المشروع الرئيسية - جميع الأطراف",
+          description: "محادثة بين العميل والمهندس والشركة الاستشارية",
+          participants,
+          is_main_room: true
+        });
+        convs = [newMainRoom, ...convs];
+      }
+      
       setConversations(convs);
 
       // Load available participants
@@ -241,11 +259,11 @@ export default function ProjectChat() {
             {/* Chat Window */}
             <div className="lg:col-span-2">
               {selectedConversation ? (
-                <ChatWindow
+                <EnhancedChatWindow
                   conversation={selectedConversation}
                   currentUserEmail={currentUser?.email}
                   onClose={() => setSelectedConversation(null)}
-                  onParticipantsClick={() => {}}
+                  projectData={project}
                 />
               ) : (
                 <Card className="h-96">
