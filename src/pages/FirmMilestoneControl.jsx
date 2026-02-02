@@ -120,13 +120,20 @@ export default function FirmMilestoneControl() {
         audit_log: [...(milestone.audit_log || []), auditEntry]
       });
 
-      // Send notification to client
+      // Send high-level notification to client
       const clientData = await base44.entities.Client.filter({ id: project.client_id });
       if (clientData.length > 0) {
+        const client = clientData[0];
+        const notificationMessage = client.client_type === "investor" 
+          ? `✅ تم اعتماد المرحلة "${milestone.title}" فنياً في مشروع: ${project.title}. رخصة بلدي رقم: ${permitNumber}`
+          : `تم التحقق من المطابقة الفنية للمرحلة: ${milestone.title}. المشروع جاهز للمرحلة التالية.`;
+
         await base44.entities.Notification.create({
-          recipient_email: clientData[0].email,
-          title: "✅ تم اعتماد المرحلة فنياً",
-          message: `تم التحقق من المطابقة الفنية للمرحلة: ${milestone.title}. المشروع جاهز للمرحلة التالية.`,
+          recipient_email: client.email,
+          title: client.client_type === "investor" 
+            ? `📋 ${project.title} - مرحلة معتمدة`
+            : "✅ تم اعتماد المرحلة فنياً",
+          message: notificationMessage,
           type: "milestone_approved",
           related_project_id: project.id,
           priority: "high"

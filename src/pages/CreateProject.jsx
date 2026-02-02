@@ -118,7 +118,7 @@ export default function CreateProject() {
       return;
     }
 
-    if (showMilestones && totalPercentage !== 100) {
+    if (formData.project_type === "express_service" && showMilestones && totalPercentage !== 100) {
       alert("يجب أن يكون مجموع نسب المراحل 100%");
       return;
     }
@@ -140,24 +140,77 @@ export default function CreateProject() {
       total_proposals: 0
     });
 
-    // Create milestones if defined
-    if (showMilestones && formData.milestones.length > 0) {
+    // Create milestones based on project type
+    if (formData.project_type === "full_construction") {
+      // Predefined 6-stage milestones for full construction
       const projectBudget = parseFloat(formData.budget_max) || parseFloat(formData.budget_min) || 0;
-      
-      for (let i = 0; i < formData.milestones.length; i++) {
-        const milestone = formData.milestones[i];
-        const milestoneAmount = (projectBudget * parseFloat(milestone.percentage)) / 100;
+      const fullConstructionMilestones = [
+        { title: "توقيع العقد", description: "بدء التعاقد الرسمي في المنصة", percentage: 25, days: 3 },
+        { title: "المخطط المعماري - الفكرة التصميمية", description: "التصميم المعماري المبدئي", percentage: 20, days: 14 },
+        { title: "تطوير التصميم", description: "التفاصيل المعمارية الإضافية وتنسيق المخططات", percentage: 15, days: 14 },
+        { title: "استخراج رخصة البناء واعتماد بلدي", description: "إرفاق رقم الرخصة الرسمي", percentage: 10, days: 21 },
+        { title: "المخططات التنفيذية النهائية", description: "المخططات التفصيلية (إنشائية، كهربائية، سباكة، دفاع مدني)", percentage: 20, days: 21 },
+        { title: "التسليم النهائي", description: "استلام جميع الملفات مختومة وجاهزة للتنفيذ", percentage: 10, days: 7 }
+      ];
+
+      for (let i = 0; i < fullConstructionMilestones.length; i++) {
+        const milestone = fullConstructionMilestones[i];
+        const milestoneAmount = (projectBudget * milestone.percentage) / 100;
         
         await base44.entities.ProjectMilestone.create({
           project_id: newProject.id,
           title: milestone.title,
           description: milestone.description,
           amount: milestoneAmount,
-          percentage: parseFloat(milestone.percentage),
+          percentage: milestone.percentage,
           order: i + 1,
           status: "pending",
-          due_date: new Date(Date.now() + milestone.due_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          due_date: new Date(Date.now() + milestone.days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
         });
+      }
+    } else if (formData.project_type === "express_service") {
+      // Create milestones for express service (either custom or default 2-stage)
+      if (showMilestones && formData.milestones.length > 0) {
+        const projectBudget = parseFloat(formData.budget_max) || parseFloat(formData.budget_min) || 0;
+        
+        for (let i = 0; i < formData.milestones.length; i++) {
+          const milestone = formData.milestones[i];
+          const milestoneAmount = (projectBudget * parseFloat(milestone.percentage)) / 100;
+          
+          await base44.entities.ProjectMilestone.create({
+            project_id: newProject.id,
+            title: milestone.title,
+            description: milestone.description,
+            amount: milestoneAmount,
+            percentage: parseFloat(milestone.percentage),
+            order: i + 1,
+            status: "pending",
+            due_date: new Date(Date.now() + milestone.due_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          });
+        }
+      } else {
+        // Default 2-stage for express service
+        const projectBudget = parseFloat(formData.budget_max) || parseFloat(formData.budget_min) || 0;
+        const expressMilestones = [
+          { title: "دفعة مقدمة", description: "50% عند البدء", percentage: 50, days: 1 },
+          { title: "التسليم النهائي", description: "50% عند الاستلام", percentage: 50, days: 7 }
+        ];
+
+        for (let i = 0; i < expressMilestones.length; i++) {
+          const milestone = expressMilestones[i];
+          const milestoneAmount = (projectBudget * milestone.percentage) / 100;
+          
+          await base44.entities.ProjectMilestone.create({
+            project_id: newProject.id,
+            title: milestone.title,
+            description: milestone.description,
+            amount: milestoneAmount,
+            percentage: milestone.percentage,
+            order: i + 1,
+            status: "pending",
+            due_date: new Date(Date.now() + milestone.days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          });
+        }
       }
     }
 
@@ -444,32 +497,43 @@ export default function CreateProject() {
 
               {/* Milestones Section */}
               <div className="space-y-3 border-t pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label>
-                      {formData.project_type === "full_construction" ? 
-                        "مراحل المشروع (6 مراحل)" : 
-                        "تحديد مراحل المشروع (اختياري)"}
-                    </Label>
-                    <p className="text-xs text-slate-500 mt-1">
-                      {formData.project_type === "full_construction" ? 
-                        "المشاريع الكاملة تتطلب تقسيم لمراحل متعددة" :
-                        "قسّم المشروع لمراحل لضمان دفع آمن ومتدرج"}
+                {formData.project_type === "full_construction" ? (
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <Label className="font-semibold text-blue-900">المراحل الستة (تلقائياً)</Label>
+                    <div className="mt-3 space-y-2 text-sm text-blue-800">
+                      <div className="flex justify-between"><span>1. توقيع العقد</span><span className="font-semibold">25%</span></div>
+                      <div className="flex justify-between"><span>2. المخطط المعماري</span><span className="font-semibold">20%</span></div>
+                      <div className="flex justify-between"><span>3. تطوير التصميم</span><span className="font-semibold">15%</span></div>
+                      <div className="flex justify-between"><span>4. رخصة البناء (بلدي)</span><span className="font-semibold">10%</span></div>
+                      <div className="flex justify-between"><span>5. المخططات التنفيذية</span><span className="font-semibold">20%</span></div>
+                      <div className="flex justify-between border-t border-blue-300 pt-2"><span>6. التسليم النهائي</span><span className="font-semibold">10%</span></div>
+                    </div>
+                    <p className="text-xs text-blue-600 mt-3">
+                      ✓ سيتم إنشاء المراحل تلقائياً عند نشر المشروع
                     </p>
                   </div>
-                  {formData.project_type === "express_service" && (
-                    <Button
-                      type="button"
-                      variant={showMilestones ? "default" : "outline"}
-                      onClick={() => setShowMilestones(!showMilestones)}
-                      size="sm"
-                    >
-                      {showMilestones ? "إخفاء المراحل" : "إضافة مراحل"}
-                    </Button>
-                  )}
-                </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label>تحديد مراحل المشروع (اختياري)</Label>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {showMilestones ? "أو استخدم المرحلتين الافتراضيتين (50% + 50%)" : "افتراضياً: مرحلتين (50% + 50%)"}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant={showMilestones ? "default" : "outline"}
+                        onClick={() => setShowMilestones(!showMilestones)}
+                        size="sm"
+                      >
+                        {showMilestones ? "إخفاء المراحل" : "إضافة مراحل"}
+                      </Button>
+                    </div>
+                  </>
+                )}
 
-                {showMilestones && (
+                {showMilestones && formData.project_type === "express_service" && (
                   <div className="space-y-3">
                     {formData.milestones.map((milestone, index) => (
                       <Card key={index} className="p-4 border-[#d4a574]/30">

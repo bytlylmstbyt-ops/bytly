@@ -80,6 +80,8 @@ import EngineerProfile from './pages/EngineerProfile';
 import EngineerProjects from './pages/EngineerProjects';
 import Engineers from './pages/Engineers';
 import FileDispute from './pages/FileDispute';
+import FirmDashboard from './pages/FirmDashboard';
+import FirmMilestoneControl from './pages/FirmMilestoneControl';
 import Gallery from './pages/Gallery';
 import Home from './pages/Home';
 import InvoiceManager from './pages/InvoiceManager';
@@ -105,6 +107,7 @@ import RegisterChoice from './pages/RegisterChoice';
 import RegisterClient from './pages/RegisterClient';
 import RegisterConsultant from './pages/RegisterConsultant';
 import RegisterEngineer from './pages/RegisterEngineer';
+import RegisterFirm from './pages/RegisterFirm';
 import RegisterLegalConsultant from './pages/RegisterLegalConsultant';
 import RegistrationSuccess from './pages/RegistrationSuccess';
 import RoleManagement from './pages/RoleManagement';
@@ -116,9 +119,6 @@ import Terms from './pages/Terms';
 import UserRoleAssignment from './pages/UserRoleAssignment';
 import Wallet from './pages/Wallet';
 import WorkflowBuilder from './pages/WorkflowBuilder';
-import RegisterFirm from './pages/RegisterFirm';
-import FirmDashboard from './pages/FirmDashboard';
-import FirmMilestoneControl from './pages/FirmMilestoneControl';
 import __Layout from './Layout.jsx';
 
 
@@ -156,6 +156,8 @@ export const PAGES = {
     "EngineerProjects": EngineerProjects,
     "Engineers": Engineers,
     "FileDispute": FileDispute,
+    "FirmDashboard": FirmDashboard,
+    "FirmMilestoneControl": FirmMilestoneControl,
     "Gallery": Gallery,
     "Home": Home,
     "InvoiceManager": InvoiceManager,
@@ -181,6 +183,7 @@ export const PAGES = {
     "RegisterClient": RegisterClient,
     "RegisterConsultant": RegisterConsultant,
     "RegisterEngineer": RegisterEngineer,
+    "RegisterFirm": RegisterFirm,
     "RegisterLegalConsultant": RegisterLegalConsultant,
     "RegistrationSuccess": RegistrationSuccess,
     "RoleManagement": RoleManagement,
@@ -192,9 +195,6 @@ export const PAGES = {
     "UserRoleAssignment": UserRoleAssignment,
     "Wallet": Wallet,
     "WorkflowBuilder": WorkflowBuilder,
-    "RegisterFirm": RegisterFirm,
-    "FirmDashboard": FirmDashboard,
-    "FirmMilestoneControl": FirmMilestoneControl,
 }
 
 export const pagesConfig = {

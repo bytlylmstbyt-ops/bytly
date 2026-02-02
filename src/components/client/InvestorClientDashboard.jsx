@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import MasterProgressDashboard from "@/components/investor/MasterProgressDashboard";
 
 export default function InvestorClientDashboard({ client, stats, recentProjects }) {
   const [preferredFirms, setPreferredFirms] = useState([]);
@@ -118,9 +119,11 @@ export default function InvestorClientDashboard({ client, stats, recentProjects 
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* All Projects */}
+        {/* Master Progress Dashboard */}
         <div className="lg:col-span-2">
-          <Card>
+          <MasterProgressDashboard projects={recentProjects} />
+
+          <Card className="mt-6">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>جميع المشاريع</CardTitle>
