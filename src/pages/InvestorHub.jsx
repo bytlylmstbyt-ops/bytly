@@ -32,16 +32,23 @@ export default function InvestorHub() {
   const loadInvestorData = async () => {
     try {
       const user = await base44.auth.me();
+      
+      // Allow admin to access all pages
+      const isAdmin = user.role === 'admin';
+      
       const [clientData] = await base44.entities.Client.filter({ email: user.email });
       
-      if (!clientData || clientData.client_type !== "investor") {
+      if (!isAdmin && (!clientData || clientData.client_type !== "investor")) {
         window.location.href = createPageUrl("Dashboard");
         return;
       }
 
-      setClient(clientData);
+      setClient(clientData || { full_name: user.full_name, email: user.email, client_type: "investor" });
 
-      const projectsList = await base44.entities.Project.filter({ client_id: clientData.id });
+      // If admin, load all projects; otherwise load only client's projects
+      const projectsList = isAdmin 
+        ? await base44.entities.Project.filter({})
+        : await base44.entities.Project.filter({ client_id: clientData.id });
       setProjects(projectsList);
 
       const milestonesList = await Promise.all(

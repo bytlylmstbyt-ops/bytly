@@ -125,8 +125,8 @@ export default function Dashboard() {
     );
   }
 
-  // Redirect investors to InvestorHub
-  if (userType === "client" && profile?.client_type === "investor") {
+  // Redirect investors to InvestorHub (but not admins)
+  if (userType === "client" && profile?.client_type === "investor" && !isAdmin) {
     window.location.href = createPageUrl("InvestorHub");
     return null;
   }
