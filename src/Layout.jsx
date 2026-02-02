@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "./utils";
 import { base44 } from "@/api/base44Client";
 import ChatbotWidget from "@/components/chatbot/ChatbotWidget";
+import MessageNotificationBadge from "@/components/notifications/MessageNotificationBadge";
 import { 
   Search, MessageSquare, User, Menu, X, 
   LogOut, Briefcase, Settings, Wallet, Bell, 
@@ -126,10 +127,11 @@ export default function Layout({ children, currentPageName }) {
             {/* Actions */}
             <div className="flex items-center gap-3">
               {isAuthenticated && user ? (
-                <>
-                  <Link to={createPageUrl("Messages")} className="relative p-2 hover:bg-slate-100 rounded-full transition-colors">
-                    <MessageSquare className="w-5 h-5 text-slate-600" />
-                  </Link>
+                  <>
+                    <Link to={createPageUrl("Messages")} className="relative p-2 hover:bg-slate-100 rounded-full transition-colors">
+                      <MessageSquare className="w-5 h-5 text-slate-600" />
+                      <MessageNotificationBadge />
+                    </Link>
                   <Link to={createPageUrl("Notifications")} className="relative p-2 hover:bg-slate-100 rounded-full transition-colors">
                     <Bell className="w-5 h-5 text-slate-600" />
                   </Link>

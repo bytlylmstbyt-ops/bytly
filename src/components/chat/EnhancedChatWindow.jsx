@@ -29,9 +29,45 @@ export default function EnhancedChatWindow({
 
   useEffect(() => {
     loadMessages();
-    const interval = setInterval(loadMessages, 3000);
-    return () => clearInterval(interval);
-  }, [conversation.id]);
+    
+    // Real-time subscription to new messages
+    const unsubscribe = base44.entities.Message.subscribe((event) => {
+      if (event.data?.conversation_id === conversation.id) {
+        setMessages(prev => {
+          // Avoid duplicates
+          if (event.type === 'create' && !prev.find(m => m.id === event.id)) {
+            const newMessages = [...prev, event.data].sort((a, b) => 
+              new Date(a.created_date) - new Date(b.created_date)
+            );
+            setTimeout(scrollToBottom, 100);
+            
+            // Play notification sound for new messages from others
+            if (event.data.sender_email !== currentUserEmail) {
+              playNotificationSound();
+            }
+            
+            return newMessages;
+          }
+          if (event.type === 'update') {
+            return prev.map(m => m.id === event.id ? event.data : m);
+          }
+          if (event.type === 'delete') {
+            return prev.filter(m => m.id !== event.id);
+          }
+          return prev;
+        });
+      }
+    });
+
+    return () => unsubscribe();
+  }, [conversation.id, currentUserEmail]);
+
+  const playNotificationSound = () => {
+    // Simple notification sound
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGS57OihUBELTKXh8bllHAU2jdXty3YpBS1+zPDckEILFGCz6O6qVxMMR6Dg8r1tIwcxfsr03I5BCRVhtuvvq1kVDEih4PO9bSMHMH7K9NyOQAoVYbbr76tZFgxIoeDzvW0jBzB+yvTcjkAKFWG26++rWRUMSKHg871tIwcwfsr03I5AChVhtuvvq1kWDEih4PO9bSMHMH7K9NyOQAoVYbbr76tZFgxIoeDzvW0jBzB+yvTcjkAKFWG26++rWRUMSKHg871tIwcwfsr03I5AChVhtuvvq1kWDEih4PO9bSMHMH7K9NyOQAoVYbbr76tZFgxIoeDzvW0jBzB+yvTcjkAKFWG26++rWRUMSKHg871tIwcwfsr03I5AChVhtuvvq1kWDEih4PO9');
+    audio.volume = 0.3;
+    audio.play().catch(() => {}); // Ignore if autoplay blocked
+  };
 
   const loadMessages = async () => {
     try {
@@ -68,6 +104,12 @@ export default function EnhancedChatWindow({
       }
 
       await sendMessageWithAttachments(attachments);
+      
+      // Update last message
+      await base44.entities.Conversation.update(conversation.id, {
+        last_message: `📎 ${attachments.length} ملف(ات)`,
+        last_message_date: new Date().toISOString()
+      });
     } catch (error) {
       toast.error("خطأ في رفع الملفات");
     } finally {
@@ -128,7 +170,7 @@ export default function EnhancedChatWindow({
       });
 
       setNewMessage("");
-      await loadMessages();
+      // No need to loadMessages - real-time subscription will handle it
     } catch (error) {
       toast.error("خطأ في إرسال الرسالة");
     } finally {

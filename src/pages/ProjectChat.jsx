@@ -37,6 +37,21 @@ export default function ProjectChat() {
     loadData();
   }, [projectId]);
 
+  useEffect(() => {
+    // Real-time subscription to conversation updates
+    const unsubscribe = base44.entities.Conversation.subscribe((event) => {
+      if (event.data?.project_id === projectId) {
+        if (event.type === 'create') {
+          setConversations(prev => [...prev, event.data]);
+        } else if (event.type === 'update') {
+          setConversations(prev => prev.map(c => c.id === event.id ? event.data : c));
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [projectId]);
+
   const loadData = async () => {
     try {
       const user = await base44.auth.me();
