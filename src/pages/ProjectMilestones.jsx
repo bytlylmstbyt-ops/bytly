@@ -115,8 +115,8 @@ export default function ProjectMilestones() {
   };
 
   const approveMilestone = async (milestone) => {
-    // Check if firm approval is required and not yet approved
-    if (!milestone.firm_approved) {
+    // Check if firm approval is required and not yet approved (only for full construction projects)
+    if (project.project_type === "full_construction" && !milestone.firm_approved) {
       alert("يجب اعتماد المرحلة من الشركة الاستشارية أولاً قبل تحرير الدفع");
       return;
     }
@@ -361,8 +361,8 @@ export default function ProjectMilestones() {
                       </div>
                     )}
 
-                    {/* Firm Approval Notice */}
-                    {milestone.status === "submitted" && !milestone.firm_approved && (
+                    {/* Firm Approval Notice - Only for full construction projects */}
+                    {project.project_type === "full_construction" && milestone.status === "submitted" && !milestone.firm_approved && (
                       <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
                         <Clock className="w-5 h-5 text-amber-600 mt-0.5" />
                         <div className="text-sm text-amber-800">
@@ -372,17 +372,22 @@ export default function ProjectMilestones() {
                       </div>
                     )}
 
-                    {/* Client Actions - Only after firm approval */}
-                    {!isEngineer && milestone.status === "firm_approved" && !milestone.client_approved && (
+                    {/* Client Actions - After firm approval for full construction, or directly for express */}
+                    {!isEngineer && (
+                      (project.project_type === "full_construction" && milestone.status === "firm_approved") ||
+                      (project.project_type === "express_service" && milestone.status === "submitted")
+                    ) && !milestone.client_approved && (
                       <div className="space-y-3">
-                        <div className="p-3 bg-green-50 border border-green-200 rounded-lg mb-3">
-                          <p className="text-sm text-green-800 font-medium">
-                            ✅ تم اعتماد المرحلة من الشركة الاستشارية
-                          </p>
-                          <p className="text-xs text-green-700 mt-1">
-                            الشركة: {milestone.firm_name || "شركة استشارية معتمدة"}
-                          </p>
-                        </div>
+                        {project.project_type === "full_construction" && (
+                          <div className="p-3 bg-green-50 border border-green-200 rounded-lg mb-3">
+                            <p className="text-sm text-green-800 font-medium">
+                              ✅ تم اعتماد المرحلة من الشركة الاستشارية
+                            </p>
+                            <p className="text-xs text-green-700 mt-1">
+                              الشركة: {milestone.firm_name || "شركة استشارية معتمدة"}
+                            </p>
+                          </div>
+                        )}
 
                         <Button
                           onClick={() => approveMilestone(milestone)}

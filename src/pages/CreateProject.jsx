@@ -5,13 +5,14 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
   Briefcase, MapPin, Calendar, DollarSign, 
-  Upload, X, Loader2, CheckCircle, FileText, Plus
+  Upload, X, Loader2, CheckCircle, FileText, Plus, Building, Zap, HelpCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -29,6 +30,7 @@ export default function CreateProject() {
     title: "",
     description: "",
     category: "",
+    project_type: "express_service",
     budget_min: "",
     budget_max: "",
     location: "",
@@ -127,6 +129,7 @@ export default function CreateProject() {
       title: formData.title,
       description: formData.description,
       category: formData.category,
+      project_type: formData.project_type,
       budget_min: parseFloat(formData.budget_min) || 0,
       budget_max: parseFloat(formData.budget_max) || 0,
       location: formData.location,
@@ -228,6 +231,73 @@ export default function CreateProject() {
         <Card className="border-0 shadow-xl">
           <CardContent className="p-6 md:p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Project Type Selection */}
+              <div className="space-y-3">
+                <Label className="text-base font-semibold flex items-center gap-2">
+                  نوع المشروع *
+                  <HelpCircle className="w-4 h-4 text-slate-400" />
+                </Label>
+                <RadioGroup
+                  value={formData.project_type}
+                  onValueChange={(value) => {
+                    handleInputChange("project_type", value);
+                    setShowMilestones(value === "full_construction");
+                  }}
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                >
+                  <div>
+                    <RadioGroupItem value="full_construction" id="full_construction" className="peer sr-only" />
+                    <Label
+                      htmlFor="full_construction"
+                      className="flex flex-col rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-[#d4a574] peer-data-[state=checked]:bg-[#d4a574]/5 cursor-pointer transition-all"
+                    >
+                      <div className="flex items-center gap-3 mb-3">
+                        <Building className="h-6 w-6 text-slate-700" />
+                        <div className="flex-1">
+                          <p className="font-semibold text-slate-900">مشروع بناء كامل</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            6 مراحل + مراجعة استشارية
+                          </p>
+                        </div>
+                      </div>
+                      <div className="space-y-1 text-xs text-slate-600">
+                        <p>✓ تصميم إنشائي كامل</p>
+                        <p>✓ موافقة الشركة الهندسية</p>
+                        <p>✓ دفع محجوز بأمان</p>
+                      </div>
+                    </Label>
+                  </div>
+                  <div>
+                    <RadioGroupItem value="express_service" id="express_service" className="peer sr-only" />
+                    <Label
+                      htmlFor="express_service"
+                      className="flex flex-col rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-[#d4a574] peer-data-[state=checked]:bg-[#d4a574]/5 cursor-pointer transition-all"
+                    >
+                      <div className="flex items-center gap-3 mb-3">
+                        <Zap className="h-6 w-6 text-amber-600" />
+                        <div className="flex-1">
+                          <p className="font-semibold text-slate-900">خدمة سريعة</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            مرحلتين فقط (50% + 50%)
+                          </p>
+                        </div>
+                      </div>
+                      <div className="space-y-1 text-xs text-slate-600">
+                        <p>✓ تصميم واجهات / ديكور</p>
+                        <p>✓ رسومات تنفيذية 2D</p>
+                        <p>✓ تسليم سريع</p>
+                      </div>
+                    </Label>
+                  </div>
+                </RadioGroup>
+                
+                {formData.project_type === "full_construction" && (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                    💡 المشاريع الكاملة تتطلب موافقة شركة هندسية استشارية قبل تحرير الدفعات
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="title">عنوان المشروع *</Label>
                 <Input
@@ -376,19 +446,27 @@ export default function CreateProject() {
               <div className="space-y-3 border-t pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label>تحديد مراحل المشروع (اختياري)</Label>
+                    <Label>
+                      {formData.project_type === "full_construction" ? 
+                        "مراحل المشروع (6 مراحل)" : 
+                        "تحديد مراحل المشروع (اختياري)"}
+                    </Label>
                     <p className="text-xs text-slate-500 mt-1">
-                      قسّم المشروع لمراحل لضمان دفع آمن ومتدرج
+                      {formData.project_type === "full_construction" ? 
+                        "المشاريع الكاملة تتطلب تقسيم لمراحل متعددة" :
+                        "قسّم المشروع لمراحل لضمان دفع آمن ومتدرج"}
                     </p>
                   </div>
-                  <Button
-                    type="button"
-                    variant={showMilestones ? "default" : "outline"}
-                    onClick={() => setShowMilestones(!showMilestones)}
-                    size="sm"
-                  >
-                    {showMilestones ? "إخفاء المراحل" : "إضافة مراحل"}
-                  </Button>
+                  {formData.project_type === "express_service" && (
+                    <Button
+                      type="button"
+                      variant={showMilestones ? "default" : "outline"}
+                      onClick={() => setShowMilestones(!showMilestones)}
+                      size="sm"
+                    >
+                      {showMilestones ? "إخفاء المراحل" : "إضافة مراحل"}
+                    </Button>
+                  )}
                 </div>
 
                 {showMilestones && (

@@ -40,6 +40,12 @@ export default function FirmMilestoneControl() {
       const [projectData] = await base44.entities.Project.filter({ id: projectId });
       setProject(projectData);
 
+      // Check if project requires firm approval
+      if (projectData.project_type !== "full_construction") {
+        toast.error("هذا المشروع لا يتطلب مراجعة من الشركة الاستشارية");
+        return;
+      }
+
       const milestonesData = await base44.entities.ProjectMilestone.filter(
         { project_id: projectId },
         "order"
@@ -167,7 +173,12 @@ export default function FirmMilestoneControl() {
         <Card>
           <CardContent className="pt-6 text-center">
             <Shield className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <p className="text-slate-600">غير مصرح بالوصول</p>
+            <p className="text-slate-600">غير مصرح بالوصول أو المشروع غير متاح</p>
+            {project?.project_type === "express_service" && (
+              <p className="text-sm text-slate-500 mt-2">
+                هذا المشروع من نوع "خدمة سريعة" ولا يتطلب مراجعة استشارية
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
