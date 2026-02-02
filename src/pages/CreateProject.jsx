@@ -7,6 +7,8 @@ import {
   Briefcase, MapPin, Calendar, DollarSign, 
   Upload, X, Loader2, CheckCircle, FileText, Plus, Building, Zap, HelpCircle
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,10 +24,14 @@ import {
 } from "@/components/ui/select";
 
 export default function CreateProject() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const preselectedEngineerId = urlParams.get("engineer");
+  
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [user, setUser] = useState(null);
   const [client, setClient] = useState(null);
+  const [preselectedEngineer, setPreselectedEngineer] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -58,6 +64,13 @@ export default function CreateProject() {
     const clientData = await base44.entities.Client.filter({ email: currentUser.email });
     if (clientData.length > 0) {
       setClient(clientData[0]);
+    }
+  };
+
+  const loadPreselectedEngineer = async () => {
+    const engineerData = await base44.entities.Engineer.filter({ id: preselectedEngineerId });
+    if (engineerData && engineerData.length > 0) {
+      setPreselectedEngineer(engineerData[0]);
     }
   };
 
@@ -143,7 +156,9 @@ export default function CreateProject() {
       attachments: formData.attachments,
       client_id: client.id,
       status: "open",
-      total_proposals: 0
+      total_proposals: 0,
+      is_direct_hire: preselectedEngineerId ? true : false,
+      assigned_engineer_id: preselectedEngineerId || null
     });
 
     // Create milestones based on project type
@@ -225,10 +240,21 @@ export default function CreateProject() {
       total_projects: (client.total_projects || 0) + 1
     });
 
-    // Send notifications to matching engineers
-    const matchingEngineers = await base44.entities.Engineer.filter({
-      status: "approved"
-    });
+    // If direct hire, notify only the selected engineer
+    if (preselectedEngineerId && preselectedEngineer) {
+      await base44.entities.Notification.create({
+        recipient_email: preselectedEngineer.email,
+        title: "طلب خدمة مباشرة جديد",
+        message: `تم اختيارك مباشرة لمشروع "${formData.title}" من قبل ${client.full_name}. الميزانية: ${formData.budget_min?.toLocaleString()} - ${formData.budget_max?.toLocaleString()} ريال`,
+        type: "project_update",
+        related_project_id: newProject.id,
+        priority: "high"
+      });
+    } else {
+      // Send notifications to matching engineers
+      const matchingEngineers = await base44.entities.Engineer.filter({
+        status: "approved"
+      });
 
     const notificationsToSend = matchingEngineers
       .filter(eng => {
@@ -253,9 +279,11 @@ export default function CreateProject() {
       await Promise.all(
         notificationsToSend.map(notif => base44.entities.Notification.create(notif))
       );
+      }
     }
 
     setIsLoading(false);
+    alert(preselectedEngineerId ? "تم إرسال طلب الخدمة المباشرة بنجاح!" : "تم إنشاء المشروع بنجاح!");
     navigate(createPageUrl("Projects"));
   };
 
@@ -282,10 +310,33 @@ export default function CreateProject() {
             <Briefcase className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e] mb-2">
-            إضافة مشروع جديد
+            {preselectedEngineerId ? "طلب خدمة مباشرة" : "إضافة مشروع جديد"}
           </h1>
-          <p className="text-slate-600">أضف تفاصيل مشروعك للحصول على عروض من المهندسين</p>
+          <p className="text-slate-600">
+            {preselectedEngineerId ? "أرسل طلبك مباشرة للمهندس المختار" : "أضف تفاصيل مشروعك للحصول على عروض من المهندسين"}
+          </p>
         </motion.div>
+
+        {preselectedEngineer && (
+          <Card className="border-2 border-green-200 bg-green-50 mb-6">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <Avatar className="w-16 h-16">
+                  <AvatarImage src={preselectedEngineer.profile_image} />
+                  <AvatarFallback className="bg-gradient-to-br from-green-600 to-emerald-600 text-white text-xl">
+                    {preselectedEngineer.full_name?.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <h3 className="font-bold text-green-900">طلب خدمة مباشرة من:</h3>
+                  <p className="text-lg font-semibold text-green-700">{preselectedEngineer.full_name}</p>
+                  <p className="text-sm text-green-600">{preselectedEngineer.specialization}</p>
+                </div>
+                <Badge className="bg-green-600 text-white">خدمة خاصة</Badge>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="border-0 shadow-xl">
           <CardContent className="p-6 md:p-8">
