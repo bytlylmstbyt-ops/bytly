@@ -233,3 +233,8 @@ export default function ClientProfile() {
               </CardContent>
             </Card>
           )}
+        </motion.div>
+      </div>
+    </div>
+  );
+}
