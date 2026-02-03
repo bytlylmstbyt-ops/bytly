@@ -4,6 +4,8 @@ import { createPageUrl } from "./utils";
 import { base44 } from "@/api/base44Client";
 import ChatbotWidget from "@/components/chatbot/ChatbotWidget";
 import MessageNotificationBadge from "@/components/notifications/MessageNotificationBadge";
+import { LanguageProvider, useLanguage } from "@/components/i18n/LanguageContext";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { 
   Search, MessageSquare, User, Menu, X, 
   LogOut, Briefcase, Settings, Wallet, Bell, 
@@ -20,10 +22,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-export default function Layout({ children, currentPageName }) {
+function LayoutContent({ children, currentPageName }) {
   const [user, setUser] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { t, isRTL } = useLanguage();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -49,7 +52,7 @@ export default function Layout({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30" dir={isRTL ? "rtl" : "ltr"}>
       <style>{`
         :root {
           --primary: #6B5D4F;
@@ -96,36 +99,37 @@ export default function Layout({ children, currentPageName }) {
                 to={createPageUrl("Home")} 
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'Home' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
-                الرئيسية
+                {t('nav.home')}
               </Link>
               <Link 
                 to={createPageUrl("Engineers")} 
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'Engineers' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
-                المهندسين
+                {t('nav.engineers')}
               </Link>
               <Link 
                 to={createPageUrl("Projects")} 
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'Projects' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
-                المشاريع
+                {t('nav.projects')}
               </Link>
               <Link 
                 to={createPageUrl("Gallery")} 
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'Gallery' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
-                معرض الأعمال
+                {t('nav.gallery')}
               </Link>
               <Link 
                 to={createPageUrl("DesignMarketplace")} 
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'DesignMarketplace' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
-                متجر التصاميم
+                {t('nav.designMarketplace')}
               </Link>
             </nav>
 
             {/* Actions */}
             <div className="flex items-center gap-3">
+              <LanguageSwitcher variant="ghost" />
               {isAuthenticated && user ? (
                   <>
                     <Link to={createPageUrl("Messages")} className="relative p-2 hover:bg-slate-100 rounded-full transition-colors">
@@ -150,37 +154,37 @@ export default function Layout({ children, currentPageName }) {
                       <DropdownMenuItem asChild>
                         <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
                           <User className="w-4 h-4" />
-                          لوحة التحكم
+                          {t('nav.dashboard')}
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to={createPageUrl("MyPurchasedProjects")} className="flex items-center gap-2">
                           <Briefcase className="w-4 h-4" />
-                          مشاريعي المشتراة
+                          {t('nav.myProjects')}
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to={createPageUrl("Wallet")} className="flex items-center gap-2">
                           <Wallet className="w-4 h-4" />
-                          المحفظة
+                          {t('nav.wallet')}
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to={createPageUrl("WalletTopup")} className="flex items-center gap-2 text-blue-600">
                           <PlusCircle className="w-4 h-4" />
-                          شحن المحفظة
+                          {t('nav.topupWallet')}
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to={createPageUrl("Settings")} className="flex items-center gap-2">
                           <Settings className="w-4 h-4" />
-                          الإعدادات
+                          {t('nav.settings')}
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-                        <LogOut className="w-4 h-4 ml-2" />
-                        تسجيل الخروج
+                        <LogOut className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        {t('nav.logout')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -192,11 +196,11 @@ export default function Layout({ children, currentPageName }) {
                     onClick={() => base44.auth.redirectToLogin()}
                     className="text-[#6B5D4F] hover:text-[#C9A66B]"
                   >
-                    تسجيل الدخول
+                    {t('nav.login')}
                   </Button>
                   <Link to={createPageUrl("RegisterChoice")}>
                     <Button className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white hover:opacity-90">
-                      انضم لـ بيتلي
+                      {t('nav.joinBytly')}
                     </Button>
                   </Link>
                 </div>
@@ -222,35 +226,35 @@ export default function Layout({ children, currentPageName }) {
                 className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
                 onClick={() => setIsMenuOpen(false)}
               >
-                الرئيسية
+                {t('nav.home')}
               </Link>
               <Link 
                 to={createPageUrl("Engineers")} 
                 className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
                 onClick={() => setIsMenuOpen(false)}
               >
-                المهندسين
+                {t('nav.engineers')}
               </Link>
               <Link 
                 to={createPageUrl("Projects")} 
                 className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
                 onClick={() => setIsMenuOpen(false)}
               >
-                المشاريع
+                {t('nav.projects')}
               </Link>
               <Link 
                 to={createPageUrl("Gallery")} 
                 className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
                 onClick={() => setIsMenuOpen(false)}
               >
-                معرض الأعمال
+                {t('nav.gallery')}
               </Link>
               <Link 
                 to={createPageUrl("DesignMarketplace")} 
                 className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
                 onClick={() => setIsMenuOpen(false)}
               >
-                متجر التصاميم
+                {t('nav.designMarketplace')}
               </Link>
             </div>
           </div>
@@ -282,37 +286,37 @@ export default function Layout({ children, currentPageName }) {
 
             {/* Links */}
             <div>
-              <h3 className="font-semibold mb-4 text-[#C9A66B]">روابط سريعة</h3>
+              <h3 className="font-semibold mb-4 text-[#C9A66B]">{t('footer.quickLinks')}</h3>
               <ul className="space-y-2 text-sm text-slate-300">
-                <li><Link to={createPageUrl("Home")} className="hover:text-[#C9A66B] transition-colors">الرئيسية</Link></li>
-                <li><Link to={createPageUrl("Engineers")} className="hover:text-[#C9A66B] transition-colors">المهندسين</Link></li>
-                <li><Link to={createPageUrl("Projects")} className="hover:text-[#C9A66B] transition-colors">المشاريع</Link></li>
-                <li><Link to={createPageUrl("Gallery")} className="hover:text-[#C9A66B] transition-colors">معرض الأعمال</Link></li>
+                <li><Link to={createPageUrl("Home")} className="hover:text-[#C9A66B] transition-colors">{t('nav.home')}</Link></li>
+                <li><Link to={createPageUrl("Engineers")} className="hover:text-[#C9A66B] transition-colors">{t('nav.engineers')}</Link></li>
+                <li><Link to={createPageUrl("Projects")} className="hover:text-[#C9A66B] transition-colors">{t('nav.projects')}</Link></li>
+                <li><Link to={createPageUrl("Gallery")} className="hover:text-[#C9A66B] transition-colors">{t('nav.gallery')}</Link></li>
               </ul>
             </div>
 
             {/* Legal */}
             <div>
-              <h3 className="font-semibold mb-4 text-[#C9A66B]">الشروط والسياسات</h3>
+              <h3 className="font-semibold mb-4 text-[#C9A66B]">{t('footer.termsAndPolicies')}</h3>
               <ul className="space-y-2 text-sm text-slate-300">
-                <li><Link to={createPageUrl("Terms")} className="hover:text-[#C9A66B] transition-colors">الشروط والأحكام</Link></li>
-                <li><Link to={createPageUrl("Privacy")} className="hover:text-[#C9A66B] transition-colors">سياسة الخصوصية</Link></li>
-                <li><Link to={createPageUrl("Copyright")} className="hover:text-[#C9A66B] transition-colors">اتفاقية حفظ الحقوق</Link></li>
+                <li><Link to={createPageUrl("Terms")} className="hover:text-[#C9A66B] transition-colors">{t('footer.terms')}</Link></li>
+                <li><Link to={createPageUrl("Privacy")} className="hover:text-[#C9A66B] transition-colors">{t('footer.privacy')}</Link></li>
+                <li><Link to={createPageUrl("Copyright")} className="hover:text-[#C9A66B] transition-colors">{t('footer.copyright')}</Link></li>
               </ul>
             </div>
 
             {/* Support */}
             <div>
-              <h3 className="font-semibold mb-4 text-[#C9A66B]">الدعم والمساعدة</h3>
+              <h3 className="font-semibold mb-4 text-[#C9A66B]">{t('footer.supportAndHelp')}</h3>
               <ul className="space-y-2 text-sm text-slate-300">
-                <li><Link to={createPageUrl("Complaints")} className="hover:text-[#C9A66B] transition-colors">الشكاوى والاقتراحات</Link></li>
-                <li><Link to={createPageUrl("Support")} className="hover:text-[#C9A66B] transition-colors">الدعم الفني</Link></li>
+                <li><Link to={createPageUrl("Complaints")} className="hover:text-[#C9A66B] transition-colors">{t('footer.complaints')}</Link></li>
+                <li><Link to={createPageUrl("Support")} className="hover:text-[#C9A66B] transition-colors">{t('footer.technicalSupport')}</Link></li>
               </ul>
             </div>
 
             {/* Contact */}
             <div>
-              <h3 className="font-semibold mb-4 text-[#C9A66B]">تواصل معنا</h3>
+              <h3 className="font-semibold mb-4 text-[#C9A66B]">{t('footer.contactUs')}</h3>
               <ul className="space-y-3 text-sm text-slate-300">
                 <li className="flex items-center gap-2">
                   <Mail className="w-4 h-4 text-[#C9A66B]" />
@@ -340,10 +344,18 @@ export default function Layout({ children, currentPageName }) {
           </div>
 
           <div className="border-t border-white/10 mt-8 pt-8 text-center text-sm text-slate-400">
-            <p>© {new Date().getFullYear()} بيتلي - لمسة بيت. جميع الحقوق محفوظة.</p>
+            <p>© {new Date().getFullYear()} {t('footer.rightsReserved')}</p>
           </div>
         </div>
       </footer>
     </div>
-  );
-}
+    );
+    }
+
+    export default function Layout({ children, currentPageName }) {
+    return (
+    <LanguageProvider>
+    <LayoutContent children={children} currentPageName={currentPageName} />
+    </LanguageProvider>
+    );
+    }
