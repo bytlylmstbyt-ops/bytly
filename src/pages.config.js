@@ -84,6 +84,7 @@ import Dashboard from './pages/Dashboard';
 import DesignDetails from './pages/DesignDetails';
 import DesignMarketplace from './pages/DesignMarketplace';
 import DesignPurchaseSuccess from './pages/DesignPurchaseSuccess';
+import DevelopmentRoadmap from './pages/DevelopmentRoadmap';
 import DisputeDetails from './pages/DisputeDetails';
 import EngineerDashboard from './pages/EngineerDashboard';
 import EngineerProfile from './pages/EngineerProfile';
@@ -98,6 +99,7 @@ import Gallery from './pages/Gallery';
 import Home from './pages/Home';
 import InvestorHub from './pages/InvestorHub';
 import InvoiceManager from './pages/InvoiceManager';
+import InvoicePayment from './pages/InvoicePayment';
 import LegalConsultantProfile from './pages/LegalConsultantProfile';
 import Messages from './pages/Messages';
 import MyDisputes from './pages/MyDisputes';
@@ -133,13 +135,11 @@ import TechnicalReviewPage from './pages/TechnicalReviewPage';
 import Terms from './pages/Terms';
 import UserRoleAssignment from './pages/UserRoleAssignment';
 import Wallet from './pages/Wallet';
-import WorkflowBuilder from './pages/WorkflowBuilder';
 import WalletRecharge from './pages/WalletRecharge';
 import WalletRechargeSuccess from './pages/WalletRechargeSuccess';
 import WalletTopup from './pages/WalletTopup';
 import WalletTopupSuccess from './pages/WalletTopupSuccess';
-import InvoicePayment from './pages/InvoicePayment';
-import DevelopmentRoadmap from './pages/DevelopmentRoadmap';
+import WorkflowBuilder from './pages/WorkflowBuilder';
 import __Layout from './Layout.jsx';
 
 
@@ -181,6 +181,7 @@ export const PAGES = {
     "DesignDetails": DesignDetails,
     "DesignMarketplace": DesignMarketplace,
     "DesignPurchaseSuccess": DesignPurchaseSuccess,
+    "DevelopmentRoadmap": DevelopmentRoadmap,
     "DisputeDetails": DisputeDetails,
     "EngineerDashboard": EngineerDashboard,
     "EngineerProfile": EngineerProfile,
@@ -195,6 +196,7 @@ export const PAGES = {
     "Home": Home,
     "InvestorHub": InvestorHub,
     "InvoiceManager": InvoiceManager,
+    "InvoicePayment": InvoicePayment,
     "LegalConsultantProfile": LegalConsultantProfile,
     "Messages": Messages,
     "MyDisputes": MyDisputes,
@@ -230,13 +232,11 @@ export const PAGES = {
     "Terms": Terms,
     "UserRoleAssignment": UserRoleAssignment,
     "Wallet": Wallet,
-    "WorkflowBuilder": WorkflowBuilder,
     "WalletRecharge": WalletRecharge,
     "WalletRechargeSuccess": WalletRechargeSuccess,
     "WalletTopup": WalletTopup,
     "WalletTopupSuccess": WalletTopupSuccess,
-    "InvoicePayment": InvoicePayment,
-    "DevelopmentRoadmap": DevelopmentRoadmap,
+    "WorkflowBuilder": WorkflowBuilder,
 }
 
 export const pagesConfig = {
