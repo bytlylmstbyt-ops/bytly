@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
 import { sendNotification } from "@/components/notifications/NotificationHelper";
+import CommissionExplainer from "@/components/payment/CommissionExplainer";
 
 export default function ProjectMilestones() {
   const navigate = useNavigate();
@@ -135,9 +136,10 @@ export default function ProjectMilestones() {
     try {
       const now = new Date().toISOString();
       
-      // Calculate commission (15% platform fee for projects)
-      const commissionRate = 0.15;
-      const commissionAmount = milestone.amount * commissionRate;
+      // FIXED COMMISSION LOGIC: 15% of total project, distributed proportionally
+      // The milestone amount already includes the proportional commission
+      const commissionRate = 0.15; // Fixed rate for entire project
+      const commissionAmount = milestone.amount * commissionRate; // Proportional share
       const netAmount = milestone.amount - commissionAmount;
 
       // Update milestone status
@@ -181,8 +183,9 @@ export default function ProjectMilestones() {
         user_type: "platform",
         type: "commission",
         amount: commissionAmount,
+        commission_amount: commissionAmount,
         status: "completed",
-        description: `عمولة المنصة (15%) - ${milestone.title}`,
+        description: `عمولة المنصة (حصة متناسبة ${milestone.percentage}% من إجمالي 15%) - ${milestone.title}`,
         project_id: projectId,
         milestone_id: milestone.id,
         from_wallet: engineer.email,
@@ -195,8 +198,8 @@ export default function ProjectMilestones() {
         project_id: projectId,
         milestone_id: milestone.id,
         total_amount: milestone.amount,
-        commission_rate: commissionRate,
-        commission_amount: commissionAmount,
+        commission_rate: commissionRate, // Fixed 15% of total project
+        commission_amount: commissionAmount, // Proportional collection
         seller_email: engineer.email,
         seller_earnings: netAmount,
         status: "collected",
@@ -217,7 +220,7 @@ export default function ProjectMilestones() {
       await sendNotification({
         recipientEmail: engineer.email,
         title: "تم تحرير دفعة مرحلة",
-        message: `تم تحرير ${netAmount.toLocaleString('ar-SA')} ريال (${milestone.amount.toLocaleString('ar-SA')} - 15% عمولة منصة) لمرحلة: ${milestone.title}`,
+        message: `تم تحرير ${netAmount.toLocaleString('ar-SA')} ر.س (${milestone.amount.toLocaleString('ar-SA')} - عمولة 15%) للمرحلة: ${milestone.title}`,
         type: "payment",
         projectId: projectId,
         priority: "high"
@@ -402,17 +405,60 @@ export default function ProjectMilestones() {
             <p className="text-slate-600">{project.title}</p>
           </div>
 
+          {/* Commission Explainer */}
+          {milestones.length > 0 && !isEngineer && (
+            <div className="mb-6">
+              <CommissionExplainer 
+                totalProjectValue={milestones.reduce((sum, m) => sum + m.amount, 0)}
+                milestones={milestones}
+              />
+            </div>
+          )}
+
           {/* Progress Overview */}
           <Card className="mb-6">
             <CardContent className="pt-6">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">التقدم الكلي</span>
-                  <span className="text-sm text-slate-600">
-                    {completedMilestones} من {milestones.length} مراحل مكتملة
-                  </span>
+              <div className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">التقدم الكلي</span>
+                    <span className="text-sm text-slate-600">
+                      {completedMilestones} من {milestones.length} مراحل مكتملة
+                    </span>
+                  </div>
+                  <Progress value={progress} className="h-3" />
                 </div>
-                <Progress value={progress} className="h-3" />
+
+                {/* Total Project Financial Summary */}
+                <div className="pt-4 border-t">
+                  <p className="text-xs font-semibold text-slate-700 mb-3">الملخص المالي للمشروع:</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="p-3 bg-blue-50 rounded-lg text-center">
+                      <p className="text-xs text-slate-600 mb-1">قيمة العمل</p>
+                      <p className="text-lg font-bold text-blue-900">
+                        {milestones.reduce((sum, m) => sum + m.amount, 0).toLocaleString('ar-SA')}
+                      </p>
+                      <p className="text-xs text-slate-500">ر.س</p>
+                    </div>
+                    <div className="p-3 bg-orange-50 rounded-lg text-center">
+                      <p className="text-xs text-slate-600 mb-1">العمولة (15%)</p>
+                      <p className="text-lg font-bold text-orange-700">
+                        {(milestones.reduce((sum, m) => sum + m.amount, 0) * 0.15).toLocaleString('ar-SA')}
+                      </p>
+                      <p className="text-xs text-slate-500">ر.س</p>
+                    </div>
+                    <div className="p-3 bg-green-50 rounded-lg text-center">
+                      <p className="text-xs text-slate-600 mb-1">صافي المهندس</p>
+                      <p className="text-lg font-bold text-green-700">
+                        {(milestones.reduce((sum, m) => sum + m.amount, 0) * 0.85).toLocaleString('ar-SA')}
+                      </p>
+                      <p className="text-xs text-slate-500">ر.س</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-center text-slate-500 mt-3">
+                    💡 العمولة نسبة ثابتة 15% من قيمة المشروع، تُجمع بشكل متناسب مع كل مرحلة
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -505,12 +551,22 @@ export default function ProjectMilestones() {
                     {!isEngineer && milestone.status === "pending" && !milestone.payment_released && (
                       <div className="mb-4">
                         <div className="mb-3 p-3 bg-blue-50 rounded-lg text-sm">
-                          <p className="text-blue-800 mb-2">💡 نظام الدفع الآمن:</p>
+                          <p className="text-blue-800 mb-2 font-semibold">💡 نظام الدفع الآمن:</p>
                           <ul className="text-xs text-blue-700 space-y-1">
                             <li>• يُحجز المبلغ في نظام الضمان (Escrow)</li>
                             <li>• يُحرّر للمهندس بعد موافقتك على العمل</li>
-                            <li>• يُخصم 15% عمولة منصة تلقائياً</li>
+                            <li>• عمولة المنصة 15% ثابتة من قيمة المشروع الكلية، موزعة بشكل متناسب</li>
                           </ul>
+                        </div>
+
+                        <div className="mb-3 p-3 bg-slate-50 rounded-lg text-xs">
+                          <div className="flex justify-between mb-1">
+                            <span className="text-slate-600">قيمة المرحلة ({milestone.percentage}%):</span>
+                            <span className="font-semibold">{milestone.amount.toLocaleString('ar-SA')} ر.س</span>
+                          </div>
+                          <p className="text-slate-500 text-xs mt-1">
+                            ✓ المبلغ يشمل حصة متناسبة من العمولة الثابتة (15% من المشروع)
+                          </p>
                         </div>
 
                         <Button
@@ -606,19 +662,25 @@ export default function ProjectMilestones() {
                           </div>
                         )}
 
-                        <div className="mb-3 p-3 bg-slate-50 rounded-lg text-sm space-y-1">
+                        <div className="mb-3 p-3 bg-gradient-to-br from-slate-50 to-blue-50 border border-blue-200 rounded-lg text-sm space-y-2">
+                          <p className="text-blue-900 font-semibold text-xs mb-2">
+                            💵 توزيع الدفعة ({milestone.percentage}% من المشروع):
+                          </p>
                           <div className="flex justify-between">
-                            <span className="text-slate-600">المبلغ الإجمالي:</span>
-                            <span className="font-semibold">{milestone.amount.toLocaleString('ar-SA')} ريال</span>
+                            <span className="text-slate-700">قيمة المرحلة:</span>
+                            <span className="font-semibold">{milestone.amount.toLocaleString('ar-SA')} ر.س</span>
                           </div>
-                          <div className="flex justify-between text-red-600">
-                            <span>عمولة المنصة (15%):</span>
-                            <span>- {(milestone.amount * 0.15).toLocaleString('ar-SA')} ريال</span>
+                          <div className="flex justify-between text-orange-700">
+                            <span>حصة العمولة ({milestone.percentage}% × 15%):</span>
+                            <span className="font-semibold">- {(milestone.amount * 0.15).toLocaleString('ar-SA')} ر.س</span>
                           </div>
-                          <div className="flex justify-between pt-2 border-t text-green-600 font-bold">
-                            <span>صافي المهندس:</span>
-                            <span>{(milestone.amount * 0.85).toLocaleString('ar-SA')} ريال</span>
+                          <div className="flex justify-between pt-2 border-t border-blue-300 text-green-700 font-bold">
+                            <span>يستلم المهندس:</span>
+                            <span>{(milestone.amount * 0.85).toLocaleString('ar-SA')} ر.س</span>
                           </div>
+                          <p className="text-xs text-blue-700 mt-2 pt-2 border-t border-blue-200">
+                            ℹ️ العمولة 15% ثابتة من قيمة المشروع الكلية، تُجمع بشكل متناسب مع كل مرحلة
+                          </p>
                         </div>
                         <Button
                           onClick={() => approveMilestone(milestone)}
