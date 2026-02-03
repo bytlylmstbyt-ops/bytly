@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLanguage } from '@/lib/i18n/LanguageContext';
+import { useLanguage } from '@/components/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Globe } from 'lucide-react';
 
