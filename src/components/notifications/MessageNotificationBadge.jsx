@@ -47,10 +47,11 @@ export default function MessageNotificationBadge() {
     try {
       const user = await base44.auth.me();
       
-      // Get all conversations user is part of
-      const conversations = await base44.entities.Conversation.filter({
-        participants: { $includes: user.email }
-      });
+      // Get all conversations where user is a participant
+      const allConversations = await base44.entities.Conversation.list();
+      const conversations = allConversations.filter(c => 
+        c.participants && c.participants.includes(user.email)
+      );
 
       const conversationIds = conversations.map(c => c.id);
       
@@ -59,10 +60,10 @@ export default function MessageNotificationBadge() {
       for (const convId of conversationIds) {
         const messages = await base44.entities.Message.filter({
           conversation_id: convId,
-          sender_email: { $ne: user.email },
           is_read: false
         });
-        count += messages.length;
+        // Only count messages not sent by current user
+        count += messages.filter(m => m.sender_email !== user.email).length;
       }
       
       setUnreadCount(count);
