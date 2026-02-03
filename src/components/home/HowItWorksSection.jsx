@@ -15,28 +15,28 @@ export default function HowItWorksSection() {
       step: 1,
       icon: FileText,
       title: "اطرح مشروعك",
-      description: "حدد التفاصيل والميزانية والموعد النهائي",
+      description: "حدد التفاصيل والميزانية والموعد النهائي للمشروع",
       color: "from-blue-500 to-cyan-500"
     },
     {
       step: 2,
       icon: Users,
       title: "استقبل العروض",
-      description: "قارن بين المهندسين والأسعار والمدة",
+      description: "قارن بين المهندسين والأسعار والمدة المقترحة",
       color: "from-purple-500 to-indigo-500"
     },
     {
       step: 3,
       icon: Wallet,
       title: "ادفع بأمان",
-      description: "المبلغ يُحفظ في نظام الضمان حتى تستلم العمل",
+      description: "المبلغ يُحفظ في نظام الضمان حتى تستلم العمل كاملاً",
       color: "from-green-500 to-emerald-500"
     },
     {
       step: 4,
       icon: CheckCircle,
       title: "اعتمد واستلم",
-      description: "راجع التصميم، اعتمده، واحصل على الملفات",
+      description: "راجع التصميم، اعتمده، واحصل على جميع الملفات",
       color: "from-amber-500 to-orange-500"
     }
   ];
@@ -46,21 +46,21 @@ export default function HowItWorksSection() {
       step: 1,
       icon: Upload,
       title: "أنشئ ملفك",
-      description: "ارفع أعمالك السابقة وحدد تخصصك",
+      description: "ارفع أعمالك السابقة وحدد تخصصاتك الرئيسية",
       color: "from-indigo-500 to-purple-500"
     },
     {
       step: 2,
       icon: Search,
       title: "تصفح المشاريع",
-      description: "ابحث عن فرص تناسب خبرتك",
+      description: "ابحث عن فرص عمل تناسب خبرتك وتخصصك",
       color: "from-blue-500 to-cyan-500"
     },
     {
       step: 3,
       icon: FileText,
       title: "قدّم عرضك",
-      description: "حدد السعر والمدة وابدأ العمل",
+      description: "حدد السعر والمدة الزمنية والبدء في العمل",
       color: "from-rose-500 to-pink-500"
     },
     {
