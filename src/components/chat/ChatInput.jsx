@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Send, Paperclip, X } from "lucide-react";
 import { motion } from "framer-motion";
+import VoiceRecorder from "./VoiceRecorder";
 
 export default function ChatInput({ onMessageSend, disabled = false }) {
   const [message, setMessage] = useState("");
@@ -54,6 +55,29 @@ export default function ChatInput({ onMessageSend, disabled = false }) {
       setAttachments([]);
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleVoiceSend = async ({ audioFile, duration }) => {
+    setUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: audioFile });
+      
+      await onMessageSend({
+        content: "🎤 رسالة صوتية",
+        attachments: [{
+          name: audioFile.name,
+          url: file_url,
+          size: audioFile.size,
+          type: audioFile.type,
+          duration: duration,
+          isVoice: true
+        }]
+      });
+    } catch (error) {
+      console.error("Error sending voice message:", error);
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -110,6 +134,11 @@ export default function ChatInput({ onMessageSend, disabled = false }) {
             onChange={handleFileUpload}
             multiple
             className="hidden"
+            disabled={disabled || uploading || sending}
+          />
+
+          <VoiceRecorder
+            onSend={handleVoiceSend}
             disabled={disabled || uploading || sending}
           />
 

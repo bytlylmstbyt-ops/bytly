@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Download, FileText, Image as ImageIcon, Trash2, Edit2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import AudioPlayer from "./AudioPlayer";
 
 export default function ChatMessage({
   message,
@@ -71,29 +72,38 @@ export default function ChatMessage({
           {message.attachments?.length > 0 && (
             <div className="mt-3 space-y-2">
               {message.attachments.map((file, idx) => (
-                <a
-                  key={idx}
-                  href={file.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(
-                    "flex items-center gap-2 p-2 rounded transition-colors",
-                    isOwn
-                      ? "bg-white/20 hover:bg-white/30"
-                      : "bg-white hover:bg-slate-50"
-                  )}
-                >
-                  {getFileIcon(file.type)}
-                  <div className="flex-1 min-w-0">
-                    <p className={cn("text-xs font-medium truncate", isOwn ? "text-white" : "text-slate-900")}>
-                      {file.name}
-                    </p>
-                    <p className={cn("text-xs", isOwn ? "text-white/70" : "text-slate-600")}>
-                      {formatFileSize(file.size)}
-                    </p>
-                  </div>
-                  <Download className={cn("w-4 h-4 flex-shrink-0", isOwn ? "text-white" : "text-slate-600")} />
-                </a>
+                file.isVoice ? (
+                  <AudioPlayer
+                    key={idx}
+                    audioUrl={file.url}
+                    duration={file.duration}
+                    isOwn={isOwn}
+                  />
+                ) : (
+                  <a
+                    key={idx}
+                    href={file.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      "flex items-center gap-2 p-2 rounded transition-colors",
+                      isOwn
+                        ? "bg-white/20 hover:bg-white/30"
+                        : "bg-white hover:bg-slate-50"
+                    )}
+                  >
+                    {getFileIcon(file.type)}
+                    <div className="flex-1 min-w-0">
+                      <p className={cn("text-xs font-medium truncate", isOwn ? "text-white" : "text-slate-900")}>
+                        {file.name}
+                      </p>
+                      <p className={cn("text-xs", isOwn ? "text-white/70" : "text-slate-600")}>
+                        {formatFileSize(file.size)}
+                      </p>
+                    </div>
+                    <Download className={cn("w-4 h-4 flex-shrink-0", isOwn ? "text-white" : "text-slate-600")} />
+                  </a>
+                )
               ))}
             </div>
           )}
