@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download, FileText, Image as ImageIcon, Trash2, Edit2 } from "lucide-react";
+import { Download, FileText, Image as ImageIcon, Trash2, Edit2, Video as VideoIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import AudioPlayer from "./AudioPlayer";
 
@@ -17,8 +17,10 @@ export default function ChatMessage({
 }) {
   const [showActions, setShowActions] = useState(false);
 
-  const getFileIcon = (type) => {
+  const getFileIcon = (type, isCallRecording) => {
+    if (isCallRecording) return <VideoIcon className="w-4 h-4" />;
     if (type?.includes("image")) return <ImageIcon className="w-4 h-4" />;
+    if (type?.includes("video")) return <VideoIcon className="w-4 h-4" />;
     return <FileText className="w-4 h-4" />;
   };
 
@@ -89,16 +91,18 @@ export default function ChatMessage({
                       "flex items-center gap-2 p-2 rounded transition-colors",
                       isOwn
                         ? "bg-white/20 hover:bg-white/30"
-                        : "bg-white hover:bg-slate-50"
+                        : "bg-white hover:bg-slate-50",
+                      file.isCallRecording && "border-2 border-blue-400"
                     )}
                   >
-                    {getFileIcon(file.type)}
+                    {getFileIcon(file.type, file.isCallRecording)}
                     <div className="flex-1 min-w-0">
                       <p className={cn("text-xs font-medium truncate", isOwn ? "text-white" : "text-slate-900")}>
-                        {file.name}
+                        {file.isCallRecording ? '📹 ' : ''}{file.name}
                       </p>
                       <p className={cn("text-xs", isOwn ? "text-white/70" : "text-slate-600")}>
                         {formatFileSize(file.size)}
+                        {file.isCallRecording && " • تسجيل مكالمة"}
                       </p>
                     </div>
                     <Download className={cn("w-4 h-4 flex-shrink-0", isOwn ? "text-white" : "text-slate-600")} />

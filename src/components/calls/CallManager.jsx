@@ -234,6 +234,38 @@ export default function CallManager({ conversationId, currentUserEmail, recipien
     iceCandidatesQueue.current = [];
   };
 
+  const handleRecordingComplete = async (recordingFile) => {
+    try {
+      // Upload recording to server
+      const { file_url } = await base44.integrations.Core.UploadFile({ 
+        file: recordingFile 
+      });
+
+      // Save recording metadata to database
+      const user = await base44.auth.me();
+      await base44.entities.Message.create({
+        conversation_id: conversationId,
+        sender_email: currentUserEmail,
+        sender_name: user.full_name,
+        sender_role: 'user',
+        content: '📹 تسجيل المكالمة',
+        attachments: [{
+          name: recordingFile.name,
+          url: file_url,
+          size: recordingFile.size,
+          type: recordingFile.type,
+          isCallRecording: true
+        }],
+        is_system_message: false
+      });
+
+      toast.success('تم حفظ تسجيل المكالمة بنجاح');
+    } catch (error) {
+      console.error('Error saving call recording:', error);
+      toast.error('فشل حفظ التسجيل');
+    }
+  };
+
   return {
     isCallActive,
     isIncomingCall,
@@ -253,6 +285,7 @@ export default function CallManager({ conversationId, currentUserEmail, recipien
         onAccept={acceptCall}
         onReject={rejectCall}
         onEnd={endCall}
+        onRecordingComplete={handleRecordingComplete}
       />
     ) : null
   };

@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   Phone, PhoneOff, Mic, MicOff, Video, VideoOff, 
-  Maximize2, Minimize2, Monitor, User, Volume2, VolumeX
+  Maximize2, Minimize2, Monitor, User, Volume2, VolumeX,
+  Circle, MonitorUp, Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -17,7 +18,8 @@ export default function VideoCallWindow({
   onAccept,
   onReject,
   localStream,
-  remoteStream
+  remoteStream,
+  onRecordingComplete
 }) {
   const [callStatus, setCallStatus] = useState(isIncoming ? 'ringing' : 'connecting');
   const [isMuted, setIsMuted] = useState(false);
@@ -25,10 +27,15 @@ export default function VideoCallWindow({
   const [isSpeakerOff, setIsSpeakerOff] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [duration, setDuration] = useState(0);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
   
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const timerRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const recordedChunksRef = useRef([]);
+  const screenStreamRef = useRef(null);
 
   useEffect(() => {
     if (localStream && localVideoRef.current) {
@@ -99,10 +106,138 @@ export default function VideoCallWindow({
     onReject?.();
   };
 
-  const handleEnd = () => {
+  const handleEnd = async () => {
+    // Stop recording if active
+    if (isRecording) {
+      await stopRecording();
+    }
+    
+    // Stop screen sharing if active
+    if (isScreenSharing) {
+      stopScreenSharing();
+    }
+    
     setCallStatus('ended');
     if (timerRef.current) clearInterval(timerRef.current);
     onEnd?.();
+  };
+
+  const startRecording = async () => {
+    try {
+      // Create a combined stream with both local and remote audio/video
+      const combinedStream = new MediaStream();
+      
+      if (localStream) {
+        localStream.getTracks().forEach(track => combinedStream.addTrack(track));
+      }
+      
+      if (remoteStream) {
+        remoteStream.getTracks().forEach(track => combinedStream.addTrack(track));
+      }
+
+      const mediaRecorder = new MediaRecorder(combinedStream, {
+        mimeType: 'video/webm;codecs=vp9,opus'
+      });
+
+      recordedChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+        await saveRecording(blob);
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start(1000); // Collect data every second
+      setIsRecording(true);
+      
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      alert('فشل بدء التسجيل. يرجى المحاولة مرة أخرى.');
+    }
+  };
+
+  const stopRecording = async () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const saveRecording = async (blob) => {
+    try {
+      const file = new File(
+        [blob],
+        `call_recording_${Date.now()}.webm`,
+        { type: 'video/webm' }
+      );
+      
+      onRecordingComplete?.(file);
+      
+      // Also offer download
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+    } catch (error) {
+      console.error('Error saving recording:', error);
+    }
+  };
+
+  const startScreenSharing = async () => {
+    try {
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({
+        video: {
+          cursor: 'always'
+        },
+        audio: false
+      });
+
+      screenStreamRef.current = screenStream;
+      
+      // Replace video track
+      if (localStream) {
+        const videoTrack = screenStream.getVideoTracks()[0];
+        const sender = localStream.getVideoTracks()[0];
+        
+        // This would need to be passed from parent to update peer connection
+        // For now, just update local display
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = screenStream;
+        }
+        
+        videoTrack.onended = () => {
+          stopScreenSharing();
+        };
+      }
+
+      setIsScreenSharing(true);
+    } catch (error) {
+      console.error('Error starting screen share:', error);
+      alert('فشل مشاركة الشاشة. يرجى المحاولة مرة أخرى.');
+    }
+  };
+
+  const stopScreenSharing = () => {
+    if (screenStreamRef.current) {
+      screenStreamRef.current.getTracks().forEach(track => track.stop());
+      
+      // Restore camera stream
+      if (localVideoRef.current && localStream) {
+        localVideoRef.current.srcObject = localStream;
+      }
+      
+      screenStreamRef.current = null;
+      setIsScreenSharing(false);
+    }
   };
 
   const statusConfig = {
@@ -203,10 +338,32 @@ export default function VideoCallWindow({
                   <User className="w-12 h-12 text-white/50" />
                 </div>
               )}
-              <div className="absolute bottom-2 left-2">
+              <div className="absolute bottom-2 left-2 flex items-center gap-1">
                 <Badge className="bg-black/50 text-white text-xs">أنت</Badge>
+                {isScreenSharing && (
+                  <Badge className="bg-blue-500 text-white text-xs flex items-center gap-1">
+                    <MonitorUp className="w-3 h-3" />
+                    شاشة
+                  </Badge>
+                )}
               </div>
             </motion.div>
+
+            {/* Recording Indicator */}
+            {isRecording && (
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="absolute top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-full flex items-center gap-2 shadow-xl"
+              >
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  className="w-3 h-3 bg-white rounded-full"
+                />
+                <span className="text-sm font-medium">جاري التسجيل</span>
+              </motion.div>
+            )}
           </div>
 
           {/* Call Controls */}
@@ -248,6 +405,7 @@ export default function VideoCallWindow({
                       "rounded-full w-14 h-14 transition-all",
                       isMuted ? "bg-red-500 hover:bg-red-600 text-white" : "bg-white/10 hover:bg-white/20 text-white"
                     )}
+                    title={isMuted ? "تشغيل الميكروفون" : "كتم الميكروفون"}
                   >
                     {isMuted ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                   </Button>
@@ -260,6 +418,7 @@ export default function VideoCallWindow({
                       "rounded-full w-14 h-14 transition-all",
                       isVideoOff ? "bg-red-500 hover:bg-red-600 text-white" : "bg-white/10 hover:bg-white/20 text-white"
                     )}
+                    title={isVideoOff ? "تشغيل الفيديو" : "إيقاف الفيديو"}
                   >
                     {isVideoOff ? <VideoOff className="w-5 h-5" /> : <Video className="w-5 h-5" />}
                   </Button>
@@ -272,14 +431,42 @@ export default function VideoCallWindow({
                       "rounded-full w-14 h-14 transition-all",
                       isSpeakerOff ? "bg-red-500 hover:bg-red-600 text-white" : "bg-white/10 hover:bg-white/20 text-white"
                     )}
+                    title={isSpeakerOff ? "تشغيل السماعة" : "كتم السماعة"}
                   >
                     {isSpeakerOff ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    onClick={isScreenSharing ? stopScreenSharing : startScreenSharing}
+                    className={cn(
+                      "rounded-full w-14 h-14 transition-all",
+                      isScreenSharing ? "bg-blue-500 hover:bg-blue-600 text-white" : "bg-white/10 hover:bg-white/20 text-white"
+                    )}
+                    title={isScreenSharing ? "إيقاف مشاركة الشاشة" : "مشاركة الشاشة"}
+                  >
+                    <MonitorUp className="w-5 h-5" />
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="lg"
+                    onClick={isRecording ? stopRecording : startRecording}
+                    className={cn(
+                      "rounded-full w-14 h-14 transition-all",
+                      isRecording ? "bg-red-500 hover:bg-red-600 text-white animate-pulse" : "bg-white/10 hover:bg-white/20 text-white"
+                    )}
+                    title={isRecording ? "إيقاف التسجيل" : "بدء التسجيل"}
+                  >
+                    <Circle className={cn("w-5 h-5", isRecording && "fill-white")} />
                   </Button>
 
                   <Button
                     size="lg"
                     onClick={handleEnd}
                     className="bg-red-600 hover:bg-red-700 text-white rounded-full w-16 h-16 ml-4"
+                    title="إنهاء المكالمة"
                   >
                     <PhoneOff className="w-6 h-6" />
                   </Button>
