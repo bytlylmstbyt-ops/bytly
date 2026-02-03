@@ -6,11 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  Send, Paperclip, Users, Shield, Loader2, AlertTriangle
+  Send, Paperclip, Users, Shield, Loader2, AlertTriangle, Video, Phone
 } from "lucide-react";
 import { toast } from "sonner";
 import FilePreview from "./FilePreview";
 import { motion, AnimatePresence } from "framer-motion";
+import CallManager from "../calls/CallManager";
 
 export default function EnhancedChatWindow({ 
   conversation, 
@@ -26,6 +27,16 @@ export default function EnhancedChatWindow({
   const [sensitiveWarning, setSensitiveWarning] = useState(null);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  // Call Management
+  const callManager = CallManager({
+    conversationId: conversation.id,
+    currentUserEmail,
+    recipientData: {
+      name: conversation.participant_roles?.engineer || conversation.participant_roles?.client || 'مستخدم',
+      avatar: null
+    }
+  });
 
   useEffect(() => {
     loadMessages();
@@ -207,18 +218,43 @@ export default function EnhancedChatWindow({
   }
 
   return (
-    <Card className="flex flex-col h-[600px]">
-      <CardHeader className="border-b">
-        <CardTitle className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Users className="w-5 h-5 text-[#d4a574]" />
-            <span>{conversation.name || "غرفة المشروع الرئيسية"}</span>
-          </div>
-          <Badge variant="outline" className="flex items-center gap-1">
-            <Shield className="w-3 h-3" />
-            محمية
-          </Badge>
-        </CardTitle>
+    <>
+      {callManager.VideoCallWindow}
+      
+      <Card className="flex flex-col h-[600px]">
+        <CardHeader className="border-b">
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Users className="w-5 h-5 text-[#d4a574]" />
+              <span>{conversation.name || "غرفة المشروع الرئيسية"}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => callManager.startCall(true)}
+                disabled={callManager.isCallActive}
+                className="text-blue-600 hover:bg-blue-50"
+              >
+                <Video className="w-4 h-4 mr-1" />
+                فيديو
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => callManager.startCall(false)}
+                disabled={callManager.isCallActive}
+                className="text-green-600 hover:bg-green-50"
+              >
+                <Phone className="w-4 h-4 mr-1" />
+                صوت
+              </Button>
+              <Badge variant="outline" className="flex items-center gap-1">
+                <Shield className="w-3 h-3" />
+                محمية
+              </Badge>
+            </div>
+          </CardTitle>
         
         {conversation.is_main_room && (
           <p className="text-xs text-slate-500 mt-1">
@@ -356,6 +392,7 @@ export default function EnhancedChatWindow({
           🔒 جميع المحادثات محمية ومؤرشفة للرجوع إليها عند الحاجة
         </p>
       </div>
-    </Card>
+      </Card>
+    </>
   );
 }

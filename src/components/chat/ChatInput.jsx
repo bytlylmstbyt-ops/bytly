@@ -2,11 +2,11 @@ import React, { useState, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Send, Paperclip, X } from "lucide-react";
+import { Loader2, Send, Paperclip, X, Video, Phone } from "lucide-react";
 import { motion } from "framer-motion";
 import VoiceRecorder from "./VoiceRecorder";
 
-export default function ChatInput({ onMessageSend, disabled = false }) {
+export default function ChatInput({ onMessageSend, onVideoCall, onVoiceCall, disabled = false }) {
   const [message, setMessage] = useState("");
   const [attachments, setAttachments] = useState([]);
   const [uploading, setUploading] = useState(false);
@@ -136,6 +136,32 @@ export default function ChatInput({ onMessageSend, disabled = false }) {
             className="hidden"
             disabled={disabled || uploading || sending}
           />
+
+          {onVideoCall && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onVideoCall}
+              disabled={disabled}
+              title="مكالمة فيديو"
+              className="hover:bg-blue-50 hover:text-blue-600"
+            >
+              <Video className="w-4 h-4" />
+            </Button>
+          )}
+
+          {onVoiceCall && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onVoiceCall}
+              disabled={disabled}
+              title="مكالمة صوتية"
+              className="hover:bg-green-50 hover:text-green-600"
+            >
+              <Phone className="w-4 h-4" />
+            </Button>
+          )}
 
           <VoiceRecorder
             onSend={handleVoiceSend}
