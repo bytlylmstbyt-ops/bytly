@@ -30,8 +30,10 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { useLanguage } from "@/components/i18n/LanguageContext";
 
 export default function Engineers() {
+  const { t } = useLanguage();
   const urlParams = new URLSearchParams(window.location.search);
   const initialSearch = urlParams.get("search") || "";
   const initialCategory = urlParams.get("category") || "";
