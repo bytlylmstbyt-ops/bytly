@@ -8,8 +8,14 @@ import WithdrawalForm from "../components/wallet/WithdrawalForm";
 import TransactionHistory from "../components/wallet/TransactionHistory";
 import ClientWalletView from "../components/wallet/ClientWalletView";
 import InvestorFinancialView from "../components/wallet/InvestorFinancialView";
+import { useLanguage } from "@/components/i18n/LanguageContext";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function WalletPage() {
+  const { t } = useLanguage();
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [userType, setUserType] = useState(null);
@@ -105,7 +111,7 @@ export default function WalletPage() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
-          <p className="text-slate-600 mb-4">يرجى إكمال ملفك الشخصي للوصول إلى المحفظة</p>
+          <p className="text-slate-600 mb-4">{t('wallet.noProfile')}</p>
         </div>
       </div>
     );
@@ -123,29 +129,29 @@ export default function WalletPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <h1 className="text-3xl md:text-4xl font-bold gradient-text">
-                المحفظة الإلكترونية
+                {t('wallet.title')}
               </h1>
             {userType === "engineer" && (
               <div className="flex items-center gap-1 text-sm text-slate-600">
                 <UserIcon className="w-4 h-4" />
-                <span>مهندس</span>
+                <span>{t('wallet.userTypes.engineer')}</span>
               </div>
             )}
             {userType === "firm" && (
               <div className="flex items-center gap-1 text-sm text-slate-600">
                 <Building2 className="w-4 h-4" />
-                <span>شركة استشارية</span>
+                <span>{t('wallet.userTypes.firm')}</span>
               </div>
             )}
             </div>
             <Link to={createPageUrl("WalletRecharge")}>
               <Button className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
                 <Plus className="w-5 h-5 ml-2" />
-                شحن المحفظة
+                {t('wallet.rechargeWallet')}
               </Button>
             </Link>
           </div>
-          <p className="text-slate-600">إدارة رصيدك ومعاملاتك المالية</p>
+          <p className="text-slate-600">{t('wallet.subtitle')}</p>
         </motion.div>
 
         {/* Engineer Wallet View */}
@@ -154,8 +160,8 @@ export default function WalletPage() {
             <WalletOverview engineer={userProfile} />
             <Tabs defaultValue="transactions" className="mt-6">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="transactions">سجل المعاملات</TabsTrigger>
-                <TabsTrigger value="withdrawal">طلب سحب</TabsTrigger>
+                <TabsTrigger value="transactions">{t('wallet.tabs.transactions')}</TabsTrigger>
+                <TabsTrigger value="withdrawal">{t('wallet.tabs.withdrawal')}</TabsTrigger>
               </TabsList>
               <TabsContent value="transactions">
                 <TransactionHistory transactions={transactions} />

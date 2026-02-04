@@ -16,8 +16,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { useLanguage } from "@/components/i18n/LanguageContext";
 
 export default function Settings() {
+  const { t, language } = useLanguage();
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [userType, setUserType] = useState(null);
@@ -127,10 +129,10 @@ export default function Settings() {
         });
       }
       
-      toast.success("تم حفظ التغييرات بنجاح");
+      toast.success(t('settings.profile.saveSuccess'));
     } catch (error) {
       console.error("Error:", error);
-      toast.error("حدث خطأ أثناء الحفظ");
+      toast.error(t('settings.profile.saveError'));
     } finally {
       setIsSaving(false);
       loadUserData();
@@ -153,34 +155,34 @@ export default function Settings() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e]">الإعدادات</h1>
-          <p className="text-slate-500">إدارة حسابك وتفضيلاتك</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e]">{t('settings.title')}</h1>
+          <p className="text-slate-500">{t('settings.subtitle')}</p>
         </motion.div>
 
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="bg-white shadow-sm">
             <TabsTrigger value="profile" className="gap-2">
               <User className="w-4 h-4" />
-              الملف الشخصي
+              {t('settings.tabs.profile')}
             </TabsTrigger>
             <TabsTrigger value="security" className="gap-2">
               <Shield className="w-4 h-4" />
-              الأمان
+              {t('settings.tabs.security')}
             </TabsTrigger>
             <TabsTrigger value="notifications" className="gap-2">
               <Bell className="w-4 h-4" />
-              الإشعارات
+              {t('settings.tabs.notifications')}
             </TabsTrigger>
             <TabsTrigger value="email" className="gap-2">
               <Mail className="w-4 h-4" />
-              البريد الإلكتروني
+              {t('settings.tabs.email')}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="profile">
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle>معلومات الملف الشخصي</CardTitle>
+                <CardTitle>{t('settings.profile.title')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Profile Image */}
@@ -211,46 +213,46 @@ export default function Settings() {
                 {/* Form Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="full_name">الاسم الكامل</Label>
+                    <Label htmlFor="full_name">{t('settings.profile.fullName')}</Label>
                     <div className="relative">
-                      <User className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                      <User className={`absolute ${language === 'ar' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400`} />
                       <Input
                         id="full_name"
                         value={formData.full_name || ""}
                         onChange={(e) => handleInputChange("full_name", e.target.value)}
-                        className="pr-10"
+                        className={language === 'ar' ? 'pr-10' : 'pl-10'}
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone">رقم الهاتف</Label>
+                    <Label htmlFor="phone">{t('settings.profile.phone')}</Label>
                     <div className="relative">
-                      <Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                      <Phone className={`absolute ${language === 'ar' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400`} />
                       <Input
                         id="phone"
                         value={formData.phone || ""}
                         onChange={(e) => handleInputChange("phone", e.target.value)}
-                        className="pr-10"
+                        className={language === 'ar' ? 'pr-10' : 'pl-10'}
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="country">الدولة</Label>
+                    <Label htmlFor="country">{t('settings.profile.country')}</Label>
                     <div className="relative">
-                      <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                      <MapPin className={`absolute ${language === 'ar' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400`} />
                       <Input
                         id="country"
                         value={formData.country || ""}
                         onChange={(e) => handleInputChange("country", e.target.value)}
-                        className="pr-10"
+                        className={language === 'ar' ? 'pr-10' : 'pl-10'}
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="city">المدينة</Label>
+                    <Label htmlFor="city">{t('settings.profile.city')}</Label>
                     <Input
                       id="city"
                       value={formData.city || ""}
@@ -262,7 +264,7 @@ export default function Settings() {
                 {userType === "engineer" && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="specialization">التخصص</Label>
+                      <Label htmlFor="specialization">{t('settings.profile.specialization')}</Label>
                       <Input
                         id="specialization"
                         value={formData.specialization || ""}
@@ -271,7 +273,7 @@ export default function Settings() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="bio">نبذة عني</Label>
+                      <Label htmlFor="bio">{t('settings.profile.bio')}</Label>
                       <Textarea
                         id="bio"
                         value={formData.bio || ""}
@@ -306,18 +308,18 @@ export default function Settings() {
           <TabsContent value="security">
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle>إعدادات الأمان</CardTitle>
+                <CardTitle>{t('settings.security.title')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="p-4 bg-slate-50 rounded-xl">
                   <div className="flex items-center gap-3 mb-2">
                     <Lock className="w-5 h-5 text-slate-600" />
-                    <h3 className="font-medium">تغيير كلمة المرور</h3>
+                    <h3 className="font-medium">{t('settings.security.changePassword')}</h3>
                   </div>
                   <p className="text-sm text-slate-500 mb-4">
-                    يمكنك تغيير كلمة المرور من خلال إعدادات الحساب
+                    {t('settings.security.changePasswordDesc')}
                   </p>
-                  <Button variant="outline">تغيير كلمة المرور</Button>
+                  <Button variant="outline">{t('settings.security.changePassword')}</Button>
                 </div>
 
                 <div className="p-4 bg-slate-50 rounded-xl">
@@ -325,8 +327,8 @@ export default function Settings() {
                     <div className="flex items-center gap-3">
                       <Shield className="w-5 h-5 text-slate-600" />
                       <div>
-                        <h3 className="font-medium">التحقق بخطوتين</h3>
-                        <p className="text-sm text-slate-500">أضف طبقة حماية إضافية لحسابك</p>
+                        <h3 className="font-medium">{t('settings.security.twoFactor')}</h3>
+                        <p className="text-sm text-slate-500">{t('settings.security.twoFactorDesc')}</p>
                       </div>
                     </div>
                     <Switch />
@@ -339,13 +341,13 @@ export default function Settings() {
           <TabsContent value="notifications">
             <Card className="border-0 shadow-lg">
               <CardHeader>
-                <CardTitle>إعدادات الإشعارات</CardTitle>
+                <CardTitle>{t('settings.notifications.title')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
                   <div>
-                    <h3 className="font-medium">إشعارات داخل التطبيق</h3>
-                    <p className="text-sm text-slate-500">إشعارات فورية داخل المنصة</p>
+                    <h3 className="font-medium">{t('settings.notifications.inApp')}</h3>
+                    <p className="text-sm text-slate-500">{t('settings.notifications.inAppDesc')}</p>
                   </div>
                   <Switch 
                     checked={notificationSettings.in_app_notifications}
@@ -358,8 +360,8 @@ export default function Settings() {
 
                 <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
                   <div>
-                    <h3 className="font-medium">إشعارات البريد الإلكتروني</h3>
-                    <p className="text-sm text-slate-500">استلم تحديثات على بريدك</p>
+                    <h3 className="font-medium">{t('settings.notifications.email')}</h3>
+                    <p className="text-sm text-slate-500">{t('settings.notifications.emailDesc')}</p>
                   </div>
                   <Switch 
                     checked={notificationSettings.email_notifications}
@@ -371,19 +373,19 @@ export default function Settings() {
                 </div>
 
                 <div className="border-t pt-4 mt-4">
-                  <h4 className="font-medium mb-3">تخصيص أنواع الإشعارات</h4>
+                  <h4 className="font-medium mb-3">{t('settings.notifications.customize')}</h4>
                   <div className="space-y-2">
                     {[
-                      { key: 'project_updates', label: 'تحديثات المشاريع' },
-                      { key: 'contract_updates', label: 'تحديثات العقود' },
-                      { key: 'payment_reminders', label: 'تذكيرات الدفع' },
-                      { key: 'milestone_reminders', label: 'تذكيرات المعالم' },
-                      { key: 'new_proposals', label: 'عروض جديدة' },
-                      { key: 'deadline_reminders', label: 'تذكيرات المواعيد' },
-                      { key: 'dispute_updates', label: 'تحديثات النزاعات' },
-                      { key: 'new_messages', label: 'رسائل جديدة' },
-                      { key: 'review_requests', label: 'طلبات التقييم' },
-                      { key: 'system_notifications', label: 'إشعارات النظام' }
+                      { key: 'project_updates', label: t('settings.notifications.types.projectUpdates') },
+                      { key: 'contract_updates', label: t('settings.notifications.types.contractUpdates') },
+                      { key: 'payment_reminders', label: t('settings.notifications.types.paymentReminders') },
+                      { key: 'milestone_reminders', label: t('settings.notifications.types.milestoneReminders') },
+                      { key: 'new_proposals', label: t('settings.notifications.types.newProposals') },
+                      { key: 'deadline_reminders', label: t('settings.notifications.types.deadlineReminders') },
+                      { key: 'dispute_updates', label: t('settings.notifications.types.disputeUpdates') },
+                      { key: 'new_messages', label: t('settings.notifications.types.newMessages') },
+                      { key: 'review_requests', label: t('settings.notifications.types.reviewRequests') },
+                      { key: 'system_notifications', label: t('settings.notifications.types.systemNotifications') }
                     ].map(item => (
                       <div key={item.key} className="flex items-center justify-between p-2 hover:bg-slate-50 rounded">
                         <span className="text-sm">{item.label}</span>
@@ -410,7 +412,7 @@ export default function Settings() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Mail className="w-5 h-5 text-[#C9A66B]" />
-                  إعدادات البريد الإلكتروني
+                  {t('settings.emailSettings.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -420,8 +422,8 @@ export default function Settings() {
                       <Bell className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="font-medium text-slate-900">تفعيل إرسال التنبيهات</p>
-                      <p className="text-sm text-slate-500">استلم نسخة من كل تنبيه على بريدك الإلكتروني</p>
+                      <p className="font-medium text-slate-900">{t('settings.emailSettings.enableAlerts')}</p>
+                      <p className="text-sm text-slate-500">{t('settings.emailSettings.enableAlertsDesc')}</p>
                     </div>
                   </div>
                   <Switch
@@ -439,29 +441,29 @@ export default function Settings() {
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] flex items-center justify-center">
                         <Mail className="w-4 h-4 text-white" />
                       </div>
-                      <p className="font-semibold text-amber-900">البريد الإداري الرئيسي</p>
+                      <p className="font-semibold text-amber-900">{t('settings.emailSettings.adminEmail')}</p>
                     </div>
                     <div className="bg-white p-4 rounded-lg border border-amber-300 mb-4">
-                      <p className="text-sm text-slate-600 mb-2">البريد المستخدم للإشعارات الإدارية:</p>
+                      <p className="text-sm text-slate-600 mb-2">{t('settings.emailSettings.adminEmailUsed')}</p>
                       <p className="font-mono text-[#6B5D4F] font-bold text-lg">bytlylmstbyt@gmail.com</p>
                     </div>
                     <div className="space-y-3">
                       <p className="text-sm text-slate-700 font-semibold flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                        أنواع الإشعارات المفعّلة:
+                        {t('settings.emailSettings.enabledTypes')}
                       </p>
                       <ul className="space-y-2 text-sm text-slate-600 mr-6">
                         <li className="flex items-center gap-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-[#C9A66B]"></span>
-                          تسجيل مهندس جديد
+                          {t('settings.emailSettings.newEngineer')}
                         </li>
                         <li className="flex items-center gap-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-[#C9A66B]"></span>
-                          رفع شهادة جودة واعتماد للمشاريع
+                          {t('settings.emailSettings.certificateUpload')}
                         </li>
                         <li className="flex items-center gap-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-[#C9A66B]"></span>
-                          استفسار جديد عبر الشات بوت
+                          {t('settings.emailSettings.newChatbot')}
                         </li>
                       </ul>
                     </div>
@@ -472,9 +474,9 @@ export default function Settings() {
                   <div className="flex items-start gap-3">
                     <Mail className="w-5 h-5 text-blue-600 mt-0.5" />
                     <div className="text-sm">
-                      <p className="font-medium text-blue-900 mb-1">هوية الرسائل</p>
+                      <p className="font-medium text-blue-900 mb-1">{t('settings.emailSettings.emailIdentity')}</p>
                       <p className="text-blue-700">
-                        جميع رسائل البريد الإلكتروني تحمل شعار <strong>بيتلي</strong> البني والتنسيق الرسمي للمنصة، مع تدرج لوني من البني إلى الذهبي.
+                        {t('settings.emailSettings.emailIdentityDesc')}
                       </p>
                     </div>
                   </div>
@@ -488,12 +490,12 @@ export default function Settings() {
                   {isSaving ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin ml-2" />
-                      جاري الحفظ...
+                      {t('settings.profile.saving')}
                     </>
                   ) : (
                     <>
                       <Save className="w-5 h-5 ml-2" />
-                      حفظ التغييرات
+                      {t('settings.profile.saveChanges')}
                     </>
                   )}
                 </Button>
