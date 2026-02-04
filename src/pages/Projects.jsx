@@ -83,12 +83,12 @@ export default function Projects() {
   });
 
   const categories = [
-    { value: "interior", label: "تصميم داخلي" },
-    { value: "architecture", label: "تصميم معماري" },
-    { value: "painting", label: "رسم هندسي" },
-    { value: "landscape", label: "تنسيق حدائق" },
-    { value: "furniture", label: "تصميم أثاث" },
-    { value: "lighting", label: "تصميم إضاءة" }
+    { value: "interior", label: t('projects.categories.interior') },
+    { value: "architecture", label: t('projects.categories.architecture') },
+    { value: "painting", label: t('projects.categories.painting') },
+    { value: "landscape", label: t('projects.categories.landscape') },
+    { value: "furniture", label: t('projects.categories.furniture') },
+    { value: "lighting", label: t('projects.categories.lighting') }
   ];
 
   const statusColors = {
@@ -99,10 +99,10 @@ export default function Projects() {
   };
 
   const statusLabels = {
-    open: "مفتوح",
-    in_progress: "قيد التنفيذ",
-    completed: "مكتمل",
-    cancelled: "ملغي"
+    open: t('projects.status.open'),
+    inProgress: t('projects.status.inProgress'),
+    completed: t('projects.status.completed'),
+    cancelled: t('projects.status.cancelled')
   };
 
   return (
@@ -146,9 +146,9 @@ export default function Projects() {
             {/* Status Filter */}
             <div className="flex bg-white rounded-xl shadow-sm p-1">
               {[
-                { value: "", label: "الكل" },
-                { value: "open", label: "مفتوح" },
-                { value: "in_progress", label: "قيد التنفيذ" }
+                { value: "", label: t('projects.filters.all') },
+                { value: "open", label: t('projects.filters.open') },
+                { value: "in_progress", label: t('projects.filters.inProgress') }
               ].map(status => (
                 <button
                   key={status.value}
@@ -167,10 +167,10 @@ export default function Projects() {
             {/* Category Filter */}
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="w-[180px] bg-white">
-                <SelectValue placeholder="التصنيف" />
+                <SelectValue placeholder={t('projects.filters.category')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={null}>الكل</SelectItem>
+                <SelectItem value={null}>{t('projects.filters.allCategories')}</SelectItem>
                 {categories.map(cat => (
                   <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
                 ))}
@@ -225,10 +225,10 @@ export default function Projects() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <Badge className={project.project_type === "full_construction" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}>
-                              {project.project_type === "full_construction" ? "مشروع إنشائي" : "خدمة سريعة"}
+                              {project.project_type === "full_construction" ? t('projects.types.fullConstruction') : t('projects.types.expressService')}
                             </Badge>
                             <Badge className={statusColors[project.status]}>
-                              {statusLabels[project.status]}
+                              {statusLabels[project.status] || statusLabels.open}
                             </Badge>
                           </div>
                           <h3 className="text-lg font-bold text-[#1a1a2e] mb-1">
@@ -286,7 +286,7 @@ export default function Projects() {
           <div className="text-center py-16">
             <Briefcase className="w-20 h-20 text-slate-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-slate-700 mb-2">{t('projects.noProjects')}</h3>
-            <p className="text-slate-500 mb-4">{t('projects.noProjects')}</p>
+            <p className="text-slate-500 mb-4">{t('projects.noResults')}</p>
           </div>
         )}
       </div>

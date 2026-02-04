@@ -88,11 +88,11 @@ export default function Engineers() {
   ];
 
   const userTypes = [
-    { value: "all", label: "الكل", icon: Users },
-    { value: "engineer", label: "مهندسين", icon: Building2 },
-    { value: "architect", label: "معماريين", icon: Palette },
-    { value: "civil", label: "مهندس مدني", icon: Building2 },
-    { value: "painter", label: "رسامين", icon: PenTool }
+    { value: "all", label: t('engineers.filters.all'), icon: Users },
+    { value: "engineer", label: t('engineers.filters.engineers'), icon: Building2 },
+    { value: "architect", label: t('engineers.filters.architects'), icon: Palette },
+    { value: "civil", label: t('engineers.filters.civil'), icon: Building2 },
+    { value: "painter", label: t('engineers.filters.painters'), icon: PenTool }
   ];
 
   const clearFilters = () => {
@@ -177,10 +177,10 @@ export default function Engineers() {
               onValueChange={(value) => setFilters(prev => ({ ...prev, specialization: value }))}
             >
               <SelectTrigger className="w-[180px] bg-white">
-                <SelectValue placeholder="التخصص" />
+                <SelectValue placeholder={t('engineers.filters.specialization')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={null}>الكل</SelectItem>
+                <SelectItem value={null}>{t('engineers.filters.allSpecializations')}</SelectItem>
                 {specializations.map(spec => (
                   <SelectItem key={spec} value={spec}>{spec}</SelectItem>
                 ))}
@@ -192,7 +192,7 @@ export default function Engineers() {
               <SheetTrigger asChild>
                 <Button variant="outline" className="md:hidden relative">
                   <SlidersHorizontal className="w-4 h-4 ml-2" />
-                  فلاتر
+                  {t('engineers.filters.sortBy')}
                   {activeFiltersCount > 0 && (
                     <Badge className="absolute -top-2 -left-2 w-5 h-5 p-0 flex items-center justify-center bg-[#d4a574]">
                       {activeFiltersCount}
@@ -202,20 +202,20 @@ export default function Engineers() {
               </SheetTrigger>
               <SheetContent side="right" className="w-80">
                 <SheetHeader>
-                  <SheetTitle>فلترة النتائج</SheetTitle>
+                  <SheetTitle>{t('engineers.filters.filtersTitle')}</SheetTitle>
                 </SheetHeader>
                 <div className="mt-6 space-y-6">
                   <div className="space-y-2">
-                    <Label>المدينة</Label>
+                    <Label>{t('engineers.filters.city')}</Label>
                     <Input
-                      placeholder="أدخل المدينة"
+                      placeholder={t('engineers.filters.city')}
                       value={filters.city}
                       onChange={(e) => setFilters(prev => ({ ...prev, city: e.target.value }))}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>الحد الأدنى للتقييم: {filters.minRating}</Label>
+                    <Label>{t('engineers.filters.minRating')}: {filters.minRating}</Label>
                     <Slider
                       value={[filters.minRating]}
                       onValueChange={([value]) => setFilters(prev => ({ ...prev, minRating: value }))}
@@ -230,11 +230,11 @@ export default function Engineers() {
                       checked={filters.verified}
                       onCheckedChange={(checked) => setFilters(prev => ({ ...prev, verified: checked }))}
                     />
-                    <Label htmlFor="verified">المهندسين الموثقين فقط</Label>
+                    <Label htmlFor="verified">{t('engineers.filters.verified')}</Label>
                   </div>
 
                   <Button onClick={clearFilters} variant="outline" className="w-full">
-                    إعادة تعيين الفلاتر
+                    {t('engineers.filters.clearFilters')}
                   </Button>
                 </div>
               </SheetContent>
@@ -244,7 +244,7 @@ export default function Engineers() {
             {activeFiltersCount > 0 && (
               <Button variant="ghost" onClick={clearFilters} className="text-slate-500 hidden md:flex">
                 <X className="w-4 h-4 ml-1" />
-                مسح الفلاتر ({activeFiltersCount})
+                {t('engineers.filters.applyFilters')} ({activeFiltersCount})
               </Button>
             )}
           </div>
@@ -256,10 +256,10 @@ export default function Engineers() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="-rating">الأعلى تقييماً</SelectItem>
-                <SelectItem value="-completed_projects">الأكثر مشاريع</SelectItem>
-                <SelectItem value="-years_experience">الأكثر خبرة</SelectItem>
-                <SelectItem value="-created_date">الأحدث</SelectItem>
+                <SelectItem value="-rating">{t('engineers.filters.topRated')}</SelectItem>
+                <SelectItem value="-completed_projects">{t('engineers.filters.mostProjects')}</SelectItem>
+                <SelectItem value="-years_experience">{t('engineers.filters.mostExperience')}</SelectItem>
+                <SelectItem value="-created_date">{t('engineers.filters.newest')}</SelectItem>
               </SelectContent>
             </Select>
 
@@ -334,7 +334,7 @@ export default function Engineers() {
                             )}
                             {engineer.subscription_type !== "none" && (
                               <Badge className="absolute top-3 left-3 bg-amber-500 text-white">
-                                مميز
+                                {t('engineers.featured')}
                               </Badge>
                             )}
                           </div>
@@ -367,7 +367,7 @@ export default function Engineers() {
                                   <span className="text-slate-400 text-sm">({engineer.total_reviews || 0})</span>
                                 </div>
                                 <Badge variant="secondary" className="bg-slate-100">
-                                  {engineer.completed_projects || 0} مشروع
+                                  {engineer.completed_projects || 0} {t('engineers.projects')}
                                 </Badge>
                               </div>
                             </div>
@@ -389,7 +389,7 @@ export default function Engineers() {
                                 <CheckCircle className="w-5 h-5 text-blue-500" />
                               )}
                               {engineer.subscription_type !== "none" && (
-                                <Badge className="bg-amber-500 text-white">مميز</Badge>
+                                <Badge className="bg-amber-500 text-white">{t('engineers.featured')}</Badge>
                               )}
                             </div>
                             <p className="text-sm text-slate-600 mb-2">{engineer.specialization}</p>
@@ -407,9 +407,9 @@ export default function Engineers() {
 
                           <div className="text-left">
                             <Badge variant="secondary" className="bg-slate-100 mb-2">
-                              {engineer.completed_projects || 0} مشروع
+                              {engineer.completed_projects || 0} {t('engineers.projects')}
                             </Badge>
-                            <p className="text-sm text-slate-500">{engineer.years_experience || 0} سنة خبرة</p>
+                            <p className="text-sm text-slate-500">{engineer.years_experience || 0} {t('engineers.yearsExperience')}</p>
                           </div>
                         </CardContent>
                       )}
@@ -423,9 +423,9 @@ export default function Engineers() {
           <div className="text-center py-16">
             <Users className="w-20 h-20 text-slate-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-slate-700 mb-2">{t('engineers.noResults')}</h3>
-            <p className="text-slate-500 mb-4">{t('engineers.noResults')}</p>
+            <p className="text-slate-500 mb-4">{t('engineers.noResultsMessage')}</p>
             <Button onClick={clearFilters} variant="outline">
-              {t('engineers.noResults')}
+              {t('engineers.filters.clearFilters')}
             </Button>
           </div>
         )}

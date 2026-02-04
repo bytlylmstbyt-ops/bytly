@@ -222,20 +222,29 @@ export const translations = {
         painters: "رسامين",
         civil: "مهندس مدني",
         specialization: "التخصص",
-        allSpecializations: "جميع التخصصات",
+        allSpecializations: "الكل",
         city: "المدينة",
         allCities: "جميع المدن",
         rating: "التقييم",
         allRatings: "جميع التقييمات",
-        verified: "موثّق فقط",
+        verified: "المهندسين الموثقين فقط",
         sortBy: "الترتيب",
         newest: "الأحدث",
         topRated: "الأعلى تقييماً",
-        mostProjects: "الأكثر مشاريع"
+        mostProjects: "الأكثر مشاريع",
+        mostExperience: "الأكثر خبرة",
+        filtersTitle: "فلترة النتائج",
+        clearFilters: "إعادة تعيين الفلاتر",
+        minRating: "الحد الأدنى للتقييم",
+        applyFilters: "مسح الفلاتر"
       },
       results: "عرض {count} نتيجة",
       noResults: "لا توجد نتائج",
-      viewProfile: "عرض الملف الشخصي"
+      noResultsMessage: "جرب تغيير معايير البحث أو الفلاتر",
+      viewProfile: "عرض الملف الشخصي",
+      featured: "مميز",
+      projects: "مشروع",
+      yearsExperience: "سنة خبرة"
     },
     projects: {
       title: "سوق المشاريع",
@@ -247,10 +256,29 @@ export const translations = {
         open: "مفتوح",
         inProgress: "قيد التنفيذ",
         category: "التصنيف",
-        allCategories: "جميع التصنيفات"
+        allCategories: "الكل"
+      },
+      categories: {
+        interior: "تصميم داخلي",
+        architecture: "تصميم معماري",
+        painting: "رسم هندسي",
+        landscape: "تنسيق حدائق",
+        furniture: "تصميم أثاث",
+        lighting: "تصميم إضاءة"
+      },
+      status: {
+        open: "مفتوح",
+        inProgress: "قيد التنفيذ",
+        completed: "مكتمل",
+        cancelled: "ملغي"
+      },
+      types: {
+        fullConstruction: "مشروع إنشائي",
+        expressService: "خدمة سريعة"
       },
       results: "عرض {count} مشروع",
-      noProjects: "لا توجد مشاريع متاحة حالياً",
+      noProjects: "لا توجد مشاريع",
+      noResults: "لا توجد مشاريع تطابق معايير البحث",
       budget: "الميزانية",
       location: "الموقع",
       deadline: "الموعد النهائي",
@@ -534,20 +562,29 @@ export const translations = {
         painters: "Drafters",
         civil: "Civil Engineer",
         specialization: "Specialization",
-        allSpecializations: "All Specializations",
+        allSpecializations: "All",
         city: "City",
         allCities: "All Cities",
         rating: "Rating",
         allRatings: "All Ratings",
-        verified: "Verified Only",
+        verified: "Verified Engineers Only",
         sortBy: "Sort By",
         newest: "Newest",
         topRated: "Top Rated",
-        mostProjects: "Most Projects"
+        mostProjects: "Most Projects",
+        mostExperience: "Most Experienced",
+        filtersTitle: "Filter Results",
+        clearFilters: "Reset Filters",
+        minRating: "Minimum Rating",
+        applyFilters: "Clear Filters"
       },
       results: "Showing {count} results",
       noResults: "No results found",
-      viewProfile: "View Profile"
+      noResultsMessage: "Try changing your search criteria or filters",
+      viewProfile: "View Profile",
+      featured: "Featured",
+      projects: "Projects",
+      yearsExperience: "years experience"
     },
     projects: {
       title: "Project Marketplace",
@@ -559,10 +596,29 @@ export const translations = {
         open: "Open",
         inProgress: "In Progress",
         category: "Category",
-        allCategories: "All Categories"
+        allCategories: "All"
+      },
+      categories: {
+        interior: "Interior Design",
+        architecture: "Architectural Design",
+        painting: "Engineering Drawing",
+        landscape: "Landscaping",
+        furniture: "Furniture Design",
+        lighting: "Lighting Design"
+      },
+      status: {
+        open: "Open",
+        inProgress: "In Progress",
+        completed: "Completed",
+        cancelled: "Cancelled"
+      },
+      types: {
+        fullConstruction: "Construction Project",
+        expressService: "Express Service"
       },
       results: "Showing {count} projects",
-      noProjects: "No projects currently available",
+      noProjects: "No projects available",
+      noResults: "No projects match your search criteria",
       budget: "Budget",
       location: "Location",
       deadline: "Deadline",
