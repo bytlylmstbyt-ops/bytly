@@ -356,6 +356,23 @@ export const translations = {
       },
       noNotifications: "لا توجد إشعارات",
       noNotificationsMessage: "ستظهر الإشعارات الجديدة هنا"
+    },
+    messages: {
+      title: "المحادثات",
+      searchPlaceholder: "بحث...",
+      noConversations: "لا توجد محادثات",
+      startConversation: "ابدأ المحادثة...",
+      onlineNow: "متصل الآن",
+      selectConversation: "اختر محادثة",
+      selectConversationMessage: "اختر محادثة من القائمة للبدء",
+      typingPlaceholder: "اكتب رسالتك...",
+      attachment: "مرفق",
+      downloadAttachment: "تحميل المرفق",
+      menu: {
+        viewProfile: "عرض الملف الشخصي",
+        muteNotifications: "كتم الإشعارات",
+        deleteConversation: "حذف المحادثة"
+      }
     }
   },
   en: {
@@ -715,6 +732,23 @@ export const translations = {
       },
       noNotifications: "No notifications",
       noNotificationsMessage: "New notifications will appear here"
+    },
+    messages: {
+      title: "Messages",
+      searchPlaceholder: "Search...",
+      noConversations: "No conversations",
+      startConversation: "Start conversation...",
+      onlineNow: "Online now",
+      selectConversation: "Select a conversation",
+      selectConversationMessage: "Select a conversation from the list to start",
+      typingPlaceholder: "Type your message...",
+      attachment: "Attachment",
+      downloadAttachment: "Download attachment",
+      menu: {
+        viewProfile: "View profile",
+        muteNotifications: "Mute notifications",
+        deleteConversation: "Delete conversation"
+      }
     }
   }
 };

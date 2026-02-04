@@ -17,8 +17,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useLanguage } from "@/components/i18n/LanguageContext";
 
 export default function Messages() {
+  const { t, language } = useLanguage();
   const urlParams = new URLSearchParams(window.location.search);
   const engineerIdFromUrl = urlParams.get("engineer");
 
@@ -174,7 +176,7 @@ export default function Messages() {
     });
 
     await base44.entities.Conversation.update(selectedConversation.id, {
-      last_message: `📎 مرفق`,
+      last_message: `📎 ${language === 'ar' ? 'مرفق' : 'Attachment'}`,
       last_message_date: new Date().toISOString()
     });
 
@@ -203,14 +205,14 @@ export default function Messages() {
           <div className={`w-full md:w-96 border-l flex flex-col ${showMobileChat ? "hidden md:flex" : "flex"}`}>
             {/* Header */}
             <div className="p-4 border-b">
-              <h2 className="text-xl font-bold text-[#1a1a2e] mb-4">المحادثات</h2>
+              <h2 className="text-xl font-bold text-[#1a1a2e] mb-4">{t('messages.title')}</h2>
               <div className="relative">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <Search className={`absolute ${language === 'ar' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400`} />
                 <Input
-                  placeholder="بحث..."
+                  placeholder={t('messages.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pr-10"
+                  className={language === 'ar' ? 'pr-10' : 'pl-10'}
                 />
               </div>
             </div>
@@ -246,11 +248,11 @@ export default function Messages() {
                           </h3>
                           <span className="text-xs text-slate-500">
                             {conversation.last_message_date && 
-                              new Date(conversation.last_message_date).toLocaleDateString("ar")}
+                              new Date(conversation.last_message_date).toLocaleDateString(language === 'ar' ? 'ar' : 'en')}
                           </span>
                         </div>
                         <p className="text-sm text-slate-500 truncate">
-                          {conversation.last_message || "ابدأ المحادثة..."}
+                          {conversation.last_message || t('messages.startConversation')}
                         </p>
                       </div>
                     </div>
@@ -258,7 +260,7 @@ export default function Messages() {
                 })
               ) : (
                 <div className="p-8 text-center text-slate-500">
-                  لا توجد محادثات
+                  {t('messages.noConversations')}
                 </div>
               )}
             </ScrollArea>
@@ -287,7 +289,7 @@ export default function Messages() {
                       <h3 className="font-semibold text-slate-800">
                         {getOtherParticipant(selectedConversation).full_name}
                       </h3>
-                      <p className="text-xs text-green-500">متصل الآن</p>
+                      <p className="text-xs text-green-500">{t('messages.onlineNow')}</p>
                     </div>
                   </div>
                   <DropdownMenu>
@@ -297,9 +299,9 @@ export default function Messages() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start">
-                      <DropdownMenuItem>عرض الملف الشخصي</DropdownMenuItem>
-                      <DropdownMenuItem>كتم الإشعارات</DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600">حذف المحادثة</DropdownMenuItem>
+                      <DropdownMenuItem>{t('messages.menu.viewProfile')}</DropdownMenuItem>
+                      <DropdownMenuItem>{t('messages.menu.muteNotifications')}</DropdownMenuItem>
+                      <DropdownMenuItem className="text-red-600">{t('messages.menu.deleteConversation')}</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
@@ -334,12 +336,12 @@ export default function Messages() {
                                   }`}
                                 >
                                   <Download className="w-4 h-4" />
-                                  تحميل المرفق
+                                  {t('messages.downloadAttachment')}
                                 </a>
                               ))}
                             </div>
                             <p className={`text-xs text-slate-400 mt-1 ${isOwn ? "text-right" : "text-left"}`}>
-                              {new Date(message.created_date).toLocaleTimeString("ar", { 
+                              {new Date(message.created_date).toLocaleTimeString(language === 'ar' ? 'ar' : 'en', { 
                                 hour: "2-digit", 
                                 minute: "2-digit" 
                               })}
@@ -368,7 +370,7 @@ export default function Messages() {
                       <Paperclip className="w-5 h-5 text-slate-500" />
                     </label>
                     <Input
-                      placeholder="اكتب رسالتك..."
+                      placeholder={t('messages.typingPlaceholder')}
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
@@ -394,8 +396,8 @@ export default function Messages() {
                   <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-slate-200 flex items-center justify-center">
                     <Send className="w-10 h-10 text-slate-400" />
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-700 mb-2">اختر محادثة</h3>
-                  <p className="text-slate-500">اختر محادثة من القائمة للبدء</p>
+                  <h3 className="text-lg font-semibold text-slate-700 mb-2">{t('messages.selectConversation')}</h3>
+                  <p className="text-slate-500">{t('messages.selectConversationMessage')}</p>
                 </div>
               </div>
             )}
