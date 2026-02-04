@@ -123,10 +123,10 @@ export default function Engineers() {
             className="text-center"
           >
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              اكتشف أفضل المهندسين والمصممين
+              {t('engineers.title')}
             </h1>
             <p className="text-slate-300 mb-8 max-w-2xl mx-auto">
-              ابحث عن المهندس المناسب لمشروعك من بين مجموعة من أفضل المتخصصين
+              {t('engineers.subtitle')}
             </p>
 
             {/* Search Bar */}

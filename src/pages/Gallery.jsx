@@ -8,8 +8,10 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import ImageGallerySlider from "@/components/portfolio/ImageGallerySlider";
+import { useLanguage } from "@/components/i18n/LanguageContext";
 
 export default function Gallery() {
+  const { t } = useLanguage();
   const [portfolios, setPortfolios] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -27,13 +29,13 @@ export default function Gallery() {
   };
 
   const categories = [
-    { value: "all", label: "الكل", icon: Grid3X3 },
-    { value: "interior", label: "تصميم داخلي", icon: Palette },
-    { value: "architecture", label: "معماري", icon: Building2 },
-    { value: "painting", label: "رسم", icon: PenTool },
-    { value: "landscape", label: "حدائق", icon: LayoutGrid },
-    { value: "furniture", label: "أثاث", icon: Grid3X3 },
-    { value: "lighting", label: "إضاءة", icon: Grid3X3 }
+    { value: "all", label: t('gallery.categories.all'), icon: Grid3X3 },
+    { value: "interior", label: t('gallery.categories.interior'), icon: Palette },
+    { value: "architecture", label: t('gallery.categories.architecture'), icon: Building2 },
+    { value: "painting", label: t('gallery.categories.painting'), icon: PenTool },
+    { value: "landscape", label: t('gallery.categories.landscape'), icon: LayoutGrid },
+    { value: "furniture", label: t('gallery.categories.furniture'), icon: Grid3X3 },
+    { value: "lighting", label: t('gallery.categories.lighting'), icon: Grid3X3 }
   ];
 
   const filteredPortfolios = portfolios.filter(p => {
@@ -55,10 +57,10 @@ export default function Gallery() {
             className="text-center"
           >
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              معرض الأعمال
+              {t('gallery.title')}
             </h1>
             <p className="text-slate-300 mb-8 max-w-2xl mx-auto">
-              استلهم من أفضل التصاميم والأعمال المنفذة من قبل مهندسينا
+              {t('gallery.subtitle')}
             </p>
 
             <div className="max-w-xl mx-auto">
@@ -66,7 +68,7 @@ export default function Gallery() {
                 <div className="relative">
                   <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <Input
-                    placeholder="ابحث في المعرض..."
+                    placeholder={t('gallery.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pr-12 h-12 bg-white border-0 rounded-xl text-slate-800 placeholder:text-slate-400"
@@ -100,7 +102,7 @@ export default function Gallery() {
         {/* Results */}
         <div className="mb-6 text-center">
           <p className="text-slate-600">
-            عرض <span className="font-semibold text-[#1a1a2e]">{filteredPortfolios.length}</span> معرض أعمال
+            {t('gallery.showing').replace('{count}', filteredPortfolios.length)}
           </p>
         </div>
 
@@ -153,8 +155,8 @@ export default function Gallery() {
         ) : (
           <div className="text-center py-16">
             <Grid3X3 className="w-20 h-20 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-slate-700 mb-2">لا توجد أعمال</h3>
-            <p className="text-slate-500">لا توجد أعمال تطابق معايير البحث</p>
+            <h3 className="text-xl font-semibold text-slate-700 mb-2">{t('gallery.noPortfolios')}</h3>
+            <p className="text-slate-500">{t('gallery.noResults')}</p>
           </div>
         )}
       </div>

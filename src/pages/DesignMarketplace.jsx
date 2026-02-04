@@ -19,8 +19,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useLanguage } from "@/components/i18n/LanguageContext";
 
 export default function DesignMarketplace() {
+  const { t } = useLanguage();
   const [designs, setDesigns] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -61,21 +63,21 @@ export default function DesignMarketplace() {
     });
 
   const categories = [
-    { value: "villa", label: "فلل", icon: Home },
-    { value: "apartment", label: "شقق سكنية", icon: Layers },
-    { value: "facade", label: "واجهات", icon: Grid3X3 },
-    { value: "interior", label: "تصميم داخلي", icon: Bed },
-    { value: "landscape", label: "حدائق", icon: Award },
-    { value: "commercial", label: "تجاري", icon: ShoppingCart }
+    { value: "villa", label: t('designMarketplace.categories.villa'), icon: Home },
+    { value: "apartment", label: t('designMarketplace.categories.apartment'), icon: Layers },
+    { value: "facade", label: t('designMarketplace.categories.facade'), icon: Grid3X3 },
+    { value: "interior", label: t('designMarketplace.categories.interior'), icon: Bed },
+    { value: "landscape", label: t('designMarketplace.categories.landscape'), icon: Award },
+    { value: "commercial", label: t('designMarketplace.categories.commercial'), icon: ShoppingCart }
   ];
 
   const styles = [
-    { value: "modern", label: "عصري" },
-    { value: "classic", label: "كلاسيكي" },
-    { value: "islamic", label: "إسلامي" },
-    { value: "contemporary", label: "معاصر" },
-    { value: "minimalist", label: "بسيط" },
-    { value: "luxury", label: "فاخر" }
+    { value: "modern", label: t('designMarketplace.styles.modern') },
+    { value: "classic", label: t('designMarketplace.styles.classic') },
+    { value: "islamic", label: t('designMarketplace.styles.islamic') },
+    { value: "contemporary", label: t('designMarketplace.styles.contemporary') },
+    { value: "minimalist", label: t('designMarketplace.styles.minimalist') },
+    { value: "luxury", label: t('designMarketplace.styles.luxury') }
   ];
 
   return (
@@ -94,10 +96,10 @@ export default function DesignMarketplace() {
               </div>
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              متجر التصاميم الجاهزة
+              {t('designMarketplace.title')}
             </h1>
             <p className="text-slate-300 mb-8 max-w-2xl mx-auto">
-              مخططات معمارية وتصاميم جاهزة للشراء والتنفيذ الفوري
+              {t('designMarketplace.subtitle')}
             </p>
 
             <div className="max-w-2xl mx-auto">
@@ -105,7 +107,7 @@ export default function DesignMarketplace() {
                 <div className="relative">
                   <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <Input
-                    placeholder="ابحث عن تصميم..."
+                    placeholder={t('designMarketplace.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pr-12 h-14 bg-white border-0 rounded-xl"
@@ -144,10 +146,10 @@ export default function DesignMarketplace() {
           <div className="flex items-center gap-3">
             <Select value={styleFilter} onValueChange={setStyleFilter}>
               <SelectTrigger className="w-[180px] bg-white">
-                <SelectValue placeholder="النمط المعماري" />
+                <SelectValue placeholder={t('designMarketplace.filters.styleLabel')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={null}>جميع الأنماط</SelectItem>
+                <SelectItem value={null}>{t('designMarketplace.filters.allStyles')}</SelectItem>
                 {styles.map(style => (
                   <SelectItem key={style.value} value={style.value}>{style.label}</SelectItem>
                 ))}
@@ -156,13 +158,13 @@ export default function DesignMarketplace() {
 
             <Select value={priceSort} onValueChange={setPriceSort}>
               <SelectTrigger className="w-[180px] bg-white">
-                <SelectValue placeholder="الترتيب" />
+                <SelectValue placeholder={t('designMarketplace.filters.sortLabel')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={null}>الأحدث</SelectItem>
-                <SelectItem value="low">السعر: الأقل</SelectItem>
-                <SelectItem value="high">السعر: الأعلى</SelectItem>
-                <SelectItem value="popular">الأكثر مبيعاً</SelectItem>
+                <SelectItem value={null}>{t('designMarketplace.filters.newest')}</SelectItem>
+                <SelectItem value="low">{t('designMarketplace.filters.priceLow')}</SelectItem>
+                <SelectItem value="high">{t('designMarketplace.filters.priceHigh')}</SelectItem>
+                <SelectItem value="popular">{t('designMarketplace.filters.popular')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -171,7 +173,7 @@ export default function DesignMarketplace() {
             <Link to={createPageUrl("AddDesign")}>
               <Button className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
                 <Plus className="w-5 h-5 ml-2" />
-                أضف تصميم للبيع
+                {t('designMarketplace.addDesign')}
               </Button>
             </Link>
           </div>
@@ -180,7 +182,7 @@ export default function DesignMarketplace() {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-slate-600">
-            عرض <span className="font-semibold text-[#1a1a2e]">{filteredDesigns.length}</span> تصميم
+            {t('designMarketplace.showing').replace('{count}', filteredDesigns.length)}
           </p>
         </div>
 
@@ -218,7 +220,7 @@ export default function DesignMarketplace() {
                       {design.is_featured && (
                         <Badge className="absolute top-3 right-3 bg-amber-500 text-white">
                           <Award className="w-3 h-3 ml-1" />
-                          مميز
+                          {t('designMarketplace.featured')}
                         </Badge>
                       )}
                       <div className="absolute bottom-3 left-3 right-3 flex gap-2">
@@ -240,7 +242,7 @@ export default function DesignMarketplace() {
                         {design.area_sqm && (
                           <span className="flex items-center gap-1">
                             <Ruler className="w-4 h-4" />
-                            {design.area_sqm} م²
+                            {design.area_sqm} {t('designMarketplace.sqm')}
                           </span>
                         )}
                         {design.bedrooms && (
@@ -265,7 +267,7 @@ export default function DesignMarketplace() {
                           {design.total_purchases > 0 && (
                             <p className="text-xs text-slate-500">
                               <Download className="w-3 h-3 inline ml-1" />
-                              {design.total_purchases} مبيعة
+                              {design.total_purchases} {t('designMarketplace.sales')}
                             </p>
                           )}
                         </div>
@@ -285,8 +287,8 @@ export default function DesignMarketplace() {
         ) : (
           <div className="text-center py-16">
             <ShoppingCart className="w-20 h-20 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-slate-700 mb-2">لا توجد تصاميم</h3>
-            <p className="text-slate-500">لا توجد تصاميم تطابق معايير البحث</p>
+            <h3 className="text-xl font-semibold text-slate-700 mb-2">{t('designMarketplace.noDesigns')}</h3>
+            <p className="text-slate-500">{t('designMarketplace.noResults')}</p>
           </div>
         )}
       </div>

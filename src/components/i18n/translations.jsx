@@ -210,6 +210,105 @@ export const translations = {
         completedProjects: "مشروع مكتمل",
         support: "دعم فني متواصل"
       }
+    },
+    engineers: {
+      title: "اكتشف أفضل المهندسين والمصممين",
+      subtitle: "ابحث عن المهندس المناسب لمشروعك من بين مجموعة من أفضل المتخصصين",
+      searchPlaceholder: "ابحث بالاسم، التخصص، أو المدينة...",
+      filters: {
+        all: "الكل",
+        engineers: "مهندسين",
+        architects: "معماريين",
+        painters: "رسامين",
+        civil: "مهندس مدني",
+        specialization: "التخصص",
+        allSpecializations: "جميع التخصصات",
+        city: "المدينة",
+        allCities: "جميع المدن",
+        rating: "التقييم",
+        allRatings: "جميع التقييمات",
+        verified: "موثّق فقط",
+        sortBy: "الترتيب",
+        newest: "الأحدث",
+        topRated: "الأعلى تقييماً",
+        mostProjects: "الأكثر مشاريع"
+      },
+      results: "عرض {count} نتيجة",
+      noResults: "لا توجد نتائج",
+      viewProfile: "عرض الملف الشخصي"
+    },
+    projects: {
+      title: "سوق المشاريع",
+      subtitle: "تصفح المشاريع المتاحة وقدّم عروضك لأصحاب المشاريع",
+      searchPlaceholder: "ابحث عن مشروع...",
+      addProject: "إضافة مشروع جديد",
+      filters: {
+        all: "الكل",
+        open: "مفتوح",
+        inProgress: "قيد التنفيذ",
+        category: "التصنيف",
+        allCategories: "جميع التصنيفات"
+      },
+      results: "عرض {count} مشروع",
+      noProjects: "لا توجد مشاريع متاحة حالياً",
+      budget: "الميزانية",
+      location: "الموقع",
+      deadline: "الموعد النهائي",
+      proposals: "عرض"
+    },
+    gallery: {
+      title: "معرض الأعمال",
+      subtitle: "استلهم من أفضل التصاميم والأعمال المنفذة من قبل مهندسينا",
+      searchPlaceholder: "ابحث في المعرض...",
+      categories: {
+        all: "الكل",
+        interior: "تصميم داخلي",
+        architecture: "معماري",
+        painting: "رسم",
+        landscape: "حدائق",
+        furniture: "أثاث",
+        lighting: "إضاءة"
+      },
+      showing: "عرض {count} معرض أعمال",
+      noPortfolios: "لا توجد أعمال",
+      noResults: "لا توجد أعمال تطابق معايير البحث"
+    },
+    designMarketplace: {
+      title: "متجر التصاميم الجاهزة",
+      subtitle: "مخططات معمارية وتصاميم جاهزة للشراء والتنفيذ الفوري",
+      searchPlaceholder: "ابحث عن تصميم...",
+      addDesign: "أضف تصميم للبيع",
+      categories: {
+        villa: "فلل",
+        apartment: "شقق سكنية",
+        facade: "واجهات",
+        interior: "تصميم داخلي",
+        landscape: "حدائق",
+        commercial: "تجاري"
+      },
+      styles: {
+        modern: "عصري",
+        classic: "كلاسيكي",
+        islamic: "إسلامي",
+        contemporary: "معاصر",
+        minimalist: "بسيط",
+        luxury: "فاخر"
+      },
+      filters: {
+        styleLabel: "النمط المعماري",
+        allStyles: "جميع الأنماط",
+        sortLabel: "الترتيب",
+        newest: "الأحدث",
+        priceLow: "السعر: الأقل",
+        priceHigh: "السعر: الأعلى",
+        popular: "الأكثر مبيعاً"
+      },
+      showing: "عرض {count} تصميم",
+      noDesigns: "لا توجد تصاميم",
+      noResults: "لا توجد تصاميم تطابق معايير البحث",
+      sqm: "م²",
+      sales: "مبيعة",
+      featured: "مميز"
     }
   },
   en: {
@@ -423,6 +522,105 @@ export const translations = {
         completedProjects: "Completed projects",
         support: "Continuous technical support"
       }
+    },
+    engineers: {
+      title: "Discover the Best Engineers and Designers",
+      subtitle: "Find the right engineer for your project from among the finest specialists",
+      searchPlaceholder: "Search by name, specialization, or city...",
+      filters: {
+        all: "All",
+        engineers: "Engineers",
+        architects: "Architects",
+        painters: "Drafters",
+        civil: "Civil Engineer",
+        specialization: "Specialization",
+        allSpecializations: "All Specializations",
+        city: "City",
+        allCities: "All Cities",
+        rating: "Rating",
+        allRatings: "All Ratings",
+        verified: "Verified Only",
+        sortBy: "Sort By",
+        newest: "Newest",
+        topRated: "Top Rated",
+        mostProjects: "Most Projects"
+      },
+      results: "Showing {count} results",
+      noResults: "No results found",
+      viewProfile: "View Profile"
+    },
+    projects: {
+      title: "Project Marketplace",
+      subtitle: "Browse available projects and submit your proposals to project owners",
+      searchPlaceholder: "Search for a project...",
+      addProject: "Add New Project",
+      filters: {
+        all: "All",
+        open: "Open",
+        inProgress: "In Progress",
+        category: "Category",
+        allCategories: "All Categories"
+      },
+      results: "Showing {count} projects",
+      noProjects: "No projects currently available",
+      budget: "Budget",
+      location: "Location",
+      deadline: "Deadline",
+      proposals: "Proposals"
+    },
+    gallery: {
+      title: "Portfolio Gallery",
+      subtitle: "Get inspired by the best designs and executed works from our engineers",
+      searchPlaceholder: "Search in gallery...",
+      categories: {
+        all: "All",
+        interior: "Interior Design",
+        architecture: "Architecture",
+        painting: "Drafting",
+        landscape: "Landscape",
+        furniture: "Furniture",
+        lighting: "Lighting"
+      },
+      showing: "Showing {count} portfolios",
+      noPortfolios: "No portfolios available",
+      noResults: "No portfolios match your search criteria"
+    },
+    designMarketplace: {
+      title: "Ready-Made Designs Store",
+      subtitle: "Architectural drawings and ready designs for instant purchase and execution",
+      searchPlaceholder: "Search for a design...",
+      addDesign: "Add Design for Sale",
+      categories: {
+        villa: "Villas",
+        apartment: "Apartments",
+        facade: "Facades",
+        interior: "Interior Design",
+        landscape: "Landscape",
+        commercial: "Commercial"
+      },
+      styles: {
+        modern: "Modern",
+        classic: "Classic",
+        islamic: "Islamic",
+        contemporary: "Contemporary",
+        minimalist: "Minimalist",
+        luxury: "Luxury"
+      },
+      filters: {
+        styleLabel: "Architectural Style",
+        allStyles: "All Styles",
+        sortLabel: "Sort By",
+        newest: "Newest",
+        priceLow: "Price: Low to High",
+        priceHigh: "Price: High to Low",
+        popular: "Best Selling"
+      },
+      showing: "Showing {count} designs",
+      noDesigns: "No designs available",
+      noResults: "No designs match your search criteria",
+      sqm: "sqm",
+      sales: "sales",
+      featured: "Featured"
     }
   }
 };
