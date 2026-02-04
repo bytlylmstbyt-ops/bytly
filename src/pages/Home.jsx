@@ -14,6 +14,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import WelcomeSlides from "@/components/onboarding/WelcomeSlides";
+import ProfessionalWelcomeSlides from "@/components/onboarding/ProfessionalWelcomeSlides";
+import FirmWelcomeSlides from "@/components/onboarding/FirmWelcomeSlides";
 import CorePillarsSection from "@/components/home/CorePillarsSection";
 import HowItWorksSection from "@/components/home/HowItWorksSection";
 import { useLanguage } from "@/components/i18n/LanguageContext";
@@ -25,19 +27,58 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [userType, setUserType] = useState(null);
 
   useEffect(() => {
     loadData();
-    
-    // Show welcome slides for first-time visitors
-    const hasSeenWelcome = localStorage.getItem('bytly_seen_welcome');
-    if (!hasSeenWelcome) {
-      setShowWelcome(true);
-    }
+    checkUserAndWelcome();
   }, []);
 
-  const handleWelcomeComplete = () => {
-    localStorage.setItem('bytly_seen_welcome', 'true');
+  const checkUserAndWelcome = async () => {
+    try {
+      const isAuth = await base44.auth.isAuthenticated();
+      if (isAuth) {
+        const user = await base44.auth.me();
+        const hasSeenWelcome = localStorage.getItem(`bytly_seen_welcome_${user.email}`);
+        
+        if (!hasSeenWelcome) {
+          // Check if user is an engineer
+          const engineers = await base44.entities.Engineer.filter({ email: user.email }, null, 1);
+          if (engineers.length > 0) {
+            setUserType('engineer');
+            setShowWelcome(true);
+            return;
+          }
+          
+          // Check if user is a firm
+          const firms = await base44.entities.EngineeringFirm.filter({ email: user.email }, null, 1);
+          if (firms.length > 0) {
+            setUserType('firm');
+            setShowWelcome(true);
+            return;
+          }
+          
+          // Check if user is a client
+          const clients = await base44.entities.Client.filter({ email: user.email }, null, 1);
+          if (clients.length > 0) {
+            setUserType('client');
+            setShowWelcome(true);
+            return;
+          }
+        }
+      }
+    } catch (error) {
+      console.log("Not authenticated or error checking user type");
+    }
+  };
+
+  const handleWelcomeComplete = async () => {
+    try {
+      const user = await base44.auth.me();
+      localStorage.setItem(`bytly_seen_welcome_${user.email}`, 'true');
+    } catch (error) {
+      localStorage.setItem('bytly_seen_welcome', 'true');
+    }
     setShowWelcome(false);
   };
 
@@ -87,7 +128,19 @@ export default function Home() {
   return (
     <div className="overflow-hidden">
       {/* Welcome Onboarding */}
-      {showWelcome && (
+      {showWelcome && userType === 'engineer' && (
+        <ProfessionalWelcomeSlides 
+          onComplete={handleWelcomeComplete}
+          onSkip={handleWelcomeComplete}
+        />
+      )}
+      {showWelcome && userType === 'firm' && (
+        <FirmWelcomeSlides 
+          onComplete={handleWelcomeComplete}
+          onSkip={handleWelcomeComplete}
+        />
+      )}
+      {showWelcome && userType === 'client' && (
         <WelcomeSlides 
           onComplete={handleWelcomeComplete}
           onSkip={handleWelcomeComplete}
