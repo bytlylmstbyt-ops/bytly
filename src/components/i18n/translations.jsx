@@ -618,6 +618,64 @@ export const translations = {
       },
       publish: "نشر المشروع",
       publishing: "جاري النشر..."
+    },
+    projectDetails: {
+      notFound: "لم يتم العثور على المشروع",
+      backToProjects: "العودة للمشاريع",
+      submitProposal: "تقديم عرض",
+      proposalSubmitted: "تم تقديم عرضك",
+      rateProject: "قيّم المشروع",
+      rated: "تم التقييم ({rating}/5)",
+      proposalDialog: {
+        title: "تقديم عرض على المشروع",
+        price: "السعر المقترح (ر.س)",
+        pricePlaceholder: "أدخل السعر",
+        deliveryDays: "مدة التسليم (بالأيام)",
+        daysPlaceholder: "عدد الأيام",
+        coverLetter: "رسالة العرض",
+        coverLetterPlaceholder: "اشرح لماذا أنت الأنسب لهذا المشروع...",
+        attachments: "المرفقات (معرض أعمال، مستندات)",
+        addFiles: "أضف ملفات توضيحية",
+        submit: "إرسال العرض",
+        submitting: "جاري الإرسال..."
+      },
+      reviewDialog: {
+        title: "قيّم تجربتك مع المهندس",
+        overallRating: "التقييم العام",
+        quality: "الجودة",
+        communication: "التواصل",
+        delivery: "التسليم",
+        comment: "تعليقك",
+        commentPlaceholder: "شاركنا تجربتك مع المهندس...",
+        submit: "إرسال التقييم",
+        submitting: "جاري الإرسال..."
+      },
+      sections: {
+        description: "وصف المشروع",
+        attachments: "المرفقات",
+        proposals: "العروض المقدمة",
+        proposalsCount: "{count} عرض",
+        noProposals: "لا توجد عروض حتى الآن",
+        projectDetails: "تفاصيل المشروع",
+        budget: "الميزانية",
+        location: "الموقع",
+        deadline: "الموعد النهائي",
+        publishDate: "تاريخ النشر",
+        kanbanBoard: "لوحة المشروع",
+        kanbanBoardDesc: "إدارة المهام والتقدم",
+        contract: "العقد القانوني",
+        contractDesc: "أنشئ عقداً رسمياً للمشروع"
+      },
+      proposalStatus: {
+        accepted: "مقبول",
+        rejected: "مرفوض",
+        pending: "قيد المراجعة"
+      },
+      actions: {
+        contact: "تواصل",
+        acceptProposal: "قبول العرض",
+        attachments: "المرفقات ({count})"
+      }
     }
   },
   en: {
