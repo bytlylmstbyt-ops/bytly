@@ -114,10 +114,10 @@ export default function Projects() {
             className="text-center"
           >
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              سوق المشاريع
+              {t('projects.title')}
             </h1>
             <p className="text-slate-300 mb-8 max-w-2xl mx-auto">
-              تصفح المشاريع المتاحة وقدم عروضك لأصحاب المشاريع
+              {t('projects.subtitle')}
             </p>
 
             <div className="max-w-2xl mx-auto">
@@ -125,7 +125,7 @@ export default function Projects() {
                 <div className="relative">
                   <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <Input
-                    placeholder="ابحث عن مشروع..."
+                    placeholder={t('projects.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pr-12 h-14 bg-white border-0 rounded-xl text-slate-800 placeholder:text-slate-400"
@@ -179,7 +179,7 @@ export default function Projects() {
           <Link to={createPageUrl("CreateProject")}>
             <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
               <PlusCircle className="w-5 h-5 ml-2" />
-              أضف مشروع جديد
+              {t('projects.addProject')}
             </Button>
           </Link>
         </div>
@@ -187,7 +187,7 @@ export default function Projects() {
         {/* Results */}
         <div className="mb-6">
           <p className="text-slate-600">
-            عرض <span className="font-semibold text-[#1a1a2e]">{filteredProjects.length}</span> مشروع
+            {t('projects.results').replace('{count}', filteredProjects.length)}
           </p>
         </div>
 
@@ -267,7 +267,7 @@ export default function Projects() {
                       <div className="flex items-center justify-between pt-4 border-t">
                         <span className="text-sm text-slate-500">
                           <Users className="w-4 h-4 inline ml-1" />
-                          {project.total_proposals || 0} عرض
+                          {project.total_proposals || 0} {t('projects.proposals')}
                         </span>
                         <span className="text-sm text-slate-500">
                           <Clock className="w-4 h-4 inline ml-1" />
@@ -283,8 +283,8 @@ export default function Projects() {
         ) : (
           <div className="text-center py-16">
             <Briefcase className="w-20 h-20 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-slate-700 mb-2">لا توجد مشاريع</h3>
-            <p className="text-slate-500 mb-4">لا توجد مشاريع تطابق معايير البحث</p>
+            <h3 className="text-xl font-semibold text-slate-700 mb-2">{t('projects.noProjects')}</h3>
+            <p className="text-slate-500 mb-4">{t('projects.noProjects')}</p>
           </div>
         )}
       </div>

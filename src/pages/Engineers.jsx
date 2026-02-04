@@ -135,7 +135,7 @@ export default function Engineers() {
                 <div className="relative">
                   <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <Input
-                    placeholder="ابحث بالاسم، التخصص، أو المدينة..."
+                    placeholder={t('engineers.searchPlaceholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full pr-12 h-14 bg-white border-0 rounded-xl text-slate-800 placeholder:text-slate-400"
@@ -282,7 +282,7 @@ export default function Engineers() {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-slate-600">
-            عرض <span className="font-semibold text-[#1a1a2e]">{filteredEngineers.length}</span> نتيجة
+            {t('engineers.results').replace('{count}', filteredEngineers.length)}
           </p>
         </div>
 
@@ -420,10 +420,10 @@ export default function Engineers() {
         ) : (
           <div className="text-center py-16">
             <Users className="w-20 h-20 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-slate-700 mb-2">لا توجد نتائج</h3>
-            <p className="text-slate-500 mb-4">جرب تغيير معايير البحث أو الفلاتر</p>
+            <h3 className="text-xl font-semibold text-slate-700 mb-2">{t('engineers.noResults')}</h3>
+            <p className="text-slate-500 mb-4">{t('engineers.noResults')}</p>
             <Button onClick={clearFilters} variant="outline">
-              إعادة تعيين الفلاتر
+              {t('engineers.noResults')}
             </Button>
           </div>
         )}
