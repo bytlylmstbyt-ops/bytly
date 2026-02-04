@@ -292,12 +292,12 @@ export default function Settings() {
                   {isSaving ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin ml-2" />
-                      جاري الحفظ...
+                      {t('settings.profile.saving')}
                     </>
                   ) : (
                     <>
                       <Save className="w-5 h-5 ml-2" />
-                      حفظ التغييرات
+                      {t('settings.profile.saveChanges')}
                     </>
                   )}
                 </Button>
