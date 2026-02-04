@@ -8,15 +8,18 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/components/i18n/LanguageContext";
 
 export default function RegisterChoice() {
+  const { t } = useLanguage();
+  
   const options = [
     {
       id: "investor",
       icon: Building2,
-      title: "مستثمر / مطور عقاري",
-      description: "أدر محفظة مشاريعك العقارية من لوحة تحكم واحدة",
-      features: ["نظام إشارات ضوئية للمشاريع", "إدارة مركزية للمدفوعات", "مستندات موحدة"],
+      title: t('registerChoice.roles.investor.title'),
+      description: t('registerChoice.roles.investor.description'),
+      features: t('registerChoice.roles.investor.features'),
       color: "from-purple-600 to-indigo-600",
       link: createPageUrl("RegisterClient") + "?type=investor",
       featured: true
@@ -24,36 +27,36 @@ export default function RegisterChoice() {
     {
       id: "client",
       icon: Briefcase,
-      title: "صاحب منزل",
-      description: "ابحث عن أفضل المصممين لمشروعك السكني",
-      features: ["طرح مشاريع مجاناً", "مقارنة العروض", "دفع آمن"],
+      title: t('registerChoice.roles.homeowner.title'),
+      description: t('registerChoice.roles.homeowner.description'),
+      features: t('registerChoice.roles.homeowner.features'),
       color: "from-amber-500 to-orange-500",
       link: createPageUrl("RegisterClient") + "?type=individual"
     },
     {
       id: "engineer",
       icon: Building2,
-      title: "مهندس مستقل",
-      description: "انضم كمهندس معتمد واعرض أعمالك للعملاء",
-      features: ["عرض Portfolio احترافي", "استقبال طلبات المشاريع", "محفظة إلكترونية"],
+      title: t('registerChoice.roles.engineer.title'),
+      description: t('registerChoice.roles.engineer.description'),
+      features: t('registerChoice.roles.engineer.features'),
       color: "from-blue-500 to-cyan-500",
       link: createPageUrl("RegisterEngineer") + "?type=engineer"
     },
     {
       id: "firm",
       icon: Building2,
-      title: "شركة استشارية",
-      description: "سجل شركتك الاستشارية للمشاريع الكبرى",
-      features: ["إدارة الفريق", "اعتماد المخططات", "عضوية مميزة"],
+      title: t('registerChoice.roles.firm.title'),
+      description: t('registerChoice.roles.firm.description'),
+      features: t('registerChoice.roles.firm.features'),
       color: "from-teal-600 to-cyan-600",
       link: createPageUrl("RegisterFirm")
     },
     {
       id: "legal",
       icon: Scale,
-      title: "مستشار قانوني",
-      description: "انضم لحماية حقوق المصممين والعملاء",
-      features: ["صياغة العقود", "حل النزاعات", "حماية الملكية"],
+      title: t('registerChoice.roles.legal.title'),
+      description: t('registerChoice.roles.legal.description'),
+      features: t('registerChoice.roles.legal.features'),
       color: "from-slate-600 to-gray-700",
       link: createPageUrl("RegisterLegalConsultant")
     }
@@ -68,10 +71,10 @@ export default function RegisterChoice() {
           className="text-center mb-12"
         >
           <h1 className="text-3xl md:text-4xl font-bold text-[#1a1a2e] mb-4">
-            انضم لـ بيتلي
+            {t('registerChoice.title')}
           </h1>
           <p className="text-slate-600 max-w-2xl mx-auto">
-            اختر نوع حسابك وابدأ رحلتك معنا
+            {t('registerChoice.subtitle')}
           </p>
         </motion.div>
 
@@ -115,7 +118,7 @@ export default function RegisterChoice() {
 
                   <Link to={option.link}>
                     <Button className={`w-full bg-gradient-to-r ${option.color} text-white hover:opacity-90`}>
-                      اختر هذا الحساب
+                      {t('registerChoice.chooseAccount')}
                       <ArrowLeft className="w-4 h-4 mr-2" />
                     </Button>
                   </Link>
@@ -132,12 +135,12 @@ export default function RegisterChoice() {
           className="text-center mt-8"
         >
           <p className="text-slate-500">
-            لديك حساب بالفعل؟{" "}
+            {t('registerChoice.alreadyHaveAccount')}{" "}
             <button 
               onClick={() => window.base44?.auth?.redirectToLogin()}
               className="text-[#d4a574] font-medium hover:underline"
             >
-              تسجيل الدخول
+              {t('registerChoice.login')}
             </button>
           </p>
         </motion.div>

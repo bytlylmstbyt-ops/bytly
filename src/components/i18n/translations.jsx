@@ -93,6 +93,123 @@ export const translations = {
       submit: "إرسال",
       confirm: "تأكيد",
       sar: "ر.س"
+    },
+    registerChoice: {
+      title: "انضم لـ بيتلي",
+      subtitle: "اختر نوع حسابك وابدأ رحلتك معنا",
+      alreadyHaveAccount: "لديك حساب بالفعل؟",
+      login: "تسجيل الدخول",
+      chooseAccount: "اختر هذا الحساب",
+      roles: {
+        investor: {
+          title: "مستثمر / مطور عقاري",
+          description: "أدر محفظة مشاريعك العقارية من لوحة تحكم واحدة",
+          features: ["نظام إشارات ضوئية للمشاريع", "إدارة مركزية للمدفوعات", "مستندات موحدة"]
+        },
+        homeowner: {
+          title: "صاحب منزل",
+          description: "ابحث عن أفضل المصممين لمشروعك السكني",
+          features: ["طرح مشاريع مجاناً", "مقارنة العروض", "دفع آمن"]
+        },
+        engineer: {
+          title: "مهندس مستقل",
+          description: "انضم كمهندس معتمد واعرض أعمالك للعملاء",
+          features: ["عرض Portfolio احترافي", "استقبال طلبات المشاريع", "محفظة إلكترونية"]
+        },
+        firm: {
+          title: "شركة استشارية",
+          description: "سجل شركتك الاستشارية للمشاريع الكبرى",
+          features: ["إدارة الفريق", "اعتماد المخططات", "عضوية مميزة"]
+        },
+        legal: {
+          title: "مستشار قانوني",
+          description: "انضم لحماية حقوق المصممين والعملاء",
+          features: ["صياغة العقود", "حل النزاعات", "حماية الملكية"]
+        }
+      }
+    },
+    howItWorks: {
+      badge: "كيف يعمل بيتلي",
+      title: "خطوات بسيطة نحو مشروعك",
+      subtitle: "سواء كنت صاحب مشروع أو مهندس محترف، العملية واضحة ومباشرة",
+      forOwners: "لأصحاب المشاريع",
+      forEngineers: "للمهندسين",
+      ownerSteps: {
+        step1: {
+          title: "اطرح مشروعك",
+          description: "حدد التفاصيل والميزانية والموعد النهائي للمشروع"
+        },
+        step2: {
+          title: "استقبل العروض",
+          description: "قارن بين المهندسين والأسعار والمدة المقترحة"
+        },
+        step3: {
+          title: "ادفع بأمان",
+          description: "المبلغ يُحفظ في نظام الضمان حتى تستلم العمل كاملاً"
+        },
+        step4: {
+          title: "اعتمد واستلم",
+          description: "راجع التصميم، اعتمده، واحصل على جميع الملفات"
+        }
+      },
+      engineerSteps: {
+        step1: {
+          title: "أنشئ ملفك",
+          description: "ارفع أعمالك السابقة وحدد تخصصاتك الرئيسية"
+        },
+        step2: {
+          title: "تصفح المشاريع",
+          description: "ابحث عن فرص عمل تناسب خبرتك وتخصصك"
+        },
+        step3: {
+          title: "قدّم عرضك",
+          description: "حدد السعر والمدة الزمنية والبدء في العمل"
+        },
+        step4: {
+          title: "استلم مستحقاتك",
+          description: "بعد موافقة العميل، يُحول المبلغ لمحفظتك فوراً"
+        }
+      }
+    },
+    corePillars: {
+      badge: "عن بيتلي",
+      title: "أركان بيتلي الأساسية",
+      subtitle: "بُنيت بيتلي على أسس راسخة لضمان تجربة استثنائية لجميع المستخدمين",
+      pillars: {
+        financial: {
+          title: "الأمان المالي",
+          subtitle: "Financial Safety",
+          description: "نظام ضمان (Escrow) يحمي أموالك حتى استلام العمل كاملاً. دفع آمن ومشفر عبر بوابات موثوقة.",
+          features: ["حماية كاملة للمدفوعات", "لا تحويل قبل الموافقة", "استرداد في حالة النزاع"],
+          stats: "98% رضا عن الأمان"
+        },
+        experts: {
+          title: "خبراء معتمدون",
+          subtitle: "Expert Access",
+          description: "مئات المهندسين والمصممين المعتمدين بشهادات رسمية ومعرض أعمال احترافي.",
+          features: ["توثيق رسمي لكل مهندس", "معرض أعمال شامل", "تقييمات حقيقية من عملاء"],
+          stats: "1000+ مهندس معتمد"
+        },
+        tracking: {
+          title: "سهولة المتابعة",
+          subtitle: "Easy Tracking",
+          description: "لوحة تحكم شاملة لمتابعة مشاريعك بنظام الإشارات الضوئية والمراحل التفصيلية.",
+          features: ["نظام إشارات ضوئية للمشاريع", "تتبع المراحل لحظياً", "تنبيهات ذكية ومباشرة"],
+          stats: "متابعة 24/7"
+        },
+        designs: {
+          title: "تصاميم جاهزة",
+          subtitle: "Ready Designs",
+          description: "متجر تصاميم معمارية جاهزة للشراء والتحميل الفوري بأسعار تنافسية.",
+          features: ["تحميل فوري بعد الدفع", "مخططات معتمدة ومختومة", "إمكانية طلب تعديلات"],
+          stats: "500+ تصميم جاهز"
+        }
+      },
+      trust: {
+        securePayment: "دفع آمن ومشفر",
+        completedProjects: "مشروع مكتمل",
+        support: "دعم فني متواصل"
+      }
     }
   },
   en: {
@@ -189,6 +306,123 @@ export const translations = {
       submit: "Submit",
       confirm: "Confirm",
       sar: "SAR"
+    },
+    registerChoice: {
+      title: "Join Bytly",
+      subtitle: "Choose your account type and start your journey with us",
+      alreadyHaveAccount: "Already have an account?",
+      login: "Login",
+      chooseAccount: "Choose This Account",
+      roles: {
+        investor: {
+          title: "Investor / Real Estate Developer",
+          description: "Manage your real estate project portfolio from one dashboard",
+          features: ["Traffic light system for projects", "Centralized payment management", "Unified documents"]
+        },
+        homeowner: {
+          title: "Homeowner",
+          description: "Find the best designers for your residential project",
+          features: ["Post projects for free", "Compare proposals", "Secure payment"]
+        },
+        engineer: {
+          title: "Independent Engineer",
+          description: "Join as a certified engineer and showcase your work to clients",
+          features: ["Professional Portfolio display", "Receive project requests", "Digital wallet"]
+        },
+        firm: {
+          title: "Consulting Firm",
+          description: "Register your consulting firm for major projects",
+          features: ["Team management", "Drawing certification", "Premium membership"]
+        },
+        legal: {
+          title: "Legal Consultant",
+          description: "Join to protect designers' and clients' rights",
+          features: ["Contract drafting", "Dispute resolution", "Intellectual property protection"]
+        }
+      }
+    },
+    howItWorks: {
+      badge: "How Bytly Works",
+      title: "Simple Steps Towards Your Project",
+      subtitle: "Whether you're a project owner or professional engineer, the process is clear and straightforward",
+      forOwners: "For Project Owners",
+      forEngineers: "For Engineers",
+      ownerSteps: {
+        step1: {
+          title: "Post Your Project",
+          description: "Define details, budget, and project deadline"
+        },
+        step2: {
+          title: "Receive Proposals",
+          description: "Compare engineers, prices, and proposed timelines"
+        },
+        step3: {
+          title: "Pay Securely",
+          description: "Amount is held in escrow until you receive the complete work"
+        },
+        step4: {
+          title: "Approve & Receive",
+          description: "Review the design, approve it, and get all files"
+        }
+      },
+      engineerSteps: {
+        step1: {
+          title: "Create Your Profile",
+          description: "Upload your previous works and define your main specializations"
+        },
+        step2: {
+          title: "Browse Projects",
+          description: "Search for work opportunities matching your expertise and specialization"
+        },
+        step3: {
+          title: "Submit Your Proposal",
+          description: "Set the price and timeline and start working"
+        },
+        step4: {
+          title: "Receive Your Payment",
+          description: "After client approval, amount is transferred to your wallet immediately"
+        }
+      }
+    },
+    corePillars: {
+      badge: "About Bytly",
+      title: "Bytly's Core Pillars",
+      subtitle: "Bytly is built on solid foundations to ensure an exceptional experience for all users",
+      pillars: {
+        financial: {
+          title: "Financial Safety",
+          subtitle: "Financial Safety",
+          description: "Escrow system protects your money until work is fully delivered. Secure and encrypted payment through trusted gateways.",
+          features: ["Complete payment protection", "No transfer before approval", "Refund in case of disputes"],
+          stats: "98% security satisfaction"
+        },
+        experts: {
+          title: "Certified Experts",
+          subtitle: "Expert Access",
+          description: "Hundreds of certified engineers and designers with official certificates and professional portfolios.",
+          features: ["Official verification for each engineer", "Comprehensive portfolio gallery", "Real client reviews"],
+          stats: "1000+ certified engineers"
+        },
+        tracking: {
+          title: "Easy Tracking",
+          subtitle: "Easy Tracking",
+          description: "Comprehensive dashboard to track your projects with traffic light system and detailed milestones.",
+          features: ["Traffic light system for projects", "Real-time milestone tracking", "Smart and direct alerts"],
+          stats: "24/7 monitoring"
+        },
+        designs: {
+          title: "Ready Designs",
+          subtitle: "Ready Designs",
+          description: "Store of ready-made architectural designs for instant purchase and download at competitive prices.",
+          features: ["Instant download after payment", "Certified and stamped drawings", "Modification requests available"],
+          stats: "500+ ready designs"
+        }
+      },
+      trust: {
+        securePayment: "Secure & encrypted payment",
+        completedProjects: "Completed projects",
+        support: "Continuous technical support"
+      }
     }
   }
 };

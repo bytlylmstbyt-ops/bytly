@@ -6,60 +6,47 @@ import {
   Shield, Users, BarChart3, ShoppingBag,
   CheckCircle, Star, Lock, Zap
 } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageContext";
 
 export default function CorePillarsSection() {
+  const { t } = useLanguage();
+  
   const pillars = [
     {
       icon: Shield,
-      title: "الأمان المالي",
-      subtitle: "Financial Safety",
-      description: "نظام ضمان (Escrow) يحمي أموالك حتى استلام العمل كاملاً. دفع آمن ومشفر عبر بوابات موثوقة.",
-      features: [
-        "حماية كاملة للمدفوعات",
-        "لا تحويل قبل الموافقة",
-        "استرداد في حالة النزاع"
-      ],
+      title: t('corePillars.pillars.financial.title'),
+      subtitle: t('corePillars.pillars.financial.subtitle'),
+      description: t('corePillars.pillars.financial.description'),
+      features: t('corePillars.pillars.financial.features'),
       color: "from-green-500 to-emerald-500",
-      stats: "98% رضا عن الأمان"
+      stats: t('corePillars.pillars.financial.stats')
     },
     {
       icon: Users,
-      title: "خبراء معتمدون",
-      subtitle: "Expert Access",
-      description: "مئات المهندسين والمصممين المعتمدين بشهادات رسمية ومعرض أعمال احترافي.",
-      features: [
-        "توثيق رسمي لكل مهندس",
-        "معرض أعمال شامل",
-        "تقييمات حقيقية من عملاء"
-      ],
+      title: t('corePillars.pillars.experts.title'),
+      subtitle: t('corePillars.pillars.experts.subtitle'),
+      description: t('corePillars.pillars.experts.description'),
+      features: t('corePillars.pillars.experts.features'),
       color: "from-blue-500 to-cyan-500",
-      stats: "1000+ مهندس معتمد"
+      stats: t('corePillars.pillars.experts.stats')
     },
     {
       icon: BarChart3,
-      title: "سهولة المتابعة",
-      subtitle: "Easy Tracking",
-      description: "لوحة تحكم شاملة لمتابعة مشاريعك بنظام الإشارات الضوئية والمراحل التفصيلية.",
-      features: [
-        "نظام إشارات ضوئية للمشاريع",
-        "تتبع المراحل لحظياً",
-        "تنبيهات ذكية ومباشرة"
-      ],
+      title: t('corePillars.pillars.tracking.title'),
+      subtitle: t('corePillars.pillars.tracking.subtitle'),
+      description: t('corePillars.pillars.tracking.description'),
+      features: t('corePillars.pillars.tracking.features'),
       color: "from-purple-500 to-indigo-500",
-      stats: "متابعة 24/7"
+      stats: t('corePillars.pillars.tracking.stats')
     },
     {
       icon: ShoppingBag,
-      title: "تصاميم جاهزة",
-      subtitle: "Ready Designs",
-      description: "متجر تصاميم معمارية جاهزة للشراء والتحميل الفوري بأسعار تنافسية.",
-      features: [
-        "تحميل فوري بعد الدفع",
-        "مخططات معتمدة ومختومة",
-        "إمكانية طلب تعديلات"
-      ],
+      title: t('corePillars.pillars.designs.title'),
+      subtitle: t('corePillars.pillars.designs.subtitle'),
+      description: t('corePillars.pillars.designs.description'),
+      features: t('corePillars.pillars.designs.features'),
       color: "from-amber-500 to-orange-500",
-      stats: "500+ تصميم جاهز"
+      stats: t('corePillars.pillars.designs.stats')
     }
   ];
 
@@ -73,13 +60,13 @@ export default function CorePillarsSection() {
           className="text-center mb-16"
         >
           <Badge className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white mb-4 px-4 py-2">
-            عن بيتلي
+            {t('corePillars.badge')}
           </Badge>
           <h2 className="text-3xl md:text-4xl font-bold text-[#1a1a2e] mb-4">
-            أركان بيتلي الأساسية
+            {t('corePillars.title')}
           </h2>
           <p className="text-slate-600 max-w-2xl mx-auto">
-            بُنيت بيتلي على أسس راسخة لضمان تجربة استثنائية لجميع المستخدمين
+            {t('corePillars.subtitle')}
           </p>
         </motion.div>
 
@@ -146,7 +133,7 @@ export default function CorePillarsSection() {
             <CardContent className="pt-6 text-center">
               <Lock className="w-8 h-8 text-green-600 mx-auto mb-3" />
               <p className="text-2xl font-bold text-green-900 mb-1">100%</p>
-              <p className="text-sm text-slate-600">دفع آمن ومشفر</p>
+              <p className="text-sm text-slate-600">{t('corePillars.trust.securePayment')}</p>
             </CardContent>
           </Card>
 
@@ -154,7 +141,7 @@ export default function CorePillarsSection() {
             <CardContent className="pt-6 text-center">
               <CheckCircle className="w-8 h-8 text-blue-600 mx-auto mb-3" />
               <p className="text-2xl font-bold text-blue-900 mb-1">5000+</p>
-              <p className="text-sm text-slate-600">مشروع مكتمل</p>
+              <p className="text-sm text-slate-600">{t('corePillars.trust.completedProjects')}</p>
             </CardContent>
           </Card>
 
@@ -162,7 +149,7 @@ export default function CorePillarsSection() {
             <CardContent className="pt-6 text-center">
               <Zap className="w-8 h-8 text-purple-600 mx-auto mb-3" />
               <p className="text-2xl font-bold text-purple-900 mb-1">24/7</p>
-              <p className="text-sm text-slate-600">دعم فني متواصل</p>
+              <p className="text-sm text-slate-600">{t('corePillars.trust.support')}</p>
             </CardContent>
           </Card>
         </motion.div>
