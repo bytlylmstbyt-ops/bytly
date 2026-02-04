@@ -1147,6 +1147,214 @@ export const translations = {
         message: "Please complete registration first",
         createAccount: "Create New Account"
       }
+    },
+    settings: {
+      title: "Settings",
+      subtitle: "Manage your account and preferences",
+      tabs: {
+        profile: "Profile",
+        security: "Security",
+        notifications: "Notifications",
+        email: "Email"
+      },
+      profile: {
+        title: "Profile Information",
+        fullName: "Full Name",
+        phone: "Phone Number",
+        country: "Country",
+        city: "City",
+        specialization: "Specialization",
+        bio: "About Me",
+        saveChanges: "Save Changes",
+        saving: "Saving...",
+        saveSuccess: "Changes saved successfully",
+        saveError: "An error occurred while saving"
+      },
+      security: {
+        title: "Security Settings",
+        changePassword: "Change Password",
+        changePasswordDesc: "You can change your password through account settings",
+        twoFactor: "Two-Factor Authentication",
+        twoFactorDesc: "Add an extra layer of security to your account"
+      },
+      notifications: {
+        title: "Notification Settings",
+        inApp: "In-App Notifications",
+        inAppDesc: "Instant notifications within the platform",
+        email: "Email Notifications",
+        emailDesc: "Receive updates on your email",
+        customize: "Customize Notification Types",
+        types: {
+          projectUpdates: "Project Updates",
+          contractUpdates: "Contract Updates",
+          paymentReminders: "Payment Reminders",
+          milestoneReminders: "Milestone Reminders",
+          newProposals: "New Proposals",
+          deadlineReminders: "Deadline Reminders",
+          disputeUpdates: "Dispute Updates",
+          newMessages: "New Messages",
+          reviewRequests: "Review Requests",
+          systemNotifications: "System Notifications"
+        }
+      },
+      emailSettings: {
+        title: "Email Settings",
+        enableAlerts: "Enable Alert Notifications",
+        enableAlertsDesc: "Receive a copy of each notification via email",
+        adminEmail: "Primary Admin Email",
+        adminEmailUsed: "Email used for admin notifications:",
+        enabledTypes: "Enabled Notification Types:",
+        newEngineer: "New Engineer Registration",
+        certificateUpload: "Quality Certificate Upload for Projects",
+        newChatbot: "New Chatbot Inquiry",
+        emailIdentity: "Email Identity",
+        emailIdentityDesc: "All emails carry the brown Bytly logo and the platform's official formatting, with a brown to gold gradient."
+      }
+    },
+    wallet: {
+      title: "Electronic Wallet",
+      subtitle: "Manage your balance and financial transactions",
+      userTypes: {
+        engineer: "Engineer",
+        firm: "Consulting Firm"
+      },
+      rechargeWallet: "Recharge Wallet",
+      noProfile: "Please complete your profile to access the wallet",
+      tabs: {
+        transactions: "Transaction History",
+        withdrawal: "Withdrawal Request"
+      }
+    },
+    createProject: {
+      directHire: "Direct Service Request",
+      newProject: "Add New Project",
+      directHireDesc: "Send your request directly to the selected engineer",
+      newProjectDesc: "Add your project details to receive proposals from engineers",
+      directHireFrom: "Direct Service Request from:",
+      privateService: "Private Service",
+      pleaseRegister: "Please complete project owner registration first",
+      totalPercentageError: "Total milestone percentages must equal 100%",
+      directHireSuccess: "Direct service request sent successfully!",
+      projectCreated: "Project created successfully!",
+      projectType: {
+        label: "Project Type *",
+        fullConstruction: "Full Construction Project",
+        fullConstructionDesc: "6 stages + consultancy review",
+        fullConstructionFeatures: {
+          structural: "Complete structural design",
+          firmApproval: "Engineering firm approval",
+          securePay: "Secure escrow payment"
+        },
+        expressService: "Express Service",
+        expressServiceDesc: "Only 2 stages (50% + 50%)",
+        expressServiceFeatures: {
+          facades: "Facade / Interior design",
+          drawings: "2D executive drawings",
+          fastDelivery: "Fast delivery"
+        },
+        fullConstructionNote: "💡 Full projects require engineering firm approval before releasing payments"
+      },
+      fields: {
+        title: "Project Title *",
+        titlePlaceholder: "Example: 150 sqm apartment design",
+        description: "Project Description *",
+        descriptionPlaceholder: "Explain your project details and requirements...",
+        category: "Project Category *",
+        categoryPlaceholder: "Select category",
+        budgetFrom: "Budget From (SAR)",
+        budgetTo: "Budget To (SAR)",
+        location: "Project Location",
+        locationPlaceholder: "Example: Riyadh, Al Nakhil District",
+        deadline: "Expected Deadline",
+        attachments: "Attachments (images, plans, files)",
+        attachmentsHint: "Click to upload files",
+        acceptedFormats: "Images, PDF, DWG"
+      },
+      milestones: {
+        sixStages: "Six Stages (Automatic)",
+        autoGenerated: "✓ Stages will be created automatically when publishing the project",
+        optional: "Define Project Milestones (Optional)",
+        defaultStages: "Default: 2 stages (50% + 50%)",
+        useDefault: "Or use the default 2 stages (50% + 50%)",
+        addMilestones: "Add Milestones",
+        hideMilestones: "Hide Milestones",
+        stageNumber: "Stage {number}",
+        stageTitle: "Stage Title",
+        stageDesc: "Stage description and required deliverables",
+        percentage: "Percentage of Amount %",
+        durationDays: "Duration in Days",
+        addNewStage: "+ Add New Stage",
+        totalPercentage: "Total Percentage: {total}%",
+        mustBe100: "(Must equal 100%)",
+        stages: {
+          contract: "Contract Signing",
+          architectural: "Architectural Plan",
+          development: "Design Development",
+          permit: "Building Permit (Balady)",
+          executive: "Executive Plans",
+          final: "Final Delivery"
+        }
+      },
+      publish: "Publish Project",
+      publishing: "Publishing..."
+    },
+    projectDetails: {
+      notFound: "Project Not Found",
+      backToProjects: "Back to Projects",
+      submitProposal: "Submit Proposal",
+      proposalSubmitted: "Your proposal has been submitted",
+      rateProject: "Rate Project",
+      rated: "Rated ({rating}/5)",
+      proposalDialog: {
+        title: "Submit a Proposal for the Project",
+        price: "Proposed Price (SAR)",
+        pricePlaceholder: "Enter price",
+        deliveryDays: "Delivery Time (in days)",
+        daysPlaceholder: "Number of days",
+        coverLetter: "Cover Letter",
+        coverLetterPlaceholder: "Explain why you're the best fit for this project...",
+        attachments: "Attachments (portfolio, documents)",
+        addFiles: "Add supporting files",
+        submit: "Submit Proposal",
+        submitting: "Submitting..."
+      },
+      reviewDialog: {
+        title: "Rate Your Experience with the Engineer",
+        overallRating: "Overall Rating",
+        quality: "Quality",
+        communication: "Communication",
+        delivery: "Delivery",
+        comment: "Your Comment",
+        commentPlaceholder: "Share your experience with the engineer...",
+        submit: "Submit Review",
+        submitting: "Submitting..."
+      },
+      sections: {
+        description: "Project Description",
+        attachments: "Attachments",
+        proposals: "Submitted Proposals",
+        proposalsCount: "{count} proposal",
+        noProposals: "No proposals yet",
+        projectDetails: "Project Details",
+        budget: "Budget",
+        location: "Location",
+        deadline: "Deadline",
+        publishDate: "Publish Date",
+        kanbanBoard: "Project Board",
+        kanbanBoardDesc: "Manage tasks and progress",
+        contract: "Legal Contract",
+        contractDesc: "Create an official contract for the project"
+      },
+      proposalStatus: {
+        accepted: "Accepted",
+        rejected: "Rejected",
+        pending: "Under Review"
+      },
+      actions: {
+        contact: "Contact",
+        acceptProposal: "Accept Proposal",
+        attachments: "Attachments ({count})"
+      }
     }
   }
 };
