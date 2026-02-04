@@ -19,38 +19,50 @@ export const translations = {
     },
     home: {
       hero: {
-        title: "اصنع منزل أحلامك مع",
-        titleHighlight: "بيتلي",
-        subtitle: "منصة احترافية تربط بين أصحاب المشاريع والمهندسين المعماريين والمصممين. نوفر لك تجربة سلسة لإنجاز مشاريعك بجودة عالية.",
-        searchPlaceholder: "ابحث عن مهندس أو خدمة...",
-        search: "بحث",
+        badge: "منصة التصميم الأولى في المنطقة",
+        title: "حوّل منزلك إلى",
+        titleHighlight: "تحفة فنية",
+        subtitle: "سواء كنت صاحب منزل، مستثمر عقاري، أو مهندس محترف - بيتلي هي منصتك الموثوقة لإنجاز مشاريعك بجودة واحترافية.",
+        searchPlaceholder: "ابحث عن مصمم أو تخصص...",
+        searchButton: "ابحث الآن",
         stats: {
-          engineers: "مهندس محترف",
+          engineers: "مهندس ومصمم",
           projects: "مشروع مكتمل",
-          clients: "عميل راضٍ"
+          satisfaction: "رضا العملاء",
+          support: "دعم فني"
         }
       },
       categories: {
-        title: "استكشف الخدمات",
-        subtitle: "اختر التخصص المناسب لمشروعك"
+        title: "اكتشف التخصصات",
+        subtitle: "مجموعة متنوعة من المتخصصين في مختلف مجالات التصميم والهندسة",
+        interior: "تصميم داخلي",
+        architecture: "تصميم معماري",
+        civil: "هندسة مدنية",
+        drafting: "رسم هندسي",
+        executive: "رسم تنفيذي",
+        decor: "ديكور وإكسسوارات",
+        specialist: "متخصص"
       },
       featuredEngineers: {
         title: "مهندسون مميزون",
-        subtitle: "تعرف على أفضل المحترفين في المنصة",
+        subtitle: "أفضل المصممين والمهندسين المعتمدين",
         viewAll: "عرض الكل",
         verified: "موثّق",
         rating: "التقييم",
         projects: "مشروع",
+        noEngineers: "لا يوجد مهندسين حالياً",
         viewProfile: "عرض الملف"
       },
       portfolio: {
-        title: "معرض الأعمال",
-        subtitle: "استلهم من أعمال سابقة نفذها مهندسونا"
+        title: "معرض الأعمال المميزة",
+        subtitle: "استلهم من أفضل التصاميم والأعمال المنفذة",
+        exploreMore: "استكشف المزيد",
+        noPortfolios: "لا توجد أعمال حالياً"
       },
       cta: {
-        title: "جاهز لبدء مشروعك؟",
-        subtitle: "انضم إلى آلاف العملاء الراضين واحصل على تصميم أحلامك",
-        startProject: "ابدأ مشروعك الآن"
+        title: "انضم إلى بيتلي اليوم",
+        subtitle: "سواء كنت تبحث عن تصميم منزلك، أو مهندس تريد عرض خدماتك، أو شركة استشارية ترغب في تقديم خدماتك - بيتلي هي منصتك المثالية.",
+        joinButton: "انضم لـ بيتلي"
       }
     },
     footer: {
@@ -103,38 +115,50 @@ export const translations = {
     },
     home: {
       hero: {
-        title: "Build Your Dream Home with",
-        titleHighlight: "Bytly",
-        subtitle: "A professional platform connecting project owners with architects and designers. We provide you with a seamless experience to complete your projects with high quality.",
-        searchPlaceholder: "Search for an engineer or service...",
-        search: "Search",
+        badge: "The Leading Design Platform in the Region",
+        title: "Transform Your Home into",
+        titleHighlight: "A Masterpiece",
+        subtitle: "Whether you're a homeowner, real estate investor, or professional engineer - Bytly is your trusted platform to complete your projects with quality and professionalism.",
+        searchPlaceholder: "Search for designer or specialization...",
+        searchButton: "Search Now",
         stats: {
-          engineers: "Professional Engineers",
+          engineers: "Engineers & Designers",
           projects: "Completed Projects",
-          clients: "Satisfied Clients"
+          satisfaction: "Client Satisfaction",
+          support: "Technical Support"
         }
       },
       categories: {
-        title: "Explore Services",
-        subtitle: "Choose the right specialization for your project"
+        title: "Discover Specializations",
+        subtitle: "A diverse range of specialists in various design and engineering fields",
+        interior: "Interior Design",
+        architecture: "Architectural Design",
+        civil: "Civil Engineering",
+        drafting: "Engineering Drafting",
+        executive: "Executive Drawing",
+        decor: "Decor & Accessories",
+        specialist: "Specialist"
       },
       featuredEngineers: {
         title: "Featured Engineers",
-        subtitle: "Meet the best professionals on the platform",
+        subtitle: "The best certified designers and engineers",
         viewAll: "View All",
         verified: "Verified",
         rating: "Rating",
         projects: "Projects",
+        noEngineers: "No engineers currently available",
         viewProfile: "View Profile"
       },
       portfolio: {
-        title: "Portfolio Gallery",
-        subtitle: "Get inspired by previous works executed by our engineers"
+        title: "Featured Portfolio Gallery",
+        subtitle: "Get inspired by the best designs and executed works",
+        exploreMore: "Explore More",
+        noPortfolios: "No portfolios currently available"
       },
       cta: {
-        title: "Ready to Start Your Project?",
-        subtitle: "Join thousands of satisfied clients and get your dream design",
-        startProject: "Start Your Project Now"
+        title: "Join Bytly Today",
+        subtitle: "Whether you're looking to design your home, an engineer wanting to showcase your services, or a consulting firm wanting to provide your services - Bytly is your ideal platform.",
+        joinButton: "Join Bytly"
       }
     },
     footer: {

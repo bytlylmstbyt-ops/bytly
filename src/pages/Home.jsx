@@ -16,8 +16,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import WelcomeSlides from "@/components/onboarding/WelcomeSlides";
 import CorePillarsSection from "@/components/home/CorePillarsSection";
 import HowItWorksSection from "@/components/home/HowItWorksSection";
+import { useLanguage } from "@/components/i18n/LanguageContext";
 
 export default function Home() {
+  const { t } = useLanguage();
   const [engineers, setEngineers] = useState([]);
   const [portfolios, setPortfolios] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -67,19 +69,19 @@ export default function Home() {
   };
 
   const categories = [
-    { icon: Palette, title: "تصميم داخلي", count: "500+", color: "from-rose-500 to-orange-500" },
-    { icon: Building2, title: "تصميم معماري", count: "300+", color: "from-blue-500 to-cyan-500" },
-    { icon: Building2, title: "هندسة مدنية", count: "250+", color: "from-gray-600 to-slate-700" },
-    { icon: PenTool, title: "رسم هندسي", count: "200+", color: "from-violet-500 to-purple-500" },
-    { icon: Ruler, title: "رسم تنفيذي", count: "150+", color: "from-emerald-500 to-teal-500" },
-    { icon: Sparkles, title: "ديكور وإكسسوارات", count: "400+", color: "from-amber-500 to-yellow-500" },
+    { icon: Palette, title: t('home.categories.interior'), count: "500+", color: "from-rose-500 to-orange-500" },
+    { icon: Building2, title: t('home.categories.architecture'), count: "300+", color: "from-blue-500 to-cyan-500" },
+    { icon: Building2, title: t('home.categories.civil'), count: "250+", color: "from-gray-600 to-slate-700" },
+    { icon: PenTool, title: t('home.categories.drafting'), count: "200+", color: "from-violet-500 to-purple-500" },
+    { icon: Ruler, title: t('home.categories.executive'), count: "150+", color: "from-emerald-500 to-teal-500" },
+    { icon: Sparkles, title: t('home.categories.decor'), count: "400+", color: "from-amber-500 to-yellow-500" },
   ];
 
   const stats = [
-    { value: "1000+", label: "مهندس ومصمم" },
-    { value: "5000+", label: "مشروع مكتمل" },
-    { value: "98%", label: "رضا العملاء" },
-    { value: "24/7", label: "دعم فني" },
+    { value: "1000+", label: t('home.hero.stats.engineers') },
+    { value: "5000+", label: t('home.hero.stats.projects') },
+    { value: "98%", label: t('home.hero.stats.satisfaction') },
+    { value: "24/7", label: t('home.hero.stats.support') },
   ];
 
   return (
@@ -114,19 +116,18 @@ export default function Home() {
             >
               <Badge className="bg-white/10 text-white border-white/20 mb-6 px-4 py-2">
                 <Sparkles className="w-4 h-4 ml-2" />
-                منصة التصميم الأولى في المنطقة
+                {t('home.hero.badge')}
               </Badge>
               
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-                حوّل منزلك إلى
+                {t('home.hero.title')}
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#d4a574] to-[#e8c9a8]">
-                  تحفة فنية
+                  {t('home.hero.titleHighlight')}
                 </span>
               </h1>
               
               <p className="text-lg text-slate-300 mb-8 max-w-lg">
-                سواء كنت صاحب منزل، مستثمر عقاري، أو مهندس محترف - 
-                بيتلي هي منصتك الموثوقة لإنجاز مشاريعك بجودة واحترافية.
+                {t('home.hero.subtitle')}
               </p>
 
               {/* Search Box */}
@@ -135,7 +136,7 @@ export default function Home() {
                   <div className="flex-1 relative">
                     <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <Input
-                      placeholder="ابحث عن مصمم أو تخصص..."
+                      placeholder={t('home.hero.searchPlaceholder')}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full pr-12 h-14 bg-white border-0 rounded-xl text-slate-800 placeholder:text-slate-400"
@@ -143,7 +144,7 @@ export default function Home() {
                   </div>
                   <Link to={createPageUrl("Engineers") + (searchQuery ? `?search=${searchQuery}` : "")}>
                     <Button className="h-14 px-8 bg-gradient-to-r from-[#d4a574] to-[#c9a227] text-white rounded-xl hover:opacity-90 w-full sm:w-auto">
-                      ابحث الآن
+                      {t('home.hero.searchButton')}
                       <ArrowLeft className="w-5 h-5 mr-2" />
                     </Button>
                   </Link>
@@ -226,10 +227,10 @@ export default function Home() {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-[#1a1a2e] mb-4">
-              اكتشف التخصصات
+              {t('home.categories.title')}
             </h2>
             <p className="text-slate-600 max-w-2xl mx-auto">
-              مجموعة متنوعة من المتخصصين في مختلف مجالات التصميم والهندسة
+              {t('home.categories.subtitle')}
             </p>
           </motion.div>
 
@@ -249,7 +250,7 @@ export default function Home() {
                         <category.icon className="w-8 h-8 text-white" />
                       </div>
                       <h3 className="font-semibold text-[#1a1a2e] mb-1">{category.title}</h3>
-                      <p className="text-sm text-slate-500">{category.count} متخصص</p>
+                      <p className="text-sm text-slate-500">{category.count} {t('home.categories.specialist')}</p>
                     </CardContent>
                   </Card>
                 </Link>
@@ -270,15 +271,15 @@ export default function Home() {
           >
             <div>
               <h2 className="text-3xl md:text-4xl font-bold text-[#1a1a2e] mb-4">
-                مهندسون مميزون
+                {t('home.featuredEngineers.title')}
               </h2>
               <p className="text-slate-600">
-                أفضل المصممين والمهندسين المعتمدين
+                {t('home.featuredEngineers.subtitle')}
               </p>
             </div>
             <Link to={createPageUrl("Engineers")}>
               <Button variant="outline" className="hidden md:flex items-center gap-2 border-[#d4a574] text-[#d4a574] hover:bg-[#d4a574] hover:text-white">
-                عرض الكل
+                {t('home.featuredEngineers.viewAll')}
                 <ChevronLeft className="w-4 h-4" />
               </Button>
             </Link>
@@ -353,7 +354,7 @@ export default function Home() {
                               <span className="text-slate-400 text-sm">({engineer.total_reviews || 0})</span>
                             </div>
                             <Badge variant="secondary" className="bg-slate-100">
-                              {engineer.completed_projects || 0} مشروع
+                              {engineer.completed_projects || 0} {t('home.featuredEngineers.projects')}
                             </Badge>
                           </div>
                         </div>
@@ -366,7 +367,7 @@ export default function Home() {
           ) : (
             <div className="text-center py-12">
               <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500">لا يوجد مهندسين حالياً</p>
+              <p className="text-slate-500">{t('home.featuredEngineers.noEngineers')}</p>
             </div>
           )}
         </div>
@@ -382,10 +383,10 @@ export default function Home() {
             className="text-center mb-12"
           >
             <h2 className="text-3xl md:text-4xl font-bold text-[#1a1a2e] mb-4">
-              معرض الأعمال المميزة
+              {t('home.portfolio.title')}
             </h2>
             <p className="text-slate-600 max-w-2xl mx-auto">
-              استلهم من أفضل التصاميم والأعمال المنفذة
+              {t('home.portfolio.subtitle')}
             </p>
           </motion.div>
 
@@ -423,14 +424,14 @@ export default function Home() {
           ) : (
             <div className="text-center py-12">
               <Palette className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500">لا توجد أعمال حالياً</p>
+              <p className="text-slate-500">{t('home.portfolio.noPortfolios')}</p>
             </div>
           )}
 
           <div className="text-center mt-8">
             <Link to={createPageUrl("Gallery")}>
               <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white px-8">
-                استكشف المزيد
+                {t('home.portfolio.exploreMore')}
                 <ChevronLeft className="w-4 h-4 mr-2" />
               </Button>
             </Link>
@@ -453,15 +454,14 @@ export default function Home() {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-              انضم إلى بيتلي اليوم
+              {t('home.cta.title')}
             </h2>
             <p className="text-white/90 text-lg mb-8 max-w-2xl mx-auto">
-              سواء كنت تبحث عن تصميم منزلك، أو مهندس تريد عرض خدماتك، 
-              أو شركة استشارية ترغب في تقديم خدماتك - بيتلي هي منصتك المثالية.
+              {t('home.cta.subtitle')}
             </p>
             <Link to={createPageUrl("RegisterChoice")}>
               <Button size="lg" className="bg-white text-[#1a1a2e] hover:bg-white/90 px-8 py-6 text-lg">
-                انضم لـ بيتلي
+                {t('home.cta.joinButton')}
                 <ArrowLeft className="w-5 h-5 mr-2" />
               </Button>
             </Link>
