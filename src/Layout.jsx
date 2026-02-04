@@ -279,8 +279,7 @@ function LayoutContent({ children, currentPageName }) {
                 <Logo size="large" isDark={true} />
               </div>
               <p className="text-slate-300 text-sm leading-relaxed max-w-md">
-                منصة احترافية تجمع مهندسي التصميم الداخلي والمعماريين والرسامين مع أصحاب المشاريع. 
-                نساعدك في العثور على أفضل المصممين لتحويل أحلامك إلى واقع.
+                {t('footer.description')}
               </p>
             </div>
 
