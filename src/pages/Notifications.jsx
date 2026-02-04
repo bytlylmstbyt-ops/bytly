@@ -13,14 +13,19 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import moment from "moment";
 import "moment/locale/ar";
-
-moment.locale("ar");
+import { useLanguage } from "@/components/i18n/LanguageContext";
 
 export default function Notifications() {
+  const { t, language } = useLanguage();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [filter, setFilter] = useState("all");
+
+  // Set moment locale based on current language
+  useEffect(() => {
+    moment.locale(language);
+  }, [language]);
 
   useEffect(() => {
     loadNotifications();
