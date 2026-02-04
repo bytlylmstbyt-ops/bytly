@@ -17,8 +17,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import InvestorClientDashboard from "@/components/client/InvestorClientDashboard";
 import IndividualClientDashboard from "@/components/client/IndividualClientDashboard";
+import { useLanguage } from "@/components/i18n/LanguageContext";
 
 export default function Dashboard() {
+  const { t } = useLanguage();
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [userType, setUserType] = useState(null); // 'engineer' or 'client'
@@ -112,11 +114,11 @@ export default function Dashboard() {
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <Card className="max-w-md w-full mx-4">
           <CardContent className="p-8 text-center">
-            <h2 className="text-xl font-bold text-slate-700 mb-4">لم يتم العثور على حساب</h2>
-            <p className="text-slate-500 mb-6">يرجى إكمال التسجيل أولاً</p>
+            <h2 className="text-xl font-bold text-slate-700 mb-4">{t('dashboard.noAccount.title')}</h2>
+            <p className="text-slate-500 mb-6">{t('dashboard.noAccount.message')}</p>
             <Link to={createPageUrl("RegisterChoice")}>
               <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
-                إنشاء حساب جديد
+                {t('dashboard.noAccount.createAccount')}
               </Button>
             </Link>
           </CardContent>
@@ -155,10 +157,10 @@ export default function Dashboard() {
               </Avatar>
               <div>
                 <h1 className="text-2xl font-bold text-[#1a1a2e]">
-                  مرحباً، {profile.full_name}
+                  {t('dashboard.welcome').replace('{name}', profile.full_name)}
                 </h1>
                 <p className="text-slate-500">
-                  {userType === "engineer" ? profile.specialization : "صاحب مشاريع"}
+                  {userType === "engineer" ? profile.specialization : t('dashboard.specialization')}
                 </p>
               </div>
             </div>
@@ -167,14 +169,14 @@ export default function Dashboard() {
                 <Link to={createPageUrl("AddPortfolio")}>
                   <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
                     <Plus className="w-5 h-5 ml-2" />
-                    إضافة عمل جديد
+                    {t('dashboard.buttons.addNewWork')}
                   </Button>
                 </Link>
               ) : (
                 <Link to={createPageUrl("CreateProject")}>
                   <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
                     <Plus className="w-5 h-5 ml-2" />
-                    مشروع جديد
+                    {t('dashboard.buttons.newProject')}
                   </Button>
                 </Link>
               )}
@@ -182,27 +184,27 @@ export default function Dashboard() {
                 <Link to={createPageUrl("EngineerProjects")}>
                   <Button variant="outline">
                     <Briefcase className="w-5 h-5 ml-2" />
-                    مشاريعي
+                    {t('dashboard.buttons.myProjects')}
                   </Button>
                 </Link>
               )}
               <Link to={createPageUrl("ContractArchive")}>
                 <Button variant="outline">
                   <FileText className="w-5 h-5 ml-2" />
-                  العقود
+                  {t('dashboard.buttons.contracts')}
                 </Button>
               </Link>
               <Link to={createPageUrl("InvoiceManager")}>
                 <Button variant="outline">
                   <DollarSign className="w-5 h-5 ml-2" />
-                  الفواتير
+                  {t('dashboard.buttons.invoices')}
                 </Button>
               </Link>
               {(userType === "client" || isAdmin) && (
                 <Link to={createPageUrl("ContractTemplates")}>
                   <Button variant="outline">
                     <FileText className="w-5 h-5 ml-2" />
-                    القوالب
+                    {t('dashboard.buttons.templates')}
                   </Button>
                 </Link>
               )}
@@ -231,11 +233,11 @@ export default function Dashboard() {
                         <Grid3X3 className="w-6 h-6 text-blue-600" />
                       </div>
                       <Badge variant="secondary" className="bg-blue-50 text-blue-700">
-                        أعمالي
+                        {t('dashboard.stats.myWorks')}
                       </Badge>
                     </div>
                     <p className="text-3xl font-bold text-[#1a1a2e]">{stats.portfolioCount}</p>
-                    <p className="text-sm text-slate-500">عمل في المعرض</p>
+                    <p className="text-sm text-slate-500">{t('dashboard.stats.worksInGallery')}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -252,11 +254,11 @@ export default function Dashboard() {
                         <CheckCircle className="w-6 h-6 text-green-600" />
                       </div>
                       <Badge variant="secondary" className="bg-green-50 text-green-700">
-                        مكتمل
+                        {t('dashboard.stats.completed')}
                       </Badge>
                     </div>
                     <p className="text-3xl font-bold text-[#1a1a2e]">{stats.completedProjects}</p>
-                    <p className="text-sm text-slate-500">مشروع مكتمل</p>
+                    <p className="text-sm text-slate-500">{t('dashboard.stats.completedProjects')}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -273,11 +275,11 @@ export default function Dashboard() {
                         <Star className="w-6 h-6 text-amber-600" />
                       </div>
                       <Badge variant="secondary" className="bg-amber-50 text-amber-700">
-                        التقييم
+                        {t('dashboard.stats.rating')}
                       </Badge>
                     </div>
                     <p className="text-3xl font-bold text-[#1a1a2e]">{stats.rating?.toFixed(1)}</p>
-                    <p className="text-sm text-slate-500">{stats.reviewsCount} تقييم</p>
+                    <p className="text-sm text-slate-500">{t('dashboard.stats.reviews').replace('{count}', stats.reviewsCount)}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -294,11 +296,11 @@ export default function Dashboard() {
                         <Wallet className="w-6 h-6 text-purple-600" />
                       </div>
                       <Badge variant="secondary" className="bg-purple-50 text-purple-700">
-                        المحفظة
+                        {t('dashboard.stats.wallet')}
                       </Badge>
                     </div>
                     <p className="text-3xl font-bold text-[#1a1a2e]">{stats.walletBalance?.toLocaleString()}</p>
-                    <p className="text-sm text-slate-500">ر.س</p>
+                    <p className="text-sm text-slate-500">{t('dashboard.stats.sar')}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -318,7 +320,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <p className="text-3xl font-bold text-[#1a1a2e]">{stats.totalProjects}</p>
-                    <p className="text-sm text-slate-500">إجمالي المشاريع</p>
+                    <p className="text-sm text-slate-500">{t('dashboard.stats.totalProjects')}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -336,7 +338,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <p className="text-3xl font-bold text-[#1a1a2e]">{stats.openProjects}</p>
-                    <p className="text-sm text-slate-500">مشاريع مفتوحة</p>
+                    <p className="text-sm text-slate-500">{t('dashboard.stats.openProjects')}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -354,7 +356,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <p className="text-3xl font-bold text-[#1a1a2e]">{stats.inProgressProjects}</p>
-                    <p className="text-sm text-slate-500">قيد التنفيذ</p>
+                    <p className="text-sm text-slate-500">{t('dashboard.stats.inProgress')}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -372,7 +374,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     <p className="text-3xl font-bold text-[#1a1a2e]">{stats.walletBalance?.toLocaleString()}</p>
-                    <p className="text-sm text-slate-500">ر.س في المحفظة</p>
+                    <p className="text-sm text-slate-500">{t('dashboard.stats.sarInWallet')}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -392,8 +394,8 @@ export default function Dashboard() {
                   <Clock className="w-6 h-6 text-amber-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-amber-800">حسابك قيد المراجعة</h3>
-                  <p className="text-sm text-amber-600">سيتم مراجعة حسابك والموافقة عليه خلال 24-48 ساعة</p>
+                  <h3 className="font-semibold text-amber-800">{t('dashboard.accountStatus.underReview')}</h3>
+                  <p className="text-sm text-amber-600">{t('dashboard.accountStatus.reviewMessage')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -408,54 +410,54 @@ export default function Dashboard() {
           >
             <Card className="border-0 shadow-lg mb-8 overflow-hidden">
               <div className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] p-6 text-white">
-                <h3 className="text-xl font-bold mb-2">ترقية حسابك</h3>
-                <p className="text-white/80">احصل على مزايا إضافية وظهور أفضل</p>
+                <h3 className="text-xl font-bold mb-2">{t('dashboard.subscription.upgrade')}</h3>
+                <p className="text-white/80">{t('dashboard.subscription.upgradeMessage')}</p>
               </div>
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="border rounded-xl p-6 hover:border-[#d4a574] transition-colors cursor-pointer">
-                    <Badge className="bg-blue-100 text-blue-700 mb-4">شهري</Badge>
-                    <p className="text-3xl font-bold text-[#1a1a2e]">99 <span className="text-sm font-normal">ر.س/شهر</span></p>
+                    <Badge className="bg-blue-100 text-blue-700 mb-4">{t('dashboard.subscription.monthly')}</Badge>
+                    <p className="text-3xl font-bold text-[#1a1a2e]">99 <span className="text-sm font-normal">{t('dashboard.subscription.perMonth')}</span></p>
                     <ul className="mt-4 space-y-2 text-sm text-slate-600">
                       <li className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-green-500" />
-                        ظهور في المقدمة
+                        {t('dashboard.subscription.features.topPlacement')}
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-green-500" />
-                        شارة مميز
+                        {t('dashboard.subscription.features.badge')}
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-green-500" />
-                        تقديم عروض غير محدودة
+                        {t('dashboard.subscription.features.unlimitedProposals')}
                       </li>
                     </ul>
                     <Link to={createPageUrl("Subscription") + "?plan=monthly"}>
-                      <Button className="w-full mt-4" variant="outline">اختر الخطة</Button>
+                      <Button className="w-full mt-4" variant="outline">{t('dashboard.subscription.choosePlan')}</Button>
                     </Link>
                   </div>
                   <div className="border-2 border-[#d4a574] rounded-xl p-6 relative">
-                    <Badge className="absolute -top-3 right-4 bg-[#d4a574] text-white">الأفضل قيمة</Badge>
-                    <Badge className="bg-amber-100 text-amber-700 mb-4">سنوي</Badge>
-                    <p className="text-3xl font-bold text-[#1a1a2e]">799 <span className="text-sm font-normal">ر.س/سنة</span></p>
-                    <p className="text-sm text-green-600">وفر 389 ر.س</p>
+                    <Badge className="absolute -top-3 right-4 bg-[#d4a574] text-white">{t('dashboard.subscription.bestValue')}</Badge>
+                    <Badge className="bg-amber-100 text-amber-700 mb-4">{t('dashboard.subscription.yearly')}</Badge>
+                    <p className="text-3xl font-bold text-[#1a1a2e]">799 <span className="text-sm font-normal">{t('dashboard.subscription.perYear')}</span></p>
+                    <p className="text-sm text-green-600">{t('dashboard.subscription.save').replace('{amount}', '389')}</p>
                     <ul className="mt-4 space-y-2 text-sm text-slate-600">
                       <li className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-green-500" />
-                        جميع مزايا الشهري
+                        {t('dashboard.subscription.features.allMonthly')}
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-green-500" />
-                        أولوية في نتائج البحث
+                        {t('dashboard.subscription.features.searchPriority')}
                       </li>
                       <li className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 text-green-500" />
-                        دعم فني مخصص
+                        {t('dashboard.subscription.features.dedicatedSupport')}
                       </li>
                     </ul>
                     <Link to={createPageUrl("Subscription") + "?plan=yearly"}>
                       <Button className="w-full mt-4 bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
-                        اختر الخطة
+                        {t('dashboard.subscription.choosePlan')}
                       </Button>
                     </Link>
                   </div>
@@ -476,7 +478,7 @@ export default function Dashboard() {
               <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="w-6 h-6 text-blue-600" />
-                  لوحة الإدارة - روابط سريعة
+                  {t('dashboard.adminPanel.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
@@ -487,8 +489,8 @@ export default function Dashboard() {
                         <div className="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-4">
                           <FileCheck className="w-8 h-8 text-blue-600" />
                         </div>
-                        <h3 className="font-bold text-lg mb-2">طلبات السحب</h3>
-                        <p className="text-sm text-slate-600">مراجعة واعتماد جميع طلبات السحب</p>
+                        <h3 className="font-bold text-lg mb-2">{t('dashboard.adminPanel.withdrawalRequests')}</h3>
+                        <p className="text-sm text-slate-600">{t('dashboard.adminPanel.withdrawalDesc')}</p>
                       </CardContent>
                     </Card>
                   </Link>
@@ -499,8 +501,8 @@ export default function Dashboard() {
                         <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
                           <Award className="w-8 h-8 text-green-600" />
                         </div>
-                        <h3 className="font-bold text-lg mb-2">شهادات الجودة</h3>
-                        <p className="text-sm text-slate-600">جميع المشاريع المعتمدة</p>
+                        <h3 className="font-bold text-lg mb-2">{t('dashboard.adminPanel.certifications')}</h3>
+                        <p className="text-sm text-slate-600">{t('dashboard.adminPanel.certificationsDesc')}</p>
                       </CardContent>
                     </Card>
                   </Link>
@@ -511,8 +513,8 @@ export default function Dashboard() {
                         <div className="w-16 h-16 mx-auto bg-purple-100 rounded-full flex items-center justify-center mb-4">
                           <Wallet className="w-8 h-8 text-purple-600" />
                         </div>
-                        <h3 className="font-bold text-lg mb-2">إدارة المحافظ</h3>
-                        <p className="text-sm text-slate-600">مراجعة طلبات السحب</p>
+                        <h3 className="font-bold text-lg mb-2">{t('dashboard.adminPanel.walletManagement')}</h3>
+                        <p className="text-sm text-slate-600">{t('dashboard.adminPanel.walletManagementDesc')}</p>
                       </CardContent>
                     </Card>
                   </Link>
@@ -525,8 +527,8 @@ export default function Dashboard() {
                         <div className="w-16 h-16 mx-auto bg-amber-100 rounded-full flex items-center justify-center mb-4">
                           <BarChart3 className="w-8 h-8 text-amber-600" />
                         </div>
-                        <h3 className="font-bold text-lg mb-2">التقارير والإحصائيات</h3>
-                        <p className="text-sm text-slate-600">تقارير شاملة عن أداء المنصة</p>
+                        <h3 className="font-bold text-lg mb-2">{t('dashboard.adminPanel.reportsAndStats')}</h3>
+                        <p className="text-sm text-slate-600">{t('dashboard.adminPanel.reportsDesc')}</p>
                       </CardContent>
                     </Card>
                   </Link>
@@ -534,7 +536,7 @@ export default function Dashboard() {
 
                 {/* Management Section */}
                 <div className="mt-8">
-                  <h2 className="text-xl font-bold text-[#1a1a2e] mb-4">إدارة البيانات</h2>
+                  <h2 className="text-xl font-bold text-[#1a1a2e] mb-4">{t('dashboard.adminPanel.dataManagement')}</h2>
                   <div className="grid md:grid-cols-3 gap-4">
                     <Link to={createPageUrl("AdminCategories")}>
                       <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-slate-200 hover:border-slate-400">
@@ -542,8 +544,8 @@ export default function Dashboard() {
                           <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center mb-4">
                             <Settings className="w-8 h-8 text-slate-600" />
                           </div>
-                          <h3 className="font-bold text-lg mb-2">إدارة التصنيفات</h3>
-                          <p className="text-sm text-slate-600">تخصيص أنواع المشاريع</p>
+                          <h3 className="font-bold text-lg mb-2">{t('dashboard.adminPanel.categories')}</h3>
+                          <p className="text-sm text-slate-600">{t('dashboard.adminPanel.categoriesDesc')}</p>
                         </CardContent>
                       </Card>
                     </Link>
@@ -554,8 +556,8 @@ export default function Dashboard() {
                           <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center mb-4">
                             <Users className="w-8 h-8 text-slate-600" />
                           </div>
-                          <h3 className="font-bold text-lg mb-2">إدارة العملاء</h3>
-                          <p className="text-sm text-slate-600">عرض وتعديل حسابات العملاء</p>
+                          <h3 className="font-bold text-lg mb-2">{t('dashboard.adminPanel.clientsManagement')}</h3>
+                          <p className="text-sm text-slate-600">{t('dashboard.adminPanel.clientsManagementDesc')}</p>
                         </CardContent>
                       </Card>
                     </Link>
@@ -566,8 +568,8 @@ export default function Dashboard() {
                           <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center mb-4">
                             <Award className="w-8 h-8 text-slate-600" />
                           </div>
-                          <h3 className="font-bold text-lg mb-2">إدارة المهندسين</h3>
-                          <p className="text-sm text-slate-600">قبول وتعديل حسابات المهندسين</p>
+                          <h3 className="font-bold text-lg mb-2">{t('dashboard.adminPanel.engineersManagement')}</h3>
+                          <p className="text-sm text-slate-600">{t('dashboard.adminPanel.engineersManagementDesc')}</p>
                         </CardContent>
                       </Card>
                     </Link>
@@ -589,7 +591,7 @@ export default function Dashboard() {
               <CardHeader className="bg-gradient-to-r from-amber-50 to-green-50">
                 <CardTitle className="flex items-center gap-2">
                   <Award className="w-6 h-6 text-[#d4a574]" />
-                  المشاريع المعتمدة - لوحة الإدارة
+                  {t('dashboard.adminPanel.approvedProjects')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
@@ -604,19 +606,19 @@ export default function Dashboard() {
                         <div className="flex-1">
                           <p className="font-bold text-[#1a1a2e]">{project.title}</p>
                           <p className="text-sm text-slate-600 mt-1">
-                            العميل: {project.client_id?.slice(0, 8)}... | المبلغ: {project.escrow_amount?.toLocaleString()} ر.س
+                            {t('dashboard.adminPanel.client')}: {project.client_id?.slice(0, 8)}... | {t('dashboard.adminPanel.amount')}: {project.escrow_amount?.toLocaleString()} {t('dashboard.stats.sar')}
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
                           <Badge className="bg-green-100 text-green-700">
-                            معتمد فنياً
+                            {t('dashboard.adminPanel.technicallyApproved')}
                           </Badge>
                           <Button 
                             size="sm" 
                             className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
                           >
                             <Award className="w-4 h-4 ml-2" />
-                            عرض الشهادة
+                            {t('dashboard.adminPanel.viewCertificate')}
                           </Button>
                         </div>
                       </div>
@@ -627,7 +629,7 @@ export default function Dashboard() {
                   <div className="text-center mt-4">
                     <Link to={createPageUrl("Projects") + "?status=technical_approved"}>
                       <Button variant="outline" className="text-[#d4a574]">
-                        عرض جميع المشاريع المعتمدة ({approvedProjects.length})
+                        {t('dashboard.adminPanel.viewAllApproved').replace('{count}', approvedProjects.length)}
                       </Button>
                     </Link>
                   </div>
@@ -645,7 +647,7 @@ export default function Dashboard() {
           <Card className="border-0 shadow-lg">
             <CardHeader>
               <CardTitle>
-                {userType === "engineer" ? "عروضي الأخيرة" : "مشاريعي الأخيرة"}
+                {userType === "engineer" ? t('dashboard.recentActivity.engineerProposals') : t('dashboard.recentActivity.clientProjects')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -655,16 +657,16 @@ export default function Dashboard() {
                     {recentProposals.map(proposal => (
                       <div key={proposal.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
                         <div>
-                          <p className="font-medium text-[#1a1a2e]">عرض #{proposal.id?.slice(-6)}</p>
-                          <p className="text-sm text-slate-500">{proposal.price?.toLocaleString()} ر.س</p>
+                          <p className="font-medium text-[#1a1a2e]">{t('dashboard.recentActivity.proposalId').replace('{id}', proposal.id?.slice(-6))}</p>
+                          <p className="text-sm text-slate-500">{proposal.price?.toLocaleString()} {t('dashboard.stats.sar')}</p>
                         </div>
                         <Badge className={
                           proposal.status === "accepted" ? "bg-green-100 text-green-700" :
                           proposal.status === "rejected" ? "bg-red-100 text-red-700" :
                           "bg-amber-100 text-amber-700"
                         }>
-                          {proposal.status === "accepted" ? "مقبول" :
-                           proposal.status === "rejected" ? "مرفوض" : "قيد المراجعة"}
+                          {proposal.status === "accepted" ? t('dashboard.recentActivity.accepted') :
+                           proposal.status === "rejected" ? t('dashboard.recentActivity.rejected') : t('dashboard.recentActivity.underReview')}
                         </Badge>
                       </div>
                     ))}
@@ -672,10 +674,10 @@ export default function Dashboard() {
                 ) : (
                   <div className="text-center py-8 text-slate-500">
                     <FileText className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                    <p>لم تقدم أي عروض بعد</p>
+                    <p>{t('dashboard.recentActivity.noProposals')}</p>
                     <Link to={createPageUrl("Projects")}>
                       <Button variant="link" className="text-[#d4a574]">
-                        تصفح المشاريع المتاحة
+                        {t('dashboard.recentActivity.browseProjects')}
                         <ArrowLeft className="w-4 h-4 mr-2" />
                       </Button>
                     </Link>
@@ -689,7 +691,7 @@ export default function Dashboard() {
                         <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
                           <div>
                             <p className="font-medium text-[#1a1a2e]">{project.title}</p>
-                            <p className="text-sm text-slate-500">{project.total_proposals || 0} عرض</p>
+                            <p className="text-sm text-slate-500">{t('dashboard.recentActivity.proposals').replace('{count}', project.total_proposals || 0)}</p>
                           </div>
                           <Badge className={
                             project.status === "completed" ? "bg-green-100 text-green-700" :
@@ -697,9 +699,9 @@ export default function Dashboard() {
                             project.status === "cancelled" ? "bg-red-100 text-red-700" :
                             "bg-amber-100 text-amber-700"
                           }>
-                            {project.status === "completed" ? "مكتمل" :
-                             project.status === "in_progress" ? "قيد التنفيذ" :
-                             project.status === "cancelled" ? "ملغي" : "مفتوح"}
+                            {project.status === "completed" ? t('dashboard.recentActivity.completed') :
+                             project.status === "in_progress" ? t('dashboard.recentActivity.inProgress') :
+                             project.status === "cancelled" ? t('dashboard.recentActivity.cancelled') : t('dashboard.recentActivity.open')}
                           </Badge>
                         </div>
                       </Link>
@@ -708,10 +710,10 @@ export default function Dashboard() {
                 ) : (
                   <div className="text-center py-8 text-slate-500">
                     <Briefcase className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                    <p>لم تضف أي مشاريع بعد</p>
+                    <p>{t('dashboard.recentActivity.noProjects')}</p>
                     <Link to={createPageUrl("CreateProject")}>
                       <Button variant="link" className="text-[#d4a574]">
-                        أضف مشروعك الأول
+                        {t('dashboard.recentActivity.addFirstProject')}
                         <ArrowLeft className="w-4 h-4 mr-2" />
                       </Button>
                     </Link>
