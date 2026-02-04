@@ -373,6 +373,101 @@ export const translations = {
         muteNotifications: "كتم الإشعارات",
         deleteConversation: "حذف المحادثة"
       }
+    },
+    dashboard: {
+      welcome: "مرحباً، {name}",
+      specialization: "صاحب مشاريع",
+      buttons: {
+        addNewWork: "إضافة عمل جديد",
+        newProject: "مشروع جديد",
+        myProjects: "مشاريعي",
+        contracts: "العقود",
+        invoices: "الفواتير",
+        templates: "القوالب"
+      },
+      stats: {
+        myWorks: "أعمالي",
+        worksInGallery: "عمل في المعرض",
+        completed: "مكتمل",
+        completedProjects: "مشروع مكتمل",
+        rating: "التقييم",
+        reviews: "{count} تقييم",
+        wallet: "المحفظة",
+        sar: "ر.س",
+        totalProjects: "إجمالي المشاريع",
+        openProjects: "مشاريع مفتوحة",
+        inProgress: "قيد التنفيذ",
+        sarInWallet: "ر.س في المحفظة"
+      },
+      accountStatus: {
+        underReview: "حسابك قيد المراجعة",
+        reviewMessage: "سيتم مراجعة حسابك والموافقة عليه خلال 24-48 ساعة"
+      },
+      subscription: {
+        upgrade: "ترقية حسابك",
+        upgradeMessage: "احصل على مزايا إضافية وظهور أفضل",
+        monthly: "شهري",
+        yearly: "سنوي",
+        bestValue: "الأفضل قيمة",
+        perMonth: "ر.س/شهر",
+        perYear: "ر.س/سنة",
+        save: "وفر {amount} ر.س",
+        choosePlan: "اختر الخطة",
+        features: {
+          topPlacement: "ظهور في المقدمة",
+          badge: "شارة مميز",
+          unlimitedProposals: "تقديم عروض غير محدودة",
+          allMonthly: "جميع مزايا الشهري",
+          searchPriority: "أولوية في نتائج البحث",
+          dedicatedSupport: "دعم فني مخصص"
+        }
+      },
+      adminPanel: {
+        title: "لوحة الإدارة - روابط سريعة",
+        withdrawalRequests: "طلبات السحب",
+        withdrawalDesc: "مراجعة واعتماد جميع طلبات السحب",
+        certifications: "شهادات الجودة",
+        certificationsDesc: "جميع المشاريع المعتمدة",
+        walletManagement: "إدارة المحافظ",
+        walletManagementDesc: "مراجعة طلبات السحب",
+        reportsAndStats: "التقارير والإحصائيات",
+        reportsDesc: "تقارير شاملة عن أداء المنصة",
+        dataManagement: "إدارة البيانات",
+        categories: "إدارة التصنيفات",
+        categoriesDesc: "تخصيص أنواع المشاريع",
+        clientsManagement: "إدارة العملاء",
+        clientsManagementDesc: "عرض وتعديل حسابات العملاء",
+        engineersManagement: "إدارة المهندسين",
+        engineersManagementDesc: "قبول وتعديل حسابات المهندسين",
+        approvedProjects: "المشاريع المعتمدة - لوحة الإدارة",
+        technicallyApproved: "معتمد فنياً",
+        viewCertificate: "عرض الشهادة",
+        client: "العميل",
+        amount: "المبلغ",
+        viewAllApproved: "عرض جميع المشاريع المعتمدة ({count})"
+      },
+      recentActivity: {
+        engineerProposals: "عروضي الأخيرة",
+        clientProjects: "مشاريعي الأخيرة",
+        proposalId: "عرض #{id}",
+        accepted: "مقبول",
+        rejected: "مرفوض",
+        underReview: "قيد المراجعة",
+        noProposals: "لم تقدم أي عروض بعد",
+        browseProjects: "تصفح المشاريع المتاحة",
+        proposals: "{count} عرض",
+        completed: "مكتمل",
+        inProgress: "قيد التنفيذ",
+        cancelled: "ملغي",
+        open: "مفتوح",
+        noProjects: "لم تضف أي مشاريع بعد",
+        addFirstProject: "أضف مشروعك الأول"
+      },
+      noAccount: {
+        title: "لم يتم العثور على حساب",
+        message: "يرجى إكمال التسجيل أولاً",
+        createAccount: "إنشاء حساب جديد"
+      }
     }
   },
   en: {
