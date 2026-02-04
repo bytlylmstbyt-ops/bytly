@@ -154,9 +154,9 @@ export default function Notifications() {
         >
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e]">الإشعارات</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e]">{t('notifications.title')}</h1>
               {unreadCount > 0 && (
-                <p className="text-slate-500">{unreadCount} إشعار جديد</p>
+                <p className="text-slate-500">{t('notifications.unreadCount').replace('{count}', unreadCount)}</p>
               )}
             </div>
             <div className="flex gap-2">
@@ -165,15 +165,15 @@ export default function Notifications() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">الكل</SelectItem>
-                  <SelectItem value="unread">غير مقروء</SelectItem>
-                  <SelectItem value="read">مقروء</SelectItem>
+                  <SelectItem value="all">{t('notifications.filters.all')}</SelectItem>
+                  <SelectItem value="unread">{t('notifications.filters.unread')}</SelectItem>
+                  <SelectItem value="read">{t('notifications.filters.read')}</SelectItem>
                 </SelectContent>
               </Select>
               {unreadCount > 0 && (
                 <Button variant="outline" onClick={markAllAsRead}>
                   <CheckCircle className="w-4 h-4 ml-2" />
-                  تعليم الكل كمقروء
+                  {t('notifications.markAllRead')}
                 </Button>
               )}
             </div>
@@ -211,13 +211,11 @@ export default function Notifications() {
                               <h3 className="font-medium text-[#1a1a2e] flex items-center gap-2 flex-wrap">
                                 {notification.title}
                                 {!notification.is_read && (
-                                  <Badge className="bg-[#d4a574] text-white text-xs">جديد</Badge>
+                                  <Badge className="bg-[#d4a574] text-white text-xs">{t('notifications.new')}</Badge>
                                 )}
                                 {notification.priority && notification.priority !== "medium" && (
                                   <Badge className={`text-xs ${getPriorityColor(notification.priority)}`}>
-                                    {notification.priority === "urgent" ? "عاجل" :
-                                     notification.priority === "high" ? "مهم" :
-                                     notification.priority === "low" ? "منخفض" : ""}
+                                    {t(`notifications.priority.${notification.priority}`)}
                                   </Badge>
                                 )}
                               </h3>
@@ -246,8 +244,8 @@ export default function Notifications() {
               ) : (
                 <div className="text-center py-16">
                   <Bell className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-slate-700 mb-2">لا توجد إشعارات</h3>
-                  <p className="text-slate-500">ستظهر الإشعارات الجديدة هنا</p>
+                  <h3 className="text-lg font-semibold text-slate-700 mb-2">{t('notifications.noNotifications')}</h3>
+                  <p className="text-slate-500">{t('notifications.noNotificationsMessage')}</p>
                 </div>
               )}
             </CardContent>

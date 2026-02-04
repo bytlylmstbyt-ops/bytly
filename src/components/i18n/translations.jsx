@@ -337,6 +337,25 @@ export const translations = {
       sqm: "م²",
       sales: "مبيعة",
       featured: "مميز"
+    },
+    notifications: {
+      title: "الإشعارات",
+      unreadCount: "{count} إشعار جديد",
+      filters: {
+        all: "الكل",
+        unread: "غير مقروء",
+        read: "مقروء"
+      },
+      markAllRead: "تعليم الكل كمقروء",
+      new: "جديد",
+      priority: {
+        urgent: "عاجل",
+        high: "مهم",
+        medium: "متوسط",
+        low: "منخفض"
+      },
+      noNotifications: "لا توجد إشعارات",
+      noNotificationsMessage: "ستظهر الإشعارات الجديدة هنا"
     }
   },
   en: {
@@ -677,6 +696,25 @@ export const translations = {
       sqm: "sqm",
       sales: "sales",
       featured: "Featured"
+    },
+    notifications: {
+      title: "Notifications",
+      unreadCount: "{count} new notification",
+      filters: {
+        all: "All",
+        unread: "Unread",
+        read: "Read"
+      },
+      markAllRead: "Mark all as read",
+      new: "New",
+      priority: {
+        urgent: "Urgent",
+        high: "Important",
+        medium: "Medium",
+        low: "Low"
+      },
+      noNotifications: "No notifications",
+      noNotificationsMessage: "New notifications will appear here"
     }
   }
 };
