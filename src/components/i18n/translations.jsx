@@ -844,6 +844,101 @@ export const translations = {
         muteNotifications: "Mute notifications",
         deleteConversation: "Delete conversation"
       }
+    },
+    dashboard: {
+      welcome: "Welcome, {name}",
+      specialization: "Project Owner",
+      buttons: {
+        addNewWork: "Add New Work",
+        newProject: "New Project",
+        myProjects: "My Projects",
+        contracts: "Contracts",
+        invoices: "Invoices",
+        templates: "Templates"
+      },
+      stats: {
+        myWorks: "My Works",
+        worksInGallery: "work in gallery",
+        completed: "Completed",
+        completedProjects: "completed project",
+        rating: "Rating",
+        reviews: "{count} review",
+        wallet: "Wallet",
+        sar: "SAR",
+        totalProjects: "Total Projects",
+        openProjects: "Open Projects",
+        inProgress: "In Progress",
+        sarInWallet: "SAR in wallet"
+      },
+      accountStatus: {
+        underReview: "Your account is under review",
+        reviewMessage: "Your account will be reviewed and approved within 24-48 hours"
+      },
+      subscription: {
+        upgrade: "Upgrade Your Account",
+        upgradeMessage: "Get additional features and better visibility",
+        monthly: "Monthly",
+        yearly: "Yearly",
+        bestValue: "Best Value",
+        perMonth: "SAR/month",
+        perYear: "SAR/year",
+        save: "Save {amount} SAR",
+        choosePlan: "Choose Plan",
+        features: {
+          topPlacement: "Top Placement",
+          badge: "Featured Badge",
+          unlimitedProposals: "Unlimited Proposals",
+          allMonthly: "All Monthly Features",
+          searchPriority: "Search Priority",
+          dedicatedSupport: "Dedicated Support"
+        }
+      },
+      adminPanel: {
+        title: "Admin Panel - Quick Links",
+        withdrawalRequests: "Withdrawal Requests",
+        withdrawalDesc: "Review and approve all withdrawal requests",
+        certifications: "Quality Certifications",
+        certificationsDesc: "All approved projects",
+        walletManagement: "Wallet Management",
+        walletManagementDesc: "Review withdrawal requests",
+        reportsAndStats: "Reports & Statistics",
+        reportsDesc: "Comprehensive platform performance reports",
+        dataManagement: "Data Management",
+        categories: "Categories Management",
+        categoriesDesc: "Customize project types",
+        clientsManagement: "Client Management",
+        clientsManagementDesc: "View and edit client accounts",
+        engineersManagement: "Engineers Management",
+        engineersManagementDesc: "Approve and edit engineer accounts",
+        approvedProjects: "Approved Projects - Admin Panel",
+        technicallyApproved: "Technically Approved",
+        viewCertificate: "View Certificate",
+        client: "Client",
+        amount: "Amount",
+        viewAllApproved: "View All Approved Projects ({count})"
+      },
+      recentActivity: {
+        engineerProposals: "My Recent Proposals",
+        clientProjects: "My Recent Projects",
+        proposalId: "Proposal #{id}",
+        accepted: "Accepted",
+        rejected: "Rejected",
+        underReview: "Under Review",
+        noProposals: "You haven't submitted any proposals yet",
+        browseProjects: "Browse Available Projects",
+        proposals: "{count} proposal",
+        completed: "Completed",
+        inProgress: "In Progress",
+        cancelled: "Cancelled",
+        open: "Open",
+        noProjects: "You haven't added any projects yet",
+        addFirstProject: "Add Your First Project"
+      },
+      noAccount: {
+        title: "Account Not Found",
+        message: "Please complete registration first",
+        createAccount: "Create New Account"
+      }
     }
   }
 };
