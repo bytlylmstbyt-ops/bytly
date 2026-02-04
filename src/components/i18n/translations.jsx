@@ -468,6 +468,69 @@ export const translations = {
         message: "يرجى إكمال التسجيل أولاً",
         createAccount: "إنشاء حساب جديد"
       }
+    },
+    settings: {
+      title: "الإعدادات",
+      subtitle: "إدارة حسابك وتفضيلاتك",
+      tabs: {
+        profile: "الملف الشخصي",
+        security: "الأمان",
+        notifications: "الإشعارات",
+        email: "البريد الإلكتروني"
+      },
+      profile: {
+        title: "معلومات الملف الشخصي",
+        fullName: "الاسم الكامل",
+        phone: "رقم الهاتف",
+        country: "الدولة",
+        city: "المدينة",
+        specialization: "التخصص",
+        bio: "نبذة عني",
+        saveChanges: "حفظ التغييرات",
+        saving: "جاري الحفظ...",
+        saveSuccess: "تم حفظ التغييرات بنجاح",
+        saveError: "حدث خطأ أثناء الحفظ"
+      },
+      security: {
+        title: "إعدادات الأمان",
+        changePassword: "تغيير كلمة المرور",
+        changePasswordDesc: "يمكنك تغيير كلمة المرور من خلال إعدادات الحساب",
+        twoFactor: "التحقق بخطوتين",
+        twoFactorDesc: "أضف طبقة حماية إضافية لحسابك"
+      },
+      notifications: {
+        title: "إعدادات الإشعارات",
+        inApp: "إشعارات داخل التطبيق",
+        inAppDesc: "إشعارات فورية داخل المنصة",
+        email: "إشعارات البريد الإلكتروني",
+        emailDesc: "استلم تحديثات على بريدك",
+        customize: "تخصيص أنواع الإشعارات",
+        types: {
+          projectUpdates: "تحديثات المشاريع",
+          contractUpdates: "تحديثات العقود",
+          paymentReminders: "تذكيرات الدفع",
+          milestoneReminders: "تذكيرات المعالم",
+          newProposals: "عروض جديدة",
+          deadlineReminders: "تذكيرات المواعيد",
+          disputeUpdates: "تحديثات النزاعات",
+          newMessages: "رسائل جديدة",
+          reviewRequests: "طلبات التقييم",
+          systemNotifications: "إشعارات النظام"
+        }
+      },
+      emailSettings: {
+        title: "إعدادات البريد الإلكتروني",
+        enableAlerts: "تفعيل إرسال التنبيهات",
+        enableAlertsDesc: "استلم نسخة من كل تنبيه على بريدك الإلكتروني",
+        adminEmail: "البريد الإداري الرئيسي",
+        adminEmailUsed: "البريد المستخدم للإشعارات الإدارية:",
+        enabledTypes: "أنواع الإشعارات المفعّلة:",
+        newEngineer: "تسجيل مهندس جديد",
+        certificateUpload: "رفع شهادة جودة واعتماد للمشاريع",
+        newChatbot: "استفسار جديد عبر الشات بوت",
+        emailIdentity: "هوية الرسائل",
+        emailIdentityDesc: "جميع رسائل البريد الإلكتروني تحمل شعار بيتلي البني والتنسيق الرسمي للمنصة، مع تدرج لوني من البني إلى الذهبي."
+      }
     }
   },
   en: {
