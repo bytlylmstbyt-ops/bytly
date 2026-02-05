@@ -319,8 +319,8 @@ function LayoutContent({ children, currentPageName }) {
               <ul className="space-y-3 text-sm text-slate-300">
                 <li className="flex items-center gap-2">
                   <Mail className="w-4 h-4 text-[#C9A66B]" />
-                  <a href="mailto:bytlylmstbyt@gmail.com" className="hover:text-[#C9A66B]">
-                    bytlylmstbyt@gmail.com
+                  <a href="mailto:info@mybytly.com" className="hover:text-[#C9A66B]">
+                    info@mybytly.com
                   </a>
                 </li>
                 <li className="flex items-center gap-2">
