@@ -445,7 +445,7 @@ export default function Settings() {
                     </div>
                     <div className="bg-white p-4 rounded-lg border border-amber-300 mb-4">
                       <p className="text-sm text-slate-600 mb-2">{t('settings.emailSettings.adminEmailUsed')}</p>
-                      <p className="font-mono text-[#6B5D4F] font-bold text-lg">bytlylmstbyt@gmail.com</p>
+                      <p className="font-mono text-[#6B5D4F] font-bold text-lg">info@mybytly.com</p>
                     </div>
                     <div className="space-y-3">
                       <p className="text-sm text-slate-700 font-semibold flex items-center gap-2">
