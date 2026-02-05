@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
         botResponse += `\n\n📌 للمزيد: ${matchedFAQ.reference_link}`;
       }
     } else {
-      // Use LLM for intelligent response
+      // Use Gemini AI for intelligent response
       // Check for onboarding keywords
 const onboardingKeywords = ['مشروع جديد', 'بدء مشروع', 'أريد تصميم', 'احتاج مهندس', 'onboarding'];
 const isOnboarding = onboardingKeywords.some(kw => messageLower.includes(kw));
@@ -55,44 +55,49 @@ if (isOnboarding && user_type === 'visitor') {
 }
 
       try {
-        const systemPrompt = `أنت فهد، المساعد الشخصي الذكي لمنصة (بيت لي - Bytly) - المنصة الرائدة في ربط المهندسين بأصحاب المشاريع في المملكة العربية السعودية.
+        const systemInstructions = `أنت المساعد الذكي لمنصة (بيت لي - Bytly). وظيفتك هي مساعدة المستخدمين (ملاك العقارات والمهندسين) في السعودية. يجب أن تكون خبيراً في معايير الكود السعودي، وتساعد في صياغة العقود وتلخيص المتطلبات الهندسية. تواصل بأسلوب مهني يدعم رؤية 2030.`;
 
-🎯 دورك ورسالتك:
-أنت لست مجرد روبوت، بل مستشار موثوق ومساعد ودود يفهم احتياجات المستخدمين ويقدم لهم الحلول المناسبة بطريقة إنسانية وواضحة.
+        const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
+        if (!geminiApiKey) {
+          throw new Error('Gemini API key not configured');
+        }
 
-📋 معلومات المنصة الأساسية:
-• منصة بيتلي هي حلقة الوصل الآمنة بين المهندسين المحترفين وأصحاب المشاريع
-• نعمل كضامن (Escrow) محايد يحمي حقوق الطرفين
-• التخصصات المتوفرة: التصميم الداخلي، الهندسة المعمارية، الرسم الهندسي، الهندسة المدنية
-• كل مشروع يخضع لمراجعة استشاري فني معتمد وتوثيق قانوني
-• المدفوعات محفوظة في حساب ضمان حتى موافقة العميل النهائية على العمل
+        // Call Gemini API
+        const geminiResponse = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              system_instruction: {
+                parts: [{ text: systemInstructions }]
+              },
+              contents: [{
+                parts: [{ text: user_message }]
+              }],
+              generationConfig: {
+                temperature: 0.7,
+                topP: 0.95,
+                maxOutputTokens: 2048
+              }
+            })
+          }
+        );
 
-💡 أسلوب التواصل المطلوب:
-- استخدم لغة عربية فصيحة وواضحة مع لمسة ودية وشخصية
-- كن مختصراً ومباشراً، لكن دافئاً في الأسلوب
-- استخدم الإيموجي بذكاء واعتدال لإضفاء حيوية
-- اطرح أسئلة توضيحية عند الحاجة لفهم احتياج المستخدم بدقة
-- قدم إجابات عملية قابلة للتطبيق مباشرة
-- اظهر التعاطف والحماس لمساعدة المستخدم
-- تجنب الردود الجافة أو الآلية
+        if (!geminiResponse.ok) {
+          const errorText = await geminiResponse.text();
+          console.error('Gemini API error:', errorText);
+          throw new Error(`Gemini API failed: ${geminiResponse.status}`);
+        }
 
-🎓 كيف تتعامل مع الاستفسارات:
-- إذا سأل عن كيفية بدء مشروع: وضح الخطوات بوضوح واعرض المساعدة
-- إذا كان مهندساً: ساعده في فهم كيفية عرض أعماله وجذب العملاء
-- إذا كان عميلاً: ساعده في اختيار المهندس المناسب وفهم آلية الضمان
-- عند عدم التأكد: اسأل بلطف عن المزيد من التفاصيل
-
-تذكر: أنت تمثل العلامة التجارية بيتلي، فكن سفيراً مميزاً لها!`;
-
-        const llmResponse = await base44.integrations.Core.InvokeLLM({
-          prompt: `${systemPrompt}\n\n👤 سؤال المستخدم: ${user_message}\n\nأجب بأسلوب طبيعي وودود كأنك صديق محترف يساعد صديقه:`,
-          add_context_from_internet: false
-        });
+        const geminiData = await geminiResponse.json();
+        botResponse = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'أعتذر، لم أتمكن من فهم سؤالك. يرجى التواصل مع فريق الدعم.';
         
-        botResponse = llmResponse || 'أعتذر، لم أتمكن من فهم سؤالك. يرجى التواصل مع فريق الدعم.';
       } catch (llmError) {
-        console.error('LLM error:', llmError);
-        botResponse = 'أعتذر، أواجه مشكلة تقنية. يرجى التواصل مع فريق الدعم الفني.';
+        console.error('Gemini API error:', llmError);
+        botResponse = 'أعتذر، أواجه مشكلة تقنية. يرجى التواصل مع فريق الدعم الفني على info@mybytly.com';
         shouldEscalate = true;
       }
     }
