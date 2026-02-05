@@ -28,13 +28,22 @@ export default function DesignPurchaseSuccess() {
   }, [purchaseId]);
 
   const loadPurchaseData = async () => {
-    const [purchaseData] = await base44.entities.DesignPurchase.filter({ id: purchaseId });
-    setPurchase(purchaseData);
+    try {
+      const [purchaseData] = await base44.entities.DesignPurchase.filter({ id: purchaseId });
+      
+      if (purchaseData) {
+        setPurchase(purchaseData);
 
-    const [designData] = await base44.entities.ReadyMadeDesign.filter({ id: purchaseData.design_id });
-    setDesign(designData);
-
-    setIsLoading(false);
+        if (purchaseData.design_id) {
+          const [designData] = await base44.entities.ReadyMadeDesign.filter({ id: purchaseData.design_id });
+          setDesign(designData);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading purchase data:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isLoading) {
