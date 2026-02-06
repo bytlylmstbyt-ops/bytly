@@ -132,10 +132,10 @@ function LayoutContent({ children, currentPageName }) {
               <LanguageSwitcher variant="ghost" />
               {isAuthenticated && user ? (
                   <>
-                    <Link to={createPageUrl("Messages")} className="relative p-2 hover:bg-slate-100 rounded-full transition-colors">
+                    <Link to={createPageUrl("Messages")} className="relative p-2 hover:bg-slate-100 rounded-full transition-colors" title={t('nav.messages')}>
                       <MessageSquare className="w-5 h-5 text-slate-600" />
                     </Link>
-                  <Link to={createPageUrl("Notifications")} className="relative p-2 hover:bg-slate-100 rounded-full transition-colors">
+                  <Link to={createPageUrl("Notifications")} className="relative p-2 hover:bg-slate-100 rounded-full transition-colors" title={t('nav.notifications')}>
                     <Bell className="w-5 h-5 text-slate-600" />
                   </Link>
                   <DropdownMenu>
