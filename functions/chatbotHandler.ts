@@ -208,13 +208,15 @@ ${userContext}
           throw new Error('Gemini API key not configured');
         }
 
-        // Call Gemini API with extended timeout for audio processing
+        // Call Gemini API with proper error handling
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minutes timeout
+        const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 minutes for voice processing
         
         try {
+          console.log('Sending request to Gemini API...');
+          
           const geminiResponse = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${geminiApiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
             {
               method: 'POST',
               headers: {
@@ -229,10 +231,30 @@ ${userContext}
                   parts: [{ text: user_message }]
                 }],
                 generationConfig: {
-                  temperature: 0.7,
+                  temperature: 0.8,
                   topP: 0.95,
-                  maxOutputTokens: 3072
-                }
+                  topK: 40,
+                  maxOutputTokens: 2048,
+                  candidateCount: 1
+                },
+                safetySettings: [
+                  {
+                    category: "HARM_CATEGORY_HARASSMENT",
+                    threshold: "BLOCK_NONE"
+                  },
+                  {
+                    category: "HARM_CATEGORY_HATE_SPEECH",
+                    threshold: "BLOCK_NONE"
+                  },
+                  {
+                    category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                    threshold: "BLOCK_NONE"
+                  },
+                  {
+                    category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+                    threshold: "BLOCK_NONE"
+                  }
+                ]
               })
             }
           );
@@ -241,29 +263,59 @@ ${userContext}
 
           if (!geminiResponse.ok) {
             const errorText = await geminiResponse.text();
-            console.error('Gemini API error:', errorText);
-            throw new Error(`Gemini API failed: ${geminiResponse.status}`);
+            console.error('Gemini API error response:', errorText);
+            throw new Error(`Gemini API returned status ${geminiResponse.status}: ${errorText}`);
           }
 
           const geminiData = await geminiResponse.json();
-          botResponse = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'أعتذر، لم أتمكن من فهم سؤالك. يرجى التواصل مع فريق الدعم.';
+          console.log('Gemini response received:', JSON.stringify(geminiData).substring(0, 200));
+          
+          // Extract text from response with better error handling
+          if (!geminiData.candidates || geminiData.candidates.length === 0) {
+            console.error('No candidates in Gemini response:', geminiData);
+            throw new Error('لم يتم استلام رد من الذكاء الاصطناعي');
+          }
+          
+          const candidate = geminiData.candidates[0];
+          
+          // Check if response was blocked
+          if (candidate.finishReason === 'SAFETY' || candidate.finishReason === 'RECITATION') {
+            console.warn('Response blocked by safety filters:', candidate.finishReason);
+            botResponse = 'أعتذر، لا يمكنني الرد على هذا السؤال. يرجى إعادة صياغته أو التواصل مع الدعم الفني.';
+          } else if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
+            console.error('No content in candidate:', candidate);
+            botResponse = 'أعتذر، حدثت مشكلة في معالجة طلبك. يرجى المحاولة مرة أخرى.';
+          } else {
+            botResponse = candidate.content.parts[0].text || 'أعتذر، لم أتمكن من توليد رد مناسب.';
+          }
           
           // Format response for better readability
           botResponse = botResponse
             .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
+            .replace(/\* /g, '• ') // Convert asterisk lists to bullet points
             .trim();
+          
+          console.log('Final bot response:', botResponse.substring(0, 100) + '...');
           
         } catch (fetchError) {
           clearTimeout(timeoutId);
+          console.error('Gemini fetch error:', fetchError);
           throw fetchError;
         }
         
       } catch (llmError) {
-        console.error('Gemini API error:', llmError);
+        console.error('Gemini API error details:', {
+          name: llmError.name,
+          message: llmError.message,
+          stack: llmError.stack
+        });
+        
         if (llmError.name === 'AbortError') {
-          botResponse = 'أعتذر، استغرق الرد وقتاً طويلاً. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.';
+          botResponse = '⏱️ استغرق الرد وقتاً أطول من المتوقع.\n\nالحلول:\n• تحقق من اتصالك بالإنترنت\n• حاول إعادة صياغة السؤال بشكل أبسط\n• أو تواصل مع الدعم الفني مباشرة 📞';
+        } else if (llmError.message.includes('لم يتم استلام رد')) {
+          botResponse = '🤖 نواجه ضغط مؤقت على الخادم.\n\nيرجى المحاولة مرة أخرى بعد ثوانٍ قليلة.\nإذا استمرت المشكلة، تواصل معنا على info@mybytly.com';
         } else {
-          botResponse = 'أعتذر، أواجه مشكلة تقنية. يرجى التواصل مع فريق الدعم الفني على info@mybytly.com';
+          botResponse = '⚠️ أعتذر، أواجه مشكلة تقنية مؤقتة.\n\nيمكنك:\n• المحاولة مرة أخرى الآن\n• التواصل مع فريقنا: info@mybytly.com\n• استخدام البحث في المنصة للإجابات السريعة';
         }
         shouldEscalate = true;
       }
