@@ -94,11 +94,15 @@ export default function ChatbotWidget() {
 
   const startRecording = async () => {
     try {
+      // Optimized audio constraints for human voice (44.1kHz standard)
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          sampleRate: 48000
+          autoGainControl: true,
+          sampleRate: 44100, // Human voice clarity
+          channelCount: 1, // Mono for voice
+          latency: 0
         }
       });
       
@@ -111,7 +115,11 @@ export default function ChatbotWidget() {
         }
       }
       
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      // Audio buffer optimization for browser recording
+      const mediaRecorder = new MediaRecorder(stream, { 
+        mimeType,
+        audioBitsPerSecond: 128000 // Clear audio quality
+      });
       
       audioChunksRef.current = [];
       
@@ -139,49 +147,91 @@ export default function ChatbotWidget() {
           isProcessing: true
         }]);
         
-        try {
-          const { file_url } = await base44.integrations.Core.UploadFile({ file: audioFile });
-          
-          const transcriptionResult = await base44.integrations.Core.InvokeLLM({
-            prompt: `استمع لهذه الرسالة الصوتية وحولها لنص عربي فصيح.
+        // Auto-retry logic with exponential backoff
+        let retryCount = 0;
+        const maxRetries = 3;
+        let transcriptionResult = null;
+        
+        while (retryCount <= maxRetries) {
+          try {
+            // Upload audio with proper buffer handling
+            const { file_url } = await base44.integrations.Core.UploadFile({ file: audioFile });
+            
+            // Wait for file to be fully uploaded and ready
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            transcriptionResult = await base44.integrations.Core.InvokeLLM({
+              prompt: `استمع لهذه الرسالة الصوتية وحولها لنص عربي فصيح.
 
 تعليمات التحويل:
 - دعم اللهجة السعودية والعامية الخليجية بالكامل
 - تحويل الكلمات العامية للفصحى أو الإبقاء عليها إن كانت واضحة
 - التعامل مع المصطلحات الهندسية والتقنية (تصميم، إنشاءات، رخصة بناء، إلخ)
 - إزالة أصوات الخلفية والضوضاء من الفهم
-- معالجة ملفات صوتية بصيغة WebM, MP3, MP4
+- معالجة ملفات صوتية بصيغة WebM, MP3, MP4 بمعدل 44.1kHz
+- التعرف على الترددات البشرية بدقة
 
 إذا كان الصوت غير واضح أو مشوش، أرجع فقط: [غير واضح]
 وإلا، أرجع النص المحول فقط بدون أي شرح أو إضافات.`,
-            file_urls: [file_url]
-          });
-          
-          // Remove processing message
-          setMessages(prev => prev.filter(m => !m.isProcessing));
+              file_urls: [file_url]
+            });
+            
+            // Success - break retry loop
+            break;
+            
+          } catch (uploadError) {
+            retryCount++;
+            console.error(`Transcription attempt ${retryCount} failed:`, uploadError);
+            
+            if (retryCount > maxRetries) {
+              throw uploadError;
+            }
+            
+            // Exponential backoff: 1s, 2s, 4s
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount - 1) * 1000));
+            
+            // Update processing message
+            setMessages(prev => prev.map(m => 
+              m.isProcessing ? {
+                ...m,
+                content: `🎧 جاري إعادة المحاولة (${retryCount}/${maxRetries})...`
+              } : m
+            ));
+          }
+        }
+        
+        // Remove processing message
+        setMessages(prev => prev.filter(m => !m.isProcessing));
 
+        if (transcriptionResult) {
           const cleanText = transcriptionResult.trim();
           
           // Check if audio was unclear
           if (cleanText.includes('[غير واضح]') || cleanText.toLowerCase().includes('unclear')) {
             setMessages(prev => [...prev, {
               role: "assistant",
-              content: "⚠️ عذراً، الرسالة الصوتية غير واضحة.\n\nيرجى:\n• التسجيل في مكان هادئ\n• التحدث بوضوح وببطء\n• التأكد من قرب الميكروفون\n\nجرب مرة أخرى 🎤",
+              content: "⚠️ عذراً، الرسالة الصوتية غير واضحة.\n\nيرجى:\n• التسجيل في مكان هادئ\n• التحدث بوضوح وببطء\n• التأكد من قرب الميكروفون\n• تأكد من تفعيل الميكروفون بشكل صحيح\n\nجرب مرة أخرى 🎤",
               timestamp: new Date().toISOString()
             }]);
           } else {
             setInputValue(`🎤 ${cleanText}`);
           }
-        } catch (error) {
-          console.error("Error transcribing:", error);
-          setMessages(prev => [...prev, {
-            role: "assistant",
-            content: "عذراً، حدثت مشكلة في تحويل الصوت.\n\nتأكد من:\n• جودة الصوت\n• عمل الميكروفون\n• الاتصال بالإنترنت\n\nحاول مرة أخرى 🔄",
-            timestamp: new Date().toISOString()
-          }]);
-        } finally {
-          setUploading(false);
         }
+        
+      } catch (error) {
+        console.error("Error transcribing after all retries:", error);
+        
+        // Remove processing message
+        setMessages(prev => prev.filter(m => !m.isProcessing));
+        
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: `❌ فشل تحويل الصوت بعد ${maxRetries} محاولات.\n\nالمشكلة المحتملة:\n• اتصال الإنترنت ضعيف\n• جودة الصوت منخفضة جداً\n• حجم الملف كبير\n\nالحلول:\n✓ تحقق من الاتصال\n✓ تحدث بوضوح أكبر\n✓ حاول تسجيل رسالة أقصر\n\nأو اكتب رسالتك نصاً 📝`,
+          timestamp: new Date().toISOString()
+        }]);
+      } finally {
+        setUploading(false);
+      }
       };
       
       mediaRecorderRef.current = mediaRecorder;
