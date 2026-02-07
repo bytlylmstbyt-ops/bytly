@@ -262,7 +262,7 @@ export default function ChatbotWidget() {
               </CardHeader>
 
               {/* Messages */}
-              <CardContent className="chat-window-content flex-1 overflow-y-auto p-4 space-y-4">
+              <CardContent className="chat-window-content flex-1 overflow-y-auto p-4 space-y-4 max-h-[400px]">
                 {messages.map((msg, idx) => (
                   <motion.div
                     key={idx}
@@ -299,13 +299,30 @@ export default function ChatbotWidget() {
 
                       {/* Suggested Engineers */}
                       {msg.suggestedEngineers?.length > 0 && (
-                        <div className="mt-2 space-y-1">
-                          <p className="text-xs font-medium">المهندسين المقترحين:</p>
-                          {msg.suggestedEngineers.map((eng) => (
-                            <Badge key={eng.id} variant="outline" className="block text-xs w-full">
-                              {eng.name} - {eng.specialization}
-                            </Badge>
-                          ))}
+                        <div className="mt-3 space-y-2 border-t pt-2">
+                          <p className="text-sm font-semibold text-slate-700">👨‍💼 مهندسين مقترحين:</p>
+                          <div className="space-y-2">
+                            {msg.suggestedEngineers.map((eng) => (
+                              <a
+                                key={eng.id}
+                                href={`/engineers/${eng.id}`}
+                                target="_blank"
+                                className="block p-2 bg-white border border-slate-200 rounded-lg hover:shadow-md hover:border-[#C9A66B] transition-all"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="text-sm font-medium text-slate-800">{eng.name}</p>
+                                    <p className="text-xs text-slate-500">{eng.specialization}</p>
+                                  </div>
+                                  {eng.rating > 0 && (
+                                    <div className="text-xs text-amber-600">
+                                      ⭐ {eng.rating.toFixed(1)}
+                                    </div>
+                                  )}
+                                </div>
+                              </a>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>

@@ -9,63 +9,79 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Get relevant FAQs
-    const faqs = await base44.asServiceRole.entities.ChatbotFAQ.filter({ 
-      is_active: true 
-    });
-
-    // Find matching FAQ based on keywords
-    let matchedFAQ = null;
-    const messageLower = user_message.toLowerCase();
-
-    for (const faq of faqs) {
-      if (faq.keywords?.some(keyword => messageLower.includes(keyword.toLowerCase()))) {
-        if (!matchedFAQ || faq.priority > matchedFAQ.priority) {
-          matchedFAQ = faq;
-        }
-      }
-    }
-
     let botResponse = '';
     let shouldEscalate = false;
+    const messageLower = user_message.toLowerCase();
 
-    if (matchedFAQ) {
-      botResponse = matchedFAQ.answer;
-      if (matchedFAQ.reference_link) {
-        botResponse += `\n\n📌 للمزيد: ${matchedFAQ.reference_link}`;
-      }
-    } else {
-      // Use Gemini AI for intelligent response
-      // Check for onboarding keywords
-const onboardingKeywords = ['مشروع جديد', 'بدء مشروع', 'أريد تصميم', 'احتاج مهندس', 'onboarding'];
-const isOnboarding = onboardingKeywords.some(kw => messageLower.includes(kw));
+    // Check for onboarding keywords
+    const onboardingKeywords = ['مشروع جديد', 'بدء مشروع', 'أريد تصميم', 'احتاج مهندس', 'onboarding'];
+    const isOnboarding = onboardingKeywords.some(kw => messageLower.includes(kw));
 
-if (isOnboarding && user_type === 'visitor') {
-  const onboardingResponse = {
-    response: `مرحباً! 👋 أرى أنك مهتم ببدء مشروع جديد. لدينا معالج ذكي يساعدك في:
+    if (isOnboarding && user_type === 'visitor') {
+      const onboardingResponse = {
+        response: `مرحباً! 👋 أرى أنك مهتم ببدء مشروع جديد. لدينا معالج ذكي يساعدك في:
 ✓ تحديد احتياجات مشروعك
 ✓ اختيار الفئة المناسبة
 ✓ الحصول على اقتراحات مهندسين متخصصين
 
 هل تريد البدء الآن؟`,
-    shouldRedirect: true,
-    redirectPage: 'ClientOnboarding'
-  };
-  return Response.json(onboardingResponse);
-}
+        shouldRedirect: true,
+        redirectPage: 'ClientOnboarding'
+      };
+      return Response.json(onboardingResponse);
+    }
 
       try {
-        const systemInstructions = `أنت الآن المساعد الذكي الرسمي لمنصة (بيت لي - Bytly). مهمتك هي دعم المهندسين والمستثمرين في قطاع التصميم والاستشارات الهندسية في السعودية.
+        // Build user context for personalized responses
+        let userContext = '';
+        if (user_type === 'client') {
+          userContext = '\nالمستخدم الحالي: عميل يبحث عن مهندس أو يدير مشروع.';
+        } else if (user_type === 'consultant') {
+          userContext = '\nالمستخدم الحالي: مهندس أو شركة استشارية تبحث عن مشاريع أو عملاء.';
+        } else {
+          userContext = '\nالمستخدم الحالي: زائر يستكشف المنصة للمرة الأولى.';
+        }
 
-قواعد العمل الخاصة بك:
-1. تقديم نصائح هندسية أولية بناءً على (الكود السعودي للمباني - SBC).
-2. مساعدة المستخدمين في صياغة متطلبات مشاريعهم (Scope of Work) بشكل احترافي ومنظم.
-3. الرد بلهجة مهنية، ودودة، ومحفزة تدعم رؤية المملكة 2030 في التطوير والابتكار.
-4. توضيح أهمية نظام (الضامن المالي - Escrow) في المنصة لضمان حقوق جميع الأطراف - حيث يتم حجز الأموال بشكل آمن حتى إتمام المشروع بنجاح.
-5. إذا سُئلت عن تفاصيل تقنية معقدة أو استشارات هندسية متخصصة، وجه المستخدم للتحدث مع أحد المهندسين المختصين المعتمدين عبر المنصة.
-6. كن داعماً وإيجابياً، ووضح كيف تساعد منصة بيتلي في تسهيل رحلة المشاريع الهندسية.
+        const systemInstructions = `أنت الآن المساعد الذكي الرسمي لمنصة (بيت لي - Bytly) - منصة رائدة في الاستشارات الهندسية والتصميم المعماري في السعودية.
 
-ملاحظة مهمة: تواصل باللغتين العربية والإنجليزية حسب لغة المستخدم، مع الحفاظ على نفس المستوى من الاحترافية والوضوح في كلا اللغتين.`;
+مهمتك الرئيسية:
+━━━━━━━━━━━━━━━
+تقديم استشارات هندسية ذكية واحترافية تساعد العملاء والمهندسين على تحقيق أهدافهم بكفاءة عالية، مع الالتزام بالمعايير السعودية (SBC) ورؤية المملكة 2030.
+
+قواعد الرد الاحترافية:
+━━━━━━━━━━━━━━━
+1. **نبرة احترافية استشارية**: تحدث كمستشار هندسي خبير، وليس كروبوت.
+2. **تخصيص الردود حسب هوية المستخدم**: ${userContext}
+   - للعملاء: ركز على كيفية إيجاد المهندس المناسب، شرح المراحل، وضمان الجودة.
+   - للمهندسين: قدم نصائح لتحسين الملف الشخصي، جذب العملاء، وإدارة المشاريع.
+   - للزوار: قدم نظرة شاملة عن المنصة ومزاياها.
+
+3. **دعم فني وهندسي متقدم**:
+   - شرح الكود السعودي للمباني (SBC) والمتطلبات القانونية
+   - مساعدة في صياغة نطاق العمل (Scope of Work)
+   - توضيح المراحل الهندسية ومتطلبات كل مرحلة
+   - نصائح حول اختيار المهندس المناسب
+
+4. **التركيز على قيمة المنصة**:
+   - نظام الضامن المالي (Escrow) لحماية جميع الأطراف
+   - توثيق المهندسين والشركات الاستشارية
+   - إدارة المراحل والمدفوعات بشكل آمن
+   - دعم فني متواصل
+
+5. **الإحالة للدعم المتخصص**:
+   - للأسئلة التقنية المعقدة: وجه للتواصل مع مهندسين معتمدين عبر المنصة
+   - للمشاكل القانونية: وجه للدعم القانوني في بيتلي
+   - للشكاوى: وجه لفريق الدعم الفني
+
+6. **الأسلوب والتنسيق**:
+   - استخدم تنسيق واضح ومنظم (نقاط، فواصل، إيموجي بحكمة)
+   - ردود متوسطة الطول (ليست قصيرة جداً ولا طويلة مملة)
+   - اذكر روابط مفيدة عند الضرورة
+   - قدم أمثلة عملية عندما يناسب السياق
+
+7. **اللغة**: رد بنفس لغة المستخدم (عربي/إنجليزي) مع الحفاظ على الاحترافية.
+
+ملاحظة هامة: أنت هنا لتقديم قيمة حقيقية وليس مجرد ردود آلية. كن مفيداً، واضحاً، ومحفزاً.`;
 
         const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
         if (!geminiApiKey) {
@@ -105,12 +121,16 @@ if (isOnboarding && user_type === 'visitor') {
         const geminiData = await geminiResponse.json();
         botResponse = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'أعتذر، لم أتمكن من فهم سؤالك. يرجى التواصل مع فريق الدعم.';
         
+        // Format response for better readability
+        botResponse = botResponse
+          .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
+          .trim();
+        
       } catch (llmError) {
         console.error('Gemini API error:', llmError);
         botResponse = 'أعتذر، أواجه مشكلة تقنية. يرجى التواصل مع فريق الدعم الفني على info@mybytly.com';
         shouldEscalate = true;
       }
-    }
 
     // Update conversation if exists
     if (conversation_id) {
