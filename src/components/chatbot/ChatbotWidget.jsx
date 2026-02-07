@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Send, MessageCircle, X, Loader2, Phone } from "lucide-react";
+import { Send, MessageCircle, X, Loader2, Phone, Video, Mic, Paperclip } from "lucide-react";
 
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,8 +18,11 @@ export default function ChatbotWidget() {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [attachments, setAttachments] = useState([]);
+  const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef(null);
   const widgetRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     initializeChatbot();
@@ -62,16 +65,62 @@ export default function ChatbotWidget() {
     setMessages(newConv.messages);
   };
 
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    setUploading(true);
+    try {
+      for (const file of files) {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        setAttachments(prev => [...prev, {
+          name: file.name,
+          url: file_url,
+          size: file.size,
+          type: file.type
+        }]);
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleVoiceTranscription = async (audioFile) => {
+    setUploading(true);
+    try {
+      // Upload voice file
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: audioFile });
+      
+      // Transcribe using Gemini
+      const transcription = await base44.integrations.Core.InvokeLLM({
+        prompt: "استمع لهذه الرسالة الصوتية وحولها لنص عربي. أرجع النص فقط بدون أي إضافات.",
+        file_urls: [file_url]
+      });
+
+      // Add as user message with voice icon
+      setInputValue(`🎤 ${transcription}`);
+    } catch (error) {
+      console.error("Error transcribing voice:", error);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() && attachments.length === 0) return;
 
     const userMessage = inputValue;
+    const userAttachments = [...attachments];
     setInputValue("");
+    setAttachments([]);
     
     // Add user message to UI
     setMessages(prev => [...prev, {
       role: "user",
-      content: userMessage,
+      content: userMessage || "📎 ملفات مرفقة",
+      attachments: userAttachments,
       timestamp: new Date().toISOString()
     }]);
 
@@ -82,7 +131,8 @@ export default function ChatbotWidget() {
         user_message: userMessage,
         visitor_id: visitorId,
         conversation_id: conversationId,
-        user_type: currentUser ? (currentUser.role === 'admin' ? 'consultant' : 'client') : 'visitor'
+        user_type: currentUser ? (currentUser.role === 'admin' ? 'consultant' : 'client') : 'visitor',
+        attachments: userAttachments
       });
 
       if (response.data.success) {
@@ -229,6 +279,24 @@ export default function ChatbotWidget() {
                     >
                       <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
 
+                      {/* Attachments */}
+                      {msg.attachments?.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {msg.attachments.map((att, i) => (
+                            <a 
+                              key={i}
+                              href={att.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-xs underline hover:no-underline"
+                            >
+                              <Paperclip className="w-3 h-3" />
+                              {att.name}
+                            </a>
+                          ))}
+                        </div>
+                      )}
+
                       {/* Suggested Engineers */}
                       {msg.suggestedEngineers?.length > 0 && (
                         <div className="mt-2 space-y-1">
@@ -254,23 +322,94 @@ export default function ChatbotWidget() {
               </CardContent>
 
               {/* Input */}
-              <div className="chat-window-content border-t p-3 flex gap-2">
-                <Input
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="اكتب سؤالك..."
-                  disabled={loading}
-                  className="text-sm"
-                />
-                <Button
-                  size="icon"
-                  onClick={handleSendMessage}
-                  disabled={loading || !inputValue.trim()}
-                  className="bg-[#d4a574] hover:bg-[#c89864]"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
+              <div className="chat-window-content border-t p-3 space-y-2">
+                {/* Attachments Preview */}
+                {attachments.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {attachments.map((file, idx) => (
+                      <div key={idx} className="flex items-center gap-1 bg-slate-100 px-2 py-1 rounded text-xs">
+                        <Paperclip className="w-3 h-3" />
+                        <span className="truncate max-w-[100px]">{file.name}</span>
+                        <button
+                          onClick={() => setAttachments(prev => prev.filter((_, i) => i !== idx))}
+                          className="hover:bg-slate-200 rounded p-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex gap-2">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    multiple
+                    accept=".pdf,.dwg,.dxf,.jpg,.jpeg,.png"
+                    className="hidden"
+                  />
+                  
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={loading || uploading}
+                    title="إرفاق ملف"
+                  >
+                    {uploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Paperclip className="w-4 h-4" />
+                    )}
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = 'audio/*';
+                      input.onchange = async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) await handleVoiceTranscription(file);
+                      };
+                      input.click();
+                    }}
+                    disabled={loading || uploading}
+                    title="رسالة صوتية (تحويل تلقائي لنص)"
+                  >
+                    <Mic className="w-4 h-4" />
+                  </Button>
+
+                  <Input
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="اكتب سؤالك..."
+                    disabled={loading || uploading}
+                    className="text-sm flex-1"
+                  />
+
+                  <Button
+                    size="icon"
+                    onClick={handleSendMessage}
+                    disabled={loading || uploading || (!inputValue.trim() && attachments.length === 0)}
+                    className="bg-[#d4a574] hover:bg-[#c89864]"
+                  >
+                    {loading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+
+                <p className="text-xs text-slate-500 text-center">
+                  💬 الدردشة مع Gemini AI • 🎤 رسائل صوتية • 📎 ملفات
+                </p>
               </div>
             </Card>
           </motion.div>
