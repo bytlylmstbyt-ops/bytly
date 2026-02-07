@@ -94,31 +94,31 @@ export default function ChatbotWidget() {
 
   const startRecording = async () => {
     try {
-      // Optimized audio constraints for human voice (44.1kHz standard)
+      // Optimized audio constraints for human voice with Opus/Ogg codec
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 44100, // Human voice clarity
+          sampleRate: 48000, // Opus optimal rate
           channelCount: 1, // Mono for voice
           latency: 0
         }
       });
       
-      // Check supported formats (WebM preferred, MP3 fallback)
-      let mimeType = 'audio/webm;codecs=opus';
+      // Prioritize Opus/Ogg codec for modern browsers (best quality & compression)
+      let mimeType = 'audio/ogg;codecs=opus';
       if (!MediaRecorder.isTypeSupported(mimeType)) {
-        mimeType = 'audio/webm';
+        mimeType = 'audio/webm;codecs=opus';
         if (!MediaRecorder.isTypeSupported(mimeType)) {
-          mimeType = 'audio/mp4';
+          mimeType = 'audio/webm';
         }
       }
       
-      // Audio buffer optimization for browser recording
+      // High-quality audio buffer for stream processing
       const mediaRecorder = new MediaRecorder(stream, { 
         mimeType,
-        audioBitsPerSecond: 128000 // Clear audio quality
+        audioBitsPerSecond: 256000 // High bitrate for clarity
       });
       
       audioChunksRef.current = [];
@@ -130,8 +130,8 @@ export default function ChatbotWidget() {
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach(track => track.stop());
         
-        const mimeType = mediaRecorder.mimeType || 'audio/webm';
-        const extension = mimeType.includes('webm') ? 'webm' : 'mp4';
+        const mimeType = mediaRecorderRef.current.mimeType || 'audio/webm';
+        const extension = mimeType.includes('ogg') ? 'ogg' : (mimeType.includes('webm') ? 'webm' : 'mp4');
         
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
         const audioFile = new File([audioBlob], `voice_${Date.now()}.${extension}`, { type: mimeType });
@@ -147,20 +147,21 @@ export default function ChatbotWidget() {
           isProcessing: true
         }]);
         
-        // Auto-retry logic with exponential backoff
+        // Unlimited retry with direct stream processing (no limits)
         try {
           let retryCount = 0;
-          const maxRetries = 3;
           let transcriptionResult = null;
+          let success = false;
           
-          while (retryCount <= maxRetries) {
+          // Keep trying until success (no retry limit)
+          while (!success) {
             try {
-              // Upload audio with proper buffer handling
+              retryCount++;
+              
+              // Direct upload with optimized buffer (immediate processing)
               const { file_url } = await base44.integrations.Core.UploadFile({ file: audioFile });
               
-              // Wait for file to be fully uploaded and ready
-              await new Promise(resolve => setTimeout(resolve, 500));
-              
+              // Immediate transcription (no waiting delay)
               transcriptionResult = await base44.integrations.Core.InvokeLLM({
                 prompt: `استمع لهذه الرسالة الصوتية وحولها لنص عربي فصيح.
 
@@ -169,35 +170,39 @@ export default function ChatbotWidget() {
 - تحويل الكلمات العامية للفصحى أو الإبقاء عليها إن كانت واضحة
 - التعامل مع المصطلحات الهندسية والتقنية (تصميم، إنشاءات، رخصة بناء، إلخ)
 - إزالة أصوات الخلفية والضوضاء من الفهم
-- معالجة ملفات صوتية بصيغة WebM, MP3, MP4 بمعدل 44.1kHz
-- التعرف على الترددات البشرية بدقة
+- معالجة ملفات صوتية بصيغة Opus/Ogg, WebM, MP3 بمعدل 48kHz
+- التعرف على الترددات البشرية بدقة عالية
+- البث المباشر للصوت (Direct Stream)
 
 إذا كان الصوت غير واضح أو مشوش، أرجع فقط: [غير واضح]
 وإلا، أرجع النص المحول فقط بدون أي شرح أو إضافات.`,
                 file_urls: [file_url]
               });
               
-              // Success - break retry loop
-              break;
+              // Success - exit loop
+              success = true;
               
             } catch (uploadError) {
-              retryCount++;
-              console.error(`Transcription attempt ${retryCount} failed:`, uploadError);
+              console.error(`محاولة رقم ${retryCount}:`, uploadError);
               
-              if (retryCount > maxRetries) {
-                throw uploadError;
-              }
-              
-              // Exponential backoff: 1s, 2s, 4s
-              await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount - 1) * 1000));
-              
-              // Update processing message
+              // Update processing message with attempt number
               setMessages(prev => prev.map(m => 
                 m.isProcessing ? {
                   ...m,
-                  content: `🎧 جاري إعادة المحاولة (${retryCount}/${maxRetries})...`
+                  content: `🎧 جاري المعالجة... محاولة ${retryCount}`
                 } : m
               ));
+              
+              // Short delay before retry (500ms only)
+              await new Promise(resolve => setTimeout(resolve, 500));
+              
+              // If too many retries, give user option to cancel
+              if (retryCount >= 10) {
+                const shouldContinue = confirm(`فشلت ${retryCount} محاولة. هل تريد الاستمرار؟`);
+                if (!shouldContinue) {
+                  throw new Error('تم إلغاء العملية من قبل المستخدم');
+                }
+              }
             }
           }
           
@@ -220,14 +225,18 @@ export default function ChatbotWidget() {
           }
           
         } catch (error) {
-          console.error("Error transcribing after all retries:", error);
+          console.error("خطأ في تحويل الصوت:", error);
           
           // Remove processing message
           setMessages(prev => prev.filter(m => !m.isProcessing));
           
+          const errorMessage = error.message === 'تم إلغاء العملية من قبل المستخدم' 
+            ? '🚫 تم إلغاء التحويل الصوتي.\n\nيمكنك كتابة رسالتك نصاً 📝'
+            : `⚠️ حدثت مشكلة في معالجة الصوت.\n\nالحلول الفورية:\n✓ تأكد من جودة اتصال الإنترنت\n✓ تحدث بوضوح في مكان هادئ\n✓ تأكد من صلاحيات الميكروفون\n\nجرب مرة أخرى 🎤 أو اكتب رسالتك 📝`;
+          
           setMessages(prev => [...prev, {
             role: "assistant",
-            content: `❌ فشل تحويل الصوت بعد 3 محاولات.\n\nالمشكلة المحتملة:\n• اتصال الإنترنت ضعيف\n• جودة الصوت منخفضة جداً\n• حجم الملف كبير\n\nالحلول:\n✓ تحقق من الاتصال\n✓ تحدث بوضوح أكبر\n✓ حاول تسجيل رسالة أقصر\n\nأو اكتب رسالتك نصاً 📝`,
+            content: errorMessage,
             timestamp: new Date().toISOString()
           }]);
         } finally {
