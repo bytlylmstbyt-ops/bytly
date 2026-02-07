@@ -94,8 +94,24 @@ export default function ChatbotWidget() {
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 48000
+        }
+      });
+      
+      // Check supported formats (WebM preferred, MP3 fallback)
+      let mimeType = 'audio/webm;codecs=opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/webm';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = 'audio/mp4';
+        }
+      }
+      
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       
       audioChunksRef.current = [];
       
@@ -106,11 +122,23 @@ export default function ChatbotWidget() {
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach(track => track.stop());
         
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        const audioFile = new File([audioBlob], `voice_${Date.now()}.webm`, { type: 'audio/webm' });
+        const mimeType = mediaRecorder.mimeType || 'audio/webm';
+        const extension = mimeType.includes('webm') ? 'webm' : 'mp4';
         
-        // Transcribe with Gemini (supports Arabic dialects including Saudi)
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+        const audioFile = new File([audioBlob], `voice_${Date.now()}.${extension}`, { type: mimeType });
+        
+        // Transcribe with Gemini 1.5 Pro (supports audio streams: WebM, MP3, MP4)
         setUploading(true);
+        
+        // Show processing message
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: "🎧 جاري معالجة الرسالة الصوتية...",
+          timestamp: new Date().toISOString(),
+          isProcessing: true
+        }]);
+        
         try {
           const { file_url } = await base44.integrations.Core.UploadFile({ file: audioFile });
           
@@ -120,13 +148,17 @@ export default function ChatbotWidget() {
 تعليمات التحويل:
 - دعم اللهجة السعودية والعامية الخليجية بالكامل
 - تحويل الكلمات العامية للفصحى أو الإبقاء عليها إن كانت واضحة
-- التعامل مع المصطلحات الهندسية والتقنية
+- التعامل مع المصطلحات الهندسية والتقنية (تصميم، إنشاءات، رخصة بناء، إلخ)
 - إزالة أصوات الخلفية والضوضاء من الفهم
+- معالجة ملفات صوتية بصيغة WebM, MP3, MP4
 
 إذا كان الصوت غير واضح أو مشوش، أرجع فقط: [غير واضح]
 وإلا، أرجع النص المحول فقط بدون أي شرح أو إضافات.`,
             file_urls: [file_url]
           });
+          
+          // Remove processing message
+          setMessages(prev => prev.filter(m => !m.isProcessing));
 
           const cleanText = transcriptionResult.trim();
           

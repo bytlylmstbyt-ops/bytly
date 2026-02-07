@@ -88,47 +88,63 @@ Deno.serve(async (req) => {
           throw new Error('Gemini API key not configured');
         }
 
-        // Call Gemini API
-        const geminiResponse = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              system_instruction: {
-                parts: [{ text: systemInstructions }]
-              },
-              contents: [{
-                parts: [{ text: user_message }]
-              }],
-              generationConfig: {
-                temperature: 0.7,
-                topP: 0.95,
-                maxOutputTokens: 2048
-              }
-            })
-          }
-        );
-
-        if (!geminiResponse.ok) {
-          const errorText = await geminiResponse.text();
-          console.error('Gemini API error:', errorText);
-          throw new Error(`Gemini API failed: ${geminiResponse.status}`);
-        }
-
-        const geminiData = await geminiResponse.json();
-        botResponse = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'أعتذر، لم أتمكن من فهم سؤالك. يرجى التواصل مع فريق الدعم.';
+        // Call Gemini API with extended timeout for audio processing
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minutes timeout
         
-        // Format response for better readability
-        botResponse = botResponse
-          .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
-          .trim();
+        try {
+          const geminiResponse = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${geminiApiKey}`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              signal: controller.signal,
+              body: JSON.stringify({
+                system_instruction: {
+                  parts: [{ text: systemInstructions }]
+                },
+                contents: [{
+                  parts: [{ text: user_message }]
+                }],
+                generationConfig: {
+                  temperature: 0.7,
+                  topP: 0.95,
+                  maxOutputTokens: 3072
+                }
+              })
+            }
+          );
+          
+          clearTimeout(timeoutId);
+
+          if (!geminiResponse.ok) {
+            const errorText = await geminiResponse.text();
+            console.error('Gemini API error:', errorText);
+            throw new Error(`Gemini API failed: ${geminiResponse.status}`);
+          }
+
+          const geminiData = await geminiResponse.json();
+          botResponse = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || 'أعتذر، لم أتمكن من فهم سؤالك. يرجى التواصل مع فريق الدعم.';
+          
+          // Format response for better readability
+          botResponse = botResponse
+            .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
+            .trim();
+          
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          throw fetchError;
+        }
         
       } catch (llmError) {
         console.error('Gemini API error:', llmError);
-        botResponse = 'أعتذر، أواجه مشكلة تقنية. يرجى التواصل مع فريق الدعم الفني على info@mybytly.com';
+        if (llmError.name === 'AbortError') {
+          botResponse = 'أعتذر، استغرق الرد وقتاً طويلاً. يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى.';
+        } else {
+          botResponse = 'أعتذر، أواجه مشكلة تقنية. يرجى التواصل مع فريق الدعم الفني على info@mybytly.com';
+        }
         shouldEscalate = true;
       }
 
