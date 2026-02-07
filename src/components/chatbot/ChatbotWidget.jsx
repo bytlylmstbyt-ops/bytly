@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Send, MessageCircle, X, Loader2, Phone, Video, Mic, Paperclip } from "lucide-react";
+import { Send, MessageCircle, X, Loader2, Phone, Video, Mic, Paperclip, Square } from "lucide-react";
 
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,9 +20,14 @@ export default function ChatbotWidget() {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [attachments, setAttachments] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordDuration, setRecordDuration] = useState(0);
   const messagesEndRef = useRef(null);
   const widgetRef = useRef(null);
   const fileInputRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const recordTimerRef = useRef(null);
 
   useEffect(() => {
     initializeChatbot();
@@ -87,26 +92,76 @@ export default function ChatbotWidget() {
     }
   };
 
-  const handleVoiceTranscription = async (audioFile) => {
-    setUploading(true);
+  const startRecording = async () => {
     try {
-      // Upload voice file
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: audioFile });
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
       
-      // Transcribe using Gemini
-      const transcription = await base44.integrations.Core.InvokeLLM({
-        prompt: "استمع لهذه الرسالة الصوتية وحولها لنص عربي. أرجع النص فقط بدون أي إضافات.",
-        file_urls: [file_url]
-      });
-
-      // Add as user message with voice icon
-      setInputValue(`🎤 ${transcription}`);
+      audioChunksRef.current = [];
+      
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(track => track.stop());
+        
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioFile = new File([audioBlob], `voice_${Date.now()}.webm`, { type: 'audio/webm' });
+        
+        // Transcribe
+        setUploading(true);
+        try {
+          const { file_url } = await base44.integrations.Core.UploadFile({ file: audioFile });
+          const transcription = await base44.integrations.Core.InvokeLLM({
+            prompt: "استمع لهذه الرسالة الصوتية وحولها لنص. أرجع النص فقط بدون أي شرح أو إضافات.",
+            file_urls: [file_url]
+          });
+          setInputValue(`🎤 ${transcription}`);
+        } catch (error) {
+          console.error("Error transcribing:", error);
+          setMessages(prev => [...prev, {
+            role: "assistant",
+            content: "عذراً، لم أتمكن من تحويل الرسالة الصوتية. حاول مرة أخرى.",
+            timestamp: new Date().toISOString()
+          }]);
+        } finally {
+          setUploading(false);
+        }
+      };
+      
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordDuration(0);
+      
+      recordTimerRef.current = setInterval(() => {
+        setRecordDuration(prev => prev + 1);
+      }, 1000);
+      
     } catch (error) {
-      console.error("Error transcribing voice:", error);
-    } finally {
-      setUploading(false);
+      console.error('Microphone access error:', error);
+      alert('لا يمكن الوصول للميكروفون. تأكد من الأذونات.');
     }
   };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      if (recordTimerRef.current) {
+        clearInterval(recordTimerRef.current);
+        recordTimerRef.current = null;
+      }
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (recordTimerRef.current) clearInterval(recordTimerRef.current);
+      if (mediaRecorderRef.current) mediaRecorderRef.current.stop();
+    };
+  }, []);
 
   const handleSendMessage = async () => {
     if (!inputValue.trim() && attachments.length === 0) return;
@@ -382,24 +437,28 @@ export default function ChatbotWidget() {
                     )}
                   </Button>
 
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => {
-                      const input = document.createElement('input');
-                      input.type = 'file';
-                      input.accept = 'audio/*';
-                      input.onchange = async (e) => {
-                        const file = e.target.files?.[0];
-                        if (file) await handleVoiceTranscription(file);
-                      };
-                      input.click();
-                    }}
-                    disabled={loading || uploading}
-                    title="رسالة صوتية (تحويل تلقائي لنص)"
-                  >
-                    <Mic className="w-4 h-4" />
-                  </Button>
+                  {!isRecording ? (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={startRecording}
+                      disabled={loading || uploading}
+                      title="تسجيل رسالة صوتية"
+                      className="relative"
+                    >
+                      <Mic className="w-4 h-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={stopRecording}
+                      title="إيقاف التسجيل"
+                      className="animate-pulse"
+                    >
+                      <Square className="w-4 h-4" />
+                    </Button>
+                  )}
 
                   <Input
                     value={inputValue}
@@ -424,8 +483,16 @@ export default function ChatbotWidget() {
                   </Button>
                 </div>
 
+                {isRecording && (
+                  <div className="flex items-center justify-center gap-2 py-1 bg-red-50 rounded">
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                    <span className="text-xs text-red-700 font-mono">
+                      جاري التسجيل... {Math.floor(recordDuration / 60)}:{(recordDuration % 60).toString().padStart(2, '0')}
+                    </span>
+                  </div>
+                )}
                 <p className="text-xs text-slate-500 text-center">
-                  💬 الدردشة مع Gemini AI • 🎤 رسائل صوتية • 📎 ملفات
+                  💬 الدردشة مع Gemini AI • 🎤 تسجيل مباشر • 📎 ملفات
                 </p>
               </div>
             </Card>
