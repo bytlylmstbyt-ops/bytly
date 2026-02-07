@@ -302,6 +302,8 @@ export default function ChatbotWidget() {
     setLoading(true);
 
     try {
+      console.log('Sending message to chatbot...', { messageLength: userMessage.length, hasAttachments: userAttachments.length > 0 });
+      
       const response = await base44.functions.invoke("chatbotHandler", {
         user_message: userMessage,
         visitor_id: visitorId,
@@ -309,6 +311,8 @@ export default function ChatbotWidget() {
         user_type: currentUser ? (currentUser.role === 'admin' ? 'consultant' : 'client') : 'visitor',
         attachments: userAttachments
       });
+
+      console.log('Chatbot response received:', { success: response.data?.success, hasResponse: !!response.data?.response });
 
       if (response.data.success) {
         setMessages(prev => [...prev, {
@@ -325,12 +329,30 @@ export default function ChatbotWidget() {
             timestamp: new Date().toISOString()
           }]);
         }
+      } else {
+        // Handle case where success is false
+        setMessages(prev => [...prev, {
+          role: "assistant",
+          content: response.data.response || "⚠️ حدثت مشكلة في معالجة طلبك. يرجى المحاولة مرة أخرى.",
+          timestamp: new Date().toISOString()
+        }]);
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Chatbot error:", error);
+      
+      let errorMessage = "⚠️ حدثت مشكلة في إرسال رسالتك.\n\n";
+      
+      if (error.message?.includes('timeout') || error.message?.includes('network')) {
+        errorMessage += "المشكلة: انقطاع الاتصال بالإنترنت\nالحل: تحقق من اتصالك وأعد المحاولة";
+      } else if (error.message?.includes('429')) {
+        errorMessage += "المشكلة: طلبات كثيرة جداً\nالحل: انتظر 30 ثانية ثم حاول مرة أخرى";
+      } else {
+        errorMessage += "يرجى:\n• المحاولة مرة أخرى\n• إذا استمرت المشكلة، تواصل معنا:\n  info@mybytly.com";
+      }
+      
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: "أعتذر، حدثت مشكلة تقنية. يرجى محاولة لاحقاً.",
+        content: errorMessage,
         timestamp: new Date().toISOString()
       }]);
     } finally {
