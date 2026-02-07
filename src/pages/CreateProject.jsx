@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
   Briefcase, MapPin, Calendar, DollarSign, 
-  Upload, X, Loader2, CheckCircle, FileText, Plus, Building, Zap, HelpCircle
+  Upload, X, Loader2, CheckCircle, FileText, Plus, Building, Zap, HelpCircle, Sparkles
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import AIProjectAssistant from "@/components/project/AIProjectAssistant";
 
 export default function CreateProject() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -32,6 +33,7 @@ export default function CreateProject() {
   const [user, setUser] = useState(null);
   const [client, setClient] = useState(null);
   const [preselectedEngineer, setPreselectedEngineer] = useState(null);
+  const [useAI, setUseAI] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -46,6 +48,20 @@ export default function CreateProject() {
   });
   
   const [showMilestones, setShowMilestones] = useState(false);
+
+  const handleAIComplete = (aiData) => {
+    setFormData(prev => ({
+      ...prev,
+      title: aiData.title || prev.title,
+      description: aiData.description || prev.description,
+      category: aiData.type || prev.category,
+      budget_min: aiData.budget_min || prev.budget_min,
+      budget_max: aiData.budget_max || prev.budget_max,
+      location: aiData.location || prev.location
+    }));
+    setUseAI(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   useEffect(() => {
     loadUserData();
@@ -315,7 +331,27 @@ export default function CreateProject() {
           <p className="text-slate-600">
             {preselectedEngineerId ? "أرسل طلبك مباشرة للمهندس المختار" : "أضف تفاصيل مشروعك للحصول على عروض من المهندسين"}
           </p>
+          
+          {!useAI && (
+            <Button
+              onClick={() => setUseAI(true)}
+              variant="outline"
+              className="mt-4 border-2 border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900"
+            >
+              <Sparkles className="w-4 h-4 ml-2" />
+              استخدم المساعد الذكي لكتابة وصف احترافي
+            </Button>
+          )}
         </motion.div>
+
+        {useAI && (
+          <div className="mb-6">
+            <AIProjectAssistant 
+              onComplete={handleAIComplete}
+              initialData={formData}
+            />
+          </div>
+        )}
 
         {preselectedEngineer && (
           <Card className="border-2 border-green-200 bg-green-50 mb-6">
