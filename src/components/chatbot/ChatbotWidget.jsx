@@ -67,7 +67,13 @@ export default function ChatbotWidget() {
     });
 
     setConversationId(newConv.id);
-    setMessages(newConv.messages);
+    setMessages([
+      {
+        role: "assistant",
+        content: "مرحباً بك في بيتلي! 👋\n\nأنا نور، مساعدتك الذكية. سعيدة بمساعدتك في مشروعك الهندسي 🏗️\n\nكيف يمكنني خدمتك اليوم؟",
+        timestamp: new Date().toISOString()
+      }
+    ]);
   };
 
   const handleFileUpload = async (e) => {
@@ -424,8 +430,11 @@ export default function ChatbotWidget() {
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-white">مساعد بيتلي</CardTitle>
-                    <p className="text-xs text-white/80 mt-1">متاح 24/7 • اسحبني لتحريكي</p>
+                    <CardTitle className="text-white flex items-center gap-2">
+                      <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                      نور - مساعدة بيتلي
+                    </CardTitle>
+                    <p className="text-xs text-white/80 mt-1">🎤 رسائل صوتية • 💬 رد فوري • 📱 متاح دائماً</p>
                   </div>
                 </div>
               </CardHeader>
@@ -606,7 +615,7 @@ export default function ChatbotWidget() {
                   </div>
                 )}
                 <p className="text-xs text-slate-500 text-center">
-                  💬 الدردشة مع Gemini AI • 🎤 تسجيل مباشر • 📎 ملفات
+                  مدعوم بـ Gemini AI 🤖 • رسائل صوتية مباشرة 🎤 • مرفقات ومخططات 📎
                 </p>
               </div>
             </Card>
