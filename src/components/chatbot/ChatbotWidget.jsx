@@ -109,20 +109,42 @@ export default function ChatbotWidget() {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const audioFile = new File([audioBlob], `voice_${Date.now()}.webm`, { type: 'audio/webm' });
         
-        // Transcribe
+        // Transcribe with Gemini (supports Arabic dialects including Saudi)
         setUploading(true);
         try {
           const { file_url } = await base44.integrations.Core.UploadFile({ file: audioFile });
-          const transcription = await base44.integrations.Core.InvokeLLM({
-            prompt: "استمع لهذه الرسالة الصوتية وحولها لنص. أرجع النص فقط بدون أي شرح أو إضافات.",
+          
+          const transcriptionResult = await base44.integrations.Core.InvokeLLM({
+            prompt: `استمع لهذه الرسالة الصوتية وحولها لنص عربي فصيح.
+
+تعليمات التحويل:
+- دعم اللهجة السعودية والعامية الخليجية بالكامل
+- تحويل الكلمات العامية للفصحى أو الإبقاء عليها إن كانت واضحة
+- التعامل مع المصطلحات الهندسية والتقنية
+- إزالة أصوات الخلفية والضوضاء من الفهم
+
+إذا كان الصوت غير واضح أو مشوش، أرجع فقط: [غير واضح]
+وإلا، أرجع النص المحول فقط بدون أي شرح أو إضافات.`,
             file_urls: [file_url]
           });
-          setInputValue(`🎤 ${transcription}`);
+
+          const cleanText = transcriptionResult.trim();
+          
+          // Check if audio was unclear
+          if (cleanText.includes('[غير واضح]') || cleanText.toLowerCase().includes('unclear')) {
+            setMessages(prev => [...prev, {
+              role: "assistant",
+              content: "⚠️ عذراً، الرسالة الصوتية غير واضحة.\n\nيرجى:\n• التسجيل في مكان هادئ\n• التحدث بوضوح وببطء\n• التأكد من قرب الميكروفون\n\nجرب مرة أخرى 🎤",
+              timestamp: new Date().toISOString()
+            }]);
+          } else {
+            setInputValue(`🎤 ${cleanText}`);
+          }
         } catch (error) {
           console.error("Error transcribing:", error);
           setMessages(prev => [...prev, {
             role: "assistant",
-            content: "عذراً، لم أتمكن من تحويل الرسالة الصوتية. حاول مرة أخرى.",
+            content: "عذراً، حدثت مشكلة في تحويل الصوت.\n\nتأكد من:\n• جودة الصوت\n• عمل الميكروفون\n• الاتصال بالإنترنت\n\nحاول مرة أخرى 🔄",
             timestamp: new Date().toISOString()
           }]);
         } finally {
