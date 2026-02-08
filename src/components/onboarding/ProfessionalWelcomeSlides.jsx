@@ -55,11 +55,16 @@ export default function ProfessionalWelcomeSlides({ onComplete, onSkip }) {
   const Icon = currentSlideData.icon;
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-slate-900/90 to-slate-800/95 backdrop-blur-lg z-50 overflow-y-auto p-4 flex items-center justify-center" dir="rtl" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-900/90 to-slate-800/95 backdrop-blur-lg z-50 flex items-start justify-center p-4" dir="rtl" style={{ 
+      overflow: 'auto',
+      WebkitOverflowScrolling: 'touch',
+      minHeight: '100vh'
+    }}>
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className="relative w-full max-w-6xl my-8"
+        style={{ marginBottom: 'calc(env(safe-area-inset-bottom) + 2rem)' }}
       >
         <Card className="overflow-hidden shadow-2xl border border-slate-200 bg-white">
           <button

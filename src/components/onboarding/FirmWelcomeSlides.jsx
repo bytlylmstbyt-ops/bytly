@@ -55,11 +55,16 @@ export default function FirmWelcomeSlides({ onComplete, onSkip }) {
   const Icon = currentSlideData.icon;
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-slate-900/95 to-indigo-900/95 backdrop-blur-md z-50 overflow-y-auto p-4 flex items-center justify-center" dir="rtl" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-900/95 to-indigo-900/95 backdrop-blur-md z-50 flex items-start justify-center p-4" dir="rtl" style={{ 
+      overflow: 'auto',
+      WebkitOverflowScrolling: 'touch',
+      minHeight: '100vh'
+    }}>
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="relative w-full max-w-5xl my-8"
+        style={{ marginBottom: 'calc(env(safe-area-inset-bottom) + 2rem)' }}
       >
         <Card className="overflow-hidden shadow-2xl border-2 border-indigo-200/20 bg-white">
           <button
