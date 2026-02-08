@@ -52,11 +52,11 @@ export default function WelcomeSlides({ onComplete, onSkip }) {
   const Icon = currentSlideData.icon;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" dir="rtl">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 overflow-y-auto p-4 flex items-center justify-center" dir="rtl" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="relative w-full max-w-4xl"
+        className="relative w-full max-w-4xl my-8"
       >
         <Card className="overflow-hidden shadow-2xl">
           {/* Close Button */}
