@@ -226,141 +226,137 @@ Deno.serve(async (req) => {
           throw new Error('Gemini API key not configured');
         }
 
-        // Retry mechanism with smart fallback
+        // Generate contextual responses based on keywords
+        const getContextualResponse = (msg) => {
+          const msgLower = msg.toLowerCase();
+          const responseVariants = [];
+          
+          if (msgLower.includes('سعر') || msgLower.includes('تكلفة') || msgLower.includes('كم')) {
+            responseVariants.push(
+              'الأسعار تختلف بحسب نوع المشروع والتفاصيل 💰 انشر مشروعك للحصول على عروض دقيقة!',
+              'صعب أحدد سعراً بدون معرفة تفاصيل مشروعك 📊 انشر واستقبل عروضاً متنوعة.',
+              'كل مشروع له سعره الخاص 💭 أفضل طريقة: انشر مشروعك واقارن بين العروض.'
+            );
+          } else if (msgLower.includes('مهندس') || msgLower.includes('تصميم')) {
+            responseVariants.push(
+              'عندنا مهندسين محترفين في كل التخصصات! تصفح صفحة المهندسين أو انشر مشروعك 👷',
+              'مئات المهندسين المعتمدين جاهزين للعمل 🎯 ابحث أو انشر مشروعك.',
+              'فريق متنوع من المهندسين المتخصصين 💼 تصفح ملفاتهم أو انشر مشروعك.'
+            );
+          } else if (msgLower.includes('دفع') || msgLower.includes('ضمان') || msgLower.includes('آمن')) {
+            responseVariants.push(
+              'الدفع آمن 100% بنظام Escrow 🛡️ أموالك محجوزة لحد ما تستلم وتوافق!',
+              'نظام دفع محمي بالكامل! المبلغ ما ينصرف إلا بموافقتك ✓',
+              'اطمن! الدفع الآمن يحفظ حقك، والمبلغ محفوظ لحد التسليم 🔒'
+            );
+          } else if (msgLower.includes('خدم') || msgLower.includes('معلوم')) {
+            responseVariants.push(
+              'أقدر أساعدك في:\n• نشر مشروع جديد\n• البحث عن مهندسين\n• فهم نظام الدفع\n\nوش تحتاج؟ 😊',
+              'خدماتنا:\n• مشاريع هندسية كاملة\n• تصاميم معمارية وداخلية\n• استشارات سريعة\n\nكيف أساعدك؟ 👋',
+              'بيتلي منصة شاملة:\n✓ مهندسين معتمدين\n✓ دفع آمن\n✓ عقود موثقة\n\nاسأل عن أي شي! 💬'
+            );
+          } else {
+            responseVariants.push(
+              'أهلاً! كيف أقدر أساعدك؟ 😊 اسأل عن المشاريع، المهندسين، أو أي شي يخص بيتلي.',
+              'مرحباً! وش تحتاج؟ 👋 سواء تبي تنشر مشروع أو تلاقي مهندس، أنا هنا.',
+              'حياك! 💬 أي استفسار عن خدماتنا، نظام الدفع، أو الخطوات - فقط اسأل.'
+            );
+          }
+          
+          return responseVariants[Math.floor(Math.random() * responseVariants.length)];
+        };
+        
+        // Try Gemini API with retries
         let retries = 0;
-        const maxRetries = 3;
+        const maxRetries = 2;
         let lastError = null;
 
         while (retries < maxRetries && !botResponse) {
           try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), retries === 0 ? 30000 : 15000); // 30s first, 15s for retries
+            const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
 
-            console.log(`Gemini API attempt ${retries + 1}/${maxRetries}...`);
+            console.log(`Gemini attempt ${retries + 1}/${maxRetries}`);
 
             const geminiResponse = await fetch(
               `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
               {
                 method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 signal: controller.signal,
                 body: JSON.stringify({
-                system_instruction: {
-                  parts: [{ text: systemInstructions }]
-                },
-                contents: [
-                  // Include conversation history for context
-                  ...conversationHistory.map(msg => ({
-                    role: msg.role === 'assistant' ? 'model' : 'user',
-                    parts: [{ text: msg.content }]
-                  })),
-                  // Current message
-                  {
-                    role: 'user',
-                    parts: [{ text: user_message }]
-                  }
-                ],
-                generationConfig: {
-                  temperature: 0.8,
-                  topP: 0.95,
-                  topK: 40,
-                  maxOutputTokens: 2048,
-                  candidateCount: 1
-                },
-                safetySettings: [
-                  {
-                    category: "HARM_CATEGORY_HARASSMENT",
-                    threshold: "BLOCK_NONE"
+                  system_instruction: {
+                    parts: [{ text: systemInstructions }]
                   },
-                  {
-                    category: "HARM_CATEGORY_HATE_SPEECH",
-                    threshold: "BLOCK_NONE"
+                  contents: [
+                    ...conversationHistory.map(msg => ({
+                      role: msg.role === 'assistant' ? 'model' : 'user',
+                      parts: [{ text: msg.content }]
+                    })),
+                    {
+                      role: 'user',
+                      parts: [{ text: user_message }]
+                    }
+                  ],
+                  generationConfig: {
+                    temperature: 0.9,
+                    topP: 0.95,
+                    topK: 40,
+                    maxOutputTokens: 1024,
+                    candidateCount: 1
                   },
-                  {
-                    category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                    threshold: "BLOCK_NONE"
-                  },
-                  {
-                    category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-                    threshold: "BLOCK_NONE"
-                  }
-                ]
-              })
+                  safetySettings: [
+                    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                  ]
+                })
               }
-              );
+            );
 
-              clearTimeout(timeoutId);
+            clearTimeout(timeoutId);
 
-              if (!geminiResponse.ok) {
-              const errorText = await geminiResponse.text();
-              console.error(`Gemini error (attempt ${retries + 1}):`, errorText);
-              throw new Error(`Gemini API status ${geminiResponse.status}`);
-              }
+            if (!geminiResponse.ok) {
+              throw new Error(`API ${geminiResponse.status}`);
+            }
 
-              const geminiData = await geminiResponse.json();
-              console.log('Gemini response received successfully');
+            const geminiData = await geminiResponse.json();
+            
+            if (geminiData.candidates?.[0]?.content?.parts?.[0]?.text) {
+              botResponse = geminiData.candidates[0].content.parts[0].text
+                .replace(/\*\*(.*?)\*\*/g, '$1')
+                .replace(/\* /g, '• ')
+                .trim();
+              
+              console.log('✓ Response generated');
+              break;
+            } else {
+              throw new Error('Empty response');
+            }
 
-              // Extract text from response
-              if (!geminiData.candidates || geminiData.candidates.length === 0) {
-              throw new Error('No candidates in response');
-              }
+          } catch (fetchError) {
+            clearTimeout(timeoutId);
+            lastError = fetchError;
+            retries++;
+            console.error(`Retry ${retries}:`, fetchError.message);
 
-              const candidate = geminiData.candidates[0];
+            if (retries < maxRetries) {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+          }
+        }
 
-              // Check if response was blocked
-              if (candidate.finishReason === 'SAFETY' || candidate.finishReason === 'RECITATION') {
-              console.warn('Response blocked by safety filters');
-              botResponse = getSmartFallback(user_message);
-              break; // Exit retry loop
-              } else if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
-              throw new Error('No content in candidate');
-              } else {
-              botResponse = candidate.content.parts[0].text || '';
+        // Use contextual fallback if AI failed
+        if (!botResponse) {
+          console.log('Using contextual fallback');
+          botResponse = getContextualResponse(user_message);
+        }
 
-              if (!botResponse) {
-              throw new Error('Empty response text');
-              }
-
-              // Format response for better readability
-              botResponse = botResponse
-              .replace(/\*\*(.*?)\*\*/g, '$1')
-              .replace(/\* /g, '• ')
-              .trim();
-
-              console.log('Successfully generated response');
-              break; // Success - exit retry loop
-              }
-
-              } catch (fetchError) {
-              clearTimeout(timeoutId);
-              lastError = fetchError;
-              retries++;
-              console.error(`Attempt ${retries} failed:`, fetchError.message);
-
-              // Wait before retry (exponential backoff: 500ms, 1s, 2s)
-              if (retries < maxRetries) {
-              await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, retries - 1)));
-              }
-              }
-              }
-
-              // If all retries failed, provide a helpful generic response
-              if (!botResponse && lastError) {
-                console.error('All retries exhausted');
-                const responses = [
-                  'آسفة! 😊 حصل خطأ مؤقت. أعد إرسال سؤالك وسأجيبك مباشرة.',
-                  'عفواً! 🙏 واجهت مشكلة بسيطة. حاول مرة ثانية الآن.',
-                  'معليش! حصلت مشكلة صغيرة. أرسل سؤالك مرة أخرى.'
-                ];
-                botResponse = responses[Math.floor(Math.random() * responses.length)];
-              }
-
-              } catch (llmError) {
-              console.error('Outer error:', llmError);
-              botResponse = 'آسفة! حصل خطأ بسيط. أعد المحاولة الآن 🔄';
-              }
+      } catch (llmError) {
+        console.error('LLM error:', llmError);
+        botResponse = getContextualResponse(user_message);
+      }
 
     // Update conversation if exists
     if (conversation_id) {
