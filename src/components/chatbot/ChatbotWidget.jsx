@@ -340,14 +340,14 @@ export default function ChatbotWidget() {
     } catch (error) {
       console.error("Chatbot error:", error);
       
-      let errorMessage = "⚠️ حدثت مشكلة في إرسال رسالتك.\n\n";
+      let errorMessage = "عذراً! 😅 حصل خطأ بسيط.\n\n";
       
       if (error.message?.includes('timeout') || error.message?.includes('network')) {
-        errorMessage += "المشكلة: انقطاع الاتصال بالإنترنت\nالحل: تحقق من اتصالك وأعد المحاولة";
+        errorMessage += "يبدو أن الاتصال بطيء. جرب مرة أخرى الآن 🔄";
       } else if (error.message?.includes('429')) {
-        errorMessage += "المشكلة: طلبات كثيرة جداً\nالحل: انتظر 30 ثانية ثم حاول مرة أخرى";
+        errorMessage += "الكثير من الرسائل دفعة واحدة! انتظر 10 ثوانٍ وأعد المحاولة ⏱️";
       } else {
-        errorMessage += "يرجى:\n• المحاولة مرة أخرى\n• إذا استمرت المشكلة، تواصل معنا:\n  info@mybytly.com";
+        errorMessage += "أعد إرسال رسالتك وسأساعدك فوراً! 💬";
       }
       
       setMessages(prev => [...prev, {

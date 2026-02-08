@@ -302,23 +302,24 @@ ${userContext}
           console.error('Gemini fetch error:', fetchError);
           throw fetchError;
         }
-        
-      } catch (llmError) {
+
+        } catch (llmError) {
         console.error('Gemini API error details:', {
           name: llmError.name,
           message: llmError.message,
           stack: llmError.stack
         });
-        
+
+        // Try to provide helpful response even on error
         if (llmError.name === 'AbortError') {
-          botResponse = '⏱️ استغرق الرد وقتاً أطول من المتوقع.\n\nالحلول:\n• تحقق من اتصالك بالإنترنت\n• حاول إعادة صياغة السؤال بشكل أبسط\n• أو تواصل مع الدعم الفني مباشرة 📞';
-        } else if (llmError.message.includes('لم يتم استلام رد')) {
-          botResponse = '🤖 نواجه ضغط مؤقت على الخادم.\n\nيرجى المحاولة مرة أخرى بعد ثوانٍ قليلة.\nإذا استمرت المشكلة، تواصل معنا على info@mybytly.com';
+          botResponse = 'عذراً على التأخير! 😊\n\nهل يمكنك إعادة صياغة سؤالك بشكل أبسط؟ أو اسألني عن:\n• خدماتنا الهندسية\n• كيفية نشر مشروع\n• نظام الدفع الآمن';
         } else {
-          botResponse = '⚠️ أعتذر، أواجه مشكلة تقنية مؤقتة.\n\nيمكنك:\n• المحاولة مرة أخرى الآن\n• التواصل مع فريقنا: info@mybytly.com\n• استخدام البحث في المنصة للإجابات السريعة';
+          // Give a friendly retry message without escalating immediately
+          botResponse = 'آسفة! حصل خطأ صغير 🙏\n\nيرجى إعادة إرسال رسالتك مرة أخرى، وسأكون سعيدة بمساعدتك.';
         }
-        shouldEscalate = true;
-      }
+        // Don't escalate on first error
+        shouldEscalate = false;
+        }
 
     // Update conversation if exists
     if (conversation_id) {
