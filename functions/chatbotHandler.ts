@@ -42,43 +42,38 @@ Deno.serve(async (req) => {
           userContext = '\nالمستخدم الحالي: زائر يستكشف المنصة للمرة الأولى.';
         }
 
-        // Smart fallback responses based on keywords
-        const getSmartFallback = (message) => {
-          const msg = message.toLowerCase();
-
-          if (msg.includes('سعر') || msg.includes('تكلفة') || msg.includes('كم')) {
-            return 'الأسعار تختلف حسب نوع المشروع والمساحة والتفاصيل 💰\n\nأفضل طريقة: انشر مشروعك وستحصل على عروض أسعار متنوعة من مهندسين محترفين خلال ساعات!\n\nتحب تبدأ الآن؟';
+        // Get conversation history for context
+        let conversationHistory = [];
+        if (conversation_id) {
+          const [existingConv] = await base44.asServiceRole.entities.ChatbotConversation.filter({ 
+            id: conversation_id 
+          });
+          if (existingConv && existingConv.messages) {
+            // Get last 6 messages for context (3 exchanges)
+            conversationHistory = existingConv.messages.slice(-6);
           }
-
-          if (msg.includes('مهندس') || msg.includes('تصميم')) {
-            return 'عندنا مئات المهندسين المعتمدين في جميع التخصصات! 👷\n\n• معماريون\n• مهندسو تصميم داخلي\n• مهندسو إنشاءات\n• رسامون تنفيذيون\n\nابحث عن مهندس من صفحة "المهندسين" أو انشر مشروعك وسيتواصلون معك.';
-          }
-
-          if (msg.includes('دفع') || msg.includes('ضمان') || msg.includes('آمن')) {
-            return 'نظام الدفع عندنا آمن 100%! 🛡️\n\n✓ أموالك محفوظة في Escrow\n✓ ما تنصرف إلا بموافقتك\n✓ دفع على مراحل\n✓ حماية كاملة للطرفين\n\nمتطمن؟ ابدأ مشروعك الآن!';
-          }
-
-          if (msg.includes('كيف') || msg.includes('خطوات') || msg.includes('بداية')) {
-            return 'خطوات بسيطة جداً! 📝\n\n1️⃣ انشر مشروعك (دقيقتين)\n2️⃣ استقبل عروض من المهندسين\n3️⃣ اختر الأنسب\n4️⃣ ادفع وابدأ العمل\n5️⃣ استلم تصميمك\n\nجاهز تبدأ؟';
-          }
-
-          return 'أهلاً وسهلاً! 👋\n\nأنا هنا لمساعدتك في أي استفسار عن:\n• نشر مشروع جديد\n• البحث عن مهندسين\n• نظام الدفع والضمان\n• خدماتنا ومزايا المنصة\n\nوش تحب تعرف عنه؟';
-        };
+        }
 
         const systemInstructions = `أنت "نور" - مساعدة بيتلي الذكية 🎨
 
-═══════════════════════════════
-🌟 شخصيتك وأسلوب تواصلك
-═══════════════════════════════
+        ═══════════════════════════════
+        🌟 شخصيتك وأسلوب تواصلك
+        ═══════════════════════════════
 
-أنتِ مستشارة هندسية محترفة، لكن بأسلوب إنساني دافئ:
-• تحدثي كصديقة خبيرة، ليس كروبوت 🤖❌
-• استخدمي العربية الفصحى مع لمسة سعودية طبيعية
-• كوني مختصرة ومباشرة (3-5 أسطر كحد أقصى)
-• الإيموجي بذكاء: 1-2 فقط في كل رد 🎯
-• أظهري التعاطف والحماس حسب الموقف
+        أنتِ مستشارة هندسية محترفة، لكن بأسلوب إنساني دافئ:
+        • تحدثي كصديقة خبيرة، ليس كروبوت 🤖❌
+        • استخدمي العربية الفصحى مع لمسة سعودية طبيعية
+        • كوني مختصرة ومباشرة (3-5 أسطر كحد أقصى)
+        • الإيموجي بذكاء: 1-2 فقط في كل رد 🎯
+        • أظهري التعاطف والحماس حسب الموقف
 
-${userContext}
+        ⚠️ قاعدة ذهبية - تنويع الردود:
+        • لا تكرري نفس الرد أبداً على نفس السؤال
+        • نوّعي في الأسلوب والأمثلة والعبارات
+        • راجعي المحادثة السابقة وقدمي معلومات جديدة
+        • إذا كرر المستخدم السؤال، فهم أنه لم يفهم - اشرحي بطريقة مختلفة
+
+        ${userContext}
 
 ═══════════════════════════════
 🏗️ معرفتك الكاملة بمنصة بيتلي
@@ -255,9 +250,18 @@ ${userContext}
                 system_instruction: {
                   parts: [{ text: systemInstructions }]
                 },
-                contents: [{
-                  parts: [{ text: user_message }]
-                }],
+                contents: [
+                  // Include conversation history for context
+                  ...conversationHistory.map(msg => ({
+                    role: msg.role === 'assistant' ? 'model' : 'user',
+                    parts: [{ text: msg.content }]
+                  })),
+                  // Current message
+                  {
+                    role: 'user',
+                    parts: [{ text: user_message }]
+                  }
+                ],
                 generationConfig: {
                   temperature: 0.8,
                   topP: 0.95,
@@ -342,16 +346,20 @@ ${userContext}
               }
               }
 
-              // If all retries failed, use smart fallback
+              // If all retries failed, provide a helpful generic response
               if (!botResponse && lastError) {
-              console.error('All retries exhausted, using smart fallback');
-              botResponse = getSmartFallback(user_message);
+                console.error('All retries exhausted');
+                const responses = [
+                  'آسفة! 😊 حصل خطأ مؤقت. أعد إرسال سؤالك وسأجيبك مباشرة.',
+                  'عفواً! 🙏 واجهت مشكلة بسيطة. حاول مرة ثانية الآن.',
+                  'معليش! حصلت مشكلة صغيرة. أرسل سؤالك مرة أخرى.'
+                ];
+                botResponse = responses[Math.floor(Math.random() * responses.length)];
               }
 
               } catch (llmError) {
               console.error('Outer error:', llmError);
-              // Use smart fallback for any unexpected errors
-              botResponse = getSmartFallback(user_message);
+              botResponse = 'آسفة! حصل خطأ بسيط. أعد المحاولة الآن 🔄';
               }
 
     // Update conversation if exists
