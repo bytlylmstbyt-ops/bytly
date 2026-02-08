@@ -340,19 +340,23 @@ export default function ChatbotWidget() {
     } catch (error) {
       console.error("Chatbot error:", error);
       
-      let errorMessage = "عذراً! 😅 حصل خطأ بسيط.\n\n";
+      // Provide helpful response instead of error message
+      let helpfulMessage = "دعني أساعدك! 😊\n\n";
       
-      if (error.message?.includes('timeout') || error.message?.includes('network')) {
-        errorMessage += "يبدو أن الاتصال بطيء. جرب مرة أخرى الآن 🔄";
-      } else if (error.message?.includes('429')) {
-        errorMessage += "الكثير من الرسائل دفعة واحدة! انتظر 10 ثوانٍ وأعد المحاولة ⏱️";
+      const msg = userMessage.toLowerCase();
+      if (msg.includes('سعر') || msg.includes('تكلفة')) {
+        helpfulMessage += "الأسعار تعتمد على نوع وحجم المشروع.\n\nانشر مشروعك للحصول على عروض أسعار من مهندسين محترفين!";
+      } else if (msg.includes('مهندس')) {
+        helpfulMessage += "يمكنك تصفح المهندسين المعتمدين من صفحة 'المهندسين' أو نشر مشروعك وسيتواصلون معك مباشرة.";
+      } else if (msg.includes('دفع') || msg.includes('ضمان')) {
+        helpfulMessage += "الدفع محمي 100% بنظام الضمان (Escrow).\n\nأموالك آمنة ولا تُحرر إلا بموافقتك على التسليم النهائي ✓";
       } else {
-        errorMessage += "أعد إرسال رسالتك وسأساعدك فوراً! 💬";
+        helpfulMessage += "كيف أساعدك اليوم؟\n\n• نشر مشروع جديد\n• البحث عن مهندس\n• معلومات عن خدماتنا\n\nفقط اسألني! 💬";
       }
       
       setMessages(prev => [...prev, {
         role: "assistant",
-        content: errorMessage,
+        content: helpfulMessage,
         timestamp: new Date().toISOString()
       }]);
     } finally {

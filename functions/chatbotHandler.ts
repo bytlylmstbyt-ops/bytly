@@ -42,6 +42,29 @@ Deno.serve(async (req) => {
           userContext = '\nالمستخدم الحالي: زائر يستكشف المنصة للمرة الأولى.';
         }
 
+        // Smart fallback responses based on keywords
+        const getSmartFallback = (message) => {
+          const msg = message.toLowerCase();
+
+          if (msg.includes('سعر') || msg.includes('تكلفة') || msg.includes('كم')) {
+            return 'الأسعار تختلف حسب نوع المشروع والمساحة والتفاصيل 💰\n\nأفضل طريقة: انشر مشروعك وستحصل على عروض أسعار متنوعة من مهندسين محترفين خلال ساعات!\n\nتحب تبدأ الآن؟';
+          }
+
+          if (msg.includes('مهندس') || msg.includes('تصميم')) {
+            return 'عندنا مئات المهندسين المعتمدين في جميع التخصصات! 👷\n\n• معماريون\n• مهندسو تصميم داخلي\n• مهندسو إنشاءات\n• رسامون تنفيذيون\n\nابحث عن مهندس من صفحة "المهندسين" أو انشر مشروعك وسيتواصلون معك.';
+          }
+
+          if (msg.includes('دفع') || msg.includes('ضمان') || msg.includes('آمن')) {
+            return 'نظام الدفع عندنا آمن 100%! 🛡️\n\n✓ أموالك محفوظة في Escrow\n✓ ما تنصرف إلا بموافقتك\n✓ دفع على مراحل\n✓ حماية كاملة للطرفين\n\nمتطمن؟ ابدأ مشروعك الآن!';
+          }
+
+          if (msg.includes('كيف') || msg.includes('خطوات') || msg.includes('بداية')) {
+            return 'خطوات بسيطة جداً! 📝\n\n1️⃣ انشر مشروعك (دقيقتين)\n2️⃣ استقبل عروض من المهندسين\n3️⃣ اختر الأنسب\n4️⃣ ادفع وابدأ العمل\n5️⃣ استلم تصميمك\n\nجاهز تبدأ؟';
+          }
+
+          return 'أهلاً وسهلاً! 👋\n\nأنا هنا لمساعدتك في أي استفسار عن:\n• نشر مشروع جديد\n• البحث عن مهندسين\n• نظام الدفع والضمان\n• خدماتنا ومزايا المنصة\n\nوش تحب تعرف عنه؟';
+        };
+
         const systemInstructions = `أنت "نور" - مساعدة بيتلي الذكية 🎨
 
 ═══════════════════════════════
@@ -208,22 +231,27 @@ ${userContext}
           throw new Error('Gemini API key not configured');
         }
 
-        // Call Gemini API with proper error handling
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 180000); // 3 minutes for voice processing
-        
-        try {
-          console.log('Sending request to Gemini API...');
-          
-          const geminiResponse = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              signal: controller.signal,
-              body: JSON.stringify({
+        // Retry mechanism with smart fallback
+        let retries = 0;
+        const maxRetries = 3;
+        let lastError = null;
+
+        while (retries < maxRetries && !botResponse) {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), retries === 0 ? 30000 : 15000); // 30s first, 15s for retries
+
+            console.log(`Gemini API attempt ${retries + 1}/${maxRetries}...`);
+
+            const geminiResponse = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                signal: controller.signal,
+                body: JSON.stringify({
                 system_instruction: {
                   parts: [{ text: systemInstructions }]
                 },
@@ -256,70 +284,75 @@ ${userContext}
                   }
                 ]
               })
-            }
-          );
-          
-          clearTimeout(timeoutId);
+              }
+              );
 
-          if (!geminiResponse.ok) {
-            const errorText = await geminiResponse.text();
-            console.error('Gemini API error response:', errorText);
-            throw new Error(`Gemini API returned status ${geminiResponse.status}: ${errorText}`);
-          }
+              clearTimeout(timeoutId);
 
-          const geminiData = await geminiResponse.json();
-          console.log('Gemini response received:', JSON.stringify(geminiData).substring(0, 200));
-          
-          // Extract text from response with better error handling
-          if (!geminiData.candidates || geminiData.candidates.length === 0) {
-            console.error('No candidates in Gemini response:', geminiData);
-            throw new Error('لم يتم استلام رد من الذكاء الاصطناعي');
-          }
-          
-          const candidate = geminiData.candidates[0];
-          
-          // Check if response was blocked
-          if (candidate.finishReason === 'SAFETY' || candidate.finishReason === 'RECITATION') {
-            console.warn('Response blocked by safety filters:', candidate.finishReason);
-            botResponse = 'أعتذر، لا يمكنني الرد على هذا السؤال. يرجى إعادة صياغته أو التواصل مع الدعم الفني.';
-          } else if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
-            console.error('No content in candidate:', candidate);
-            botResponse = 'أعتذر، حدثت مشكلة في معالجة طلبك. يرجى المحاولة مرة أخرى.';
-          } else {
-            botResponse = candidate.content.parts[0].text || 'أعتذر، لم أتمكن من توليد رد مناسب.';
-          }
-          
-          // Format response for better readability
-          botResponse = botResponse
-            .replace(/\*\*(.*?)\*\*/g, '$1') // Remove bold markdown
-            .replace(/\* /g, '• ') // Convert asterisk lists to bullet points
-            .trim();
-          
-          console.log('Final bot response:', botResponse.substring(0, 100) + '...');
-          
-        } catch (fetchError) {
-          clearTimeout(timeoutId);
-          console.error('Gemini fetch error:', fetchError);
-          throw fetchError;
-        }
+              if (!geminiResponse.ok) {
+              const errorText = await geminiResponse.text();
+              console.error(`Gemini error (attempt ${retries + 1}):`, errorText);
+              throw new Error(`Gemini API status ${geminiResponse.status}`);
+              }
 
-        } catch (llmError) {
-        console.error('Gemini API error details:', {
-          name: llmError.name,
-          message: llmError.message,
-          stack: llmError.stack
-        });
+              const geminiData = await geminiResponse.json();
+              console.log('Gemini response received successfully');
 
-        // Try to provide helpful response even on error
-        if (llmError.name === 'AbortError') {
-          botResponse = 'عذراً على التأخير! 😊\n\nهل يمكنك إعادة صياغة سؤالك بشكل أبسط؟ أو اسألني عن:\n• خدماتنا الهندسية\n• كيفية نشر مشروع\n• نظام الدفع الآمن';
-        } else {
-          // Give a friendly retry message without escalating immediately
-          botResponse = 'آسفة! حصل خطأ صغير 🙏\n\nيرجى إعادة إرسال رسالتك مرة أخرى، وسأكون سعيدة بمساعدتك.';
-        }
-        // Don't escalate on first error
-        shouldEscalate = false;
-        }
+              // Extract text from response
+              if (!geminiData.candidates || geminiData.candidates.length === 0) {
+              throw new Error('No candidates in response');
+              }
+
+              const candidate = geminiData.candidates[0];
+
+              // Check if response was blocked
+              if (candidate.finishReason === 'SAFETY' || candidate.finishReason === 'RECITATION') {
+              console.warn('Response blocked by safety filters');
+              botResponse = getSmartFallback(user_message);
+              break; // Exit retry loop
+              } else if (!candidate.content || !candidate.content.parts || candidate.content.parts.length === 0) {
+              throw new Error('No content in candidate');
+              } else {
+              botResponse = candidate.content.parts[0].text || '';
+
+              if (!botResponse) {
+              throw new Error('Empty response text');
+              }
+
+              // Format response for better readability
+              botResponse = botResponse
+              .replace(/\*\*(.*?)\*\*/g, '$1')
+              .replace(/\* /g, '• ')
+              .trim();
+
+              console.log('Successfully generated response');
+              break; // Success - exit retry loop
+              }
+
+              } catch (fetchError) {
+              clearTimeout(timeoutId);
+              lastError = fetchError;
+              retries++;
+              console.error(`Attempt ${retries} failed:`, fetchError.message);
+
+              // Wait before retry (exponential backoff: 500ms, 1s, 2s)
+              if (retries < maxRetries) {
+              await new Promise(resolve => setTimeout(resolve, 500 * Math.pow(2, retries - 1)));
+              }
+              }
+              }
+
+              // If all retries failed, use smart fallback
+              if (!botResponse && lastError) {
+              console.error('All retries exhausted, using smart fallback');
+              botResponse = getSmartFallback(user_message);
+              }
+
+              } catch (llmError) {
+              console.error('Outer error:', llmError);
+              // Use smart fallback for any unexpected errors
+              botResponse = getSmartFallback(user_message);
+              }
 
     // Update conversation if exists
     if (conversation_id) {
