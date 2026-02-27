@@ -352,18 +352,34 @@ export default function Messages() {
                       <p className="text-xs text-green-500">{t('messages.onlineNow')}</p>
                     </div>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreVertical className="w-5 h-5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start">
-                      <DropdownMenuItem>{t('messages.menu.viewProfile')}</DropdownMenuItem>
-                      <DropdownMenuItem>{t('messages.menu.muteNotifications')}</DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600">{t('messages.menu.deleteConversation')}</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleVoiceCall}
+                      className="p-2 rounded-full bg-green-100 hover:bg-green-200 text-green-600 transition-colors"
+                      title="مكالمة صوتية"
+                    >
+                      <Phone className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={handleVideoCall}
+                      className="p-2 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors"
+                      title="مكالمة فيديو"
+                    >
+                      <Video className="w-5 h-5" />
+                    </button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreVertical className="w-5 h-5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        <DropdownMenuItem>{t('messages.menu.viewProfile')}</DropdownMenuItem>
+                        <DropdownMenuItem>{t('messages.menu.muteNotifications')}</DropdownMenuItem>
+                        <DropdownMenuItem className="text-red-600">{t('messages.menu.deleteConversation')}</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
 
                 {/* Messages */}
