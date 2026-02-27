@@ -187,6 +187,63 @@ export default function Messages() {
     setIsSending(false);
   };
 
+  const getJitsiRoomId = (conversationId) => {
+    return `bytly-${conversationId?.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)}`;
+  };
+
+  const handleVideoCall = () => {
+    if (!selectedConversation) return;
+    const roomId = getJitsiRoomId(selectedConversation.id);
+    const callUrl = `https://meet.jit.si/${roomId}`;
+    sendCallInvite('فيديو', callUrl);
+    window.open(callUrl, '_blank', 'width=900,height=700');
+  };
+
+  const handleVoiceCall = () => {
+    if (!selectedConversation) return;
+    const roomId = getJitsiRoomId(selectedConversation.id);
+    const callUrl = `https://meet.jit.si/${roomId}#config.startWithVideoMuted=true`;
+    sendCallInvite('صوتية', callUrl);
+    window.open(callUrl, '_blank', 'width=900,height=700');
+  };
+
+  const sendCallInvite = async (type, url) => {
+    const message = await base44.entities.Message.create({
+      conversation_id: selectedConversation.id,
+      sender_id: user.email,
+      content: `📞 دعوة مكالمة ${type} — انضم عبر: ${url}`
+    });
+    setMessages(prev => [...prev, message]);
+  };
+
+  const handleVoiceRecord = async () => {
+    if (isRecording) {
+      mediaRecorderRef.current?.stop();
+      setIsRecording(false);
+      return;
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const recorder = new MediaRecorder(stream);
+    audioChunksRef.current = [];
+    recorder.ondataavailable = (e) => audioChunksRef.current.push(e.data);
+    recorder.onstop = async () => {
+      const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      stream.getTracks().forEach(t => t.stop());
+      const file = new File([blob], 'voice-message.webm', { type: 'audio/webm' });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const msg = await base44.entities.Message.create({
+        conversation_id: selectedConversation.id,
+        sender_id: user.email,
+        content: '🎤 رسالة صوتية',
+        attachments: [file_url]
+      });
+      setMessages(prev => [...prev, msg]);
+    };
+    recorder.start();
+    mediaRecorderRef.current = recorder;
+    setIsRecording(true);
+  };
+
   const filteredConversations = conversations.filter(c => {
     const other = getOtherParticipant(c);
     return other.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
