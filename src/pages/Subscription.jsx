@@ -80,7 +80,7 @@ export default function Subscription() {
           });
         }
 
-        setTrialDaysLeft(180);
+        setTrialDaysLeft(90);
         setIsInFreeTrial(true);
       }
     } catch (error) {
