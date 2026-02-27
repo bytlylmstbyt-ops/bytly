@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  Send, Paperclip, Users, Shield, Loader2, AlertTriangle, Video, Phone
+  Send, Paperclip, Users, Shield, Loader2, AlertTriangle, Video, Phone, MoreVertical
 } from "lucide-react";
 import { toast } from "sonner";
 import FilePreview from "./FilePreview";
