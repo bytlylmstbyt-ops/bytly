@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Search, Send, Paperclip, Image, File, MoreVertical,
-  Phone, Video, Info, ChevronLeft, X, Download, Loader2
+  Search, Send, Paperclip, MoreVertical,
+  Phone, Video, ChevronLeft, Download, Loader2, Mic, MicOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
