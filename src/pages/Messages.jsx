@@ -34,7 +34,10 @@ export default function Messages() {
   const [isSending, setIsSending] = useState(false);
   const [otherUsers, setOtherUsers] = useState({});
   const [showMobileChat, setShowMobileChat] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const messagesEndRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
 
   useEffect(() => {
     loadInitialData();
