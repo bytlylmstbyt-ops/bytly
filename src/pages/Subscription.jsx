@@ -56,9 +56,9 @@ export default function Subscription() {
         setTrialDaysLeft(daysLeft);
         setIsInFreeTrial(profile.subscription_type === "free_trial" && daysLeft > 0);
       } else {
-        // Auto-set trial period (6 months from now) if not set
+        // Auto-set trial period (90 days from now) if not set
         const trialEnd = new Date();
-        trialEnd.setMonth(trialEnd.getMonth() + 6);
+        trialEnd.setDate(trialEnd.getDate() + 90);
         
         if (type === "engineer") {
           await base44.entities.Engineer.update(profile.id, {
