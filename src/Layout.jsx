@@ -125,6 +125,13 @@ function LayoutContent({ children, currentPageName }) {
               >
                 {t('nav.designMarketplace')}
               </Link>
+              <Link 
+                to={createPageUrl("Messages")} 
+                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] flex items-center gap-1.5 ${currentPageName === 'Messages' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
+              >
+                <MessagesSquare className="w-4 h-4" />
+                المحادثات
+              </Link>
             </nav>
 
             {/* Actions */}
