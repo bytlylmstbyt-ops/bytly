@@ -1,209 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
-import VideoCallWindow from './VideoCallWindow';
 import { toast } from 'sonner';
 
 export default function CallManager({ conversationId, currentUserEmail, recipientData }) {
-  const [isCallActive, setIsCallActive] = useState(false);
-  const [isIncomingCall, setIsIncomingCall] = useState(false);
-  const [callData, setCallData] = useState(null);
-  const [localStream, setLocalStream] = useState(null);
-  const [remoteStream, setRemoteStream] = useState(null);
-  
-  const peerConnectionRef = useRef(null);
-  const iceCandidatesQueue = useRef([]);
 
-  // WebRTC Configuration
-  const rtcConfig = {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' }
-    ]
-  };
-
-  useEffect(() => {
-    // Subscribe to call signals
-    const unsubscribe = base44.entities.Message.subscribe((event) => {
-      if (event.type === 'create' && event.data?.conversation_id === conversationId) {
-        handleIncomingSignal(event.data);
-      }
-    });
-
-    return () => {
-      unsubscribe();
-      cleanup();
-    };
-  }, [conversationId]);
-
-  const handleIncomingSignal = async (message) => {
-    if (!message.content?.startsWith('__CALL_SIGNAL__')) return;
-
-    try {
-      const signal = JSON.parse(message.content.replace('__CALL_SIGNAL__', ''));
-      
-      switch (signal.type) {
-        case 'offer':
-          if (message.sender_email !== currentUserEmail) {
-            setIsIncomingCall(true);
-            setCallData({
-              name: message.sender_name,
-              avatar: null,
-              offer: signal.offer
-            });
-          }
-          break;
-          
-        case 'answer':
-          if (peerConnectionRef.current) {
-            await peerConnectionRef.current.setRemoteDescription(
-              new RTCSessionDescription(signal.answer)
-            );
-            // Process queued ICE candidates
-            while (iceCandidatesQueue.current.length > 0) {
-              const candidate = iceCandidatesQueue.current.shift();
-              await peerConnectionRef.current.addIceCandidate(candidate);
-            }
-          }
-          break;
-          
-        case 'ice-candidate':
-          if (peerConnectionRef.current) {
-            const candidate = new RTCIceCandidate(signal.candidate);
-            if (peerConnectionRef.current.remoteDescription) {
-              await peerConnectionRef.current.addIceCandidate(candidate);
-            } else {
-              iceCandidatesQueue.current.push(candidate);
-            }
-          }
-          break;
-          
-        case 'end':
-          handleCallEnd();
-          break;
-      }
-    } catch (error) {
-      console.error('Error handling call signal:', error);
-    }
-  };
-
-  const initializeCall = async (isVideo = true) => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: isVideo,
-        audio: true
-      });
-      
-      setLocalStream(stream);
-      
-      const peerConnection = new RTCPeerConnection(rtcConfig);
-      peerConnectionRef.current = peerConnection;
-
-      stream.getTracks().forEach(track => {
-        peerConnection.addTrack(track, stream);
-      });
-
-      peerConnection.ontrack = (event) => {
-        setRemoteStream(event.streams[0]);
-      };
-
-      peerConnection.onicecandidate = (event) => {
-        if (event.candidate) {
-          sendSignal({
-            type: 'ice-candidate',
-            candidate: event.candidate
-          });
-        }
-      };
-
-      return peerConnection;
-    } catch (error) {
-      console.error('Error initializing call:', error);
-      toast.error('فشل الوصول للكاميرا/الميكروفون');
-      throw error;
-    }
+  const getJitsiRoomId = () => {
+    // Use conversationId as unique room identifier (sanitized)
+    return `bytly-${conversationId?.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)}`;
   };
 
   const startCall = async (isVideo = true) => {
-    try {
-      const peerConnection = await initializeCall(isVideo);
-      
-      const offer = await peerConnection.createOffer({
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: isVideo
-      });
-      
-      await peerConnection.setLocalDescription(offer);
-      
-      await sendSignal({
-        type: 'offer',
-        offer: offer
-      });
+    const roomId = getJitsiRoomId();
+    const callUrl = `https://meet.jit.si/${roomId}${isVideo ? '' : '#config.startWithVideoMuted=true'}`;
+    const callType = isVideo ? 'فيديو' : 'صوتية';
 
-      setIsCallActive(true);
-      setCallData({
-        name: recipientData?.name || 'مستخدم',
-        avatar: recipientData?.avatar,
-        isVideo
-      });
-      
-      toast.success('جاري الاتصال...');
-    } catch (error) {
-      console.error('Error starting call:', error);
-      cleanup();
-    }
-  };
-
-  const acceptCall = async () => {
-    try {
-      const peerConnection = await initializeCall(true);
-      
-      await peerConnection.setRemoteDescription(
-        new RTCSessionDescription(callData.offer)
-      );
-      
-      const answer = await peerConnection.createAnswer();
-      await peerConnection.setLocalDescription(answer);
-      
-      await sendSignal({
-        type: 'answer',
-        answer: answer
-      });
-
-      setIsIncomingCall(false);
-      setIsCallActive(true);
-      
-      // Process queued ICE candidates
-      while (iceCandidatesQueue.current.length > 0) {
-        const candidate = iceCandidatesQueue.current.shift();
-        await peerConnection.addIceCandidate(candidate);
-      }
-    } catch (error) {
-      console.error('Error accepting call:', error);
-      rejectCall();
-    }
-  };
-
-  const rejectCall = async () => {
-    await sendSignal({ type: 'end' });
-    setIsIncomingCall(false);
-    setCallData(null);
-    toast.info('تم رفض المكالمة');
-  };
-
-  const endCall = async () => {
-    await sendSignal({ type: 'end' });
-    handleCallEnd();
-    toast.info('انتهت المكالمة');
-  };
-
-  const handleCallEnd = () => {
-    cleanup();
-    setIsCallActive(false);
-    setIsIncomingCall(false);
-    setCallData(null);
-  };
-
-  const sendSignal = async (signal) => {
+    // Send invite message to the conversation
     try {
       const user = await base44.auth.me();
       await base44.entities.Message.create({
@@ -211,82 +21,28 @@ export default function CallManager({ conversationId, currentUserEmail, recipien
         sender_email: currentUserEmail,
         sender_name: user.full_name,
         sender_role: 'user',
-        content: `__CALL_SIGNAL__${JSON.stringify(signal)}`,
+        content: `📞 دعوة مكالمة ${callType}\n\nانضم للمكالمة عبر الرابط:\n${callUrl}`,
         is_system_message: true
       });
+      toast.success(`جاري بدء مكالمة ${callType}...`);
     } catch (error) {
-      console.error('Error sending signal:', error);
+      console.error('Error sending call invite:', error);
     }
-  };
 
-  const cleanup = () => {
-    if (localStream) {
-      localStream.getTracks().forEach(track => track.stop());
-      setLocalStream(null);
-    }
-    
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
-    }
-    
-    setRemoteStream(null);
-    iceCandidatesQueue.current = [];
-  };
-
-  const handleRecordingComplete = async (recordingFile) => {
-    try {
-      // Upload recording to server
-      const { file_url } = await base44.integrations.Core.UploadFile({ 
-        file: recordingFile 
-      });
-
-      // Save recording metadata to database
-      const user = await base44.auth.me();
-      await base44.entities.Message.create({
-        conversation_id: conversationId,
-        sender_email: currentUserEmail,
-        sender_name: user.full_name,
-        sender_role: 'user',
-        content: '📹 تسجيل المكالمة',
-        attachments: [{
-          name: recordingFile.name,
-          url: file_url,
-          size: recordingFile.size,
-          type: recordingFile.type,
-          isCallRecording: true
-        }],
-        is_system_message: false
-      });
-
-      toast.success('تم حفظ تسجيل المكالمة بنجاح');
-    } catch (error) {
-      console.error('Error saving call recording:', error);
-      toast.error('فشل حفظ التسجيل');
-    }
+    // Open Jitsi call in new window
+    window.open(callUrl, '_blank', 'width=900,height=700,scrollbars=no,resizable=yes');
   };
 
   return {
-    isCallActive,
-    isIncomingCall,
-    callData,
-    localStream,
-    remoteStream,
+    isCallActive: false,
+    isIncomingCall: false,
+    callData: null,
+    localStream: null,
+    remoteStream: null,
     startCall,
-    acceptCall,
-    rejectCall,
-    endCall,
-    VideoCallWindow: isCallActive || isIncomingCall ? (
-      <VideoCallWindow
-        callData={callData}
-        isIncoming={isIncomingCall}
-        localStream={localStream}
-        remoteStream={remoteStream}
-        onAccept={acceptCall}
-        onReject={rejectCall}
-        onEnd={endCall}
-        onRecordingComplete={handleRecordingComplete}
-      />
-    ) : null
+    acceptCall: () => {},
+    rejectCall: () => {},
+    endCall: () => {},
+    VideoCallWindow: null
   };
 }
