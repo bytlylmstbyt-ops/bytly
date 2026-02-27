@@ -3,10 +3,31 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { project_id } = await req.json();
 
+    // Support both: scheduled automation (no body) and manual call (with project_id)
+    let project_id = null;
+    try {
+      const body = await req.json();
+      project_id = body?.project_id;
+    } catch (_) {
+      // No body - running as scheduled automation
+    }
+
+    // Scheduled mode: analyze ALL active projects
     if (!project_id) {
-      return Response.json({ error: 'Missing project_id' }, { status: 400 });
+      const activeProjects = await base44.asServiceRole.entities.Project.filter({ status: 'in_progress' });
+      const results = [];
+
+      for (const proj of activeProjects) {
+        try {
+          const res = await base44.asServiceRole.functions.invoke('analyzeProjectRisks', { project_id: proj.id });
+          results.push({ project_id: proj.id, title: proj.title, success: true });
+        } catch (e) {
+          results.push({ project_id: proj.id, title: proj.title, success: false, error: e.message });
+        }
+      }
+
+      return Response.json({ success: true, mode: 'scheduled', analyzed: results.length, results });
     }
 
     // Fetch comprehensive project data
