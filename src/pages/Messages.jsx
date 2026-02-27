@@ -440,28 +440,35 @@ export default function Messages() {
                       onChange={handleFileUpload}
                     />
                     <label
-                      htmlFor="file-upload"
-                      className="p-2 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
+                     htmlFor="file-upload"
+                     className="p-2 hover:bg-slate-100 rounded-lg cursor-pointer transition-colors"
                     >
-                      <Paperclip className="w-5 h-5 text-slate-500" />
+                     <Paperclip className="w-5 h-5 text-slate-500" />
                     </label>
+                    <button
+                     onClick={handleVoiceRecord}
+                     className={`p-2 rounded-lg transition-colors ${isRecording ? 'bg-red-100 text-red-600 animate-pulse' : 'hover:bg-slate-100 text-slate-500'}`}
+                     title={isRecording ? 'إيقاف التسجيل' : 'تسجيل رسالة صوتية'}
+                    >
+                     {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                    </button>
                     <Input
-                      placeholder={t('messages.typingPlaceholder')}
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                      className="flex-1"
+                     placeholder={t('messages.typingPlaceholder')}
+                     value={newMessage}
+                     onChange={(e) => setNewMessage(e.target.value)}
+                     onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                     className="flex-1"
                     />
                     <Button
-                      onClick={handleSendMessage}
-                      disabled={!newMessage.trim() || isSending}
-                      className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
+                     onClick={handleSendMessage}
+                     disabled={!newMessage.trim() || isSending}
+                     className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
                     >
-                      {isSending ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <Send className="w-5 h-5" />
-                      )}
+                     {isSending ? (
+                       <Loader2 className="w-5 h-5 animate-spin" />
+                     ) : (
+                       <Send className="w-5 h-5" />
+                     )}
                     </Button>
                   </div>
                 </div>
