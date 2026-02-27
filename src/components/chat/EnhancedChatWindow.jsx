@@ -228,27 +228,26 @@ export default function EnhancedChatWindow({
               <Users className="w-5 h-5 text-[#d4a574]" />
               <span>{conversation.name || "غرفة المشروع الرئيسية"}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => callManager.startCall(true)}
-                disabled={callManager.isCallActive}
-                className="text-blue-600 hover:bg-blue-50"
-              >
-                <Video className="w-4 h-4 mr-1" />
-                فيديو
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
+            <div className="flex items-center gap-3">
+              <button
                 onClick={() => callManager.startCall(false)}
                 disabled={callManager.isCallActive}
-                className="text-green-600 hover:bg-green-50"
+                className="p-2 hover:bg-gray-100 rounded-full transition disabled:opacity-50"
+                title="مكالمة صوتية"
               >
-                <Phone className="w-4 h-4 mr-1" />
-                صوت
-              </Button>
+                <Phone size={20} className="text-gray-600" />
+              </button>
+              <button
+                onClick={() => callManager.startCall(true)}
+                disabled={callManager.isCallActive}
+                className="p-2 hover:bg-gray-100 rounded-full transition disabled:opacity-50"
+                title="مكالمة فيديو"
+              >
+                <Video size={20} className="text-gray-600" />
+              </button>
+              <button className="p-2 hover:bg-gray-100 rounded-full transition">
+                <MoreVertical size={20} className="text-gray-600" />
+              </button>
               <Badge variant="outline" className="flex items-center gap-1">
                 <Shield className="w-3 h-3" />
                 محمية
