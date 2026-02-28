@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Send, MessageCircle, X, Loader2, Phone, Video, Mic, Paperclip, Square, ExternalLink } from "lucide-react";
 
 const WHATSAPP_NUMBER = "966550028319";
-const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("مرحباً! أريد الاستفسار عن خدمات بيتلي 🏗️")}`;
+const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("مرحباً! أريد الاستفسار عن خدمات Bytly 🏠 | mybytly.com")}`;
 
 export default function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -73,7 +73,7 @@ export default function ChatbotWidget() {
     setMessages([
       {
         role: "assistant",
-        content: "مرحباً بك في بيتلي! 👋\n\nأنا نور، مساعدتك الذكية. سعيدة بمساعدتك في مشروعك الهندسي 🏗️\n\nكيف يمكنني خدمتك اليوم؟",
+        content: "أهلاً بك في Bytly 🏠، شريكك الموثوق لتصميم وبناء منزل أحلامك. كيف يمكننا مساعدتك اليوم؟",
         timestamp: new Date().toISOString()
       }
     ]);
@@ -461,9 +461,9 @@ export default function ChatbotWidget() {
                   <div className="flex-1">
                     <CardTitle className="text-white flex items-center gap-2">
                       <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                      نور - مساعدة بيتلي
+                      Bytly AI Agent
                     </CardTitle>
-                    <p className="text-xs text-white/80 mt-1">🎤 رسائل صوتية • 💬 رد فوري • 📱 متاح دائماً</p>
+                    <p className="text-xs text-white/80 mt-1">🏠 مساعدك الهندسي الذكي من فريق Bytly</p>
                   </div>
                   <a
                     href={WHATSAPP_URL}
@@ -657,7 +657,7 @@ export default function ChatbotWidget() {
                   </div>
                 )}
                 <p className="text-xs text-slate-500 text-center">
-                  مدعوم بـ Gemini AI 🤖 • رسائل صوتية مباشرة 🎤 • مرفقات ومخططات 📎
+                  Bytly AI Agent 🤖 • mybytly.com • رسائل صوتية 🎤
                 </p>
               </div>
             </Card>
