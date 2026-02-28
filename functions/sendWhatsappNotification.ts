@@ -38,19 +38,20 @@ Deno.serve(async (req) => {
       return Response.json({ error: "to_phone is required" }, { status: 400 });
     }
 
-    const APP_URL = "https://app.base44.com"; // سيُستبدل بالدومين الفعلي
+    const APP_URL = "https://mybytly.com";
+    const FACEBOOK_PAGE = "https://www.facebook.com/profile.php?id=61587162083581";
     let message = "";
 
     if (type === "new_message") {
       const chatUrl = `${APP_URL}/Messages?conversation=${conversation_id}`;
-      message = `🔔 *بيتلي - رسالة جديدة*\n\nمرحباً ${to_name || ""}،\nلديك رسالة جديدة من *${sender_name}*.\n\n👉 اضغط هنا للرد:\n${chatUrl}`;
+      message = `🔔 *Bytly - رسالة جديدة*\n\nمرحباً ${to_name || ""}،\nلديك رسالة جديدة من *${sender_name}*.\n\n👉 اضغط هنا للرد:\n${chatUrl}\n\n🌐 ${APP_URL}`;
     
     } else if (type === "video_call") {
-      message = `📹 *بيتلي - مكالمة فيديو*\n\nمرحباً ${to_name || ""}،\nتمت دعوتك لمكالمة فيديو عبر بيتلي.\n\n🔗 رابط الاجتماع:\n${meeting_link}`;
+      message = `📹 *Bytly - مكالمة فيديو*\n\nمرحباً ${to_name || ""}،\nتمت دعوتك لمكالمة فيديو عبر Bytly.\n\n🔗 رابط الاجتماع:\n${meeting_link}\n\n🌐 ${APP_URL}`;
     
     } else if (type === "new_contract") {
       const contractUrl = `${APP_URL}/Contract?id=${contract_id}`;
-      message = `📄 *بيتلي - عقد جديد*\n\nمرحباً ${to_name || ""}،\nتم إصدار عقدك الجديد بنجاح ✅\n\nيمكنك مراجعته الآن عبر الرابط التالي:\n${contractUrl}`;
+      message = `📄 *Bytly - عقد جديد*\n\nمرحباً ${to_name || ""}،\nتم إصدار عقدك الجديد بنجاح ✅\n\nيمكنك مراجعته الآن عبر الرابط التالي:\n${contractUrl}\n\n🌐 ${APP_URL}`;
     
     } else {
       return Response.json({ error: "Unknown notification type" }, { status: 400 });

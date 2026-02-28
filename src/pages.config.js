@@ -74,6 +74,7 @@ import ClientProfile from './pages/ClientProfile';
 import Complaints from './pages/Complaints';
 import ConsultantApproval from './pages/ConsultantApproval';
 import ConsultantDashboard from './pages/ConsultantDashboard';
+import ConsultingFirms from './pages/ConsultingFirms';
 import Contract from './pages/Contract';
 import ContractAmendments from './pages/ContractAmendments';
 import ContractArchive from './pages/ContractArchive';
@@ -140,7 +141,6 @@ import WalletRechargeSuccess from './pages/WalletRechargeSuccess';
 import WalletTopup from './pages/WalletTopup';
 import WalletTopupSuccess from './pages/WalletTopupSuccess';
 import WorkflowBuilder from './pages/WorkflowBuilder';
-import ConsultingFirms from './pages/ConsultingFirms';
 import __Layout from './Layout.jsx';
 
 
@@ -172,6 +172,7 @@ export const PAGES = {
     "Complaints": Complaints,
     "ConsultantApproval": ConsultantApproval,
     "ConsultantDashboard": ConsultantDashboard,
+    "ConsultingFirms": ConsultingFirms,
     "Contract": Contract,
     "ContractAmendments": ContractAmendments,
     "ContractArchive": ContractArchive,
@@ -238,7 +239,6 @@ export const PAGES = {
     "WalletTopup": WalletTopup,
     "WalletTopupSuccess": WalletTopupSuccess,
     "WorkflowBuilder": WorkflowBuilder,
-    "ConsultingFirms": ConsultingFirms,
 }
 
 export const pagesConfig = {

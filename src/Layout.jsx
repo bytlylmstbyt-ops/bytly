@@ -356,7 +356,14 @@ function LayoutContent({ children, currentPageName }) {
                 </li>
                 <li className="flex items-center gap-2">
                   <Facebook className="w-4 h-4 text-[#C9A66B]" />
-                  <a href="#" className="hover:text-[#C9A66B]">بيتلي</a>
+                  <a 
+                    href="https://www.facebook.com/profile.php?id=61587162083581" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hover:text-[#C9A66B]"
+                  >
+                    Bytly - لمسة بيت
+                  </a>
                 </li>
               </ul>
             </div>
