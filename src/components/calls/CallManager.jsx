@@ -25,6 +25,16 @@ export default function CallManager({ conversationId, currentUserEmail, recipien
         is_system_message: true
       });
       toast.success(`جاري بدء مكالمة ${callType}...`);
+
+      // إرسال تنبيه واتساب للطرف الآخر
+      if (recipientData?.phone) {
+        base44.functions.invoke('sendWhatsappNotification', {
+          type: "video_call",
+          to_phone: recipientData.phone,
+          to_name: recipientData.name || recipientData.full_name || "",
+          meeting_link: callUrl,
+        }).catch(e => console.error('WhatsApp call notify error:', e));
+      }
     } catch (error) {
       console.error('Error sending call invite:', error);
     }

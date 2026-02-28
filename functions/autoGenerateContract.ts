@@ -137,6 +137,21 @@ Deno.serve(async (req) => {
       `
     });
 
+    // إرسال تنبيه واتساب للعميل إذا كان لديه رقم هاتف
+    if (client?.phone) {
+      try {
+        await base44.asServiceRole.functions.invoke('sendWhatsappNotification', {
+          type: "new_contract",
+          to_phone: client.phone,
+          to_name: client.full_name || "",
+          contract_id: contract.id,
+        });
+        console.log(`WhatsApp contract notification sent to ${client.phone}`);
+      } catch (waErr) {
+        console.error("WhatsApp contract notify failed:", waErr.message);
+      }
+    }
+
     return Response.json({ 
       success: true,
       contract_id: contract.id,
