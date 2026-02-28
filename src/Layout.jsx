@@ -249,6 +249,13 @@ function LayoutContent({ children, currentPageName }) {
                 {t('nav.engineers')}
               </Link>
               <Link 
+                to={createPageUrl("ConsultingFirms")} 
+                className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                الشركات الاستشارية
+              </Link>
+              <Link 
                 to={createPageUrl("Projects")} 
                 className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
                 onClick={() => setIsMenuOpen(false)}
