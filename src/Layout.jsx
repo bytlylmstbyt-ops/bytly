@@ -108,6 +108,12 @@ function LayoutContent({ children, currentPageName }) {
                 {t('nav.engineers')}
               </Link>
               <Link 
+                to={createPageUrl("ConsultingFirms")} 
+                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'ConsultingFirms' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
+              >
+                الشركات الاستشارية
+              </Link>
+              <Link 
                 to={createPageUrl("Projects")} 
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'Projects' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
