@@ -185,7 +185,7 @@ export default function LinkedInManager() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-3 w-full mb-6">
+          <TabsList className="grid grid-cols-4 w-full mb-6">
             <TabsTrigger value="share" className="flex items-center gap-2">
               <Share2 className="w-4 h-4" />
               مشاركة أعمال
