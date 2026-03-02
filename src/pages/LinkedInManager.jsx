@@ -67,6 +67,7 @@ export default function LinkedInManager() {
   const [clientProfiles, setClientProfiles] = useState([]);
   const [selectedClients, setSelectedClients] = useState([]);
   const [clientBatchResults, setClientBatchResults] = useState([]);
+  const [activeClientCategory, setActiveClientCategory] = useState("investors");
   const [clientForm, setClientForm] = useState({
     industry: "العقارات والبناء",
     location: "الرياض",
