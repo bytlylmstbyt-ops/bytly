@@ -481,9 +481,33 @@ ${clientForm.customNote ? `- ملاحظات إضافية: ${clientForm.customNot
                     <Users className="w-5 h-5 text-[#0A66C2]" />
                     البحث الآلي عن عملاء محتملين
                   </CardTitle>
-                  <p className="text-sm text-slate-500">حدد معايير العميل المثالي وسيقوم الذكاء الاصطناعي بتوليد قائمة مستهدفة مع رسائل تواصل مخصصة</p>
+                  <p className="text-sm text-slate-500">اختر فئة العملاء المستهدفين وحدد معايير البحث</p>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {/* Category Selector */}
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-2 block">فئة العملاء المستهدفين *</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {clientCategories.map(cat => (
+                        <button
+                          key={cat.value}
+                          onClick={() => { setActiveClientCategory(cat.value); setClientProfiles([]); setClientBatchResults([]); }}
+                          className={`p-3 rounded-lg border-2 text-sm font-medium transition-all text-center ${
+                            activeClientCategory === cat.value
+                              ? "border-[#0A66C2] bg-blue-50 text-[#0A66C2]"
+                              : "border-slate-200 bg-white text-slate-600 hover:border-slate-300"
+                          }`}
+                        >
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
+                    {activeClientCategory && (
+                      <p className="text-xs text-slate-500 mt-2 bg-slate-50 px-3 py-2 rounded-lg">
+                        💡 {categoryPrompts[activeClientCategory]?.context}
+                      </p>
+                    )}
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium text-slate-700 mb-1 block">القطاع / الصناعة</label>
