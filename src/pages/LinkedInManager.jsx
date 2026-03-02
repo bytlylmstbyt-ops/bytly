@@ -384,6 +384,163 @@ export default function LinkedInManager() {
               </CardContent>
             </Card>
           </TabsContent>
+          {/* Tab 4: توسيع الشبكة المهنية */}
+          <TabsContent value="network">
+            <div className="space-y-4">
+              {/* Criteria Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Network className="w-5 h-5 text-[#0A66C2]" />
+                    توسيع شبكة المهندسين المحترفين
+                  </CardTitle>
+                  <p className="text-sm text-slate-500">حدد معايير المهندسين المستهدفين وأرسل طلبات تواصل مخصصة دفعةً واحدة</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Criteria */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">التخصص المستهدف</label>
+                      <Select value={networkForm.specialization} onValueChange={v => setNetworkForm({ ...networkForm, specialization: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {specializations.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">المدينة</label>
+                      <Select value={networkForm.city} onValueChange={v => setNetworkForm({ ...networkForm, city: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {saudiCities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">مستوى الخبرة</label>
+                      <Select value={networkForm.experienceLevel} onValueChange={v => setNetworkForm({ ...networkForm, experienceLevel: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {experienceLevels.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">عدد الملفات المستهدفة</label>
+                      <Select value={String(networkForm.count)} onValueChange={v => setNetworkForm({ ...networkForm, count: Number(v) })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {[3, 5, 8, 10].map(n => <SelectItem key={n} value={String(n)}>{n} مهندسين</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 mb-1 block">ملاحظة مخصصة تُضاف لكل رسالة (اختياري)</label>
+                    <Textarea
+                      placeholder="مثال: نحن نبحث عن مهندسين لمشاريع فلل فاخرة في الرياض..."
+                      value={networkForm.customNote}
+                      onChange={e => setNetworkForm({ ...networkForm, customNote: e.target.value })}
+                      rows={2}
+                    />
+                  </div>
+                  <Button
+                    className="w-full bg-[#0A66C2] hover:bg-[#004182] text-white"
+                    onClick={generateTargetProfiles}
+                    disabled={networkLoading}
+                  >
+                    {networkLoading && !generatedProfiles.length ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Search className="w-4 h-4 ml-2" />}
+                    البحث عن مهندسين مطابقين
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Generated Profiles */}
+              {generatedProfiles.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                        {generatedProfiles.length} ملف مطابق للمعايير
+                      </CardTitle>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => setSelectedProfiles(generatedProfiles.map((_, i) => i))}>
+                          تحديد الكل
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setSelectedProfiles([])}>
+                          إلغاء الكل
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500">اختر المهندسين الذين تريد إرسال طلب تواصل لهم</p>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {generatedProfiles.map((p, i) => (
+                      <div
+                        key={i}
+                        onClick={() => toggleProfile(i)}
+                        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                          selectedProfiles.includes(i)
+                            ? "border-[#0A66C2] bg-blue-50"
+                            : "border-slate-200 hover:border-slate-300 bg-white"
+                        }`}
+                      >
+                        <Checkbox
+                          checked={selectedProfiles.includes(i)}
+                          onCheckedChange={() => toggleProfile(i)}
+                          onClick={e => e.stopPropagation()}
+                          className="mt-0.5"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-slate-800 text-sm">{p.name}</span>
+                            <Badge variant="outline" className="text-xs">{p.yearsExp} سنوات خبرة</Badge>
+                          </div>
+                          <p className="text-xs text-slate-600 mt-0.5">{p.title} • {p.company}</p>
+                          <p className="text-xs text-blue-600 mt-1">✨ {p.highlight}</p>
+                          <div className="flex flex-wrap gap-1 mt-1.5">
+                            {p.skills?.map(s => (
+                              <span key={s} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{s}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    <Button
+                      className="w-full bg-green-600 hover:bg-green-700 text-white"
+                      onClick={sendBatchConnectionRequests}
+                      disabled={networkLoading || !selectedProfiles.length}
+                    >
+                      {networkLoading ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <UserPlus className="w-4 h-4 ml-2" />}
+                      إرسال طلبات تواصل لـ {selectedProfiles.length} مهندس
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Batch Results */}
+              {batchResults.length > 0 && (
+                <Card className="border-green-200 bg-green-50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2 text-green-800">
+                      <CheckCircle className="w-5 h-5" />
+                      نتائج إرسال طلبات التواصل
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {batchResults.map((r, i) => (
+                      <BatchResultItem key={i} result={r} onCopy={copyToClipboard} />
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
         </Tabs>
 
         {/* Result Card */}
