@@ -440,57 +440,173 @@ ${clientForm.customNote ? `- ملاحظات إضافية: ${clientForm.customNot
 
           {/* Tab 2: استهداف عملاء */}
           <TabsContent value="clients">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Users className="w-5 h-5 text-[#0A66C2]" />
-                  البحث عن عملاء محتملين والتواصل معهم
-                </CardTitle>
-                <p className="text-sm text-slate-500">انشر منشورًا موجهًا للعملاء واحصل على مسودة رسالة تواصل جاهزة</p>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-slate-700 mb-1 block">القطاع المستهدف</label>
-                    <Input
-                      value={clientForm.industry}
-                      onChange={e => setClientForm({ ...clientForm, industry: e.target.value })}
-                    />
+            <div className="space-y-4">
+              {/* Search Criteria */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Users className="w-5 h-5 text-[#0A66C2]" />
+                    البحث الآلي عن عملاء محتملين
+                  </CardTitle>
+                  <p className="text-sm text-slate-500">حدد معايير العميل المثالي وسيقوم الذكاء الاصطناعي بتوليد قائمة مستهدفة مع رسائل تواصل مخصصة</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">القطاع / الصناعة</label>
+                      <Select value={clientForm.industry} onValueChange={v => setClientForm({ ...clientForm, industry: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {industries.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">المدينة</label>
+                      <Select value={clientForm.location} onValueChange={v => setClientForm({ ...clientForm, location: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {saudiCities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">حجم الشركة</label>
+                      <Select value={clientForm.companySize} onValueChange={v => setClientForm({ ...clientForm, companySize: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {companySizes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">المسمى الوظيفي المستهدف</label>
+                      <Select value={clientForm.jobTitle} onValueChange={v => setClientForm({ ...clientForm, jobTitle: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {jobTitles.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">نوع الخدمة المقدمة</label>
+                      <Input
+                        value={clientForm.projectType}
+                        onChange={e => setClientForm({ ...clientForm, projectType: e.target.value })}
+                        placeholder="تصميم معماري وداخلي..."
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 mb-1 block">عدد العملاء المستهدفين</label>
+                      <Select value={String(clientForm.count)} onValueChange={v => setClientForm({ ...clientForm, count: Number(v) })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {[3, 5, 8, 10].map(n => <SelectItem key={n} value={String(n)}>{n} عملاء</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-slate-700 mb-1 block">المدينة / المنطقة</label>
-                    <Input
-                      value={clientForm.location}
-                      onChange={e => setClientForm({ ...clientForm, location: e.target.value })}
+                    <label className="text-sm font-medium text-slate-700 mb-1 block">ملاحظة مخصصة للرسائل (اختياري)</label>
+                    <Textarea
+                      placeholder="مثال: نركز على المشاريع الفاخرة بميزانية +500,000 ريال..."
+                      value={clientForm.customNote}
+                      onChange={e => setClientForm({ ...clientForm, customNote: e.target.value })}
+                      rows={2}
                     />
                   </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700 mb-1 block">نوع المشروع المطلوب</label>
-                  <Input
-                    value={clientForm.projectType}
-                    onChange={e => setClientForm({ ...clientForm, projectType: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700 mb-1 block">رسالة مخصصة (اختياري)</label>
-                  <Textarea
-                    placeholder="أضف أي تفاصيل إضافية تريد ذكرها..."
-                    value={clientForm.customMessage}
-                    onChange={e => setClientForm({ ...clientForm, customMessage: e.target.value })}
-                    rows={2}
-                  />
-                </div>
-                <Button
-                  className="w-full bg-[#0A66C2] hover:bg-[#004182] text-white"
-                  onClick={() => invoke("searchAndOutreachClients", clientForm)}
-                  disabled={loading}
-                >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Users className="w-4 h-4 ml-2" />}
-                  إنشاء منشور ورسالة تواصل
-                </Button>
-              </CardContent>
-            </Card>
+                  <Button
+                    className="w-full bg-[#0A66C2] hover:bg-[#004182] text-white"
+                    onClick={generateClientProfiles}
+                    disabled={clientLoading}
+                  >
+                    {clientLoading && !clientProfiles.length
+                      ? <Loader2 className="w-4 h-4 animate-spin ml-2" />
+                      : <Search className="w-4 h-4 ml-2" />}
+                    البحث عن عملاء محتملين
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Client Profiles List */}
+              {clientProfiles.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                        {clientProfiles.length} عميل محتمل مطابق للمعايير
+                      </CardTitle>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => setSelectedClients(clientProfiles.map((_, i) => i))}>تحديد الكل</Button>
+                        <Button size="sm" variant="outline" onClick={() => setSelectedClients([])}>إلغاء الكل</Button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500">اختر العملاء الذين تريد إرسال رسائل تواصل مخصصة لهم</p>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {clientProfiles.map((p, i) => (
+                      <div
+                        key={i}
+                        onClick={() => toggleClient(i)}
+                        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
+                          selectedClients.includes(i)
+                            ? "border-[#0A66C2] bg-blue-50"
+                            : "border-slate-200 hover:border-slate-300 bg-white"
+                        }`}
+                      >
+                        <Checkbox
+                          checked={selectedClients.includes(i)}
+                          onCheckedChange={() => toggleClient(i)}
+                          onClick={e => e.stopPropagation()}
+                          className="mt-0.5"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-slate-800 text-sm">{p.name}</span>
+                            <Badge variant="outline" className="text-xs text-blue-700 border-blue-200">{p.companyType}</Badge>
+                            {p.budget && <Badge className="text-xs bg-amber-100 text-amber-800 border-0">{p.budget}</Badge>}
+                          </div>
+                          <p className="text-xs text-slate-600 mt-0.5">{p.title} • {p.company}</p>
+                          <p className="text-xs text-green-700 mt-1">🎯 {p.potentialNeed}</p>
+                          <p className="text-xs text-red-600 mt-0.5">⚠️ {p.painPoint}</p>
+                        </div>
+                      </div>
+                    ))}
+                    <Button
+                      className="w-full bg-green-600 hover:bg-green-700 text-white"
+                      onClick={sendBatchClientMessages}
+                      disabled={clientLoading || !selectedClients.length}
+                    >
+                      {clientLoading ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Users className="w-4 h-4 ml-2" />}
+                      توليد رسائل مخصصة لـ {selectedClients.length} عميل
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Batch Client Results */}
+              {clientBatchResults.length > 0 && (
+                <Card className="border-green-200 bg-green-50">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2 text-green-800">
+                      <CheckCircle className="w-5 h-5" />
+                      رسائل التواصل المولّدة ({clientBatchResults.filter(r => r.success).length} ناجحة)
+                    </CardTitle>
+                    <p className="text-xs text-green-700">انسخ كل رسالة وأرسلها مباشرة عبر LinkedIn InMail</p>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {clientBatchResults.map((r, i) => (
+                      <BatchResultItem key={i} result={r} onCopy={copyToClipboard} />
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
 
           {/* Tab 3: استقطاب مهندسين */}
