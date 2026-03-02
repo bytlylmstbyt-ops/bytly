@@ -125,6 +125,12 @@ export default function LinkedInManager() {
 
   const saudiCities = ["الرياض", "جدة", "الدمام", "مكة المكرمة", "المدينة المنورة", "أبها", "تبوك", "الخبر"];
 
+  const clientCategories = [
+    { value: "investors", label: "🏦 المستثمرون", color: "bg-purple-100 text-purple-800" },
+    { value: "developers", label: "🏗️ المطورون العقاريون", color: "bg-blue-100 text-blue-800" },
+    { value: "businesses", label: "💼 أصحاب الأعمال والشركات", color: "bg-amber-100 text-amber-800" },
+  ];
+
   const industries = [
     "العقارات والبناء",
     "التطوير العقاري",
