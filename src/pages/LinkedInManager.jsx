@@ -125,6 +125,127 @@ export default function LinkedInManager() {
 
   const saudiCities = ["الرياض", "جدة", "الدمام", "مكة المكرمة", "المدينة المنورة", "أبها", "تبوك", "الخبر"];
 
+  const industries = [
+    "العقارات والبناء",
+    "التطوير العقاري",
+    "الضيافة والفنادق",
+    "التجزئة والمراكز التجارية",
+    "المكاتب والشركات",
+    "المقاولات والإنشاء",
+    "الحكومة والمشاريع الحكومية",
+    "التعليم والمدارس",
+    "الرعاية الصحية والمستشفيات",
+  ];
+
+  const companySizes = [
+    "شركة ناشئة (1-10 موظفين)",
+    "شركة صغيرة (10-50 موظف)",
+    "شركة متوسطة (50-200 موظف)",
+    "شركة كبيرة (200-1000 موظف)",
+    "مجموعة كبرى (+1000 موظف)",
+  ];
+
+  const jobTitles = [
+    "مدير مشاريع",
+    "رئيس تنفيذي / CEO",
+    "مدير عقارات",
+    "مطور عقاري",
+    "مدير تطوير أعمال",
+    "مالك ومستثمر",
+    "مدير إدارة المرافق",
+    "مدير البناء والتشييد",
+  ];
+
+  const generateClientProfiles = async () => {
+    setClientLoading(true);
+    setClientProfiles([]);
+    setSelectedClients([]);
+    setClientBatchResults([]);
+    try {
+      const res = await base44.integrations.Core.InvokeLLM({
+        prompt: `أنشئ قائمة بـ ${clientForm.count} ملف شخصي وهمي لعملاء محتملين على LinkedIn وفق هذه المعايير:
+- القطاع: ${clientForm.industry}
+- المدينة: ${clientForm.location}
+- حجم الشركة: ${clientForm.companySize}
+- المسمى الوظيفي: ${clientForm.jobTitle}
+- نوع المشروع المتوقع: ${clientForm.projectType}
+
+أنشئ ملفات واقعية لأشخاص يمكن أن يكونوا عملاءً مهتمين بخدمات التصميم والبناء، مع ذكر احتياجاتهم المحتملة.
+أرجع JSON فقط:`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            profiles: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  title: { type: "string" },
+                  company: { type: "string" },
+                  companyType: { type: "string" },
+                  potentialNeed: { type: "string" },
+                  budget: { type: "string" },
+                  painPoint: { type: "string" },
+                }
+              }
+            }
+          }
+        }
+      });
+      const profiles = res.profiles || [];
+      setClientProfiles(profiles);
+      setSelectedClients(profiles.map((_, i) => i));
+    } catch (e) {
+      toast.error("فشل توليد الملفات: " + e.message);
+    } finally {
+      setClientLoading(false);
+    }
+  };
+
+  const toggleClient = (idx) => {
+    setSelectedClients(prev =>
+      prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+    );
+  };
+
+  const sendBatchClientMessages = async () => {
+    const targets = clientProfiles.filter((_, i) => selectedClients.includes(i));
+    if (!targets.length) { toast.error("اختر عميلاً واحدًا على الأقل"); return; }
+    setClientLoading(true);
+    setClientBatchResults([]);
+    const results = [];
+    for (const profile of targets) {
+      try {
+        const res = await base44.integrations.Core.InvokeLLM({
+          prompt: `أنت مسوّق لمنصة Bytly لخدمات التصميم الهندسي والبناء في السعودية.
+
+اكتب رسالة تواصل مخصصة على LinkedIn لهذا العميل المحتمل:
+- الاسم: ${profile.name}
+- المسمى الوظيفي: ${profile.title}
+- الشركة: ${profile.company} (${profile.companyType})
+- الاحتياج المتوقع: ${profile.potentialNeed}
+- نقطة الألم: ${profile.painPoint}
+- نوع الخدمة: ${clientForm.projectType}
+${clientForm.customNote ? `- ملاحظات إضافية: ${clientForm.customNote}` : ""}
+
+شروط الرسالة:
+- قصيرة ومباشرة (لا تتجاوز 5 أسطر)
+- شخصية وتشير إلى احتياجهم تحديدًا
+- تذكر ميزة Bytly (منصة متكاملة، مهندسون معتمدون، ضمان الجودة)
+- تنتهي بدعوة واضحة للتواصل أو الاستفسار
+- باللغة العربية الفصيحة`,
+        });
+        results.push({ profile, success: true, draft: res });
+      } catch {
+        results.push({ profile, success: false, draft: null });
+      }
+    }
+    setClientBatchResults(results);
+    setClientLoading(false);
+    toast.success(`تم إنشاء ${results.filter(r => r.success).length} رسالة تواصل ✓`);
+  };
+
   // Generate simulated engineer profiles based on criteria using AI
   const generateTargetProfiles = async () => {
     setNetworkLoading(true);
