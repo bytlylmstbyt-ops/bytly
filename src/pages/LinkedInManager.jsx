@@ -198,6 +198,10 @@ export default function LinkedInManager() {
               <UserPlus className="w-4 h-4" />
               استقطاب مهندسين
             </TabsTrigger>
+            <TabsTrigger value="network" className="flex items-center gap-2">
+              <Network className="w-4 h-4" />
+              توسيع الشبكة
+            </TabsTrigger>
           </TabsList>
 
           {/* Tab 1: مشاركة أعمال تصميمية */}
