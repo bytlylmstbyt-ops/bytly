@@ -71,6 +71,103 @@ export default function LinkedInManager() {
     "رسم وتصميم",
   ];
 
+  const experienceLevels = [
+    "حديث التخرج (0-2 سنة)",
+    "خبرة متوسطة (3-7 سنوات)",
+    "خبرة عالية (8-15 سنة)",
+    "خبير متمرس (+15 سنة)",
+  ];
+
+  const saudiCities = ["الرياض", "جدة", "الدمام", "مكة المكرمة", "المدينة المنورة", "أبها", "تبوك", "الخبر"];
+
+  // Generate simulated engineer profiles based on criteria using AI
+  const generateTargetProfiles = async () => {
+    setNetworkLoading(true);
+    setGeneratedProfiles([]);
+    setSelectedProfiles([]);
+    setBatchResults([]);
+    try {
+      const res = await base44.integrations.Core.InvokeLLM({
+        prompt: `أنشئ قائمة بـ ${networkForm.count} ملف شخصي وهمي (افتراضي) لمهندسين محترفين على LinkedIn وفق هذه المعايير:
+- التخصص: ${networkForm.specialization}
+- المدينة: ${networkForm.city}
+- مستوى الخبرة: ${networkForm.experienceLevel}
+
+أرجع JSON فقط بهذا الشكل بدون أي نص خارجه:
+{
+  "profiles": [
+    {
+      "name": "اسم المهندس",
+      "title": "المسمى الوظيفي",
+      "company": "اسم الشركة أو الجهة",
+      "yearsExp": 5,
+      "skills": ["مهارة 1", "مهارة 2", "مهارة 3"],
+      "highlight": "إنجاز أو ميزة بارزة"
+    }
+  ]
+}`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            profiles: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  title: { type: "string" },
+                  company: { type: "string" },
+                  yearsExp: { type: "number" },
+                  skills: { type: "array", items: { type: "string" } },
+                  highlight: { type: "string" }
+                }
+              }
+            }
+          }
+        }
+      });
+      setGeneratedProfiles(res.profiles || []);
+      setSelectedProfiles((res.profiles || []).map((_, i) => i)); // select all by default
+    } catch (e) {
+      toast.error("فشل توليد الملفات: " + e.message);
+    } finally {
+      setNetworkLoading(false);
+    }
+  };
+
+  const toggleProfile = (idx) => {
+    setSelectedProfiles(prev =>
+      prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+    );
+  };
+
+  const sendBatchConnectionRequests = async () => {
+    const targets = generatedProfiles.filter((_, i) => selectedProfiles.includes(i));
+    if (!targets.length) { toast.error("اختر مهندسًا واحدًا على الأقل"); return; }
+    setNetworkLoading(true);
+    setBatchResults([]);
+    const results = [];
+    for (const profile of targets) {
+      try {
+        const res = await base44.functions.invoke("linkedinService", {
+          action: "outreachToEngineers",
+          data: {
+            engineerName: profile.name,
+            engineerSpecialization: networkForm.specialization,
+            engineerCity: networkForm.city,
+            customNote: `${networkForm.customNote ? networkForm.customNote + ' | ' : ''}${profile.highlight} | خبرة ${profile.yearsExp} سنوات في ${profile.title}`
+          }
+        });
+        results.push({ profile, success: true, draft: res.data.connectionRequestDraft });
+      } catch {
+        results.push({ profile, success: false, draft: null });
+      }
+    }
+    setBatchResults(results);
+    setNetworkLoading(false);
+    toast.success(`تم إنشاء ${results.filter(r => r.success).length} رسالة تواصل ✓`);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white p-6" dir="rtl">
       <div className="max-w-4xl mx-auto">
