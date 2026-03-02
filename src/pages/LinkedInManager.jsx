@@ -7,13 +7,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Share2, Users, UserPlus, CheckCircle, Copy, ExternalLink, Linkedin } from "lucide-react";
+import { Loader2, Share2, Users, UserPlus, CheckCircle, Copy, ExternalLink, Linkedin, Network, Search, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 export default function LinkedInManager() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [activeTab, setActiveTab] = useState("share");
+  const [networkLoading, setNetworkLoading] = useState(false);
+  const [generatedProfiles, setGeneratedProfiles] = useState([]);
+  const [selectedProfiles, setSelectedProfiles] = useState([]);
+  const [networkForm, setNetworkForm] = useState({
+    specialization: "هندسة معمارية",
+    city: "الرياض",
+    experienceLevel: "خبرة متوسطة (3-7 سنوات)",
+    count: 5,
+    customNote: "",
+  });
+  const [batchResults, setBatchResults] = useState([]);
 
   // Form states
   const [shareForm, setShareForm] = useState({ title: "", description: "", designCategory: "interior", engineerName: "", firmName: "Bytly" });
