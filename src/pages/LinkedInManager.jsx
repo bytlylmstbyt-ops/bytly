@@ -60,8 +60,22 @@ export default function LinkedInManager() {
 
   // Form states
   const [shareForm, setShareForm] = useState({ title: "", description: "", designCategory: "interior", engineerName: "", firmName: "Bytly" });
-  const [clientForm, setClientForm] = useState({ industry: "العقارات والبناء", location: "الرياض", projectType: "تصميم معماري وداخلي", customMessage: "" });
   const [engineerForm, setEngineerForm] = useState({ engineerName: "", engineerSpecialization: "هندسة معمارية", engineerCity: "الرياض", customNote: "" });
+
+  // Client targeting state
+  const [clientLoading, setClientLoading] = useState(false);
+  const [clientProfiles, setClientProfiles] = useState([]);
+  const [selectedClients, setSelectedClients] = useState([]);
+  const [clientBatchResults, setClientBatchResults] = useState([]);
+  const [clientForm, setClientForm] = useState({
+    industry: "العقارات والبناء",
+    location: "الرياض",
+    companySize: "شركة متوسطة (50-200 موظف)",
+    jobTitle: "مدير مشاريع",
+    projectType: "تصميم معماري وداخلي",
+    count: 5,
+    customNote: "",
+  });
 
   const invoke = async (action, data) => {
     setLoading(true);

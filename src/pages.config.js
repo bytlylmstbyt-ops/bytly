@@ -102,6 +102,7 @@ import InvestorHub from './pages/InvestorHub';
 import InvoiceManager from './pages/InvoiceManager';
 import InvoicePayment from './pages/InvoicePayment';
 import LegalConsultantProfile from './pages/LegalConsultantProfile';
+import LinkedInManager from './pages/LinkedInManager';
 import Messages from './pages/Messages';
 import MyDisputes from './pages/MyDisputes';
 import MyFavorites from './pages/MyFavorites';
@@ -141,7 +142,6 @@ import WalletRechargeSuccess from './pages/WalletRechargeSuccess';
 import WalletTopup from './pages/WalletTopup';
 import WalletTopupSuccess from './pages/WalletTopupSuccess';
 import WorkflowBuilder from './pages/WorkflowBuilder';
-import LinkedInManager from './pages/LinkedInManager';
 import __Layout from './Layout.jsx';
 
 
@@ -201,6 +201,7 @@ export const PAGES = {
     "InvoiceManager": InvoiceManager,
     "InvoicePayment": InvoicePayment,
     "LegalConsultantProfile": LegalConsultantProfile,
+    "LinkedInManager": LinkedInManager,
     "Messages": Messages,
     "MyDisputes": MyDisputes,
     "MyFavorites": MyFavorites,
@@ -240,7 +241,6 @@ export const PAGES = {
     "WalletTopup": WalletTopup,
     "WalletTopupSuccess": WalletTopupSuccess,
     "WorkflowBuilder": WorkflowBuilder,
-    "LinkedInManager": LinkedInManager,
 }
 
 export const pagesConfig = {
