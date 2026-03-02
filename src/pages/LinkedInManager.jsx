@@ -163,21 +163,45 @@ export default function LinkedInManager() {
     "مدير البناء والتشييد",
   ];
 
+  const categoryPrompts = {
+    investors: {
+      label: "المستثمرون",
+      jobTitleHint: "مستثمر عقاري، رئيس صندوق استثماري، شريك في صندوق رأس مال مخاطر، مدير محفظة عقارية",
+      need: "يبحثون عن فرص استثمارية عقارية مربحة ومشاريع قابلة للتطوير والتأجير",
+      context: "لديهم رأس مال يريدون استثماره في مشاريع عقارية أو توسيع محفظتهم العقارية",
+    },
+    developers: {
+      label: "المطورون العقاريون",
+      jobTitleHint: "مطور عقاري، رئيس مشاريع التطوير، مدير تطوير عقاري، CEO شركة تطوير",
+      need: "يحتاجون تصاميم معمارية وهندسية احترافية لمشاريع سكنية وتجارية ضخمة",
+      context: "لديهم أراضٍ أو مشاريع قيد التطوير ويبحثون عن شركاء هندسيين موثوقين",
+    },
+    businesses: {
+      label: "أصحاب الأعمال والشركات",
+      jobTitleHint: "رئيس تنفيذي، مدير عام، صاحب شركة، مؤسس شركة",
+      need: "يبحثون عن تصميم وتجهيز مكاتبهم أو مقار أعمالهم أو فروعهم الجديدة",
+      context: "يرغبون في تجهيز بيئة عمل احترافية تعكس هوية شركتهم وتعزز إنتاجية موظفيهم",
+    },
+  };
+
   const generateClientProfiles = async () => {
     setClientLoading(true);
     setClientProfiles([]);
     setSelectedClients([]);
     setClientBatchResults([]);
+    const catInfo = categoryPrompts[activeClientCategory];
     try {
       const res = await base44.integrations.Core.InvokeLLM({
-        prompt: `أنشئ قائمة بـ ${clientForm.count} ملف شخصي وهمي لعملاء محتملين على LinkedIn وفق هذه المعايير:
-- القطاع: ${clientForm.industry}
+        prompt: `أنشئ قائمة بـ ${clientForm.count} ملف شخصي وهمي لعملاء محتملين من فئة "${catInfo.label}" على LinkedIn وفق هذه المعايير:
 - المدينة: ${clientForm.location}
-- حجم الشركة: ${clientForm.companySize}
-- المسمى الوظيفي: ${clientForm.jobTitle}
-- نوع المشروع المتوقع: ${clientForm.projectType}
+- حجم الشركة / الكيان: ${clientForm.companySize}
+- المسميات الوظيفية الممكنة: ${catInfo.jobTitleHint}
+- احتياجهم: ${catInfo.need}
+- السياق: ${catInfo.context}
+- نوع الخدمة: ${clientForm.projectType}
+${clientForm.customNote ? `- ملاحظات إضافية: ${clientForm.customNote}` : ""}
 
-أنشئ ملفات واقعية لأشخاص يمكن أن يكونوا عملاءً مهتمين بخدمات التصميم والبناء، مع ذكر احتياجاتهم المحتملة.
+أنشئ ملفات واقعية جداً مع احتياجات محددة ونقاط ألم واضحة لكل شخص.
 أرجع JSON فقط:`,
         response_json_schema: {
           type: "object",
