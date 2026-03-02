@@ -11,6 +11,37 @@ import { Loader2, Share2, Users, UserPlus, CheckCircle, Copy, ExternalLink, Link
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
+function BatchResultItem({ result, onCopy }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className={`bg-white rounded-lg border p-3 ${result.success ? 'border-green-200' : 'border-red-200'}`}>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {result.success
+            ? <CheckCircle className="w-4 h-4 text-green-600" />
+            : <span className="w-4 h-4 text-red-500 text-xs">✗</span>
+          }
+          <span className="text-sm font-medium text-slate-800">{result.profile.name}</span>
+          <span className="text-xs text-slate-500">{result.profile.title}</span>
+        </div>
+        {result.draft && (
+          <div className="flex gap-1">
+            <Button size="sm" variant="ghost" onClick={() => onCopy(result.draft)}><Copy className="w-3 h-3" /></Button>
+            <Button size="sm" variant="ghost" onClick={() => setExpanded(e => !e)}>
+              {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+            </Button>
+          </div>
+        )}
+      </div>
+      {expanded && result.draft && (
+        <p className="text-xs text-slate-600 mt-2 whitespace-pre-line bg-slate-50 p-2 rounded border leading-relaxed">
+          {result.draft}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function LinkedInManager() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
