@@ -245,26 +245,28 @@ ${clientForm.customNote ? `- ملاحظات إضافية: ${clientForm.customNot
     if (!targets.length) { toast.error("اختر عميلاً واحدًا على الأقل"); return; }
     setClientLoading(true);
     setClientBatchResults([]);
+    const catInfo = categoryPrompts[activeClientCategory];
     const results = [];
     for (const profile of targets) {
       try {
         const res = await base44.integrations.Core.InvokeLLM({
           prompt: `أنت مسوّق لمنصة Bytly لخدمات التصميم الهندسي والبناء في السعودية.
 
-اكتب رسالة تواصل مخصصة على LinkedIn لهذا العميل المحتمل:
+اكتب رسالة تواصل مخصصة على LinkedIn لهذا العميل من فئة "${catInfo.label}":
 - الاسم: ${profile.name}
 - المسمى الوظيفي: ${profile.title}
 - الشركة: ${profile.company} (${profile.companyType})
 - الاحتياج المتوقع: ${profile.potentialNeed}
 - نقطة الألم: ${profile.painPoint}
+- السياق: ${catInfo.context}
 - نوع الخدمة: ${clientForm.projectType}
 ${clientForm.customNote ? `- ملاحظات إضافية: ${clientForm.customNote}` : ""}
 
 شروط الرسالة:
 - قصيرة ومباشرة (لا تتجاوز 5 أسطر)
-- شخصية وتشير إلى احتياجهم تحديدًا
-- تذكر ميزة Bytly (منصة متكاملة، مهندسون معتمدون، ضمان الجودة)
-- تنتهي بدعوة واضحة للتواصل أو الاستفسار
+- شخصية جداً وتعالج نقطة ألمهم المحددة
+- تذكر ميزة Bytly المناسبة لهذه الفئة (${activeClientCategory === 'investors' ? 'عوائد استثمارية مضمونة وتصاميم تزيد قيمة المشروع' : activeClientCategory === 'developers' ? 'فرق هندسية متكاملة وإنجاز في الموعد المحدد' : 'تصميم يعكس هوية العلامة التجارية ويرفع إنتاجية الفريق'})
+- تنتهي بدعوة واضحة للتواصل
 - باللغة العربية الفصيحة`,
         });
         results.push({ profile, success: true, draft: res });
