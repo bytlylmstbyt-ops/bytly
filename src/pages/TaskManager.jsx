@@ -52,6 +52,7 @@ export default function TaskManager() {
   const [detailProject, setDetailProject] = useState(null);
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(u => {
