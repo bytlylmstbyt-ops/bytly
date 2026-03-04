@@ -97,6 +97,7 @@ import FirmMilestoneControl from './pages/FirmMilestoneControl';
 import FirmProfile from './pages/FirmProfile';
 import FirmSettings from './pages/FirmSettings';
 import Gallery from './pages/Gallery';
+import GmailManager from './pages/GmailManager';
 import Home from './pages/Home';
 import InvestorHub from './pages/InvestorHub';
 import InvoiceManager from './pages/InvoiceManager';
@@ -142,7 +143,7 @@ import WalletRechargeSuccess from './pages/WalletRechargeSuccess';
 import WalletTopup from './pages/WalletTopup';
 import WalletTopupSuccess from './pages/WalletTopupSuccess';
 import WorkflowBuilder from './pages/WorkflowBuilder';
-import GmailManager from './pages/GmailManager';
+import CalendarManager from './pages/CalendarManager';
 import __Layout from './Layout.jsx';
 
 
@@ -197,6 +198,7 @@ export const PAGES = {
     "FirmProfile": FirmProfile,
     "FirmSettings": FirmSettings,
     "Gallery": Gallery,
+    "GmailManager": GmailManager,
     "Home": Home,
     "InvestorHub": InvestorHub,
     "InvoiceManager": InvoiceManager,
@@ -242,7 +244,7 @@ export const PAGES = {
     "WalletTopup": WalletTopup,
     "WalletTopupSuccess": WalletTopupSuccess,
     "WorkflowBuilder": WorkflowBuilder,
-    "GmailManager": GmailManager,
+    "CalendarManager": CalendarManager,
 }
 
 export const pagesConfig = {
