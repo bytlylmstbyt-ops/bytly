@@ -13,6 +13,7 @@ export default function TaskFormModal({ open, onClose, onSave, initial, projects
   const [form, setForm] = useState({
     title: "", description: "", project_id: "", status: "todo",
     priority: "medium", assigned_to: "", due_date: "", start_date: "",
+    due_time: "", start_time: "",
     progress: 0, cost: 0, dependencies: [],
   });
 
