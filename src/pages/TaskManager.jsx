@@ -47,6 +47,7 @@ export default function TaskManager() {
 
   // Notifications
   const [notifications, setNotifications] = useState([]);
+  const [detailProject, setDetailProject] = useState(null);
 
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
