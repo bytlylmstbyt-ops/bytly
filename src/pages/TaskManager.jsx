@@ -18,6 +18,7 @@ import TaskFormModal from "@/components/tasks/TaskFormModal";
 import ProjectFormModal from "@/components/tasks/ProjectFormModal";
 import TaskCalendarView from "@/components/tasks/TaskCalendarView";
 import ProjectDetailView from "@/components/tasks/ProjectDetailView";
+import ProjectAlertsPanel from "@/components/tasks/ProjectAlertsPanel";
 
 const STATUS_COLS = [
   { key: "todo",        label: "قيد الانتظار", color: "bg-slate-100" },
@@ -48,11 +49,26 @@ export default function TaskManager() {
   // Notifications
   const [notifications, setNotifications] = useState([]);
   const [detailProject, setDetailProject] = useState(null);
+  const [alertsOpen, setAlertsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    base44.auth.me().then(u => {
+      setUser(u);
+      if (u?.email) loadUnreadCount(u.email);
+    }).catch(() => {});
     loadAll();
   }, []);
+
+  const loadUnreadCount = async (email) => {
+    try {
+      const notifs = await base44.entities.Notification.filter(
+        { recipient_email: email, type: 'project_update', is_read: false },
+        '-created_date', 50
+      );
+      setUnreadCount(notifs.length);
+    } catch { setUnreadCount(0); }
+  };
 
   const loadAll = async () => {
     setLoading(true);
