@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Save } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Save, Link2, X } from "lucide-react";
 
-export default function TaskFormModal({ open, onClose, onSave, initial, projects, loading }) {
+export default function TaskFormModal({ open, onClose, onSave, initial, projects, allTasks = [], loading }) {
   const [form, setForm] = useState({
     title: "", description: "", project_id: "", status: "todo",
-    priority: "medium", assigned_to: "", due_date: "", start_date: "", progress: 0,
+    priority: "medium", assigned_to: "", due_date: "", start_date: "",
+    progress: 0, cost: 0, dependencies: [],
   });
 
   useEffect(() => {
@@ -24,23 +26,37 @@ export default function TaskFormModal({ open, onClose, onSave, initial, projects
         due_date: initial.due_date || "",
         start_date: initial.start_date || "",
         progress: initial.progress || 0,
+        cost: initial.cost || 0,
+        dependencies: initial.dependencies || [],
       });
     } else {
-      setForm({ title: "", description: "", project_id: projects?.[0]?.id || "", status: "todo", priority: "medium", assigned_to: "", due_date: "", start_date: "", progress: 0 });
+      setForm({ title: "", description: "", project_id: projects?.[0]?.id || "", status: "todo", priority: "medium", assigned_to: "", due_date: "", start_date: "", progress: 0, cost: 0, dependencies: [] });
     }
   }, [initial, open]);
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
+  // Tasks in the same project (excluding current)
+  const siblingTasks = allTasks.filter(t => t.project_id === form.project_id && t.id !== initial?.id);
+
+  const toggleDep = (taskId) => {
+    setForm(p => ({
+      ...p,
+      dependencies: p.dependencies.includes(taskId)
+        ? p.dependencies.filter(d => d !== taskId)
+        : [...p.dependencies, taskId],
+    }));
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg" dir="rtl">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" dir="rtl">
         <DialogHeader>
           <DialogTitle>{initial ? "تعديل المهمة" : "مهمة جديدة"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 py-2">
           <Input placeholder="عنوان المهمة *" value={form.title} onChange={e => set("title", e.target.value)} />
-          <Textarea placeholder="وصف المهمة..." rows={3} value={form.description} onChange={e => set("description", e.target.value)} />
+          <Textarea placeholder="وصف المهمة..." rows={2} value={form.description} onChange={e => set("description", e.target.value)} />
 
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -96,12 +112,37 @@ export default function TaskFormModal({ open, onClose, onSave, initial, projects
             </div>
           </div>
 
+          <div>
+            <label className="text-xs text-slate-500 mb-1 block">التكلفة (ر.س)</label>
+            <Input type="number" value={form.cost} onChange={e => set("cost", Number(e.target.value))} placeholder="0" />
+          </div>
+
           {initial && (
             <div>
               <label className="text-xs text-slate-500 mb-1 block">نسبة الإنجاز: {form.progress}%</label>
               <input type="range" min="0" max="100" step="5" value={form.progress}
                 onChange={e => set("progress", Number(e.target.value))}
                 className="w-full accent-blue-600" />
+            </div>
+          )}
+
+          {/* Dependencies */}
+          {siblingTasks.length > 0 && (
+            <div>
+              <label className="text-xs text-slate-500 mb-2 block flex items-center gap-1">
+                <Link2 className="w-3 h-3" />التبعيات (مهام يجب اكتمالها أولاً)
+              </label>
+              <div className="flex flex-wrap gap-2 max-h-28 overflow-y-auto p-2 bg-slate-50 rounded-lg border">
+                {siblingTasks.map(t => (
+                  <button key={t.id} type="button" onClick={() => toggleDep(t.id)}
+                    className={`text-xs px-2 py-1 rounded-full border transition-all ${form.dependencies.includes(t.id) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300'}`}>
+                    {t.title}
+                  </button>
+                ))}
+              </div>
+              {form.dependencies.length > 0 && (
+                <p className="text-xs text-blue-600 mt-1">{form.dependencies.length} تبعية محددة</p>
+              )}
             </div>
           )}
         </div>
