@@ -11,8 +11,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   X, Plus, Flag, DollarSign, BarChart3, Loader2, Save,
-  CheckCircle2, Clock, Circle, AlertCircle, Sparkles, Link2, Trash2, Edit2
+  CheckCircle2, Clock, Circle, AlertCircle, Sparkles, Link2, Trash2, Edit2, Paperclip
 } from "lucide-react";
+import DocumentsPanel from "./DocumentsPanel";
 import { format, parseISO, isPast, differenceInDays } from "date-fns";
 import { ar } from "date-fns/locale";
 import { toast } from "sonner";
