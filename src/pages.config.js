@@ -146,6 +146,7 @@ import WalletRechargeSuccess from './pages/WalletRechargeSuccess';
 import WalletTopup from './pages/WalletTopup';
 import WalletTopupSuccess from './pages/WalletTopupSuccess';
 import WorkflowBuilder from './pages/WorkflowBuilder';
+import TaskReports from './pages/TaskReports';
 import __Layout from './Layout.jsx';
 
 
@@ -249,6 +250,7 @@ export const PAGES = {
     "WalletTopup": WalletTopup,
     "WalletTopupSuccess": WalletTopupSuccess,
     "WorkflowBuilder": WorkflowBuilder,
+    "TaskReports": TaskReports,
 }
 
 export const pagesConfig = {
