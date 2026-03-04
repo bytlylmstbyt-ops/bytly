@@ -35,7 +35,7 @@ export default function TaskFormModal({ open, onClose, onSave, initial, projects
         dependencies: initial.dependencies || [],
       });
     } else {
-      setForm({ title: "", description: "", project_id: projects?.[0]?.id || "", status: "todo", priority: "medium", assigned_to: "", due_date: "", start_date: "", progress: 0, cost: 0, dependencies: [] });
+      setForm({ title: "", description: "", project_id: projects?.[0]?.id || "", status: "todo", priority: "medium", assigned_to: "", due_date: "", start_date: "", due_time: "", start_time: "", progress: 0, cost: 0, dependencies: [] });
     }
   }, [initial, open]);
 
