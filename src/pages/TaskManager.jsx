@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Plus, RefreshCw, Loader2, FolderOpen, CheckSquare, Calendar,
-  Bell, Edit2, Trash2, Search, Filter, AlertCircle, LayoutList, LayoutGrid
+  Bell, BellRing, Edit2, Trash2, Search, AlertCircle, LayoutList, LayoutGrid
 } from "lucide-react";
 import { toast } from "sonner";
 import { isPast, isToday, parseISO, differenceInDays, format } from "date-fns";
@@ -193,6 +193,15 @@ export default function TaskManager() {
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={loadAll} disabled={loading}>
               <RefreshCw className={`w-4 h-4 ml-1 ${loading ? 'animate-spin' : ''}`} />تحديث
+            </Button>
+            <Button variant="outline" size="sm" className="relative" onClick={() => setAlertsOpen(true)}>
+              {unreadCount > 0 ? <BellRing className="w-4 h-4 ml-1 text-amber-500" /> : <Bell className="w-4 h-4 ml-1" />}
+              إشعارات
+              {unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold leading-none">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </Button>
             <Button variant="outline" onClick={() => setProjectModal({ open: true, initial: null })}>
               <FolderOpen className="w-4 h-4 ml-1" />مشروع جديد
