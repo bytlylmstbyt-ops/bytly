@@ -195,6 +195,11 @@ export default function TaskManager() {
             </div>
           </div>
           <div className="flex gap-2">
+            <Link to={createPageUrl("TaskReports")}>
+              <Button variant="outline" size="sm">
+                <BarChart2 className="w-4 h-4 ml-1 text-purple-500" />التقارير
+              </Button>
+            </Link>
             <Button variant="outline" size="sm" onClick={() => setSearchOpen(true)}>
               <Search className="w-4 h-4 ml-1" />بحث شامل
             </Button>
