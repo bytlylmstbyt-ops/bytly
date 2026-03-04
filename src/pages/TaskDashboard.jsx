@@ -339,7 +339,7 @@ export default function TaskDashboard() {
                         <p className="font-semibold text-sm text-slate-800 truncate">{p.name}</p>
                         <div className="flex gap-1 mt-0.5 flex-wrap">
                           {p.status && (
-                            <Badge className="text-xs py-0 px-1.5" style={{ background: p.status === "active" ? "#dcfce7", color: "#16a34a" }}>
+                            <Badge className="text-xs py-0 px-1.5" style={{ background: p.status === "active" ? "#dcfce7" : "#f1f5f9", color: "#16a34a" }}>
                               {p.status === "active" ? "نشط" : p.status === "completed" ? "مكتمل" : p.status === "on_hold" ? "معلق" : "مؤرشف"}
                             </Badge>
                           )}
