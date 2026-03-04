@@ -447,6 +447,15 @@ export default function TaskManager() {
         initial={projectModal.initial}
         loading={actionLoading}
       />
+
+      <GlobalSearchPanel
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        projects={projects}
+        tasks={tasks}
+        onEditTask={openEditTask}
+        onOpenProject={setDetailProject}
+      />
     </div>
   );
 }
