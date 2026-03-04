@@ -47,6 +47,7 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import AIAssistant from './pages/AIAssistant';
 import AddDesign from './pages/AddDesign';
 import AddEngineer from './pages/AddEngineer';
 import AddPortfolio from './pages/AddPortfolio';
@@ -67,6 +68,7 @@ import AllCertifications from './pages/AllCertifications';
 import AllWithdrawalRequests from './pages/AllWithdrawalRequests';
 import Analytics from './pages/Analytics';
 import CRMDashboard from './pages/CRMDashboard';
+import CalendarManager from './pages/CalendarManager';
 import CertificationPage from './pages/CertificationPage';
 import ClientDashboard from './pages/ClientDashboard';
 import ClientOnboarding from './pages/ClientOnboarding';
@@ -134,6 +136,7 @@ import RoleManagement from './pages/RoleManagement';
 import Settings from './pages/Settings';
 import Subscription from './pages/Subscription';
 import Support from './pages/Support';
+import TaskManager from './pages/TaskManager';
 import TechnicalReviewPage from './pages/TechnicalReviewPage';
 import Terms from './pages/Terms';
 import UserRoleAssignment from './pages/UserRoleAssignment';
@@ -143,13 +146,11 @@ import WalletRechargeSuccess from './pages/WalletRechargeSuccess';
 import WalletTopup from './pages/WalletTopup';
 import WalletTopupSuccess from './pages/WalletTopupSuccess';
 import WorkflowBuilder from './pages/WorkflowBuilder';
-import CalendarManager from './pages/CalendarManager';
-import AIAssistant from './pages/AIAssistant';
-import TaskManager from './pages/TaskManager';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AIAssistant": AIAssistant,
     "AddDesign": AddDesign,
     "AddEngineer": AddEngineer,
     "AddPortfolio": AddPortfolio,
@@ -170,6 +171,7 @@ export const PAGES = {
     "AllWithdrawalRequests": AllWithdrawalRequests,
     "Analytics": Analytics,
     "CRMDashboard": CRMDashboard,
+    "CalendarManager": CalendarManager,
     "CertificationPage": CertificationPage,
     "ClientDashboard": ClientDashboard,
     "ClientOnboarding": ClientOnboarding,
@@ -237,6 +239,7 @@ export const PAGES = {
     "Settings": Settings,
     "Subscription": Subscription,
     "Support": Support,
+    "TaskManager": TaskManager,
     "TechnicalReviewPage": TechnicalReviewPage,
     "Terms": Terms,
     "UserRoleAssignment": UserRoleAssignment,
@@ -246,9 +249,6 @@ export const PAGES = {
     "WalletTopup": WalletTopup,
     "WalletTopupSuccess": WalletTopupSuccess,
     "WorkflowBuilder": WorkflowBuilder,
-    "CalendarManager": CalendarManager,
-    "AIAssistant": AIAssistant,
-    "TaskManager": TaskManager,
 }
 
 export const pagesConfig = {

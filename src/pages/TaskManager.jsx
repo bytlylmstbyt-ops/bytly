@@ -17,6 +17,7 @@ import TaskCard from "@/components/tasks/TaskCard";
 import TaskFormModal from "@/components/tasks/TaskFormModal";
 import ProjectFormModal from "@/components/tasks/ProjectFormModal";
 import TaskCalendarView from "@/components/tasks/TaskCalendarView";
+import ProjectDetailView from "@/components/tasks/ProjectDetailView";
 
 const STATUS_COLS = [
   { key: "todo",        label: "قيد الانتظار", color: "bg-slate-100" },
