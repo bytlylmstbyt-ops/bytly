@@ -8,8 +8,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Plus, RefreshCw, Loader2, FolderOpen, CheckSquare, Calendar,
-  Bell, BellRing, Edit2, Trash2, Search, AlertCircle, LayoutList, LayoutGrid
+  Bell, BellRing, Edit2, Trash2, Search, AlertCircle, LayoutList, LayoutGrid, BarChart2
 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
 import { isPast, isToday, parseISO, differenceInDays, format } from "date-fns";
 import { ar } from "date-fns/locale";
