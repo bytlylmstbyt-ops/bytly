@@ -159,6 +159,8 @@ export default function TaskFormModal({ open, onClose, onSave, initial, projects
             </div>
           )}
         </div>
+          </TabsContent>
+        </Tabs>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>إلغاء</Button>
           <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => onSave(form)} disabled={loading || !form.title || !form.project_id}>
