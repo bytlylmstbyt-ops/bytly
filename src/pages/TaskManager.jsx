@@ -389,8 +389,20 @@ export default function TaskManager() {
         onSave={saveTask}
         initial={editingTask}
         projects={projects}
+        allTasks={tasks}
         loading={actionLoading}
       />
+
+      {detailProject && (
+        <ProjectDetailView
+          project={detailProject}
+          tasks={tasks}
+          onClose={() => setDetailProject(null)}
+          onRefresh={loadAll}
+          onEditTask={openEditTask}
+          onStatusChange={changeStatus}
+        />
+      )}
       <ProjectFormModal
         open={projectModal.open}
         onClose={() => setProjectModal({ open: false, initial: null })}
