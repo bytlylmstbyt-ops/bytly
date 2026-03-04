@@ -144,6 +144,7 @@ import WalletTopup from './pages/WalletTopup';
 import WalletTopupSuccess from './pages/WalletTopupSuccess';
 import WorkflowBuilder from './pages/WorkflowBuilder';
 import CalendarManager from './pages/CalendarManager';
+import AIAssistant from './pages/AIAssistant';
 import __Layout from './Layout.jsx';
 
 
@@ -245,6 +246,7 @@ export const PAGES = {
     "WalletTopupSuccess": WalletTopupSuccess,
     "WorkflowBuilder": WorkflowBuilder,
     "CalendarManager": CalendarManager,
+    "AIAssistant": AIAssistant,
 }
 
 export const pagesConfig = {
