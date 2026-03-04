@@ -56,6 +56,17 @@ export default function TaskFormModal({ open, onClose, onSave, initial, projects
         <DialogHeader>
           <DialogTitle>{initial ? "تعديل المهمة" : "مهمة جديدة"}</DialogTitle>
         </DialogHeader>
+        <Tabs defaultValue="details">
+          <TabsList className="grid grid-cols-2 mb-2">
+            <TabsTrigger value="details" className="text-xs">التفاصيل</TabsTrigger>
+            <TabsTrigger value="documents" className="text-xs flex items-center gap-1" disabled={!initial?.id}>
+              <Paperclip className="w-3 h-3" />المستندات {!initial?.id && <span className="text-slate-300">(احفظ أولاً)</span>}
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="documents">
+            {initial?.id && <DocumentsPanel linkedTo="task" linkedId={initial.id} />}
+          </TabsContent>
+          <TabsContent value="details">
         <div className="space-y-3 py-2">
           <Input placeholder="عنوان المهمة *" value={form.title} onChange={e => set("title", e.target.value)} />
           <Textarea placeholder="وصف المهمة..." rows={2} value={form.description} onChange={e => set("description", e.target.value)} />
