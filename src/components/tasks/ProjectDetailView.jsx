@@ -464,6 +464,11 @@ export default function ProjectDetailView({ project, tasks, onClose, onRefresh, 
             )}
           </TabsContent>
 
+          {/* Documents */}
+          <TabsContent value="documents" className="p-4">
+            <DocumentsPanel linkedTo="project" linkedId={project.id} />
+          </TabsContent>
+
           {/* Report */}
           <TabsContent value="report" className="p-4 space-y-4">
             <div className="flex justify-between items-center">
