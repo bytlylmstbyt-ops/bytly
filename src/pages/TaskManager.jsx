@@ -193,6 +193,9 @@ export default function TaskManager() {
             </div>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setSearchOpen(true)}>
+              <Search className="w-4 h-4 ml-1" />بحث شامل
+            </Button>
             <Button variant="outline" size="sm" onClick={loadAll} disabled={loading}>
               <RefreshCw className={`w-4 h-4 ml-1 ${loading ? 'animate-spin' : ''}`} />تحديث
             </Button>
