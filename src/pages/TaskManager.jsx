@@ -337,7 +337,7 @@ export default function TaskManager() {
                 const done = pTasks.filter(t => t.status === 'completed').length;
                 const pct = pTasks.length ? Math.round((done / pTasks.length) * 100) : 0;
                 return (
-                  <Card key={p.id} className="hover:shadow-md transition-all cursor-pointer" onClick={() => { setSelectedProject(p.id); setActiveTab('board'); }}>
+                  <Card key={p.id} className="hover:shadow-md transition-all cursor-pointer group" onClick={() => setDetailProject(p)}>
                     <CardContent className="p-4">
                       <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-lg"
