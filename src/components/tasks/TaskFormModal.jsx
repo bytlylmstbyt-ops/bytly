@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Save, Link2, X } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Save, Link2, X, Paperclip } from "lucide-react";
+import DocumentsPanel from "./DocumentsPanel";
 
 export default function TaskFormModal({ open, onClose, onSave, initial, projects, allTasks = [], loading }) {
   const [form, setForm] = useState({
