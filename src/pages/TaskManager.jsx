@@ -418,6 +418,13 @@ export default function TaskManager() {
         loading={actionLoading}
       />
 
+      {alertsOpen && user?.email && (
+        <ProjectAlertsPanel
+          userEmail={user.email}
+          onClose={() => { setAlertsOpen(false); loadUnreadCount(user.email); }}
+        />
+      )}
+
       {detailProject && (
         <ProjectDetailView
           project={detailProject}
