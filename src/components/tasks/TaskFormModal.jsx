@@ -28,6 +28,8 @@ export default function TaskFormModal({ open, onClose, onSave, initial, projects
         assigned_to: initial.assigned_to || "",
         due_date: initial.due_date || "",
         start_date: initial.start_date || "",
+        due_time: initial.due_time || "",
+        start_time: initial.start_time || "",
         progress: initial.progress || 0,
         cost: initial.cost || 0,
         dependencies: initial.dependencies || [],
