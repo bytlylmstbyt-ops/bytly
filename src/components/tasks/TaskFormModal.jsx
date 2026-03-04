@@ -126,8 +126,19 @@ export default function TaskFormModal({ open, onClose, onSave, initial, projects
                   <Input type="date" value={form.start_date} onChange={e => set("start_date", e.target.value)} />
                 </div>
                 <div>
+                  <label className="text-xs text-slate-500 mb-1 block">وقت البدء</label>
+                  <Input type="time" value={form.start_time} onChange={e => set("start_time", e.target.value)} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
                   <label className="text-xs text-slate-500 mb-1 block">تاريخ الاستحقاق</label>
                   <Input type="date" value={form.due_date} onChange={e => set("due_date", e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs text-slate-500 mb-1 block">وقت الاستحقاق</label>
+                  <Input type="time" value={form.due_time} onChange={e => set("due_time", e.target.value)} />
                 </div>
               </div>
 
