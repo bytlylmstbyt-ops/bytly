@@ -245,10 +245,13 @@ export default function ProjectDetailView({ project, tasks, onClose, onRefresh, 
         </div>
 
         <Tabs defaultValue="overview" className="flex-1 flex flex-col">
-          <TabsList className="mx-4 mt-3 grid grid-cols-4 shrink-0">
+          <TabsList className="mx-4 mt-3 grid grid-cols-5 shrink-0">
             <TabsTrigger value="overview" className="text-xs">نظرة عامة</TabsTrigger>
             <TabsTrigger value="milestones" className="text-xs">المعالم</TabsTrigger>
             <TabsTrigger value="budget" className="text-xs">الميزانية</TabsTrigger>
+            <TabsTrigger value="documents" className="text-xs flex items-center gap-1">
+              <Paperclip className="w-3 h-3" />مستندات
+            </TabsTrigger>
             <TabsTrigger value="report" className="text-xs">التقرير</TabsTrigger>
           </TabsList>
 
