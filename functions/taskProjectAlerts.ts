@@ -205,8 +205,23 @@ Deno.serve(async (req) => {
             related_project_id: alert.projectId,
             priority: alert.priority,
             is_read: false,
-            email_sent: false,
+            email_sent: true,
           });
+
+          // Send rich email notification if there's a task entity involved
+          if (alert.entityId && (alert.type === 'task_blocking_milestone' || alert.type === 'critical_path_blocked' || alert.type === 'incomplete_dependencies')) {
+            try {
+              await base44.asServiceRole.functions.invoke('sendTaskNotificationEmail', {
+                taskId: alert.entityId,
+                recipientEmail: alert.ownerEmail,
+                alertType: alert.type === 'critical_path_blocked' ? 'overdue' : 'soon',
+                appUrl: 'https://app.base44.com',
+              });
+            } catch (emailErr) {
+              console.error(`Failed to send task email for ${alert.ownerEmail}:`, emailErr.message);
+            }
+          }
+
           created++;
         }
       } catch (err) {
