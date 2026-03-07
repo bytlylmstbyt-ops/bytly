@@ -140,56 +140,72 @@ export default function BIMSearch() {
 
             {/* Content */}
             <div className="max-w-5xl mx-auto px-6 py-6">
-                {/* Stats + Add Button */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                        <Layers className="w-4 h-4" />
-                        <span>{results.length} نموذج {query ? 'في نتائج البحث' : 'متاح'}</span>
-                        {models.length === 0 && (
-                            <Badge variant="outline" className="text-orange-600 border-orange-300">لا توجد نماذج بعد</Badge>
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                    <div className="flex items-center justify-between mb-4">
+                        <TabsList>
+                            <TabsTrigger value="search" className="gap-2">
+                                <Search className="w-4 h-4" /> البحث في النماذج
+                            </TabsTrigger>
+                            {(user?.role === 'admin' || user?.role === 'engineer') && (
+                                <TabsTrigger value="bim360" className="gap-2">
+                                    <CloudDownload className="w-4 h-4" /> BIM 360 Browser
+                                </TabsTrigger>
+                            )}
+                        </TabsList>
+                        {activeTab === 'search' && (user?.role === 'admin' || user?.role === 'engineer') && (
+                            <Button onClick={() => setShowAddModal(true)} className="gap-2">
+                                <Plus className="w-4 h-4" /> إضافة يدوي
+                            </Button>
                         )}
                     </div>
-                    {(user?.role === 'admin' || user?.role === 'engineer') && (
-                        <Button onClick={() => setShowAddModal(true)} className="gap-2">
-                            <Plus className="w-4 h-4" />
-                            إضافة نموذج BIM
-                        </Button>
-                    )}
-                </div>
 
-                {/* Results */}
-                {results.length === 0 ? (
-                    <div className="text-center py-20 text-gray-500">
-                        {query ? (
-                            <>
-                                <Search className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                                <p>لم يتم العثور على نتائج لـ "<strong>{query}</strong>"</p>
-                                <p className="text-sm mt-1">جرب كلمات أخرى مثل: خرسانة، مساحة، طابق</p>
-                            </>
-                        ) : (
-                            <>
-                                <Building2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                                <p>لا توجد نماذج BIM مضافة بعد</p>
-                                {(user?.role === 'admin' || user?.role === 'engineer') && (
-                                    <Button className="mt-4" onClick={() => setShowAddModal(true)}>
-                                        <Plus className="w-4 h-4 ml-2" /> أضف أول نموذج
-                                    </Button>
+                    {/* Search Tab */}
+                    <TabsContent value="search">
+                        <div className="flex items-center gap-3 text-sm text-gray-600 mb-4">
+                            <Layers className="w-4 h-4" />
+                            <span>{results.length} نموذج {query ? 'في نتائج البحث' : 'متاح'}</span>
+                        </div>
+                        {results.length === 0 ? (
+                            <div className="text-center py-20 text-gray-500">
+                                {query ? (
+                                    <>
+                                        <Search className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                                        <p>لم يتم العثور على نتائج لـ "<strong>{query}</strong>"</p>
+                                        <p className="text-sm mt-1">جرب كلمات أخرى مثل: خرسانة، مساحة، طابق</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Building2 className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                                        <p>لا توجد نماذج BIM بعد</p>
+                                        {(user?.role === 'admin' || user?.role === 'engineer') && (
+                                            <Button className="mt-4" onClick={() => setActiveTab('bim360')}>
+                                                <CloudDownload className="w-4 h-4 ml-2" /> استورد من BIM 360
+                                            </Button>
+                                        )}
+                                    </>
                                 )}
-                            </>
+                            </div>
+                        ) : (
+                            <div className="grid gap-4 md:grid-cols-2">
+                                {results.map(model => (
+                                    <ModelCard
+                                        key={model.id}
+                                        model={model}
+                                        query={query}
+                                        onView={() => setSelectedModel(model)}
+                                    />
+                                ))}
+                            </div>
                         )}
-                    </div>
-                ) : (
-                    <div className="grid gap-4 md:grid-cols-2">
-                        {results.map(model => (
-                            <ModelCard
-                                key={model.id}
-                                model={model}
-                                query={query}
-                                onView={() => setSelectedModel(model)}
-                            />
-                        ))}
-                    </div>
-                )}
+                    </TabsContent>
+
+                    {/* BIM 360 Browser Tab */}
+                    {(user?.role === 'admin' || user?.role === 'engineer') && (
+                        <TabsContent value="bim360">
+                            <BIM360Browser onImported={() => loadModels(user)} />
+                        </TabsContent>
+                    )}
+                </Tabs>
             </div>
 
             {/* BIM 3D Viewer */}
