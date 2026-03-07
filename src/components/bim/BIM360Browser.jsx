@@ -275,7 +275,7 @@ export default function BIM360Browser({ onImported }) {
                         ))
                     )}
                 </div>
-            </div>
+            </div>}
         </div>
     );
 }
