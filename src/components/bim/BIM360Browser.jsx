@@ -13,6 +13,7 @@ const FILE_ICONS = { rvt: '🏗️', dwg: '📐', ifc: '🧱', nwc: '🔷', pdf:
 function getExt(name = '') { return name.split('.').pop().toLowerCase(); }
 
 export default function BIM360Browser({ onImported }) {
+    const [connectionStatus, setConnectionStatus] = useState('loading'); // loading | connected | disconnected
     const [hubs, setHubs] = useState([]);
     const [selectedHub, setSelectedHub] = useState(null);
     const [projects, setProjects] = useState([]);
@@ -22,13 +23,18 @@ export default function BIM360Browser({ onImported }) {
     const [folderContents, setFolderContents] = useState({});
     const [importing, setImporting] = useState({});
     const [importedIds, setImportedIds] = useState(new Set());
-    const [loadingHubs, setLoadingHubs] = useState(true);
+    const [loadingHubs, setLoadingHubs] = useState(false);
     const [loadingProjects, setLoadingProjects] = useState(false);
     const [error, setError] = useState('');
     const [syncing, setSyncing] = useState(false);
     const [syncResult, setSyncResult] = useState(null);
 
-    useEffect(() => { loadHubs(); }, []);
+    const handleConnectionChange = (status) => {
+        setConnectionStatus(status);
+        if (status === 'connected') {
+            loadHubs();
+        }
+    };
 
     const call = async (payload) => {
         const res = await base44.functions.invoke('bimService', payload);
