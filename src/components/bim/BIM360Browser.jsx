@@ -189,7 +189,27 @@ export default function BIM360Browser({ onImported }) {
                 </div>
             )}
 
-            <div className="flex" style={{ minHeight: 340 }}>
+            {/* Not Connected State */}
+            {connectionStatus === 'disconnected' && (
+                <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+                    <div className="w-16 h-16 rounded-full bg-orange-50 flex items-center justify-center mb-4">
+                        <Link2 className="w-8 h-8 text-orange-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-2">ربط حساب Autodesk</h3>
+                    <p className="text-sm text-gray-500 mb-6 max-w-sm">
+                        لاستعراض مشاريعك ومجلداتك من Autodesk Construction Cloud، يجب ربط حسابك أولاً.
+                    </p>
+                    <AutodeskConnectButton onStatusChange={handleConnectionChange} />
+                </div>
+            )}
+
+            {connectionStatus === 'loading' && (
+                <div className="flex items-center justify-center py-16">
+                    <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                </div>
+            )}
+
+            {connectionStatus === 'connected' && <div className="flex" style={{ minHeight: 340 }}>
                 {/* Hubs Column */}
                 <div className="w-48 border-l border-gray-100 bg-gray-50 p-3">
                     <p className="text-xs font-semibold text-gray-500 mb-2 px-1">الحسابات</p>
