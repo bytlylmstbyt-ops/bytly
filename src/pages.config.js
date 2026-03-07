@@ -137,6 +137,7 @@ import Settings from './pages/Settings';
 import Subscription from './pages/Subscription';
 import Support from './pages/Support';
 import TaskManager from './pages/TaskManager';
+import TaskReports from './pages/TaskReports';
 import TechnicalReviewPage from './pages/TechnicalReviewPage';
 import Terms from './pages/Terms';
 import UserRoleAssignment from './pages/UserRoleAssignment';
@@ -146,7 +147,7 @@ import WalletRechargeSuccess from './pages/WalletRechargeSuccess';
 import WalletTopup from './pages/WalletTopup';
 import WalletTopupSuccess from './pages/WalletTopupSuccess';
 import WorkflowBuilder from './pages/WorkflowBuilder';
-import TaskReports from './pages/TaskReports';
+import BIMSearch from './pages/BIMSearch';
 import __Layout from './Layout.jsx';
 
 
@@ -241,6 +242,7 @@ export const PAGES = {
     "Subscription": Subscription,
     "Support": Support,
     "TaskManager": TaskManager,
+    "TaskReports": TaskReports,
     "TechnicalReviewPage": TechnicalReviewPage,
     "Terms": Terms,
     "UserRoleAssignment": UserRoleAssignment,
@@ -250,7 +252,7 @@ export const PAGES = {
     "WalletTopup": WalletTopup,
     "WalletTopupSuccess": WalletTopupSuccess,
     "WorkflowBuilder": WorkflowBuilder,
-    "TaskReports": TaskReports,
+    "BIMSearch": BIMSearch,
 }
 
 export const pagesConfig = {
