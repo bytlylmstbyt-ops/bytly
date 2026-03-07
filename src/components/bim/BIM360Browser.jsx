@@ -209,9 +209,11 @@ export default function BIM360Browser({ onImported }) {
                 </div>
             )}
 
-            {connectionStatus === 'connected' && <div className="flex" style={{ minHeight: 340 }}>
+            {connectionStatus === 'connected' && (
+            <div className="flex" style={{ minHeight: 340 }}>
                 {/* Hubs Column */}
                 <div className="w-48 border-l border-gray-100 bg-gray-50 p-3">
+...
                     <p className="text-xs font-semibold text-gray-500 mb-2 px-1">الحسابات</p>
                     {loadingHubs ? (
                         <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-blue-500" /></div>
