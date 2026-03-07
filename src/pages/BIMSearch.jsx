@@ -18,6 +18,7 @@ export default function BIMSearch() {
     const [loading, setLoading] = useState(true);
     const [selectedModel, setSelectedModel] = useState(null);
     const [showAddModal, setShowAddModal] = useState(false);
+    const [activeTab, setActiveTab] = useState('search');
 
     useEffect(() => {
         const init = async () => {
