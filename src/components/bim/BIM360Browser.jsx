@@ -46,6 +46,10 @@ export default function BIM360Browser({ onImported }) {
         setError('');
         try {
             const data = await call({ action: 'list_hubs' });
+            if (data.error === 'not_connected') {
+                setConnectionStatus('disconnected');
+                return;
+            }
             setHubs(data.hubs || []);
         } catch (e) {
             setError(e.message);
