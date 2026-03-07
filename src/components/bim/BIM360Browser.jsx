@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
     ChevronRight, ChevronDown, Folder, FolderOpen,
-    FileBox, Download, Loader2, RefreshCw, CheckCircle2, AlertCircle
+    Download, Loader2, RefreshCw, CheckCircle2, AlertCircle, Link2
 } from 'lucide-react';
+import AutodeskConnectButton from './AutodeskConnectButton';
 
 const FILE_ICONS = { rvt: '🏗️', dwg: '📐', ifc: '🧱', nwc: '🔷', pdf: '📄' };
 
