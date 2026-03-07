@@ -155,16 +155,21 @@ export default function BIM360Browser({ onImported }) {
                         <p className="text-blue-200 text-xs">استعراض ورفع النماذج من BIM 360</p>
                     </div>
                 </div>
-                <Button
-                    size="sm"
-                    variant="outline"
-                    className="border-white/30 text-white hover:bg-white/20 gap-2"
-                    onClick={syncAll}
-                    disabled={syncing}
-                >
-                    <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-                    مزامنة الكل
-                </Button>
+                <div className="flex items-center gap-2">
+                    <AutodeskConnectButton onStatusChange={handleConnectionChange} />
+                    {connectionStatus === 'connected' && (
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-white/30 text-white hover:bg-white/20 gap-2"
+                            onClick={syncAll}
+                            disabled={syncing}
+                        >
+                            <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+                            مزامنة الكل
+                        </Button>
+                    )}
+                </div>
             </div>
 
             {/* Sync Result */}
