@@ -67,6 +67,7 @@ import AdminWalletDashboard from './pages/AdminWalletDashboard';
 import AllCertifications from './pages/AllCertifications';
 import AllWithdrawalRequests from './pages/AllWithdrawalRequests';
 import Analytics from './pages/Analytics';
+import BIMSearch from './pages/BIMSearch';
 import CRMDashboard from './pages/CRMDashboard';
 import CalendarManager from './pages/CalendarManager';
 import CertificationPage from './pages/CertificationPage';
@@ -147,7 +148,6 @@ import WalletRechargeSuccess from './pages/WalletRechargeSuccess';
 import WalletTopup from './pages/WalletTopup';
 import WalletTopupSuccess from './pages/WalletTopupSuccess';
 import WorkflowBuilder from './pages/WorkflowBuilder';
-import BIMSearch from './pages/BIMSearch';
 import __Layout from './Layout.jsx';
 
 
@@ -172,6 +172,7 @@ export const PAGES = {
     "AllCertifications": AllCertifications,
     "AllWithdrawalRequests": AllWithdrawalRequests,
     "Analytics": Analytics,
+    "BIMSearch": BIMSearch,
     "CRMDashboard": CRMDashboard,
     "CalendarManager": CalendarManager,
     "CertificationPage": CertificationPage,
@@ -252,7 +253,6 @@ export const PAGES = {
     "WalletTopup": WalletTopup,
     "WalletTopupSuccess": WalletTopupSuccess,
     "WorkflowBuilder": WorkflowBuilder,
-    "BIMSearch": BIMSearch,
 }
 
 export const pagesConfig = {

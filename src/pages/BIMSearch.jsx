@@ -4,9 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search, Eye, Plus, Building2, Layers, Shield, AlertCircle, Loader2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Search, Eye, Plus, Building2, Layers, Shield, Loader2, CloudDownload } from 'lucide-react';
 import BIMViewer from '@/components/bim/BIMViewer';
 import AddBIMModelModal from '@/components/bim/AddBIMModelModal';
+import BIM360Browser from '@/components/bim/BIM360Browser';
 
 export default function BIMSearch() {
     const [user, setUser] = useState(null);
