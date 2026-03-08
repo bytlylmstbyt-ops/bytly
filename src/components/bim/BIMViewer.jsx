@@ -3,8 +3,9 @@ import { base44 } from '@/api/base44Client';
 import {
     Loader2, AlertCircle, X, ChevronRight, ChevronDown,
     Layers, Info, List, Search, Home, ZoomIn, ZoomOut,
-    Maximize2, RotateCcw, Box, FileText
+    Maximize2, RotateCcw, Box, FileText, BarChart3
 } from 'lucide-react';
+import QuantitiesPanel from './QuantitiesPanel';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -300,6 +301,7 @@ export default function BIMViewer({ modelUrn, modelName, onClose }) {
     const panels = [
         { id: 'properties', icon: <List className="w-4 h-4" />, label: 'الخصائص' },
         { id: 'tree', icon: <Layers className="w-4 h-4" />, label: 'الهيكل' },
+        { id: 'quantities', icon: <BarChart3 className="w-4 h-4" />, label: 'الكميات' },
         { id: 'info', icon: <Info className="w-4 h-4" />, label: 'معلومات' },
     ];
 
@@ -421,6 +423,13 @@ export default function BIMViewer({ modelUrn, modelName, onClose }) {
                             )}
                             {activePanel === 'tree' && (
                                 <ModelTreePanel viewer={viewerInstance.current} />
+                            )}
+                            {activePanel === 'quantities' && (
+                                <QuantitiesPanel
+                                    modelUrn={modelUrn}
+                                    modelId={null}
+                                    modelName={modelName}
+                                />
                             )}
                             {activePanel === 'info' && (
                                 <div className="p-4 space-y-4 overflow-y-auto">
