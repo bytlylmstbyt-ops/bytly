@@ -38,22 +38,27 @@ export default function AutodeskConnectButton({ onStatusChange }) {
 
     const connect = async () => {
         try {
-            const redirectUri = `${window.location.origin}/AutodeskCallback`;
+            // Build redirect URI - must match exactly what's registered in Autodesk App settings
+            const redirectUri = window.location.origin + '/AutodeskCallback';
             const res = await base44.functions.invoke('autodeskOAuth', {
                 action: 'get_auth_url',
                 redirect_uri: redirectUri
             });
             const authUrl = res.data?.auth_url;
-            if (!authUrl) return;
+            if (!authUrl) {
+                console.error('No auth URL received');
+                return;
+            }
+            console.log('Autodesk OAuth redirect_uri:', redirectUri);
 
             // Open popup
             const popup = window.open(authUrl, 'autodesk_oauth', 'width=600,height=700,left=200,top=100');
             if (!popup) {
-                // Fallback: redirect in same tab
+                // Popup blocked - redirect in same tab
                 window.location.href = authUrl;
             }
         } catch (e) {
-            console.error(e);
+            console.error('Autodesk connect error:', e);
         }
     };
 
