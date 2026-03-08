@@ -9,7 +9,7 @@ import BIMViewer from '@/components/bim/BIMViewer';
 import {
     Search, Building2, Layers, CloudDownload, RefreshCw, ExternalLink,
     Mail, FolderOpen, TableProperties, CheckCircle2, Clock, AlertCircle,
-    BarChart3, Filter, X, Eye, Plus, FileText, ArrowUpRight, Loader2,
+    BarChart3, Filter, X, Eye, FileText, ArrowUpRight, Loader2,
     SlidersHorizontal, Calendar, Cloud
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
