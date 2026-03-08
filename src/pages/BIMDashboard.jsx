@@ -266,6 +266,11 @@ export default function BIMDashboard() {
                                 <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
                                 مزامنة الكل
                             </Button>
+                            <Link to={createPageUrl('BIMQuantitiesReport')}>
+                                <Button size="sm" variant="outline" className="border-white/20 text-white hover:bg-white/10 gap-2">
+                                    <BarChart3 className="w-4 h-4" /> تقرير الكميات
+                                </Button>
+                            </Link>
                             <Link to={createPageUrl('BIMSearch')}>
                                 <Button size="sm" className="bg-blue-500 hover:bg-blue-400 gap-2">
                                     <Search className="w-4 h-4" /> البحث الذكي
