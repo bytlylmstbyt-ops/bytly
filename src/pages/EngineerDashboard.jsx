@@ -264,6 +264,46 @@ export default function EngineerDashboard() {
           </Link>
         </div>
 
+        {/* Escrow Status Alert */}
+        {(escrowHeldProjects.length > 0 || pendingEscrowProjects.length > 0) && (
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            {escrowHeldProjects.length > 0 && (
+              <Card className="border-blue-200 bg-blue-50">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-blue-200 flex items-center justify-center shrink-0">
+                      <Shield className="w-5 h-5 text-blue-700" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-blue-900">مبالغ ضمان محجوزة</h3>
+                      <p className="text-sm text-blue-700">
+                        {escrowHeldProjects.length} مشروع بمبلغ إجمالي {escrowHeldProjects.reduce((s, p) => s + (p.escrow_amount || 0), 0).toLocaleString('ar-SA')} ريال محجوز في بيتلي — سيُحوَّل إليك عند موافقة العميل.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            {pendingEscrowProjects.length > 0 && (
+              <Card className="border-amber-200 bg-amber-50">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-amber-200 flex items-center justify-center shrink-0">
+                      <Clock className="w-5 h-5 text-amber-700" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-amber-900">في انتظار إيداع الضمان</h3>
+                      <p className="text-sm text-amber-700">
+                        {pendingEscrowProjects.length} مشروع لم يُودَع مبلغه بعد — تواصل مع العميل لإتمام الإيداع.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
         {/* Alerts */}
         {(pendingDisputes.length > 0 || unreadNotifications.length > 0) && (
           <div className="grid md:grid-cols-2 gap-4 mb-8">
