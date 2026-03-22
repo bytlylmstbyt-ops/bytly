@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Loader2, Star, Briefcase, ShieldAlert, Bell, 
   MapPin, Mail, Phone, Plus, TrendingUp, DollarSign,
-  CheckCircle, Clock, AlertCircle, Edit, FileText, Wallet
+  CheckCircle, Clock, AlertCircle, Edit, FileText, Wallet, Shield
 } from "lucide-react";
 
 export default function EngineerDashboard() {
