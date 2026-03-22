@@ -64,6 +64,8 @@ export default function EngineerDashboard() {
 
   const activeProjects = projects.filter(p => p.status === 'in_progress');
   const completedProjects = projects.filter(p => p.status === 'completed');
+  const escrowHeldProjects = activeProjects.filter(p => p.escrow_status === 'held');
+  const pendingEscrowProjects = activeProjects.filter(p => !p.escrow_status || p.escrow_status === 'none');
   const pendingDisputes = disputes.filter(d => !['resolved', 'closed'].includes(d.status));
   const unreadNotifications = notifications.filter(n => !n.is_read);
   const pendingProposals = proposals.filter(p => p.status === 'pending');
