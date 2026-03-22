@@ -74,11 +74,12 @@ export default function ProjectDetails() {
     const currentUser = await base44.auth.me();
     setUser(currentUser);
 
-    const [projectData, proposalsData, engineersData, userEngData] = await Promise.all([
+    const [projectData, proposalsData, engineersData, userEngData, userClientData] = await Promise.all([
       base44.entities.Project.filter({ id: projectId }),
       base44.entities.Proposal.filter({ project_id: projectId }),
       base44.entities.Engineer.filter({ status: "approved" }),
-      base44.entities.Engineer.filter({ email: currentUser.email })
+      base44.entities.Engineer.filter({ email: currentUser.email }),
+      base44.entities.Client.filter({ email: currentUser.email })
     ]);
 
     setProject(projectData[0]);
@@ -92,6 +93,9 @@ export default function ProjectDetails() {
 
     if (userEngData.length > 0) {
       setUserEngineer(userEngData[0]);
+    }
+    if (userClientData.length > 0) {
+      setUserClient(userClientData[0]);
     }
 
     setIsLoading(false);
