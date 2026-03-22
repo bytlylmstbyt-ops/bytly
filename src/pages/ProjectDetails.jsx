@@ -35,6 +35,7 @@ export default function ProjectDetails() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [userEngineer, setUserEngineer] = useState(null);
+  const [userClient, setUserClient] = useState(null);
   const [showProposalForm, setShowProposalForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [proposalData, setProposalData] = useState({
