@@ -9,6 +9,7 @@ import {
   Star, Download, Eye, ArrowLeft, Scale, Upload, X, Paperclip, Kanban
 } from "lucide-react";
 import ContractGenerator from "@/components/contracts/ContractGenerator";
+import EscrowPanel from "@/components/escrow/EscrowPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
