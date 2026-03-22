@@ -758,6 +758,17 @@ export default function ProjectDetails() {
                 </CardContent>
               </Card>
 
+              {/* Escrow Panel - Always show for in_progress or when escrow exists */}
+              {(project.escrow_status && project.escrow_status !== 'none') || project.status === 'in_progress' ? (
+                <EscrowPanel
+                  project={project}
+                  proposalId={proposals.find(p => p.status === 'accepted')?.id}
+                  isClient={user && project.created_by === user.email}
+                  isEngineer={!!userEngineer && project.assigned_engineer_id === userEngineer.id}
+                  onUpdate={loadData}
+                />
+              ) : null}
+
               {/* Kanban Board - For in progress projects */}
                {project?.status === "in_progress" && (
                  <Link to={createPageUrl("ProjectKanban") + `?id=${project.id}`}>
