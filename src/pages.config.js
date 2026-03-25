@@ -77,6 +77,7 @@ import CertificationPage from './pages/CertificationPage';
 import ClientDashboard from './pages/ClientDashboard';
 import ClientOnboarding from './pages/ClientOnboarding';
 import ClientProfile from './pages/ClientProfile';
+import ContactUs from './pages/ContactUs';
 import Complaints from './pages/Complaints';
 import ConsultantApproval from './pages/ConsultantApproval';
 import ConsultantDashboard from './pages/ConsultantDashboard';
@@ -185,6 +186,7 @@ export const PAGES = {
     "ClientDashboard": ClientDashboard,
     "ClientOnboarding": ClientOnboarding,
     "ClientProfile": ClientProfile,
+    "ContactUs": ContactUs,
     "Complaints": Complaints,
     "ConsultantApproval": ConsultantApproval,
     "ConsultantDashboard": ConsultantDashboard,

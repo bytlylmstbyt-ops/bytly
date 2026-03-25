@@ -114,6 +114,12 @@ function LayoutContent({ children, currentPageName }) {
                 الشركات الاستشارية
               </Link>
               <Link 
+                to={createPageUrl("ContactUs")} 
+                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'ContactUs' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
+              >
+                اتصل بنا
+              </Link>
+              <Link 
                 to={createPageUrl("Projects")} 
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'Projects' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
