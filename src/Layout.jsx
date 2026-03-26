@@ -127,6 +127,12 @@ function LayoutContent({ children, currentPageName }) {
                 {t('nav.gallery')}
               </Link>
               <Link 
+                to="/TechnicalResources" 
+                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'TechnicalResources' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
+              >
+                المعايير الفنية
+              </Link>
+              <Link 
                 to={createPageUrl("DesignMarketplace")} 
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'DesignMarketplace' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
