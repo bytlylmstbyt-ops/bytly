@@ -239,6 +239,11 @@ export default function EngineerProfile() {
                     </Button>
                   </Link>
                   <Link to={createPageUrl("Messages") + `?engineer=${engineer.id}`}>
+                    <Button className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+                      <MessageSquare className="w-5 h-5 ml-2" />
+                      تواصل الآن
+                    </Button>
+                  </Link>
                   <div className="flex gap-2">
                     {currentClient && (
                       <Button 
