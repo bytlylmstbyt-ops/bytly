@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import ReviewModal from "@/components/reviews/ReviewModal";
+import AppointmentModal from "@/components/appointments/AppointmentModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import {
   Shield, Building2, Award, Clock, Star, CheckCircle,
-  FileCheck, Users, TrendingUp, MapPin, Phone, Mail, Globe
+  FileCheck, Users, TrendingUp, MapPin, Phone, Mail, Globe, Calendar
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -164,6 +165,18 @@ export default function FirmProfile() {
                 </div>
 
                 <div className="flex flex-col gap-2">
+                  <AppointmentModal
+                    targetId={firmId}
+                    targetName={firm.company_name}
+                    targetType="firm"
+                    targetEmail={firm.email}
+                    trigger={
+                      <Button className="bg-gradient-to-r from-amber-500 to-amber-600 text-white gap-2">
+                        <Calendar className="w-4 h-4" />
+                        حجز موعد استشارة
+                      </Button>
+                    }
+                  />
                   <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
                     تواصل مع الشركة
                   </Button>

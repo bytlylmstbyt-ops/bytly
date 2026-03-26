@@ -9,6 +9,7 @@ import {
   Calendar, Phone, Mail, ChevronLeft, ChevronRight, HeartOff
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import AppointmentModal from "@/components/appointments/AppointmentModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -219,6 +220,18 @@ export default function EngineerProfile() {
 
                 {/* Actions */}
                 <div className="flex flex-col gap-3 min-w-[200px]">
+                  <AppointmentModal
+                    targetId={engineer.id}
+                    targetName={engineer.full_name}
+                    targetType="engineer"
+                    targetEmail={engineer.email}
+                    trigger={
+                      <Button className="w-full bg-gradient-to-r from-amber-500 to-amber-600 text-white">
+                        <Calendar className="w-5 h-5 ml-2" />
+                        حجز موعد استشارة
+                      </Button>
+                    }
+                  />
                   <Link to={createPageUrl("CreateProject") + `?engineer=${engineer.id}`}>
                     <Button className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white">
                       <Briefcase className="w-5 h-5 ml-2" />
@@ -226,11 +239,6 @@ export default function EngineerProfile() {
                     </Button>
                   </Link>
                   <Link to={createPageUrl("Messages") + `?engineer=${engineer.id}`}>
-                    <Button className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
-                      <MessageSquare className="w-5 h-5 ml-2" />
-                      تواصل الآن
-                    </Button>
-                  </Link>
                   <div className="flex gap-2">
                     {currentClient && (
                       <Button 
