@@ -1,0 +1,81 @@
+{
+  "name": "BuildingProgress",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0634\u0631\u0648\u0639 \u0627\u0644\u0645\u0631\u062a\u0628\u0637"
+    },
+    "project_title": {
+      "type": "string",
+      "description": "\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0645\u0634\u0631\u0648\u0639"
+    },
+    "client_email": {
+      "type": "string",
+      "description": "\u0628\u0631\u064a\u062f \u0627\u0644\u0645\u0627\u0644\u0643"
+    },
+    "engineer_email": {
+      "type": "string",
+      "description": "\u0628\u0631\u064a\u062f \u0627\u0644\u0645\u0647\u0646\u062f\u0633"
+    },
+    "engineer_name": {
+      "type": "string",
+      "description": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0647\u0646\u062f\u0633"
+    },
+    "current_stage": {
+      "type": "string",
+      "enum": [
+        "design",
+        "permits",
+        "foundation",
+        "structure",
+        "finishing",
+        "handover"
+      ],
+      "default": "design",
+      "description": "\u0627\u0644\u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u062d\u0627\u0644\u064a\u0629"
+    },
+    "overall_progress": {
+      "type": "number",
+      "default": 0,
+      "description": "\u0646\u0633\u0628\u0629 \u0627\u0644\u0625\u0646\u062c\u0627\u0632 \u0627\u0644\u0643\u0644\u064a\u0629 0-100"
+    },
+    "stages": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "\u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0645\u0631\u0627\u062d\u0644"
+    },
+    "last_update_note": {
+      "type": "string",
+      "description": "\u0645\u0644\u0627\u062d\u0638\u0629 \u0622\u062e\u0631 \u062a\u062d\u062f\u064a\u062b"
+    },
+    "last_updated_by": {
+      "type": "string",
+      "description": "\u0645\u0646 \u0642\u0627\u0645 \u0628\u0627\u0644\u062a\u062d\u062f\u064a\u062b"
+    },
+    "expected_completion": {
+      "type": "string",
+      "format": "date",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0627\u0646\u062a\u0647\u0627\u0621 \u0627\u0644\u0645\u062a\u0648\u0642\u0639"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u0635\u0648\u0631 \u0648\u0645\u0633\u062a\u0646\u062f\u0627\u062a \u0627\u0644\u062a\u0642\u062f\u0645"
+    }
+  },
+  "required": [
+    "project_id",
+    "client_email",
+    "engineer_email"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

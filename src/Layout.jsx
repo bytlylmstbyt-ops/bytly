@@ -133,6 +133,12 @@ function LayoutContent({ children, currentPageName }) {
                 المعايير الفنية
               </Link>
               <Link 
+                to="/BuildingProgress" 
+                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'BuildingProgress' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
+              >
+                متابعة البناء
+              </Link>
+              <Link 
                 to="/CostEstimator" 
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'CostEstimator' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
