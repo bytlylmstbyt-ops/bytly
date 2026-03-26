@@ -91,10 +91,10 @@ export default function ConstructionTracker() {
     let list = [];
     if (engs.length > 0) {
       role = "engineer";
-      list = await base44.entities.ConstructionPhase.filter({ engineer_email: u.email }, "-updated_date");
+      list = await base44.entities.BuildingProgress.filter({ engineer_email: u.email }, "-updated_date");
     } else {
       role = "client";
-      list = await base44.entities.ConstructionPhase.filter({ client_email: u.email }, "-updated_date");
+      list = await base44.entities.BuildingProgress.filter({ client_email: u.email }, "-updated_date");
     }
 
     setUserRole(role);
@@ -112,7 +112,7 @@ export default function ConstructionTracker() {
     if (!newForm.project_title || !newForm.client_email) return;
     setIsSaving(true);
     const eng = await base44.entities.Engineer.filter({ email: user.email });
-    const tracker = await base44.entities.ConstructionPhase.create({
+    const tracker = await base44.entities.BuildingProgress.create({
       project_title: newForm.project_title,
       client_email: newForm.client_email,
       engineer_email: user.email,
@@ -170,7 +170,7 @@ export default function ConstructionTracker() {
       by: user.full_name,
     };
 
-    const updated = await base44.entities.ConstructionPhase.update(selectedTracker.id, {
+    const updated = await base44.entities.BuildingProgress.update(selectedTracker.id, {
       phases: updatedPhases,
       overall_progress: overall,
       current_phase: currentPhase,
@@ -198,7 +198,7 @@ export default function ConstructionTracker() {
     if (!logMessage.trim() || !selectedTracker) return;
     setIsSaving(true);
     const logEntry = { date: new Date().toISOString(), message: logMessage, by: user.full_name, phase: selectedTracker.current_phase };
-    const updated = await base44.entities.ConstructionPhase.update(selectedTracker.id, {
+    const updated = await base44.entities.BuildingProgress.update(selectedTracker.id, {
       updates_log: [...(selectedTracker.updates_log || []), logEntry],
     });
     setSelectedTracker({ ...selectedTracker, ...updated });
