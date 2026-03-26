@@ -9,6 +9,7 @@ import {
   Star, Download, Eye, ArrowLeft, Scale, Upload, X, Paperclip, Kanban
 } from "lucide-react";
 import ContractGenerator from "@/components/contracts/ContractGenerator";
+import MilestoneInvoicePanel from "@/components/invoices/MilestoneInvoicePanel";
 import EscrowPanel from "@/components/escrow/EscrowPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -808,6 +809,14 @@ export default function ProjectDetails() {
                  </Card>
                )}
 
+              {/* Milestone Invoices */}
+              {project.status === "in_progress" || project.status === "completed" ? (
+                <MilestoneInvoicePanel
+                  projectId={projectId}
+                  isClient={user && project.created_by === user.email}
+                />
+              ) : null}
+
               <Link to={createPageUrl("Projects")}>
                 <Button variant="outline" className="w-full gap-2">
                   <ArrowLeft className="w-4 h-4" />
@@ -815,6 +824,7 @@ export default function ProjectDetails() {
                 </Button>
               </Link>
             </div>
+          </div>
           </div>
         </motion.div>
       </div>
