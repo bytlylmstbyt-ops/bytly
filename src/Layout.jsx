@@ -139,6 +139,12 @@ function LayoutContent({ children, currentPageName }) {
                 حاسبة التكاليف
               </Link>
               <Link 
+                to="/ConstructionTracker" 
+                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'ConstructionTracker' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
+              >
+                متابعة البناء
+              </Link>
+              <Link 
                 to={createPageUrl("DesignMarketplace")} 
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'DesignMarketplace' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
