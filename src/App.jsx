@@ -64,7 +64,7 @@ const AuthenticatedApp = () => {
       ))}
       <Route path="/BuildingProgress" element={<LayoutWrapper currentPageName="BuildingProgress"><BuildingProgress /></LayoutWrapper>} />
       <Route path="/CostEstimator" element={<LayoutWrapper currentPageName="CostEstimator"><CostEstimator /></LayoutWrapper>} />
-      <Route path="/ConstructionTracker" element={<LayoutWrapper currentPageName="ConstructionTracker"><ConstructionTracker /></LayoutWrapper>} /> element={<LayoutWrapper currentPageName="CostEstimator"><CostEstimator /></LayoutWrapper>} />
+      <Route path="/ConstructionTracker" element={<LayoutWrapper currentPageName="ConstructionTracker"><ConstructionTracker /></LayoutWrapper>} />
       <Route path="/TechnicalResources" element={<LayoutWrapper currentPageName="TechnicalResources"><TechnicalResources /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
