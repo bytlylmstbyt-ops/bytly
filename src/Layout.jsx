@@ -133,6 +133,12 @@ function LayoutContent({ children, currentPageName }) {
                 المعايير الفنية
               </Link>
               <Link 
+                to="/CostEstimator" 
+                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'CostEstimator' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
+              >
+                حاسبة التكاليف
+              </Link>
+              <Link 
                 to={createPageUrl("DesignMarketplace")} 
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'DesignMarketplace' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
