@@ -336,6 +336,7 @@ function LayoutContent({ children, currentPageName }) {
               <ul className="space-y-2 text-sm text-slate-300">
                 <li><Link to={createPageUrl("Complaints")} className="hover:text-[#C9A66B] transition-colors">{t('footer.complaints')}</Link></li>
                 <li><Link to={createPageUrl("Support")} className="hover:text-[#C9A66B] transition-colors">{t('footer.technicalSupport')}</Link></li>
+                <li><Link to={createPageUrl("ContactUs")} className="hover:text-[#C9A66B] transition-colors">اتصل بنا</Link></li>
               </ul>
             </div>
 
