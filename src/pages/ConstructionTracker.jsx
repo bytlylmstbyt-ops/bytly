@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
+import { jsPDF } from "jspdf";
 import {
   Building2, CheckCircle2, Clock, AlertTriangle, Plus, Upload,
   ChevronRight, Edit3, Save, X, FileText, Loader2, Bell,
-  BarChart3, Calendar, User, ArrowLeft, Camera, TrendingUp
+  BarChart3, Calendar, User, ArrowLeft, Camera, TrendingUp, Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -69,6 +70,7 @@ export default function ConstructionTracker() {
   const [projects, setProjects] = useState([]);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [logMessage, setLogMessage] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => { loadData(); }, []);
   useEffect(() => {
@@ -194,6 +196,143 @@ export default function ConstructionTracker() {
     setIsSaving(false);
   };
 
+  const exportPDF = () => {
+    if (!selectedTracker) return;
+    setIsExporting(true);
+    try {
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageW = doc.internal.pageSize.getWidth();
+      let y = 20;
+
+      // Header
+      doc.setFillColor(74, 63, 53);
+      doc.rect(0, 0, pageW, 35, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.text("Construction Progress Report", pageW / 2, 15, { align: "center" });
+      doc.setFontSize(11);
+      doc.text(selectedTracker.project_title || "", pageW / 2, 25, { align: "center" });
+      doc.setTextColor(0, 0, 0);
+      y = 45;
+
+      // Project Info
+      doc.setFontSize(12);
+      doc.setFont(undefined, "bold");
+      doc.text("Project Information", 15, y);
+      doc.setFont(undefined, "normal");
+      y += 7;
+      doc.setFontSize(10);
+      doc.setDrawColor(201, 166, 107);
+      doc.line(15, y, pageW - 15, y);
+      y += 5;
+      doc.text(`Engineer: ${selectedTracker.engineer_name || "-"}`, 15, y); y += 6;
+      doc.text(`Client Email: ${selectedTracker.client_email || "-"}`, 15, y); y += 6;
+      doc.text(`Start Date: ${selectedTracker.start_date || "-"}`, 15, y);
+      doc.text(`Expected Delivery: ${selectedTracker.expected_end_date || "-"}`, pageW / 2, y); y += 6;
+      doc.text(`Report Date: ${new Date().toLocaleDateString("en-GB")}`, 15, y); y += 10;
+
+      // Overall Progress
+      doc.setFontSize(12);
+      doc.setFont(undefined, "bold");
+      doc.text("Overall Progress", 15, y); y += 7;
+      doc.setFont(undefined, "normal");
+      doc.setFontSize(22);
+      doc.setTextColor(201, 166, 107);
+      doc.text(`${selectedTracker.overall_progress || 0}%`, 15, y);
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(10);
+      // Progress bar
+      const barX = 35, barY = y - 5, barW = pageW - 50, barH = 6;
+      doc.setDrawColor(220, 220, 220);
+      doc.setFillColor(240, 240, 240);
+      doc.roundedRect(barX, barY, barW, barH, 2, 2, "FD");
+      const fillW = (barW * (selectedTracker.overall_progress || 0)) / 100;
+      if (fillW > 0) {
+        doc.setFillColor(201, 166, 107);
+        doc.roundedRect(barX, barY, fillW, barH, 2, 2, "F");
+      }
+      y += 15;
+
+      // Phases
+      doc.setFontSize(12);
+      doc.setFont(undefined, "bold");
+      doc.text("Construction Phases Summary", 15, y); y += 7;
+      doc.line(15, y, pageW - 15, y); y += 5;
+
+      const statusLabel = { pending: "Not Started", in_progress: "In Progress", completed: "Completed", delayed: "Delayed" };
+      const phases = selectedTracker.phases || [];
+      phases.forEach(phase => {
+        if (y > 260) { doc.addPage(); y = 20; }
+        doc.setFont(undefined, "bold");
+        doc.setFontSize(10);
+        doc.text(phase.label || phase.key, 15, y);
+        doc.setFont(undefined, "normal");
+        const st = statusLabel[phase.status] || phase.status || "Pending";
+        doc.text(`Status: ${st}  |  Progress: ${phase.progress || 0}%`, 80, y);
+        y += 5;
+        if (phase.notes) {
+          doc.setFontSize(9);
+          doc.setTextColor(100, 100, 100);
+          doc.text(`Notes: ${phase.notes}`, 15, y);
+          doc.setTextColor(0, 0, 0);
+          y += 5;
+        }
+        if (phase.start_date || phase.end_date) {
+          doc.setFontSize(9);
+          doc.setTextColor(100, 100, 100);
+          doc.text(`Start: ${phase.start_date || "-"}  End: ${phase.end_date || "-"}`, 15, y);
+          doc.setTextColor(0, 0, 0);
+          y += 5;
+        }
+        doc.setDrawColor(230, 230, 230);
+        doc.line(15, y, pageW - 15, y);
+        y += 4;
+      });
+
+      // Updates Log
+      const logs = selectedTracker.updates_log || [];
+      if (logs.length > 0) {
+        if (y > 240) { doc.addPage(); y = 20; }
+        y += 5;
+        doc.setFontSize(12);
+        doc.setFont(undefined, "bold");
+        doc.text("Updates Log", 15, y); y += 7;
+        doc.setDrawColor(201, 166, 107);
+        doc.line(15, y, pageW - 15, y); y += 5;
+
+        [...logs].reverse().forEach(log => {
+          if (y > 275) { doc.addPage(); y = 20; }
+          doc.setFontSize(9);
+          doc.setFont(undefined, "bold");
+          const dateStr = new Date(log.date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+          doc.text(`${dateStr} - ${log.by || ""}`, 15, y); y += 5;
+          doc.setFont(undefined, "normal");
+          doc.setTextColor(60, 60, 60);
+          const lines = doc.splitTextToSize(log.message || "", pageW - 30);
+          lines.forEach(line => {
+            if (y > 275) { doc.addPage(); y = 20; }
+            doc.text(line, 15, y); y += 5;
+          });
+          doc.setTextColor(0, 0, 0);
+          y += 2;
+        });
+      }
+
+      // Footer
+      const totalPages = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`Page ${i} of ${totalPages} | Generated by Bytly`, pageW / 2, 290, { align: "center" });
+      }
+
+      doc.save(`${selectedTracker.project_title || "project"}-report.pdf`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const addLogMessage = async () => {
     if (!logMessage.trim() || !selectedTracker) return;
     setIsSaving(true);
@@ -282,6 +421,19 @@ export default function ConstructionTracker() {
             {/* Main content */}
             {selectedTracker && (
               <div className="lg:col-span-3 space-y-5">
+
+                {/* Export PDF Button */}
+                <div className="flex justify-end">
+                  <Button
+                    onClick={exportPDF}
+                    disabled={isExporting}
+                    variant="outline"
+                    className="gap-2 border-[#C9A66B] text-[#C9A66B] hover:bg-[#C9A66B] hover:text-white"
+                  >
+                    {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                    تصدير تقرير PDF
+                  </Button>
+                </div>
 
                 {/* Project Header */}
                 <Card className="border-0 shadow-md bg-gradient-to-br from-[#4A3F35] to-[#6B5D4F] text-white">
