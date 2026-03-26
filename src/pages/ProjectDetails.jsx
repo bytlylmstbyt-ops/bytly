@@ -824,9 +824,8 @@ export default function ProjectDetails() {
                 </Button>
               </Link>
             </div>
-          </div>
-          </div>
-        </motion.div>
+            </div>
+            </motion.div>
       </div>
     </div>
   );
