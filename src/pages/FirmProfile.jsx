@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import ReviewModal from "@/components/reviews/ReviewModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,9 @@ export default function FirmProfile() {
   const firmId = searchParams.get("id");
   const [firm, setFirm] = useState(null);
   const [teamMembers, setTeamMembers] = useState([]);
+  const [firmReviews, setFirmReviews] = useState([]);
+  const [currentClient, setCurrentClient] = useState(null);
+  const [existingReview, setExistingReview] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,16 +29,51 @@ export default function FirmProfile() {
 
   const loadFirmData = async () => {
     try {
-      const [firmData] = await base44.entities.EngineeringFirm.filter({ id: firmId });
-      setFirm(firmData);
+      const user = await base44.auth.me();
+      const clientData = await base44.entities.Client.filter({ email: user.email });
+      if (clientData.length > 0) setCurrentClient(clientData[0]);
 
-      const members = await base44.entities.FirmTeamMember.filter({ firm_id: firmId });
+      const [[firmData], members, reviews] = await Promise.all([
+        base44.entities.EngineeringFirm.filter({ id: firmId }),
+        base44.entities.FirmTeamMember.filter({ firm_id: firmId }),
+        base44.entities.FirmReview.filter({ firm_id: firmId }, "-created_date")
+      ]);
+      setFirm(firmData);
       setTeamMembers(members);
+      setFirmReviews(reviews);
+
+      if (clientData.length > 0) {
+        const myReview = reviews.find(r => r.client_id === clientData[0].id);
+        if (myReview) setExistingReview(myReview);
+      }
     } catch (error) {
       console.error("Error loading firm:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmitReview = async (formData) => {
+    const avgRating = ((formData.quality_rating + formData.communication_rating + formData.service_rating) / 3);
+    const review = await base44.entities.FirmReview.create({
+      firm_id: firmId,
+      client_id: currentClient.id,
+      client_name: currentClient.full_name,
+      rating: formData.rating,
+      quality_rating: formData.quality_rating,
+      service_rating: formData.service_rating,
+      communication_rating: formData.communication_rating,
+      comment: formData.comment
+    });
+    // Update firm satisfaction rating
+    const allReviews = [...firmReviews, review];
+    const avg = allReviews.reduce((s, r) => s + r.rating, 0) / allReviews.length;
+    await base44.entities.EngineeringFirm.update(firmId, {
+      client_satisfaction_rating: parseFloat(avg.toFixed(2)),
+      total_reviews: allReviews.length
+    });
+    setExistingReview(review);
+    loadFirmData();
   };
 
   const specializationLabels = {
@@ -124,9 +163,29 @@ export default function FirmProfile() {
                   </div>
                 </div>
 
-                <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
-                  تواصل مع الشركة
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+                    تواصل مع الشركة
+                  </Button>
+                  {currentClient && !existingReview && (
+                    <ReviewModal
+                      targetName={firm.company_name}
+                      onSubmit={handleSubmitReview}
+                      trigger={
+                        <Button variant="outline" className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50">
+                          <Star className="w-4 h-4" />
+                          تقييم الشركة
+                        </Button>
+                      }
+                    />
+                  )}
+                  {existingReview && (
+                    <div className="flex items-center gap-1 text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
+                      <Star className="w-4 h-4 fill-amber-500" />
+                      قيّمت بـ {existingReview.rating}/5
+                    </div>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -164,7 +223,7 @@ export default function FirmProfile() {
                     <div className="flex items-center gap-1">
                       <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
                       <span className="font-bold">{(firm.client_satisfaction_rating || 0).toFixed(1)}</span>
-                      <span className="text-xs text-slate-500">/ 5</span>
+                      <span className="text-xs text-slate-500">/ 5 ({firm.total_reviews || firmReviews.length} تقييم)</span>
                     </div>
                   </div>
                   <Progress value={(firm.client_satisfaction_rating || 0) * 20} className="h-2" />
@@ -239,6 +298,50 @@ export default function FirmProfile() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Reviews Section */}
+          {firmReviews.length > 0 && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="w-5 h-5 text-amber-500" />
+                  تقييمات العملاء ({firmReviews.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {firmReviews.map((review, idx) => (
+                    <div key={review.id} className={`${idx > 0 ? "border-t pt-4" : ""}`}>
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white font-bold">
+                          {review.client_name?.charAt(0) || "E"}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm">{review.client_name || "عميل"}</span>
+                              <div className="flex">
+                                {[1,2,3,4,5].map(s => (
+                                  <Star key={s} className={`w-3.5 h-3.5 ${s <= review.rating ? "fill-amber-400 text-amber-400" : "text-slate-300"}`} />
+                                ))}
+                              </div>
+                            </div>
+                            <span className="text-xs text-slate-400">{new Date(review.created_date).toLocaleDateString("ar")}</span>
+                          </div>
+                          {review.comment && <p className="text-sm text-slate-600">{review.comment}</p>}
+                          <div className="flex gap-3 mt-1 text-xs text-slate-400">
+                            {review.quality_rating && <span>جودة: {review.quality_rating}/5</span>}
+                            {review.communication_rating && <span>تواصل: {review.communication_rating}/5</span>}
+                            {review.service_rating && <span>خدمة: {review.service_rating}/5</span>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Team Members */}
           {teamMembers.length > 0 && (

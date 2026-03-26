@@ -1,0 +1,52 @@
+{
+  "name": "FirmReview",
+  "type": "object",
+  "properties": {
+    "firm_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0634\u0631\u0643\u0629 \u0627\u0644\u0627\u0633\u062a\u0634\u0627\u0631\u064a\u0629"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0639\u0645\u064a\u0644"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "\u0627\u0633\u0645 \u0627\u0644\u0639\u0645\u064a\u0644"
+    },
+    "project_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0634\u0631\u0648\u0639 \u0627\u0644\u0645\u0631\u062a\u0628\u0637"
+    },
+    "rating": {
+      "type": "number",
+      "description": "\u0627\u0644\u062a\u0642\u064a\u064a\u0645 \u0627\u0644\u0639\u0627\u0645 \u0645\u0646 5"
+    },
+    "quality_rating": {
+      "type": "number",
+      "description": "\u062a\u0642\u064a\u064a\u0645 \u0627\u0644\u062c\u0648\u062f\u0629"
+    },
+    "service_rating": {
+      "type": "number",
+      "description": "\u062a\u0642\u064a\u064a\u0645 \u0627\u0644\u062e\u062f\u0645\u0629"
+    },
+    "communication_rating": {
+      "type": "number",
+      "description": "\u062a\u0642\u064a\u064a\u0645 \u0627\u0644\u062a\u0648\u0627\u0635\u0644"
+    },
+    "comment": {
+      "type": "string",
+      "description": "\u0627\u0644\u062a\u0639\u0644\u064a\u0642"
+    }
+  },
+  "required": [
+    "firm_id",
+    "client_id",
+    "rating"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}
