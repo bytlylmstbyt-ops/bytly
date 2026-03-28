@@ -30,18 +30,19 @@ import {
 } from "@/components/ui/dialog";
 
 const FINISH_TYPES = [
-  { value: "economy", label: "اقتصادي", desc: "تشطيب بسيط بمواد معيارية", multiplier: 1.0, color: "bg-slate-100 text-slate-700" },
-  { value: "standard", label: "متوسط", desc: "تشطيب جيد بمواد متوسطة الجودة", multiplier: 1.35, color: "bg-blue-100 text-blue-700" },
-  { value: "luxury", label: "فاخر", desc: "تشطيب راقٍ بمواد عالية الجودة", multiplier: 1.8, color: "bg-amber-100 text-amber-700" },
-  { value: "ultra", label: "فاخر جداً", desc: "مواد استيراد وتصميم خاص", multiplier: 2.4, color: "bg-purple-100 text-purple-700" },
+  { value: "economy", label: "اقتصادي", desc: "بناء خام بمواد معيارية دون تشطيب داخلي متكامل", multiplier: 1.0, color: "bg-slate-100 text-slate-700" },
+  { value: "standard", label: "متوسط", desc: "تشطيب جيد بمواد متوسطة الجودة", multiplier: 1.45, color: "bg-blue-100 text-blue-700" },
+  { value: "luxury", label: "فاخر", desc: "تشطيب راقٍ بمواد عالية الجودة", multiplier: 2.1, color: "bg-amber-100 text-amber-700" },
+  { value: "ultra", label: "فاخر جداً", desc: "مواد استيراد ومعمار خاص وتصميم مخصص", multiplier: 2.9, color: "bg-purple-100 text-purple-700" },
 ];
 
+// أسعار السوق السعودي - مارس 2024 (ريال/م² للمساحة المبنية - مستوى اقتصادي كقاعدة)
 const BUILDING_TYPES = [
-  { value: "villa", label: "فيلا سكنية", icon: "🏡", base_cost: 1200 },
-  { value: "apartment", label: "شقق سكنية", icon: "🏢", base_cost: 1000 },
-  { value: "commercial", label: "مبنى تجاري", icon: "🏬", base_cost: 1400 },
-  { value: "warehouse", label: "مستودع / صناعي", icon: "🏭", base_cost: 700 },
-  { value: "duplex", label: "دوبلكس", icon: "🏘", base_cost: 1100 },
+  { value: "villa",      label: "فيلا سكنية",    icon: "🏡", base_cost: 1800 },
+  { value: "apartment", label: "شقق سكنية",     icon: "🏢", base_cost: 1600 },
+  { value: "commercial",label: "مبنى تجاري",    icon: "🏬", base_cost: 2000 },
+  { value: "warehouse", label: "مستودع / صناعي",icon: "🏭", base_cost: 900  },
+  { value: "duplex",    label: "دوبلكس",        icon: "🏘", base_cost: 1700 },
 ];
 
 const REGIONS = [
@@ -105,9 +106,9 @@ export default function CostEstimator() {
     let total = builtArea * baseCost;
     const extras = [];
 
-    if (form.has_basement) { total += parseFloat(form.land_area) * 600; extras.push({ label: "بدروم", cost: parseFloat(form.land_area) * 600 }); }
-    if (form.has_pool) { total += 80000; extras.push({ label: "مسبح", cost: 80000 }); }
-    if (form.has_elevator) { total += 120000; extras.push({ label: "مصعد", cost: 120000 }); }
+    if (form.has_basement) { const bCost = parseFloat(form.land_area) * 950; total += bCost; extras.push({ label: "بدروم", cost: bCost }); }
+    if (form.has_pool) { total += 180000; extras.push({ label: "مسبح", cost: 180000 }); }
+    if (form.has_elevator) { total += 130000; extras.push({ label: "مصعد", cost: 130000 }); }
 
     const infra = total * 0.12; // بنية تحتية
     const design = total * 0.06; // تصميم
@@ -314,9 +315,9 @@ export default function CostEstimator() {
                     </CardHeader>
                     <CardContent className="space-y-3">
                       {[
-                        { key: "has_basement", label: "بدروم", cost: "600 ر/م²" },
-                        { key: "has_pool", label: "مسبح", cost: "80,000 ر" },
-                        { key: "has_elevator", label: "مصعد", cost: "120,000 ر" },
+                        { key: "has_basement", label: "بدروم", cost: "950 ر/م²" },
+                        { key: "has_pool", label: "مسبح", cost: "180,000 ر" },
+                        { key: "has_elevator", label: "مصعد", cost: "130,000 ر" },
                       ].map(item => (
                         <label key={item.key} className="flex items-center justify-between p-3 rounded-xl border cursor-pointer hover:bg-slate-50">
                           <div className="flex items-center gap-3">
