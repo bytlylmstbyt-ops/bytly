@@ -7,7 +7,7 @@ import {
   Briefcase, Wallet, Star, MessageSquare, Eye, 
   TrendingUp, Clock, CheckCircle, Plus, ArrowLeft,
   Upload, Settings, Grid3X3, FileText, DollarSign, Award,
-  Shield, Users, FileCheck, BarChart3
+  Shield, Users, FileCheck, BarChart3, Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -520,7 +520,18 @@ export default function Dashboard() {
                   </Link>
                 </div>
                 
-                <div className="mt-4">
+                <div className="mt-4 grid md:grid-cols-2 gap-4">
+                  <Link to={createPageUrl("InvestorHub")}>
+                    <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-emerald-200 hover:border-emerald-400">
+                      <CardContent className="p-6 text-center">
+                        <div className="w-16 h-16 mx-auto bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+                          <Building2 className="w-8 h-8 text-emerald-600" />
+                        </div>
+                        <h3 className="font-bold text-lg mb-2">مركز المستثمرين</h3>
+                        <p className="text-sm text-slate-600">لوحة تحكم المشاريع العقارية والمحافظ الاستثمارية</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
                   <Link to={createPageUrl("AdminReports")}>
                     <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-amber-200 hover:border-amber-400">
                       <CardContent className="p-6 text-center">
