@@ -265,15 +265,21 @@ export default function CostEstimator() {
 
                       {/* Floors */}
                       <div>
-                        <Label className="text-sm mb-2 block">عدد الأدوار: <span className="font-bold text-[#C9A66B]">{form.floors}</span></Label>
-                        <Slider
-                          min={1} max={10} step={1}
-                          value={[form.floors]}
-                          onValueChange={([v]) => f("floors")(v)}
-                          className="mt-2"
-                        />
-                        <div className="flex justify-between text-xs text-slate-400 mt-1">
-                          <span>1 دور</span><span>10 أدوار</span>
+                        <Label className="text-sm mb-2 block">عدد الأدوار</Label>
+                        <div className="grid grid-cols-5 gap-2">
+                          {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                            <button
+                              key={n}
+                              onClick={() => f("floors")(n)}
+                              className={`h-10 rounded-xl border-2 font-bold text-sm transition-all ${
+                                form.floors === n
+                                  ? "border-[#C9A66B] bg-amber-50 text-[#C9A66B]"
+                                  : "border-slate-200 text-slate-600 hover:border-slate-300"
+                              }`}
+                            >
+                              {n}
+                            </button>
+                          ))}
                         </div>
                       </div>
                     </CardContent>
