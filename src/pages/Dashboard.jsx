@@ -521,7 +521,7 @@ export default function Dashboard() {
                 </div>
                 
                 <div className="mt-4 grid md:grid-cols-2 gap-4">
-                  <Link to={createPageUrl("InvestorHub")}>
+                  <Link to="/InvestorHub">
                     <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-emerald-200 hover:border-emerald-400">
                       <CardContent className="p-6 text-center">
                         <div className="w-16 h-16 mx-auto bg-emerald-100 rounded-full flex items-center justify-center mb-4">
