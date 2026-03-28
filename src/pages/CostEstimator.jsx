@@ -487,14 +487,14 @@ export default function CostEstimator() {
                 </Card>
               )}
 
-              {/* Nearby Engineers */}
-              {engineers.length > 0 && (
+              {/* Nearby Engineers & Firms */}
+              {(engineers.length > 0 || firms.length > 0) && (
                 <div className="mt-6">
                   <h3 className="font-semibold text-[#4A3F35] mb-3 flex items-center gap-2">
-                    <Star className="w-4 h-4 text-[#C9A66B]" /> مهندسون ومكاتب مقترحة
+                    <Star className="w-4 h-4 text-[#C9A66B]" /> مهندسون وشركات مقترحة
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    {[...engineers.slice(0, 3)].map(eng => (
+                    {engineers.slice(0, 3).map(eng => (
                       <Card key={eng.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
                         <CardContent className="p-4 flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] flex items-center justify-center text-white font-bold flex-shrink-0">
@@ -503,14 +503,32 @@ export default function CostEstimator() {
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm text-slate-800 truncate">{eng.full_name}</p>
                             <p className="text-xs text-slate-500 truncate">{eng.specialization}</p>
-                            {eng.rating > 0 && (
-                              <div className="flex items-center gap-1 mt-0.5">
-                                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                                <span className="text-xs font-medium">{eng.rating?.toFixed(1)}</span>
-                              </div>
-                            )}
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <Badge className="text-xs bg-blue-50 text-blue-600 border-0 px-1.5 py-0">مهندس</Badge>
+                              {eng.rating > 0 && <><Star className="w-3 h-3 fill-amber-400 text-amber-400" /><span className="text-xs font-medium">{eng.rating?.toFixed(1)}</span></>}
+                            </div>
                           </div>
                           <Link to={createPageUrl("EngineerProfile") + `?id=${eng.id}`}>
+                            <Button size="sm" variant="ghost" className="text-xs px-2">عرض</Button>
+                          </Link>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    {firms.slice(0, 3).map(firm => (
+                      <Card key={firm.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+                        <CardContent className="p-4 flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#4A3F35] to-[#8B7355] flex items-center justify-center text-white font-bold flex-shrink-0 text-lg">
+                            {firm.cover_image ? <img src={firm.cover_image} alt="" className="w-full h-full object-cover rounded-full" /> : (firm.company_name || firm.name)?.charAt(0)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm text-slate-800 truncate">{firm.company_name || firm.name}</p>
+                            <p className="text-xs text-slate-500 truncate">{firm.city || firm.specialization || ""}</p>
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <Badge className="text-xs bg-amber-50 text-amber-700 border-0 px-1.5 py-0">شركة</Badge>
+                              {firm.rating > 0 && <><Star className="w-3 h-3 fill-amber-400 text-amber-400" /><span className="text-xs font-medium">{firm.rating?.toFixed(1)}</span></>}
+                            </div>
+                          </div>
+                          <Link to={createPageUrl("FirmProfile") + `?id=${firm.id}`}>
                             <Button size="sm" variant="ghost" className="text-xs px-2">عرض</Button>
                           </Link>
                         </CardContent>
