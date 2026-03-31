@@ -6,20 +6,20 @@ import { motion } from "framer-motion";
 import { 
   MapPin, Star, CheckCircle, Briefcase, Award, Clock,
   MessageSquare, Share2, Heart, Grid3X3, ExternalLink,
-  Calendar, Phone, Mail, ChevronLeft, ChevronRight, HeartOff
+  Calendar, Phone, Mail, ChevronLeft, ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AppointmentModal from "@/components/appointments/AppointmentModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import {
   Dialog,
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import EngineerReviewForm from "@/components/reviews/EngineerReviewForm";
 
 export default function EngineerProfile() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -33,6 +33,7 @@ export default function EngineerProfile() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorited, setIsFavorited] = useState(false);
   const [currentClient, setCurrentClient] = useState(null);
+  const [hasReviewed, setHasReviewed] = useState(false);
 
   useEffect(() => {
     if (engineerId) {
@@ -49,7 +50,6 @@ export default function EngineerProfile() {
     if (clientData.length > 0) {
       setCurrentClient(clientData[0]);
       
-      // Check if favorited
       const favorites = await base44.entities.Favorite.filter({
         client_id: clientData[0].id,
         engineer_id: engineerId
@@ -66,6 +66,12 @@ export default function EngineerProfile() {
     setEngineer(engineerData[0]);
     setPortfolios(portfolioData);
     setReviews(reviewData);
+
+    if (clientData.length > 0) {
+      const alreadyReviewed = reviewData.some(r => r.client_id === clientData[0].id);
+      setHasReviewed(alreadyReviewed);
+    }
+
     setIsLoading(false);
   };
 
@@ -76,7 +82,6 @@ export default function EngineerProfile() {
     }
 
     if (isFavorited) {
-      // Remove from favorites
       const favorites = await base44.entities.Favorite.filter({
         client_id: currentClient.id,
         engineer_id: engineerId
@@ -86,7 +91,6 @@ export default function EngineerProfile() {
       }
       setIsFavorited(false);
     } else {
-      // Add to favorites
       await base44.entities.Favorite.create({
         client_id: currentClient.id,
         engineer_id: engineerId
@@ -98,13 +102,15 @@ export default function EngineerProfile() {
   const allImages = portfolios.flatMap(p => p.images || []);
 
   const handlePrevImage = () => {
-    setCurrentImageIndex(prev => (prev === 0 ? allImages.length - 1 : prev - 1));
-    setSelectedImage(allImages[currentImageIndex === 0 ? allImages.length - 1 : currentImageIndex - 1]);
+    const newIdx = currentImageIndex === 0 ? allImages.length - 1 : currentImageIndex - 1;
+    setCurrentImageIndex(newIdx);
+    setSelectedImage(allImages[newIdx]);
   };
 
   const handleNextImage = () => {
-    setCurrentImageIndex(prev => (prev === allImages.length - 1 ? 0 : prev + 1));
-    setSelectedImage(allImages[currentImageIndex === allImages.length - 1 ? 0 : currentImageIndex + 1]);
+    const newIdx = currentImageIndex === allImages.length - 1 ? 0 : currentImageIndex + 1;
+    setCurrentImageIndex(newIdx);
+    setSelectedImage(allImages[newIdx]);
   };
 
   if (isLoading) {
@@ -262,6 +268,27 @@ export default function EngineerProfile() {
                       <Share2 className="w-5 h-5" />
                     </Button>
                   </div>
+                  {currentClient && !hasReviewed && (
+                    <EngineerReviewForm
+                      engineerId={engineerId}
+                      engineerName={engineer.full_name}
+                      clientId={currentClient.id}
+                      clientName={currentClient.full_name}
+                      onSubmitted={loadData}
+                      trigger={
+                        <Button variant="outline" className="w-full border-amber-300 text-amber-700 hover:bg-amber-50 gap-2">
+                          <Star className="w-4 h-4" />
+                          تقييم المهندس
+                        </Button>
+                      }
+                    />
+                  )}
+                  {currentClient && hasReviewed && (
+                    <div className="flex items-center gap-1 text-sm text-amber-600 bg-amber-50 rounded-lg px-3 py-2 justify-center">
+                      <Star className="w-4 h-4 fill-amber-500" />
+                      لقد قمت بتقييم هذا المهندس
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -344,7 +371,7 @@ export default function EngineerProfile() {
                 <Card className="border-0 shadow-lg">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Shield className="w-5 h-5 text-purple-600" />
+                      <Award className="w-5 h-5 text-purple-600" />
                       تقييمات الشركات الاستشارية
                     </CardTitle>
                   </CardHeader>
@@ -397,7 +424,7 @@ export default function EngineerProfile() {
                               <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: (index * portfolio.images?.length + imgIndex) * 0.05 }}
+                                transition={{ delay: (index * (portfolio.images?.length || 0) + imgIndex) * 0.05 }}
                                 className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer"
                                 onClick={() => {
                                   const globalIndex = portfolios.slice(0, index).reduce((acc, p) => acc + (p.images?.length || 0), 0) + imgIndex;
@@ -463,8 +490,20 @@ export default function EngineerProfile() {
               transition={{ delay: 0.3 }}
             >
               <Card className="border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle>التقييمات والمراجعات</CardTitle>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Star className="w-5 h-5 text-amber-500" />
+                    التقييمات والمراجعات
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-[#1a1a2e]">{engineer.rating?.toFixed(1) || "0.0"}</span>
+                    <div className="flex">
+                      {[1,2,3,4,5].map(s => (
+                        <Star key={s} className={`w-4 h-4 ${s <= Math.round(engineer.rating||0) ? "fill-amber-400 text-amber-400" : "text-slate-300"}`} />
+                      ))}
+                    </div>
+                    <span className="text-sm text-slate-500">({engineer.total_reviews || 0})</span>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {reviews.length > 0 ? (
@@ -473,25 +512,27 @@ export default function EngineerProfile() {
                         <div key={review.id} className={`${index > 0 ? "border-t pt-6" : ""}`}>
                           <div className="flex items-start gap-4">
                             <Avatar className="w-12 h-12">
-                              <AvatarFallback className="bg-slate-200">
-                                {review.client_id?.charAt(0) || "U"}
+                              <AvatarFallback className="bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] text-white">
+                                {review.client_id?.charAt(0) || "E"}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
+                              <div className="flex items-center justify-between mb-1">
+                                <div className="flex">
                                   {[1, 2, 3, 4, 5].map(star => (
-                                    <Star 
-                                      key={star} 
-                                      className={`w-4 h-4 ${star <= review.rating ? "fill-amber-400 text-amber-400" : "text-slate-300"}`}
-                                    />
+                                    <Star key={star} className={`w-4 h-4 ${star <= review.rating ? "fill-amber-400 text-amber-400" : "text-slate-300"}`} />
                                   ))}
                                 </div>
                                 <span className="text-sm text-slate-500">
                                   {new Date(review.created_date).toLocaleDateString("ar")}
                                 </span>
                               </div>
-                              <p className="text-slate-600">{review.comment}</p>
+                              {review.comment && <p className="text-slate-600 mb-2">{review.comment}</p>}
+                              <div className="flex gap-3 text-xs text-slate-400">
+                                {review.quality_rating > 0 && <span>جودة: {review.quality_rating}/5</span>}
+                                {review.communication_rating > 0 && <span>تواصل: {review.communication_rating}/5</span>}
+                                {review.delivery_rating > 0 && <span>مواعيد: {review.delivery_rating}/5</span>}
+                              </div>
                             </div>
                           </div>
                         </div>
