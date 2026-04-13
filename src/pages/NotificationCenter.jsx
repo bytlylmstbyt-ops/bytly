@@ -1,94 +1,86 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import {
-  Bell, CheckCircle, Clock, AlertCircle, Eye, Filter,
-  Briefcase, DollarSign, MessageSquare, FileCheck
+  Bell, CheckCircle, Clock, AlertCircle, DollarSign,
+  MessageSquare, Briefcase, Search, Filter, Trash2, X
 } from "lucide-react";
+
+const TYPE_CONFIG = {
+  approval:       { label: "قبول عرض",      icon: CheckCircle,    color: "text-green-600",  bg: "bg-green-50",  badge: "bg-green-100 text-green-700" },
+  project_update: { label: "تحديث مشروع",   icon: Briefcase,      color: "text-blue-600",   bg: "bg-blue-50",   badge: "bg-blue-100 text-blue-700" },
+  payment:        { label: "دفعة / سحب",     icon: DollarSign,     color: "text-emerald-600",bg: "bg-emerald-50",badge: "bg-emerald-100 text-emerald-700" },
+  withdrawal:     { label: "طلب سحب",        icon: DollarSign,     color: "text-amber-600",  bg: "bg-amber-50",  badge: "bg-amber-100 text-amber-700" },
+  new_message:    { label: "رسالة جديدة",    icon: MessageSquare,  color: "text-purple-600", bg: "bg-purple-50", badge: "bg-purple-100 text-purple-700" },
+  review:         { label: "مراجعة فنية",    icon: AlertCircle,    color: "text-orange-600", bg: "bg-orange-50", badge: "bg-orange-100 text-orange-700" },
+  milestone:      { label: "تحديث مرحلة",   icon: Clock,          color: "text-sky-600",    bg: "bg-sky-50",    badge: "bg-sky-100 text-sky-700" },
+  default:        { label: "عام",            icon: Bell,           color: "text-slate-500",  bg: "bg-slate-50",  badge: "bg-slate-100 text-slate-700" },
+};
+
+const PRIORITY_LABELS = { high: "عالية", medium: "متوسطة", low: "منخفضة", urgent: "عاجلة" };
+const PRIORITY_COLORS = { high: "bg-red-100 text-red-700", medium: "bg-amber-100 text-amber-700", low: "bg-slate-100 text-slate-500", urgent: "bg-red-200 text-red-800" };
 
 export default function NotificationCenter() {
   const [notifications, setNotifications] = useState([]);
-  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");
-  const [client, setClient] = useState(null);
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [readFilter, setReadFilter] = useState("all"); // all | unread | read
+  const [priorityFilter, setPriorityFilter] = useState("all");
 
   useEffect(() => {
     loadData();
+    const unsubscribe = base44.entities.Notification.subscribe((event) => {
+      if (event.type === "create") setNotifications((prev) => [event.data, ...prev]);
+      else if (event.type === "update") setNotifications((prev) => prev.map((n) => n.id === event.id ? event.data : n));
+      else if (event.type === "delete") setNotifications((prev) => prev.filter((n) => n.id !== event.id));
+    });
+    return () => unsubscribe();
   }, []);
 
   const loadData = async () => {
     try {
       const user = await base44.auth.me();
-      const [clientData] = await base44.entities.Client.filter({
-        email: user.email
-      });
-      setClient(clientData);
-
-      const notifs = await base44.entities.Notification.filter(
-        { recipient_email: user.email },
-        "-created_date",
-        50
-      );
+      const notifs = await base44.entities.Notification.filter({ recipient_email: user.email }, "-created_date", 100);
       setNotifications(notifs);
-
-      if (clientData?.client_type === "investor") {
-        const projectsList = await base44.entities.Project.filter({
-          client_id: clientData.id
-        });
-        setProjects(projectsList);
-      }
-    } catch (error) {
-      console.error("Error loading data:", error);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
-  const markAsRead = async (notificationId) => {
-    await base44.entities.Notification.update(notificationId, {
-      is_read: true
-    });
-    await loadData();
+  const markAsRead = async (id) => {
+    await base44.entities.Notification.update(id, { is_read: true });
+    setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, is_read: true } : n));
   };
 
-  const getNotificationIcon = (type) => {
-    const icons = {
-      milestone_approved: <CheckCircle className="w-5 h-5 text-green-600" />,
-      revision_requested: <Clock className="w-5 h-5 text-amber-600" />,
-      payment_released: <DollarSign className="w-5 h-5 text-blue-600" />,
-      new_message: <MessageSquare className="w-5 h-5 text-purple-600" />,
-      project_update: <Briefcase className="w-5 h-5 text-slate-600" />,
-      default: <Bell className="w-5 h-5 text-slate-400" />
-    };
-    return icons[type] || icons.default;
+  const markAllRead = async () => {
+    const unread = notifications.filter((n) => !n.is_read);
+    await Promise.all(unread.map((n) => base44.entities.Notification.update(n.id, { is_read: true })));
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
   };
 
-  const groupNotificationsByProject = () => {
-    const grouped = {};
-    notifications.forEach(notif => {
-      if (notif.related_project_id) {
-        if (!grouped[notif.related_project_id]) {
-          grouped[notif.related_project_id] = [];
-        }
-        grouped[notif.related_project_id].push(notif);
-      }
-    });
-    return grouped;
+  const deleteNotification = async (id) => {
+    await base44.entities.Notification.delete(id);
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
-  const filteredNotifications = notifications.filter(n => {
-    if (filter === "all") return true;
-    if (filter === "unread") return !n.is_read;
-    if (filter === "high") return n.priority === "high";
-    return n.type === filter;
+  const filtered = notifications.filter((n) => {
+    if (readFilter === "unread" && n.is_read) return false;
+    if (readFilter === "read" && !n.is_read) return false;
+    if (typeFilter !== "all" && n.type !== typeFilter) return false;
+    if (priorityFilter !== "all" && n.priority !== priorityFilter) return false;
+    if (search && !n.title?.toLowerCase().includes(search.toLowerCase()) && !n.message?.toLowerCase().includes(search.toLowerCase())) return false;
+    return true;
   });
+
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
+  const allTypes = [...new Set(notifications.map((n) => n.type))].filter(Boolean);
 
   if (loading) {
     return (
@@ -98,147 +90,164 @@ export default function NotificationCenter() {
     );
   }
 
-  const isInvestor = client?.client_type === "investor";
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8" dir="rtl">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-[#1a1a2e]">
-                {isInvestor ? "مركز الإشعارات" : "الإشعارات"}
+              <h1 className="text-3xl font-bold text-[#1a1a2e] flex items-center gap-3">
+                <Bell className="w-8 h-8 text-[#d4a574]" />
+                مركز الإشعارات
               </h1>
-              <p className="text-slate-600 mt-1">
-                {isInvestor 
-                  ? "ملخص تحديثات جميع مشاريعك في مكان واحد"
-                  : "تابع آخر التحديثات والإشعارات"}
-              </p>
+              <p className="text-slate-500 mt-1">تتبع جميع تنبيهاتك ولحظاتك المهمة</p>
             </div>
-            <Badge variant="outline" className="text-lg px-4 py-2">
-              {notifications.filter(n => !n.is_read).length} جديد
-            </Badge>
+            <div className="flex items-center gap-3">
+              {unreadCount > 0 && (
+                <Badge className="bg-red-100 text-red-700 text-base px-3 py-1.5">
+                  {unreadCount} غير مقروء
+                </Badge>
+              )}
+              {unreadCount > 0 && (
+                <Button variant="outline" size="sm" onClick={markAllRead} className="gap-1">
+                  <CheckCircle className="w-4 h-4" />
+                  تحديد الكل كمقروء
+                </Button>
+              )}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Stats Row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          {[
+            { label: "الكل", value: notifications.length, color: "bg-slate-100 text-slate-700" },
+            { label: "غير مقروء", value: unreadCount, color: "bg-blue-100 text-blue-700" },
+            { label: "عالية الأولوية", value: notifications.filter(n => n.priority === "high" || n.priority === "urgent").length, color: "bg-red-100 text-red-700" },
+            { label: "اليوم", value: notifications.filter(n => new Date(n.created_date).toDateString() === new Date().toDateString()).length, color: "bg-green-100 text-green-700" },
+          ].map((s) => (
+            <div key={s.label} className={`rounded-xl p-3 text-center ${s.color}`}>
+              <p className="text-2xl font-bold">{s.value}</p>
+              <p className="text-xs mt-0.5">{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Filters */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
+          className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-6 space-y-3">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Input
+              placeholder="ابحث في الإشعارات..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pr-9"
+            />
           </div>
 
-          <Tabs defaultValue={isInvestor ? "by-project" : "all"} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 lg:w-auto">
-              {isInvestor && (
-                <TabsTrigger value="by-project">حسب المشروع</TabsTrigger>
-              )}
-              <TabsTrigger value="all">الكل</TabsTrigger>
-              <TabsTrigger value="unread">غير مقروء</TabsTrigger>
-            </TabsList>
+          {/* Filter Pills */}
+          <div className="flex flex-wrap gap-2">
+            <span className="text-xs text-slate-500 flex items-center gap-1 ml-1"><Filter className="w-3 h-3" /> حالة:</span>
+            {[{ v: "all", l: "الكل" }, { v: "unread", l: "غير مقروء" }, { v: "read", l: "مقروء" }].map((f) => (
+              <button key={f.v} onClick={() => setReadFilter(f.v)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${readFilter === f.v ? "bg-[#1a1a2e] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                {f.l}
+              </button>
+            ))}
+          </div>
 
-            {isInvestor && (
-              <TabsContent value="by-project" className="space-y-4">
-                {Object.entries(groupNotificationsByProject()).map(([projectId, notifs]) => {
-                  const project = projects.find(p => p.id === projectId);
-                  return (
-                    <Card key={projectId}>
-                      <CardHeader>
-                        <CardTitle className="flex items-center justify-between">
-                          <span className="flex items-center gap-2">
-                            <Briefcase className="w-5 h-5 text-[#d4a574]" />
-                            {project?.title || "مشروع"}
-                          </span>
-                          <Badge>{notifs.length} تحديث</Badge>
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        {notifs.slice(0, 3).map(notif => (
-                          <div
-                            key={notif.id}
-                            className="p-3 border rounded-lg hover:border-[#d4a574] transition-all"
-                          >
-                            <div className="flex items-start gap-3">
-                              {getNotificationIcon(notif.type)}
-                              <div className="flex-1">
-                                <p className="font-medium text-sm">{notif.title}</p>
-                                <p className="text-xs text-slate-600 mt-1">{notif.message}</p>
-                                <span className="text-xs text-slate-400 mt-2 block">
-                                  {new Date(notif.created_date).toLocaleString('ar-SA')}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                        {notifs.length > 3 && (
-                          <Button variant="ghost" size="sm" className="w-full">
-                            عرض {notifs.length - 3} إشعارات إضافية
-                          </Button>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </TabsContent>
-            )}
+          <div className="flex flex-wrap gap-2">
+            <span className="text-xs text-slate-500 flex items-center gap-1 ml-1"><Bell className="w-3 h-3" /> النوع:</span>
+            <button onClick={() => setTypeFilter("all")}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${typeFilter === "all" ? "bg-[#d4a574] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+              الكل
+            </button>
+            {allTypes.map((t) => {
+              const cfg = TYPE_CONFIG[t] || TYPE_CONFIG.default;
+              return (
+                <button key={t} onClick={() => setTypeFilter(t)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${typeFilter === t ? "bg-[#d4a574] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                  {cfg.label}
+                </button>
+              );
+            })}
+          </div>
 
-            <TabsContent value="all" className="space-y-3">
-              {filteredNotifications.map((notif) => (
-                <motion.div
-                  key={notif.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                >
-                  <Card className={!notif.is_read ? "border-l-4 border-l-blue-600" : ""}>
+          <div className="flex flex-wrap gap-2">
+            <span className="text-xs text-slate-500 flex items-center gap-1 ml-1"><AlertCircle className="w-3 h-3" /> الأولوية:</span>
+            {[{ v: "all", l: "الكل" }, { v: "urgent", l: "عاجلة" }, { v: "high", l: "عالية" }, { v: "medium", l: "متوسطة" }].map((f) => (
+              <button key={f.v} onClick={() => setPriorityFilter(f.v)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${priorityFilter === f.v ? "bg-[#1a1a2e] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                {f.l}
+              </button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Results count */}
+        <p className="text-sm text-slate-500 mb-4">{filtered.length} إشعار</p>
+
+        {/* Notification List */}
+        <div className="space-y-3">
+          {filtered.length === 0 ? (
+            <div className="text-center py-16">
+              <Bell className="w-16 h-16 text-slate-200 mx-auto mb-4" />
+              <p className="text-slate-500">لا توجد إشعارات تطابق البحث</p>
+            </div>
+          ) : (
+            filtered.map((n, idx) => {
+              const cfg = TYPE_CONFIG[n.type] || TYPE_CONFIG.default;
+              const Icon = cfg.icon;
+              return (
+                <motion.div key={n.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.03 }}>
+                  <Card className={`transition-all hover:shadow-md ${!n.is_read ? "border-r-4 border-r-blue-500" : ""}`}>
                     <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-start gap-3 flex-1">
-                          {getNotificationIcon(notif.type)}
-                          <div className="flex-1">
-                            <p className="font-medium">{notif.title}</p>
-                            <p className="text-sm text-slate-600 mt-1">{notif.message}</p>
-                            <span className="text-xs text-slate-400 mt-2 block">
-                              {new Date(notif.created_date).toLocaleString('ar-SA')}
-                            </span>
-                          </div>
+                      <div className="flex items-start gap-3">
+                        <div className={`w-10 h-10 rounded-xl ${cfg.bg} flex items-center justify-center shrink-0`}>
+                          <Icon className={`w-5 h-5 ${cfg.color}`} />
                         </div>
-                        {!notif.is_read && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => markAsRead(notif.id)}
-                          >
-                            <CheckCircle className="w-4 h-4" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <p className={`text-sm ${!n.is_read ? "font-bold text-slate-900" : "font-medium text-slate-700"}`}>{n.title}</p>
+                            <Badge className={`text-xs ${cfg.badge}`}>{cfg.label}</Badge>
+                            {n.priority && n.priority !== "medium" && (
+                              <Badge className={`text-xs ${PRIORITY_COLORS[n.priority] || ""}`}>
+                                {PRIORITY_LABELS[n.priority]}
+                              </Badge>
+                            )}
+                            {!n.is_read && <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />}
+                          </div>
+                          <p className="text-sm text-slate-500">{n.message}</p>
+                          <p className="text-xs text-slate-400 mt-1.5">
+                            {new Date(n.created_date).toLocaleString("ar-SA", {
+                              weekday: "short", year: "numeric", month: "short",
+                              day: "numeric", hour: "2-digit", minute: "2-digit"
+                            })}
+                          </p>
+                        </div>
+                        <div className="flex gap-1 shrink-0">
+                          {!n.is_read && (
+                            <Button size="icon" variant="ghost" className="w-8 h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
+                              onClick={() => markAsRead(n.id)} title="تحديد كمقروء">
+                              <CheckCircle className="w-4 h-4" />
+                            </Button>
+                          )}
+                          <Button size="icon" variant="ghost" className="w-8 h-8 text-red-400 hover:text-red-600 hover:bg-red-50"
+                            onClick={() => deleteNotification(n.id)} title="حذف">
+                            <Trash2 className="w-4 h-4" />
                           </Button>
-                        )}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
                 </motion.div>
-              ))}
-            </TabsContent>
-
-            <TabsContent value="unread" className="space-y-3">
-              {filteredNotifications.filter(n => !n.is_read).map((notif) => (
-                <Card key={notif.id} className="border-l-4 border-l-blue-600">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-3 flex-1">
-                        {getNotificationIcon(notif.type)}
-                        <div className="flex-1">
-                          <p className="font-medium">{notif.title}</p>
-                          <p className="text-sm text-slate-600 mt-1">{notif.message}</p>
-                          <span className="text-xs text-slate-400 mt-2 block">
-                            {new Date(notif.created_date).toLocaleString('ar-SA')}
-                          </span>
-                        </div>
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => markAsRead(notif.id)}
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </TabsContent>
-          </Tabs>
-        </motion.div>
+              );
+            })
+          )}
+        </div>
       </div>
     </div>
   );

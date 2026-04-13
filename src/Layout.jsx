@@ -4,6 +4,7 @@ import { createPageUrl } from "./utils";
 import { base44 } from "@/api/base44Client";
 import ChatbotWidget from "@/components/chatbot/ChatbotWidget";
 import MessageNotificationBadge from "@/components/notifications/MessageNotificationBadge";
+import NotificationBell from "@/components/notifications/NotificationBell";
 import { LanguageProvider, useLanguage } from "@/components/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { 
@@ -168,9 +169,7 @@ function LayoutContent({ children, currentPageName }) {
                     <Link to={createPageUrl("Messages")} className="relative p-2 hover:bg-slate-100 rounded-full transition-colors" title={t('nav.messages')}>
                       <MessageSquare className="w-5 h-5 text-slate-600" />
                     </Link>
-                  <Link to={createPageUrl("Notifications")} className="relative p-2 hover:bg-slate-100 rounded-full transition-colors" title={t('nav.notifications')}>
-                    <Bell className="w-5 h-5 text-slate-600" />
-                  </Link>
+                  <NotificationBell />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="flex items-center gap-2 px-2">

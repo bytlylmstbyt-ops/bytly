@@ -137,6 +137,65 @@ export const notifyPaymentRelease = async (recipientEmail, amount, type) => {
   });
 };
 
+export const notifyProposalAccepted = async ({ engineerEmail, projectTitle, amount, projectId }) => {
+  await sendNotification({
+    recipientEmail: engineerEmail,
+    title: "🎉 تم قبول عرضك!",
+    message: `تهانينا! تم قبول عرضك على مشروع "${projectTitle}" بقيمة ${amount?.toLocaleString('ar-SA')} ريال. تواصل مع العميل للبدء.`,
+    type: "approval",
+    projectId,
+    priority: "high"
+  });
+};
+
+export const notifyMilestoneUpdate = async ({ recipientEmail, milestoneTitle, projectTitle, status, projectId }) => {
+  const statusMessages = {
+    submitted: `قدّم المهندس المرحلة "${milestoneTitle}" في مشروع "${projectTitle}" - بانتظار موافقتك.`,
+    approved: `تمت الموافقة على المرحلة "${milestoneTitle}" في مشروع "${projectTitle}".`,
+    revision_requested: `طُلب تعديل على المرحلة "${milestoneTitle}" في مشروع "${projectTitle}".`,
+    completed: `اكتملت المرحلة "${milestoneTitle}" في مشروع "${projectTitle}" بنجاح!`,
+  };
+  await sendNotification({
+    recipientEmail,
+    title: `تحديث مرحلة: ${milestoneTitle}`,
+    message: statusMessages[status] || `تحديث على مرحلة "${milestoneTitle}"`,
+    type: "milestone",
+    projectId,
+    priority: status === "submitted" ? "high" : "medium"
+  });
+};
+
+export const notifyWithdrawalRequest = async ({ engineerEmail, amount, requestId }) => {
+  await sendNotification({
+    recipientEmail: engineerEmail,
+    title: "تم استلام طلب السحب",
+    message: `تم استلام طلب سحب بقيمة ${amount?.toLocaleString('ar-SA')} ريال وهو قيد المراجعة من الشركة الاستشارية.`,
+    type: "withdrawal",
+    priority: "medium"
+  });
+  // Notify admin
+  await sendNotification({
+    recipientEmail: ADMIN_EMAIL,
+    title: "طلب سحب جديد يحتاج مراجعة",
+    message: `طلب سحب جديد بقيمة ${amount?.toLocaleString('ar-SA')} ريال يحتاج اعتماد مستشار فني.`,
+    type: "withdrawal",
+    priority: "high"
+  });
+};
+
+export const notifyWithdrawalProcessed = async ({ engineerEmail, amount, status }) => {
+  const approved = status !== "rejected";
+  await sendNotification({
+    recipientEmail: engineerEmail,
+    title: approved ? "✅ تم اعتماد طلب السحب" : "❌ تم رفض طلب السحب",
+    message: approved
+      ? `تم اعتماد طلب سحب ${amount?.toLocaleString('ar-SA')} ريال وسيتم التحويل خلال 3-5 أيام عمل.`
+      : `تم رفض طلب سحب ${amount?.toLocaleString('ar-SA')} ريال. راجع ملاحظات المستشار للتصحيح.`,
+    type: "withdrawal",
+    priority: "high"
+  });
+};
+
 export const notifyLegalReview = async (complaintId, projectId, legalConsultantId) => {
   await sendNotification({
     recipientEmail: legalConsultantId,
