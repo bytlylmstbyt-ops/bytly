@@ -790,24 +790,24 @@ export default function ProjectDetails() {
                )}
 
               {/* Contract Generator - Only for assigned engineer or client */}
-               {project?.status === "in_progress" && engineer && client && (
-                 <Card className="border-0 shadow-lg mb-6">
-                   <CardContent className="p-4">
-                     <div className="flex items-center gap-3 mb-3">
-                       <Scale className="w-5 h-5 text-purple-500" />
-                       <div>
-                         <h4 className="font-semibold text-[#1a1a2e]">العقد القانوني</h4>
-                         <p className="text-sm text-slate-500">أنشئ عقداً رسمياً للمشروع</p>
-                       </div>
-                     </div>
-                     <ContractGenerator 
-                       project={project} 
-                       engineer={engineer} 
-                       client={client} 
-                     />
-                   </CardContent>
-                 </Card>
-               )}
+               {project?.status === "in_progress" && userEngineer && userClient && (
+                  <Card className="border-0 shadow-lg mb-6">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Scale className="w-5 h-5 text-purple-500" />
+                        <div>
+                          <h4 className="font-semibold text-[#1a1a2e]">العقد القانوني</h4>
+                          <p className="text-sm text-slate-500">أنشئ عقداً رسمياً للمشروع</p>
+                        </div>
+                      </div>
+                      <ContractGenerator 
+                        project={project} 
+                        engineer={userEngineer} 
+                        client={userClient} 
+                      />
+                    </CardContent>
+                  </Card>
+                )}
 
               {/* Milestone Invoices */}
               {project.status === "in_progress" || project.status === "completed" ? (

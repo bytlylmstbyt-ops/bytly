@@ -6,6 +6,7 @@ import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import TechnicalResources from './pages/TechnicalResources';
+import RequestQuote from './pages/RequestQuote';
 import BuildingProgress from './pages/BuildingProgress';
 import CostEstimator from './pages/CostEstimator';
 import ConstructionTracker from './pages/ConstructionTracker';
@@ -66,6 +67,7 @@ const AuthenticatedApp = () => {
       <Route path="/CostEstimator" element={<LayoutWrapper currentPageName="CostEstimator"><CostEstimator /></LayoutWrapper>} />
       <Route path="/ConstructionTracker" element={<LayoutWrapper currentPageName="ConstructionTracker"><ConstructionTracker /></LayoutWrapper>} />
       <Route path="/TechnicalResources" element={<LayoutWrapper currentPageName="TechnicalResources"><TechnicalResources /></LayoutWrapper>} />
+      <Route path="/RequestQuote" element={<LayoutWrapper currentPageName="RequestQuote"><RequestQuote /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

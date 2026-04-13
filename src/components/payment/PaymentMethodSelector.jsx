@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   Wallet, CreditCard, FileText, Apple, 
-  Smartphone, CheckCircle, Shield 
+  Smartphone, CheckCircle, Shield, Zap, Building2
 } from "lucide-react";
 
 export default function PaymentMethodSelector({ 
@@ -130,7 +130,7 @@ export default function PaymentMethodSelector({
                   <p className="font-semibold text-[#1a1a2e]">إصدار فاتورة</p>
                   <p className="text-sm text-slate-500">للشركات (دفع آجل)</p>
                   <Badge variant="outline" className="mt-1 text-xs">
-                    <Building className="w-3 h-3 ml-1" />
+                    <Building2 className="w-3 h-3 ml-1" />
                     30 يوم
                   </Badge>
                 </div>

@@ -67,9 +67,10 @@ export default function ConsultantDashboard() {
       }
       
       // Load pending withdrawal requests for review
+      const currentConsultant = consultant || (user.role === "admin" ? { id: "admin-view" } : null);
       const allRequests = await base44.entities.WithdrawalRequest.list();
       const pending = allRequests.filter(r => !r.consultant_approval && r.status === "pending");
-      const completed = allRequests.filter(r => r.consultant_id === consultantData.id);
+      const completed = allRequests.filter(r => currentConsultant && r.consultant_id === currentConsultant.id);
       
       setPendingRequests(pending);
       setCompletedRequests(completed);
@@ -93,7 +94,7 @@ export default function ConsultantDashboard() {
         pending_reviews: pending.length,
         completed_reviews: completed.length,
         total_earnings: totalEarnings,
-        avg_response_time: consultantData.total_reviews || 0
+        avg_response_time: 0
       });
       
     } catch (error) {
