@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { 
   Search, Filter, MapPin, Clock, DollarSign, 
   Briefcase, PlusCircle, Calendar, Tag, Eye,
-  ChevronLeft, Users
+  ChevronLeft, Users, X, SlidersHorizontal
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,11 @@ export default function Projects() {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("open");
+  const [locationFilter, setLocationFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [projectTypeFilter, setProjectTypeFilter] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const [currentUser, setCurrentUser] = useState(null);
   const [currentEngineer, setCurrentEngineer] = useState(null);
@@ -54,12 +59,32 @@ export default function Projects() {
     setIsLoading(false);
   };
 
+  const activeFiltersCount = [locationFilter, dateFrom, dateTo, projectTypeFilter, categoryFilter].filter(Boolean).length;
+
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setLocationFilter("");
+    setDateFrom("");
+    setDateTo("");
+    setProjectTypeFilter("");
+    setCategoryFilter("");
+    setStatusFilter("open");
+  };
+
   const filteredProjects = projects.filter(project => {
+    const q = searchQuery.toLowerCase();
     const matchesSearch = !searchQuery || 
-      project.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      project.title?.toLowerCase().includes(q) ||
+      project.description?.toLowerCase().includes(q) ||
+      project.location?.toLowerCase().includes(q);
     const matchesCategory = !categoryFilter || project.category === categoryFilter;
+    const matchesLocation = !locationFilter || project.location?.toLowerCase().includes(locationFilter.toLowerCase());
+    const matchesType = !projectTypeFilter || project.project_type === projectTypeFilter;
+    const matchesDateFrom = !dateFrom || new Date(project.created_date) >= new Date(dateFrom);
+    const matchesDateTo = !dateTo || new Date(project.created_date) <= new Date(dateTo + "T23:59:59");
     
+    if (!matchesLocation || !matchesType || !matchesDateFrom || !matchesDateTo) return false;
+
     // Smart filtering based on engineer specialization
     if (currentEngineer) {
       const engineerType = currentEngineer.user_type;
@@ -124,16 +149,104 @@ export default function Projects() {
 
             <div className="max-w-2xl mx-auto">
               <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-2 border border-white/20">
-                <div className="relative">
-                  <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <Input
-                    placeholder={t('projects.searchPlaceholder')}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pr-12 h-14 bg-white border-0 rounded-xl text-slate-800 placeholder:text-slate-400"
-                  />
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <Input
+                      placeholder="ابحث في العنوان، الوصف، أو الموقع..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pr-12 h-14 bg-white border-0 rounded-xl text-slate-800 placeholder:text-slate-400"
+                    />
+                  </div>
+                  <button
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className={`px-4 rounded-xl flex items-center gap-2 text-sm font-medium transition-all ${
+                      showAdvanced || activeFiltersCount > 0
+                        ? "bg-[#d4a574] text-white"
+                        : "bg-white text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                    <span className="hidden sm:inline">فلاتر متقدمة</span>
+                    {activeFiltersCount > 0 && (
+                      <span className="bg-white text-[#d4a574] rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                        {activeFiltersCount}
+                      </span>
+                    )}
+                  </button>
                 </div>
               </div>
+
+              {/* Advanced Filters Panel */}
+              {showAdvanced && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-3 bg-white rounded-2xl p-4 shadow-lg border border-slate-100"
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 mb-1 block">الموقع</label>
+                      <div className="relative">
+                        <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Input
+                          placeholder="مثال: الرياض، جدة..."
+                          value={locationFilter}
+                          onChange={(e) => setLocationFilter(e.target.value)}
+                          className="pr-9 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 mb-1 block">نوع المشروع</label>
+                      <Select value={projectTypeFilter} onValueChange={setProjectTypeFilter}>
+                        <SelectTrigger className="text-sm">
+                          <SelectValue placeholder="جميع الأنواع" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={null}>جميع الأنواع</SelectItem>
+                          <SelectItem value="full_construction">بناء كامل</SelectItem>
+                          <SelectItem value="express_service">خدمة سريعة</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 mb-1 block">من تاريخ</label>
+                      <div className="relative">
+                        <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Input
+                          type="date"
+                          value={dateFrom}
+                          onChange={(e) => setDateFrom(e.target.value)}
+                          className="pr-9 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-500 mb-1 block">إلى تاريخ</label>
+                      <div className="relative">
+                        <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Input
+                          type="date"
+                          value={dateTo}
+                          onChange={(e) => setDateTo(e.target.value)}
+                          className="pr-9 text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  {activeFiltersCount > 0 && (
+                    <button
+                      onClick={clearAllFilters}
+                      className="mt-3 text-xs text-red-500 hover:text-red-700 flex items-center gap-1"
+                    >
+                      <X className="w-3 h-3" />
+                      مسح جميع الفلاتر
+                    </button>
+                  )}
+                </motion.div>
+              )}
             </div>
           </motion.div>
         </div>
