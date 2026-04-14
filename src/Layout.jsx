@@ -340,6 +340,7 @@ function LayoutContent({ children, currentPageName }) {
                 <li><Link to={createPageUrl("Terms")} className="hover:text-[#C9A66B] transition-colors">{t('footer.terms')}</Link></li>
                 <li><Link to={createPageUrl("Privacy")} className="hover:text-[#C9A66B] transition-colors">{t('footer.privacy')}</Link></li>
                 <li><Link to={createPageUrl("Copyright")} className="hover:text-[#C9A66B] transition-colors">{t('footer.copyright')}</Link></li>
+                <li><Link to="/Certificates" className="hover:text-[#C9A66B] transition-colors flex items-center gap-1">🏅 شهادات المنصة وتراخيصها</Link></li>
               </ul>
             </div>
 
