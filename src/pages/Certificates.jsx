@@ -216,13 +216,32 @@ export default function Certificates() {
             <CertCard key={cert.id} cert={cert} onClick={() => setSelected(cert)} />
           ))}
 
-          {/* Placeholder for future certs */}
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-10 text-slate-300 min-h-[320px]">
-            <Award className="w-10 h-10 mb-3" />
-            <p className="text-sm font-medium">قيد الإضافة</p>
-            <p className="text-xs mt-1">شهادات ومستندات إضافية</p>
-          </motion.div>
+          {/* Upcoming licenses */}
+          {[
+            { title: "السجل التجاري", sub: "وزارة التجارة السعودية" },
+            { title: "رخصة الاستثمار", sub: "هيئة الاستثمار السعودية" },
+          ].map((item) => (
+            <motion.div key={item.title} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              className="rounded-2xl border-2 border-dashed border-amber-200 bg-amber-50/40 flex flex-col items-center justify-center p-10 text-center min-h-[320px] gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2a10 10 0 0 1 0 20A10 10 0 0 1 12 2z" opacity=".15" fill="currentColor"/>
+                  <path d="M12 6v6l3 3"/>
+                  <path d="M5.6 5.6l.7.7M18.4 5.6l-.7.7M5.6 18.4l.7-.7M18.4 18.4l-.7-.7"/>
+                  <path d="M12 2v2M12 20v2M2 12h2M20 12h2"/>
+                </svg>
+              </div>
+              <div>
+                <p className="font-bold text-slate-700 text-base">{item.title}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{item.sub}</p>
+              </div>
+              <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-700 text-xs font-semibold px-3 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                قيد العمل
+              </span>
+              <p className="text-xs text-slate-400 max-w-[160px] leading-relaxed">المنصة في مرحلة توسع قانوني مستمر</p>
+            </motion.div>
+          ))}
         </div>
 
         {/* Trust banner */}
