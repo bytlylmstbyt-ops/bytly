@@ -10,7 +10,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { 
   Search, MessageSquare, User, Menu, X, 
   LogOut, Briefcase, Settings, Wallet, Bell, 
-  PlusCircle, ChevronDown, Instagram, Facebook, Mail, Phone, MessagesSquare
+  PlusCircle, ChevronDown, Instagram, Facebook, Mail, Phone, MessagesSquare, Scale
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -193,6 +193,12 @@ function LayoutContent({ children, currentPageName }) {
                         <Link to={createPageUrl("MyPurchasedProjects")} className="flex items-center gap-2">
                           <Briefcase className="w-4 h-4" />
                           {t('nav.myProjects')}
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/MyContracts" className="flex items-center gap-2">
+                          <Scale className="w-4 h-4" />
+                          عقودي
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>

@@ -7,6 +7,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import TechnicalResources from './pages/TechnicalResources';
 import EngineerFinancialDashboard from './pages/EngineerFinancialDashboard';
+import MyContracts from './pages/MyContracts';
 import EngineerReviews from './pages/EngineerReviews';
 import Certificates from './pages/Certificates';
 import RequestQuote from './pages/RequestQuote';
@@ -74,6 +75,7 @@ const AuthenticatedApp = () => {
       <Route path="/EngineerFinancialDashboard" element={<LayoutWrapper currentPageName="EngineerFinancialDashboard"><EngineerFinancialDashboard /></LayoutWrapper>} />
       <Route path="/EngineerReviews" element={<LayoutWrapper currentPageName="EngineerReviews"><EngineerReviews /></LayoutWrapper>} />
       <Route path="/Certificates" element={<LayoutWrapper currentPageName="Certificates"><Certificates /></LayoutWrapper>} />
+      <Route path="/MyContracts" element={<LayoutWrapper currentPageName="MyContracts"><MyContracts /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
