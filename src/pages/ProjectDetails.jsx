@@ -9,6 +9,7 @@ import {
   Star, Download, Eye, ArrowLeft, Scale, Upload, X, Paperclip, Kanban
 } from "lucide-react";
 import ContractGenerator from "@/components/contracts/ContractGenerator";
+import ProjectChat from "@/components/project/ProjectChat";
 import MilestoneInvoicePanel from "@/components/invoices/MilestoneInvoicePanel";
 import EscrowPanel from "@/components/escrow/EscrowPanel";
 import { Button } from "@/components/ui/button";
