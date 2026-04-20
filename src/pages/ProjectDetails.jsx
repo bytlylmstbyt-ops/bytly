@@ -825,7 +825,24 @@ export default function ProjectDetails() {
                 </Button>
               </Link>
             </div>
+          </div>
+
+          {/* Project Chat - visible when project is in_progress or has assigned engineer */}
+          {(project.status === "in_progress" || project.assigned_engineer_id) && user && (
+            <div className="mt-8">
+              <div className="flex items-center gap-2 mb-4">
+                <MessageSquare className="w-5 h-5 text-[#d4a574]" />
+                <h2 className="text-lg font-bold text-[#1a1a2e]">قناة التواصل المباشر</h2>
+              </div>
+              <ProjectChat
+                projectId={projectId}
+                project={project}
+                currentUser={user}
+                engineerName={engineers[project.assigned_engineer_id]?.full_name}
+              />
             </div>
+          )}
+          
             </motion.div>
       </div>
     </div>
