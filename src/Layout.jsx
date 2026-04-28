@@ -10,7 +10,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { 
   Search, MessageSquare, User, Menu, X, 
   LogOut, Briefcase, Settings, Wallet, Bell, 
-  PlusCircle, ChevronDown, Instagram, Facebook, Mail, Phone, MessagesSquare, Scale
+  PlusCircle, ChevronDown, Instagram, Facebook, Mail, Phone, MessagesSquare, Scale, Linkedin
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -390,6 +390,17 @@ function LayoutContent({ children, currentPageName }) {
                     className="hover:text-[#C9A66B]"
                   >
                     Bytly - لمسة بيت
+                  </a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Linkedin className="w-4 h-4 text-[#C9A66B]" />
+                  <a 
+                    href="https://www.linkedin.com/in/bytly-sa" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hover:text-[#C9A66B]"
+                  >
+                    Bytly على LinkedIn
                   </a>
                 </li>
               </ul>
