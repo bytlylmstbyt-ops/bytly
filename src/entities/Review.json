@@ -1,0 +1,17 @@
+{
+  "name": "Review",
+  "type": "object",
+  "properties": {
+    "engineer_id": { "type": "string", "description": "معرف المهندس" },
+    "client_id": { "type": "string", "description": "معرف العميل" },
+    "project_id": { "type": "string", "description": "معرف المشروع" },
+    "rating": { "type": "number", "description": "التقييم من 5" },
+    "comment": { "type": "string", "description": "التعليق" },
+    "description": { "type": "string", "description": "وصف تفصيلي لتجربة العميل مع المهندس", "maxLength": 1000 },
+    "quality_rating": { "type": "number", "description": "تقييم الجودة" },
+    "communication_rating": { "type": "number", "description": "تقييم التواصل" },
+    "delivery_rating": { "type": "number", "description": "تقييم التسليم" }
+  },
+  "required": ["engineer_id", "client_id", "rating"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

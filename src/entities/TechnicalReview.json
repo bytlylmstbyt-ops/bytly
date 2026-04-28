@@ -1,0 +1,19 @@
+{
+  "name": "TechnicalReview",
+  "type": "object",
+  "properties": {
+    "project_id": { "type": "string", "description": "معرف المشروع" },
+    "consultant_id": { "type": "string", "description": "معرف المستشار الفني" },
+    "engineer_id": { "type": "string", "description": "معرف المهندس" },
+    "description": { "type": "string", "description": "وصف تفصيلي للمراجعة الفنية ونتائجها وتوصياتها", "maxLength": 1000 },
+    "review_notes": { "type": "string", "description": "ملاحظات المراجعة" },
+    "status": { "type": "string", "enum": ["pending", "in_progress", "approved", "rejected"], "default": "pending", "description": "حالة المراجعة" },
+    "compliance_level": { "type": "string", "enum": ["compliant", "partially_compliant", "non_compliant"], "description": "مستوى الامتثال" },
+    "review_date": { "type": "string", "format": "date-time", "description": "تاريخ المراجعة" },
+    "report_file": { "type": "string", "description": "ملف تقرير المراجعة" },
+    "issues_found": { "type": "array", "items": { "type": "string" }, "description": "المشكلات المكتشفة" },
+    "recommendations": { "type": "array", "items": { "type": "string" }, "description": "التوصيات" }
+  },
+  "required": ["project_id", "consultant_id"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

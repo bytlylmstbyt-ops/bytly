@@ -4,7 +4,7 @@ import { queryClientInstance } from '@/lib/query-client'
 import NavigationTracker from '@/lib/NavigationTracker'
 import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import PageNotFound from './lib/PageNotFound';
+import NotFoundError from './lib/NotFoundError';
 import TechnicalResources from './pages/TechnicalResources';
 import EngineerFinancialDashboard from './pages/EngineerFinancialDashboard';
 import MyContracts from './pages/MyContracts';
@@ -76,7 +76,7 @@ const AuthenticatedApp = () => {
       <Route path="/EngineerReviews" element={<LayoutWrapper currentPageName="EngineerReviews"><EngineerReviews /></LayoutWrapper>} />
       <Route path="/Certificates" element={<LayoutWrapper currentPageName="Certificates"><Certificates /></LayoutWrapper>} />
       <Route path="/MyContracts" element={<LayoutWrapper currentPageName="MyContracts"><MyContracts /></LayoutWrapper>} />
-      <Route path="*" element={<PageNotFound />} />
+      <Route path="*" element={<NotFoundError />} />
     </Routes>
   );
 };

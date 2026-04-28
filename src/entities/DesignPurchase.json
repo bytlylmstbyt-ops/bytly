@@ -1,0 +1,19 @@
+{
+  "name": "DesignPurchase",
+  "type": "object",
+  "properties": {
+    "design_id": { "type": "string", "description": "معرف التصميم" },
+    "client_id": { "type": "string", "description": "معرف العميل" },
+    "client_email": { "type": "string", "description": "بريد العميل" },
+    "engineer_id": { "type": "string", "description": "معرف المهندس صاحب التصميم" },
+    "description": { "type": "string", "description": "وصف تفصيلي لعملية الشراء والتصميم المكتسب", "maxLength": 1000 },
+    "amount": { "type": "number", "description": "مبلغ الشراء" },
+    "status": { "type": "string", "enum": ["pending", "completed", "refunded", "failed"], "default": "pending", "description": "حالة الشراء" },
+    "payment_method": { "type": "string", "description": "طريقة الدفع" },
+    "payment_reference": { "type": "string", "description": "رقم مرجع الدفع" },
+    "download_count": { "type": "number", "default": 0, "description": "عدد مرات التنزيل" },
+    "license_type": { "type": "string", "enum": ["personal", "commercial"], "default": "personal", "description": "نوع الترخيص" }
+  },
+  "required": ["design_id", "client_id", "amount"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

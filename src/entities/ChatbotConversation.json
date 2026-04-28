@@ -1,0 +1,17 @@
+{
+  "name": "ChatbotConversation",
+  "type": "object",
+  "properties": {
+    "visitor_id": { "type": "string", "description": "معرف الزائر" },
+    "user_email": { "type": "string", "description": "بريد المستخدم إن كان مسجلاً" },
+    "user_type": { "type": "string", "description": "نوع المستخدم" },
+    "project_id": { "type": "string", "description": "معرف المشروع المرتبط" },
+    "description": { "type": "string", "description": "وصف موضوع المحادثة مع الشاتبوت وملخص الاستفسار", "maxLength": 1000 },
+    "messages": { "type": "array", "items": { "type": "object" }, "description": "رسائل المحادثة" },
+    "status": { "type": "string", "enum": ["active", "resolved", "escalated"], "default": "active", "description": "حالة المحادثة" },
+    "assigned_support_email": { "type": "string", "description": "بريد موظف الدعم المسند إليه" },
+    "suggested_engineers": { "type": "array", "items": { "type": "string" }, "description": "المهندسون المقترحون" }
+  },
+  "required": ["visitor_id"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "recipient_email": { "type": "string", "description": "بريد المستلم" },
+    "title": { "type": "string", "description": "عنوان الإشعار" },
+    "message": { "type": "string", "description": "نص الإشعار" },
+    "description": { "type": "string", "description": "وصف تفصيلي للإشعار والسياق المرتبط به", "maxLength": 1000 },
+    "type": { "type": "string", "enum": ["project_update", "payment", "message", "system", "review", "contract"], "description": "نوع الإشعار" },
+    "priority": { "type": "string", "enum": ["low", "medium", "high"], "default": "medium", "description": "أولوية الإشعار" },
+    "is_read": { "type": "boolean", "default": false, "description": "مقروءة" },
+    "email_sent": { "type": "boolean", "default": false, "description": "تم إرسال البريد الإلكتروني" },
+    "related_project_id": { "type": "string", "description": "معرف المشروع المرتبط" },
+    "action_url": { "type": "string", "description": "رابط الإجراء" }
+  },
+  "required": ["recipient_email", "title", "message"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

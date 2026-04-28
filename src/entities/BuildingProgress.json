@@ -1,0 +1,21 @@
+{
+  "name": "BuildingProgress",
+  "type": "object",
+  "properties": {
+    "project_id": { "type": "string", "description": "معرف المشروع المرتبط" },
+    "project_title": { "type": "string", "description": "عنوان المشروع" },
+    "client_email": { "type": "string", "description": "بريد المالك" },
+    "engineer_email": { "type": "string", "description": "بريد المهندس" },
+    "engineer_name": { "type": "string", "description": "اسم المهندس" },
+    "description": { "type": "string", "description": "وصف تفصيلي لمراحل التقدم وملاحظات البناء", "maxLength": 1000 },
+    "current_stage": { "type": "string", "enum": ["design", "permits", "foundation", "structure", "finishing", "handover"], "default": "design", "description": "المرحلة الحالية" },
+    "overall_progress": { "type": "number", "default": 0, "description": "نسبة الإنجاز الكلية 0-100" },
+    "stages": { "type": "array", "items": { "type": "object" }, "description": "تفاصيل المراحل" },
+    "last_update_note": { "type": "string", "description": "ملاحظة آخر تحديث" },
+    "last_updated_by": { "type": "string", "description": "من قام بالتحديث" },
+    "expected_completion": { "type": "string", "format": "date", "description": "تاريخ الانتهاء المتوقع" },
+    "attachments": { "type": "array", "items": { "type": "string" }, "description": "صور ومستندات التقدم" }
+  },
+  "required": ["project_id", "client_email", "engineer_email"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "FirmReview",
+  "type": "object",
+  "properties": {
+    "firm_id": { "type": "string", "description": "معرف الشركة الاستشارية" },
+    "client_id": { "type": "string", "description": "معرف العميل" },
+    "client_name": { "type": "string", "description": "اسم العميل" },
+    "project_id": { "type": "string", "description": "معرف المشروع المرتبط" },
+    "rating": { "type": "number", "description": "التقييم العام من 5" },
+    "quality_rating": { "type": "number", "description": "تقييم الجودة" },
+    "service_rating": { "type": "number", "description": "تقييم الخدمة" },
+    "communication_rating": { "type": "number", "description": "تقييم التواصل" },
+    "comment": { "type": "string", "description": "التعليق" },
+    "description": { "type": "string", "description": "وصف تفصيلي لتجربة العميل مع الشركة الاستشارية", "maxLength": 1000 }
+  },
+  "required": ["firm_id", "client_id", "rating"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

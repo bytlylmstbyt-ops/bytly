@@ -1,0 +1,30 @@
+{
+  "name": "QuoteRequest",
+  "type": "object",
+  "properties": {
+    "client_id": { "type": "string", "description": "معرف العميل" },
+    "client_name": { "type": "string", "description": "اسم العميل" },
+    "client_email": { "type": "string", "description": "بريد العميل" },
+    "client_phone": { "type": "string", "description": "هاتف العميل" },
+    "project_title": { "type": "string", "description": "عنوان المشروع" },
+    "project_type": { "type": "string", "enum": ["residential", "commercial", "industrial", "renovation", "interior", "landscape", "other"], "description": "نوع المشروع" },
+    "project_description": { "type": "string", "description": "وصف المشروع" },
+    "description": { "type": "string", "description": "وصف تفصيلي لطلب عرض السعر ومتطلبات المشروع الكاملة", "maxLength": 1000 },
+    "location": { "type": "string", "description": "موقع المشروع" },
+    "land_area": { "type": "number", "description": "مساحة الأرض بالمتر المربع" },
+    "floors_count": { "type": "number", "description": "عدد الطوابق" },
+    "budget_range": { "type": "string", "enum": ["under_100k", "100k_300k", "300k_500k", "500k_1m", "over_1m"], "description": "نطاق الميزانية" },
+    "timeline": { "type": "string", "description": "الجدول الزمني المطلوب" },
+    "engineering_files": { "type": "array", "items": { "type": "string" }, "description": "الملفات الهندسية والمخططات" },
+    "file_names": { "type": "array", "items": { "type": "string" }, "description": "أسماء الملفات" },
+    "special_requirements": { "type": "string", "description": "متطلبات خاصة" },
+    "target_engineer_id": { "type": "string", "description": "المهندس المستهدف (اختياري)" },
+    "target_engineer_name": { "type": "string", "description": "اسم المهندس المستهدف" },
+    "status": { "type": "string", "enum": ["pending", "reviewed", "quoted", "accepted", "rejected"], "default": "pending", "description": "حالة الطلب" },
+    "engineer_estimate": { "type": "number", "description": "تقدير المهندس بالريال" },
+    "engineer_notes": { "type": "string", "description": "ملاحظات المهندس" },
+    "estimated_duration": { "type": "string", "description": "مدة التنفيذ المقدرة" }
+  },
+  "required": ["client_name", "client_email", "project_title", "project_type"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

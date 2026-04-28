@@ -1,0 +1,19 @@
+{
+  "name": "PlatformRevenue",
+  "type": "object",
+  "properties": {
+    "source_type": { "type": "string", "enum": ["commission", "subscription", "design_sale", "featured_listing", "other"], "description": "مصدر الإيراد" },
+    "source_id": { "type": "string", "description": "معرف المصدر" },
+    "description": { "type": "string", "description": "وصف تفصيلي لإيراد المنصة ومصدره وآلية احتسابه", "maxLength": 1000 },
+    "amount": { "type": "number", "description": "المبلغ" },
+    "commission_rate": { "type": "number", "description": "نسبة العمولة بالمئة" },
+    "project_id": { "type": "string", "description": "معرف المشروع المرتبط" },
+    "engineer_id": { "type": "string", "description": "معرف المهندس المرتبط" },
+    "status": { "type": "string", "enum": ["pending", "collected", "refunded"], "default": "pending", "description": "حالة الإيراد" },
+    "collection_date": { "type": "string", "format": "date-time", "description": "تاريخ التحصيل" },
+    "period_month": { "type": "number", "description": "شهر الفترة" },
+    "period_year": { "type": "number", "description": "سنة الفترة" }
+  },
+  "required": ["source_type", "amount"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}
