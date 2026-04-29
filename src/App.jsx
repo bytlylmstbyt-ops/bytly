@@ -8,6 +8,7 @@ import NotFoundError from './lib/NotFoundError';
 import TechnicalResources from './pages/TechnicalResources';
 import EngineerFinancialDashboard from './pages/EngineerFinancialDashboard';
 import MyContracts from './pages/MyContracts';
+import EngineerMatcher from './pages/EngineerMatcher';
 import EngineerReviews from './pages/EngineerReviews';
 import Certificates from './pages/Certificates';
 import RequestQuote from './pages/RequestQuote';
@@ -76,6 +77,7 @@ const AuthenticatedApp = () => {
       <Route path="/EngineerReviews" element={<LayoutWrapper currentPageName="EngineerReviews"><EngineerReviews /></LayoutWrapper>} />
       <Route path="/Certificates" element={<LayoutWrapper currentPageName="Certificates"><Certificates /></LayoutWrapper>} />
       <Route path="/MyContracts" element={<LayoutWrapper currentPageName="MyContracts"><MyContracts /></LayoutWrapper>} />
+      <Route path="/EngineerMatcher" element={<LayoutWrapper currentPageName="EngineerMatcher"><EngineerMatcher /></LayoutWrapper>} />
       <Route path="*" element={<NotFoundError />} />
     </Routes>
   );
