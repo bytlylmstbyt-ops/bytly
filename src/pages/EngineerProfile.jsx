@@ -34,6 +34,7 @@ export default function EngineerProfile() {
   const [isFavorited, setIsFavorited] = useState(false);
   const [currentClient, setCurrentClient] = useState(null);
   const [hasReviewed, setHasReviewed] = useState(false);
+  const [tiktokData, setTiktokData] = useState(null);
 
   useEffect(() => {
     if (engineerId) {
@@ -71,6 +72,14 @@ export default function EngineerProfile() {
       const alreadyReviewed = reviewData.some(r => r.client_id === clientData[0].id);
       setHasReviewed(alreadyReviewed);
     }
+
+    // Fetch TikTok verified status (shared connector - platform account)
+    try {
+      const ttRes = await base44.functions.invoke("tiktokProfile", {});
+      if (ttRes.data && !ttRes.data.error) {
+        setTiktokData(ttRes.data);
+      }
+    } catch (_) {}
 
     setIsLoading(false);
   };
@@ -186,6 +195,14 @@ export default function EngineerProfile() {
                     {engineer.subscription_type !== "none" && (
                       <Badge className="bg-amber-100 text-amber-700 mx-auto md:mx-0">
                         عضو مميز
+                      </Badge>
+                    )}
+                    {tiktokData?.is_verified && (
+                      <Badge className="bg-[#010101] text-white mx-auto md:mx-0 flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.77 1.52V6.76a4.85 4.85 0 01-1-.07z"/>
+                        </svg>
+                        موثق TikTok
                       </Badge>
                     )}
                   </div>
@@ -586,6 +603,70 @@ export default function EngineerProfile() {
                 </CardContent>
               </Card>
             </motion.div>
+
+            {/* TikTok Verified Card */}
+            {tiktokData && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.18 }}
+              >
+                <Card className="border-0 shadow-lg overflow-hidden">
+                  <div className="h-1.5 bg-gradient-to-r from-[#010101] via-[#fe2c55] to-[#25f4ee]" />
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.77 1.52V6.76a4.85 4.85 0 01-1-.07z"/>
+                      </svg>
+                      حساب TikTok
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      {tiktokData.avatar_url && (
+                        <img src={tiktokData.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
+                      )}
+                      <div>
+                        <p className="font-semibold text-sm">{tiktokData.display_name}</p>
+                        {tiktokData.is_verified && (
+                          <span className="inline-flex items-center gap-1 text-xs text-[#fe2c55] font-medium">
+                            <CheckCircle className="w-3 h-3" />
+                            حساب موثق ✓
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {(tiktokData.follower_count !== undefined) && (
+                      <div className="grid grid-cols-2 gap-2 text-center">
+                        <div className="bg-slate-50 rounded-lg p-2">
+                          <p className="text-base font-bold text-[#1a1a2e]">
+                            {tiktokData.follower_count?.toLocaleString("ar") || 0}
+                          </p>
+                          <p className="text-xs text-slate-500">متابع</p>
+                        </div>
+                        <div className="bg-slate-50 rounded-lg p-2">
+                          <p className="text-base font-bold text-[#1a1a2e]">
+                            {tiktokData.video_count?.toLocaleString("ar") || 0}
+                          </p>
+                          <p className="text-xs text-slate-500">فيديو</p>
+                        </div>
+                      </div>
+                    )}
+                    {tiktokData.profile_deep_link && (
+                      <a
+                        href={tiktokData.profile_deep_link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-xs text-[#fe2c55] hover:underline"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        عرض الملف على TikTok
+                      </a>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
             {/* Quick Info */}
             <motion.div
