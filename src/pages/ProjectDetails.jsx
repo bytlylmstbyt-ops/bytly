@@ -9,6 +9,7 @@ import {
   Star, Download, Eye, ArrowLeft, Scale, Upload, X, Paperclip, Kanban
 } from "lucide-react";
 import ContractGenerator from "@/components/contracts/ContractGenerator";
+import ProjectChatbot from "@/components/chatbot/ProjectChatbot";
 import ProjectChat from "@/components/project/ProjectChat";
 import MilestoneInvoicePanel from "@/components/invoices/MilestoneInvoicePanel";
 import EscrowPanel from "@/components/escrow/EscrowPanel";
@@ -826,6 +827,16 @@ export default function ProjectDetails() {
               </Link>
             </div>
           </div>
+
+          {/* AI Project Chatbot */}
+          {user && (
+            <div className="mt-6 mb-2 flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-slate-500">تحليل ذكي للمشروع:</span>
+              </div>
+              <ProjectChatbot projectId={projectId} projectTitle={project.title} />
+            </div>
+          )}
 
           {/* Project Chat - visible when project is in_progress or has assigned engineer */}
           {(project.status === "in_progress" || project.assigned_engineer_id) && user && (
