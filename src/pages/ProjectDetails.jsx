@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import ContractGenerator from "@/components/contracts/ContractGenerator";
 import ProjectChatbot from "@/components/chatbot/ProjectChatbot";
+import AdBanner from "@/components/ads/AdBanner";
 import ProjectChat from "@/components/project/ProjectChat";
 import MilestoneInvoicePanel from "@/components/invoices/MilestoneInvoicePanel";
 import EscrowPanel from "@/components/escrow/EscrowPanel";
@@ -825,6 +826,14 @@ export default function ProjectDetails() {
                   العودة للمشاريع
                 </Button>
               </Link>
+
+              {/* Contextual Ads - Project Sidebar */}
+              <AdBanner
+                placement="project_details"
+                tags={[project.category, ...(project.tags || [])].filter(Boolean)}
+                variant="sidebar"
+                maxAds={2}
+              />
             </div>
           </div>
 

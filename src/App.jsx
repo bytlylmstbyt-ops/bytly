@@ -6,6 +6,7 @@ import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import NotFoundError from './lib/NotFoundError';
 import TechnicalResources from './pages/TechnicalResources';
+import AdManager from './pages/AdManager';
 import EngineerFinancialDashboard from './pages/EngineerFinancialDashboard';
 import MyContracts from './pages/MyContracts';
 import EngineerMatcher from './pages/EngineerMatcher';
@@ -78,6 +79,7 @@ const AuthenticatedApp = () => {
       <Route path="/Certificates" element={<LayoutWrapper currentPageName="Certificates"><Certificates /></LayoutWrapper>} />
       <Route path="/MyContracts" element={<LayoutWrapper currentPageName="MyContracts"><MyContracts /></LayoutWrapper>} />
       <Route path="/EngineerMatcher" element={<LayoutWrapper currentPageName="EngineerMatcher"><EngineerMatcher /></LayoutWrapper>} />
+      <Route path="/AdManager" element={<LayoutWrapper currentPageName="AdManager"><AdManager /></LayoutWrapper>} />
       <Route path="*" element={<NotFoundError />} />
     </Routes>
   );
