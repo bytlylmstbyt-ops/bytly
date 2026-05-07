@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 import ContractGenerator from "@/components/contracts/ContractGenerator";
 import ProjectChatbot from "@/components/chatbot/ProjectChatbot";
-import AdBanner from "@/components/ads/AdBanner";
+import { AdSidebarCards } from "@/components/ads/DemoAdBanner";
+import { useAds } from "@/hooks/useAds";
 import ProjectChat from "@/components/project/ProjectChat";
 import MilestoneInvoicePanel from "@/components/invoices/MilestoneInvoicePanel";
 import EscrowPanel from "@/components/escrow/EscrowPanel";
@@ -32,6 +33,8 @@ import {
 export default function ProjectDetails() {
   const urlParams = new URLSearchParams(window.location.search);
   const projectId = urlParams.get("id");
+
+  const { ads: sidebarAds } = useAds({ placement: "project_details", tags: [], maxAds: 2 });
 
   const [project, setProject] = useState(null);
   const [proposals, setProposals] = useState([]);
@@ -828,12 +831,7 @@ export default function ProjectDetails() {
               </Link>
 
               {/* Contextual Ads - Project Sidebar */}
-              <AdBanner
-                placement="project_details"
-                tags={[project.category, ...(project.tags || [])].filter(Boolean)}
-                variant="sidebar"
-                maxAds={2}
-              />
+              <AdSidebarCards ads={sidebarAds} />
             </div>
           </div>
 

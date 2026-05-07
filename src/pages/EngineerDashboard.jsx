@@ -12,9 +12,11 @@ import {
   MapPin, Mail, Phone, Plus, TrendingUp, DollarSign,
   CheckCircle, Clock, AlertCircle, Edit, FileText, Wallet, Shield
 } from "lucide-react";
-import AdBanner from "@/components/ads/AdBanner";
+import { AdSidebarCards } from "@/components/ads/DemoAdBanner";
+import { useAds } from "@/hooks/useAds";
 
 export default function EngineerDashboard() {
+  const { ads: dashboardAds } = useAds({ placement: "engineer_dashboard", tags: ["مدني", "هندسة", "مقاولات"], maxAds: 2 });
   const [user, setUser] = useState(null);
   const [engineer, setEngineer] = useState(null);
   const [projects, setProjects] = useState([]);
@@ -374,15 +376,8 @@ export default function EngineerDashboard() {
           </div>
         )}
 
-        {/* Contextual Ad - Dashboard Sidebar */}
-        <div className="mb-6">
-          <AdBanner
-            placement="engineer_dashboard"
-            tags={engineer.specialization ? [engineer.specialization] : []}
-            variant="horizontal"
-            maxAds={2}
-          />
-        </div>
+        {/* Contextual Ads - Dashboard */}
+        <AdSidebarCards ads={dashboardAds} />
 
         {/* Tabs Section */}
         <Tabs defaultValue="projects" className="space-y-6">

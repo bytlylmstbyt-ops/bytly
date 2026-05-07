@@ -20,9 +20,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useLanguage } from "@/components/i18n/LanguageContext";
+import { AdHorizontalBanner } from "@/components/ads/DemoAdBanner";
+import { useAds } from "@/hooks/useAds";
 
 export default function Projects() {
   const { t } = useLanguage();
+  const { ads: projectAds } = useAds({ placement: "project_details", tags: ["مدني", "مقاولات", "إنشائي"], maxAds: 1 });
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -305,6 +308,9 @@ export default function Projects() {
             {t('projects.results').replace('{count}', filteredProjects.length)}
           </p>
         </div>
+
+        {/* Contextual Ad Banner - between filters and project list */}
+        <AdHorizontalBanner ads={projectAds} />
 
         {/* Projects Grid */}
         {isLoading ? (
