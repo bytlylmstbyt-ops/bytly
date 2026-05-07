@@ -59,7 +59,10 @@ Deno.serve(async (req) => {
     // Filter: allowed categories only, placement match, not expired
     let filtered = allAds.filter(ad => {
       if (!ALLOWED_CATEGORIES.includes(ad.category)) return false;
-      if (ad.placement !== 'both' && ad.placement !== placement) return false;
+      // 'all' placement = show everywhere; 'both' = project_details + engineer_dashboard
+      if (ad.placement === 'all') return true;
+      if (ad.placement === 'both' && (placement === 'project_details' || placement === 'engineer_dashboard')) return true;
+      if (ad.placement !== placement) return false;
       if (ad.end_date && ad.end_date < today) return false;
       if (ad.start_date && ad.start_date > today) return false;
       return true;

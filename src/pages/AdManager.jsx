@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
   Plus, Pencil, Trash2, CheckCircle, XCircle, Eye, MousePointerClick,
-  Upload, Loader2, BarChart2, Shield, X
+  Upload, Loader2, BarChart2, Shield, X, Play, Image
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,11 +34,25 @@ const PLACEMENTS = [
   { value: "project_details", label: "تفاصيل المشروع" },
   { value: "engineer_dashboard", label: "لوحة المهندس" },
   { value: "both", label: "كلاهما" },
+]; // kept for backward compatibility
+
+const PLACEMENTS_EXTENDED = [
+  { value: "projects_feed", label: "سوق المشاريع (In-feed)" },
+  { value: "project_details", label: "تفاصيل المشروع" },
+  { value: "engineer_dashboard", label: "لوحة المهندس" },
+  { value: "all", label: "جميع المواضع" },
+  { value: "both", label: "تفاصيل المشروع + لوحة المهندس" },
+];
+
+const MEDIA_TYPES = [
+  { value: "image", label: "صورة ثابتة" },
+  { value: "video", label: "فيديو (MP4)" },
+  { value: "gif", label: "صورة متحركة (GIF)" },
 ];
 
 const EMPTY_FORM = {
-  title: "", advertiser_name: "", image_url: "", destination_url: "",
-  category: "", placement: "both", target_tags: [],
+  title: "", advertiser_name: "", image_url: "", video_url: "", media_type: "image",
+  destination_url: "", category: "", placement: "all", target_tags: [],
   is_active: true, is_verified_advertiser: false,
   description: "", logo_url: "", start_date: "", end_date: ""
 };
@@ -52,6 +66,7 @@ export default function AdManager() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [tagsInput, setTagsInput] = useState("");
 
@@ -87,14 +102,16 @@ export default function AdManager() {
     setShowForm(true);
   };
 
-  const handleImageUpload = async (e, field) => {
+  const handleFileUpload = async (e, field) => {
     const file = e.target.files[0];
     if (!file) return;
     if (field === "image_url") setUploading(true);
+    else if (field === "video_url") setUploadingVideo(true);
     else setUploadingLogo(true);
     const { file_url } = await base44.integrations.Core.UploadFile({ file });
     setForm(prev => ({ ...prev, [field]: file_url }));
     if (field === "image_url") setUploading(false);
+    else if (field === "video_url") setUploadingVideo(false);
     else setUploadingLogo(false);
   };
 
@@ -198,7 +215,18 @@ export default function AdManager() {
                     animate={{ opacity: 1 }}
                     className="flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-white hover:shadow-sm transition-all"
                   >
-                    <img src={ad.image_url} alt={ad.title} className="w-16 h-12 object-cover rounded-lg flex-shrink-0" />
+                    <div className="relative flex-shrink-0">
+                      {ad.media_type === "video" && ad.video_url ? (
+                        <video src={ad.video_url} poster={ad.image_url} className="w-16 h-12 object-cover rounded-lg" muted />
+                      ) : (
+                        <img src={ad.image_url} alt={ad.title} className="w-16 h-12 object-cover rounded-lg" />
+                      )}
+                      {(ad.media_type === "video" || ad.media_type === "gif") && (
+                        <span className="absolute bottom-1 right-1 bg-black/60 text-white text-[8px] px-1 rounded">
+                          {ad.media_type === "video" ? "▶ VIDEO" : "GIF"}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-sm text-slate-800 truncate">{ad.advertiser_name}</span>
@@ -293,7 +321,7 @@ export default function AdManager() {
                   <Select value={form.placement} onValueChange={v => setForm(p => ({ ...p, placement: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {PLACEMENTS.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+                      {PLACEMENTS_EXTENDED.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -304,25 +332,56 @@ export default function AdManager() {
                 <Input value={tagsInput} onChange={e => setTagsInput(e.target.value)} placeholder="تصميم معماري، مدني، ديكور" />
               </div>
 
-              {/* Image Upload */}
+              {/* Media Type */}
               <div>
-                <Label className="text-xs">صورة الإعلان *</Label>
+                <Label className="text-xs">نوع المحتوى الإعلاني</Label>
+                <Select value={form.media_type} onValueChange={v => setForm(p => ({ ...p, media_type: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {MEDIA_TYPES.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Cover Image */}
+              <div>
+                <Label className="text-xs">صورة الغلاف {form.media_type !== "image" ? "(تُعرض قبل تشغيل الفيديو)" : "*"}</Label>
                 <div className="flex gap-2 items-center mt-1">
                   <label className="flex items-center gap-2 px-3 py-2 border border-dashed rounded-lg cursor-pointer hover:border-[#d4a574] transition-colors text-sm text-slate-500">
-                    <input type="file" accept="image/*" onChange={e => handleImageUpload(e, "image_url")} className="hidden" />
-                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                    <input type="file" accept="image/*" onChange={e => handleFileUpload(e, "image_url")} className="hidden" />
+                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Image className="w-4 h-4" />}
                     رفع صورة
                   </label>
                   {form.image_url && <img src={form.image_url} alt="" className="w-16 h-12 object-cover rounded-lg" />}
                 </div>
               </div>
 
+              {/* Video / GIF Upload */}
+              {(form.media_type === "video" || form.media_type === "gif") && (
+                <div>
+                  <Label className="text-xs">{form.media_type === "video" ? "ملف الفيديو (MP4)" : "ملف GIF"} *</Label>
+                  <div className="flex gap-2 items-center mt-1">
+                    <label className="flex items-center gap-2 px-3 py-2 border border-dashed rounded-lg cursor-pointer hover:border-[#d4a574] transition-colors text-sm text-slate-500">
+                      <input type="file" accept={form.media_type === "video" ? "video/mp4,video/*" : "image/gif"} onChange={e => handleFileUpload(e, "video_url")} className="hidden" />
+                      {uploadingVideo ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+                      {uploadingVideo ? "جارٍ الرفع..." : `رفع ${form.media_type === "video" ? "فيديو" : "GIF"}`}
+                    </label>
+                    {form.video_url && (
+                      <span className="text-xs text-green-600 flex items-center gap-1">
+                        <CheckCircle className="w-3.5 h-3.5" /> تم الرفع
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-1">يُشغَّل تلقائياً بدون صوت عند التمرير (Autoplay Muted)</p>
+                </div>
+              )}
+
               {/* Logo Upload */}
               <div>
                 <Label className="text-xs">شعار المعلن (اختياري)</Label>
                 <div className="flex gap-2 items-center mt-1">
                   <label className="flex items-center gap-2 px-3 py-2 border border-dashed rounded-lg cursor-pointer hover:border-[#d4a574] transition-colors text-sm text-slate-500">
-                    <input type="file" accept="image/*" onChange={e => handleImageUpload(e, "logo_url")} className="hidden" />
+                    <input type="file" accept="image/*" onChange={e => handleFileUpload(e, "logo_url")} className="hidden" />
                     {uploadingLogo ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                     رفع الشعار
                   </label>

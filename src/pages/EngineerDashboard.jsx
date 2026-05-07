@@ -12,7 +12,7 @@ import {
   MapPin, Mail, Phone, Plus, TrendingUp, DollarSign,
   CheckCircle, Clock, AlertCircle, Edit, FileText, Wallet, Shield
 } from "lucide-react";
-import { AdSidebarCards } from "@/components/ads/DemoAdBanner";
+import { AdSidebarSection } from "@/components/ads/SmartAdCard";
 import { useAds } from "@/hooks/useAds";
 
 export default function EngineerDashboard() {
@@ -377,7 +377,7 @@ export default function EngineerDashboard() {
         )}
 
         {/* Contextual Ads - Dashboard */}
-        <AdSidebarCards ads={dashboardAds} />
+        <AdSidebarSection ads={dashboardAds} />
 
         {/* Tabs Section */}
         <Tabs defaultValue="projects" className="space-y-6">

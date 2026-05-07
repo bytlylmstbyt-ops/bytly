@@ -20,12 +20,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useLanguage } from "@/components/i18n/LanguageContext";
-import { AdHorizontalBanner } from "@/components/ads/DemoAdBanner";
+import { AdInFeedSection } from "@/components/ads/SmartAdCard";
 import { useAds } from "@/hooks/useAds";
 
 export default function Projects() {
   const { t } = useLanguage();
-  const { ads: projectAds } = useAds({ placement: "project_details", tags: ["مدني", "مقاولات", "إنشائي"], maxAds: 1 });
+  const { ads: projectAds } = useAds({ placement: "projects_feed", tags: ["مدني", "مقاولات", "إنشائي"], maxAds: 3 });
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -309,10 +309,7 @@ export default function Projects() {
           </p>
         </div>
 
-        {/* Contextual Ad Banner - between filters and project list */}
-        <AdHorizontalBanner ads={projectAds} />
-
-        {/* Projects Grid */}
+        {/* Projects Grid with In-feed ads every 3 items */}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[1, 2, 3, 4].map(i => (
@@ -331,74 +328,82 @@ export default function Projects() {
         ) : filteredProjects.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredProjects.map((project, index) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Link to={createPageUrl("ProjectDetails") + `?id=${project.id}`}>
-                  <Card className="hover-lift cursor-pointer border-0 shadow-lg h-full">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge className={project.project_type === "full_construction" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}>
-                              {project.project_type === "full_construction" ? t('projects.types.fullConstruction') : t('projects.types.expressService')}
-                            </Badge>
-                            <Badge className={statusColors[project.status]}>
-                              {statusLabels[project.status] || statusLabels.open}
-                            </Badge>
+              <React.Fragment key={project.id}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Link to={createPageUrl("ProjectDetails") + `?id=${project.id}`}>
+                    <Card className="hover-lift cursor-pointer border-0 shadow-lg h-full">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge className={project.project_type === "full_construction" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}>
+                                {project.project_type === "full_construction" ? t('projects.types.fullConstruction') : t('projects.types.expressService')}
+                              </Badge>
+                              <Badge className={statusColors[project.status]}>
+                                {statusLabels[project.status] || statusLabels.open}
+                              </Badge>
+                            </div>
+                            <h3 className="text-lg font-bold text-[#1a1a2e] mb-1">
+                              {project.title}
+                            </h3>
                           </div>
-                          <h3 className="text-lg font-bold text-[#1a1a2e] mb-1">
-                            {project.title}
-                          </h3>
+                          <Badge variant="secondary" className="bg-amber-50 text-amber-700">
+                            <Tag className="w-3 h-3 ml-1" />
+                            {categories.find(c => c.value === project.category)?.label || project.category}
+                          </Badge>
                         </div>
-                        <Badge variant="secondary" className="bg-amber-50 text-amber-700">
-                          <Tag className="w-3 h-3 ml-1" />
-                          {categories.find(c => c.value === project.category)?.label || project.category}
-                        </Badge>
-                      </div>
 
-                      <p className="text-slate-600 text-sm mb-4 line-clamp-2">
-                        {project.description}
-                      </p>
+                        <p className="text-slate-600 text-sm mb-4 line-clamp-2">
+                          {project.description}
+                        </p>
 
-                      <div className="flex flex-wrap gap-4 text-sm text-slate-500 mb-4">
-                        {project.budget_min && project.budget_max && (
-                          <span className="flex items-center gap-1">
-                            <DollarSign className="w-4 h-4" />
-                            {project.budget_min.toLocaleString()} - {project.budget_max.toLocaleString()} ر.س
-                          </span>
-                        )}
-                        {project.location && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
-                            {project.location}
-                          </span>
-                        )}
-                        {project.deadline && (
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            {new Date(project.deadline).toLocaleDateString("ar")}
-                          </span>
-                        )}
-                      </div>
+                        <div className="flex flex-wrap gap-4 text-sm text-slate-500 mb-4">
+                          {project.budget_min && project.budget_max && (
+                            <span className="flex items-center gap-1">
+                              <DollarSign className="w-4 h-4" />
+                              {project.budget_min.toLocaleString()} - {project.budget_max.toLocaleString()} ر.س
+                            </span>
+                          )}
+                          {project.location && (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-4 h-4" />
+                              {project.location}
+                            </span>
+                          )}
+                          {project.deadline && (
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
+                              {new Date(project.deadline).toLocaleDateString("ar")}
+                            </span>
+                          )}
+                        </div>
 
-                      <div className="flex items-center justify-between pt-4 border-t">
-                        <span className="text-sm text-slate-500">
-                          <Users className="w-4 h-4 inline ml-1" />
-                          {project.total_proposals || 0} {t('projects.proposals')}
-                        </span>
-                        <span className="text-sm text-slate-500">
-                          <Clock className="w-4 h-4 inline ml-1" />
-                          {new Date(project.created_date).toLocaleDateString("ar")}
-                        </span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </motion.div>
+                        <div className="flex items-center justify-between pt-4 border-t">
+                          <span className="text-sm text-slate-500">
+                            <Users className="w-4 h-4 inline ml-1" />
+                            {project.total_proposals || 0} {t('projects.proposals')}
+                          </span>
+                          <span className="text-sm text-slate-500">
+                            <Clock className="w-4 h-4 inline ml-1" />
+                            {new Date(project.created_date).toLocaleDateString("ar")}
+                          </span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </motion.div>
+
+                {/* Inject ad after every 3rd project — spans both columns */}
+                {(index + 1) % 3 === 0 && projectAds.length > 0 && (
+                  <div className="col-span-1 md:col-span-2">
+                    <AdInFeedSection ads={[projectAds[Math.floor((index + 1) / 3 - 1) % projectAds.length]]} />
+                  </div>
+                )}
+              </React.Fragment>
             ))}
           </div>
         ) : (
