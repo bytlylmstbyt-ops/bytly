@@ -129,7 +129,7 @@
     "update": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "data.buyer_email": "{{user.email}}"
         },
         {
           "data.seller_email": "{{user.email}}"
@@ -142,9 +142,16 @@
       ]
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }
