@@ -1,0 +1,116 @@
+{
+  "name": "TaskProject",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0634\u0631\u0648\u0639"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u0648\u0635\u0641 \u0627\u0644\u0645\u0634\u0631\u0648\u0639"
+    },
+    "color": {
+      "type": "string",
+      "default": "#6B5D4F",
+      "description": "\u0644\u0648\u0646 \u0627\u0644\u0645\u0634\u0631\u0648\u0639"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed",
+        "on_hold",
+        "archived"
+      ],
+      "default": "active"
+    },
+    "owner_email": {
+      "type": "string"
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "budget_total": {
+      "type": "number",
+      "default": 0,
+      "description": "\u0627\u0644\u0645\u064a\u0632\u0627\u0646\u064a\u0629 \u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a\u0629 \u0628\u0627\u0644\u0631\u064a\u0627\u0644"
+    },
+    "budget_spent": {
+      "type": "number",
+      "default": 0,
+      "description": "\u0627\u0644\u0645\u0635\u0631\u0648\u0641 \u0627\u0644\u0641\u0639\u0644\u064a"
+    },
+    "budget_notes": {
+      "type": "string",
+      "description": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a \u0627\u0644\u0645\u064a\u0632\u0627\u0646\u064a\u0629"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "data.members": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "data.members": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
