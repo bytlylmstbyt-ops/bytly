@@ -1,0 +1,112 @@
+{
+  "name": "Document",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0633\u062a\u0646\u062f"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "\u0631\u0627\u0628\u0637 \u0627\u0644\u0645\u0644\u0641"
+    },
+    "file_type": {
+      "type": "string",
+      "description": "\u0646\u0648\u0639 \u0627\u0644\u0645\u0644\u0641 (pdf, docx, image, ...)"
+    },
+    "file_size": {
+      "type": "number",
+      "description": "\u062d\u062c\u0645 \u0627\u0644\u0645\u0644\u0641 \u0628\u0627\u0644\u0628\u0627\u064a\u062a"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "contract",
+        "specification",
+        "design",
+        "report",
+        "invoice",
+        "other"
+      ],
+      "default": "other",
+      "description": "\u062a\u0635\u0646\u064a\u0641 \u0627\u0644\u0645\u0633\u062a\u0646\u062f"
+    },
+    "linked_to": {
+      "type": "string",
+      "enum": [
+        "project",
+        "task",
+        "milestone"
+      ],
+      "description": "\u0645\u0631\u062a\u0628\u0637 \u0628\u0640"
+    },
+    "linked_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0639\u0646\u0635\u0631 \u0627\u0644\u0645\u0631\u062a\u0628\u0637"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u0648\u0635\u0641 \u0627\u0644\u0645\u0633\u062a\u0646\u062f"
+    },
+    "uploaded_by": {
+      "type": "string",
+      "description": "\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0644\u0645\u0646 \u0631\u0641\u0639 \u0627\u0644\u0645\u0644\u0641"
+    }
+  },
+  "required": [
+    "name",
+    "file_url",
+    "linked_to",
+    "linked_id"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.uploaded_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.uploaded_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.uploaded_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
