@@ -107,6 +107,9 @@
           "data.requested_from": "{{user.email}}"
         },
         {
+          "data.requested_by": "{{user.email}}"
+        },
+        {
           "data.project_id": {
             "_filter": "Project",
             "read": true
@@ -122,7 +125,13 @@
     "update": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.requested_from": "{{user.email}}"
+        },
+        {
+          "data.requested_by": "{{user.email}}"
         },
         {
           "user_condition": {
