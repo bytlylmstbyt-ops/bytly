@@ -3,9 +3,10 @@ import { base44 } from '@/api/base44Client';
 import {
     Loader2, AlertCircle, X, ChevronRight, ChevronDown,
     Layers, Info, List, Search, Home, ZoomIn, ZoomOut,
-    Maximize2, RotateCcw, Box, FileText, BarChart3
+    Maximize2, RotateCcw, Box, FileText, BarChart3, Construction
 } from 'lucide-react';
 import QuantitiesPanel from './QuantitiesPanel';
+import BuildingProgressPanel from './BuildingProgressPanel';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -245,7 +246,7 @@ export default function BIMViewer({ modelUrn, modelName, onClose }) {
                         if (e.dbIdArray && e.dbIdArray.length > 0) {
                             const dbId = e.dbIdArray[0];
                             setSelectedDbId(dbId);
-                            setActivePanel('properties');
+                            setActivePanel('progress');
                             viewer.getProperties(dbId, (r) => setSelectedName(r.name || `Element ${dbId}`));
                         } else {
                             setSelectedDbId(null);
@@ -300,6 +301,7 @@ export default function BIMViewer({ modelUrn, modelName, onClose }) {
 
     const panels = [
         { id: 'properties', icon: <List className="w-4 h-4" />, label: 'الخصائص' },
+        { id: 'progress', icon: <Construction className="w-4 h-4" />, label: 'التقدم' },
         { id: 'tree', icon: <Layers className="w-4 h-4" />, label: 'الهيكل' },
         { id: 'quantities', icon: <BarChart3 className="w-4 h-4" />, label: 'الكميات' },
         { id: 'info', icon: <Info className="w-4 h-4" />, label: 'معلومات' },
@@ -409,7 +411,7 @@ export default function BIMViewer({ modelUrn, modelName, onClose }) {
                         </div>
 
                         {/* Selected element badge */}
-                        {selectedDbId != null && activePanel === 'properties' && (
+                        {selectedDbId != null && (activePanel === 'properties' || activePanel === 'progress') && (
                             <div className="px-3 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-2">
                                 <Box className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                                 <span className="text-xs text-blue-700 font-medium truncate">{selectedName || `Element #${selectedDbId}`}</span>
@@ -420,6 +422,13 @@ export default function BIMViewer({ modelUrn, modelName, onClose }) {
                         <div className="flex-1 overflow-hidden flex flex-col">
                             {activePanel === 'properties' && (
                                 <PropertiesPanel viewer={viewerInstance.current} selectedDbId={selectedDbId} />
+                            )}
+                            {activePanel === 'progress' && (
+                                <BuildingProgressPanel
+                                    selectedDbId={selectedDbId}
+                                    selectedName={selectedName}
+                                    modelUrn={modelUrn}
+                                />
                             )}
                             {activePanel === 'tree' && (
                                 <ModelTreePanel viewer={viewerInstance.current} />
