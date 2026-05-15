@@ -73,7 +73,11 @@
           "data.owner_email": "{{user.email}}"
         },
         {
-          "data.members": "{{user.email}}"
+          "data.members": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
         },
         {
           "user_condition": {
@@ -89,9 +93,6 @@
         },
         {
           "data.owner_email": "{{user.email}}"
-        },
-        {
-          "data.members": "{{user.email}}"
         },
         {
           "user_condition": {
