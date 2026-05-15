@@ -151,6 +151,9 @@
           "created_by": "{{user.email}}"
         },
         {
+          "data.client_email": "{{user.email}}"
+        },
+        {
           "data.target_engineer_id": "{{user.id}}"
         },
         {
