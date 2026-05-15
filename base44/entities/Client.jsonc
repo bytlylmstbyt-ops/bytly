@@ -160,6 +160,9 @@
           "created_by": "{{user.email}}"
         },
         {
+          "data.email": "{{user.email}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -169,7 +172,7 @@
     "update": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "data.email": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -179,9 +182,16 @@
       ]
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "data.email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }
