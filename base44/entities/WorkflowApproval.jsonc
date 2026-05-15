@@ -1,0 +1,140 @@
+{
+  "name": "WorkflowApproval",
+  "type": "object",
+  "properties": {
+    "workflow_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0633\u064a\u0631 \u0627\u0644\u0639\u0645\u0644"
+    },
+    "project_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0634\u0631\u0648\u0639"
+    },
+    "stage_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u0645\u0631\u0627\u062f \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0639\u0644\u064a\u0647\u0627"
+    },
+    "requested_from": {
+      "type": "string",
+      "description": "\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0644\u0644\u0634\u062e\u0635 \u0627\u0644\u0645\u0631\u0627\u062f \u0645\u0648\u0627\u0641\u0642\u062a\u0647"
+    },
+    "requested_by": {
+      "type": "string",
+      "description": "\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0644\u0645\u0646 \u0637\u0644\u0628 \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629"
+    },
+    "approval_type": {
+      "type": "string",
+      "enum": [
+        "client",
+        "engineer",
+        "consultant"
+      ],
+      "description": "\u0646\u0648\u0639 \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected",
+        "expired"
+      ],
+      "default": "pending",
+      "description": "\u062d\u0627\u0644\u0629 \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629"
+    },
+    "approval_notes": {
+      "type": "string",
+      "description": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0623\u0648 \u0627\u0644\u0631\u0641\u0636"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0646\u062a\u0647\u0627\u0621 \u0635\u0644\u0627\u062d\u064a\u0629 \u0637\u0644\u0628 \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u0627\u0644\u0645\u0631\u0641\u0642\u0627\u062a \u0627\u0644\u0645\u062a\u0639\u0644\u0642\u0629 \u0628\u0637\u0644\u0628 \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629"
+    },
+    "completion_checklist": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "completed": {
+            "type": "boolean",
+            "default": false
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "description": "\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0645\u0647\u0627\u0645 \u0627\u0644\u0645\u0637\u0644\u0648\u0628\u0629 \u0644\u0644\u0645\u0648\u0627\u0641\u0642\u0629"
+    }
+  },
+  "required": [
+    "workflow_id",
+    "project_id",
+    "stage_id",
+    "requested_from",
+    "approval_type"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.requested_from": "{{user.email}}"
+        },
+        {
+          "data.project_id": {
+            "_filter": "Project",
+            "read": true
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.requested_from": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
