@@ -3,10 +3,11 @@ import { base44 } from '@/api/base44Client';
 import {
     Loader2, AlertCircle, X, ChevronRight, ChevronDown,
     Layers, Info, List, Search, Home, ZoomIn, ZoomOut,
-    Maximize2, RotateCcw, Box, FileText, BarChart3, Construction
+    Maximize2, RotateCcw, Box, FileText, BarChart3, Construction, Camera
 } from 'lucide-react';
 import QuantitiesPanel from './QuantitiesPanel';
 import BuildingProgressPanel from './BuildingProgressPanel';
+import SitePhotoGallery from './SitePhotoGallery';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -192,7 +193,7 @@ function ModelTreePanel({ viewer }) {
     );
 }
 
-export default function BIMViewer({ modelUrn, modelName, onClose }) {
+export default function BIMViewer({ modelUrn, modelName, modelId, onClose }) {
     const viewerRef = useRef(null);
     const viewerInstance = useRef(null);
     const [status, setStatus] = useState('loading');
@@ -302,6 +303,7 @@ export default function BIMViewer({ modelUrn, modelName, onClose }) {
     const panels = [
         { id: 'properties', icon: <List className="w-4 h-4" />, label: 'الخصائص' },
         { id: 'progress', icon: <Construction className="w-4 h-4" />, label: 'التقدم' },
+        { id: 'photos', icon: <Camera className="w-4 h-4" />, label: 'الصور' },
         { id: 'tree', icon: <Layers className="w-4 h-4" />, label: 'الهيكل' },
         { id: 'quantities', icon: <BarChart3 className="w-4 h-4" />, label: 'الكميات' },
         { id: 'info', icon: <Info className="w-4 h-4" />, label: 'معلومات' },
@@ -411,7 +413,7 @@ export default function BIMViewer({ modelUrn, modelName, onClose }) {
                         </div>
 
                         {/* Selected element badge */}
-                        {selectedDbId != null && (activePanel === 'properties' || activePanel === 'progress') && (
+                        {selectedDbId != null && (activePanel === 'properties' || activePanel === 'progress' || activePanel === 'photos') && (
                             <div className="px-3 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-2">
                                 <Box className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                                 <span className="text-xs text-blue-700 font-medium truncate">{selectedName || `Element #${selectedDbId}`}</span>
@@ -428,6 +430,13 @@ export default function BIMViewer({ modelUrn, modelName, onClose }) {
                                     selectedDbId={selectedDbId}
                                     selectedName={selectedName}
                                     modelUrn={modelUrn}
+                                />
+                            )}
+                            {activePanel === 'photos' && (
+                                <SitePhotoGallery
+                                    bimModelId={modelId || modelUrn}
+                                    selectedDbId={selectedDbId}
+                                    selectedName={selectedName}
                                 />
                             )}
                             {activePanel === 'tree' && (

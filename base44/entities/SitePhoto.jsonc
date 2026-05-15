@@ -1,0 +1,71 @@
+{
+  "name": "SitePhoto",
+  "type": "object",
+  "properties": {
+    "bim_model_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0646\u0645\u0648\u0630\u062c BIM \u0627\u0644\u0645\u0631\u062a\u0628\u0637"
+    },
+    "element_db_id": {
+      "type": "number",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0639\u0646\u0635\u0631 \u0641\u064a \u0646\u0645\u0648\u0630\u062c BIM (dbId)"
+    },
+    "element_name": {
+      "type": "string",
+      "description": "\u0627\u0633\u0645 \u0627\u0644\u0639\u0646\u0635\u0631 \u0641\u064a \u0627\u0644\u0646\u0645\u0648\u0630\u062c"
+    },
+    "photo_url": {
+      "type": "string",
+      "description": "\u0631\u0627\u0628\u0637 \u0627\u0644\u0635\u0648\u0631\u0629"
+    },
+    "caption": {
+      "type": "string",
+      "description": "\u0648\u0635\u0641 \u0627\u0644\u0635\u0648\u0631\u0629"
+    },
+    "taken_by": {
+      "type": "string",
+      "description": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0635\u0648\u0631 / \u0627\u0644\u0645\u0647\u0646\u062f\u0633"
+    },
+    "taken_by_email": {
+      "type": "string",
+      "description": "\u0628\u0631\u064a\u062f \u0627\u0644\u0645\u0635\u0648\u0631"
+    },
+    "taken_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0648\u0648\u0642\u062a \u0627\u0644\u0627\u0644\u062a\u0642\u0627\u0637"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "design",
+        "permits",
+        "foundation",
+        "structure",
+        "finishing",
+        "handover"
+      ],
+      "description": "\u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u062a\u0646\u0641\u064a\u0630"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u0648\u0633\u0648\u0645 \u0644\u0644\u062a\u0635\u0646\u064a\u0641"
+    },
+    "location_note": {
+      "type": "string",
+      "description": "\u0645\u0644\u0627\u062d\u0638\u0629 \u0627\u0644\u0645\u0648\u0642\u0639 \u0627\u0644\u062c\u063a\u0631\u0627\u0641\u064a"
+    }
+  },
+  "required": [
+    "bim_model_id",
+    "photo_url"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}
