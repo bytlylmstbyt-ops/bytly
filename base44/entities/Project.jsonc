@@ -205,10 +205,13 @@
           "created_by": "{{user.email}}"
         },
         {
+          "data.assigned_engineer_id": "{{user.id}}"
+        },
+        {
           "data.client_id": "{{user.id}}"
         },
         {
-          "data.assigned_engineer_id": "{{user.id}}"
+          "data.status": "open"
         },
         {
           "user_condition": {
@@ -221,9 +224,6 @@
       "$or": [
         {
           "created_by": "{{user.email}}"
-        },
-        {
-          "data.client_id": "{{user.id}}"
         },
         {
           "data.assigned_engineer_id": "{{user.id}}"
