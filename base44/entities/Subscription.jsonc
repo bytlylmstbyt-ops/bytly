@@ -1,0 +1,118 @@
+{
+  "name": "Subscription",
+  "type": "object",
+  "properties": {
+    "engineer_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0647\u0646\u062f\u0633"
+    },
+    "package_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0628\u0627\u0642\u0629"
+    },
+    "plan_type": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "yearly"
+      ],
+      "description": "\u0646\u0648\u0639 \u0627\u0644\u062e\u0637\u0629"
+    },
+    "amount": {
+      "type": "number",
+      "description": "\u0627\u0644\u0645\u0628\u0644\u063a"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0628\u062f\u0627\u064a\u0629"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0627\u0646\u062a\u0647\u0627\u0621"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "expired",
+        "cancelled",
+        "pending"
+      ],
+      "default": "pending",
+      "description": "\u062d\u0627\u0644\u0629 \u0627\u0644\u0627\u0634\u062a\u0631\u0627\u0643"
+    },
+    "auto_renew": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u062a\u062c\u062f\u064a\u062f \u062a\u0644\u0642\u0627\u0626\u064a"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "mada",
+        "visa",
+        "mastercard",
+        "apple_pay"
+      ],
+      "description": "\u0637\u0631\u064a\u0642\u0629 \u0627\u0644\u062f\u0641\u0639"
+    },
+    "payment_reference": {
+      "type": "string",
+      "description": "\u0631\u0642\u0645 \u0645\u0631\u062c\u0639 \u0627\u0644\u062f\u0641\u0639 \u0645\u0646 \u0628\u0648\u0627\u0628\u0629 \u0627\u0644\u062f\u0641\u0639"
+    },
+    "payment_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "completed",
+        "failed",
+        "refunded"
+      ],
+      "default": "pending",
+      "description": "\u062d\u0627\u0644\u0629 \u0627\u0644\u062f\u0641\u0639"
+    },
+    "payment_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u062f\u0641\u0639"
+    }
+  },
+  "required": [
+    "engineer_id",
+    "package_id",
+    "plan_type",
+    "amount"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.engineer_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
