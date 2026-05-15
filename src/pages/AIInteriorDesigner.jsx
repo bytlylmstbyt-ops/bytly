@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Home, Palette, Sparkles, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import AIChat from "@/components/ai/AIChat";
+import MaterialSuggester from "@/components/ai/MaterialSuggester";
 import { Button } from "@/components/ui/button";
 
 const styles = [
@@ -134,6 +135,9 @@ export default function AIInteriorDesigner() {
               💡 <strong>نصيحة:</strong> كلما زادت التفاصيل في وصفك، كان الاقتراح أكثر دقة. اذكر المساحة، عدد الأشخاص، والاستخدام.
             </p>
           </div>
+
+          {/* Material Suggester */}
+          <MaterialSuggester />
         </div>
 
         {/* Chat */}

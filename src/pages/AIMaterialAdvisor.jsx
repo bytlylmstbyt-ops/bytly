@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Layers, ArrowRight, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import AIChat from "@/components/ai/AIChat";
+import MaterialSuggester from "@/components/ai/MaterialSuggester";
 import { Button } from "@/components/ui/button";
 
 const SYSTEM_PROMPT = `أنت خبير مواد البناء والتشطيب في السوق السعودي من فريق Bytly AI Engineers.
@@ -83,6 +84,9 @@ export default function AIMaterialAdvisor() {
               💡 حدد فئة المواد، ثم أخبرنا عن ميزانيتك ومستوى الجودة المطلوب لاقتراحات مخصصة.
             </p>
           </div>
+
+          {/* Material Suggester Tool */}
+          <MaterialSuggester />
         </div>
 
         <div className="flex-1 min-h-0">
