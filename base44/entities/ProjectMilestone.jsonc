@@ -1,0 +1,231 @@
+{
+  "name": "ProjectMilestone",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0634\u0631\u0648\u0639"
+    },
+    "title": {
+      "type": "string",
+      "description": "\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0645\u0631\u062d\u0644\u0629"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u0648\u0635\u0641 \u0627\u0644\u0645\u0631\u062d\u0644\u0629"
+    },
+    "amount": {
+      "type": "number",
+      "description": "\u0642\u064a\u0645\u0629 \u0627\u0644\u0645\u0631\u062d\u0644\u0629"
+    },
+    "percentage": {
+      "type": "number",
+      "description": "\u0646\u0633\u0628\u0629 \u0627\u0644\u0645\u0631\u062d\u0644\u0629 \u0645\u0646 \u0627\u0644\u0645\u0628\u0644\u063a \u0627\u0644\u0643\u0644\u064a"
+    },
+    "order": {
+      "type": "number",
+      "description": "\u062a\u0631\u062a\u064a\u0628 \u0627\u0644\u0645\u0631\u062d\u0644\u0629"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "in_progress",
+        "submitted",
+        "revision_requested",
+        "completed",
+        "approved",
+        "firm_approved"
+      ],
+      "default": "pending",
+      "description": "\u062d\u0627\u0644\u0629 \u0627\u0644\u0645\u0631\u062d\u0644\u0629"
+    },
+    "deliverable_url": {
+      "type": "string",
+      "description": "\u0631\u0627\u0628\u0637 \u0627\u0644\u0645\u062e\u0631\u062c \u0627\u0644\u0646\u0647\u0627\u0626\u064a \u0644\u0644\u0645\u0631\u062d\u0644\u0629"
+    },
+    "deliverable_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u0645\u0644\u0641\u0627\u062a \u0627\u0644\u062a\u0633\u0644\u064a\u0645 \u0644\u0644\u0645\u0631\u062d\u0644\u0629"
+    },
+    "submission_notes": {
+      "type": "string",
+      "description": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a \u0627\u0644\u0645\u0647\u0646\u062f\u0633 \u0639\u0646\u062f \u0627\u0644\u062a\u0633\u0644\u064a\u0645"
+    },
+    "client_approved": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u0645\u0648\u0627\u0641\u0642\u0629 \u0627\u0644\u0639\u0645\u064a\u0644"
+    },
+    "client_approval_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0645\u0648\u0627\u0641\u0642\u0629 \u0627\u0644\u0639\u0645\u064a\u0644"
+    },
+    "revision_notes": {
+      "type": "string",
+      "description": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a \u0627\u0644\u062a\u0639\u062f\u064a\u0644 \u0645\u0646 \u0627\u0644\u0639\u0645\u064a\u0644"
+    },
+    "revision_count": {
+      "type": "number",
+      "default": 0,
+      "description": "\u0639\u062f\u062f \u0627\u0644\u062a\u0639\u062f\u064a\u0644\u0627\u062a \u0627\u0644\u0645\u0637\u0644\u0648\u0628\u0629"
+    },
+    "payment_released": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u062a\u0645 \u062a\u062d\u0631\u064a\u0631 \u0627\u0644\u062f\u0641\u0639\u0629"
+    },
+    "payment_release_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u062a\u062d\u0631\u064a\u0631 \u0627\u0644\u062f\u0641\u0639\u0629"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0627\u0633\u062a\u062d\u0642\u0627\u0642"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0628\u062f\u0621"
+    },
+    "completion_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0625\u0646\u062c\u0627\u0632"
+    },
+    "submitted_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u062a\u0642\u062f\u064a\u0645 \u0627\u0644\u0645\u0647\u0646\u062f\u0633 \u0644\u0644\u0645\u0631\u062d\u0644\u0629"
+    },
+    "firm_approved": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u0645\u0648\u0627\u0641\u0642\u0629 \u0627\u0644\u0634\u0631\u0643\u0629 \u0627\u0644\u0627\u0633\u062a\u0634\u0627\u0631\u064a\u0629"
+    },
+    "firm_approval_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0645\u0648\u0627\u0641\u0642\u0629 \u0627\u0644\u0634\u0631\u0643\u0629"
+    },
+    "firm_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0634\u0631\u0643\u0629 \u0627\u0644\u0627\u0633\u062a\u0634\u0627\u0631\u064a\u0629"
+    },
+    "firm_name": {
+      "type": "string",
+      "description": "\u0627\u0633\u0645 \u0627\u0644\u0634\u0631\u0643\u0629 \u0627\u0644\u0627\u0633\u062a\u0634\u0627\u0631\u064a\u0629"
+    },
+    "firm_revision_notes": {
+      "type": "string",
+      "description": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a \u0627\u0644\u062a\u0639\u062f\u064a\u0644 \u0645\u0646 \u0627\u0644\u0634\u0631\u0643\u0629"
+    },
+    "stamped_drawings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u0627\u0644\u0645\u062e\u0637\u0637\u0627\u062a \u0627\u0644\u0645\u062e\u062a\u0648\u0645\u0629 \u0645\u0646 \u0627\u0644\u0634\u0631\u0643\u0629"
+    },
+    "balady_permit_number": {
+      "type": "string",
+      "description": "\u0631\u0642\u0645 \u0631\u062e\u0635\u0629 \u0627\u0644\u0628\u0644\u062f\u064a\u0629 (Balady Permit)"
+    },
+    "technical_compliance_notes": {
+      "type": "string",
+      "description": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a \u0627\u0644\u0645\u0637\u0627\u0628\u0642\u0629 \u0627\u0644\u0641\u0646\u064a\u0629 (SBC) \u0645\u0646 \u0627\u0644\u0634\u0631\u0643\u0629"
+    },
+    "audit_log": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "actor_name": {
+            "type": "string"
+          },
+          "actor_email": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "\u0633\u062c\u0644 \u0627\u0644\u062a\u062f\u0642\u064a\u0642 \u0644\u0644\u0645\u0631\u0627\u062c\u0639\u0627\u062a \u0648\u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0627\u062a"
+    }
+  },
+  "required": [
+    "project_id",
+    "title",
+    "amount"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.project_id": {
+            "_filter": "Project",
+            "read": true
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.project_id": {
+            "_filter": "Project",
+            "update": true
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.project_id": {
+            "_filter": "Project",
+            "delete": true
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
