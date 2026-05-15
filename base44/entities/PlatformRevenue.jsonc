@@ -1,0 +1,97 @@
+{
+  "name": "PlatformRevenue",
+  "type": "object",
+  "properties": {
+    "transaction_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0639\u0627\u0645\u0644\u0629 \u0627\u0644\u0645\u0631\u062a\u0628\u0637\u0629"
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "project_milestone",
+        "design_purchase",
+        "subscription"
+      ],
+      "description": "\u0645\u0635\u062f\u0631 \u0627\u0644\u0639\u0645\u0648\u0644\u0629"
+    },
+    "project_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0634\u0631\u0648\u0639 (\u0625\u0646 \u0648\u062c\u062f)"
+    },
+    "milestone_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0631\u062d\u0644\u0629 (\u0625\u0646 \u0648\u062c\u062f)"
+    },
+    "design_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u062a\u0635\u0645\u064a\u0645 (\u0625\u0646 \u0648\u062c\u062f)"
+    },
+    "total_amount": {
+      "type": "number",
+      "description": "\u0627\u0644\u0645\u0628\u0644\u063a \u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a"
+    },
+    "commission_rate": {
+      "type": "number",
+      "description": "\u0646\u0633\u0628\u0629 \u0627\u0644\u0639\u0645\u0648\u0644\u0629"
+    },
+    "commission_amount": {
+      "type": "number",
+      "description": "\u0642\u064a\u0645\u0629 \u0627\u0644\u0639\u0645\u0648\u0644\u0629"
+    },
+    "seller_email": {
+      "type": "string",
+      "description": "\u0628\u0631\u064a\u062f \u0627\u0644\u0628\u0627\u0626\u0639/\u0627\u0644\u0645\u0647\u0646\u062f\u0633"
+    },
+    "seller_earnings": {
+      "type": "number",
+      "description": "\u0635\u0627\u0641\u064a \u0623\u0631\u0628\u0627\u062d \u0627\u0644\u0628\u0627\u0626\u0639"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "collected",
+        "refunded"
+      ],
+      "default": "pending",
+      "description": "\u062d\u0627\u0644\u0629 \u0627\u0644\u0639\u0645\u0648\u0644\u0629"
+    },
+    "payment_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u062f\u0641\u0639"
+    },
+    "stripe_payment_intent": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u062f\u0641\u0639\u0629 \u0641\u064a Stripe"
+    }
+  },
+  "required": [
+    "source_type",
+    "total_amount",
+    "commission_amount"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
