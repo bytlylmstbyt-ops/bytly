@@ -1,0 +1,127 @@
+{
+  "name": "SupportTicket",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "technical",
+        "payment",
+        "account",
+        "project",
+        "general"
+      ],
+      "description": "\u062a\u0635\u0646\u064a\u0641 \u0627\u0644\u0645\u0634\u0643\u0644\u0629"
+    },
+    "subject": {
+      "type": "string",
+      "description": "\u0627\u0644\u0645\u0648\u0636\u0648\u0639"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u0648\u0635\u0641 \u0627\u0644\u0645\u0634\u0643\u0644\u0629"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u0627\u0644\u0645\u0631\u0641\u0642\u0627\u062a"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "in_progress",
+        "waiting_customer",
+        "resolved",
+        "closed"
+      ],
+      "default": "open",
+      "description": "\u062d\u0627\u0644\u0629 \u0627\u0644\u062a\u0630\u0643\u0631\u0629"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ],
+      "default": "medium",
+      "description": "\u0627\u0644\u0623\u0648\u0644\u0648\u064a\u0629"
+    },
+    "assigned_to": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0645\u0648\u0638\u0641 \u0627\u0644\u062f\u0639\u0645 \u0627\u0644\u0645\u0633\u0624\u0648\u0644"
+    },
+    "support_responses": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "\u0631\u062f\u0648\u062f \u0627\u0644\u062f\u0639\u0645 \u0627\u0644\u0641\u0646\u064a"
+    },
+    "resolution_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u062d\u0644"
+    }
+  },
+  "required": [
+    "user_id",
+    "category",
+    "subject",
+    "description"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "data.assigned_to": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "data.assigned_to": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
