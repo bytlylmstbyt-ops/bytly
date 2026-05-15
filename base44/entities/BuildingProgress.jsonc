@@ -98,6 +98,9 @@
     "update": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.engineer_email": "{{user.email}}"
         },
         {
@@ -108,16 +111,9 @@
       ]
     },
     "delete": {
-      "$or": [
-        {
-          "data.engineer_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }
