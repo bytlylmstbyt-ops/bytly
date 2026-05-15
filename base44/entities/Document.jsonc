@@ -69,7 +69,22 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.uploaded_by": "{{user.email}}"
+          "data.linked_id": {
+            "_filter": "Project",
+            "read": true
+          }
+        },
+        {
+          "data.linked_id": {
+            "_filter": "ProjectTask",
+            "read": true
+          }
+        },
+        {
+          "data.linked_id": {
+            "_filter": "ProjectMilestone",
+            "read": true
+          }
         },
         {
           "user_condition": {
@@ -84,7 +99,10 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.uploaded_by": "{{user.email}}"
+          "data.linked_id": {
+            "_filter": "Project",
+            "update": true
+          }
         },
         {
           "user_condition": {
@@ -99,7 +117,10 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.uploaded_by": "{{user.email}}"
+          "data.linked_id": {
+            "_filter": "Project",
+            "delete": true
+          }
         },
         {
           "user_condition": {
