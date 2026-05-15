@@ -1,0 +1,152 @@
+{
+  "name": "Message",
+  "type": "object",
+  "properties": {
+    "conversation_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u062d\u0627\u062f\u062b\u0629"
+    },
+    "project_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0634\u0631\u0648\u0639"
+    },
+    "sender_email": {
+      "type": "string",
+      "description": "\u0628\u0631\u064a\u062f \u0627\u0644\u0645\u0631\u0633\u0644 \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a"
+    },
+    "sender_name": {
+      "type": "string",
+      "description": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0631\u0633\u0644"
+    },
+    "sender_role": {
+      "type": "string",
+      "enum": [
+        "client",
+        "engineer",
+        "firm",
+        "admin"
+      ],
+      "description": "\u062f\u0648\u0631 \u0627\u0644\u0645\u0631\u0633\u0644"
+    },
+    "content": {
+      "type": "string",
+      "description": "\u0645\u062d\u062a\u0648\u0649 \u0627\u0644\u0631\u0633\u0627\u0644\u0629 (\u062a\u0645 \u062a\u0646\u0642\u064a\u062a\u0647 \u062a\u0644\u0642\u0627\u0626\u064a\u0627\u064b)"
+    },
+    "original_content": {
+      "type": "string",
+      "description": "\u0627\u0644\u0645\u062d\u062a\u0648\u0649 \u0627\u0644\u0623\u0635\u0644\u064a \u0642\u0628\u0644 \u0627\u0644\u062a\u0646\u0642\u064a\u0629"
+    },
+    "has_sensitive_data": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u0647\u0644 \u062a\u062d\u062a\u0648\u064a \u0639\u0644\u0649 \u0628\u064a\u0627\u0646\u0627\u062a \u062d\u0633\u0627\u0633\u0629 \u062a\u0645 \u0641\u0644\u062a\u0631\u062a\u0647\u0627"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "size": {
+            "type": "number"
+          },
+          "type": {
+            "type": "string"
+          },
+          "preview_url": {
+            "type": "string"
+          },
+          "is_official": {
+            "type": "boolean",
+            "default": false,
+            "description": "\u0647\u0644 \u0647\u0630\u0627 \u0645\u0644\u0641 \u0631\u0633\u0645\u064a \u0644\u0644\u0645\u0634\u0631\u0648\u0639"
+          }
+        }
+      },
+      "description": "\u0627\u0644\u0645\u0631\u0641\u0642\u0627\u062a"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u0645\u0642\u0631\u0648\u0621\u0629"
+    },
+    "read_by": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u0642\u0627\u0626\u0645\u0629 \u0628\u0631\u064a\u062f \u0645\u0646 \u0642\u0631\u0623 \u0627\u0644\u0631\u0633\u0627\u0644\u0629"
+    },
+    "edited_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u062a\u0639\u062f\u064a\u0644"
+    },
+    "edited_by": {
+      "type": "string",
+      "description": "\u0645\u0646 \u0639\u062f\u0651\u0644 \u0627\u0644\u0631\u0633\u0627\u0644\u0629"
+    },
+    "is_system_message": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u0647\u0644 \u0647\u064a \u0631\u0633\u0627\u0644\u0629 \u0646\u0638\u0627\u0645\u064a\u0629 (\u0625\u0634\u0639\u0627\u0631 \u062a\u0644\u0642\u0627\u0626\u064a)"
+    },
+    "related_milestone_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u0645\u0631\u062a\u0628\u0637\u0629 (\u0644\u0644\u0625\u0634\u0639\u0627\u0631\u0627\u062a)"
+    }
+  },
+  "required": [
+    "conversation_id",
+    "project_id",
+    "sender_email",
+    "content"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.conversation_id": {
+            "_filter": "Conversation",
+            "read": true
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
