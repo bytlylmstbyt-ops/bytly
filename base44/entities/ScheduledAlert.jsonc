@@ -1,0 +1,113 @@
+{
+  "name": "ScheduledAlert",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0644\u0644\u0645\u0633\u062a\u0644\u0645"
+    },
+    "alert_type": {
+      "type": "string",
+      "enum": [
+        "deadline_reminder",
+        "payment_due",
+        "milestone_due",
+        "contract_expiry",
+        "project_overdue",
+        "review_pending"
+      ],
+      "description": "\u0646\u0648\u0639 \u0627\u0644\u062a\u0646\u0628\u064a\u0647"
+    },
+    "title": {
+      "type": "string",
+      "description": "\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u062a\u0646\u0628\u064a\u0647"
+    },
+    "message": {
+      "type": "string",
+      "description": "\u0646\u0635 \u0627\u0644\u062a\u0646\u0628\u064a\u0647"
+    },
+    "scheduled_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u062a\u0646\u0628\u064a\u0647 \u0627\u0644\u0645\u062c\u062f\u0648\u0644"
+    },
+    "related_entity_type": {
+      "type": "string",
+      "description": "\u0646\u0648\u0639 \u0627\u0644\u0643\u064a\u0627\u0646 \u0627\u0644\u0645\u0631\u062a\u0628\u0637"
+    },
+    "related_entity_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0643\u064a\u0627\u0646 \u0627\u0644\u0645\u0631\u062a\u0628\u0637"
+    },
+    "is_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u062a\u0645 \u0627\u0644\u0625\u0631\u0633\u0627\u0644"
+    },
+    "sent_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0625\u0631\u0633\u0627\u0644"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "urgent"
+      ],
+      "default": "medium",
+      "description": "\u0627\u0644\u0623\u0648\u0644\u0648\u064a\u0629"
+    }
+  },
+  "required": [
+    "user_email",
+    "alert_type",
+    "title",
+    "message",
+    "scheduled_date"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
