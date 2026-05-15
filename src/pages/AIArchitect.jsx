@@ -132,9 +132,10 @@ export default function AIArchitect() {
             agentIcon={<DraftingCompass className="w-5 h-5" />}
             agentColor="from-blue-500 to-cyan-500"
             systemPrompt={SYSTEM_PROMPT}
-            placeholder="صف مشروعك المعماري... حجم الأرض، الطوابق، المتطلبات"
+            placeholder="صف مشروعك المعماري... سيتم توليد صور معمارية احترافية"
             allowImages={true}
-            initialMessage={chatStarted && startPrompt ? startPrompt : undefined}
+            enableImageGeneration={true}
+            initialMessage={chatStarted && startPrompt ? startPrompt : `مرحباً! أنا المهندس المعماري الذكي من Bytly AI 📐\n\nأستطيع **توليد صور معمارية ثلاثية الأبعاد** لمشروعك:\n• 🏠 فيلل، شقق، استراحات، مباني تجارية\n• 🖼️ 4 تصاميم بصرية لكل طلب\n• 📋 خرائط ذهنية وتوزيع فراغات\n\nأدخل بيانات مشروعك من الجانب أو ابدأ بوصفه مباشرة!`}
           />
         </div>
       </div>

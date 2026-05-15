@@ -44,15 +44,15 @@ const SYSTEM_PROMPT = `أنت مصمم داخلية خبير محترف من ف�
 export default function AIInteriorDesigner() {
   const [selectedStyle, setSelectedStyle] = useState(null);
 
-  const initialMsg = `مرحباً! أنا مصمم الداخلية الذكي من Bytly AI 🎨
+  const initialMsg = `مرحباً! أنا مصمم الداخلية الذكي من Bytly AI ✨
 
-أستطيع مساعدتك في:
-• تصميم أي غرفة أو فراغ
-• اقتراح الألوان والأثاث والإضاءة
-• إنشاء مفهوم تصميمي متكامل
-• 9 أنماط تصميمية مختلفة
+أستطيع **توليد صور تصميم فوتوريالستية** بمجرد وصف مشروعك:
+• 🖼️ **4 تصاميم بصرية** لكل طلب — تلقائياً
+• 🏠 غرف معيشة، مطابخ، غرف نوم، مجالس، واجهات
+• 🎨 9 أنماط تصميمية (فاخر، عصري، نيوكلاسيك...)
+• 📐 جودة معمارية احترافية 8K
 
-**اختر الأسلوب التصميمي** من الأزرار أعلاه، ثم أخبرني عن مشروعك!`;
+**اختر الأسلوب التصميمي** من الجانب، ثم صف مشروعك أو اختر أمراً سريعاً!`;
 
   const systemWithStyle = selectedStyle
     ? `${SYSTEM_PROMPT}\n\nالأسلوب التصميمي المختار: ${selectedStyle}. التزم بهذا الأسلوب في كل ردودك.`
@@ -144,8 +144,10 @@ export default function AIInteriorDesigner() {
             agentIcon={<Home className="w-5 h-5" />}
             agentColor="from-purple-500 to-pink-500"
             systemPrompt={systemWithStyle}
-            placeholder="صف غرفتك أو مشروعك... مثال: غرفة معيشة 5×7 متر، عائلة من 4 أشخاص، أريد أسلوباً فاخراً"
+            placeholder="صف غرفتك أو مشروعك... سيتم توليد صور احترافية تلقائياً"
             allowImages={true}
+            enableImageGeneration={true}
+            selectedStyle={selectedStyle}
             initialMessage={initialMsg}
           />
         </div>
