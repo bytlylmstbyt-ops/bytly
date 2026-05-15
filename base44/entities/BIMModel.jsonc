@@ -116,6 +116,9 @@
           "created_by": "{{user.email}}"
         },
         {
+          "data.owner_engineer_id": "{{user.id}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
