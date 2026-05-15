@@ -7,6 +7,13 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import NotFoundError from './lib/NotFoundError';
 import TechnicalResources from './pages/TechnicalResources';
 import AdManager from './pages/AdManager';
+import AIEngineers from './pages/AIEngineers';
+import AIInteriorDesigner from './pages/AIInteriorDesigner';
+import AIArchitect from './pages/AIArchitect';
+import AIBudgetEstimator from './pages/AIBudgetEstimator';
+import AIRenovation from './pages/AIRenovation';
+import AIMaterialAdvisor from './pages/AIMaterialAdvisor';
+import AIRecommender from './pages/AIRecommender';
 import EngineerFinancialDashboard from './pages/EngineerFinancialDashboard';
 import MyContracts from './pages/MyContracts';
 import EngineerMatcher from './pages/EngineerMatcher';
@@ -80,6 +87,13 @@ const AuthenticatedApp = () => {
       <Route path="/MyContracts" element={<LayoutWrapper currentPageName="MyContracts"><MyContracts /></LayoutWrapper>} />
       <Route path="/EngineerMatcher" element={<LayoutWrapper currentPageName="EngineerMatcher"><EngineerMatcher /></LayoutWrapper>} />
       <Route path="/AdManager" element={<LayoutWrapper currentPageName="AdManager"><AdManager /></LayoutWrapper>} />
+      <Route path="/AIEngineers" element={<LayoutWrapper currentPageName="AIEngineers"><AIEngineers /></LayoutWrapper>} />
+      <Route path="/AIInteriorDesigner" element={<LayoutWrapper currentPageName="AIInteriorDesigner"><AIInteriorDesigner /></LayoutWrapper>} />
+      <Route path="/AIArchitect" element={<LayoutWrapper currentPageName="AIArchitect"><AIArchitect /></LayoutWrapper>} />
+      <Route path="/AIBudgetEstimator" element={<LayoutWrapper currentPageName="AIBudgetEstimator"><AIBudgetEstimator /></LayoutWrapper>} />
+      <Route path="/AIRenovation" element={<LayoutWrapper currentPageName="AIRenovation"><AIRenovation /></LayoutWrapper>} />
+      <Route path="/AIMaterialAdvisor" element={<LayoutWrapper currentPageName="AIMaterialAdvisor"><AIMaterialAdvisor /></LayoutWrapper>} />
+      <Route path="/AIRecommender" element={<LayoutWrapper currentPageName="AIRecommender"><AIRecommender /></LayoutWrapper>} />
       <Route path="*" element={<NotFoundError />} />
     </Routes>
   );

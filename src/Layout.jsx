@@ -10,7 +10,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { 
   Search, MessageSquare, User, Menu, X, 
   LogOut, Briefcase, Settings, Wallet, Bell, 
-  PlusCircle, ChevronDown, Instagram, Facebook, Mail, Phone, MessagesSquare, Scale, Linkedin, Twitter
+  PlusCircle, ChevronDown, Instagram, Facebook, Mail, Phone, MessagesSquare, Scale, Linkedin, Twitter, Bot
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import { Button } from "@/components/ui/button";
@@ -157,6 +157,13 @@ function LayoutContent({ children, currentPageName }) {
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'DesignMarketplace' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
                 {t('nav.designMarketplace')}
+              </Link>
+              <Link 
+                to="/AIEngineers" 
+                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] flex items-center gap-1 ${currentPageName === 'AIEngineers' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
+              >
+                <Bot className="w-4 h-4" />
+                Bytly AI
               </Link>
               <Link 
                 to={createPageUrl("Messages")} 
