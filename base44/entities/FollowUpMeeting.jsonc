@@ -1,0 +1,158 @@
+{
+  "name": "FollowUpMeeting",
+  "type": "object",
+  "properties": {
+    "client_email": {
+      "type": "string",
+      "description": "\u0628\u0631\u064a\u062f \u0627\u0644\u0639\u0645\u064a\u0644"
+    },
+    "project_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0634\u0631\u0648\u0639"
+    },
+    "interaction_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u062a\u0641\u0627\u0639\u0644 \u0627\u0644\u0645\u0631\u062a\u0628\u0637"
+    },
+    "meeting_type": {
+      "type": "string",
+      "enum": [
+        "status_update",
+        "requirement_review",
+        "feedback",
+        "problem_solving",
+        "contract_review",
+        "payment_discussion"
+      ],
+      "description": "\u0646\u0648\u0639 \u0627\u0644\u0627\u062c\u062a\u0645\u0627\u0639"
+    },
+    "title": {
+      "type": "string",
+      "description": "\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0627\u062c\u062a\u0645\u0627\u0639"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u0648\u0635\u0641 \u0627\u0644\u0627\u062c\u062a\u0645\u0627\u0639"
+    },
+    "scheduled_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u0645\u0648\u0639\u062f \u0627\u0644\u0627\u062c\u062a\u0645\u0627\u0639"
+    },
+    "scheduled_by": {
+      "type": "string",
+      "description": "\u0628\u0631\u064a\u062f \u0627\u0644\u0634\u062e\u0635 \u0627\u0644\u0630\u064a \u062c\u062f\u0648\u0644 \u0627\u0644\u0627\u062c\u062a\u0645\u0627\u0639"
+    },
+    "scheduled_reason": {
+      "type": "string",
+      "description": "\u0627\u0644\u0633\u0628\u0628 \u0648\u0631\u0627\u0621 \u062c\u062f\u0648\u0644\u0629 \u0627\u0644\u0627\u062c\u062a\u0645\u0627\u0639"
+    },
+    "meeting_link": {
+      "type": "string",
+      "description": "\u0631\u0627\u0628\u0637 \u0627\u0644\u0627\u062c\u062a\u0645\u0627\u0639 (Zoom, Teams, \u0625\u0644\u062e)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "completed",
+        "cancelled",
+        "rescheduled"
+      ],
+      "default": "scheduled",
+      "description": "\u062d\u0627\u0644\u0629 \u0627\u0644\u0627\u062c\u062a\u0645\u0627\u0639"
+    },
+    "meeting_notes": {
+      "type": "string",
+      "description": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a \u0627\u0644\u0627\u062c\u062a\u0645\u0627\u0639"
+    },
+    "action_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "task": {
+            "type": "string"
+          },
+          "assigned_to": {
+            "type": "string"
+          },
+          "due_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "in_progress",
+              "completed"
+            ]
+          }
+        }
+      },
+      "description": "\u0627\u0644\u0639\u0646\u0627\u0635\u0631 \u0627\u0644\u0625\u062c\u0631\u0627\u0626\u064a\u0629 \u0645\u0646 \u0627\u0644\u0627\u062c\u062a\u0645\u0627\u0639"
+    },
+    "attendees": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a\u0629 \u0644\u0644\u062d\u0627\u0636\u0631\u064a\u0646"
+    },
+    "auto_scheduled": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u0647\u0644 \u062a\u0645 \u062c\u062f\u0648\u0644\u062a\u0647\u0627 \u062a\u0644\u0642\u0627\u0626\u064a\u0627\u064b"
+    }
+  },
+  "required": [
+    "client_email",
+    "meeting_type",
+    "title",
+    "scheduled_date"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.client_email": "{{user.email}}"
+        },
+        {
+          "data.scheduled_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.scheduled_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
