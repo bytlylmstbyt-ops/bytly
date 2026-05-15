@@ -50,7 +50,7 @@
         },
         {
           "data.project_id": {
-            "_filter": "TaskProject",
+            "_filter": "Project",
             "read": true
           }
         },
@@ -68,7 +68,7 @@
         },
         {
           "data.project_id": {
-            "_filter": "TaskProject",
+            "_filter": "Project",
             "update": true
           }
         },
@@ -82,8 +82,11 @@
     "delete": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.project_id": {
-            "_filter": "TaskProject",
+            "_filter": "Project",
             "delete": true
           }
         },
