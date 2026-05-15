@@ -1,0 +1,149 @@
+{
+  "name": "WithdrawalRequest",
+  "type": "object",
+  "properties": {
+    "engineer_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0647\u0646\u062f\u0633"
+    },
+    "amount": {
+      "type": "number",
+      "description": "\u0627\u0644\u0645\u0628\u0644\u063a \u0627\u0644\u0645\u0637\u0644\u0648\u0628 \u0633\u062d\u0628\u0647"
+    },
+    "iban": {
+      "type": "string",
+      "description": "\u0631\u0642\u0645 \u0627\u0644\u0622\u064a\u0628\u0627\u0646"
+    },
+    "bank_name": {
+      "type": "string",
+      "description": "\u0627\u0633\u0645 \u0627\u0644\u0628\u0646\u0643"
+    },
+    "account_holder_name": {
+      "type": "string",
+      "description": "\u0627\u0633\u0645 \u0635\u0627\u062d\u0628 \u0627\u0644\u062d\u0633\u0627\u0628"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "processing",
+        "completed",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "\u062d\u0627\u0644\u0629 \u0627\u0644\u0637\u0644\u0628"
+    },
+    "consultant_approval": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u0627\u0639\u062a\u0645\u0627\u062f \u0627\u0644\u0645\u0633\u062a\u0634\u0627\u0631 - \u0634\u0631\u0637 \u0623\u0633\u0627\u0633\u064a \u0644\u062a\u062d\u0631\u064a\u0631 \u0627\u0644\u062f\u0641\u0639\u0627\u062a"
+    },
+    "consultant_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0633\u062a\u0634\u0627\u0631 \u0627\u0644\u0645\u0639\u062a\u0645\u062f"
+    },
+    "consultant_approval_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0639\u062a\u0645\u0627\u062f \u0627\u0644\u0645\u0633\u062a\u0634\u0627\u0631"
+    },
+    "consultant_notes": {
+      "type": "string",
+      "description": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a \u0627\u0644\u0645\u0633\u062a\u0634\u0627\u0631"
+    },
+    "compliance_status": {
+      "type": "string",
+      "enum": [
+        "compliant",
+        "compliant_with_notes",
+        "rejected"
+      ],
+      "description": "\u062d\u0627\u0644\u0629 \u0627\u0644\u0645\u0637\u0627\u0628\u0642\u0629: \u0645\u0637\u0627\u0628\u0642 / \u0645\u0637\u0627\u0628\u0642 \u0645\u0639 \u0645\u0644\u0627\u062d\u0638\u0627\u062a / \u0645\u0631\u0641\u0648\u0636 \u0641\u0646\u064a\u0627\u064b"
+    },
+    "saudi_code_notes": {
+      "type": "string",
+      "description": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a \u0627\u0644\u0643\u0648\u062f \u0627\u0644\u0633\u0639\u0648\u062f\u064a \u0648\u0645\u062f\u0649 \u0627\u0644\u062a\u0632\u0627\u0645 \u0627\u0644\u062a\u0635\u0645\u064a\u0645 \u0628\u0627\u0644\u0645\u0639\u0627\u064a\u064a\u0631 \u0627\u0644\u0648\u0637\u0646\u064a\u0629"
+    },
+    "implementation_recommendations": {
+      "type": "string",
+      "description": "\u062a\u0648\u0635\u064a\u0627\u062a \u0627\u0644\u062a\u0646\u0641\u064a\u0630 \u0639\u0644\u0649 \u0623\u0631\u0636 \u0627\u0644\u0648\u0627\u0642\u0639"
+    },
+    "approved_report_file": {
+      "type": "string",
+      "description": "\u0645\u0644\u0641 \u0627\u0644\u062a\u0642\u0631\u064a\u0631 \u0627\u0644\u0645\u0639\u062a\u0645\u062f PDF \u0645\u0639 \u062e\u062a\u0645 \u0627\u0644\u0645\u0633\u062a\u0634\u0627\u0631 \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a"
+    },
+    "request_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u062a\u0642\u062f\u064a\u0645 \u0627\u0644\u0637\u0644\u0628"
+    },
+    "processing_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0628\u062f\u0621 \u0627\u0644\u0645\u0639\u0627\u0644\u062c\u0629"
+    },
+    "completion_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0625\u0646\u062c\u0627\u0632"
+    },
+    "rejection_reason": {
+      "type": "string",
+      "description": "\u0633\u0628\u0628 \u0627\u0644\u0631\u0641\u0636 \u0625\u0646 \u0648\u062c\u062f"
+    },
+    "admin_notes": {
+      "type": "string",
+      "description": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a \u0627\u0644\u0625\u062f\u0627\u0631\u0629"
+    },
+    "transaction_reference": {
+      "type": "string",
+      "description": "\u0631\u0642\u0645 \u0645\u0631\u062c\u0639 \u0627\u0644\u062a\u062d\u0648\u064a\u0644 \u0627\u0644\u0628\u0646\u0643\u064a"
+    }
+  },
+  "required": [
+    "engineer_id",
+    "amount",
+    "iban",
+    "account_holder_name"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.engineer_id": "{{user.id}}"
+        },
+        {
+          "data.consultant_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.consultant_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
