@@ -131,7 +131,7 @@
     "update": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "data.engineer_id": "{{user.id}}"
         },
         {
           "data.consultant_id": "{{user.id}}"
@@ -144,16 +144,9 @@
       ]
     },
     "delete": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }
