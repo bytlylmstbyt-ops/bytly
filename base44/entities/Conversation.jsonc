@@ -91,14 +91,7 @@
     "read": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.participants": {
-            "$in": [
-              "{{user.email}}"
-            ]
-          }
+          "data.participants": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -110,14 +103,7 @@
     "update": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.participants": {
-            "$in": [
-              "{{user.email}}"
-            ]
-          }
+          "data.participants": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -127,16 +113,9 @@
       ]
     },
     "delete": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }
