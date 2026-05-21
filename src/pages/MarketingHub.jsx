@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Linkedin, Sparkles, Send, RefreshCw, CheckCircle, 
   Users, Briefcase, Share2, MessageSquare, Loader2, Copy, Check,
-  Twitter, Facebook
+  Twitter, Facebook, Instagram
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -16,6 +16,7 @@ const PLATFORMS = [
   { id: "linkedin", label: "LinkedIn", icon: Linkedin, color: "#0077B5", bg: "bg-[#0077B5]", function: "linkedinService" },
   { id: "twitter", label: "X / Twitter", icon: Twitter, color: "#000000", bg: "bg-black", function: "twitterService" },
   { id: "facebook", label: "Facebook", icon: Facebook, color: "#1877F2", bg: "bg-[#1877F2]", function: "facebookService" },
+  { id: "instagram", label: "Instagram", icon: Instagram, color: "#E1306C", bg: "bg-[#E1306C]", function: "instagramService" },
 ];
 
 const ACTIONS = [
@@ -135,6 +136,18 @@ export default function MarketingHub() {
           title: response.data.success ? "تم النشر على Facebook ✅" : "حدث خطأ",
           description: response.data.success ? `منشور فيسبوك بنجاح` : response.data.error,
           variant: response.data.success ? "default" : "destructive"
+        });
+      } else if (selectedPlatform.id === "instagram") {
+        response = await base44.functions.invoke("instagramService", {
+          action: selectedAction.twitterAction,
+          ...formData
+        });
+        setResult({ ...response.data, platform: "instagram" });
+        const d = response.data;
+        toast({
+          title: d.success ? "تم النشر على Instagram ✅" : d.requires_image ? "تم توليد الكابشن 📋" : "حدث خطأ",
+          description: d.success ? "منشور انستقرام بنجاح" : d.note || d.error,
+          variant: d.success || d.requires_image ? "default" : "destructive"
         });
       }
     } catch (e) {
@@ -256,6 +269,18 @@ export default function MarketingHub() {
                   </div>
                 ))}
 
+                {selectedPlatform.id === "instagram" && (
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">رابط الصورة (اختياري)</label>
+                    <Input
+                      placeholder="https://... رابط صورة للنشر مع الكابشن"
+                      value={formData["imageUrl"] || ""}
+                      onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                    />
+                    <p className="text-xs text-slate-400 mt-1">إذا لم تُدخل صورة، سيتم توليد الكابشن فقط لنسخه يدوياً</p>
+                  </div>
+                )}
+
                 <Button
                   onClick={handleSubmit}
                   disabled={loading}
@@ -356,6 +381,28 @@ export default function MarketingHub() {
                   )}
 
                   {/* Post links */}
+                  {/* Instagram caption result */}
+                  {result.caption && result.platform === "instagram" && (
+                    <div className="bg-white rounded-lg p-4 border border-pink-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-semibold text-slate-500">الكابشن المُولَّد</span>
+                        <button onClick={() => handleCopy(result.caption)} className="text-slate-400 hover:text-slate-600">
+                          {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{result.caption}</p>
+                      {result.note && <p className="text-xs text-amber-600 mt-2 font-medium">⚠️ {result.note}</p>}
+                    </div>
+                  )}
+
+                  {result.post_url && result.platform === "instagram" && (
+                    <a href={result.post_url} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-xs text-slate-500 hover:text-[#E1306C] transition-colors">
+                      <Instagram className="w-3.5 h-3.5" />
+                      <span>عرض صفحة @bytlylmstbyt على Instagram</span>
+                    </a>
+                  )}
+
                   {result.tweet_url && (
                     <a href={result.tweet_url} target="_blank" rel="noopener noreferrer"
                       className="flex items-center gap-2 text-xs text-slate-500 hover:text-black transition-colors">
