@@ -211,6 +211,12 @@
           "data.assigned_engineer_id": "{{user.id}}"
         },
         {
+          "data.technical_consultant_id": "{{user.id}}"
+        },
+        {
+          "data.legal_consultant_id": "{{user.id}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -223,9 +229,6 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.client_id": "{{user.id}}"
-        },
-        {
           "data.assigned_engineer_id": "{{user.id}}"
         },
         {
@@ -236,23 +239,9 @@
       ]
     },
     "delete": {
-      "$or": [
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        },
-        {
-          "$and": [
-            {
-              "created_by": "{{user.email}}"
-            },
-            {
-              "data.status": "open"
-            }
-          ]
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }
