@@ -120,16 +120,7 @@
     "read": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
           "data.client_email": "{{user.email}}"
-        },
-        {
-          "data.project_id": {
-            "_filter": "Project",
-            "read": true
-          }
         },
         {
           "user_condition": {
@@ -141,16 +132,7 @@
     "update": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
           "data.client_email": "{{user.email}}"
-        },
-        {
-          "data.project_id": {
-            "_filter": "Project",
-            "update": true
-          }
         },
         {
           "user_condition": {
@@ -160,16 +142,9 @@
       ]
     },
     "delete": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }
