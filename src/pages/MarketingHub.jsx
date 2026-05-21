@@ -179,11 +179,18 @@ export default function MarketingHub() {
             <h1 className="text-2xl font-bold text-slate-800">مركز التسويق</h1>
           </div>
           <p className="text-slate-500 text-sm">توليد ونشر المحتوى التسويقي بالذكاء الاصطناعي على منصات التواصل الاجتماعي</p>
-          <Link to="/SocialAnalytics">
-            <Button variant="outline" size="sm" className="mt-2 gap-1.5 text-xs">
-              <TrendingUp className="w-3.5 h-3.5" /> عرض تقرير التحليلات الأسبوعي
-            </Button>
-          </Link>
+          <div className="flex gap-2 mt-2">
+            <Link to="/SocialAnalytics">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                <TrendingUp className="w-3.5 h-3.5" /> تقرير التحليلات
+              </Button>
+            </Link>
+            <Link to="/LeadsManager">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                <Users className="w-3.5 h-3.5" /> العملاء المحتملون
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Platform Selector */}
