@@ -119,13 +119,13 @@
     "read": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.client_email": "{{user.email}}"
         },
         {
           "data.scheduled_by": "{{user.email}}"
-        },
-        {
-          "data.follow_up_by": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -137,10 +137,13 @@
     "update": {
       "$or": [
         {
-          "data.scheduled_by": "{{user.email}}"
+          "created_by": "{{user.email}}"
         },
         {
-          "data.follow_up_by": "{{user.email}}"
+          "data.client_email": "{{user.email}}"
+        },
+        {
+          "data.scheduled_by": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -150,9 +153,19 @@
       ]
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.client_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }
