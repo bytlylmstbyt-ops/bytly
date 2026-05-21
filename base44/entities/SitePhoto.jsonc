@@ -78,7 +78,10 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.taken_by_email": "{{user.email}}"
+          "data.bim_model_id": {
+            "_filter": "BIMModel",
+            "read": true
+          }
         },
         {
           "user_condition": {
@@ -93,9 +96,6 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.taken_by_email": "{{user.email}}"
-        },
-        {
           "user_condition": {
             "role": "admin"
           }
@@ -106,9 +106,6 @@
       "$or": [
         {
           "created_by": "{{user.email}}"
-        },
-        {
-          "data.taken_by_email": "{{user.email}}"
         },
         {
           "user_condition": {
