@@ -14,6 +14,7 @@ import AIBudgetEstimator from './pages/AIBudgetEstimator';
 import AIRenovation from './pages/AIRenovation';
 import AIMaterialAdvisor from './pages/AIMaterialAdvisor';
 import AIRecommender from './pages/AIRecommender';
+import MarketingHub from './pages/MarketingHub';
 import EngineerFinancialDashboard from './pages/EngineerFinancialDashboard';
 import MyContracts from './pages/MyContracts';
 import EngineerMatcher from './pages/EngineerMatcher';
@@ -94,6 +95,7 @@ const AuthenticatedApp = () => {
       <Route path="/AIRenovation" element={<LayoutWrapper currentPageName="AIRenovation"><AIRenovation /></LayoutWrapper>} />
       <Route path="/AIMaterialAdvisor" element={<LayoutWrapper currentPageName="AIMaterialAdvisor"><AIMaterialAdvisor /></LayoutWrapper>} />
       <Route path="/AIRecommender" element={<LayoutWrapper currentPageName="AIRecommender"><AIRecommender /></LayoutWrapper>} />
+      <Route path="/MarketingHub" element={<LayoutWrapper currentPageName="MarketingHub"><MarketingHub /></LayoutWrapper>} />
       <Route path="*" element={<NotFoundError />} />
     </Routes>
   );

@@ -144,6 +144,11 @@
       "type": "boolean",
       "default": false,
       "description": "\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u062a\u0646\u0628\u064a\u0647 15 \u064a\u0648\u0645 \u0642\u0628\u0644 \u0627\u0644\u0627\u0646\u062a\u0647\u0627\u0621"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u0648\u0635\u0641 \u0645\u0648\u062c\u0632 \u0639\u0646 \u0627\u0644\u0639\u0645\u064a\u0644 \u0648\u0627\u062d\u062a\u064a\u0627\u062c\u0627\u062a\u0647",
+      "maxLength": 1000
     }
   },
   "required": [

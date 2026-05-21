@@ -33,6 +33,11 @@
     "delivery_rating": {
       "type": "number",
       "description": "\u062a\u0642\u064a\u064a\u0645 \u0627\u0644\u062a\u0633\u0644\u064a\u0645"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u0648\u0635\u0641 \u062a\u0641\u0635\u064a\u0644\u064a \u0644\u0644\u062a\u0642\u064a\u064a\u0645",
+      "maxLength": 1000
     }
   },
   "required": [
@@ -44,7 +49,6 @@
     "create": {
       "created_by": "{{user.email}}"
     },
-    "read": true,
     "update": {
       "$or": [
         {

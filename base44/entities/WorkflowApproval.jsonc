@@ -85,6 +85,11 @@
         }
       },
       "description": "\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0645\u0647\u0627\u0645 \u0627\u0644\u0645\u0637\u0644\u0648\u0628\u0629 \u0644\u0644\u0645\u0648\u0627\u0641\u0642\u0629"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u0648\u0635\u0641 \u0637\u0644\u0628 \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0648\u0627\u0644\u063a\u0631\u0636 \u0645\u0646\u0647",
+      "maxLength": 1000
     }
   },
   "required": [
@@ -100,9 +105,6 @@
     },
     "read": {
       "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
         {
           "data.requested_from": "{{user.email}}"
         },
@@ -127,11 +129,6 @@
           }
         }
       ]
-    },
-    "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
     }
   }
 }

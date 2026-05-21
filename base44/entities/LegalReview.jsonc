@@ -62,6 +62,11 @@
       "type": "number",
       "default": 0,
       "description": "\u0623\u062a\u0639\u0627\u0628 \u0627\u0644\u0645\u0633\u062a\u0634\u0627\u0631 \u0627\u0644\u0642\u0627\u0646\u0648\u0646\u064a"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u0648\u0635\u0641 \u0645\u0648\u062c\u0632 \u0644\u0644\u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u0642\u0627\u0646\u0648\u0646\u064a\u0629 \u0648\u0645\u0644\u062e\u0635 \u0627\u0644\u0642\u0636\u064a\u0629",
+      "maxLength": 1000
     }
   },
   "required": [
@@ -72,27 +77,6 @@
   "rls": {
     "create": {
       "created_by": "{{user.email}}"
-    },
-    "read": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.legal_consultant_id": "{{user.id}}"
-        },
-        {
-          "data.project_id": {
-            "_filter": "Project",
-            "read": true
-          }
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
     },
     "update": {
       "$or": [

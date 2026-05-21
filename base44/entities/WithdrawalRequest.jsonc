@@ -98,6 +98,11 @@
     "transaction_reference": {
       "type": "string",
       "description": "\u0631\u0642\u0645 \u0645\u0631\u062c\u0639 \u0627\u0644\u062a\u062d\u0648\u064a\u0644 \u0627\u0644\u0628\u0646\u0643\u064a"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u0648\u0635\u0641 \u0637\u0644\u0628 \u0627\u0644\u0633\u062d\u0628 \u0648\u0627\u0644\u063a\u0631\u0636 \u0645\u0646\u0647",
+      "maxLength": 1000
     }
   },
   "required": [
@@ -109,24 +114,6 @@
   "rls": {
     "create": {
       "created_by": "{{user.email}}"
-    },
-    "read": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.engineer_id": "{{user.id}}"
-        },
-        {
-          "data.consultant_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
     },
     "update": {
       "$or": [
