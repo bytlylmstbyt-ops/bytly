@@ -58,6 +58,11 @@
       "type": "boolean",
       "default": false,
       "description": "\u0642\u0628\u0648\u0644 \u0627\u0644\u0645\u0647\u0646\u062f\u0633"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u0648\u0635\u0641 \u0645\u0648\u062c\u0632 \u0644\u0644\u0645\u0644\u062d\u0642 \u0627\u0644\u0642\u0627\u0646\u0648\u0646\u064a \u0648\u0645\u0644\u062e\u0635 \u0627\u0644\u0642\u0636\u064a\u0629",
+      "maxLength": 1000
     }
   },
   "required": [
@@ -68,47 +73,6 @@
   "rls": {
     "create": {
       "created_by": "{{user.email}}"
-    },
-    "read": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.legal_consultant_id": "{{user.id}}"
-        },
-        {
-          "data.contract_id": {
-            "_filter": "Contract",
-            "read": true
-          }
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    },
-    "update": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.legal_consultant_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    },
-    "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
     }
   }
 }
