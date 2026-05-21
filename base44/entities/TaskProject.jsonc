@@ -91,9 +91,6 @@
           "data.owner_email": "{{user.email}}"
         },
         {
-          "data.members": "{{user.email}}"
-        },
-        {
           "user_condition": {
             "role": "admin"
           }
@@ -104,6 +101,9 @@
       "$or": [
         {
           "created_by": "{{user.email}}"
+        },
+        {
+          "data.owner_email": "{{user.email}}"
         },
         {
           "user_condition": {
