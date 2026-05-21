@@ -91,6 +91,9 @@
     "read": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.payer_email": "{{user.email}}"
         },
         {
