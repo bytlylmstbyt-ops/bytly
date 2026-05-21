@@ -134,16 +134,16 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.assigned_to": "{{user.id}}"
-        },
-        {
-          "data.assigned_by": "{{user.email}}"
-        },
-        {
           "data.project_id": {
             "_filter": "TaskProject",
             "read": true
           }
+        },
+        {
+          "data.assigned_to": "{{user.id}}"
+        },
+        {
+          "data.assigned_by": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -158,16 +158,16 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.assigned_to": "{{user.id}}"
-        },
-        {
-          "data.assigned_by": "{{user.email}}"
-        },
-        {
           "data.project_id": {
             "_filter": "TaskProject",
             "update": true
           }
+        },
+        {
+          "data.assigned_to": "{{user.id}}"
+        },
+        {
+          "data.assigned_by": "{{user.email}}"
         },
         {
           "user_condition": {
