@@ -88,12 +88,6 @@
           }
         },
         {
-          "data.complaint_id": {
-            "_filter": "Complaint",
-            "read": true
-          }
-        },
-        {
           "user_condition": {
             "role": "admin"
           }
@@ -102,9 +96,6 @@
     },
     "update": {
       "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
         {
           "data.legal_consultant_id": "{{user.id}}"
         },
@@ -116,16 +107,9 @@
       ]
     },
     "delete": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }
