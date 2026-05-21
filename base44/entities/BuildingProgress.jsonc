@@ -85,6 +85,9 @@
     "read": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.client_email": "{{user.email}}"
         },
         {
@@ -100,6 +103,9 @@
     "update": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.engineer_email": "{{user.email}}"
         },
         {
@@ -108,6 +114,11 @@
           }
         }
       ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }
