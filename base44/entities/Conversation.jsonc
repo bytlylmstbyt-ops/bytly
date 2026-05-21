@@ -91,6 +91,9 @@
     "read": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.participants": "{{user.email}}"
         },
         {
@@ -103,7 +106,10 @@
     "update": {
       "$or": [
         {
-          "data.participants": "{{user.email}}"
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.admin_emails": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -113,9 +119,16 @@
       ]
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }
