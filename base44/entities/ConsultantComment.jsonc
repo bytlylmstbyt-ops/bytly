@@ -53,6 +53,9 @@
     "read": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.consultant_id": "{{user.id}}"
         },
         {
@@ -81,9 +84,16 @@
       ]
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }
