@@ -123,16 +123,10 @@
     "read": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
           "data.client_email": "{{user.email}}"
         },
         {
           "data.recorded_by": "{{user.email}}"
-        },
-        {
-          "data.follow_up_by": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -144,9 +138,6 @@
     "update": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
           "data.recorded_by": "{{user.email}}"
         },
         {
@@ -157,16 +148,9 @@
       ]
     },
     "delete": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }
