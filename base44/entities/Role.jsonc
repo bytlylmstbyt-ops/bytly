@@ -215,7 +215,9 @@
   ],
   "rls": {
     "create": {
-      "created_by": "{{user.email}}"
+      "user_condition": {
+        "role": "admin"
+      }
     },
     "read": {
       "user_condition": {
