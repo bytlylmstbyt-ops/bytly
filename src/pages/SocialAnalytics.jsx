@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from "recharts";
+import { useNavigate } from "react-router-dom";
 import {
   Instagram, Linkedin, Twitter, Heart, MessageCircle,
   Repeat2, TrendingUp, RefreshCw, Loader2, AlertCircle,
-  ExternalLink, Calendar, Award, Users
+  ExternalLink, Calendar, Award, Users, ArrowRight
 } from "lucide-react";
 
 const PLATFORM_CONFIG = {
@@ -170,6 +171,7 @@ function PlatformCard({ data, config }) {
 }
 
 export default function SocialAnalytics() {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -210,7 +212,10 @@ export default function SocialAnalytics() {
         {/* Header */}
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1.5 mb-1 text-slate-500 hover:text-slate-700">
+            <ArrowRight className="w-4 h-4" /> رجوع
+          </Button>
+          <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
               <TrendingUp className="w-6 h-6 text-[#C9A66B]" />
               تحليلات التواصل الاجتماعي
             </h1>
