@@ -419,7 +419,7 @@ function LayoutContent({ children, currentPageName }) {
                 <li className="flex items-center gap-2">
                   <Twitter className="w-4 h-4 text-[#C9A66B]" />
                   <a 
-                    href="https://x.com/bytlylmstbyt?s=11&t=Hgn--h3Qi8vMU1sgHC0Ntg" 
+                    href="https://x.com/bytlylmstbyt?s=21&t=Hgn--h3Qi8vMU1sgHC0Ntg" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="hover:text-[#C9A66B]"
