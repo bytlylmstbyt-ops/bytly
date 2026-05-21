@@ -11,6 +11,7 @@ const WHATSAPP_NUMBER = "966550028319";
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("مرحباً! أريد الاستفسار عن خدمات Bytly 🏠 | mybytly.com")}`;
 
 export default function ChatbotWidget() {
+  return null;
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
