@@ -75,13 +75,13 @@
           "created_by": "{{user.email}}"
         },
         {
+          "data.legal_consultant_id": "{{user.id}}"
+        },
+        {
           "data.contract_id": {
             "_filter": "Contract",
             "read": true
           }
-        },
-        {
-          "data.legal_consultant_id": "{{user.id}}"
         },
         {
           "user_condition": {
@@ -106,16 +106,9 @@
       ]
     },
     "delete": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }
