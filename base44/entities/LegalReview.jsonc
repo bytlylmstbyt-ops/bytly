@@ -78,8 +78,38 @@
     "create": {
       "created_by": "{{user.email}}"
     },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.legal_consultant_id": "{{user.id}}"
+        },
+        {
+          "data.project_id": {
+            "_filter": "Project",
+            "read": true
+          }
+        },
+        {
+          "data.complaint_id": {
+            "_filter": "Complaint",
+            "read": true
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
     "update": {
       "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
         {
           "data.legal_consultant_id": "{{user.id}}"
         },
