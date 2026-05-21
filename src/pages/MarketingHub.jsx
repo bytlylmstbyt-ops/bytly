@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -8,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Linkedin, Sparkles, Send, RefreshCw, CheckCircle, 
   Users, Briefcase, Share2, MessageSquare, Loader2, Copy, Check,
-  Twitter, Facebook, Instagram
+  Twitter, Facebook, Instagram, TrendingUp
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -178,6 +179,11 @@ export default function MarketingHub() {
             <h1 className="text-2xl font-bold text-slate-800">مركز التسويق</h1>
           </div>
           <p className="text-slate-500 text-sm">توليد ونشر المحتوى التسويقي بالذكاء الاصطناعي على منصات التواصل الاجتماعي</p>
+          <Link to="/SocialAnalytics">
+            <Button variant="outline" size="sm" className="mt-2 gap-1.5 text-xs">
+              <TrendingUp className="w-3.5 h-3.5" /> عرض تقرير التحليلات الأسبوعي
+            </Button>
+          </Link>
         </div>
 
         {/* Platform Selector */}
