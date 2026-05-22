@@ -46,7 +46,9 @@
     }
   ],
   "selected_skill_names": [],
-  "selected_workspace_skill_ids": [],
+  "selected_workspace_skill_ids": [
+    "69f2777f539735e6680e551c"
+  ],
   "telegram_greeting": "",
   "line_greeting": "",
   "name": "bytly_advisor"
