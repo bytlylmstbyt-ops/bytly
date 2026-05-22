@@ -15,7 +15,7 @@ import { AdSidebarSection } from "@/components/ads/SmartAdCard";
 import { useAds } from "@/hooks/useAds";
 import ProjectChat from "@/components/project/ProjectChat";
 import MilestoneInvoicePanel from "@/components/invoices/MilestoneInvoicePanel";
-import EscrowPanel from "@/components/escrow/EscrowPanel";
+import EscrowTracker from "@/components/escrow/EscrowTracker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -783,7 +783,7 @@ export default function ProjectDetails() {
 
               {/* Escrow Panel - Always show for in_progress or when escrow exists */}
               {(project.escrow_status && project.escrow_status !== 'none') || project.status === 'in_progress' ? (
-                <EscrowPanel
+                <EscrowTracker
                   project={project}
                   proposalId={proposals.find(p => p.status === 'accepted')?.id}
                   isClient={user && project.created_by === user.email}
