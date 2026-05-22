@@ -34,5 +34,20 @@
     "scope": "both",
     "instructions": null
   },
+  "context_files": [],
+  "app_user_connector_configs": [
+    {
+      "connector_id": "69f278ae8f6a15564ef64fb5",
+      "enabled": true
+    },
+    {
+      "connector_id": "69f27849b9dd687a1a69c88b",
+      "enabled": true
+    }
+  ],
+  "selected_skill_names": [],
+  "selected_workspace_skill_ids": [],
+  "telegram_greeting": "",
+  "line_greeting": "",
   "name": "bytly_advisor"
 }
