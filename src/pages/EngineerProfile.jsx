@@ -13,13 +13,14 @@ import AppointmentModal from "@/components/appointments/AppointmentModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Progress } from "@/components/ui/progress";
+
 import {
   Dialog,
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import EngineerReviewForm from "@/components/reviews/EngineerReviewForm";
+import RatingStats from "@/components/reviews/RatingStats";
 
 export default function EngineerProfile() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -143,11 +144,7 @@ export default function EngineerProfile() {
     );
   }
 
-  const ratingBreakdown = {
-    quality: engineer.rating || 0,
-    communication: reviews.length ? reviews.reduce((acc, r) => acc + (r.communication_rating || 0), 0) / reviews.length : 0,
-    delivery: reviews.length ? reviews.reduce((acc, r) => acc + (r.delivery_rating || 0), 0) / reviews.length : 0
-  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30">
@@ -524,32 +521,51 @@ export default function EngineerProfile() {
                 </CardHeader>
                 <CardContent>
                   {reviews.length > 0 ? (
-                    <div className="space-y-6">
+                    <div className="space-y-5">
                       {reviews.map((review, index) => (
-                        <div key={review.id} className={`${index > 0 ? "border-t pt-6" : ""}`}>
-                          <div className="flex items-start gap-4">
-                            <Avatar className="w-12 h-12">
-                              <AvatarFallback className="bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] text-white">
-                                {review.client_id?.charAt(0) || "E"}
+                        <div key={review.id} className={`p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-amber-50/30 hover:border-amber-100 transition-all`}>
+                          <div className="flex items-start gap-3">
+                            <Avatar className="w-11 h-11 flex-shrink-0">
+                              <AvatarFallback className="bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] text-white font-bold">
+                                {String.fromCharCode(65 + (index % 26))}
                               </AvatarFallback>
                             </Avatar>
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between mb-1">
-                                <div className="flex">
-                                  {[1, 2, 3, 4, 5].map(star => (
-                                    <Star key={star} className={`w-4 h-4 ${star <= review.rating ? "fill-amber-400 text-amber-400" : "text-slate-300"}`} />
-                                  ))}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
+                                <div className="flex items-center gap-2">
+                                  <div className="flex">
+                                    {[1, 2, 3, 4, 5].map(star => (
+                                      <Star key={star} className={`w-4 h-4 ${star <= review.rating ? "fill-amber-400 text-amber-400" : "text-slate-300"}`} />
+                                    ))}
+                                  </div>
+                                  <span className="text-sm font-bold text-amber-600">{review.rating}/5</span>
                                 </div>
-                                <span className="text-sm text-slate-500">
-                                  {new Date(review.created_date).toLocaleDateString("ar")}
+                                <span className="text-xs text-slate-400">
+                                  {new Date(review.created_date).toLocaleDateString("ar-SA", { year: "numeric", month: "short", day: "numeric" })}
                                 </span>
                               </div>
-                              {review.comment && <p className="text-slate-600 mb-2">{review.comment}</p>}
-                              <div className="flex gap-3 text-xs text-slate-400">
-                                {review.quality_rating > 0 && <span>جودة: {review.quality_rating}/5</span>}
-                                {review.communication_rating > 0 && <span>تواصل: {review.communication_rating}/5</span>}
-                                {review.delivery_rating > 0 && <span>مواعيد: {review.delivery_rating}/5</span>}
-                              </div>
+                              {review.comment && (
+                                <p className="text-slate-700 text-sm leading-relaxed mb-3">{review.comment}</p>
+                              )}
+                              {(review.quality_rating > 0 || review.communication_rating > 0 || review.delivery_rating > 0) && (
+                                <div className="flex flex-wrap gap-2">
+                                  {review.quality_rating > 0 && (
+                                    <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full border border-blue-100">
+                                      🏆 جودة {review.quality_rating}/5
+                                    </span>
+                                  )}
+                                  {review.communication_rating > 0 && (
+                                    <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-100">
+                                      💬 تواصل {review.communication_rating}/5
+                                    </span>
+                                  )}
+                                  {review.delivery_rating > 0 && (
+                                    <span className="inline-flex items-center gap-1 text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full border border-purple-100">
+                                      ⏱️ مواعيد {review.delivery_rating}/5
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -568,40 +584,9 @@ export default function EngineerProfile() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Rating Breakdown */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-            >
-              <Card className="border-0 shadow-lg">
-                <CardHeader>
-                  <CardTitle className="text-lg">تفاصيل التقييم</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>جودة العمل</span>
-                      <span>{ratingBreakdown.quality.toFixed(1)}</span>
-                    </div>
-                    <Progress value={ratingBreakdown.quality * 20} className="h-2" />
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>التواصل</span>
-                      <span>{ratingBreakdown.communication.toFixed(1)}</span>
-                    </div>
-                    <Progress value={ratingBreakdown.communication * 20} className="h-2" />
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>الالتزام بالمواعيد</span>
-                      <span>{ratingBreakdown.delivery.toFixed(1)}</span>
-                    </div>
-                    <Progress value={ratingBreakdown.delivery * 20} className="h-2" />
-                  </div>
-                </CardContent>
-              </Card>
+            {/* Rating Stats */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+              <RatingStats engineer={engineer} reviews={reviews} />
             </motion.div>
 
             {/* TikTok Verified Card */}
