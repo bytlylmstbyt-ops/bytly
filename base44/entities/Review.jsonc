@@ -14,13 +14,21 @@
       "type": "string",
       "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0634\u0631\u0648\u0639"
     },
+    "milestone_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0631\u062d\u0644\u0629 \u0627\u0644\u0645\u0642\u064a\u064e\u0651\u0645\u0629"
+    },
+    "milestone_title": {
+      "type": "string",
+      "description": "\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0645\u0631\u062d\u0644\u0629"
+    },
+    "conversation_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0645\u062d\u0627\u062f\u062b\u0629 Bytly AI \u0644\u0644\u062a\u0642\u064a\u064a\u0645"
+    },
     "rating": {
       "type": "number",
-      "description": "\u0627\u0644\u062a\u0642\u064a\u064a\u0645 \u0645\u0646 5"
-    },
-    "comment": {
-      "type": "string",
-      "description": "\u0627\u0644\u062a\u0639\u0644\u064a\u0642"
+      "description": "\u0627\u0644\u062a\u0642\u064a\u064a\u0645 \u0627\u0644\u0639\u0627\u0645 \u0645\u0646 5"
     },
     "quality_rating": {
       "type": "number",
@@ -32,7 +40,30 @@
     },
     "delivery_rating": {
       "type": "number",
-      "description": "\u062a\u0642\u064a\u064a\u0645 \u0627\u0644\u062a\u0633\u0644\u064a\u0645"
+      "description": "\u062a\u0642\u064a\u064a\u0645 \u0627\u0644\u0627\u0644\u062a\u0632\u0627\u0645 \u0628\u0627\u0644\u0645\u0648\u0627\u0639\u064a\u062f"
+    },
+    "comment": {
+      "type": "string",
+      "description": "\u0627\u0644\u062a\u0639\u0644\u064a\u0642 \u0627\u0644\u0645\u0644\u062e\u0635"
+    },
+    "sentiment": {
+      "type": "string",
+      "enum": [
+        "positive",
+        "neutral",
+        "negative"
+      ],
+      "description": "\u0646\u062a\u064a\u062c\u0629 \u0627\u0644\u062a\u062d\u0644\u064a\u0644 \u0627\u0644\u0639\u0627\u0637\u0641\u064a"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending_response",
+        "completed",
+        "skipped"
+      ],
+      "default": "pending_response",
+      "description": "\u062d\u0627\u0644\u0629 \u0627\u0644\u062a\u0642\u064a\u064a\u0645"
     },
     "description": {
       "type": "string",
@@ -49,7 +80,6 @@
     "create": {
       "created_by": "{{user.email}}"
     },
-    "read": true,
     "update": {
       "$or": [
         {
