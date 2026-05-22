@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "./utils";
 import { base44 } from "@/api/base44Client";
-import ChatbotWidget from "@/components/chatbot/ChatbotWidget";
+import BytlyAdvisorChat from "@/components/chatbot/BytlyAdvisorChat";
 import MessageNotificationBadge from "@/components/notifications/MessageNotificationBadge";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { LanguageProvider, useLanguage } from "@/components/i18n/LanguageContext";
@@ -324,8 +324,8 @@ function LayoutContent({ children, currentPageName }) {
         {children}
       </main>
 
-      {/* Chatbot Widget */}
-      <ChatbotWidget />
+      {/* Bytly AI Advisor */}
+      <BytlyAdvisorChat />
 
       {/* Footer */}
       <footer className="bg-[#4A3F35] text-white">
