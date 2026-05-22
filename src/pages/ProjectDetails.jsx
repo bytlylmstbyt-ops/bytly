@@ -9,6 +9,7 @@ import {
   Star, Download, Eye, ArrowLeft, Scale, Upload, X, Paperclip, Kanban
 } from "lucide-react";
 import ContractGenerator from "@/components/contracts/ContractGenerator";
+import ProposalComparison from "@/components/proposals/ProposalComparison";
 import ProjectChatbot from "@/components/chatbot/ProjectChatbot";
 import { AdSidebarSection } from "@/components/ads/SmartAdCard";
 import { useAds } from "@/hooks/useAds";
@@ -575,6 +576,21 @@ export default function ProjectDetails() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
+                  {/* Proposal Comparison Tool */}
+                  {proposals.length >= 2 && user && project.created_by === user.email && (
+                    <ProposalComparison
+                      proposals={proposals}
+                      engineers={engineers}
+                      projectBudgetMin={project.budget_min}
+                      projectBudgetMax={project.budget_max}
+                      onAccept={handleAcceptProposal}
+                      isClient={user && project.created_by === user.email}
+                      projectStatus={project.status}
+                    />
+                  )}
+                  {proposals.length >= 2 && user && project.created_by === user.email && (
+                    <div className="my-5 border-t border-slate-100" />
+                  )}
                   {proposals.length > 0 ? (
                     <div className="space-y-4">
                       {proposals.map((proposal) => {
