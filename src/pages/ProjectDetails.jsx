@@ -15,6 +15,7 @@ import { AdSidebarSection } from "@/components/ads/SmartAdCard";
 import { useAds } from "@/hooks/useAds";
 import ProjectChat from "@/components/project/ProjectChat";
 import MilestoneInvoicePanel from "@/components/invoices/MilestoneInvoicePanel";
+import MeetCallButton from "@/components/project/MeetCallButton";
 import EscrowTracker from "@/components/escrow/EscrowTracker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -791,6 +792,11 @@ export default function ProjectDetails() {
                   onUpdate={loadData}
                 />
               ) : null}
+
+              {/* Google Meet Call - For in_progress projects, owner only */}
+              {project?.status === "in_progress" && user && project.created_by === user.email && (
+                <MeetCallButton project={project} currentUser={user} />
+              )}
 
               {/* Kanban Board - For in progress projects */}
                {project?.status === "in_progress" && (
