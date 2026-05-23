@@ -24,6 +24,7 @@ import EngineerReviews from './pages/EngineerReviews';
 import Certificates from './pages/Certificates';
 import RequestQuote from './pages/RequestQuote';
 import BuildingProgress from './pages/BuildingProgress';
+import PermitApplication from './pages/PermitApplication';
 import CostEstimator from './pages/CostEstimator';
 import ConstructionTracker from './pages/ConstructionTracker';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
@@ -80,6 +81,7 @@ const AuthenticatedApp = () => {
         />
       ))}
       <Route path="/BuildingProgress" element={<LayoutWrapper currentPageName="BuildingProgress"><BuildingProgress /></LayoutWrapper>} />
+      <Route path="/PermitApplication" element={<LayoutWrapper currentPageName="PermitApplication"><PermitApplication /></LayoutWrapper>} />
       <Route path="/CostEstimator" element={<LayoutWrapper currentPageName="CostEstimator"><CostEstimator /></LayoutWrapper>} />
       <Route path="/ConstructionTracker" element={<LayoutWrapper currentPageName="ConstructionTracker"><ConstructionTracker /></LayoutWrapper>} />
       <Route path="/TechnicalResources" element={<LayoutWrapper currentPageName="TechnicalResources"><TechnicalResources /></LayoutWrapper>} />

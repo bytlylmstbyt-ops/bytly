@@ -1,0 +1,221 @@
+{
+  "name": "PermitApplication",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0639\u0645\u064a\u0644"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "\u0627\u0633\u0645 \u0627\u0644\u0639\u0645\u064a\u0644"
+    },
+    "client_email": {
+      "type": "string",
+      "description": "\u0628\u0631\u064a\u062f \u0627\u0644\u0639\u0645\u064a\u0644"
+    },
+    "client_phone": {
+      "type": "string",
+      "description": "\u0647\u0627\u062a\u0641 \u0627\u0644\u0639\u0645\u064a\u0644"
+    },
+    "engineer_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0647\u0646\u062f\u0633 \u0627\u0644\u0645\u0639\u062a\u0645\u062f"
+    },
+    "engineer_name": {
+      "type": "string",
+      "description": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0647\u0646\u062f\u0633"
+    },
+    "engineer_balady_number": {
+      "type": "string",
+      "description": "\u0631\u0642\u0645 \u0627\u0639\u062a\u0645\u0627\u062f \u0627\u0644\u0645\u0647\u0646\u062f\u0633 \u0641\u064a \u0628\u0644\u062f\u064a"
+    },
+    "project_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0634\u0631\u0648\u0639 \u0627\u0644\u0645\u0631\u062a\u0628\u0637"
+    },
+    "permit_type": {
+      "type": "string",
+      "enum": [
+        "new_building",
+        "extension",
+        "renovation",
+        "demolition",
+        "fence",
+        "pool"
+      ],
+      "description": "\u0646\u0648\u0639 \u0627\u0644\u0631\u062e\u0635\u0629"
+    },
+    "building_type": {
+      "type": "string",
+      "enum": [
+        "villa",
+        "apartment",
+        "commercial",
+        "industrial",
+        "mixed"
+      ],
+      "description": "\u0646\u0648\u0639 \u0627\u0644\u0645\u0628\u0646\u0649"
+    },
+    "land_number": {
+      "type": "string",
+      "description": "\u0631\u0642\u0645 \u0627\u0644\u0642\u0637\u0639\u0629"
+    },
+    "plan_number": {
+      "type": "string",
+      "description": "\u0631\u0642\u0645 \u0627\u0644\u0645\u062e\u0637\u0637"
+    },
+    "city": {
+      "type": "string",
+      "description": "\u0627\u0644\u0645\u062f\u064a\u0646\u0629"
+    },
+    "district": {
+      "type": "string",
+      "description": "\u0627\u0644\u062d\u064a"
+    },
+    "land_area": {
+      "type": "number",
+      "description": "\u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0623\u0631\u0636 \u0645\u00b2"
+    },
+    "building_area": {
+      "type": "number",
+      "description": "\u0645\u0633\u0627\u062d\u0629 \u0627\u0644\u0628\u0646\u0627\u0621 \u0645\u00b2"
+    },
+    "floors_count": {
+      "type": "number",
+      "description": "\u0639\u062f\u062f \u0627\u0644\u0637\u0648\u0627\u0628\u0642"
+    },
+    "drawings_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u0645\u0644\u0641\u0627\u062a \u0627\u0644\u0645\u062e\u0637\u0637\u0627\u062a \u0627\u0644\u0645\u0639\u062a\u0645\u062f\u0629"
+    },
+    "soil_report_file": {
+      "type": "string",
+      "description": "\u062a\u0642\u0631\u064a\u0631 \u0627\u0644\u062a\u0631\u0628\u0629"
+    },
+    "ownership_deed_file": {
+      "type": "string",
+      "description": "\u0648\u062b\u064a\u0642\u0629 \u0627\u0644\u0645\u0644\u0643\u064a\u0629"
+    },
+    "balady_fee": {
+      "type": "number",
+      "description": "\u0631\u0633\u0648\u0645 \u0627\u0644\u0628\u0644\u062f\u064a\u0629 \u0627\u0644\u0645\u062d\u0633\u0648\u0628\u0629"
+    },
+    "engineer_fee": {
+      "type": "number",
+      "description": "\u0623\u062a\u0639\u0627\u0628 \u0627\u0644\u0645\u0647\u0646\u062f\u0633"
+    },
+    "bytly_commission": {
+      "type": "number",
+      "description": "\u0639\u0645\u0648\u0644\u0629 \u0628\u064a\u062a\u0644\u064a"
+    },
+    "total_amount": {
+      "type": "number",
+      "description": "\u0627\u0644\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0643\u0644\u064a"
+    },
+    "payment_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "paid",
+        "failed"
+      ],
+      "default": "pending",
+      "description": "\u062d\u0627\u0644\u0629 \u0627\u0644\u062f\u0641\u0639"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "submitted",
+        "under_review",
+        "balady_submitted",
+        "approved",
+        "rejected",
+        "issued"
+      ],
+      "default": "draft",
+      "description": "\u062d\u0627\u0644\u0629 \u0627\u0644\u0637\u0644\u0628"
+    },
+    "balady_reference_number": {
+      "type": "string",
+      "description": "\u0631\u0642\u0645 \u0645\u0631\u062c\u0639 \u0628\u0644\u062f\u064a"
+    },
+    "permit_number": {
+      "type": "string",
+      "description": "\u0631\u0642\u0645 \u0631\u062e\u0635\u0629 \u0627\u0644\u0628\u0646\u0627\u0621 \u0627\u0644\u0635\u0627\u062f\u0631\u0629"
+    },
+    "permit_file_url": {
+      "type": "string",
+      "description": "\u0631\u0627\u0628\u0637 \u0627\u0644\u0631\u062e\u0635\u0629 \u0627\u0644\u0631\u0642\u0645\u064a\u0629"
+    },
+    "permit_issue_date": {
+      "type": "string",
+      "format": "date",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0625\u0635\u062f\u0627\u0631 \u0627\u0644\u0631\u062e\u0635\u0629"
+    },
+    "permit_expiry_date": {
+      "type": "string",
+      "format": "date",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0627\u0646\u062a\u0647\u0627\u0621 \u0627\u0644\u0631\u062e\u0635\u0629"
+    },
+    "rejection_reason": {
+      "type": "string",
+      "description": "\u0633\u0628\u0628 \u0627\u0644\u0631\u0641\u0636"
+    },
+    "notes": {
+      "type": "string",
+      "description": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a"
+    }
+  },
+  "required": [
+    "client_name",
+    "client_email",
+    "permit_type",
+    "building_type",
+    "land_area"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.client_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.client_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

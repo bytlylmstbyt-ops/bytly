@@ -147,6 +147,12 @@ function LayoutContent({ children, currentPageName }) {
                 متابعة البناء
               </Link>
               <Link 
+                to="/PermitApplication" 
+                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] flex items-center gap-1 ${currentPageName === 'PermitApplication' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
+              >
+                🏛️ رخصة البناء
+              </Link>
+              <Link 
                 to="/EngineerMatcher" 
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] flex items-center gap-1 ${currentPageName === 'EngineerMatcher' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
