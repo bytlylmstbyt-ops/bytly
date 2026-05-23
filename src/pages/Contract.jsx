@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { 
   FileText, Download, CheckCircle, AlertCircle, 
   Loader2, Calendar, DollarSign, User, Building2,
-  Scale, Shield, Clock, Send, Printer
+  Scale, Shield, Clock, Send, Printer, PenLine
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import ElectronicSignModal from "@/components/contracts/ElectronicSignModal";
 
 export default function ContractPage() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -28,6 +29,7 @@ export default function ContractPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSigning, setIsSigning] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [showSignModal, setShowSignModal] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -560,39 +562,43 @@ export default function ContractPage() {
         </Card>
 
         {/* Signature Section */}
-        {contract && !contract.client_signature && !contract.engineer_signature && (
-          <Card className="border-0 shadow-xl print:hidden">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-3 mb-6">
-                <Checkbox 
-                  id="agree" 
-                  checked={agreed}
-                  onCheckedChange={setAgreed}
-                />
-                <Label htmlFor="agree" className="text-sm leading-relaxed cursor-pointer">
-                  أقر بأنني قرأت هذا العقد وفهمت جميع بنوده وشروطه، وأوافق عليها بشكل كامل. 
-                  كما أقر بأن التوقيع الإلكتروني له نفس القوة القانونية للتوقيع اليدوي.
-                </Label>
-              </div>
-              <Button
-                onClick={handleSign}
-                disabled={!agreed || isSigning}
-                className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white py-6 text-lg"
-              >
-                {isSigning ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin ml-2" />
-                    جاري التوقيع...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-5 h-5 ml-2" />
-                    التوقيع على العقد
-                  </>
-                )}
-              </Button>
-            </CardContent>
-          </Card>
+        {contract && (() => {
+          const isClient   = currentUser?.email === client?.email;
+          const isEngineer = currentUser?.email === engineer?.email;
+          const mySign = isClient ? contract.client_signature : contract.engineer_signature;
+          const canSign = (isClient || isEngineer) && !mySign &&
+            ["pending_signature", "draft"].includes(contract.status);
+          return canSign ? (
+            <Card className="border-0 shadow-xl print:hidden">
+              <CardContent className="p-6 text-center">
+                <PenLine className="w-10 h-10 mx-auto mb-3 text-[#d4a574]" />
+                <p className="font-semibold text-[#1a1a2e] mb-1">بانتظار توقيعك</p>
+                <p className="text-slate-500 text-sm mb-5">
+                  أنت {isClient ? "العميل – الطرف الأول" : "المهندس – الطرف الثاني"}
+                </p>
+                <Button
+                  onClick={() => setShowSignModal(true)}
+                  className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white px-8 py-5 text-base gap-2"
+                >
+                  <PenLine className="w-5 h-5" />
+                  وقّع الآن
+                </Button>
+              </CardContent>
+            </Card>
+          ) : null;
+        })()}
+
+        {/* Electronic Sign Modal */}
+        {showSignModal && contract && (
+          <ElectronicSignModal
+            contract={contract}
+            project={project}
+            client={client}
+            engineer={engineer}
+            currentUser={currentUser}
+            onDone={() => { setShowSignModal(false); loadData(); }}
+            onClose={() => setShowSignModal(false)}
+          />
         )}
 
         {/* Contract Signed */}
