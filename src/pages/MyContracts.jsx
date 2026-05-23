@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import ElectronicSignModal from "@/components/contracts/ElectronicSignModal";
 
 // ─── helpers ───────────────────────────────────────────────────────────────
 const STATUS_MAP = {
@@ -628,12 +629,16 @@ export default function MyContracts() {
           </div>
         )}
 
-        {/* Sign Dialog (global) */}
+        {/* Electronic Sign Modal (global) */}
         {signingContract && (
-          <SigningModal
-            {...signingContract}
+          <ElectronicSignModal
+            contract={signingContract.contract}
+            project={signingContract.project}
+            client={signingContract.client}
+            engineer={signingContract.engineer}
             currentUser={currentUser}
             onDone={() => { setSigningContract(null); loadAll(); }}
+            onClose={() => setSigningContract(null)}
           />
         )}
       </div>
@@ -641,54 +646,4 @@ export default function MyContracts() {
   );
 }
 
-// ─── Inline Sign Modal ──────────────────────────────────────────────────────
-function SigningModal({ contract, client, engineer, currentUser, onDone }) {
-  const [agreed, setAgreed] = useState(false);
-  const [signing, setSigning] = useState(false);
-  const isClient = currentUser?.email === client?.email;
-
-  const handleSign = async () => {
-    setSigning(true);
-    const updates = {};
-    if (isClient) { updates.client_signature = true; updates.client_signature_date = new Date().toISOString(); }
-    else           { updates.engineer_signature = true; updates.engineer_signature_date = new Date().toISOString(); }
-    const bothSigned = (isClient && contract.engineer_signature) || (!isClient && contract.client_signature);
-    if (bothSigned) { updates.status = "active"; }
-    else { updates.status = "pending_signature"; }
-    await base44.entities.Contract.update(contract.id, updates);
-    setSigning(false);
-    onDone();
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" dir="rtl"
-      onClick={onDone}>
-      <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-        className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md"
-        onClick={e => e.stopPropagation()}>
-        <div className="flex items-center gap-2 mb-4">
-          <Scale className="w-5 h-5 text-[#d4a574]" />
-          <h2 className="font-bold text-[#1a1a2e]">التوقيع الإلكتروني</h2>
-        </div>
-        <div className="bg-slate-50 rounded-xl p-4 text-sm text-slate-700 space-y-1 mb-4">
-          <p><span className="font-semibold">العقد:</span> {contract.contract_number}</p>
-          <p><span className="font-semibold">القيمة:</span> {contract.total_amount?.toLocaleString()} ر.س</p>
-          <p><span className="font-semibold">أنت توقع بصفة:</span> {isClient ? "العميل" : "المهندس"}</p>
-        </div>
-        <div className="flex items-start gap-3 mb-5">
-          <Checkbox id="agr" checked={agreed} onCheckedChange={setAgreed} />
-          <Label htmlFor="agr" className="text-sm leading-relaxed cursor-pointer">
-            أقر بقراءة العقد والموافقة على بنوده. التوقيع الإلكتروني ملزم قانونياً.
-          </Label>
-        </div>
-        <div className="flex gap-3">
-          <Button variant="outline" className="flex-1" onClick={onDone}>إلغاء</Button>
-          <Button disabled={!agreed || signing} onClick={handleSign}
-            className="flex-1 bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
-            {signing ? <><Loader2 className="w-4 h-4 animate-spin ml-2" />جاري...</> : <><CheckCircle className="w-4 h-4 ml-2" />توقيع</>}
-          </Button>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
+// SigningModal replaced by ElectronicSignModal component
