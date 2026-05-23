@@ -12,7 +12,7 @@ import PermitFeeBreakdown, { calculatePermitFees } from '@/components/permits/Pe
 import PermitStatusTracker from '@/components/permits/PermitStatusTracker';
 import {
   Building2, FileText, Upload, CheckCircle2, ArrowLeft, ArrowRight,
-  Loader2, Award, Phone, MapPin, Layers, AlertCircle, RefreshCw, Plus
+  Loader2, Award, Phone, MapPin, Layers, AlertCircle, RefreshCw, Plus, CreditCard
 } from 'lucide-react';
 
 const PERMIT_TYPES = [
@@ -45,6 +45,7 @@ export default function PermitApplication() {
   const [showNew, setShowNew] = useState(false);
   const [selectedApp, setSelectedApp] = useState(null);
   const [uploadingFiles, setUploadingFiles] = useState({});
+  const [payLoading, setPayLoading] = useState(false);
 
   const [form, setForm] = useState({
     permit_type: '',
@@ -89,6 +90,20 @@ export default function PermitApplication() {
   }, []);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const handlePay = async (app) => {
+    setPayLoading(true);
+    const res = await base44.functions.invoke('permitPayment', {
+      action: 'create_checkout',
+      permit_id: app.id,
+    });
+    if (res.data?.checkout_url) {
+      window.location.href = res.data.checkout_url;
+    } else {
+      alert(res.data?.error || 'حدث خطأ في إنشاء جلسة الدفع');
+    }
+    setPayLoading(false);
+  };
 
   const uploadFile = async (e, key) => {
     const file = e.target.files[0];
@@ -268,6 +283,25 @@ export default function PermitApplication() {
                         <p className="font-semibold text-slate-700">{selectedApp.land_area} م²</p>
                       </div>
                     </div>
+                    {/* Pay Button */}
+                    {selectedApp.payment_status !== 'paid' && selectedApp.total_amount > 0 && (
+                      <Button
+                        className="w-full bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white gap-2 py-5 text-base font-bold"
+                        onClick={() => handlePay(selectedApp)}
+                        disabled={payLoading}
+                      >
+                        {payLoading
+                          ? <Loader2 className="w-5 h-5 animate-spin" />
+                          : <><CreditCard className="w-5 h-5" /> ادفع الآن — {(selectedApp.total_amount || 0).toLocaleString('ar-SA')} ر.س</>
+                        }
+                      </Button>
+                    )}
+                    {selectedApp.payment_status === 'paid' && (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-2 text-center text-sm text-green-700 font-semibold">
+                        ✅ تم الدفع — طلبك قيد المراجعة
+                      </div>
+                    )}
+
                     {selectedApp.balady_reference_number && (
                       <div className="bg-purple-50 border border-purple-200 rounded-lg p-2.5 text-sm">
                         <p className="text-purple-600 text-xs">رقم مرجع بلدي</p>
