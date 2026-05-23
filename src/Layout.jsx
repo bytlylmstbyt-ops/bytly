@@ -95,7 +95,7 @@ function LayoutContent({ children, currentPageName }) {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-8">
+            <nav className="hidden md:flex items-center gap-6">
               <Link 
                 to={createPageUrl("Home")} 
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'Home' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
@@ -114,63 +114,68 @@ function LayoutContent({ children, currentPageName }) {
               >
                 الشركات الاستشارية
               </Link>
-
               <Link 
                 to={createPageUrl("Projects")} 
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'Projects' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
-                {t('nav.projects')}
+                المشاريع
               </Link>
               <Link 
                 to={createPageUrl("Gallery")} 
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'Gallery' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
-                {t('nav.gallery')}
-              </Link>
-              <Link 
-                to="/TechnicalResources" 
-                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'TechnicalResources' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
-              >
-                المعايير الفنية
+                معرض الأعمال
               </Link>
 
-              <Link 
-                to="/CostEstimator" 
-                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'CostEstimator' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
-              >
-                حاسبة التكاليف
-              </Link>
-              <Link 
-                to="/ConstructionTracker" 
-                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'ConstructionTracker' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
-              >
-                متابعة البناء
-              </Link>
-              <Link 
-                to="/PermitApplication" 
-                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] flex items-center gap-1 ${currentPageName === 'PermitApplication' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
-              >
-                🏛️ رخصة البناء
-              </Link>
-              <Link 
-                to="/EngineerMatcher" 
-                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] flex items-center gap-1 ${currentPageName === 'EngineerMatcher' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
-              >
-                ✨ ابحث عن مهندسك
-              </Link>
-              <Link 
-                to={createPageUrl("DesignMarketplace")} 
-                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'DesignMarketplace' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
-              >
-                {t('nav.designMarketplace')}
-              </Link>
-              <Link 
-                to="/AIEngineers" 
-                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] flex items-center gap-1 ${currentPageName === 'AIEngineers' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
-              >
-                <Bot className="w-4 h-4" />
-                Bytly AI
-              </Link>
+              {/* Bytly Sections Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className={`flex items-center gap-1 text-sm font-medium transition-colors hover:text-[#C9A66B] focus:outline-none ${['CostEstimator','ConstructionTracker','TechnicalResources','PermitApplication','EngineerMatcher','DesignMarketplace','AIEngineers'].includes(currentPageName) ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}>
+                    أقسام بيتلي
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 mt-2">
+                  <DropdownMenuItem asChild>
+                    <Link to="/CostEstimator" className="flex items-center gap-2 cursor-pointer">
+                      🧮 حاسبة التكاليف
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/ConstructionTracker" className="flex items-center gap-2 cursor-pointer">
+                      🏗️ متابعة البناء
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/TechnicalResources" className="flex items-center gap-2 cursor-pointer">
+                      📐 المعايير الفنية
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/PermitApplication" className="flex items-center gap-2 cursor-pointer">
+                      🏛️ رخصة البناء
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/EngineerMatcher" className="flex items-center gap-2 cursor-pointer">
+                      ✨ ابحث عن مهندسك
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to={createPageUrl("DesignMarketplace")} className="flex items-center gap-2 cursor-pointer">
+                      🎨 متجر التصاميم
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/AIEngineers" className="flex items-center gap-2 cursor-pointer">
+                      <Bot className="w-4 h-4 text-[#C9A66B]" />
+                      Bytly AI
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <Link 
                 to={createPageUrl("Messages")} 
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] flex items-center gap-1.5 ${currentPageName === 'Messages' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
@@ -277,49 +282,22 @@ function LayoutContent({ children, currentPageName }) {
         {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden glass-effect border-t">
-            <div className="px-4 py-4 space-y-2">
-              <Link 
-                to={createPageUrl("Home")} 
-                className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {t('nav.home')}
-              </Link>
-              <Link 
-                to={createPageUrl("Engineers")} 
-                className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {t('nav.engineers')}
-              </Link>
-              <Link 
-                to={createPageUrl("ConsultingFirms")} 
-                className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                الشركات الاستشارية
-              </Link>
-              <Link 
-                to={createPageUrl("Projects")} 
-                className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {t('nav.projects')}
-              </Link>
-              <Link 
-                to={createPageUrl("Gallery")} 
-                className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {t('nav.gallery')}
-              </Link>
-              <Link 
-                to={createPageUrl("DesignMarketplace")} 
-                className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                {t('nav.designMarketplace')}
-              </Link>
+            <div className="px-4 py-4 space-y-1">
+              <Link to={createPageUrl("Home")} className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700" onClick={() => setIsMenuOpen(false)}>{t('nav.home')}</Link>
+              <Link to={createPageUrl("Engineers")} className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700" onClick={() => setIsMenuOpen(false)}>{t('nav.engineers')}</Link>
+              <Link to={createPageUrl("ConsultingFirms")} className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700" onClick={() => setIsMenuOpen(false)}>الشركات الاستشارية</Link>
+              <Link to={createPageUrl("Projects")} className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700" onClick={() => setIsMenuOpen(false)}>المشاريع</Link>
+              <Link to={createPageUrl("Gallery")} className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700" onClick={() => setIsMenuOpen(false)}>معرض الأعمال</Link>
+              <Link to={createPageUrl("Messages")} className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700" onClick={() => setIsMenuOpen(false)}>المحادثات</Link>
+              {/* Bytly Sections group */}
+              <div className="pt-2 pb-1 px-4 text-xs font-semibold text-[#C9A66B] uppercase tracking-wide">أقسام بيتلي</div>
+              <Link to="/CostEstimator" className="block px-4 py-2.5 rounded-lg hover:bg-slate-100 text-slate-700 text-sm" onClick={() => setIsMenuOpen(false)}>🧮 حاسبة التكاليف</Link>
+              <Link to="/ConstructionTracker" className="block px-4 py-2.5 rounded-lg hover:bg-slate-100 text-slate-700 text-sm" onClick={() => setIsMenuOpen(false)}>🏗️ متابعة البناء</Link>
+              <Link to="/TechnicalResources" className="block px-4 py-2.5 rounded-lg hover:bg-slate-100 text-slate-700 text-sm" onClick={() => setIsMenuOpen(false)}>📐 المعايير الفنية</Link>
+              <Link to="/PermitApplication" className="block px-4 py-2.5 rounded-lg hover:bg-slate-100 text-slate-700 text-sm" onClick={() => setIsMenuOpen(false)}>🏛️ رخصة البناء</Link>
+              <Link to="/EngineerMatcher" className="block px-4 py-2.5 rounded-lg hover:bg-slate-100 text-slate-700 text-sm" onClick={() => setIsMenuOpen(false)}>✨ ابحث عن مهندسك</Link>
+              <Link to={createPageUrl("DesignMarketplace")} className="block px-4 py-2.5 rounded-lg hover:bg-slate-100 text-slate-700 text-sm" onClick={() => setIsMenuOpen(false)}>🎨 متجر التصاميم</Link>
+              <Link to="/AIEngineers" className="block px-4 py-2.5 rounded-lg hover:bg-slate-100 text-slate-700 text-sm" onClick={() => setIsMenuOpen(false)}>🤖 Bytly AI</Link>
             </div>
           </div>
         )}
