@@ -118,9 +118,6 @@
     "read": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
           "data.engineer_id": "{{user.id}}"
         },
         {
