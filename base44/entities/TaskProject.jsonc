@@ -67,13 +67,14 @@
     "read": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
           "data.owner_email": "{{user.email}}"
         },
         {
-          "data.members": "{{user.email}}"
+          "data.members": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
         },
         {
           "user_condition": {
@@ -84,9 +85,6 @@
     },
     "update": {
       "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
         {
           "data.owner_email": "{{user.email}}"
         },
@@ -99,9 +97,6 @@
     },
     "delete": {
       "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
         {
           "data.owner_email": "{{user.email}}"
         },
