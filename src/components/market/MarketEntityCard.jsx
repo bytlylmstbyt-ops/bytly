@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, MapPin, TrendingUp, Eye } from "lucide-react";
+import { Building2, MapPin, TrendingUp, Eye, MessageSquarePlus } from "lucide-react";
+import MarketContactModal from "@/components/market/MarketContactModal";
 
 export default function MarketEntityCard({ entity, onViewDetails }) {
+  const [showContact, setShowContact] = useState(false);
+
   const entityTypeLabels = {
     developer: "مطور عقاري",
     investor: "مستثمر"
@@ -76,16 +79,29 @@ export default function MarketEntityCard({ entity, onViewDetails }) {
         </p>
       </CardContent>
 
-      <CardFooter>
+      <CardFooter className="flex gap-2">
         <Button 
-          className="w-full gap-2" 
+          className="flex-1 gap-2" 
           variant="outline"
           onClick={() => onViewDetails(entity)}
         >
           <Eye className="w-4 h-4" />
-          عرض التفاصيل
+          التفاصيل
+        </Button>
+        <Button
+          className="flex-1 gap-2 bg-[#c9a66b] hover:bg-[#b8935a] text-white"
+          onClick={() => setShowContact(true)}
+        >
+          <MessageSquarePlus className="w-4 h-4" />
+          تقديم طلب
         </Button>
       </CardFooter>
+
+      <MarketContactModal
+        entity={entity}
+        open={showContact}
+        onClose={() => setShowContact(false)}
+      />
     </Card>
   );
 }
