@@ -258,18 +258,18 @@ export default function AdminReportsPage() {
                     {reports.engineers.slice(0, 10).map((engineer, index) => (
                       <div
                         key={engineer.id}
-                        className="flex items-center justify-between p-4 bg-slate-50 rounded-xl"
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-slate-50 rounded-xl gap-3"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold">
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold shrink-0">
                             {index + 1}
                           </div>
-                          <div>
-                            <p className="font-bold text-[#1a1a2e]">{engineer.full_name}</p>
-                            <p className="text-sm text-slate-500">{engineer.specialization}</p>
+                          <div className="min-w-0">
+                            <p className="font-bold text-[#1a1a2e] truncate">{engineer.full_name}</p>
+                            <p className="text-sm text-slate-500 truncate">{engineer.specialization}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-6 text-sm">
+                        <div className="flex items-center gap-4 sm:gap-6 text-sm shrink-0">
                           <div className="text-center">
                             <p className="font-bold text-blue-600">{engineer.completedProjects}</p>
                             <p className="text-slate-500">مشروع</p>
@@ -306,18 +306,18 @@ export default function AdminReportsPage() {
                     {reports.clients.slice(0, 10).map((client, index) => (
                       <div
                         key={client.id}
-                        className="flex items-center justify-between p-4 bg-slate-50 rounded-xl"
+                        className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-slate-50 rounded-xl gap-3"
                       >
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                        <div className="flex items-center gap-4 min-w-0">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold shrink-0">
                             {index + 1}
                           </div>
-                          <div>
-                            <p className="font-bold text-[#1a1a2e]">{client.full_name}</p>
-                            <p className="text-sm text-slate-500">{client.email}</p>
+                          <div className="min-w-0">
+                            <p className="font-bold text-[#1a1a2e] truncate">{client.full_name}</p>
+                            <p className="text-sm text-slate-500 truncate">{client.email}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-6 text-sm">
+                        <div className="flex items-center gap-4 sm:gap-6 text-sm shrink-0">
                           <div className="text-center">
                             <p className="font-bold text-blue-600">{client.totalProjects}</p>
                             <p className="text-slate-500">مشاريع</p>

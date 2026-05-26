@@ -223,13 +223,13 @@ export default function BytlyAdvisorChat() {
                 <p className="text-amber-200 text-xs">مستشارك الهندسي الذكي ✨</p>
               </div>
               <div className="flex items-center gap-1">
-                <button onClick={handleReset} className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/20 text-white/70 hover:text-white transition-colors" title="محادثة جديدة">
+                <button onClick={handleReset} style={{ minWidth: 44, minHeight: 44 }} className="flex items-center justify-center rounded-lg hover:bg-white/20 text-white/70 hover:text-white transition-colors" title="محادثة جديدة">
                   <RotateCcw className="w-4 h-4" />
                 </button>
-                <button onClick={() => setIsMinimized(m => !m)} className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/20 text-white/70 hover:text-white transition-colors">
+                <button onClick={() => setIsMinimized(m => !m)} style={{ minWidth: 44, minHeight: 44 }} className="flex items-center justify-center rounded-lg hover:bg-white/20 text-white/70 hover:text-white transition-colors">
                   {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
                 </button>
-                <button onClick={() => setIsOpen(false)} className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/20 text-white/70 hover:text-white transition-colors">
+                <button onClick={() => setIsOpen(false)} style={{ minWidth: 44, minHeight: 44 }} className="flex items-center justify-center rounded-lg hover:bg-white/20 text-white/70 hover:text-white transition-colors">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -305,7 +305,8 @@ export default function BytlyAdvisorChat() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={isRecording ? stopRecording : startRecording}
-                      className={`p-2 rounded-xl transition-colors flex-shrink-0 ${isRecording ? "bg-red-100 text-red-600" : "bg-slate-100 text-slate-500 hover:bg-amber-100 hover:text-amber-700"}`}
+                      style={{ minWidth: 44, minHeight: 44 }}
+                      className={`flex items-center justify-center rounded-xl transition-colors flex-shrink-0 ${isRecording ? "bg-red-100 text-red-600" : "bg-slate-100 text-slate-500 hover:bg-amber-100 hover:text-amber-700"}`}
                     >
                       {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
                     </button>
@@ -323,8 +324,8 @@ export default function BytlyAdvisorChat() {
                       onClick={() => sendMessage()}
                       disabled={loading || !inputValue.trim()}
                       whileTap={{ scale: 0.9 }}
-                      className="p-2.5 rounded-xl text-white flex-shrink-0 disabled:opacity-40"
-                      style={{ background: "linear-gradient(135deg, #6B5D4F, #C9A66B)" }}
+                      className="flex items-center justify-center rounded-xl text-white flex-shrink-0 disabled:opacity-40"
+                      style={{ minWidth: 44, minHeight: 44, background: "linear-gradient(135deg, #6B5D4F, #C9A66B)" }}
                     >
                       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" style={{ transform: "scaleX(-1)" }} />}
                     </motion.button>

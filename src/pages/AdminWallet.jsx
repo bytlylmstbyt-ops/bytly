@@ -274,31 +274,29 @@ export default function AdminWalletPage() {
                   {engineers.map((engineer) => (
                     <div
                       key={engineer.id}
-                      className="flex items-center justify-between p-4 rounded-lg border hover:bg-slate-50"
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg border hover:bg-slate-50 gap-3"
                     >
-                      <div className="flex items-center gap-4 flex-1">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold">
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold shrink-0">
                           {engineer.full_name?.charAt(0) || "م"}
                         </div>
-                        <div className="flex-1">
-                          <p className="font-medium text-slate-900">{engineer.full_name}</p>
-                          <p className="text-sm text-slate-500">{engineer.email}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-slate-900 truncate">{engineer.full_name}</p>
+                          <p className="text-sm text-slate-500 truncate">{engineer.email}</p>
                         </div>
                       </div>
-                      <div className="text-left space-y-1">
-                        <div className="flex items-center gap-4">
-                          <div>
-                            <p className="text-xs text-slate-500">معلق</p>
-                            <p className="font-bold text-amber-600">
-                              {(engineer.pending_balance || 0).toLocaleString('ar-SA')} ر.س
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-slate-500">متاح</p>
-                            <p className="font-bold text-green-600">
-                              {(engineer.available_balance || 0).toLocaleString('ar-SA')} ر.س
-                            </p>
-                          </div>
+                      <div className="flex items-center gap-4 shrink-0">
+                        <div>
+                          <p className="text-xs text-slate-500">معلق</p>
+                          <p className="font-bold text-amber-600">
+                            {(engineer.pending_balance || 0).toLocaleString('ar-SA')} ر.س
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500">متاح</p>
+                          <p className="font-bold text-green-600">
+                            {(engineer.available_balance || 0).toLocaleString('ar-SA')} ر.س
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -319,18 +317,18 @@ export default function AdminWalletPage() {
                   {clients.map((client) => (
                     <div
                       key={client.id}
-                      className="flex items-center justify-between p-4 rounded-lg border hover:bg-slate-50"
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 rounded-lg border hover:bg-slate-50 gap-3"
                     >
-                      <div className="flex items-center gap-4 flex-1">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white font-bold">
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white font-bold shrink-0">
                           {client.full_name?.charAt(0) || "ع"}
                         </div>
-                        <div className="flex-1">
-                          <p className="font-medium text-slate-900">{client.full_name}</p>
-                          <p className="text-sm text-slate-500">{client.email}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-slate-900 truncate">{client.full_name}</p>
+                          <p className="text-sm text-slate-500 truncate">{client.email}</p>
                         </div>
                       </div>
-                      <div className="text-left">
+                      <div className="shrink-0">
                         <p className="text-xs text-slate-500 mb-1">الرصيد</p>
                         <p className="text-2xl font-bold text-slate-900">
                           {(client.wallet_balance || 0).toLocaleString('ar-SA')} ر.س
