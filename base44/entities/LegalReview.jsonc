@@ -90,12 +90,6 @@
           }
         },
         {
-          "data.complaint_id": {
-            "_filter": "Complaint",
-            "read": true
-          }
-        },
-        {
           "user_condition": {
             "role": "admin"
           }
