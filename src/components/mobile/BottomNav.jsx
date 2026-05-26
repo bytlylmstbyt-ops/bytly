@@ -1,6 +1,7 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, Users, Briefcase, LayoutDashboard } from "lucide-react";
+import { saveScrollPosition, restoreScrollPosition } from "@/hooks/useTabScrollPosition";
 
 const navItems = [
   { label: "الرئيسية", icon: Home, path: "/" },
@@ -11,6 +12,25 @@ const navItems = [
 
 export default function BottomNav() {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Restore scroll when landing on a tab page
+  useEffect(() => {
+    if (navItems.some(item => item.path === location.pathname)) {
+      restoreScrollPosition(location.pathname);
+    }
+  }, [location.pathname]);
+
+  const handleTabPress = (path) => {
+    // Save current page scroll before navigating away
+    saveScrollPosition(location.pathname);
+    // If tapping the active tab, scroll back to top
+    if (location.pathname === path) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      navigate(path);
+    }
+  };
 
   return (
     <nav
@@ -21,20 +41,18 @@ export default function BottomNav() {
         {navItems.map(({ label, icon: Icon, path }) => {
           const active = location.pathname === path;
           return (
-            <Link
+            <button
               key={path}
-              to={path}
-              /* min 44px tap target */
-              className={`flex flex-col items-center justify-center gap-0.5 flex-1 select-none transition-colors`}
+              onClick={() => handleTabPress(path)}
+              className="flex flex-col items-center justify-center gap-0.5 flex-1 select-none transition-colors"
               style={{ minHeight: 44, minWidth: 44, paddingTop: 8, paddingBottom: 8 }}
             >
               <Icon className={`w-5 h-5 ${active ? "text-[#C9A66B]" : "text-slate-400"}`} />
-              {/* min 14px nav text */}
               <span className={`text-[14px] font-medium leading-tight ${active ? "text-[#C9A66B]" : "text-slate-500"}`}>
                 {label}
               </span>
               {active && <span className="w-1 h-1 rounded-full bg-[#C9A66B]" />}
-            </Link>
+            </button>
           );
         })}
       </div>

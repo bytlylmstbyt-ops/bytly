@@ -31,6 +31,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useLanguage } from "@/components/i18n/LanguageContext";
+import PullToRefreshWrapper from "@/components/mobile/PullToRefreshWrapper";
 
 export default function Engineers() {
   const { t } = useLanguage();
@@ -115,6 +116,7 @@ export default function Engineers() {
   ].filter(Boolean).length;
 
   return (
+    <PullToRefreshWrapper onRefresh={loadEngineers} className="min-h-screen">
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30">
       {/* Hero Header */}
       <div className="bg-gradient-to-br from-[#1a1a2e] to-[#1a1a2e]/90 py-16">
@@ -431,5 +433,6 @@ export default function Engineers() {
         )}
       </div>
     </div>
+    </PullToRefreshWrapper>
   );
 }
