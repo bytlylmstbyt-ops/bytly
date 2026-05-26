@@ -119,13 +119,17 @@
     "read": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
           "data.client_email": "{{user.email}}"
         },
         {
           "data.scheduled_by": "{{user.email}}"
+        },
+        {
+          "data.attendees": {
+            "$in": [
+              "{{user.email}}"
+            ]
+          }
         },
         {
           "user_condition": {
@@ -136,12 +140,6 @@
     },
     "update": {
       "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.client_email": "{{user.email}}"
-        },
         {
           "data.scheduled_by": "{{user.email}}"
         },
@@ -155,10 +153,7 @@
     "delete": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.client_email": "{{user.email}}"
+          "data.scheduled_by": "{{user.email}}"
         },
         {
           "user_condition": {
