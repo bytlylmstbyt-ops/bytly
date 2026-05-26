@@ -57,6 +57,9 @@
     "read": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.requested_by": "{{user.email}}"
         },
         {
@@ -75,6 +78,9 @@
     "update": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.project_id": {
             "_filter": "Project",
             "update": true
@@ -88,9 +94,16 @@
       ]
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }
