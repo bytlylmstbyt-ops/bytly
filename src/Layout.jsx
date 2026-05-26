@@ -13,6 +13,9 @@ import {
   PlusCircle, ChevronDown, Instagram, Facebook, Mail, Phone, MessagesSquare, Scale, Linkedin, Twitter, Bot
 } from "lucide-react";
 import Logo from "@/components/Logo";
+import BottomNav from "@/components/mobile/BottomNav";
+import BackButton from "@/components/mobile/BackButton";
+import PageTransition from "@/components/mobile/PageTransition";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -89,10 +92,13 @@ function LayoutContent({ children, currentPageName }) {
       <header className="fixed top-0 left-0 right-0 z-50 glass-effect shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 md:h-20">
-            {/* Logo */}
-            <Link to={createPageUrl("Home")} className="flex items-center">
-              <Logo size="default" />
-            </Link>
+            {/* Back Button (mobile) + Logo */}
+            <div className="flex items-center gap-1">
+              <BackButton />
+              <Link to={createPageUrl("Home")} className="flex items-center">
+                <Logo size="default" />
+              </Link>
+            </div>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-6">
@@ -304,9 +310,14 @@ function LayoutContent({ children, currentPageName }) {
       </header>
 
       {/* Main Content */}
-      <main className="pt-16 md:pt-20 min-h-screen">
-        {children}
+      <main className="pt-16 md:pt-20 min-h-screen pb-16 md:pb-0 safe-area-wrapper">
+        <PageTransition>
+          {children}
+        </PageTransition>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNav />
 
       {/* Bytly AI Advisor */}
       <BytlyAdvisorChat />

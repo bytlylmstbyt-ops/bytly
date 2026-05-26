@@ -5,8 +5,15 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { 
   User, Mail, Phone, MapPin, Camera, Save, 
-  Loader2, Shield, Bell, Lock, Eye, EyeOff
+  Loader2, Shield, Bell, Lock, Eye, EyeOff, Trash2, AlertTriangle
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,6 +32,8 @@ export default function Settings() {
   const [userType, setUserType] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [formData, setFormData] = useState({});
   const [notificationSettings, setNotificationSettings] = useState({
     email_notifications: true,
@@ -503,7 +512,66 @@ export default function Settings() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Delete Account Section */}
+        <div className="mt-8 p-5 border border-red-200 rounded-xl bg-red-50">
+          <div className="flex items-center gap-3 mb-2">
+            <Trash2 className="w-5 h-5 text-red-600" />
+            <h3 className="font-semibold text-red-700">حذف الحساب</h3>
+          </div>
+          <p className="text-sm text-red-600 mb-4">
+            سيؤدي حذف حسابك إلى إزالة جميع بياناتك بشكل نهائي. هذا الإجراء لا يمكن التراجع عنه.
+          </p>
+          <Button
+            variant="outline"
+            className="border-red-300 text-red-600 hover:bg-red-100"
+            onClick={() => setShowDeleteDialog(true)}
+          >
+            <Trash2 className="w-4 h-4 ml-2" />
+            حذف حسابي
+          </Button>
+        </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-5 h-5" />
+              تأكيد حذف الحساب
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-slate-600">
+              هذا الإجراء <strong>نهائي وغير قابل للتراجع</strong>. سيتم حذف جميع بياناتك ومشاريعك وعقودك.
+            </p>
+            <div className="space-y-2">
+              <Label>اكتب <strong>احذف حسابي</strong> للتأكيد</Label>
+              <Input
+                value={deleteConfirmText}
+                onChange={e => setDeleteConfirmText(e.target.value)}
+                placeholder="احذف حسابي"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setShowDeleteDialog(false); setDeleteConfirmText(""); }}>
+              إلغاء
+            </Button>
+            <Button
+              disabled={deleteConfirmText !== "احذف حسابي"}
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => {
+                base44.auth.logout();
+              }}
+            >
+              <Trash2 className="w-4 h-4 ml-2" />
+              حذف الحساب نهائياً
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

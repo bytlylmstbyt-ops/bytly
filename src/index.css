@@ -84,5 +84,51 @@
 
   body {
     @apply bg-background text-foreground;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Safe area padding for mobile notch/home bar */
+  .safe-area-wrapper {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Disable text selection on interactive elements */
+  button, nav a, nav button, [role="navigation"] {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  svg {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+/* Dark mode via system preference */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
   }
 }
