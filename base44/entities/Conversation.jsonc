@@ -103,11 +103,7 @@
     "update": {
       "$or": [
         {
-          "data.participants": {
-            "$in": [
-              "{{user.email}}"
-            ]
-          }
+          "data.participants": "{{user.email}}"
         },
         {
           "user_condition": {
