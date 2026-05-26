@@ -81,14 +81,17 @@
     "read": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
           "data.legal_consultant_id": "{{user.id}}"
         },
         {
           "data.project_id": {
             "_filter": "Project",
+            "read": true
+          }
+        },
+        {
+          "data.complaint_id": {
+            "_filter": "Complaint",
             "read": true
           }
         },
