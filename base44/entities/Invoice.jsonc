@@ -126,12 +126,6 @@
           "data.client_email": "{{user.email}}"
         },
         {
-          "data.project_id": {
-            "_filter": "Project",
-            "read": true
-          }
-        },
-        {
           "user_condition": {
             "role": "admin"
           }
@@ -154,9 +148,16 @@
       ]
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }
