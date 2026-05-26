@@ -129,9 +129,6 @@
           "data.client_email": "{{user.email}}"
         },
         {
-          "data.recorded_by": "{{user.email}}"
-        },
-        {
           "user_condition": {
             "role": "admin"
           }
@@ -142,9 +139,6 @@
       "$or": [
         {
           "created_by": "{{user.email}}"
-        },
-        {
-          "data.recorded_by": "{{user.email}}"
         },
         {
           "user_condition": {
