@@ -71,13 +71,16 @@
     "read": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.engineer_id": "{{user.id}}"
+        },
+        {
           "data.project_id": {
             "_filter": "Project",
             "read": true
           }
-        },
-        {
-          "data.engineer_id": "{{user.id}}"
         },
         {
           "user_condition": {
@@ -89,7 +92,16 @@
     "update": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.engineer_id": "{{user.id}}"
+        },
+        {
+          "data.project_id": {
+            "_filter": "Project",
+            "update": true
+          }
         },
         {
           "user_condition": {
@@ -100,6 +112,9 @@
     },
     "delete": {
       "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
         {
           "data.engineer_id": "{{user.id}}"
         },
