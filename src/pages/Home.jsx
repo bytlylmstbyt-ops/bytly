@@ -89,22 +89,7 @@ export default function Home() {
       base44.entities.Portfolio.filter({ is_featured: true }, "-created_date", 8)
     ]);
     
-    // Load portfolios for each engineer to show as background
-    const engineersWithPortfolios = await Promise.all(
-      engineersData.map(async (engineer) => {
-        const engineerPortfolios = await base44.entities.Portfolio.filter(
-          { engineer_id: engineer.id }, 
-          "-created_date", 
-          1
-        );
-        return {
-          ...engineer,
-          featured_portfolio: engineerPortfolios[0]?.images?.[0] || engineer.cover_image
-        };
-      })
-    );
-    
-    setEngineers(engineersWithPortfolios);
+    setEngineers(engineersData);
     setPortfolios(portfoliosData);
     setIsLoading(false);
   };
@@ -368,19 +353,13 @@ export default function Home() {
                   <Link to={createPageUrl("EngineerProfile") + `?id=${engineer.id}`}>
                     <Card className="hover-lift cursor-pointer overflow-hidden border-0 shadow-lg">
                       <div className="relative h-32 bg-gradient-to-br from-[#1a1a2e] to-[#d4a574]">
-                        {engineer.featured_portfolio ? (
-                          <img 
-                            src={engineer.featured_portfolio} 
-                            alt="" 
-                            className="w-full h-full object-cover opacity-60" 
-                          />
-                        ) : engineer.cover_image ? (
+                        {engineer.cover_image && (
                           <img 
                             src={engineer.cover_image} 
                             alt="" 
                             className="w-full h-full object-cover opacity-50" 
                           />
-                        ) : null}
+                        )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                       </div>
                       <CardContent className="relative p-6 pt-0">
