@@ -67,14 +67,13 @@
     "read": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.owner_email": "{{user.email}}"
         },
         {
-          "data.members": {
-            "$in": [
-              "{{user.email}}"
-            ]
-          }
+          "data.members": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -86,7 +85,13 @@
     "update": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.owner_email": "{{user.email}}"
+        },
+        {
+          "data.members": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -97,6 +102,9 @@
     },
     "delete": {
       "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
         {
           "data.owner_email": "{{user.email}}"
         },
