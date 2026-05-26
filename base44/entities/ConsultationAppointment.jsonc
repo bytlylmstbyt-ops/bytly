@@ -129,12 +129,6 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.client_id": "{{user.id}}"
-        },
-        {
-          "data.target_id": "{{user.id}}"
-        },
-        {
           "user_condition": {
             "role": "admin"
           }
