@@ -202,6 +202,9 @@
     "read": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.client_id": "{{user.id}}"
         },
         {
@@ -223,10 +226,19 @@
     "update": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.client_id": "{{user.id}}"
         },
         {
           "data.assigned_engineer_id": "{{user.id}}"
+        },
+        {
+          "data.technical_consultant_id": "{{user.id}}"
+        },
+        {
+          "data.legal_consultant_id": "{{user.id}}"
         },
         {
           "user_condition": {
@@ -236,9 +248,16 @@
       ]
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }
