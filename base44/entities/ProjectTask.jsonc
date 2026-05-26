@@ -137,10 +137,7 @@
           "data.assigned_to": "{{user.email}}"
         },
         {
-          "data.project_id": {
-            "_filter": "Project",
-            "read": true
-          }
+          "data.assigned_by": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -158,10 +155,7 @@
           "data.assigned_to": "{{user.email}}"
         },
         {
-          "data.project_id": {
-            "_filter": "Project",
-            "update": true
-          }
+          "data.assigned_by": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -176,7 +170,7 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.assigned_to": "{{user.email}}"
+          "data.assigned_by": "{{user.email}}"
         },
         {
           "user_condition": {
