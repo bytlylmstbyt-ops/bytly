@@ -50,7 +50,7 @@
         },
         {
           "data.project_id": {
-            "_filter": "Project",
+            "_filter": "TaskProject",
             "read": true
           }
         },
@@ -68,7 +68,7 @@
         },
         {
           "data.project_id": {
-            "_filter": "Project",
+            "_filter": "TaskProject",
             "update": true
           }
         },
@@ -86,7 +86,7 @@
         },
         {
           "data.project_id": {
-            "_filter": "Project",
+            "_filter": "TaskProject",
             "delete": true
           }
         },

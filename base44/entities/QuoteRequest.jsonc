@@ -138,7 +138,7 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.client_id": "{{user.id}}"
+          "data.client_email": "{{user.email}}"
         },
         {
           "data.target_engineer_id": "{{user.id}}"
@@ -156,7 +156,7 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.client_id": "{{user.id}}"
+          "data.client_email": "{{user.email}}"
         },
         {
           "data.target_engineer_id": "{{user.id}}"
@@ -169,19 +169,9 @@
       ]
     },
     "delete": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.client_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }

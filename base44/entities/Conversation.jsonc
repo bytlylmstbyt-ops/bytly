@@ -94,6 +94,9 @@
           "data.participants": "{{user.email}}"
         },
         {
+          "data.admin_emails": "{{user.email}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -106,6 +109,9 @@
           "data.participants": "{{user.email}}"
         },
         {
+          "data.admin_emails": "{{user.email}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -113,9 +119,16 @@
       ]
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "data.admin_emails": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }
