@@ -101,37 +101,23 @@ function LayoutContent({ children, currentPageName }) {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-6">
-              <Link 
-                to={createPageUrl("Home")} 
-                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'Home' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
-              >
-                {t('nav.home')}
-              </Link>
-              <Link 
-                to={createPageUrl("Engineers")} 
-                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'Engineers' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
-              >
-                {t('nav.engineers')}
-              </Link>
-              <Link 
-                to={createPageUrl("ConsultingFirms")} 
-                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'ConsultingFirms' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
-              >
-                الشركات الاستشارية
-              </Link>
-              <Link 
-                to={createPageUrl("Projects")} 
-                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'Projects' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
-              >
-                المشاريع
-              </Link>
-              <Link 
-                to={createPageUrl("Gallery")} 
-                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] ${currentPageName === 'Gallery' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
-              >
-                معرض الأعمال
-              </Link>
+            <nav className="hidden md:flex items-center gap-2">
+              {[
+                { to: createPageUrl("Home"), label: t('nav.home'), name: 'Home' },
+                { to: createPageUrl("Engineers"), label: t('nav.engineers'), name: 'Engineers' },
+                { to: createPageUrl("ConsultingFirms"), label: 'الشركات الاستشارية', name: 'ConsultingFirms' },
+                { to: createPageUrl("Projects"), label: 'المشاريع', name: 'Projects' },
+                { to: createPageUrl("Gallery"), label: 'معرض الأعمال', name: 'Gallery' },
+              ].map(({ to, label, name }) => (
+                <Link
+                  key={name}
+                  to={to}
+                  className={`inline-flex items-center justify-center px-3 text-[14px] font-medium transition-colors hover:text-[#C9A66B] rounded-md ${currentPageName === name ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
+                  style={{ minHeight: 44 }}
+                >
+                  {label}
+                </Link>
+              ))}
 
               {/* Bytly Sections Dropdown */}
               <DropdownMenu>
@@ -274,9 +260,10 @@ function LayoutContent({ children, currentPageName }) {
                 </div>
               )}
 
-              {/* Mobile Menu Button */}
+              {/* Mobile Menu Button — 44px tap target */}
               <button
-                className="md:hidden p-2 hover:bg-slate-100 rounded-lg"
+                className="md:hidden flex items-center justify-center hover:bg-slate-100 rounded-lg"
+                style={{ minWidth: 44, minHeight: 44 }}
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
               >
                 {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -288,22 +275,46 @@ function LayoutContent({ children, currentPageName }) {
         {/* Mobile Menu */}
         {isMenuOpen && (
           <div className="md:hidden glass-effect border-t">
-            <div className="px-4 py-4 space-y-1">
-              <Link to={createPageUrl("Home")} className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700" onClick={() => setIsMenuOpen(false)}>{t('nav.home')}</Link>
-              <Link to={createPageUrl("Engineers")} className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700" onClick={() => setIsMenuOpen(false)}>{t('nav.engineers')}</Link>
-              <Link to={createPageUrl("ConsultingFirms")} className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700" onClick={() => setIsMenuOpen(false)}>الشركات الاستشارية</Link>
-              <Link to={createPageUrl("Projects")} className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700" onClick={() => setIsMenuOpen(false)}>المشاريع</Link>
-              <Link to={createPageUrl("Gallery")} className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700" onClick={() => setIsMenuOpen(false)}>معرض الأعمال</Link>
-              <Link to={createPageUrl("Messages")} className="block px-4 py-3 rounded-lg hover:bg-slate-100 text-slate-700" onClick={() => setIsMenuOpen(false)}>المحادثات</Link>
+            <div className="px-4 py-2 space-y-0.5">
+              {[
+                { to: createPageUrl("Home"), label: t('nav.home') },
+                { to: createPageUrl("Engineers"), label: t('nav.engineers') },
+                { to: createPageUrl("ConsultingFirms"), label: 'الشركات الاستشارية' },
+                { to: createPageUrl("Projects"), label: 'المشاريع' },
+                { to: createPageUrl("Gallery"), label: 'معرض الأعمال' },
+                { to: createPageUrl("Messages"), label: 'المحادثات' },
+              ].map(({ to, label }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className="flex items-center px-4 rounded-lg hover:bg-slate-100 text-slate-700 text-[14px] font-medium"
+                  style={{ minHeight: 44 }}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {label}
+                </Link>
+              ))}
               {/* Bytly Sections group */}
               <div className="pt-2 pb-1 px-4 text-xs font-semibold text-[#C9A66B] uppercase tracking-wide">أقسام بيتلي</div>
-              <Link to="/CostEstimator" className="block px-4 py-2.5 rounded-lg hover:bg-slate-100 text-slate-700 text-sm" onClick={() => setIsMenuOpen(false)}>🧮 حاسبة التكاليف</Link>
-              <Link to="/ConstructionTracker" className="block px-4 py-2.5 rounded-lg hover:bg-slate-100 text-slate-700 text-sm" onClick={() => setIsMenuOpen(false)}>🏗️ متابعة البناء</Link>
-              <Link to="/TechnicalResources" className="block px-4 py-2.5 rounded-lg hover:bg-slate-100 text-slate-700 text-sm" onClick={() => setIsMenuOpen(false)}>📐 المعايير الفنية</Link>
-              <Link to="/PermitApplication" className="block px-4 py-2.5 rounded-lg hover:bg-slate-100 text-slate-700 text-sm" onClick={() => setIsMenuOpen(false)}>🏛️ رخصة البناء</Link>
-              <Link to="/EngineerMatcher" className="block px-4 py-2.5 rounded-lg hover:bg-slate-100 text-slate-700 text-sm" onClick={() => setIsMenuOpen(false)}>✨ ابحث عن مهندسك</Link>
-              <Link to={createPageUrl("DesignMarketplace")} className="block px-4 py-2.5 rounded-lg hover:bg-slate-100 text-slate-700 text-sm" onClick={() => setIsMenuOpen(false)}>🎨 متجر التصاميم</Link>
-              <Link to="/AIEngineers" className="block px-4 py-2.5 rounded-lg hover:bg-slate-100 text-slate-700 text-sm" onClick={() => setIsMenuOpen(false)}>🤖 Bytly AI</Link>
+              {[
+                { to: "/CostEstimator", label: "🧮 حاسبة التكاليف" },
+                { to: "/ConstructionTracker", label: "🏗️ متابعة البناء" },
+                { to: "/TechnicalResources", label: "📐 المعايير الفنية" },
+                { to: "/PermitApplication", label: "🏛️ رخصة البناء" },
+                { to: "/EngineerMatcher", label: "✨ ابحث عن مهندسك" },
+                { to: createPageUrl("DesignMarketplace"), label: "🎨 متجر التصاميم" },
+                { to: "/AIEngineers", label: "🤖 Bytly AI" },
+              ].map(({ to, label }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className="flex items-center px-4 rounded-lg hover:bg-slate-100 text-slate-700 text-[14px]"
+                  style={{ minHeight: 44 }}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {label}
+                </Link>
+              ))}
             </div>
           </div>
         )}

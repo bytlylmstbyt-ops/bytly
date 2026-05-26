@@ -34,6 +34,8 @@ export default function Settings() {
   const [isSaving, setIsSaving] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteStep, setDeleteStep] = useState(1);
+  const [deleteReason, setDeleteReason] = useState("");
   const [formData, setFormData] = useState({});
   const [notificationSettings, setNotificationSettings] = useState({
     email_notifications: true,
@@ -520,65 +522,141 @@ export default function Settings() {
             <h3 className="font-semibold text-red-700">حذف الحساب</h3>
           </div>
           <p className="text-sm text-red-600 mb-4">
-            سيؤدي حذف حسابك إلى إزالة جميع بياناتك بشكل نهائي. هذا الإجراء لا يمكن التراجع عنه.
+            سيؤدي حذف حسابك إلى إزالة جميع بياناتك الشخصية بشكل نهائي وفق سياسة الخصوصية. هذا الإجراء لا يمكن التراجع عنه.
           </p>
           <Button
             variant="outline"
             className="border-red-300 text-red-600 hover:bg-red-100"
-            onClick={() => setShowDeleteDialog(true)}
+            style={{ minHeight: 44 }}
+            onClick={() => { setShowDeleteDialog(true); setDeleteStep(1); setDeleteReason(""); setDeleteConfirmText(""); }}
           >
             <Trash2 className="w-4 h-4 ml-2" />
-            حذف حسابي
+            طلب حذف الحساب
           </Button>
         </div>
       </div>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      {/* Multi-Step Delete Dialog (App Store Compliant) */}
+      <Dialog open={showDeleteDialog} onOpenChange={(open) => { if (!open) { setShowDeleteDialog(false); setDeleteStep(1); setDeleteReason(""); setDeleteConfirmText(""); } }}>
         <DialogContent className="max-w-md" dir="rtl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600">
-              <AlertTriangle className="w-5 h-5" />
-              تأكيد حذف الحساب
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <p className="text-sm text-slate-600">
-              هذا الإجراء <strong>نهائي وغير قابل للتراجع</strong>. سيتم حذف جميع بياناتك ومشاريعك وعقودك.
-            </p>
-            <div className="space-y-2">
-              <Label>اكتب <strong>احذف حسابي</strong> للتأكيد</Label>
-              <Input
-                value={deleteConfirmText}
-                onChange={e => setDeleteConfirmText(e.target.value)}
-                placeholder="احذف حسابي"
-              />
-            </div>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => { setShowDeleteDialog(false); setDeleteConfirmText(""); }}>
-              إلغاء
-            </Button>
-            <Button
-              disabled={deleteConfirmText !== "احذف حسابي"}
-              className="bg-red-600 hover:bg-red-700 text-white"
-              onClick={async () => {
-                try {
-                  if (typeof base44.auth.deleteAccount === "function") {
-                    await base44.auth.deleteAccount();
-                  } else {
-                    // Fallback: logout if deleteAccount not available
-                    await base44.auth.logout();
-                  }
-                } catch {
-                  base44.auth.logout();
-                }
-              }}
-            >
-              <Trash2 className="w-4 h-4 ml-2" />
-              حذف الحساب نهائياً
-            </Button>
-          </DialogFooter>
+          {/* Step 1: Reason selection */}
+          {deleteStep === 1 && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-slate-800">
+                  <Trash2 className="w-5 h-5 text-red-500" />
+                  لماذا تريد حذف حسابك؟
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-2 py-2">
+                {[
+                  "لم أعد أحتاج الخدمة",
+                  "أواجه مشكلة تقنية",
+                  "مخاوف تتعلق بالخصوصية",
+                  "أنشأت حسابًا آخر",
+                  "سبب آخر",
+                ].map((reason) => (
+                  <button
+                    key={reason}
+                    type="button"
+                    style={{ minHeight: 44 }}
+                    className={`w-full flex items-center px-4 rounded-xl border text-sm text-right transition-colors ${deleteReason === reason ? "border-red-400 bg-red-50 text-red-700 font-medium" : "border-slate-200 hover:bg-slate-50 text-slate-700"}`}
+                    onClick={() => setDeleteReason(reason)}
+                  >
+                    {deleteReason === reason && <span className="ml-2 text-red-500">✓</span>}
+                    {reason}
+                  </button>
+                ))}
+              </div>
+              <DialogFooter className="gap-2">
+                <Button variant="outline" style={{ minHeight: 44 }} onClick={() => setShowDeleteDialog(false)}>إلغاء</Button>
+                <Button disabled={!deleteReason} style={{ minHeight: 44 }} className="bg-red-600 hover:bg-red-700 text-white" onClick={() => setDeleteStep(2)}>
+                  التالي
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {/* Step 2: Data warning */}
+          {deleteStep === 2 && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-red-600">
+                  <AlertTriangle className="w-5 h-5" />
+                  تحذير: البيانات التي ستُحذف
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 py-2">
+                <p className="text-sm text-slate-600">سيتم حذف البيانات التالية بشكل <strong>نهائي وغير قابل للاسترداد</strong>:</p>
+                <ul className="space-y-2 text-sm text-red-700">
+                  {["ملفك الشخصي وجميع بياناتك", "مشاريعك النشطة والمكتملة", "عقودك ومحادثاتك", "رصيد محفظتك وسجل المعاملات", "تقييماتك وتوصياتك"].map(item => (
+                    <li key={item} className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                  ⚠️ إذا كان لديك مشاريع نشطة أو مبالغ محتجزة، يرجى إتمامها أو التواصل مع الدعم قبل الحذف.
+                </div>
+              </div>
+              <DialogFooter className="gap-2">
+                <Button variant="outline" style={{ minHeight: 44 }} onClick={() => setDeleteStep(1)}>رجوع</Button>
+                <Button style={{ minHeight: 44 }} className="bg-red-600 hover:bg-red-700 text-white" onClick={() => setDeleteStep(3)}>
+                  أفهم، أريد المتابعة
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {/* Step 3: Typed confirmation */}
+          {deleteStep === 3 && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-red-600">
+                  <AlertTriangle className="w-5 h-5" />
+                  تأكيد الحذف النهائي
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <p className="text-sm text-slate-600">
+                  اكتب <strong className="text-red-600">احذف حسابي</strong> بالأسفل لتأكيد الحذف النهائي.
+                </p>
+                <Input
+                  value={deleteConfirmText}
+                  onChange={e => setDeleteConfirmText(e.target.value)}
+                  placeholder="احذف حسابي"
+                  className="text-center"
+                  style={{ minHeight: 44 }}
+                />
+                <p className="text-xs text-slate-400 text-center">
+                  بالمتابعة توافق على سياسة الخصوصية وشروط الخدمة المتعلقة بحذف الحسابات.
+                </p>
+              </div>
+              <DialogFooter className="gap-2">
+                <Button variant="outline" style={{ minHeight: 44 }} onClick={() => setDeleteStep(2)}>رجوع</Button>
+                <Button
+                  disabled={deleteConfirmText !== "احذف حسابي"}
+                  style={{ minHeight: 44 }}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                  onClick={async () => {
+                    try {
+                      if (typeof base44.auth.deleteAccount === "function") {
+                        await base44.auth.deleteAccount();
+                      } else {
+                        await base44.auth.logout();
+                      }
+                    } catch {
+                      base44.auth.logout();
+                    }
+                  }}
+                >
+                  <Trash2 className="w-4 h-4 ml-2" />
+                  حذف الحساب نهائياً
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
