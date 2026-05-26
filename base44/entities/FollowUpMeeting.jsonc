@@ -158,6 +158,9 @@
           "created_by": "{{user.email}}"
         },
         {
+          "data.client_email": "{{user.email}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
