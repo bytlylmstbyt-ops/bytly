@@ -130,6 +130,7 @@ const AuthenticatedApp = () => {
       <Route path="/MarketEntities"             element={lazyRoute(MarketEntities, "MarketEntities")} />
       <Route path="/AdminMarketEntities"        element={lazyRoute(AdminMarketEntities, "AdminMarketEntities")} />
       <Route path="/MarketContracts"            element={lazyRoute(MarketContracts, "MarketContracts")} />
+      <Route path="/Subscription"               element={lazyRoute(React.lazy(() => import('./pages/Subscription')), "Subscription")} />
 
       <Route path="*" element={<NotFoundError />} />
     </Routes>
