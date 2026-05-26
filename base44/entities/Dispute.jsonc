@@ -227,10 +227,10 @@
     "update": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "data.raised_by": "{{user.email}}"
         },
         {
-          "data.raised_by": "{{user.email}}"
+          "data.raised_against": "{{user.email}}"
         },
         {
           "data.assigned_admin": "{{user.email}}"
