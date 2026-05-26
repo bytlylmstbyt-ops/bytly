@@ -562,8 +562,17 @@ export default function Settings() {
             <Button
               disabled={deleteConfirmText !== "احذف حسابي"}
               className="bg-red-600 hover:bg-red-700 text-white"
-              onClick={() => {
-                base44.auth.logout();
+              onClick={async () => {
+                try {
+                  if (typeof base44.auth.deleteAccount === "function") {
+                    await base44.auth.deleteAccount();
+                  } else {
+                    // Fallback: logout if deleteAccount not available
+                    await base44.auth.logout();
+                  }
+                } catch {
+                  base44.auth.logout();
+                }
               }}
             >
               <Trash2 className="w-4 h-4 ml-2" />

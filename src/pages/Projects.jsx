@@ -12,16 +12,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { AdInFeedSection } from "@/components/ads/SmartAdCard";
 import { useAds } from "@/hooks/useAds";
+import PullToRefreshWrapper from "@/components/mobile/PullToRefreshWrapper";
+import MobileSelect from "@/components/mobile/MobileSelect";
 
 export default function Projects() {
   const { t } = useLanguage();
@@ -134,6 +129,7 @@ export default function Projects() {
   };
 
   return (
+    <PullToRefreshWrapper onRefresh={loadProjects} className="min-h-screen">
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30">
       {/* Header */}
       <div className="bg-gradient-to-br from-[#1a1a2e] to-[#1a1a2e]/90 py-16">
@@ -203,16 +199,18 @@ export default function Projects() {
                     </div>
                     <div>
                       <label className="text-xs font-medium text-slate-500 mb-1 block">نوع المشروع</label>
-                      <Select value={projectTypeFilter} onValueChange={setProjectTypeFilter}>
-                        <SelectTrigger className="text-sm">
-                          <SelectValue placeholder="جميع الأنواع" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value={null}>جميع الأنواع</SelectItem>
-                          <SelectItem value="full_construction">بناء كامل</SelectItem>
-                          <SelectItem value="express_service">خدمة سريعة</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <MobileSelect
+                        value={projectTypeFilter}
+                        onValueChange={setProjectTypeFilter}
+                        placeholder="جميع الأنواع"
+                        label="نوع المشروع"
+                        options={[
+                          { value: null, label: "جميع الأنواع" },
+                          { value: "full_construction", label: "بناء كامل" },
+                          { value: "express_service", label: "خدمة سريعة" },
+                        ]}
+                        triggerClassName="text-sm"
+                      />
                     </div>
                     <div>
                       <label className="text-xs font-medium text-slate-500 mb-1 block">من تاريخ</label>
@@ -281,17 +279,17 @@ export default function Projects() {
             </div>
 
             {/* Category Filter */}
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[180px] bg-white">
-                <SelectValue placeholder={t('projects.filters.category')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={null}>{t('projects.filters.allCategories')}</SelectItem>
-                {categories.map(cat => (
-                  <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MobileSelect
+              value={categoryFilter}
+              onValueChange={setCategoryFilter}
+              placeholder={t('projects.filters.category')}
+              label={t('projects.filters.category')}
+              options={[
+                { value: null, label: t('projects.filters.allCategories') },
+                ...categories,
+              ]}
+              triggerClassName="w-[180px] bg-white"
+            />
           </div>
 
           <Link to={createPageUrl("CreateProject")}>
@@ -415,5 +413,6 @@ export default function Projects() {
         )}
       </div>
     </div>
+    </PullToRefreshWrapper>
   );
 }

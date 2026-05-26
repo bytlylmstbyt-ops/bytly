@@ -18,6 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import InvestorClientDashboard from "@/components/client/InvestorClientDashboard";
 import IndividualClientDashboard from "@/components/client/IndividualClientDashboard";
 import { useLanguage } from "@/components/i18n/LanguageContext";
+import PullToRefreshWrapper from "@/components/mobile/PullToRefreshWrapper";
 
 export default function Dashboard() {
   const { t } = useLanguage();
@@ -139,6 +140,7 @@ export default function Dashboard() {
   }
 
   return (
+    <PullToRefreshWrapper onRefresh={loadDashboardData} className="min-h-screen">
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -736,5 +738,6 @@ export default function Dashboard() {
         </motion.div>
       </div>
     </div>
+    </PullToRefreshWrapper>
   );
 }
