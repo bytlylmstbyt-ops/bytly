@@ -129,6 +129,23 @@
     -webkit-user-select: none;
   }
 
+  /* Touch active feedback — scale down + opacity on tap for all tappable elements */
+  @media (pointer: coarse) {
+    button:active, a:active, [role="button"]:active, [role="tab"]:active {
+      opacity: 0.7;
+      transform: scale(0.97);
+      transition: opacity 0.08s ease, transform 0.08s ease;
+    }
+  }
+
+  /* Dialog / Sheet safe-area bottom padding so content clears the iOS home indicator */
+  [role="dialog"] > div,
+  [data-radix-dialog-content],
+  [data-radix-alert-dialog-content],
+  [data-vaul-drawer] {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
   svg {
     user-select: none;
     -webkit-user-select: none;

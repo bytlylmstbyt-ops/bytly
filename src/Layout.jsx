@@ -81,7 +81,10 @@ function LayoutContent({ children, currentPageName }) {
       `}</style>
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 glass-effect shadow-sm">
+      <header
+        className="fixed top-0 left-0 right-0 z-50 glass-effect shadow-sm"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 md:h-20">
             {/* Back Button (mobile) + Logo */}
@@ -312,8 +315,11 @@ function LayoutContent({ children, currentPageName }) {
         )}
       </header>
 
-      {/* Main Content */}
-      <main className="pt-16 md:pt-20 min-h-screen pb-16 md:pb-0 safe-area-wrapper">
+      {/* Main Content — extra top offset accounts for safe-area-inset-top on notched devices */}
+      <main
+        className="min-h-screen pb-16 md:pb-0"
+        style={{ paddingTop: "calc(4rem + env(safe-area-inset-top))" }}
+      >
         <PullToRefreshWrapper onRefresh={() => window.location.reload()} className="min-h-screen">
           <PageTransition>
             {children}
