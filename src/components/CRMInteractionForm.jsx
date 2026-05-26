@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import MobileSelect from "@/components/mobile/MobileSelect";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Sparkles } from "lucide-react";
 
@@ -92,18 +92,18 @@ export default function CRMInteractionForm({ onSuccess }) {
         </div>
         <div>
           <label className="text-sm font-medium">نوع التفاعل</label>
-          <Select value={formData.interaction_type} onValueChange={(value) => setFormData(prev => ({ ...prev, interaction_type: value }))}>
-            <SelectTrigger className="mt-1">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="call">مكالمة</SelectItem>
-              <SelectItem value="email">بريد إلكتروني</SelectItem>
-              <SelectItem value="meeting">اجتماع</SelectItem>
-              <SelectItem value="message">رسالة</SelectItem>
-              <SelectItem value="note">ملاحظة</SelectItem>
-            </SelectContent>
-          </Select>
+          <MobileSelect
+            value={formData.interaction_type}
+            onValueChange={v => setFormData(prev => ({ ...prev, interaction_type: v }))}
+            label="نوع التفاعل"
+            options={[
+              { value: "call", label: "مكالمة" },
+              { value: "email", label: "بريد إلكتروني" },
+              { value: "meeting", label: "اجتماع" },
+              { value: "message", label: "رسالة" },
+              { value: "note", label: "ملاحظة" },
+            ]}
+          />
         </div>
       </div>
 

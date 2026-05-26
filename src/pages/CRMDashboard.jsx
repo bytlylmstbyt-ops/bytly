@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import MobileSelect from "@/components/mobile/MobileSelect";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Users, Plus, Search, RefreshCw, Loader2, TrendingUp,
@@ -175,16 +175,18 @@ export default function CRMDashboard() {
                 <Search className="absolute right-3 top-2.5 w-4 h-4 text-slate-400" />
                 <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="بحث بالاسم، البريد، الشركة..." className="pr-9 text-sm" />
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-36"><SelectValue placeholder="الحالة" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">جميع الحالات</SelectItem>
-                  <SelectItem value="lead">محتمل</SelectItem>
-                  <SelectItem value="active">نشط</SelectItem>
-                  <SelectItem value="inactive">غير نشط</SelectItem>
-                  <SelectItem value="churned">منسحب</SelectItem>
-                </SelectContent>
-              </Select>
+              <MobileSelect
+                value={statusFilter}
+                onValueChange={setStatusFilter}
+                label="الحالة"
+                options={[
+                  { value: "all", label: "جميع الحالات" },
+                  { value: "lead", label: "محتمل" },
+                  { value: "active", label: "نشط" },
+                  { value: "inactive", label: "غير نشط" },
+                  { value: "churned", label: "منسحب" },
+                ]}
+              />
             </div>
             {loading ? (
               <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>

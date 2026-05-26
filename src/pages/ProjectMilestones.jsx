@@ -127,11 +127,17 @@ export default function ProjectMilestones() {
   };
 
   const approveMilestone = async (milestone) => {
-    // Check if firm approval is required and not yet approved (only for full construction projects)
     if (project.project_type === "full_construction" && !milestone.firm_approved) {
       alert("يجب اعتماد المرحلة من الشركة الاستشارية أولاً قبل تحرير الدفع");
       return;
     }
+
+    // Optimistic update — mark as approved instantly in UI
+    setMilestones(prev => prev.map(m =>
+      m.id === milestone.id
+        ? { ...m, client_approved: true, payment_released: true, status: "approved" }
+        : m
+    ));
 
     try {
       const now = new Date().toISOString();
@@ -228,6 +234,10 @@ export default function ProjectMilestones() {
 
       await loadData();
     } catch (error) {
+      // Roll back optimistic update on failure
+      setMilestones(prev => prev.map(m =>
+        m.id === milestone.id ? milestone : m
+      ));
       console.error("Error approving milestone:", error);
       alert("حدث خطأ في الموافقة");
     }

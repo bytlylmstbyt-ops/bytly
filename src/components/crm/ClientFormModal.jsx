@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import MobileSelect from "@/components/mobile/MobileSelect";
 import { Loader2, Save } from "lucide-react";
 
 const COLORS = ["#6B5D4F","#3B82F6","#10B981","#F59E0B","#EF4444","#8B5CF6","#EC4899","#06B6D4"];
@@ -65,15 +65,17 @@ export default function ClientFormModal({ open, onClose, onSave, initial, loadin
             </div>
             <div>
               <label className="text-xs text-slate-500 mb-1 block">الحالة</label>
-              <Select value={form.crm_status} onValueChange={v => set("crm_status", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="lead">عميل محتمل</SelectItem>
-                  <SelectItem value="active">نشط</SelectItem>
-                  <SelectItem value="inactive">غير نشط</SelectItem>
-                  <SelectItem value="churned">منسحب</SelectItem>
-                </SelectContent>
-              </Select>
+              <MobileSelect
+                value={form.crm_status}
+                onValueChange={v => set("crm_status", v)}
+                label="الحالة"
+                options={[
+                  { value: "lead", label: "عميل محتمل" },
+                  { value: "active", label: "نشط" },
+                  { value: "inactive", label: "غير نشط" },
+                  { value: "churned", label: "منسحب" },
+                ]}
+              />
             </div>
           </div>
           <div>

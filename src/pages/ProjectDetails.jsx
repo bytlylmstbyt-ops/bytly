@@ -211,7 +211,11 @@ export default function ProjectDetails() {
   };
 
   const handleAcceptProposal = async (proposal) => {
-    // Send notification to engineer
+    // Optimistic update — mark proposal as accepted instantly
+    setProposals(prev => prev.map(p =>
+      p.id === proposal.id ? { ...p, status: "accepted" } : p
+    ));
+
     const engineer = engineers[proposal.engineer_id];
     if (engineer) {
       await base44.entities.Notification.create({
