@@ -109,7 +109,7 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.participants": "{{user.email}}"
+          "data.admin_emails": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -119,16 +119,9 @@
       ]
     },
     "delete": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }
