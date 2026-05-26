@@ -120,10 +120,7 @@
     "read": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.client_email": "{{user.email}}"
+          "data.client_id": "{{user.id}}"
         },
         {
           "data.engineer_id": "{{user.id}}"
