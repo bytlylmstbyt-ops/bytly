@@ -78,7 +78,7 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.user_id": "{{user.id}}"
+          "data.user_id": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -88,9 +88,19 @@
       ]
     },
     "update": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.user_id": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "delete": {
       "user_condition": {
