@@ -317,36 +317,69 @@ export default function Settings() {
           </TabsContent>
 
           <TabsContent value="security">
-            <Card className="border-0 shadow-lg">
-              <CardHeader>
-                <CardTitle>{t('settings.security.title')}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="p-4 bg-slate-50 rounded-xl">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Lock className="w-5 h-5 text-slate-600" />
-                    <h3 className="font-medium">{t('settings.security.changePassword')}</h3>
+            <div className="space-y-6">
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle>{t('settings.security.title')}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="p-4 bg-slate-50 rounded-xl">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Lock className="w-5 h-5 text-slate-600" />
+                      <h3 className="font-medium">{t('settings.security.changePassword')}</h3>
+                    </div>
+                    <p className="text-sm text-slate-500 mb-4">
+                      {t('settings.security.changePasswordDesc')}
+                    </p>
+                    <Button variant="outline">{t('settings.security.changePassword')}</Button>
                   </div>
-                  <p className="text-sm text-slate-500 mb-4">
-                    {t('settings.security.changePasswordDesc')}
-                  </p>
-                  <Button variant="outline">{t('settings.security.changePassword')}</Button>
-                </div>
 
-                <div className="p-4 bg-slate-50 rounded-xl">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Shield className="w-5 h-5 text-slate-600" />
+                  <div className="p-4 bg-slate-50 rounded-xl">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Shield className="w-5 h-5 text-slate-600" />
+                        <div>
+                          <h3 className="font-medium">{t('settings.security.twoFactor')}</h3>
+                          <p className="text-sm text-slate-500">{t('settings.security.twoFactorDesc')}</p>
+                        </div>
+                      </div>
+                      <Switch />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Danger Zone — Delete Account */}
+              <Card className="border-0 shadow-lg border-red-100">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2 text-red-700">
+                    <Trash2 className="w-5 h-5" />
+                    الأمان والخصوصية — منطقة الخطر
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <div className="flex items-start gap-3 mb-3">
+                      <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
                       <div>
-                        <h3 className="font-medium">{t('settings.security.twoFactor')}</h3>
-                        <p className="text-sm text-slate-500">{t('settings.security.twoFactorDesc')}</p>
+                        <h3 className="font-semibold text-red-700 mb-1">حذف الحساب نهائياً</h3>
+                        <p className="text-sm text-red-600 leading-relaxed">
+                          سيؤدي حذف حسابك إلى إزالة جميع بياناتك الشخصية، مشاريعك، عقودك، ومحادثاتك بشكل <strong>نهائي وغير قابل للاسترداد</strong>، وفق سياسة الخصوصية.
+                        </p>
                       </div>
                     </div>
-                    <Switch />
+                    <Button
+                      className="bg-red-600 hover:bg-red-700 text-white"
+                      style={{ minHeight: 44 }}
+                      onClick={() => { setShowDeleteDialog(true); setDeleteStep(1); setDeleteReason(""); setDeleteConfirmText(""); }}
+                    >
+                      <Trash2 className="w-4 h-4 ml-2" />
+                      حذف حسابي
+                    </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="notifications">

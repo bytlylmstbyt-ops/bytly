@@ -304,7 +304,8 @@ export default function BIMQuantitiesReport() {
                                     </div>
                                 </CardHeader>
                                 <CardContent className="p-0 mt-4">
-                                    <div className="overflow-x-auto">
+                                    {/* Desktop table */}
+                                    <div className="hidden sm:block overflow-x-auto">
                                         <table className="w-full text-sm">
                                             <thead className="bg-gray-50 border-y border-gray-100">
                                                 <tr>
@@ -342,6 +343,34 @@ export default function BIMQuantitiesReport() {
                                                 ))}
                                             </tbody>
                                         </table>
+                                    </div>
+                                    {/* Mobile card list */}
+                                    <div className="sm:hidden divide-y divide-gray-100">
+                                        {filteredQuantities.map((q, i) => (
+                                            <div key={i} className="p-4 space-y-2">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div>
+                                                        <p className="font-semibold text-gray-800 text-sm">{q.material}</p>
+                                                        {q.category && <p className="text-xs text-gray-400">{q.category}</p>}
+                                                    </div>
+                                                    <Badge className="bg-blue-50 text-blue-700 text-xs shrink-0">{q.count} عنصر</Badge>
+                                                </div>
+                                                <div className="grid grid-cols-3 gap-2 text-xs">
+                                                    <div className="bg-gray-50 rounded p-2 text-center">
+                                                        <p className="text-gray-500">الحجم</p>
+                                                        <p className="font-medium text-gray-700">{q.totalVolume > 0 ? `${q.totalVolume} م³` : '—'}</p>
+                                                    </div>
+                                                    <div className="bg-gray-50 rounded p-2 text-center">
+                                                        <p className="text-gray-500">المساحة</p>
+                                                        <p className="font-medium text-gray-700">{q.totalArea > 0 ? `${q.totalArea} م²` : '—'}</p>
+                                                    </div>
+                                                    <div className="bg-green-50 rounded p-2 text-center">
+                                                        <p className="text-gray-500">التكلفة</p>
+                                                        <p className="font-semibold text-green-700">{q.totalCost > 0 ? q.totalCost.toLocaleString() : '—'}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
                                 </CardContent>
                             </Card>
@@ -435,7 +464,9 @@ export default function BIMQuantitiesReport() {
                                             <p className="text-sm">لا توجد عناصر ذات أولوية في هذا الفلتر</p>
                                         </div>
                                     ) : (
-                                        <div className="overflow-x-auto">
+                                        <>
+                                        {/* Desktop table */}
+                                        <div className="hidden sm:block overflow-x-auto">
                                             <table className="w-full text-sm">
                                                 <thead className="bg-gray-50 border-y border-gray-100">
                                                     <tr>
@@ -470,6 +501,38 @@ export default function BIMQuantitiesReport() {
                                                 </tbody>
                                             </table>
                                         </div>
+                                        {/* Mobile card list */}
+                                        <div className="sm:hidden divide-y divide-gray-100">
+                                            {filteredPriority.map((el, i) => {
+                                                const cfg = PRIORITY_CONFIG[el.priority] || PRIORITY_CONFIG.high;
+                                                return (
+                                                    <div key={i} className="p-4 space-y-2">
+                                                        <div className="flex items-start justify-between gap-2">
+                                                            <div>
+                                                                <p className="font-semibold text-gray-800 text-sm">{el.name}</p>
+                                                                {el.material && <p className="text-xs text-gray-400">{el.material}</p>}
+                                                            </div>
+                                                            <Badge className={`text-xs shrink-0 ${cfg.color}`}>{cfg.label}</Badge>
+                                                        </div>
+                                                        <div className="grid grid-cols-3 gap-2 text-xs">
+                                                            <div className="bg-green-50 rounded p-2 text-center">
+                                                                <p className="text-gray-500">التكلفة</p>
+                                                                <p className="font-semibold text-green-700">{el.cost > 0 ? el.cost.toLocaleString() : '—'}</p>
+                                                            </div>
+                                                            <div className="bg-gray-50 rounded p-2 text-center">
+                                                                <p className="text-gray-500">الحجم</p>
+                                                                <p className="font-medium text-gray-700">{el.volume > 0 ? `${el.volume} م³` : '—'}</p>
+                                                            </div>
+                                                            <div className="bg-gray-50 rounded p-2 text-center">
+                                                                <p className="text-gray-500">الحالة</p>
+                                                                <p className="font-medium text-gray-700 truncate">{el.status || '—'}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        </>
                                     )}
                                 </CardContent>
                             </Card>
