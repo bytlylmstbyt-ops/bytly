@@ -132,6 +132,9 @@
           "data.follow_up_by": "{{user.email}}"
         },
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -144,6 +147,9 @@
           "data.recorded_by": "{{user.email}}"
         },
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -154,6 +160,9 @@
       "$or": [
         {
           "data.recorded_by": "{{user.email}}"
+        },
+        {
+          "created_by": "{{user.email}}"
         },
         {
           "user_condition": {

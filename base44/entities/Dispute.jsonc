@@ -203,48 +203,8 @@
     "create": {
       "created_by": "{{user.email}}"
     },
-    "read": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.raised_by": "{{user.email}}"
-        },
-        {
-          "data.raised_against": "{{user.email}}"
-        },
-        {
-          "data.assigned_admin": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    },
-    "update": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.raised_by": "{{user.email}}"
-        },
-        {
-          "data.raised_against": "{{user.email}}"
-        },
-        {
-          "data.assigned_admin": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
-    },
+    "read": null,
+    "update": null,
     "delete": {
       "user_condition": {
         "role": "admin"
