@@ -80,16 +80,8 @@ export default function MarketEntityCard({ entity, onViewDetails }) {
       </CardContent>
 
       <CardFooter className="flex gap-2">
-        <Button 
-          className="flex-1 gap-2" 
-          variant="outline"
-          onClick={() => onViewDetails(entity)}
-        >
-          <Eye className="w-4 h-4" />
-          التفاصيل
-        </Button>
         <Button
-          className="flex-1 gap-2 bg-[#c9a66b] hover:bg-[#b8935a] text-white"
+          className="w-full gap-2 bg-[#c9a66b] hover:bg-[#b8935a] text-white"
           onClick={() => setShowContact(true)}
         >
           <MessageSquarePlus className="w-4 h-4" />
