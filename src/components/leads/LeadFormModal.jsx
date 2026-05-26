@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import MobileSelect from "@/components/mobile/MobileSelect";
 
 const STATUS_OPTIONS = [
   { value: "new", label: "جديد", color: "text-blue-600" },
@@ -62,12 +62,13 @@ export default function LeadFormModal({ open, onClose, lead, onSave }) {
             </div>
             <div>
               <Label>المصدر</Label>
-              <Select value={form.source} onValueChange={v => setForm({ ...form, source: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {SOURCE_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <MobileSelect
+                value={form.source}
+                onValueChange={v => setForm({ ...form, source: v })}
+                options={SOURCE_OPTIONS}
+                placeholder="اختر المصدر"
+                label="المصدر"
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -83,12 +84,13 @@ export default function LeadFormModal({ open, onClose, lead, onSave }) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>الحالة</Label>
-              <Select value={form.status} onValueChange={v => setForm({ ...form, status: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {STATUS_OPTIONS.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
+              <MobileSelect
+                value={form.status}
+                onValueChange={v => setForm({ ...form, status: v })}
+                options={STATUS_OPTIONS}
+                placeholder="اختر الحالة"
+                label="الحالة"
+              />
             </div>
             <div>
               <Label>تاريخ المتابعة</Label>
