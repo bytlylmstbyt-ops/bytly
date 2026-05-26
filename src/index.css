@@ -133,6 +133,13 @@
     user-select: none;
     -webkit-user-select: none;
   }
+
+  /* Allow text selection in content areas */
+  p, .prose, [data-selectable],
+  .chat-message-content, .project-description {
+    user-select: text;
+    -webkit-user-select: text;
+  }
 }
 
 /* BytlyAdvisorChat floating button & window — clears BottomNav (56px) + safe area on mobile */

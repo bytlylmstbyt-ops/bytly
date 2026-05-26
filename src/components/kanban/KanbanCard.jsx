@@ -34,7 +34,7 @@ export default function KanbanCard({ task, engineer, onClick }) {
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -5 }}
       onClick={onClick}
-      className="cursor-pointer"
+      className="cursor-pointer select-none"
     >
       <Card className={`p-4 hover:shadow-lg transition-all border-l-4 ${
         isOverdue ? 'border-l-red-500 bg-red-50' : 'border-l-[#d4a574]'

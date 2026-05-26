@@ -223,13 +223,13 @@ export default function BytlyAdvisorChat() {
                 <p className="text-amber-200 text-xs">مستشارك الهندسي الذكي ✨</p>
               </div>
               <div className="flex items-center gap-1">
-                <button onClick={handleReset} className="p-1.5 rounded-lg hover:bg-white/20 text-white/70 hover:text-white transition-colors" title="محادثة جديدة">
+                <button onClick={handleReset} className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/20 text-white/70 hover:text-white transition-colors" title="محادثة جديدة">
                   <RotateCcw className="w-4 h-4" />
                 </button>
-                <button onClick={() => setIsMinimized(m => !m)} className="p-1.5 rounded-lg hover:bg-white/20 text-white/70 hover:text-white transition-colors">
+                <button onClick={() => setIsMinimized(m => !m)} className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/20 text-white/70 hover:text-white transition-colors">
                   {isMinimized ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
                 </button>
-                <button onClick={() => setIsOpen(false)} className="p-1.5 rounded-lg hover:bg-white/20 text-white/70 hover:text-white transition-colors">
+                <button onClick={() => setIsOpen(false)} className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/20 text-white/70 hover:text-white transition-colors">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -251,7 +251,7 @@ export default function BytlyAdvisorChat() {
                       }`}>
                         {msg.role === "user" ? <User className="w-4 h-4 text-white" /> : <Sparkles className="w-4 h-4 text-amber-200" />}
                       </div>
-                      <div className={`max-w-[78%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                      <div className={`chat-message-content max-w-[78%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
                         msg.role === "user"
                           ? "bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] text-white rounded-tr-sm"
                           : "bg-white text-slate-800 border border-slate-100 shadow-sm rounded-tl-sm"

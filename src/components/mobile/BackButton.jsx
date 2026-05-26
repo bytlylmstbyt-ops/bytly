@@ -11,7 +11,7 @@ export default function BackButton() {
   return (
     <button
       onClick={() => navigate(-1)}
-      className="md:hidden flex items-center justify-center w-9 h-9 rounded-full hover:bg-slate-100 transition-colors select-none"
+      className="md:hidden flex items-center justify-center w-11 h-11 rounded-full hover:bg-slate-100 transition-colors select-none"
       aria-label="رجوع"
     >
       <ChevronRight className="w-5 h-5 text-[#6B5D4F]" />

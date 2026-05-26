@@ -337,26 +337,26 @@ export default function BIMViewer({ modelUrn, modelName, modelId, onClose }) {
                 <div className="flex items-center gap-1.5">
                     {status === 'ready' && (
                         <>
-                            <Button size="sm" variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-700 h-8 w-8 p-0" title="عرض كامل"
+                            <Button size="sm" variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-700 h-11 w-11 p-0" title="عرض كامل"
                                 onClick={() => viewerAction(v => v.fitToView())}>
                                 <Home className="w-4 h-4" />
                             </Button>
-                            <Button size="sm" variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-700 h-8 w-8 p-0" title="تكبير"
+                            <Button size="sm" variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-700 h-11 w-11 p-0" title="تكبير"
                                 onClick={() => viewerAction(v => v.navigation.setZoomTowardsCursor(true))}>
                                 <ZoomIn className="w-4 h-4" />
                             </Button>
-                            <Button size="sm" variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-700 h-8 w-8 p-0" title="إظهار الكل"
+                            <Button size="sm" variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-700 h-11 w-11 p-0" title="إظهار الكل"
                                 onClick={() => viewerAction(v => v.showAll())}>
                                 <Maximize2 className="w-4 h-4" />
                             </Button>
-                            <Button size="sm" variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-700 h-8 w-8 p-0" title="إعادة تعيين"
+                            <Button size="sm" variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-700 h-11 w-11 p-0" title="إعادة تعيين"
                                 onClick={() => viewerAction(v => { v.showAll(); v.fitToView(); })}>
                                 <RotateCcw className="w-4 h-4" />
                             </Button>
                             <div className="w-px h-6 bg-gray-600 mx-1" />
                         </>
                     )}
-                    <button onClick={onClose} className="text-gray-400 hover:text-white w-8 h-8 flex items-center justify-center rounded hover:bg-gray-700">
+                    <button onClick={onClose} className="text-gray-400 hover:text-white w-11 h-11 flex items-center justify-center rounded hover:bg-gray-700">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -400,7 +400,7 @@ export default function BIMViewer({ modelUrn, modelName, modelId, onClose }) {
                                 <button
                                     key={p.id}
                                     onClick={() => setActivePanel(p.id)}
-                                    className={`flex-1 flex flex-col items-center gap-1 py-2.5 text-xs transition-colors ${
+                                    className={`flex-1 flex flex-col items-center gap-1 py-3 min-h-[44px] text-xs transition-colors ${
                                         activePanel === p.id
                                             ? 'text-blue-600 border-b-2 border-blue-600 bg-white'
                                             : 'text-gray-500 hover:text-gray-700'

@@ -42,7 +42,7 @@ export default function KanbanColumn({
               <Button
                 size="sm"
                 variant="outline"
-                className="w-full text-xs"
+                className="w-full text-xs min-h-[44px]"
                 onClick={() => onAddTask?.(status)}
               >
                 <Plus className="w-3 h-3 ml-1" />
