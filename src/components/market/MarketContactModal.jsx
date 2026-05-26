@@ -11,9 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Shield, CheckCircle2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 export default function MarketContactModal({ entity, open, onClose }) {
+  const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -22,10 +24,9 @@ export default function MarketContactModal({ entity, open, onClose }) {
     e.preventDefault();
     setLoading(true);
 
-    // حفظ الطلب كـ Lead في قاعدة البيانات مع إخفاء بيانات المطور عن المستخدم
     await base44.entities.Lead.create({
       name: `طلب عبر سوق المطورين`,
-      notes: `طلب تواصل مع: ${entity.name} (${entity.entity_type === "developer" ? "مطور عقاري" : "مستثمر"}) - المنطقة: ${entity.region}\n\nتفاصيل الطلب:\n${message}`,
+      notes: `طلب تواصل مع: ${entity.name} (${entity.entity_type === "developer" ? "مطور عقاري" : "مستثمر"}) - المنطقة: ${entity.region}\n\nعنوان الطلب: ${title}\n\nتفاصيل الطلب:\n${message}`,
       project_type: entity.project_types?.join("، ") || "",
       source: "other",
       status: "new",
@@ -37,6 +38,7 @@ export default function MarketContactModal({ entity, open, onClose }) {
 
   const handleClose = () => {
     setSubmitted(false);
+    setTitle("");
     setMessage("");
     onClose();
   };
@@ -58,14 +60,24 @@ export default function MarketContactModal({ entity, open, onClose }) {
 
             <form onSubmit={handleSubmit} className="space-y-4 mt-2">
               <div>
-                <Label htmlFor="msg" className="mb-2 block">تفاصيل مشروعك أو طلبك</Label>
+                <Label htmlFor="title" className="mb-2 block">عنوان الطلب أو المشروع</Label>
+                <Input
+                  id="title"
+                  required
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="مثال: تصميم مجمع سكني في الرياض"
+                />
+              </div>
+              <div>
+                <Label htmlFor="msg" className="mb-2 block">تفاصيل وميزانية المشروع التقريبية</Label>
                 <Textarea
                   id="msg"
                   required
                   rows={4}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="اكتب تفاصيل مشروعك أو المساحة أو الاستفسار..."
+                  placeholder="اكتب هنا تفاصيل طلبك ليتم التنسيق مع المطور مباشرة..."
                   className="resize-none"
                 />
               </div>
