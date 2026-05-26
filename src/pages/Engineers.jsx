@@ -6,8 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, Filter, MapPin, Star, CheckCircle, 
   Users, Grid3X3, List, ChevronDown, X,
-  Building2, Palette, PenTool, SlidersHorizontal
+  Building2, Palette, PenTool, SlidersHorizontal,
+  Trash2, Download, CheckSquare, Square, UserCheck
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -51,6 +53,8 @@ export default function Engineers() {
     verified: false
   });
   const [sortBy, setSortBy] = useState("-rating");
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
 
   useEffect(() => {
     loadEngineers();
@@ -105,6 +109,58 @@ export default function Engineers() {
       verified: false
     });
     setSearchQuery("");
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredEngineers.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredEngineers.map(e => e.id)));
+    }
+  };
+
+  const handleExport = () => {
+    const selected = filteredEngineers.filter(e => selectedIds.has(e.id));
+    const csv = [
+      ["الاسم", "التخصص", "المدينة", "التقييم", "المشاريع المنجزة", "البريد الإلكتروني"],
+      ...selected.map(e => [e.full_name, e.specialization, e.city, e.rating?.toFixed(1), e.completed_projects || 0, e.email])
+    ].map(row => row.join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "engineers_export.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`تم تصدير ${selected.length} مهندس بنجاح`);
+  };
+
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`هل أنت متأكد من حذف ${selectedIds.size} مهندس؟`)) return;
+    for (const id of selectedIds) {
+      await base44.entities.Engineer.delete(id);
+    }
+    toast.success(`تم حذف ${selectedIds.size} مهندس`);
+    setSelectedIds(new Set());
+    setIsSelectionMode(false);
+    loadEngineers();
+  };
+
+  const handleBulkVerify = async () => {
+    for (const id of selectedIds) {
+      await base44.entities.Engineer.update(id, { is_verified: true });
+    }
+    toast.success(`تم توثيق ${selectedIds.size} مهندس`);
+    setSelectedIds(new Set());
+    loadEngineers();
   };
 
   const activeFiltersCount = [
@@ -283,12 +339,57 @@ export default function Engineers() {
           </div>
         </div>
 
-        {/* Results Count */}
-        <div className="mb-6">
+        {/* Results Count + Selection Toggle */}
+        <div className="flex items-center justify-between mb-6">
           <p className="text-slate-600">
             {t('engineers.results').replace('{count}', filteredEngineers.length)}
           </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setIsSelectionMode(!isSelectionMode); setSelectedIds(new Set()); }}
+            className={isSelectionMode ? "bg-slate-100 border-slate-400" : ""}
+          >
+            {isSelectionMode ? <X className="w-4 h-4 ml-1" /> : <CheckSquare className="w-4 h-4 ml-1" />}
+            {isSelectionMode ? "إلغاء التحديد" : "تحديد متعدد"}
+          </Button>
         </div>
+
+        {/* Bulk Action Toolbar */}
+        {isSelectionMode && (
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-[#1a1a2e] text-white rounded-xl px-4 py-3 mb-6 shadow-lg">
+            <div className="flex items-center gap-3">
+              <button onClick={toggleSelectAll} className="flex items-center gap-2 text-sm hover:text-[#d4a574] transition-colors">
+                {selectedIds.size === filteredEngineers.length
+                  ? <CheckSquare className="w-5 h-5 text-[#d4a574]" />
+                  : <Square className="w-5 h-5" />}
+                {selectedIds.size === filteredEngineers.length ? "إلغاء الكل" : "تحديد الكل"}
+              </button>
+              <span className="text-slate-400 text-sm">
+                {selectedIds.size} محدد من {filteredEngineers.length}
+              </span>
+            </div>
+            {selectedIds.size > 0 && (
+              <div className="flex items-center gap-2">
+                <Button size="sm" variant="ghost" onClick={handleExport}
+                  className="text-green-300 hover:text-green-200 hover:bg-green-900/30">
+                  <Download className="w-4 h-4 ml-1" />
+                  تصدير CSV
+                </Button>
+                <Button size="sm" variant="ghost" onClick={handleBulkVerify}
+                  className="text-blue-300 hover:text-blue-200 hover:bg-blue-900/30">
+                  <UserCheck className="w-4 h-4 ml-1" />
+                  توثيق
+                </Button>
+                <Button size="sm" variant="ghost" onClick={handleBulkDelete}
+                  className="text-red-300 hover:text-red-200 hover:bg-red-900/30">
+                  <Trash2 className="w-4 h-4 ml-1" />
+                  حذف
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Engineers Grid/List */}
         {isLoading ? (
@@ -324,10 +425,23 @@ export default function Engineers() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <Link to={createPageUrl("EngineerProfile") + `?id=${engineer.id}`}>
-                    <Card className={`hover-lift cursor-pointer overflow-hidden border-0 shadow-lg ${
+                  <div className="relative">
+                    {/* Selection Checkbox */}
+                    {isSelectionMode && (
+                      <button
+                        onClick={(e) => { e.preventDefault(); toggleSelect(engineer.id); }}
+                        className="absolute top-3 right-3 z-10 w-7 h-7 flex items-center justify-center rounded-full bg-white/90 shadow-md"
+                      >
+                        {selectedIds.has(engineer.id)
+                          ? <CheckSquare className="w-5 h-5 text-[#d4a574]" />
+                          : <Square className="w-5 h-5 text-slate-400" />}
+                      </button>
+                    )}
+                  <Link to={isSelectionMode ? "#" : createPageUrl("EngineerProfile") + `?id=${engineer.id}`}
+                    onClick={isSelectionMode ? (e) => { e.preventDefault(); toggleSelect(engineer.id); } : undefined}>
+                    <Card className={`hover-lift cursor-pointer overflow-hidden border-0 shadow-lg transition-all ${
                       viewMode === "list" ? "flex" : ""
-                    }`}>
+                    } ${isSelectionMode && selectedIds.has(engineer.id) ? "ring-2 ring-[#d4a574]" : ""}`}>
                       {viewMode === "grid" ? (
                         <>
                           <div className="relative h-32 bg-gradient-to-br from-[#1a1a2e] to-[#d4a574]">
@@ -417,6 +531,7 @@ export default function Engineers() {
                       )}
                     </Card>
                   </Link>
+                  </div>
                 </motion.div>
               ))}
             </motion.div>
