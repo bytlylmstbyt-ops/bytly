@@ -223,7 +223,21 @@
     "create": {
       "created_by": "{{user.email}}"
     },
-    "read": true,
+    "read": {
+      "$or": [
+        {
+          "data.status": "approved"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.email": "{{user.email}}"
+        }
+      ]
+    },
     "update": {
       "$or": [
         {

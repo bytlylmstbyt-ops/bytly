@@ -174,7 +174,24 @@
     "create": {
       "created_by": "{{user.email}}"
     },
-    "read": true,
+    "read": {
+      "$or": [
+        {
+          "data.status": "active"
+        },
+        {
+          "data.status": "sold_out"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.seller_id": "{{user.id}}"
+        }
+      ]
+    },
     "update": {
       "$or": [
         {
