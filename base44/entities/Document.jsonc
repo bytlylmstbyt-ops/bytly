@@ -69,10 +69,7 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.linked_id": {
-            "_filter": "Project",
-            "read": true
-          }
+          "data.uploaded_by": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -87,6 +84,9 @@
           "created_by": "{{user.email}}"
         },
         {
+          "data.uploaded_by": "{{user.email}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -97,6 +97,9 @@
       "$or": [
         {
           "created_by": "{{user.email}}"
+        },
+        {
+          "data.uploaded_by": "{{user.email}}"
         },
         {
           "user_condition": {
