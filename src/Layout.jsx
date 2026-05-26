@@ -10,7 +10,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { 
   Search, MessageSquare, User, Menu, X, 
   LogOut, Briefcase, Settings, Wallet, Bell, 
-  PlusCircle, ChevronDown, Instagram, Facebook, Mail, Phone, MessagesSquare, Scale, Linkedin, Twitter, Bot
+  PlusCircle, ChevronDown, Instagram, Facebook, Mail, Phone, MessagesSquare, Scale, Linkedin, Twitter, Bot, Building2
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import BottomNav from "@/components/mobile/BottomNav";
@@ -152,6 +152,12 @@ function LayoutContent({ children, currentPageName }) {
                   <DropdownMenuItem asChild>
                     <Link to={createPageUrl("DesignMarketplace")} className="flex items-center gap-2 cursor-pointer">
                       🎨 متجر التصاميم
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/MarketEntities" className="flex items-center gap-2 cursor-pointer">
+                      <Building2 className="w-4 h-4 text-[#C9A66B]" />
+                      سوق المطورين والمستثمرين
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
