@@ -132,9 +132,6 @@
           "data.recorded_by": "{{user.email}}"
         },
         {
-          "data.follow_up_by": "{{user.email}}"
-        },
-        {
           "user_condition": {
             "role": "admin"
           }
@@ -148,9 +145,6 @@
         },
         {
           "data.recorded_by": "{{user.email}}"
-        },
-        {
-          "data.follow_up_by": "{{user.email}}"
         },
         {
           "user_condition": {
