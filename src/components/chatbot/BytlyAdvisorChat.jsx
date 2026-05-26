@@ -155,8 +155,9 @@ export default function BytlyAdvisorChat() {
 
   return (
     <>
-      {/* Floating Button */}
-      <div className="fixed bottom-6 left-6 z-[9999]">
+      {/* Floating Button — on mobile clears BottomNav + safe-area; on desktop stays at bottom-6 */}
+      <div className="fixed left-6 z-[9999] bytly-fab-anchor">
+
         {/* Tooltip */}
         <AnimatePresence>
           {showPulse && !isOpen && (
@@ -197,7 +198,7 @@ export default function BytlyAdvisorChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 28 }}
-            className="fixed bottom-28 left-6 z-[9998] flex flex-col rounded-2xl shadow-2xl overflow-hidden"
+            className="fixed left-6 z-[9998] flex flex-col rounded-2xl shadow-2xl overflow-hidden bytly-chat-anchor"
             dir="rtl"
             style={{
               width: "360px",

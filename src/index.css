@@ -135,6 +135,22 @@
   }
 }
 
+/* BytlyAdvisorChat floating button & window — clears BottomNav on mobile */
+.bytly-fab-anchor {
+  bottom: calc(56px + env(safe-area-inset-bottom) + 16px);
+}
+.bytly-chat-anchor {
+  bottom: calc(56px + env(safe-area-inset-bottom) + 96px);
+}
+@media (min-width: 768px) {
+  .bytly-fab-anchor {
+    bottom: 24px;
+  }
+  .bytly-chat-anchor {
+    bottom: 112px;
+  }
+}
+
 /* Dark mode via system preference */
 @media (prefers-color-scheme: dark) {
   :root:not(.light) {
