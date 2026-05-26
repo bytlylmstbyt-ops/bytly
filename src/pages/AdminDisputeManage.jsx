@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import MobileSelect from "@/components/mobile/MobileSelect";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Save, Plus, Check, X } from "lucide-react";
 import { toast } from "sonner";
@@ -267,20 +267,21 @@ export default function AdminDisputeManage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label>الحالة</Label>
-                  <Select value={status} onValueChange={setStatus}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="submitted">مقدم</SelectItem>
-                      <SelectItem value="under_review">قيد المراجعة</SelectItem>
-                      <SelectItem value="investigation">قيد التحقيق</SelectItem>
-                      <SelectItem value="mediation">في الوساطة</SelectItem>
-                      <SelectItem value="resolved">تم الحل</SelectItem>
-                      <SelectItem value="closed">مغلق</SelectItem>
-                      <SelectItem value="escalated">مصعّد</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <MobileSelect
+                    value={status}
+                    onValueChange={setStatus}
+                    placeholder="اختر الحالة"
+                    label="حالة النزاع"
+                    options={[
+                      { value: "submitted", label: "مقدم" },
+                      { value: "under_review", label: "قيد المراجعة" },
+                      { value: "investigation", label: "قيد التحقيق" },
+                      { value: "mediation", label: "في الوساطة" },
+                      { value: "resolved", label: "تم الحل" },
+                      { value: "closed", label: "مغلق" },
+                      { value: "escalated", label: "مصعّد" },
+                    ]}
+                  />
                 </div>
 
                 <div className="space-y-2">

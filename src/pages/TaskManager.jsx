@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import MobileSelect from "@/components/mobile/MobileSelect";
 import {
   Plus, RefreshCw, Loader2, FolderOpen, CheckSquare, Calendar,
   Bell, BellRing, Edit2, Trash2, Search, AlertCircle, LayoutList, LayoutGrid, BarChart2
@@ -157,12 +157,20 @@ export default function TaskManager() {
   };
 
   const changeStatus = async (task, newStatus) => {
-    await base44.entities.Task.update(task.id, {
+    // Optimistic update — reflect immediately before API round-trip
+    const optimistic = {
       status: newStatus,
       completion_date: newStatus === 'completed' ? new Date().toISOString() : null,
       progress: newStatus === 'completed' ? 100 : task.progress,
-    });
-    setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: newStatus } : t));
+    };
+    setTasks(prev => prev.map(t => t.id === task.id ? { ...t, ...optimistic } : t));
+    try {
+      await base44.entities.Task.update(task.id, optimistic);
+    } catch (e) {
+      // Rollback on failure
+      setTasks(prev => prev.map(t => t.id === task.id ? task : t));
+      toast.error("فشل تحديث الحالة");
+    }
   };
 
   const openEditTask = (task) => {
@@ -265,23 +273,31 @@ export default function TaskManager() {
             <Search className="absolute right-3 top-2.5 w-4 h-4 text-slate-400" />
             <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="بحث في المهام..." className="pr-9 text-sm" />
           </div>
-          <Select value={selectedProject} onValueChange={setSelectedProject}>
-            <SelectTrigger className="w-44"><SelectValue placeholder="كل المشاريع" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">كل المشاريع</SelectItem>
-              {projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-36"><SelectValue placeholder="كل الحالات" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">كل الحالات</SelectItem>
-              <SelectItem value="todo">انتظار</SelectItem>
-              <SelectItem value="in_progress">تنفيذ</SelectItem>
-              <SelectItem value="on_hold">معلقة</SelectItem>
-              <SelectItem value="completed">مكتملة</SelectItem>
-            </SelectContent>
-          </Select>
+          <MobileSelect
+            value={selectedProject}
+            onValueChange={setSelectedProject}
+            placeholder="كل المشاريع"
+            label="المشروع"
+            options={[
+              { value: "all", label: "كل المشاريع" },
+              ...projects.map(p => ({ value: p.id, label: p.name })),
+            ]}
+            triggerClassName="w-44"
+          />
+          <MobileSelect
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+            placeholder="كل الحالات"
+            label="الحالة"
+            options={[
+              { value: "all", label: "كل الحالات" },
+              { value: "todo", label: "انتظار" },
+              { value: "in_progress", label: "تنفيذ" },
+              { value: "on_hold", label: "معلقة" },
+              { value: "completed", label: "مكتملة" },
+            ]}
+            triggerClassName="w-36"
+          />
         </div>
 
         {/* Tabs */}

@@ -135,19 +135,20 @@
   }
 }
 
-/* BytlyAdvisorChat floating button & window — clears BottomNav on mobile */
+/* BytlyAdvisorChat floating button & window — clears BottomNav (56px) + safe area on mobile */
+/* On md+ (no BottomNav) revert to standard 24px / 112px offsets */
 .bytly-fab-anchor {
-  bottom: calc(56px + env(safe-area-inset-bottom) + 16px);
+  bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 16px);
 }
 .bytly-chat-anchor {
-  bottom: calc(56px + env(safe-area-inset-bottom) + 96px);
+  bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 96px);
 }
 @media (min-width: 768px) {
   .bytly-fab-anchor {
-    bottom: 24px;
+    bottom: 24px !important;
   }
   .bytly-chat-anchor {
-    bottom: 112px;
+    bottom: 112px !important;
   }
 }
 

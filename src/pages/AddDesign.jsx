@@ -13,13 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import MobileSelect from "@/components/mobile/MobileSelect";
 
 export default function AddDesign() {
   const navigate = useNavigate();
@@ -235,30 +229,24 @@ export default function AddDesign() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>التصنيف *</Label>
-                  <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)} required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر التصنيف" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map(cat => (
-                        <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <MobileSelect
+                    value={formData.category}
+                    onValueChange={(value) => handleInputChange("category", value)}
+                    placeholder="اختر التصنيف"
+                    label="التصنيف"
+                    options={categories}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label>النمط المعماري *</Label>
-                  <Select value={formData.design_style} onValueChange={(value) => handleInputChange("design_style", value)} required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر النمط" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {styles.map(style => (
-                        <SelectItem key={style.value} value={style.value}>{style.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <MobileSelect
+                    value={formData.design_style}
+                    onValueChange={(value) => handleInputChange("design_style", value)}
+                    placeholder="اختر النمط"
+                    label="النمط المعماري"
+                    options={styles}
+                  />
                 </div>
               </div>
 
