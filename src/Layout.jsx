@@ -16,6 +16,7 @@ import Logo from "@/components/Logo";
 import BottomNav from "@/components/mobile/BottomNav";
 import BackButton from "@/components/mobile/BackButton";
 import PageTransition from "@/components/mobile/PageTransition";
+import PullToRefreshWrapper from "@/components/mobile/PullToRefreshWrapper";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -322,9 +323,11 @@ function LayoutContent({ children, currentPageName }) {
 
       {/* Main Content */}
       <main className="pt-16 md:pt-20 min-h-screen pb-16 md:pb-0 safe-area-wrapper">
-        <PageTransition>
-          {children}
-        </PageTransition>
+        <PullToRefreshWrapper onRefresh={() => window.location.reload()} className="min-h-screen">
+          <PageTransition>
+            {children}
+          </PageTransition>
+        </PullToRefreshWrapper>
       </main>
 
       {/* Mobile Bottom Navigation */}
