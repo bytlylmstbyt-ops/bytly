@@ -69,6 +69,12 @@
           "created_by": "{{user.email}}"
         },
         {
+          "data.linked_id": {
+            "_filter": "Project",
+            "read": true
+          }
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -81,6 +87,12 @@
           "created_by": "{{user.email}}"
         },
         {
+          "data.linked_id": {
+            "_filter": "Project",
+            "update": true
+          }
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -91,6 +103,12 @@
       "$or": [
         {
           "created_by": "{{user.email}}"
+        },
+        {
+          "data.linked_id": {
+            "_filter": "Project",
+            "delete": true
+          }
         },
         {
           "user_condition": {
