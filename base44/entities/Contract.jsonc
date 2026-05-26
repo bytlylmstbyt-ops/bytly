@@ -150,6 +150,9 @@
     "read": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.client_id": "{{user.id}}"
         },
         {
@@ -164,6 +167,9 @@
     },
     "update": {
       "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
         {
           "data.client_id": "{{user.id}}"
         },
