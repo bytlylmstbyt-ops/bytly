@@ -135,13 +135,13 @@
     "read": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
           "data.client_id": "{{user.id}}"
         },
         {
           "data.target_engineer_id": "{{user.id}}"
+        },
+        {
+          "data.client_email": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -153,13 +153,13 @@
     "update": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
           "data.client_id": "{{user.id}}"
         },
         {
           "data.target_engineer_id": "{{user.id}}"
+        },
+        {
+          "data.client_email": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -171,10 +171,10 @@
     "delete": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "data.client_id": "{{user.id}}"
         },
         {
-          "data.client_id": "{{user.id}}"
+          "data.client_email": "{{user.email}}"
         },
         {
           "user_condition": {
