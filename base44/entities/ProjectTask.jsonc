@@ -131,13 +131,16 @@
     "read": {
       "$or": [
         {
-          "data.assigned_to": "{{user.id}}"
+          "created_by": "{{user.email}}"
         },
         {
           "data.project_id": {
-            "_filter": "TaskProject",
+            "_filter": "Project",
             "read": true
           }
+        },
+        {
+          "data.assigned_to": "{{user.id}}"
         },
         {
           "user_condition": {
@@ -149,13 +152,16 @@
     "update": {
       "$or": [
         {
-          "data.assigned_to": "{{user.id}}"
+          "created_by": "{{user.email}}"
         },
         {
           "data.project_id": {
-            "_filter": "TaskProject",
+            "_filter": "Project",
             "update": true
           }
+        },
+        {
+          "data.assigned_to": "{{user.id}}"
         },
         {
           "user_condition": {
@@ -165,9 +171,22 @@
       ]
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.project_id": {
+            "_filter": "Project",
+            "delete": true
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }
