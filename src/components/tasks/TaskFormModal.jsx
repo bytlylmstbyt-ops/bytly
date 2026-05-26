@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import MobileSelect from "@/components/mobile/MobileSelect";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Save, Link2, X, Paperclip } from "lucide-react";
@@ -80,39 +80,44 @@ export default function TaskFormModal({ open, onClose, onSave, initial, projects
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">المشروع *</label>
-                  <Select value={form.project_id} onValueChange={v => set("project_id", v)}>
-                    <SelectTrigger><SelectValue placeholder="اختر مشروعاً" /></SelectTrigger>
-                    <SelectContent>
-                      {projects?.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <MobileSelect
+                    value={form.project_id}
+                    onValueChange={v => set("project_id", v)}
+                    placeholder="اختر مشروعاً"
+                    label="المشروع"
+                    options={projects?.map(p => ({ value: p.id, label: p.name })) || []}
+                  />
                 </div>
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">الحالة</label>
-                  <Select value={form.status} onValueChange={v => set("status", v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todo">قيد الانتظار</SelectItem>
-                      <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
-                      <SelectItem value="completed">مكتملة</SelectItem>
-                      <SelectItem value="on_hold">معلقة</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <MobileSelect
+                    value={form.status}
+                    onValueChange={v => set("status", v)}
+                    label="الحالة"
+                    options={[
+                      { value: "todo", label: "قيد الانتظار" },
+                      { value: "in_progress", label: "قيد التنفيذ" },
+                      { value: "completed", label: "مكتملة" },
+                      { value: "on_hold", label: "معلقة" },
+                    ]}
+                  />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">الأولوية</label>
-                  <Select value={form.priority} onValueChange={v => set("priority", v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">منخفضة</SelectItem>
-                      <SelectItem value="medium">متوسطة</SelectItem>
-                      <SelectItem value="high">مرتفعة</SelectItem>
-                      <SelectItem value="urgent">عاجلة 🚨</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <MobileSelect
+                    value={form.priority}
+                    onValueChange={v => set("priority", v)}
+                    label="الأولوية"
+                    options={[
+                      { value: "low", label: "منخفضة" },
+                      { value: "medium", label: "متوسطة" },
+                      { value: "high", label: "مرتفعة" },
+                      { value: "urgent", label: "عاجلة 🚨" },
+                    ]}
+                  />
                 </div>
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">مُكلَّف لـ (بريد)</label>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, User, Flag, CheckCircle2, Circle, Clock, AlertCircle, Pause } from "lucide-react";
 import { format, isPast, isToday, parseISO } from "date-fns";
@@ -19,14 +19,28 @@ const PRIORITY_CONFIG = {
 };
 
 export default function TaskCard({ task, projectColor = "#6B5D4F", onClick, onStatusChange }) {
-  const status = STATUS_CONFIG[task.status] || STATUS_CONFIG.todo;
+  // Optimistic local status — updates instantly before server responds
+  const [localStatus, setLocalStatus] = useState(task.status);
+
+  // Keep in sync if parent passes updated task prop
+  useEffect(() => { setLocalStatus(task.status); }, [task.status]);
+
+  const status = STATUS_CONFIG[localStatus] || STATUS_CONFIG.todo;
   const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.medium;
   const StatusIcon = status.icon;
 
-  const isOverdue = task.due_date && isPast(parseISO(task.due_date)) && task.status !== "completed";
+  const isOverdue = task.due_date && isPast(parseISO(task.due_date)) && localStatus !== "completed";
   const isDueToday = task.due_date && isToday(parseISO(task.due_date));
 
   const nextStatus = { todo: "in_progress", in_progress: "completed", completed: "todo", on_hold: "in_progress" };
+
+  const handleStatusClick = (e) => {
+    e.stopPropagation();
+    if (!onStatusChange) return;
+    const next = nextStatus[localStatus];
+    setLocalStatus(next); // optimistic
+    onStatusChange(task, next);
+  };
 
   return (
     <div
@@ -37,15 +51,15 @@ export default function TaskCard({ task, projectColor = "#6B5D4F", onClick, onSt
       <div className="flex items-start gap-3">
         {/* Status toggle */}
         <button
-          onClick={e => { e.stopPropagation(); onStatusChange && onStatusChange(task, nextStatus[task.status]); }}
+          onClick={handleStatusClick}
           className="mt-0.5 shrink-0 hover:opacity-70 transition-opacity"
           title="تغيير الحالة"
         >
-          <StatusIcon className={`w-5 h-5 ${task.status === 'completed' ? 'text-green-500' : task.status === 'in_progress' ? 'text-blue-500' : 'text-slate-300'}`} />
+          <StatusIcon className={`w-5 h-5 ${localStatus === 'completed' ? 'text-green-500' : localStatus === 'in_progress' ? 'text-blue-500' : 'text-slate-300'}`} />
         </button>
 
         <div className="flex-1 min-w-0">
-          <p className={`text-sm font-medium ${task.status === 'completed' ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+          <p className={`text-sm font-medium ${localStatus === 'completed' ? 'line-through text-slate-400' : 'text-slate-800'}`}>
             {task.title}
           </p>
           {task.description && (
@@ -53,7 +67,7 @@ export default function TaskCard({ task, projectColor = "#6B5D4F", onClick, onSt
           )}
 
           <div className="flex flex-wrap items-center gap-2 mt-2">
-            <Badge className={`text-xs ${status.color}`}>{status.label}</Badge>
+            <Badge className={`text-xs ${status.color}`}>{STATUS_CONFIG[localStatus]?.label || status.label}</Badge>
             <span className={`text-xs font-medium flex items-center gap-0.5 ${priority.color}`}>
               <Flag className="w-3 h-3" />{priority.label}
             </span>
@@ -73,7 +87,7 @@ export default function TaskCard({ task, projectColor = "#6B5D4F", onClick, onSt
             )}
           </div>
 
-          {task.progress > 0 && task.status !== 'completed' && (
+          {task.progress > 0 && localStatus !== 'completed' && (
             <div className="mt-2 flex items-center gap-2">
               <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
                 <div className="h-full bg-blue-500 rounded-full transition-all" style={{ width: `${task.progress}%` }} />

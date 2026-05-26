@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import MobileSelect from "@/components/mobile/MobileSelect";
 import {
   X, Plus, Flag, DollarSign, BarChart3, Loader2, Save,
   CheckCircle2, Clock, Circle, AlertCircle, Sparkles, Link2, Trash2, Edit2, Paperclip
@@ -75,14 +75,16 @@ function MilestoneFormModal({ open, onClose, onSave, initial, loading }) {
             </div>
             <div>
               <label className="text-xs text-slate-500 mb-1 block">الحالة</label>
-              <Select value={form.status} onValueChange={v => setForm(p => ({...p, status: v}))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">قادم</SelectItem>
-                  <SelectItem value="in_progress">جارٍ</SelectItem>
-                  <SelectItem value="completed">مكتمل</SelectItem>
-                </SelectContent>
-              </Select>
+              <MobileSelect
+                value={form.status}
+                onValueChange={v => setForm(p => ({...p, status: v}))}
+                label="الحالة"
+                options={[
+                  { value: "pending", label: "قادم" },
+                  { value: "in_progress", label: "جارٍ" },
+                  { value: "completed", label: "مكتمل" },
+                ]}
+              />
             </div>
           </div>
         </div>
