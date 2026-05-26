@@ -674,12 +674,10 @@ export default function Settings() {
                   className="bg-red-600 hover:bg-red-700 text-white"
                   onClick={async () => {
                     try {
-                      if (typeof base44.auth.deleteAccount === "function") {
-                        await base44.auth.deleteAccount();
-                      } else {
-                        await base44.auth.logout();
-                      }
-                    } catch {
+                      await base44.functions.invoke('deleteAccount', { reason: deleteReason });
+                    } catch (e) {
+                      console.error('deleteAccount error', e);
+                    } finally {
                       base44.auth.logout();
                     }
                   }}
