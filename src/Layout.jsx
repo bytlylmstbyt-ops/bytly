@@ -56,7 +56,7 @@ function LayoutContent({ children, currentPageName }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="min-h-screen bg-background text-foreground" dir={isRTL ? "rtl" : "ltr"}>
       <style>{`
         :root {
           --primary: #6B5D4F;

@@ -47,7 +47,9 @@ export default function EnhancedChatWindow({
         setMessages(prev => {
           // Avoid duplicates
           if (event.type === 'create' && !prev.find(m => m.id === event.id)) {
-            const newMessages = [...prev, event.data].sort((a, b) => 
+            // Remove any optimistic placeholder from same sender and replace with real record
+            const withoutOptimistic = prev.filter(m => !(m._optimistic && m.sender_email === event.data?.sender_email));
+            const newMessages = [...withoutOptimistic, event.data].sort((a, b) =>
               new Date(a.created_date) - new Date(b.created_date)
             );
             setTimeout(scrollToBottom, 100);
@@ -147,21 +149,46 @@ export default function EnhancedChatWindow({
   const handleSendMessage = async () => {
     if (!newMessage.trim() && !uploading) return;
 
+    const optimisticText = newMessage;
+    const optimisticId = `optimistic-${Date.now()}`;
+
+    // Optimistic UI: add message immediately before API call
+    const optimisticMsg = {
+      id: optimisticId,
+      conversation_id: conversation.id,
+      sender_email: currentUserEmail,
+      sender_name: "أنت",
+      sender_role: getUserRole(),
+      content: optimisticText,
+      created_date: new Date().toISOString(),
+      _optimistic: true,
+    };
+    setMessages(prev => [...prev, optimisticMsg]);
+    setNewMessage("");
+    setTimeout(scrollToBottom, 50);
+
     setSending(true);
     setSensitiveWarning(null);
-    
+
     try {
       const user = await base44.auth.me();
-      
+
       // Filter sensitive data
       const { data: filterResult } = await base44.functions.invoke(
         'filterSensitiveData',
-        { content: newMessage }
+        { content: optimisticText }
       );
 
       if (filterResult.hasSensitiveData) {
         setSensitiveWarning(filterResult.warning);
       }
+
+      // Replace optimistic message with confirmed content
+      setMessages(prev => prev.map(m =>
+        m.id === optimisticId
+          ? { ...m, content: filterResult.filteredContent, has_sensitive_data: filterResult.hasSensitiveData }
+          : m
+      ));
 
       await base44.entities.Message.create({
         conversation_id: conversation.id,
@@ -180,9 +207,11 @@ export default function EnhancedChatWindow({
         last_message_date: new Date().toISOString()
       });
 
-      setNewMessage("");
-      // No need to loadMessages - real-time subscription will handle it
+      // Real-time subscription will replace the optimistic entry when the real record arrives
     } catch (error) {
+      // Rollback optimistic message on failure
+      setMessages(prev => prev.filter(m => m.id !== optimisticId));
+      setNewMessage(optimisticText);
       toast.error("خطأ في إرسال الرسالة");
     } finally {
       setSending(false);
