@@ -147,9 +147,6 @@
     "update": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
           "data.email": "{{user.email}}"
         },
         {
