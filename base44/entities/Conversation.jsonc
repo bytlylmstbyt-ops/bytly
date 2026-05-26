@@ -109,7 +109,7 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.admin_emails": "{{user.email}}"
+          "data.participants": "{{user.email}}"
         },
         {
           "user_condition": {
