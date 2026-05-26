@@ -135,12 +135,6 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.conversation_id": {
-            "_filter": "Conversation",
-            "update": true
-          }
-        },
-        {
           "user_condition": {
             "role": "admin"
           }
