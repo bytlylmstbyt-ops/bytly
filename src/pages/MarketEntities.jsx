@@ -4,13 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import MobileSelect from "@/components/mobile/MobileSelect";
 import { Search, Filter, X, Building2 } from "lucide-react";
 import MarketEntityCard from "@/components/market/MarketEntityCard";
 import MarketEntityDetail from "@/components/market/MarketEntityDetail";
@@ -99,52 +93,46 @@ export default function MarketEntitiesPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            <Select value={selectedEntityType} onValueChange={setSelectedEntityType}>
-              <SelectTrigger>
-                <SelectValue placeholder="نوع الجهة" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">الكل</SelectItem>
-                <SelectItem value="developer">مطورين عقاريين</SelectItem>
-                <SelectItem value="investor">مستثمرين</SelectItem>
-              </SelectContent>
-            </Select>
+            <MobileSelect
+              value={selectedEntityType}
+              onValueChange={setSelectedEntityType}
+              placeholder="نوع الجهة"
+              options={[
+                { value: "all", label: "الكل" },
+                { value: "developer", label: "مطورين عقاريين" },
+                { value: "investor", label: "مستثمرين" },
+              ]}
+            />
 
-            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-              <SelectTrigger>
-                <SelectValue placeholder="المنطقة" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">الكل</SelectItem>
-                {REGIONS.map(region => (
-                  <SelectItem key={region} value={region}>{region}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MobileSelect
+              value={selectedRegion}
+              onValueChange={setSelectedRegion}
+              placeholder="المنطقة"
+              options={[
+                { value: "all", label: "الكل" },
+                ...REGIONS.map(region => ({ value: region, label: region })),
+              ]}
+            />
 
-            <Select value={selectedProjectType} onValueChange={setSelectedProjectType}>
-              <SelectTrigger>
-                <SelectValue placeholder="نوع المشروع" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">الكل</SelectItem>
-                {PROJECT_TYPES.map(type => (
-                  <SelectItem key={type} value={type}>{type}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MobileSelect
+              value={selectedProjectType}
+              onValueChange={setSelectedProjectType}
+              placeholder="نوع المشروع"
+              options={[
+                { value: "all", label: "الكل" },
+                ...PROJECT_TYPES.map(type => ({ value: type, label: type })),
+              ]}
+            />
 
-            <Select value={selectedInvestmentRange} onValueChange={setSelectedInvestmentRange}>
-              <SelectTrigger>
-                <SelectValue placeholder="حجم الاستثمار" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">الكل</SelectItem>
-                {INVESTMENT_RANGES.map(range => (
-                  <SelectItem key={range} value={range}>{range}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MobileSelect
+              value={selectedInvestmentRange}
+              onValueChange={setSelectedInvestmentRange}
+              placeholder="حجم الاستثمار"
+              options={[
+                { value: "all", label: "الكل" },
+                ...INVESTMENT_RANGES.map(range => ({ value: range, label: range })),
+              ]}
+            />
           </div>
 
           {hasActiveFilters && (

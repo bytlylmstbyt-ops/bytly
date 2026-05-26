@@ -16,19 +16,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import MobileSelect from "@/components/mobile/MobileSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -230,20 +224,15 @@ export default function Engineers() {
             </div>
 
             {/* Specialization Filter */}
-            <Select
+            <MobileSelect
               value={filters.specialization}
               onValueChange={(value) => setFilters(prev => ({ ...prev, specialization: value }))}
-            >
-              <SelectTrigger className="w-[180px] bg-white">
-                <SelectValue placeholder={t('engineers.filters.specialization')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={null}>{t('engineers.filters.allSpecializations')}</SelectItem>
-                {specializations.map(spec => (
-                  <SelectItem key={spec} value={spec}>{spec}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder={t('engineers.filters.specialization')}
+              options={[
+                { value: "", label: t('engineers.filters.allSpecializations') },
+                ...specializations.map(spec => ({ value: spec, label: spec })),
+              ]}
+            />
 
             {/* Mobile Filters */}
             <Sheet>
@@ -309,17 +298,17 @@ export default function Engineers() {
 
           <div className="flex items-center gap-3">
             {/* Sort */}
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[160px] bg-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="-rating">{t('engineers.filters.topRated')}</SelectItem>
-                <SelectItem value="-completed_projects">{t('engineers.filters.mostProjects')}</SelectItem>
-                <SelectItem value="-years_experience">{t('engineers.filters.mostExperience')}</SelectItem>
-                <SelectItem value="-created_date">{t('engineers.filters.newest')}</SelectItem>
-              </SelectContent>
-            </Select>
+            <MobileSelect
+              value={sortBy}
+              onValueChange={setSortBy}
+              placeholder="الترتيب"
+              options={[
+                { value: "-rating", label: t('engineers.filters.topRated') },
+                { value: "-completed_projects", label: t('engineers.filters.mostProjects') },
+                { value: "-years_experience", label: t('engineers.filters.mostExperience') },
+                { value: "-created_date", label: t('engineers.filters.newest') },
+              ]}
+            />
 
             {/* View Mode */}
             <div className="hidden md:flex bg-white rounded-lg shadow-sm p-1">
