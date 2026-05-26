@@ -16,14 +16,15 @@ Deno.serve(async (req) => {
                 client_id: clientId,
                 client_secret: clientSecret,
                 grant_type: 'client_credentials',
-                scope: 'data:read metadata:read'
+                scope: 'data:read viewables:read'
             })
         });
 
         if (!tokenRes.ok) {
             const err = await tokenRes.text();
-            console.error('Token error during sync:', err);
-            return Response.json({ error: 'Auth failed' }, { status: 500 });
+            console.error('Autodesk token error during sync:', err);
+            console.error('clientId present:', !!clientId, 'clientSecret present:', !!clientSecret);
+            return Response.json({ error: 'Auth failed', details: err }, { status: 500 });
         }
 
         const { access_token } = await tokenRes.json();
