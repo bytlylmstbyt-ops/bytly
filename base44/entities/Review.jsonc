@@ -80,6 +80,7 @@
     "create": {
       "created_by": "{{user.email}}"
     },
+    "read": true,
     "update": {
       "$or": [
         {
