@@ -1,13 +1,15 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Wallet, Lock, DollarSign, TrendingUp, AlertCircle, PieChartIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import TransactionHistory from "./TransactionHistory";
+import CommissionTracker from "./CommissionTracker";
+import DepositPanel from "./DepositPanel";
 
-export default function ClientWalletView({ client, transactions, projects, onRefresh }) {
+export default function ClientWalletView({ client, transactions, projects, onRefresh, userEmail }) {
   // Calculate locked funds (escrow for active projects)
   const activeProjects = projects.filter(p => 
     p.status === "in_progress" || p.status === "awaiting_technical_review"
@@ -182,8 +184,23 @@ export default function ClientWalletView({ client, transactions, projects, onRef
         </Card>
       )}
 
-      {/* Transaction History */}
-      <TransactionHistory transactions={transactions} />
+      {/* Tabbed bottom section */}
+      <Tabs defaultValue="transactions">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="transactions">سجل المعاملات</TabsTrigger>
+          <TabsTrigger value="deposit">إيداع رصيد</TabsTrigger>
+          <TabsTrigger value="commissions">العمولات</TabsTrigger>
+        </TabsList>
+        <TabsContent value="transactions">
+          <TransactionHistory transactions={transactions} />
+        </TabsContent>
+        <TabsContent value="deposit">
+          <DepositPanel profile={client} userEmail={userEmail} onSuccess={onRefresh} />
+        </TabsContent>
+        <TabsContent value="commissions">
+          <CommissionTracker transactions={transactions} userType="client" />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

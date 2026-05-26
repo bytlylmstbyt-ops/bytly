@@ -8,8 +8,11 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import TransactionHistory from "./TransactionHistory";
+import CommissionTracker from "./CommissionTracker";
+import DepositPanel from "./DepositPanel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export default function InvestorFinancialView({ client, transactions, projects, onRefresh }) {
+export default function InvestorFinancialView({ client, transactions, projects, onRefresh, userEmail }) {
   // Calculate financial metrics
   const totalProjects = projects.length;
   const activeProjects = projects.filter(p => p.status === "in_progress").length;
@@ -202,8 +205,23 @@ export default function InvestorFinancialView({ client, transactions, projects, 
         </CardContent>
       </Card>
 
-      {/* Transaction History */}
-      <TransactionHistory transactions={transactions} />
+      {/* Tabbed bottom section */}
+      <Tabs defaultValue="transactions">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="transactions">سجل المعاملات</TabsTrigger>
+          <TabsTrigger value="deposit">إيداع رصيد</TabsTrigger>
+          <TabsTrigger value="commissions">العمولات</TabsTrigger>
+        </TabsList>
+        <TabsContent value="transactions">
+          <TransactionHistory transactions={transactions} />
+        </TabsContent>
+        <TabsContent value="deposit">
+          <DepositPanel profile={client} userEmail={userEmail} onSuccess={onRefresh} />
+        </TabsContent>
+        <TabsContent value="commissions">
+          <CommissionTracker transactions={transactions} userType="client" />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

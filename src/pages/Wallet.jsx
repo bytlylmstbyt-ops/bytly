@@ -8,6 +8,8 @@ import WithdrawalForm from "../components/wallet/WithdrawalForm";
 import TransactionHistory from "../components/wallet/TransactionHistory";
 import ClientWalletView from "../components/wallet/ClientWalletView";
 import InvestorFinancialView from "../components/wallet/InvestorFinancialView";
+import CommissionTracker from "../components/wallet/CommissionTracker";
+import DepositPanel from "../components/wallet/DepositPanel";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -159,18 +161,29 @@ export default function WalletPage() {
           <>
             <WalletOverview engineer={userProfile} />
             <Tabs defaultValue="transactions" className="mt-6">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="transactions">{t('wallet.tabs.transactions')}</TabsTrigger>
                 <TabsTrigger value="withdrawal">{t('wallet.tabs.withdrawal')}</TabsTrigger>
+                <TabsTrigger value="commissions">العمولات</TabsTrigger>
               </TabsList>
               <TabsContent value="transactions">
                 <TransactionHistory transactions={transactions} />
               </TabsContent>
               <TabsContent value="withdrawal">
-                <WithdrawalForm 
-                  engineer={userProfile}
-                  onSuccess={loadWalletData}
-                />
+                <div className="grid md:grid-cols-2 gap-6">
+                  <WithdrawalForm 
+                    engineer={userProfile}
+                    onSuccess={loadWalletData}
+                  />
+                  <DepositPanel
+                    profile={userProfile}
+                    userEmail={user?.email}
+                    onSuccess={loadWalletData}
+                  />
+                </div>
+              </TabsContent>
+              <TabsContent value="commissions">
+                <CommissionTracker transactions={transactions} userType="engineer" />
               </TabsContent>
             </Tabs>
           </>
@@ -183,6 +196,7 @@ export default function WalletPage() {
             transactions={transactions}
             projects={projects}
             onRefresh={loadWalletData}
+            userEmail={user?.email}
           />
         )}
 
@@ -193,6 +207,7 @@ export default function WalletPage() {
             transactions={transactions}
             projects={projects}
             onRefresh={loadWalletData}
+            userEmail={user?.email}
           />
         )}
 

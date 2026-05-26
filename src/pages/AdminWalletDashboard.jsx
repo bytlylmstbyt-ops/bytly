@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   DollarSign, TrendingUp, Users, Building2, 
-  ArrowUpRight, ArrowDownRight, Loader2, Search, Filter
+  ArrowUpRight, ArrowDownRight, Loader2, Search, Percent
 } from "lucide-react";
+import MobileSelect from "@/components/mobile/MobileSelect";
 import { motion } from "framer-motion";
 
 export default function AdminWalletDashboard() {
@@ -92,7 +93,7 @@ export default function AdminWalletDashboard() {
         </motion.div>
 
         {/* Financial Overview */}
-        <div className="grid md:grid-cols-4 gap-4 mb-8">
+        <div className="grid md:grid-cols-4 gap-4 mb-8" style={{ gridAutoRows: "auto" }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -167,6 +168,48 @@ export default function AdminWalletDashboard() {
               </CardContent>
             </Card>
           </motion.div>
+
+          {/* Extra: نسبة العمولة */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="md:col-span-4"
+          >
+            <Card className="bg-gradient-to-r from-slate-800 to-slate-700 text-white border-0 shadow-lg">
+              <CardContent className="pt-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-white/10 rounded-xl">
+                      <Percent className="w-6 h-6 text-amber-300" />
+                    </div>
+                    <div>
+                      <p className="text-white/70 text-sm">ملخص المنصة المالي</p>
+                      <p className="font-semibold text-lg">نسبة العمولة الحالية: <span className="text-amber-300">15%</span></p>
+                    </div>
+                  </div>
+                  <div className="flex gap-6 text-center">
+                    <div>
+                      <p className="text-white/60 text-xs">إجمالي الأرصدة</p>
+                      <p className="text-xl font-bold text-white">
+                        {(totalEngineerBalances + totalClientBalances + totalFirmBalances).toLocaleString('ar-SA')} ر.س
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-white/60 text-xs">عمولات المنصة</p>
+                      <p className="text-xl font-bold text-amber-300">
+                        {totalCommissions.toLocaleString('ar-SA')} ر.س
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-white/60 text-xs">المعاملات الكلية</p>
+                      <p className="text-xl font-bold text-white">{allTransactions.length}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
         {/* Transactions */}
@@ -183,18 +226,21 @@ export default function AdminWalletDashboard() {
                   className="pr-10"
                 />
               </div>
-              <select
+              <MobileSelect
                 value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="px-4 py-2 border rounded-lg bg-white"
-              >
-                <option value="all">كل الأنواع</option>
-                <option value="commission">عمولات</option>
-                <option value="escrow_hold">حجز ضمان</option>
-                <option value="escrow_release">تحرير ضمان</option>
-                <option value="refund">استرجاع</option>
-                <option value="withdrawal">سحب</option>
-              </select>
+                onValueChange={setFilterType}
+                label="نوع المعاملة"
+                placeholder="كل الأنواع"
+                options={[
+                  { value: "all", label: "كل الأنواع" },
+                  { value: "commission", label: "عمولات" },
+                  { value: "escrow_hold", label: "حجز ضمان" },
+                  { value: "escrow_release", label: "تحرير ضمان" },
+                  { value: "refund", label: "استرجاع" },
+                  { value: "withdrawal", label: "سحب" },
+                  { value: "deposit", label: "إيداع" },
+                ]}
+              />
             </div>
           </CardHeader>
           <CardContent>
