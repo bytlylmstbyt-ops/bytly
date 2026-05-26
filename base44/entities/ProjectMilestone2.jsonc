@@ -46,8 +46,11 @@
     "read": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.project_id": {
-            "_filter": "TaskProject",
+            "_filter": "Project",
             "read": true
           }
         },
@@ -61,8 +64,11 @@
     "update": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.project_id": {
-            "_filter": "TaskProject",
+            "_filter": "Project",
             "update": true
           }
         },
@@ -74,9 +80,22 @@
       ]
     },
     "delete": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.project_id": {
+            "_filter": "Project",
+            "delete": true
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     }
   }
 }
