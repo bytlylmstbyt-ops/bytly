@@ -15,13 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import MobileSelect from "@/components/mobile/MobileSelect";
 import AIProjectAssistant from "@/components/project/AIProjectAssistant";
 
 export default function CreateProject() {
@@ -469,20 +463,13 @@ export default function CreateProject() {
 
               <div className="space-y-2">
                 <Label>تصنيف المشروع *</Label>
-                <Select
+                <MobileSelect
                   value={formData.category}
                   onValueChange={(value) => handleInputChange("category", value)}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="اختر التصنيف" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(cat => (
-                      <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  placeholder="اختر التصنيف"
+                  label="تصنيف المشروع"
+                  options={categories}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">

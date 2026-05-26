@@ -59,23 +59,14 @@ function LayoutContent({ children, currentPageName }) {
   return (
     <div className="min-h-screen bg-background text-foreground" dir={isRTL ? "rtl" : "ltr"}>
       <style>{`
-        :root {
-          --primary: #6B5D4F;
-          --primary-dark: #4A3F35;
-          --accent: #C9A66B;
-          --accent-light: #E5D4B8;
-          --gold: #B8936D;
-          --bronze: #A07D5C;
-        }
-
         .glass-effect {
-          background: rgba(255, 255, 255, 0.85);
+          background: var(--bytly-glass-bg);
           backdrop-filter: blur(20px);
-          border: 1px solid rgba(201, 166, 107, 0.2);
+          border: 1px solid var(--bytly-accent-border);
         }
 
         .gradient-text {
-          background: linear-gradient(135deg, #6B5D4F 0%, #C9A66B 100%);
+          background: linear-gradient(135deg, var(--bytly-primary) 0%, var(--bytly-accent) 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
@@ -85,7 +76,7 @@ function LayoutContent({ children, currentPageName }) {
         }
         .hover-lift:hover {
           transform: translateY(-2px);
-          box-shadow: 0 10px 40px rgba(107, 93, 79, 0.15);
+          box-shadow: 0 10px 40px var(--bytly-shadow);
         }
       `}</style>
 

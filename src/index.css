@@ -2,6 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Bytly brand tokens */
+:root {
+  --bytly-primary: #6B5D4F;
+  --bytly-primary-dark: #4A3F35;
+  --bytly-accent: #C9A66B;
+  --bytly-accent-light: #E5D4B8;
+  --bytly-glass-bg: rgba(255, 255, 255, 0.85);
+  --bytly-accent-border: rgba(201, 166, 107, 0.2);
+  --bytly-shadow: rgba(107, 93, 79, 0.15);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --bytly-glass-bg: rgba(26, 26, 46, 0.85);
+    --bytly-accent-border: rgba(201, 166, 107, 0.15);
+    --bytly-shadow: rgba(0, 0, 0, 0.4);
+  }
+}
+
+.dark {
+  --bytly-glass-bg: rgba(26, 26, 46, 0.85);
+  --bytly-accent-border: rgba(201, 166, 107, 0.15);
+  --bytly-shadow: rgba(0, 0, 0, 0.4);
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -96,8 +121,10 @@
     padding-right: env(safe-area-inset-right);
   }
 
-  /* Disable text selection on interactive elements */
-  button, nav a, nav button, [role="navigation"] {
+  /* Disable text selection on all interactive elements */
+  button, a, nav a, nav button, [role="navigation"],
+  [role="button"], [role="tab"], [role="menuitem"],
+  label[for], .hover-lift {
     user-select: none;
     -webkit-user-select: none;
   }
