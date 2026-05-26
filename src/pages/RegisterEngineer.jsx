@@ -13,13 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import MobileSelect from "@/components/mobile/MobileSelect";
 
 export default function RegisterEngineer() {
   const navigate = useNavigate();
@@ -199,19 +193,13 @@ export default function RegisterEngineer() {
               >
                 <div className="space-y-2">
                   <Label>التخصص *</Label>
-                  <Select
+                  <MobileSelect
                     value={formData.specialization}
                     onValueChange={(value) => handleInputChange("specialization", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر تخصصك" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {specializations.map((spec) => (
-                        <SelectItem key={spec} value={spec}>{spec}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    placeholder="اختر تخصصك"
+                    label="التخصص"
+                    options={specializations.map(s => ({ value: s, label: s }))}
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
