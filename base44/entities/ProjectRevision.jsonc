@@ -96,12 +96,6 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.project_id": {
-            "_filter": "Project",
-            "delete": true
-          }
-        },
-        {
           "user_condition": {
             "role": "admin"
           }
