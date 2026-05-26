@@ -69,10 +69,16 @@
     "read": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.firm_id": {
             "_filter": "EngineeringFirm",
             "read": true
           }
+        },
+        {
+          "data.email": "{{user.email}}"
         },
         {
           "user_condition": {
