@@ -204,7 +204,7 @@
       "created_by": "{{user.email}}"
     },
     "read": {
-      "\u0420\u0455r": [
+      "$or": [
         {
           "created_by": "{{user.email}}"
         },
@@ -225,7 +225,7 @@
       ]
     },
     "update": {
-      "\u0420\u0455r": [
+      "$or": [
         {
           "created_by": "{{user.email}}"
         },
