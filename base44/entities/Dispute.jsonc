@@ -203,8 +203,48 @@
     "create": {
       "created_by": "{{user.email}}"
     },
-    "read": null,
-    "update": null,
+    "read": {
+      "\u0420\u0455r": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.raised_by": "{{user.email}}"
+        },
+        {
+          "data.raised_against": "{{user.email}}"
+        },
+        {
+          "data.assigned_admin": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "\u0420\u0455r": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.raised_by": "{{user.email}}"
+        },
+        {
+          "data.raised_against": "{{user.email}}"
+        },
+        {
+          "data.assigned_admin": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
     "delete": {
       "user_condition": {
         "role": "admin"
