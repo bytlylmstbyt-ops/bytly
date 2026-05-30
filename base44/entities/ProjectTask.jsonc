@@ -135,12 +135,12 @@
         },
         {
           "data.project_id": {
-            "_filter": "Project",
+            "_filter": "TaskProject",
             "read": true
           }
         },
         {
-          "data.assigned_to": "{{user.id}}"
+          "data.assigned_to": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -156,12 +156,12 @@
         },
         {
           "data.project_id": {
-            "_filter": "Project",
+            "_filter": "TaskProject",
             "update": true
           }
         },
         {
-          "data.assigned_to": "{{user.id}}"
+          "data.assigned_to": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -177,7 +177,7 @@
         },
         {
           "data.project_id": {
-            "_filter": "Project",
+            "_filter": "TaskProject",
             "delete": true
           }
         },
