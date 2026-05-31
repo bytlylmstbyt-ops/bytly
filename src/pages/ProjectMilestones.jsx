@@ -17,6 +17,7 @@ import {
 import { motion } from "framer-motion";
 import { sendNotification } from "@/components/notifications/NotificationHelper";
 import CommissionExplainer from "@/components/payment/CommissionExplainer";
+import MilestoneReviewModal from "@/components/reviews/MilestoneReviewModal";
 
 export default function ProjectMilestones() {
   const navigate = useNavigate();
@@ -37,6 +38,8 @@ export default function ProjectMilestones() {
   const [showPaymentOptions, setShowPaymentOptions] = useState(null);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [selectedMilestone, setSelectedMilestone] = useState(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewMilestone, setReviewMilestone] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -233,6 +236,16 @@ export default function ProjectMilestones() {
       });
 
       await loadData();
+
+      // Check if client already reviewed this milestone — if not, show review modal
+      const existingReviews = await base44.entities.Review.filter({
+        client_id: client.id,
+        milestone_id: milestone.id
+      });
+      if (existingReviews.length === 0) {
+        setReviewMilestone(milestone);
+        setShowReviewModal(true);
+      }
     } catch (error) {
       // Roll back optimistic update on failure
       setMilestones(prev => prev.map(m =>
@@ -733,6 +746,19 @@ export default function ProjectMilestones() {
           </div>
         </motion.div>
       </div>
+
+      {/* Milestone Review Modal — appears automatically after client approves a milestone */}
+      {showReviewModal && reviewMilestone && engineer && client && (
+        <MilestoneReviewModal
+          open={showReviewModal}
+          onClose={() => { setShowReviewModal(false); setReviewMilestone(null); }}
+          milestone={reviewMilestone}
+          engineer={engineer}
+          client={client}
+          projectId={projectId}
+          onSubmitted={loadData}
+        />
+      )}
     </div>
   );
 }

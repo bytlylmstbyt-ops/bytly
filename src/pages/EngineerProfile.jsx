@@ -523,7 +523,7 @@ export default function EngineerProfile() {
                   {reviews.length > 0 ? (
                     <div className="space-y-5">
                       {reviews.map((review, index) => (
-                        <div key={review.id} className={`p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-amber-50/30 hover:border-amber-100 transition-all`}>
+                        <div key={review.id} className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-amber-50/30 hover:border-amber-100 transition-all">
                           <div className="flex items-start gap-3">
                             <Avatar className="w-11 h-11 flex-shrink-0">
                               <AvatarFallback className="bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] text-white font-bold">
@@ -544,6 +544,14 @@ export default function EngineerProfile() {
                                   {new Date(review.created_date).toLocaleDateString("ar-SA", { year: "numeric", month: "short", day: "numeric" })}
                                 </span>
                               </div>
+
+                              {/* Milestone tag — shown when review is linked to a specific phase */}
+                              {review.milestone_title && (
+                                <div className="inline-flex items-center gap-1 text-xs bg-amber-50 border border-amber-200 text-amber-700 px-2 py-0.5 rounded-full mb-2">
+                                  🏗️ {review.milestone_title}
+                                </div>
+                              )}
+
                               {review.comment && (
                                 <p className="text-slate-700 text-sm leading-relaxed mb-3">{review.comment}</p>
                               )}
