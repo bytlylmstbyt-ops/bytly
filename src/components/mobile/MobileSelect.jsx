@@ -99,14 +99,22 @@ export default function MobileSelect({
   }
 
   // Desktop: standard shadcn Select
+  // Radix Select does not allow empty string values — map "" -> "__empty__" internally
+  const toInternal = (v) => (v === "" || v == null ? "__empty__" : v);
+  const toExternal = (v) => (v === "__empty__" ? "" : v);
+
   return (
-    <Select value={value} onValueChange={onValueChange} disabled={disabled}>
+    <Select
+      value={toInternal(value)}
+      onValueChange={(v) => onValueChange(toExternal(v))}
+      disabled={disabled}
+    >
       <SelectTrigger className={triggerClassName}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
         {options.map((opt) => (
-          <SelectItem key={opt.value ?? "__null__"} value={opt.value}>
+          <SelectItem key={toInternal(opt.value)} value={toInternal(opt.value)}>
             {opt.label}
           </SelectItem>
         ))}
