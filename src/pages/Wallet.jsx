@@ -10,6 +10,7 @@ import ClientWalletView from "../components/wallet/ClientWalletView";
 import InvestorFinancialView from "../components/wallet/InvestorFinancialView";
 import CommissionTracker from "../components/wallet/CommissionTracker";
 import DepositPanel from "../components/wallet/DepositPanel";
+import LiveWalletDashboard from "../components/wallet/LiveWalletDashboard";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -159,33 +160,22 @@ export default function WalletPage() {
         {/* Engineer Wallet View */}
         {userType === "engineer" && (
           <>
-            <WalletOverview engineer={userProfile} />
-            <Tabs defaultValue="transactions" className="mt-6">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="transactions">{t('wallet.tabs.transactions')}</TabsTrigger>
-                <TabsTrigger value="withdrawal">{t('wallet.tabs.withdrawal')}</TabsTrigger>
-                <TabsTrigger value="commissions">العمولات</TabsTrigger>
-              </TabsList>
-              <TabsContent value="transactions">
-                <TransactionHistory transactions={transactions} />
-              </TabsContent>
-              <TabsContent value="withdrawal">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <WithdrawalForm 
-                    engineer={userProfile}
-                    onSuccess={loadWalletData}
-                  />
-                  <DepositPanel
-                    profile={userProfile}
-                    userEmail={user?.email}
-                    onSuccess={loadWalletData}
-                  />
-                </div>
-              </TabsContent>
-              <TabsContent value="commissions">
-                <CommissionTracker transactions={transactions} userType="engineer" />
-              </TabsContent>
-            </Tabs>
+            <LiveWalletDashboard
+              profile={userProfile}
+              userType="engineer"
+              userEmail={user?.email}
+            />
+            <div className="mt-6 grid md:grid-cols-2 gap-6">
+              <WithdrawalForm
+                engineer={userProfile}
+                onSuccess={loadWalletData}
+              />
+              <DepositPanel
+                profile={userProfile}
+                userEmail={user?.email}
+                onSuccess={loadWalletData}
+              />
+            </div>
           </>
         )}
 
@@ -213,10 +203,11 @@ export default function WalletPage() {
 
         {/* Firm Wallet View */}
         {userType === "firm" && (
-          <>
-            <WalletOverview engineer={userProfile} isFirm={true} />
-            <TransactionHistory transactions={transactions} />
-          </>
+          <LiveWalletDashboard
+            profile={userProfile}
+            userType="firm"
+            userEmail={user?.email}
+          />
         )}
       </div>
     </div>

@@ -116,13 +116,10 @@
     "read": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
           "data.buyer_email": "{{user.email}}"
         },
         {
-          "data.seller_id": "{{user.id}}"
+          "data.seller_email": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -134,7 +131,10 @@
     "update": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "data.buyer_email": "{{user.email}}"
+        },
+        {
+          "data.seller_email": "{{user.email}}"
         },
         {
           "user_condition": {
