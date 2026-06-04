@@ -3,11 +3,18 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import NavigationTracker from '@/lib/NavigationTracker'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import NotFoundError from './lib/NotFoundError';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import React, { Suspense } from 'react';
+
+// Auth pages
+import Login from './pages/Login';
+import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 // ── Lazy-loaded explicit routes ──────────────────────────────────────────────
 const TechnicalResources       = React.lazy(() => import('./pages/TechnicalResources'));
@@ -71,17 +78,18 @@ const AuthenticatedApp = () => {
     return <PageSpinner />;
   }
 
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      navigateToLogin();
-      return null;
-    }
+  if (authError && authError.type === 'user_not_registered') {
+    return <UserNotRegisteredError />;
   }
 
   return (
     <Routes>
+      {/* Auth routes — no layout wrapper */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+
       {/* Main page (from pagesConfig) */}
       <Route path="/" element={
         <LayoutWrapper currentPageName={mainPageKey}>
@@ -102,20 +110,12 @@ const AuthenticatedApp = () => {
         />
       ))}
 
-      {/* Explicit lazy routes */}
-      <Route path="/BuildingProgress"           element={lazyRoute(BuildingProgress, "BuildingProgress")} />
-      <Route path="/PermitApplication"          element={lazyRoute(PermitApplication, "PermitApplication")} />
-      <Route path="/PermitPaymentSuccess"       element={lazyRoute(PermitPaymentSuccess, "PermitPaymentSuccess")} />
+      {/* ── Public explicit lazy routes ─────────────────────────────── */}
       <Route path="/CostEstimator"              element={lazyRoute(CostEstimator, "CostEstimator")} />
       <Route path="/ConstructionTracker"        element={lazyRoute(ConstructionTracker, "ConstructionTracker")} />
       <Route path="/TechnicalResources"         element={lazyRoute(TechnicalResources, "TechnicalResources")} />
-      <Route path="/RequestQuote"               element={lazyRoute(RequestQuote, "RequestQuote")} />
-      <Route path="/EngineerFinancialDashboard" element={lazyRoute(EngineerFinancialDashboard, "EngineerFinancialDashboard")} />
-      <Route path="/EngineerReviews"            element={lazyRoute(EngineerReviews, "EngineerReviews")} />
-      <Route path="/Certificates"               element={lazyRoute(Certificates, "Certificates")} />
-      <Route path="/MyContracts"                element={lazyRoute(MyContracts, "MyContracts")} />
       <Route path="/EngineerMatcher"            element={lazyRoute(EngineerMatcher, "EngineerMatcher")} />
-      <Route path="/AdManager"                  element={lazyRoute(AdManager, "AdManager")} />
+      <Route path="/MarketEntities"             element={lazyRoute(MarketEntities, "MarketEntities")} />
       <Route path="/AIEngineers"                element={lazyRoute(AIEngineers, "AIEngineers")} />
       <Route path="/AIInteriorDesigner"         element={lazyRoute(AIInteriorDesigner, "AIInteriorDesigner")} />
       <Route path="/AIArchitect"                element={lazyRoute(AIArchitect, "AIArchitect")} />
@@ -123,14 +123,26 @@ const AuthenticatedApp = () => {
       <Route path="/AIRenovation"               element={lazyRoute(AIRenovation, "AIRenovation")} />
       <Route path="/AIMaterialAdvisor"          element={lazyRoute(AIMaterialAdvisor, "AIMaterialAdvisor")} />
       <Route path="/AIRecommender"              element={lazyRoute(AIRecommender, "AIRecommender")} />
-      <Route path="/MarketingHub"               element={lazyRoute(MarketingHub, "MarketingHub")} />
-      <Route path="/SocialAnalytics"            element={lazyRoute(SocialAnalytics, "SocialAnalytics")} />
-      <Route path="/LeadsManager"               element={lazyRoute(LeadsManager, "LeadsManager")} />
-      <Route path="/RiskDashboard"              element={lazyRoute(RiskDashboard, "RiskDashboard")} />
-      <Route path="/MarketEntities"             element={lazyRoute(MarketEntities, "MarketEntities")} />
-      <Route path="/AdminMarketEntities"        element={lazyRoute(AdminMarketEntities, "AdminMarketEntities")} />
-      <Route path="/MarketContracts"            element={lazyRoute(MarketContracts, "MarketContracts")} />
-      <Route path="/Subscription"               element={lazyRoute(React.lazy(() => import('./pages/Subscription')), "Subscription")} />
+
+      {/* ── Private explicit lazy routes (require sign-in) ──────────── */}
+      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+        <Route path="/BuildingProgress"           element={lazyRoute(BuildingProgress, "BuildingProgress")} />
+        <Route path="/PermitApplication"          element={lazyRoute(PermitApplication, "PermitApplication")} />
+        <Route path="/PermitPaymentSuccess"       element={lazyRoute(PermitPaymentSuccess, "PermitPaymentSuccess")} />
+        <Route path="/RequestQuote"               element={lazyRoute(RequestQuote, "RequestQuote")} />
+        <Route path="/EngineerFinancialDashboard" element={lazyRoute(EngineerFinancialDashboard, "EngineerFinancialDashboard")} />
+        <Route path="/EngineerReviews"            element={lazyRoute(EngineerReviews, "EngineerReviews")} />
+        <Route path="/Certificates"               element={lazyRoute(Certificates, "Certificates")} />
+        <Route path="/MyContracts"                element={lazyRoute(MyContracts, "MyContracts")} />
+        <Route path="/AdManager"                  element={lazyRoute(AdManager, "AdManager")} />
+        <Route path="/MarketingHub"               element={lazyRoute(MarketingHub, "MarketingHub")} />
+        <Route path="/SocialAnalytics"            element={lazyRoute(SocialAnalytics, "SocialAnalytics")} />
+        <Route path="/LeadsManager"               element={lazyRoute(LeadsManager, "LeadsManager")} />
+        <Route path="/RiskDashboard"              element={lazyRoute(RiskDashboard, "RiskDashboard")} />
+        <Route path="/AdminMarketEntities"        element={lazyRoute(AdminMarketEntities, "AdminMarketEntities")} />
+        <Route path="/MarketContracts"            element={lazyRoute(MarketContracts, "MarketContracts")} />
+        <Route path="/Subscription"               element={lazyRoute(React.lazy(() => import('./pages/Subscription')), "Subscription")} />
+      </Route>
 
       <Route path="*" element={<NotFoundError />} />
     </Routes>
