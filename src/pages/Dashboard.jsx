@@ -700,12 +700,12 @@ export default function Dashboard() {
                 recentProjects.length > 0 ? (
                   <div className="space-y-4">
                     {recentProjects.map(project => (
-                      <Link key={project.id} to={createPageUrl("ProjectDetails") + `?id=${project.id}`}>
-                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
-                          <div>
-                            <p className="font-medium text-[#1a1a2e]">{project.title}</p>
-                            <p className="text-sm text-slate-500">{t('dashboard.recentActivity.proposals').replace('{count}', project.total_proposals || 0)}</p>
-                          </div>
+                      <div key={project.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
+                        <Link to={createPageUrl("ProjectDetails") + `?id=${project.id}`} className="flex-1 min-w-0">
+                          <p className="font-medium text-[#1a1a2e]">{project.title}</p>
+                          <p className="text-sm text-slate-500">{t('dashboard.recentActivity.proposals').replace('{count}', project.total_proposals || 0)}</p>
+                        </Link>
+                        <div className="flex items-center gap-2">
                           <Badge className={
                             project.status === "completed" ? "bg-green-100 text-green-700" :
                             project.status === "in_progress" ? "bg-blue-100 text-blue-700" :
@@ -716,8 +716,13 @@ export default function Dashboard() {
                              project.status === "in_progress" ? t('dashboard.recentActivity.inProgress') :
                              project.status === "cancelled" ? t('dashboard.recentActivity.cancelled') : t('dashboard.recentActivity.open')}
                           </Badge>
+                          <Link to={`/ProjectProposals?project_id=${project.id}`}>
+                            <Button size="sm" variant="outline" className="text-xs border-[#C9A66B] text-[#C9A66B] hover:bg-amber-50">
+                              عروض الأسعار
+                            </Button>
+                          </Link>
                         </div>
-                      </Link>
+                      </div>
                     ))}
                   </div>
                 ) : (

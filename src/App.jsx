@@ -44,6 +44,7 @@ const RiskDashboard            = React.lazy(() => import('./pages/RiskDashboard'
 const MarketEntities           = React.lazy(() => import('./pages/MarketEntities'));
 const AdminMarketEntities      = React.lazy(() => import('./pages/AdminMarketEntities'));
 const MarketContracts          = React.lazy(() => import('./pages/MarketContracts'));
+const ProjectProposals         = React.lazy(() => import('./pages/ProjectProposals'));
 
 // ── Page-level spinner fallback ───────────────────────────────────────────────
 function PageSpinner() {
@@ -141,6 +142,7 @@ const AuthenticatedApp = () => {
         <Route path="/RiskDashboard"              element={lazyRoute(RiskDashboard, "RiskDashboard")} />
         <Route path="/AdminMarketEntities"        element={lazyRoute(AdminMarketEntities, "AdminMarketEntities")} />
         <Route path="/MarketContracts"            element={lazyRoute(MarketContracts, "MarketContracts")} />
+        <Route path="/ProjectProposals"           element={lazyRoute(ProjectProposals, "ProjectProposals")} />
         <Route path="/Subscription"               element={lazyRoute(React.lazy(() => import('./pages/Subscription')), "Subscription")} />
       </Route>
 
