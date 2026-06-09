@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {
@@ -41,14 +41,13 @@ Deno.serve(async (req) => {
     scheduledDate.setDate(scheduledDate.getDate() + daysUntilMeeting);
 
     // Get project details
-    const project = await base44.entities.Project.list().then(p => 
-      p.find(proj => proj.id === project_id)
-    );
+    const projects = await base44.asServiceRole.entities.Project.filter({ id: project_id });
+    const project = projects[0];
 
     const meetingDescription = `متابعة تلقائية - ${meetingType === 'problem_solving' ? 'حل مشاكل عاجل' : 'تحديث الحالة والمتطلبات'}`;
 
     // Create follow-up meeting
-    const meeting = await base44.entities.FollowUpMeeting.create({
+    const meeting = await base44.asServiceRole.entities.FollowUpMeeting.create({
       client_email,
       project_id,
       interaction_id,

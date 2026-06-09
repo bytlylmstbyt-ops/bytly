@@ -20,15 +20,15 @@ Deno.serve(async (req) => {
       return Response.json({ error: data.error?.message || "Failed to fetch TikTok profile" }, { status: 400 });
     }
 
-    const user = data.data?.user || {};
+    const tiktokUser = data.data?.user || {};
     return Response.json({
-      display_name: user.display_name,
-      is_verified: user.is_verified || false,
-      avatar_url: user.avatar_url,
-      follower_count: user.follower_count,
-      following_count: user.following_count,
-      video_count: user.video_count,
-      profile_deep_link: user.profile_deep_link,
+      display_name: tiktokUser.display_name,
+      is_verified: tiktokUser.is_verified || false,
+      avatar_url: tiktokUser.avatar_url,
+      follower_count: tiktokUser.follower_count,
+      following_count: tiktokUser.following_count,
+      video_count: tiktokUser.video_count,
+      profile_deep_link: tiktokUser.profile_deep_link,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
