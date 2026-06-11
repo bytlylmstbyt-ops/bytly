@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import ProjectProfitPanel from "@/components/dashboard/ProjectProfitPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   TrendingUp, TrendingDown, Users, Briefcase, DollarSign,
   Activity, Star, AlertCircle, CheckCircle, Clock, RefreshCw,
-  BarChart2, Target, Layers, ArrowUpRight, ArrowDownRight
+  BarChart2, Target, Layers, ArrowUpRight, ArrowDownRight, Cpu, ShieldCheck, Wrench, Scale
 } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import moment from "moment";
@@ -342,6 +343,9 @@ export default function PlatformDashboard() {
             }
           </CardContent>
         </Card>
+
+        {/* ── قسم الربح الصافي المتوقع لكل مشروع ── */}
+        <ProjectProfitPanel projects={projects} loading={loading} />
 
         <p className="text-center text-xs text-slate-300 pb-4">بيانات حية من قاعدة بيانات بيتلي — {moment(lastRefresh).format("DD/MM/YYYY HH:mm")}</p>
       </div>
