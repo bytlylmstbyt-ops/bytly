@@ -1,255 +1,207 @@
 import React, { useState } from "react";
-import { Shield, Eye, Lock, AlertTriangle, Download, ChevronDown, ChevronUp, Search } from "lucide-react";
+import { Shield, Eye, Lock, AlertTriangle, Search, Download, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-const DATA_SCHEMA = [
-  {
-    entity: "Engineer",
-    entity_ar: "المهندس",
-    fields: [
-      { name: "full_name", ar: "الاسم الكامل", classification: "personal", sensitivity: "medium", pdpl: true, note: "بيانات شخصية — تستوجب موافقة صريحة (PDPL)" },
-      { name: "email", ar: "البريد الإلكتروني", classification: "personal", sensitivity: "high", pdpl: true, note: "معرّف فريد — يُعامل كبيانات حساسة" },
-      { name: "phone", ar: "رقم الهاتف", classification: "personal", sensitivity: "high", pdpl: true, note: "قناة تواصل مباشرة — تشفير عند التخزين" },
-      { name: "national_id", ar: "رقم الهوية الوطنية", classification: "sensitive", sensitivity: "critical", pdpl: true, note: "بيانات حكومية — أعلى مستوى حماية مطلوب" },
-      { name: "specialization", ar: "التخصص الهندسي", classification: "public", sensitivity: "low", pdpl: false, note: "معلومات مهنية عامة — يمكن عرضها للعموم" },
-      { name: "rating", ar: "التقييم العام", classification: "public", sensitivity: "low", pdpl: false, note: "بيانات عامة — تُعرض في صفحة الملف الشخصي" },
-      { name: "bank_account", ar: "رقم الحساب البنكي", classification: "sensitive", sensitivity: "critical", pdpl: true, note: "بيانات مالية — تشفير إلزامي + سجل وصول" },
-    ]
-  },
-  {
-    entity: "Project",
-    entity_ar: "المشروع",
-    fields: [
-      { name: "title", ar: "عنوان المشروع", classification: "public", sensitivity: "low", pdpl: false, note: "معلومات عامة — مرئية في الكتالوج" },
-      { name: "description", ar: "وصف المشروع", classification: "public", sensitivity: "low", pdpl: false, note: "محتوى تسويقي — لا قيود على الوصول" },
-      { name: "budget", ar: "الميزانية", classification: "sensitive", sensitivity: "high", pdpl: false, note: "بيانات مالية تجارية — وصول محدود بالأطراف المعنية" },
-      { name: "location", ar: "موقع المشروع", classification: "internal", sensitivity: "medium", pdpl: false, note: "بيانات تشغيلية — لمستخدمي المشروع فقط" },
-      { name: "contract_pdf_url", ar: "ملف العقد", classification: "sensitive", sensitivity: "critical", pdpl: true, note: "وثيقة قانونية — تشفير + سجل تدقيق إلزامي" },
-    ]
-  },
-  {
-    entity: "Contract",
-    entity_ar: "العقد",
-    fields: [
-      { name: "total_amount", ar: "المبلغ الإجمالي", classification: "sensitive", sensitivity: "high", pdpl: false, note: "بيانات مالية — وصول للأطراف الموقّعة فقط" },
-      { name: "client_signature_ip", ar: "IP التوقيع", classification: "sensitive", sensitivity: "high", pdpl: true, note: "بيانات تتبع — تُستخدم للإثبات القانوني فقط" },
-      { name: "client_id", ar: "معرف العميل", classification: "internal", sensitivity: "medium", pdpl: true, note: "ربط داخلي — يخضع لسياسة RLS" },
-      { name: "status", ar: "حالة العقد", classification: "internal", sensitivity: "low", pdpl: false, note: "حالة سير العمل — وصول للأطراف المعنية" },
-    ]
-  },
-  {
-    entity: "Payment / Transaction",
-    entity_ar: "الدفع / المعاملة المالية",
-    fields: [
-      { name: "stripe_payment_intent", ar: "معرف الدفع (Stripe)", classification: "sensitive", sensitivity: "critical", pdpl: false, note: "معرف مالي خارجي — لا يُعرض أبداً للمستخدم النهائي" },
-      { name: "amount", ar: "المبلغ", classification: "sensitive", sensitivity: "high", pdpl: false, note: "بيانات مالية — وصول محدود" },
-      { name: "payment_status", ar: "حالة الدفع", classification: "internal", sensitivity: "medium", pdpl: false, note: "حالة تشغيلية — مرئية للطرفين" },
-    ]
-  },
-  {
-    entity: "Notification",
-    entity_ar: "الإشعار",
-    fields: [
-      { name: "recipient_email", ar: "بريد المستلم", classification: "personal", sensitivity: "high", pdpl: true, note: "بيانات شخصية — لا تُرسل لجهات خارجية" },
-      { name: "message", ar: "نص الإشعار", classification: "internal", sensitivity: "low", pdpl: false, note: "محتوى تشغيلي — غير مشاركَ خارجياً" },
-    ]
-  },
-  {
-    entity: "PermitApplication",
-    entity_ar: "طلب رخصة البناء",
-    fields: [
-      { name: "land_number", ar: "رقم القطعة", classification: "sensitive", sensitivity: "high", pdpl: false, note: "بيانات حكومية — مشاركة مع بلدي فقط" },
-      { name: "ownership_deed_file", ar: "وثيقة الملكية", classification: "sensitive", sensitivity: "critical", pdpl: true, note: "وثيقة رسمية — تشفير إلزامي وسجل وصول" },
-      { name: "client_name", ar: "اسم مقدم الطلب", classification: "personal", sensitivity: "medium", pdpl: true, note: "بيانات شخصية — يُشارك مع الجهة الحكومية فقط" },
-    ]
-  },
+const DATA_CLASSIFICATION = [
+  // ─── بيانات عامة ───────────────────────────────────────────────
+  { entity: "Engineer", field: "full_name", arabicName: "اسم المهندس", category: "public", sensitivity: "عام", description: "الاسم المعروض في الملف الشخصي العام", retention: "مدة الحساب", lawBasis: "مصلحة مشروعة" },
+  { entity: "Engineer", field: "specialization", arabicName: "التخصص", category: "public", sensitivity: "عام", description: "التخصص الهندسي المعروض", retention: "مدة الحساب", lawBasis: "مصلحة مشروعة" },
+  { entity: "Engineer", field: "portfolio", arabicName: "معرض الأعمال", category: "public", sensitivity: "عام", description: "صور ومشاريع المهندس العامة", retention: "مدة الحساب", lawBasis: "موافقة صريحة" },
+  { entity: "Project", field: "title", arabicName: "اسم المشروع", category: "public", sensitivity: "عام", description: "عنوان المشروع المعروض في السوق", retention: "5 سنوات", lawBasis: "عقد" },
+  { entity: "Project", field: "category", arabicName: "فئة المشروع", category: "public", sensitivity: "عام", description: "نوع المشروع (سكني، تجاري...)", retention: "5 سنوات", lawBasis: "عقد" },
+  { entity: "ReadyMadeDesign", field: "title", arabicName: "اسم التصميم", category: "public", sensitivity: "عام", description: "اسم التصميم في متجر التصاميم", retention: "مدة النشر", lawBasis: "مصلحة مشروعة" },
+  { entity: "TechnicalResource", field: "title", arabicName: "المورد الفني", category: "public", sensitivity: "عام", description: "المعايير والموارد الفنية المنشورة", retention: "دائم", lawBasis: "مصلحة مشروعة" },
+  { entity: "Review", field: "rating", arabicName: "التقييم", category: "public", sensitivity: "عام", description: "تقييم المهندس من العميل", retention: "مدة الحساب", lawBasis: "موافقة صريحة" },
+  { entity: "ChatbotFAQ", field: "question/answer", arabicName: "أسئلة الدعم", category: "public", sensitivity: "عام", description: "أسئلة وأجوبة الدعم الفني العام", retention: "دائم", lawBasis: "مصلحة مشروعة" },
+  { entity: "MarketEntity", field: "name / region", arabicName: "بيانات الكيانات السوقية", category: "public", sensitivity: "عام", description: "بيانات المطورين والمستثمرين المعتمدة", retention: "مدة العضوية", lawBasis: "موافقة صريحة" },
+
+  // ─── بيانات شخصية ──────────────────────────────────────────────
+  { entity: "User", field: "email", arabicName: "البريد الإلكتروني", category: "personal", sensitivity: "شخصي", description: "البريد الإلكتروني لتسجيل الدخول", retention: "مدة الحساب + سنة", lawBasis: "عقد" },
+  { entity: "User", field: "full_name", arabicName: "الاسم الكامل", category: "personal", sensitivity: "شخصي", description: "الاسم الكامل للمستخدم", retention: "مدة الحساب", lawBasis: "عقد" },
+  { entity: "Engineer", field: "phone", arabicName: "رقم الهاتف", category: "personal", sensitivity: "شخصي", description: "رقم هاتف المهندس للتواصل", retention: "مدة الحساب", lawBasis: "موافقة صريحة" },
+  { entity: "Client", field: "phone", arabicName: "هاتف العميل", category: "personal", sensitivity: "شخصي", description: "رقم هاتف العميل", retention: "مدة الحساب", lawBasis: "موافقة صريحة" },
+  { entity: "Lead", field: "name / phone / email", arabicName: "بيانات العملاء المحتملين", category: "personal", sensitivity: "شخصي", description: "معلومات تواصل العملاء المحتملين", retention: "سنتان", lawBasis: "موافقة صريحة" },
+  { entity: "Notification", field: "recipient_email", arabicName: "بريد مستلم الإشعار", category: "personal", sensitivity: "شخصي", description: "البريد المستخدم لإرسال الإشعارات", retention: "سنة", lawBasis: "مصلحة مشروعة" },
+  { entity: "ChatbotConversation", field: "user_email / messages", arabicName: "محادثات الشات", category: "personal", sensitivity: "شخصي", description: "سجل محادثات المستخدم مع البوت", retention: "سنتان", lawBasis: "موافقة صريحة" },
+  { entity: "Review", field: "comment", arabicName: "تعليق التقييم", category: "personal", sensitivity: "شخصي", description: "التعليق النصي في تقييم المهندس", retention: "مدة الحساب", lawBasis: "موافقة صريحة" },
+  { entity: "OnboardingFlow", field: "client_email / project_details", arabicName: "بيانات Onboarding", category: "personal", sensitivity: "شخصي", description: "تفاصيل متطلبات المشروع للعميل الجديد", retention: "سنة", lawBasis: "موافقة صريحة" },
+  { entity: "QuoteRequest", field: "client_name / phone / email", arabicName: "بيانات طلب العرض", category: "personal", sensitivity: "شخصي", description: "معلومات العميل في طلب عرض السعر", retention: "3 سنوات", lawBasis: "عقد" },
+
+  // ─── بيانات حساسة ──────────────────────────────────────────────
+  { entity: "Contract", field: "total_amount / signatures", arabicName: "قيمة العقد والتوقيعات", category: "sensitive", sensitivity: "حساس", description: "المبالغ المالية والتوقيعات الرقمية", retention: "10 سنوات", lawBasis: "التزام قانوني" },
+  { entity: "Transaction", field: "amount / payment_method", arabicName: "بيانات المعاملات", category: "sensitive", sensitivity: "حساس", description: "تفاصيل المدفوعات والتحويلات", retention: "10 سنوات", lawBasis: "التزام قانوني" },
+  { entity: "Payment", field: "stripe_session / amount", arabicName: "بيانات Stripe", category: "sensitive", sensitivity: "حساس", description: "معرفات جلسات الدفع عبر Stripe", retention: "7 سنوات", lawBasis: "التزام قانوني" },
+  { entity: "WithdrawalRequest", field: "amount / bank_info", arabicName: "طلبات السحب البنكية", category: "sensitive", sensitivity: "حساس", description: "طلبات سحب الأرباح والبيانات البنكية", retention: "10 سنوات", lawBasis: "التزام قانوني" },
+  { entity: "PermitApplication", field: "land_number / ownership_deed", arabicName: "بيانات رخصة البناء", category: "sensitive", sensitivity: "حساس", description: "رقم القطعة وصك الملكية ووثائق البناء", retention: "15 سنوات", lawBasis: "التزام قانوني" },
+  { entity: "Complaint", field: "complaint_details", arabicName: "تفاصيل الشكاوى", category: "sensitive", sensitivity: "حساس", description: "محتوى الشكاوى والنزاعات", retention: "7 سنوات", lawBasis: "التزام قانوني" },
+  { entity: "Dispute", field: "evidence / resolution", arabicName: "بيانات النزاعات", category: "sensitive", sensitivity: "حساس", description: "الأدلة وقرارات الفصل في النزاعات", retention: "10 سنوات", lawBasis: "التزام قانوني" },
+  { entity: "LegalReview", field: "case_analysis / recommendation", arabicName: "المراجعة القانونية", category: "sensitive", sensitivity: "حساس", description: "التحليلات والتوصيات القانونية", retention: "10 سنوات", lawBasis: "التزام قانوني" },
+  { entity: "ProjectMilestone", field: "escrow_amount / payment_released", arabicName: "بيانات الضمان المالي", category: "sensitive", sensitivity: "حساس", description: "المبالغ المحجوزة في الضمان وتواريخ التحرير", retention: "7 سنوات", lawBasis: "عقد" },
+  { entity: "Engineer", field: "national_id / balady_number", arabicName: "الهوية الوطنية ورقم بلدي", category: "sensitive", sensitivity: "حساس", description: "رقم هوية المهندس ورقم اعتماده في بلدي", retention: "مدة الاعتماد + 5 سنوات", lawBasis: "التزام قانوني" },
+  { entity: "PlatformRevenue", field: "commission / revenue", arabicName: "إيرادات المنصة", category: "sensitive", sensitivity: "حساس", description: "سجلات العمولات والإيرادات الإجمالية", retention: "10 سنوات", lawBasis: "التزام قانوني" },
 ];
 
-const CLASS_CONFIG = {
-  public:    { label: "عامة",    labelEn: "Public",    color: "bg-green-100 text-green-800",   icon: <Eye className="w-3 h-3" />,       border: "border-green-200" },
-  internal:  { label: "داخلية", labelEn: "Internal",  color: "bg-blue-100 text-blue-800",    icon: <Shield className="w-3 h-3" />,    border: "border-blue-200" },
-  personal:  { label: "شخصية",  labelEn: "Personal",  color: "bg-yellow-100 text-yellow-800", icon: <AlertTriangle className="w-3 h-3" />, border: "border-yellow-200" },
-  sensitive: { label: "حساسة",  labelEn: "Sensitive", color: "bg-red-100 text-red-800",      icon: <Lock className="w-3 h-3" />,      border: "border-red-200" },
+const CATEGORIES = {
+  all: { label: "الكل", color: "bg-slate-100 text-slate-700", icon: null },
+  public: { label: "بيانات عامة", color: "bg-green-100 text-green-700", icon: Eye },
+  personal: { label: "بيانات شخصية", color: "bg-blue-100 text-blue-700", icon: Shield },
+  sensitive: { label: "بيانات حساسة", color: "bg-red-100 text-red-700", icon: Lock },
 };
 
-const SENSITIVITY_CONFIG = {
-  low:      { label: "منخفضة", color: "bg-green-500" },
-  medium:   { label: "متوسطة", color: "bg-yellow-500" },
-  high:     { label: "عالية",  color: "bg-orange-500" },
-  critical: { label: "حرجة",   color: "bg-red-600" },
+const CategoryBadge = ({ category }) => {
+  const cfg = CATEGORIES[category];
+  const Icon = cfg.icon;
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${cfg.color}`}>
+      {Icon && <Icon className="w-3 h-3" />}
+      {cfg.label}
+    </span>
+  );
 };
 
 export default function DataClassification() {
   const [search, setSearch] = useState("");
-  const [expanded, setExpanded] = useState({});
-  const [filterClass, setFilterClass] = useState("all");
+  const [filter, setFilter] = useState("all");
 
-  const toggle = (entity) => setExpanded(prev => ({ ...prev, [entity]: !prev[entity] }));
+  const filtered = DATA_CLASSIFICATION.filter(row => {
+    const matchFilter = filter === "all" || row.category === filter;
+    const matchSearch = !search ||
+      row.entity.toLowerCase().includes(search.toLowerCase()) ||
+      row.arabicName.includes(search) ||
+      row.description.includes(search);
+    return matchFilter && matchSearch;
+  });
 
-  const filtered = DATA_SCHEMA.map(e => ({
-    ...e,
-    fields: e.fields.filter(f => {
-      const matchSearch = search === "" ||
-        f.ar.includes(search) || f.name.includes(search) || f.note.includes(search);
-      const matchClass = filterClass === "all" || f.classification === filterClass;
-      return matchSearch && matchClass;
-    })
-  })).filter(e => e.fields.length > 0);
+  const counts = {
+    all: DATA_CLASSIFICATION.length,
+    public: DATA_CLASSIFICATION.filter(r => r.category === "public").length,
+    personal: DATA_CLASSIFICATION.filter(r => r.category === "personal").length,
+    sensitive: DATA_CLASSIFICATION.filter(r => r.category === "sensitive").length,
+  };
 
-  const totalFields = DATA_SCHEMA.reduce((a, e) => a + e.fields.length, 0);
-  const pdplCount   = DATA_SCHEMA.reduce((a, e) => a + e.fields.filter(f => f.pdpl).length, 0);
-  const sensitiveCount = DATA_SCHEMA.reduce((a, e) => a + e.fields.filter(f => f.classification === "sensitive").length, 0);
-
-  const exportCSV = () => {
-    const rows = [["الكيان", "الحقل", "الاسم بالعربية", "التصنيف", "مستوى الحساسية", "PDPL", "ملاحظة"]];
-    DATA_SCHEMA.forEach(e => e.fields.forEach(f =>
-      rows.push([e.entity_ar, f.name, f.ar, CLASS_CONFIG[f.classification].label, SENSITIVITY_CONFIG[f.sensitivity].label, f.pdpl ? "نعم" : "لا", f.note])
-    ));
-    const csv = rows.map(r => r.join(",")).join("\n");
+  const handleExport = () => {
+    const headers = ["الكيان", "الحقل", "الاسم العربي", "التصنيف", "الوصف", "مدة الاحتفاظ", "الأساس القانوني"];
+    const rows = DATA_CLASSIFICATION.map(r => [r.entity, r.field, r.arabicName, r.sensitivity, r.description, r.retention, r.lawBasis]);
+    const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "bytly_data_classification.csv"; a.click();
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "bytly_data_classification.csv";
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-10" dir="rtl">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] flex items-center justify-center">
-            <Shield className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-[#4A3F35]">مخطط تصنيف البيانات</h1>
-            <p className="text-sm text-slate-500">Data Classification Schema — متوافق مع PDPL و NCA</p>
+    <div className="min-h-screen bg-gray-50 py-10 px-4" dir="rtl">
+      <div className="max-w-7xl mx-auto">
+
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] flex items-center justify-center">
+              <Shield className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-[#4A3F35]">جدول تصنيف البيانات</h1>
+              <p className="text-sm text-gray-500">امتثال نظام حماية البيانات الشخصية (PDPL) — المملكة العربية السعودية</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {[
-          { label: "إجمالي الحقول", value: totalFields, color: "text-slate-700", bg: "bg-slate-50" },
-          { label: "خاضعة لـ PDPL", value: pdplCount, color: "text-yellow-700", bg: "bg-yellow-50" },
-          { label: "بيانات حساسة", value: sensitiveCount, color: "text-red-700", bg: "bg-red-50" },
-          { label: "الكيانات المُصنّفة", value: DATA_SCHEMA.length, color: "text-[#6B5D4F]", bg: "bg-amber-50" },
-        ].map(s => (
-          <div key={s.label} className={`${s.bg} rounded-xl p-4 text-center border border-slate-100`}>
-            <div className={`text-3xl font-bold ${s.color}`}>{s.value}</div>
-            <div className="text-xs text-slate-500 mt-1">{s.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Legend */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {Object.entries(CLASS_CONFIG).map(([key, cfg]) => (
-          <button
-            key={key}
-            onClick={() => setFilterClass(filterClass === key ? "all" : key)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${cfg.color} ${cfg.border} ${filterClass === key ? "ring-2 ring-offset-1 ring-[#C9A66B]" : "opacity-80 hover:opacity-100"}`}
-          >
-            {cfg.icon} {cfg.label} <span className="opacity-60">({cfg.labelEn})</span>
-          </button>
-        ))}
-        {filterClass !== "all" && (
-          <button onClick={() => setFilterClass("all")} className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-700 underline">
-            إلغاء الفلتر
-          </button>
-        )}
-      </div>
-
-      {/* Search + Export */}
-      <div className="flex gap-3 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute right-3 top-2.5 w-4 h-4 text-slate-400" />
-          <Input
-            placeholder="ابحث عن حقل أو ملاحظة..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="pr-9 text-right"
-          />
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          {Object.entries(CATEGORIES).map(([key, cfg]) => {
+            const Icon = cfg.icon || Filter;
+            return (
+              <button
+                key={key}
+                onClick={() => setFilter(key)}
+                className={`p-4 rounded-xl border-2 text-right transition-all ${filter === key ? "border-[#C9A66B] bg-white shadow-md" : "border-transparent bg-white hover:border-gray-200"}`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-2xl font-bold text-[#4A3F35]">{counts[key]}</span>
+                  <Icon className="w-5 h-5 text-[#C9A66B]" />
+                </div>
+                <p className="text-xs text-gray-500">{cfg.label}</p>
+              </button>
+            );
+          })}
         </div>
-        <Button variant="outline" onClick={exportCSV} className="gap-2 shrink-0">
-          <Download className="w-4 h-4" /> تصدير CSV
-        </Button>
-      </div>
 
-      {/* Tables */}
-      <div className="space-y-4">
-        {filtered.map(entity => (
-          <div key={entity.entity} className="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-            <button
-              className="w-full flex items-center justify-between px-5 py-4 bg-[#F9F6F2] hover:bg-[#F0EBE3] transition-colors"
-              onClick={() => toggle(entity.entity)}
-            >
-              <div className="flex items-center gap-3">
-                <span className="font-semibold text-[#4A3F35] text-base">{entity.entity_ar}</span>
-                <span className="text-xs text-slate-400 font-mono">{entity.entity}</span>
-                <span className="text-xs bg-[#C9A66B]/20 text-[#6B5D4F] px-2 py-0.5 rounded-full">
-                  {entity.fields.length} حقل
-                </span>
-              </div>
-              {expanded[entity.entity] ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
-            </button>
+        {/* Controls */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <div className="relative flex-1">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="ابحث عن كيان أو حقل..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="pr-9 text-right"
+            />
+          </div>
+          <Button onClick={handleExport} variant="outline" className="flex items-center gap-2 whitespace-nowrap">
+            <Download className="w-4 h-4" />
+            تصدير CSV
+          </Button>
+        </div>
 
-            {(expanded[entity.entity] !== false && expanded[entity.entity] !== undefined ? true : expanded[entity.entity] === undefined) && (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-slate-50 text-slate-500 text-xs">
-                      <th className="text-right px-4 py-2 font-medium">الحقل</th>
-                      <th className="text-right px-4 py-2 font-medium">التصنيف</th>
-                      <th className="text-right px-4 py-2 font-medium">الحساسية</th>
-                      <th className="text-right px-4 py-2 font-medium">PDPL</th>
-                      <th className="text-right px-4 py-2 font-medium">ملاحظة الامتثال</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {entity.fields.map(field => {
-                      const cls = CLASS_CONFIG[field.classification];
-                      const sens = SENSITIVITY_CONFIG[field.sensitivity];
-                      return (
-                        <tr key={field.name} className="hover:bg-slate-50 transition-colors">
-                          <td className="px-4 py-3">
-                            <div className="font-medium text-slate-800">{field.ar}</div>
-                            <div className="text-xs text-slate-400 font-mono">{field.name}</div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${cls.color}`}>
-                              {cls.icon} {cls.label}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-2 h-2 rounded-full ${sens.color}`} />
-                              <span className="text-xs text-slate-600">{sens.label}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3">
-                            {field.pdpl
-                              ? <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full font-medium">✓ مشمول</span>
-                              : <span className="text-xs text-slate-300">—</span>
-                            }
-                          </td>
-                          <td className="px-4 py-3 text-xs text-slate-500 max-w-xs">{field.note}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+        {/* Table */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-right">
+              <thead className="bg-[#4A3F35] text-white">
+                <tr>
+                  <th className="px-4 py-3 font-medium">الكيان</th>
+                  <th className="px-4 py-3 font-medium">الحقل / البيانات</th>
+                  <th className="px-4 py-3 font-medium">الاسم العربي</th>
+                  <th className="px-4 py-3 font-medium">التصنيف</th>
+                  <th className="px-4 py-3 font-medium hidden md:table-cell">الوصف</th>
+                  <th className="px-4 py-3 font-medium hidden lg:table-cell">مدة الاحتفاظ</th>
+                  <th className="px-4 py-3 font-medium hidden lg:table-cell">الأساس القانوني</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filtered.map((row, i) => (
+                  <tr key={i} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <span className="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-600">{row.entity}</span>
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs text-gray-500 max-w-[140px] truncate">{row.field}</td>
+                    <td className="px-4 py-3 font-medium text-[#4A3F35]">{row.arabicName}</td>
+                    <td className="px-4 py-3"><CategoryBadge category={row.category} /></td>
+                    <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell max-w-[200px]">{row.description}</td>
+                    <td className="px-4 py-3 hidden lg:table-cell">
+                      <span className="text-xs text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full border">{row.retention}</span>
+                    </td>
+                    <td className="px-4 py-3 hidden lg:table-cell">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        row.lawBasis === "التزام قانوني" ? "bg-purple-50 text-purple-700" :
+                        row.lawBasis === "عقد" ? "bg-blue-50 text-blue-700" :
+                        row.lawBasis === "موافقة صريحة" ? "bg-green-50 text-green-700" :
+                        "bg-orange-50 text-orange-700"
+                      }`}>{row.lawBasis}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filtered.length === 0 && (
+              <div className="text-center py-12 text-gray-400">
+                <AlertTriangle className="w-8 h-8 mx-auto mb-2" />
+                <p>لا توجد نتائج مطابقة</p>
               </div>
             )}
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* Footer note */}
-      <div className="mt-8 p-4 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-700 leading-relaxed">
-        <strong>ملاحظة قانونية:</strong> الحقول المُحددة بـ "PDPL مشمول" تستوجب الامتثال لنظام حماية البيانات الشخصية السعودي الصادر بالمرسوم الملكي رقم م/19. 
-        يجب مراجعة هذا الجدول دورياً عند إضافة كيانات أو حقول جديدة للنظام.
+        {/* Legend */}
+        <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800" dir="rtl">
+          <p className="font-semibold mb-1 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> ملاحظة قانونية</p>
+          <p>هذا الجدول مُعدّ وفق متطلبات <strong>نظام حماية البيانات الشخصية السعودي (PDPL)</strong> الصادر بالمرسوم الملكي رقم م/19. يجب مراجعته دورياً مع مستشار قانوني معتمد وتحديثه عند إضافة كيانات جديدة للمنصة.</p>
+        </div>
       </div>
     </div>
   );
