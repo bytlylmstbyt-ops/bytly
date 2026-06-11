@@ -85,7 +85,10 @@ export default function BudgetCalculator() {
       (AVG_SUMMARIES * CREDITS_PER_SUMMARY) +
       (AVG_MILESTONES * CREDITS_PER_MILESTONE_EMAIL);
     const aiCostPerProject = creditsPerProject * creditCostSAR;
-    const aiCosts = projectsPerMonth * aiCostPerProject;
+    const aiCostsBase = projectsPerMonth * aiCostPerProject;
+    const RETRY_MARGIN = 0.20;
+    const aiRetryBuffer = aiCostsBase * RETRY_MARGIN;
+    const aiCosts = aiCostsBase + aiRetryBuffer;
 
     const totalCosts = BASE44_COST + aiCosts + marketingBudget + SUPPORT_COST + LEGAL_COST;
 
@@ -94,7 +97,7 @@ export default function BudgetCalculator() {
     const roi = totalCosts > 0 ? ((netProfit / totalCosts) * 100) : 0;
     const cac = activeEngineers > 0 ? marketingBudget / activeEngineers : 0;
 
-    return { projectRevenue, subscriptionMonthly, totalRevenue, aiCosts, totalCosts, netProfit, breakEvenProjects, roi, cac, creditsPerProject, aiCostPerProject };
+    return { projectRevenue, subscriptionMonthly, totalRevenue, aiCostsBase, aiRetryBuffer, aiCosts, totalCosts, netProfit, breakEvenProjects, roi, cac, creditsPerProject, aiCostPerProject };
   }, [projectsPerMonth, avgContractValue, platformCommission, marketingBudget, activeEngineers, subscriptionRevenue, commissionFromBoth]);
 
   const isProfit = calc.netProfit >= 0;
@@ -236,6 +239,21 @@ export default function BudgetCalculator() {
               <p className="text-xs text-slate-400">≈ {formatSAR(calc.aiCostPerProject)}/مشروع</p>
             </div>
           </div>
+
+          {/* هامش الأمان */}
+          <div className="flex items-center justify-between bg-orange-50 border border-orange-200 rounded-lg px-4 py-3">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🛡️</span>
+              <div>
+                <p className="text-sm font-semibold text-orange-700">هامش أمان إعادة التشغيل (Retry Buffer)</p>
+                <p className="text-xs text-orange-500">20% إضافية على تكلفة الذكاء الاصطناعي لتغطية أخطاء API</p>
+              </div>
+            </div>
+            <div className="text-left">
+              <p className="font-bold text-orange-700 text-sm">+ {formatSAR(calc.aiRetryBuffer)}</p>
+              <p className="text-xs text-orange-400">/ شهرياً</p>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -270,7 +288,8 @@ export default function BudgetCalculator() {
                 <p className="text-xs font-bold text-red-500 mb-2">📉 بنود التكاليف</p>
                 {[
                   { label: "منصة Base44", value: BASE44_COST },
-                  { label: "استهلاك الذكاء الاصطناعي", value: calc.aiCosts },
+                  { label: "استهلاك الذكاء الاصطناعي (أساسي)", value: calc.aiCostsBase },
+                  { label: "🛡️ هامش أمان Retry (20%)", value: calc.aiRetryBuffer },
                   { label: "الدعم الفني", value: SUPPORT_COST },
                   { label: "الاستشارات القانونية", value: LEGAL_COST },
                   { label: "التسويق", value: marketingBudget },
