@@ -146,6 +146,7 @@ const AuthenticatedApp = () => {
         <Route path="/ProjectProposals"           element={lazyRoute(ProjectProposals, "ProjectProposals")} />
         <Route path="/DataClassification"         element={lazyRoute(DataClassification, "DataClassification")} />
         <Route path="/ComplianceDashboard"        element={lazyRoute(React.lazy(() => import('./pages/ComplianceDashboard')), "ComplianceDashboard")} />
+        <Route path="/ContractManager"           element={lazyRoute(React.lazy(() => import('./pages/ContractManager')), "ContractManager")} />
         <Route path="/Subscription"               element={lazyRoute(React.lazy(() => import('./pages/Subscription')), "Subscription")} />
       </Route>
 
