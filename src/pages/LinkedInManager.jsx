@@ -231,7 +231,7 @@ export default function LinkedInManager() {
       const res = await base44.integrations.Core.InvokeLLM({
         prompt: `أنت مسؤول تسويق محتوى لمنصة Bytly للخدمات الهندسية في السعودية.
 أنشئ خطة محتوى لـ ${calDays} أيام قادمة حول موضوع: "${calTopic}"
-
+تذكر أننا في عام 2026، استخدم إحصائيات وأحداث ومصطلحات حديثة تتعلق بعام 2026 فقط.
 لكل يوم: نوع المنشور، العنوان، نص قصير (30-50 كلمة)، وأفضل وقت للنشر.
 أرجع JSON فقط.`,
         response_json_schema: {
