@@ -56,22 +56,37 @@ export default function BudgetCalculator() {
   const [subscriptionRevenue, setSubscriptionRevenue] = useState(30);
   const [commissionFromBoth, setCommissionFromBoth] = useState(true);
   const [showDetails, setShowDetails] = useState(false);
+  const [chatInteractionsPerProject, setChatInteractionsPerProject] = useState(10);
+  const [creditCostSAR, setCreditCostSAR] = useState(0.05); // تكلفة النقطة الواحدة بالريال
 
   // التكاليف الثابتة التقريبية
   const BASE44_COST = 1500;
-  const AI_COST_PER_PROJECT = 25;
   const SUPPORT_COST = 3000;
   const LEGAL_COST = 2000;
+
+  // نقاط Base44 لكل مشروع
+  const CREDITS_PER_CHAT_MSG = 3;       // InvokeLLM Automatic
+  const CREDITS_PER_SUMMARY = 3;        // generateProjectSummary
+  const CREDITS_PER_MILESTONE_EMAIL = 2; // automation + sendEmail
+  const AVG_MILESTONES = 5;
+  const AVG_SUMMARIES = 2;
 
   const calc = useMemo(() => {
     const commissionMultiplier = commissionFromBoth ? 2 : 1;
     const commissionRate = (platformCommission / 100) * commissionMultiplier;
 
     const projectRevenue = projectsPerMonth * avgContractValue * commissionRate;
-    const subscriptionMonthly = activeEngineers * (subscriptionRevenue / 100) * 249; // متوسط اشتراك
+    const subscriptionMonthly = activeEngineers * (subscriptionRevenue / 100) * 249;
     const totalRevenue = projectRevenue + subscriptionMonthly;
 
-    const aiCosts = projectsPerMonth * AI_COST_PER_PROJECT;
+    // حساب نقاط الذكاء الاصطناعي لكل مشروع
+    const creditsPerProject =
+      (chatInteractionsPerProject * CREDITS_PER_CHAT_MSG) +
+      (AVG_SUMMARIES * CREDITS_PER_SUMMARY) +
+      (AVG_MILESTONES * CREDITS_PER_MILESTONE_EMAIL);
+    const aiCostPerProject = creditsPerProject * creditCostSAR;
+    const aiCosts = projectsPerMonth * aiCostPerProject;
+
     const totalCosts = BASE44_COST + aiCosts + marketingBudget + SUPPORT_COST + LEGAL_COST;
 
     const netProfit = totalRevenue - totalCosts;
@@ -79,7 +94,7 @@ export default function BudgetCalculator() {
     const roi = totalCosts > 0 ? ((netProfit / totalCosts) * 100) : 0;
     const cac = activeEngineers > 0 ? marketingBudget / activeEngineers : 0;
 
-    return { projectRevenue, subscriptionMonthly, totalRevenue, aiCosts, totalCosts, netProfit, breakEvenProjects, roi, cac };
+    return { projectRevenue, subscriptionMonthly, totalRevenue, aiCosts, totalCosts, netProfit, breakEvenProjects, roi, cac, creditsPerProject, aiCostPerProject };
   }, [projectsPerMonth, avgContractValue, platformCommission, marketingBudget, activeEngineers, subscriptionRevenue, commissionFromBoth]);
 
   const isProfit = calc.netProfit >= 0;
@@ -174,6 +189,55 @@ export default function BudgetCalculator() {
           </CardContent>
         </Card>
       </div>
+
+      {/* قسم تكلفة الذكاء الاصطناعي */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base text-[#4A3F35] flex items-center gap-2">
+            🤖 تكلفة نقاط الذكاء الاصطناعي (Base44 Credits)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="grid md:grid-cols-2 gap-5">
+            <InputRow label="متوسط تفاعلات الشات لكل مشروع" value={chatInteractionsPerProject} onChange={setChatInteractionsPerProject} min={1} max={100} step={1} suffix="رسالة" />
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-[#6B5D4F]">تكلفة النقطة الواحدة (ريال)</span>
+                <span className="text-sm font-bold text-[#C9A66B]">{creditCostSAR.toFixed(3)} ريال</span>
+              </div>
+              <input
+                type="range"
+                min={0.01} max={0.5} step={0.005}
+                value={creditCostSAR}
+                onChange={(e) => setCreditCostSAR(parseFloat(e.target.value))}
+                className="w-full accent-[#C9A66B]"
+              />
+              <div className="flex justify-between text-xs text-slate-400">
+                <span>0.010 ريال</span>
+                <span>0.500 ريال</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 pt-2 border-t">
+            <div className="bg-slate-50 rounded-lg p-3 text-center">
+              <p className="text-xs text-slate-500 mb-1">نقاط الشات</p>
+              <p className="font-bold text-[#4A3F35]">{chatInteractionsPerProject * 3}</p>
+              <p className="text-xs text-slate-400">{chatInteractionsPerProject} رسالة × 3</p>
+            </div>
+            <div className="bg-slate-50 rounded-lg p-3 text-center">
+              <p className="text-xs text-slate-500 mb-1">تقارير + أتمتة</p>
+              <p className="font-bold text-[#4A3F35]">16</p>
+              <p className="text-xs text-slate-400">ثابتة لكل مشروع</p>
+            </div>
+            <div className="bg-[#FEF9EE] rounded-lg p-3 text-center border border-[#C9A66B]/30">
+              <p className="text-xs text-slate-500 mb-1">إجمالي نقاط/مشروع</p>
+              <p className="font-bold text-[#C9A66B] text-lg">{calc.creditsPerProject}</p>
+              <p className="text-xs text-slate-400">≈ {formatSAR(calc.aiCostPerProject)}/مشروع</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* تفاصيل التكاليف والإيرادات */}
       <Card>
