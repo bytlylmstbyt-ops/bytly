@@ -44,20 +44,57 @@ function PostPreview({ text, userName }) {
 // ── مكوّن نتيجة الدُفعة ──────────────────────────────────────────────────────
 function BatchResultItem({ result, onCopy }) {
   const [expanded, setExpanded] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const handleSend = async () => {
+    setSending(true);
+    try {
+      const res = await base44.functions.invoke("linkedinService", {
+        action: "sendDirectMessage",
+        data: { recipientName: result.profile.name, message: result.draft },
+      });
+      setSent(true);
+      toast.success(`تم إرسال الرسالة إلى ${result.profile.name} ✓`);
+    } catch {
+      // fallback: copy + open LinkedIn
+      navigator.clipboard.writeText(result.draft);
+      window.open("https://www.linkedin.com/messaging/", "_blank");
+      toast.success(`تم نسخ الرسالة — افتح LinkedIn لإرسالها لـ ${result.profile.name}`);
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
-    <div className={`bg-white rounded-lg border p-3 ${result.success ? "border-green-200" : "border-red-200"}`}>
+    <div className={`bg-white rounded-lg border p-3 ${sent ? "border-blue-300 bg-blue-50" : result.success ? "border-green-200" : "border-red-200"}`}>
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          {result.success
-            ? <CheckCircle className="w-4 h-4 text-green-600" />
-            : <span className="w-4 h-4 text-red-500 text-xs">✗</span>}
-          <span className="text-sm font-medium text-slate-800">{result.profile.name}</span>
-          <span className="text-xs text-slate-500">{result.profile.title}</span>
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {sent
+            ? <Send className="w-4 h-4 text-blue-600 shrink-0" />
+            : result.success
+              ? <CheckCircle className="w-4 h-4 text-green-600 shrink-0" />
+              : <span className="w-4 h-4 text-red-500 text-xs shrink-0">✗</span>}
+          <span className="text-sm font-medium text-slate-800 truncate">{result.profile.name}</span>
+          <span className="text-xs text-slate-500 truncate hidden sm:block">{result.profile.title}</span>
+          {sent && <Badge className="bg-blue-100 text-blue-700 text-xs border-0 shrink-0">أُرسلت</Badge>}
         </div>
         {result.draft && (
-          <div className="flex gap-1">
-            <Button size="sm" variant="ghost" onClick={() => onCopy(result.draft)}><Copy className="w-3 h-3" /></Button>
-            <Button size="sm" variant="ghost" onClick={() => setExpanded(e => !e)}>
+          <div className="flex gap-1 shrink-0">
+            <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => onCopy(result.draft)} title="نسخ">
+              <Copy className="w-3 h-3" />
+            </Button>
+            <Button
+              size="sm"
+              className={`h-7 px-3 text-xs ${sent ? "bg-blue-100 text-blue-700 hover:bg-blue-200" : "bg-[#0A66C2] hover:bg-[#004182] text-white"}`}
+              onClick={handleSend}
+              disabled={sending}
+              title="إرسال عبر LinkedIn"
+            >
+              {sending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+              <span className="mr-1">{sent ? "أُرسلت" : "إرسال"}</span>
+            </Button>
+            <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setExpanded(e => !e)}>
               {expanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </Button>
           </div>
