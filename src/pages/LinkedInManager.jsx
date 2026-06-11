@@ -336,7 +336,7 @@ export default function LinkedInManager() {
       try {
         const res = await base44.functions.invoke("linkedinService", {
           action: "outreachToEngineers",
-          data: { engineerName: profile.name, engineerSpecialization: networkForm.specialization, engineerCity: networkForm.city, customNote: `${networkForm.customNote ? networkForm.customNote + " | " : ""}${profile.highlight} | خبرة ${profile.yearsExp} سنوات` }
+          data: { engineerName: profile.name, engineerSpecialization: networkForm.specialization, engineerCity: networkForm.city, customNote: `${networkForm.customNote ? networkForm.customNote + " | " : ""}${profile.highlight} | خبرة ${profile.yearsExp} سنوات | اختم الرسالة بـ: مع تحيات، فريق بيتلي` }
         });
         results.push({ profile, success: true, draft: res.data.connectionRequestDraft });
       } catch { results.push({ profile, success: false, draft: null }); }
@@ -403,7 +403,7 @@ ${clientForm.customNote ? `- ملاحظات: ${clientForm.customNote}` : ""}
 الاسم: ${profile.name} | المسمى: ${profile.title} | الشركة: ${profile.company}
 الاحتياج: ${profile.potentialNeed} | نقطة الألم: ${profile.painPoint}
 الفئة: ${catInfo.label} | الخدمة: ${clientForm.projectType}
-شروط: قصيرة (5 أسطر)، مخصصة، تعالج نقطة الألم، دعوة للتواصل. باللغة العربية.`,
+شروط: قصيرة (5 أسطر)، مخصصة، تعالج نقطة الألم، دعوة للتواصل، تنتهي بـ "مع تحيات، فريق بيتلي". باللغة العربية.`,
         });
         results.push({ profile, success: true, draft: res });
       } catch { results.push({ profile, success: false, draft: null }); }
@@ -850,7 +850,7 @@ ${clientForm.customNote ? `- ملاحظات: ${clientForm.customNote}` : ""}
                     onClick={async () => {
                       setLoading(true); setResult(null);
                       try {
-                        const res = await base44.functions.invoke("linkedinService", { action: "outreachToEngineers", data: engineerForm });
+                        const res = await base44.functions.invoke("linkedinService", { action: "outreachToEngineers", data: { ...engineerForm, customNote: (engineerForm.customNote ? engineerForm.customNote + " | " : "") + "اختم الرسالة بـ: مع تحيات، فريق بيتلي" } });
                         setResult(res.data); if (res.data.success) toast.success(res.data.message);
                       } catch (e) { toast.error(e.message); } finally { setLoading(false); }
                     }}
