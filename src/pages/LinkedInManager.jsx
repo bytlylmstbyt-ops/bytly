@@ -313,7 +313,9 @@ export default function LinkedInManager() {
                 properties: {
                   name: { type: "string" }, title: { type: "string" }, company: { type: "string" },
                   yearsExp: { type: "number" }, skills: { type: "array", items: { type: "string" } },
-                  highlight: { type: "string" }
+                  highlight: { type: "string" }, education: { type: "string" },
+                  connections: { type: "number" }, location: { type: "string" },
+                  linkedinHandle: { type: "string" }, about: { type: "string" }
                 }
               }
             }
@@ -377,6 +379,9 @@ ${clientForm.customNote ? `- ملاحظات: ${clientForm.customNote}` : ""}
                   name: { type: "string" }, title: { type: "string" }, company: { type: "string" },
                   companyType: { type: "string" }, potentialNeed: { type: "string" },
                   budget: { type: "string" }, painPoint: { type: "string" },
+                  connections: { type: "number" }, location: { type: "string" },
+                  linkedinHandle: { type: "string" }, about: { type: "string" },
+                  industry: { type: "string" },
                 }
               }
             }
@@ -737,17 +742,47 @@ ${clientForm.customNote ? `- ملاحظات: ${clientForm.customNote}` : ""}
                   <CardContent className="space-y-3">
                     {clientProfiles.map((p, i) => (
                       <div key={i} onClick={() => setSelectedClients(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])}
-                        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${selectedClients.includes(i) ? "border-[#0A66C2] bg-blue-50" : "border-slate-200 hover:border-slate-300"}`}>
-                        <Checkbox checked={selectedClients.includes(i)} onCheckedChange={() => {}} onClick={e => e.stopPropagation()} className="mt-0.5" />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-medium text-slate-800 text-sm">{p.name}</span>
-                            <Badge variant="outline" className="text-xs text-blue-700 border-blue-200">{p.companyType}</Badge>
-                            {p.budget && <Badge className="text-xs bg-amber-100 text-amber-800 border-0">{p.budget}</Badge>}
+                        className={`rounded-xl border cursor-pointer transition-all overflow-hidden ${selectedClients.includes(i) ? "border-[#0A66C2] bg-blue-50" : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"}`}>
+                        {/* Cover */}
+                        <div className="h-12 bg-gradient-to-l from-emerald-600 to-teal-400 relative">
+                          <div className="absolute top-2 right-3">
+                            <Checkbox checked={selectedClients.includes(i)} onCheckedChange={() => {}} onClick={e => e.stopPropagation()} className="bg-white/80 border-white" />
                           </div>
-                          <p className="text-xs text-slate-600 mt-0.5">{p.title} • {p.company}</p>
-                          <p className="text-xs text-green-700 mt-1">🎯 {p.potentialNeed}</p>
-                          <p className="text-xs text-red-600 mt-0.5">⚠️ {p.painPoint}</p>
+                        </div>
+                        <div className="px-4 pb-4">
+                          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-600 to-teal-700 flex items-center justify-center text-white font-bold text-lg -mt-7 border-2 border-white shadow mb-2">
+                            {p.name?.charAt(0)}
+                          </div>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-semibold text-sm text-slate-800">{p.name}</span>
+                                <Badge variant="outline" className="text-xs text-blue-700 border-blue-200">{p.companyType}</Badge>
+                                {p.budget && <Badge className="text-xs bg-amber-100 text-amber-800 border-0">{p.budget}</Badge>}
+                              </div>
+                              <p className="text-xs text-slate-600 mt-0.5">{p.title}</p>
+                              <p className="text-xs text-slate-500">{p.company} {p.location ? `• ${p.location}` : ""}</p>
+                              {p.industry && <p className="text-xs text-slate-400">{p.industry}</p>}
+                              {p.linkedinHandle && (
+                                <a href={`https://linkedin.com/in/${p.linkedinHandle}`} target="_blank" rel="noopener noreferrer"
+                                  onClick={e => e.stopPropagation()}
+                                  className="text-xs text-[#0A66C2] hover:underline mt-0.5 flex items-center gap-1">
+                                  <Linkedin className="w-3 h-3" /> linkedin.com/in/{p.linkedinHandle}
+                                </a>
+                              )}
+                            </div>
+                            {p.connections && (
+                              <div className="text-center shrink-0">
+                                <p className="text-base font-bold text-slate-700">{p.connections?.toLocaleString("ar-SA")}</p>
+                                <p className="text-xs text-slate-400">متابع</p>
+                              </div>
+                            )}
+                          </div>
+                          {p.about && <p className="text-xs text-slate-500 mt-2 leading-relaxed line-clamp-2 border-t pt-2">{p.about}</p>}
+                          <div className="flex gap-2 mt-2 flex-wrap">
+                            <p className="text-xs text-green-700 bg-green-50 rounded px-2 py-1">🎯 {p.potentialNeed}</p>
+                            <p className="text-xs text-red-600 bg-red-50 rounded px-2 py-1">⚠️ {p.painPoint}</p>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -884,18 +919,47 @@ ${clientForm.customNote ? `- ملاحظات: ${clientForm.customNote}` : ""}
                   <CardContent className="space-y-3">
                     {generatedProfiles.map((p, i) => (
                       <div key={i} onClick={() => setSelectedProfiles(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])}
-                        className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all ${selectedProfiles.includes(i) ? "border-[#0A66C2] bg-blue-50" : "border-slate-200 hover:border-slate-300"}`}>
-                        <Checkbox checked={selectedProfiles.includes(i)} onCheckedChange={() => {}} onClick={e => e.stopPropagation()} className="mt-0.5" />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-medium text-sm">{p.name}</span>
-                            <Badge variant="outline" className="text-xs">{p.yearsExp} سنوات</Badge>
+                        className={`rounded-xl border cursor-pointer transition-all overflow-hidden ${selectedProfiles.includes(i) ? "border-[#0A66C2] bg-blue-50" : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"}`}>
+                        {/* LinkedIn-style cover */}
+                        <div className="h-12 bg-gradient-to-l from-[#0A66C2] to-blue-400 relative">
+                          <div className="absolute top-2 right-3">
+                            <Checkbox checked={selectedProfiles.includes(i)} onCheckedChange={() => {}} onClick={e => e.stopPropagation()} className="bg-white/80 border-white" />
                           </div>
-                          <p className="text-xs text-slate-600 mt-0.5">{p.title} • {p.company}</p>
-                          <p className="text-xs text-blue-600 mt-1">✨ {p.highlight}</p>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {p.skills?.map(s => <span key={s} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{s}</span>)}
+                        </div>
+                        <div className="px-4 pb-4">
+                          {/* Avatar */}
+                          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center text-white font-bold text-lg -mt-7 border-2 border-white shadow mb-2">
+                            {p.name?.charAt(0)}
                           </div>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-semibold text-sm text-slate-800">{p.name}</span>
+                                <Badge variant="outline" className="text-xs border-blue-200 text-blue-700">{p.yearsExp} سنوات خبرة</Badge>
+                              </div>
+                              <p className="text-xs text-slate-600 mt-0.5">{p.title}</p>
+                              <p className="text-xs text-slate-500">{p.company} {p.location ? `• ${p.location}` : ""}</p>
+                              {p.linkedinHandle && (
+                                <a href={`https://linkedin.com/in/${p.linkedinHandle}`} target="_blank" rel="noopener noreferrer"
+                                  onClick={e => e.stopPropagation()}
+                                  className="text-xs text-[#0A66C2] hover:underline mt-0.5 flex items-center gap-1">
+                                  <Linkedin className="w-3 h-3" /> linkedin.com/in/{p.linkedinHandle}
+                                </a>
+                              )}
+                            </div>
+                            {p.connections && (
+                              <div className="text-center shrink-0">
+                                <p className="text-base font-bold text-slate-700">{p.connections?.toLocaleString("ar-SA")}</p>
+                                <p className="text-xs text-slate-400">متابع</p>
+                              </div>
+                            )}
+                          </div>
+                          {p.about && <p className="text-xs text-slate-500 mt-2 leading-relaxed line-clamp-2 border-t pt-2">{p.about}</p>}
+                          {p.education && <p className="text-xs text-slate-500 mt-1">🎓 {p.education}</p>}
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {p.skills?.map(s => <span key={s} className="text-xs bg-blue-50 text-blue-700 border border-blue-100 px-2 py-0.5 rounded-full">{s}</span>)}
+                          </div>
+                          <p className="text-xs text-amber-700 bg-amber-50 rounded px-2 py-1 mt-2">✨ {p.highlight}</p>
                         </div>
                       </div>
                     ))}
