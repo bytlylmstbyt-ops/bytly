@@ -8,7 +8,7 @@ import {
   ChevronDown, ChevronUp, Search, Plus, Eye, Download,
   PenLine, AlertTriangle, RefreshCw, FileCheck, Building2,
   FileBadge, User, CalendarDays, Banknote, Hash, ArrowLeft,
-  ClipboardList
+  ClipboardList, CloudUpload, ExternalLink
 } from "lucide-react";
 import moment from "moment";
 import SignaturePadModal from "@/components/contracts/SignaturePadModal";
@@ -171,6 +171,8 @@ function ContractForm({ projects, onSave, onCancel, editContract = null }) {
 function ContractDetail({ contract, project, onClose, onRefresh }) {
   const [uploading, setUploading] = useState(false);
   const [signModal, setSignModal] = useState(null); // null | "client" | "engineer"
+  const [backingUp, setBackingUp] = useState(false);
+  const [driveLink, setDriveLink] = useState(contract.drive_backup_link || null);
   const fileRef = useRef();
 
   const bothSigned = contract.client_signature && contract.engineer_signature;
@@ -234,6 +236,25 @@ function ContractDetail({ contract, project, onClose, onRefresh }) {
     await base44.entities.Contract.update(contract.id, update);
     setSignModal(null);
     onRefresh();
+  }
+
+  async function handleDriveBackup() {
+    setBackingUp(true);
+    const res = await base44.functions.invoke('backupContractToDrive', {
+      contractId: contract.id,
+      contractNumber: contract.contract_number,
+      projectTitle: project?.title || '',
+      contractType: contract.contract_type,
+      status: contract.status,
+      signedDate: contract.engineer_signature_date || contract.client_signature_date,
+      fileUrl: contract.contract_pdf_url || '',
+    });
+    if (res.data?.driveLink) {
+      setDriveLink(res.data.driveLink);
+      // حفظ الرابط في كيان العقد
+      await base44.entities.Contract.update(contract.id, { description: (contract.description || '') + ` | Drive: ${res.data.driveLink}` });
+    }
+    setBackingUp(false);
   }
 
   async function updateStatus(newStatus) {
@@ -450,6 +471,49 @@ function ContractDetail({ contract, project, onClose, onRefresh }) {
               <Link to="/ComplianceDashboard" className="text-xs text-[#6B5D4F] underline hover:no-underline">
                 عرض لوحة الامتثال ←
               </Link>
+            </div>
+
+            {/* ─── النسخ الاحتياطي على Google Drive ─── */}
+            <div className={`mt-3 rounded-xl border-2 p-4 ${driveLink ? "border-blue-200 bg-blue-50" : "border-slate-200 bg-slate-50"}`}>
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  {/* أيقونة Drive */}
+                  <svg viewBox="0 0 87.3 78" className="w-5 h-5 shrink-0" xmlns="http://www.w3.org/2000/svg">
+                    <path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/>
+                    <path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z" fill="#00ac47"/>
+                    <path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z" fill="#ea4335"/>
+                    <path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/>
+                    <path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/>
+                    <path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 27h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/>
+                  </svg>
+                  <div>
+                    <p className={`text-sm font-semibold ${driveLink ? "text-blue-700" : "text-slate-600"}`}>
+                      {driveLink ? "✓ محفوظ في Google Drive" : "النسخ الاحتياطي على Google Drive"}
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {driveLink ? "مجلد: Bytly Contracts" : "احفظ نسخة منظمة من العقد تلقائياً"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {driveLink && (
+                    <a href={driveLink} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 text-xs bg-blue-100 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-200 transition-colors">
+                      <ExternalLink className="w-3.5 h-3.5" /> عرض في Drive
+                    </a>
+                  )}
+                  <button
+                    onClick={handleDriveBackup}
+                    disabled={backingUp}
+                    className="flex items-center gap-1.5 text-xs bg-[#6B5D4F] hover:bg-[#4A3F35] text-white px-3 py-1.5 rounded-lg transition-colors disabled:opacity-60"
+                  >
+                    {backingUp
+                      ? <><div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" /> جارٍ الرفع...</>
+                      : <><CloudUpload className="w-3.5 h-3.5" /> {driveLink ? "تحديث النسخة" : "رفع نسخة احتياطية"}</>
+                    }
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
