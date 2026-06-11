@@ -741,7 +741,8 @@ ${clientForm.customNote ? `- ملاحظات: ${clientForm.customNote}` : ""}
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {clientProfiles.map((p, i) => (
-                      <div key={i} onClick={() => setSelectedClients(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])}
+                      <div key={i}
+                        onClick={() => p.linkedinHandle ? window.open(`https://linkedin.com/in/${p.linkedinHandle}`, "_blank") : setSelectedClients(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])}
                         className={`rounded-xl border cursor-pointer transition-all overflow-hidden ${selectedClients.includes(i) ? "border-[#0A66C2] bg-blue-50" : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"}`}>
                         {/* Cover */}
                         <div className="h-12 bg-gradient-to-l from-emerald-600 to-teal-400 relative">
@@ -918,7 +919,8 @@ ${clientForm.customNote ? `- ملاحظات: ${clientForm.customNote}` : ""}
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {generatedProfiles.map((p, i) => (
-                      <div key={i} onClick={() => setSelectedProfiles(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])}
+                      <div key={i}
+                        onClick={() => p.linkedinHandle ? window.open(`https://linkedin.com/in/${p.linkedinHandle}`, "_blank") : setSelectedProfiles(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])}
                         className={`rounded-xl border cursor-pointer transition-all overflow-hidden ${selectedProfiles.includes(i) ? "border-[#0A66C2] bg-blue-50" : "border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm"}`}>
                         {/* LinkedIn-style cover */}
                         <div className="h-12 bg-gradient-to-l from-[#0A66C2] to-blue-400 relative">
