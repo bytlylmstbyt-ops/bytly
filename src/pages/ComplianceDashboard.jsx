@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import {
   ShieldCheck, AlertTriangle, XCircle, FileText, Scale,
   ClipboardList, Search, Download, Eye, CheckCircle2,
-  Clock, Building2, Filter, ChevronDown, ChevronUp,
-  Gavel, FileBadge, Lock, Activity, RefreshCw
+  Clock, Building2, ChevronDown, ChevronUp,
+  Gavel, FileBadge, Lock, Activity, RefreshCw, FileDown, Loader2
 } from "lucide-react";
 import moment from "moment";
+import { jsPDF } from "jspdf";
 
 // ─── مستويات الامتثال ────────────────────────────────────────────────────────
 const COMPLIANCE_LEVELS = {
@@ -123,6 +124,197 @@ function AuditRow({ entry }) {
   );
 }
 
+// ─── تصدير PDF لمشروع واحد ──────────────────────────────────────────────────
+function exportProjectPDF(project, contracts, techReviews, legalReviews, milestones) {
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const W = doc.internal.pageSize.getWidth();
+  const projContracts = contracts.filter(c => c.project_id === project.id);
+  const projTech = techReviews.filter(t => t.project_id === project.id);
+  const projLegal = legalReviews.filter(l => l.project_id === project.id);
+  const projMilestones = milestones.filter(m => m.project_id === project.id);
+  const compliance = project.compliance;
+  const lvlLabel = COMPLIANCE_LEVELS[compliance.level].label;
+
+  let y = 0;
+
+  // ── غلاف الوثيقة ──────────────────────────────────────────────────────────
+  doc.setFillColor(74, 63, 53); // #4A3F35
+  doc.rect(0, 0, W, 50, "F");
+  doc.setFillColor(201, 166, 107); // #C9A66B
+  doc.rect(0, 50, W, 3, "F");
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(18);
+  doc.setFont("helvetica", "bold");
+  doc.text("Bytly - Compliance Report", W / 2, 22, { align: "center" });
+
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "normal");
+  doc.text("Saudi Arabia Regulatory Compliance — PDPL / SBC / Balady", W / 2, 32, { align: "center" });
+
+  doc.setFontSize(9);
+  doc.setTextColor(201, 166, 107);
+  doc.text(`Generated: ${moment().format("DD/MM/YYYY HH:mm")}`, W / 2, 43, { align: "center" });
+
+  y = 62;
+
+  // ── معلومات المشروع ────────────────────────────────────────────────────────
+  doc.setFillColor(248, 250, 252);
+  doc.roundedRect(10, y, W - 20, 38, 3, 3, "F");
+  doc.setDrawColor(226, 232, 240);
+  doc.roundedRect(10, y, W - 20, 38, 3, 3, "S");
+
+  doc.setTextColor(51, 65, 85);
+  doc.setFontSize(13);
+  doc.setFont("helvetica", "bold");
+  doc.text("Project Information", 15, y + 9);
+
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(100, 116, 139);
+  const info = [
+    ["Project Name", project.title || "N/A"],
+    ["Category", project.category || "N/A"],
+    ["Status", project.status || "N/A"],
+    ["Created Date", moment(project.created_date).format("DD/MM/YYYY")],
+  ];
+  info.forEach(([k, v], i) => {
+    const col = i < 2 ? 15 : W / 2 + 5;
+    const row = i < 2 ? y + 18 + (i * 8) : y + 18 + ((i - 2) * 8);
+    doc.setFont("helvetica", "bold"); doc.setTextColor(71, 85, 105);
+    doc.text(`${k}:`, col, row);
+    doc.setFont("helvetica", "normal"); doc.setTextColor(100, 116, 139);
+    doc.text(v, col + 32, row);
+  });
+
+  y += 46;
+
+  // ── درجة الامتثال ─────────────────────────────────────────────────────────
+  doc.setFillColor(201, 166, 107);
+  doc.roundedRect(10, y, W - 20, 22, 3, 3, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text(`Compliance Score: ${compliance.score}%   |   Level: ${lvlLabel}   |   Passed: ${compliance.passed}/${compliance.total} items`, W / 2, y + 13, { align: "center" });
+  y += 30;
+
+  // ── قائمة التحقق السعودية ─────────────────────────────────────────────────
+  doc.setTextColor(51, 65, 85);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Saudi Compliance Checklist", 15, y);
+  y += 7;
+
+  SA_CHECKLIST.forEach((item, idx) => {
+    if (y > 265) { doc.addPage(); y = 20; }
+    const passed = compliance.checks[item.id];
+    doc.setFillColor(passed ? 240 : 254, passed ? 253 : 242, passed ? 244 : 242);
+    doc.roundedRect(10, y, W - 20, 10, 2, 2, "F");
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(passed ? 5 : 153, passed ? 150 : 27, passed ? 105 : 27);
+    doc.text(passed ? "PASS" : "FAIL", 17, y + 6.5);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(51, 65, 85);
+    doc.text(item.label, 35, y + 6.5);
+    doc.setTextColor(148, 163, 184);
+    doc.text(item.category, W - 15, y + 6.5, { align: "right" });
+    y += 12;
+  });
+
+  y += 4;
+
+  // ── العقود ────────────────────────────────────────────────────────────────
+  if (projContracts.length > 0) {
+    if (y > 240) { doc.addPage(); y = 20; }
+    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(51, 65, 85);
+    doc.text("Contracts", 15, y); y += 7;
+    projContracts.forEach(c => {
+      if (y > 265) { doc.addPage(); y = 20; }
+      doc.setFillColor(248, 250, 252);
+      doc.roundedRect(10, y, W - 20, 16, 2, 2, "F");
+      doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(71, 85, 105);
+      doc.text(`Type: ${c.contract_type || "N/A"}`, 15, y + 5.5);
+      doc.text(`Amount: SAR ${(c.total_amount || 0).toLocaleString()}`, 15, y + 11.5);
+      doc.text(`Client Signed: ${c.client_signature ? "Yes" : "No"}`, W / 2, y + 5.5);
+      doc.text(`Engineer Signed: ${c.engineer_signature ? "Yes" : "No"}`, W / 2, y + 11.5);
+      const cStatus = c.client_signature && c.engineer_signature ? "SIGNED" : "PENDING";
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(c.client_signature && c.engineer_signature ? 5 : 201, c.client_signature && c.engineer_signature ? 150 : 166, c.client_signature && c.engineer_signature ? 105 : 107);
+      doc.text(cStatus, W - 15, y + 9, { align: "right" });
+      y += 19;
+    });
+    y += 4;
+  }
+
+  // ── المراجعات الفنية ───────────────────────────────────────────────────────
+  if (projTech.length > 0) {
+    if (y > 240) { doc.addPage(); y = 20; }
+    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(51, 65, 85);
+    doc.text("Technical Reviews (SBC)", 15, y); y += 7;
+    projTech.forEach(t => {
+      if (y > 265) { doc.addPage(); y = 20; }
+      doc.setFillColor(248, 250, 252);
+      doc.roundedRect(10, y, W - 20, 16, 2, 2, "F");
+      doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(71, 85, 105);
+      doc.text(`SBC Compliance: ${t.compliance_status || "N/A"}`, 15, y + 5.5);
+      doc.text(`Approval: ${t.approval_status || "pending"}`, 15, y + 11.5);
+      if (t.quality_assessment) doc.text(`Quality: ${t.quality_assessment.substring(0, 60)}`, W / 2, y + 5.5);
+      y += 19;
+    });
+    y += 4;
+  }
+
+  // ── المراجعات القانونية ────────────────────────────────────────────────────
+  if (projLegal.length > 0) {
+    if (y > 240) { doc.addPage(); y = 20; }
+    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(51, 65, 85);
+    doc.text("Legal Reviews", 15, y); y += 7;
+    projLegal.forEach(l => {
+      if (y > 265) { doc.addPage(); y = 20; }
+      doc.setFillColor(248, 250, 252);
+      doc.roundedRect(10, y, W - 20, 16, 2, 2, "F");
+      doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(71, 85, 105);
+      doc.text(`Status: ${l.status || "N/A"}`, 15, y + 5.5);
+      doc.text(`Entitled Party: ${l.entitled_party || "N/A"}`, 15, y + 11.5);
+      if (l.recommendation) doc.text(`Recommendation: ${l.recommendation.substring(0, 70)}`, W / 2, y + 5.5);
+      y += 19;
+    });
+    y += 4;
+  }
+
+  // ── رخص بلدي من المراحل ───────────────────────────────────────────────────
+  const permitMilestones = projMilestones.filter(m => m.balady_permit_number);
+  if (permitMilestones.length > 0) {
+    if (y > 240) { doc.addPage(); y = 20; }
+    doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.setTextColor(51, 65, 85);
+    doc.text("Balady Permits", 15, y); y += 7;
+    permitMilestones.forEach(m => {
+      if (y > 265) { doc.addPage(); y = 20; }
+      doc.setFillColor(240, 253, 244);
+      doc.roundedRect(10, y, W - 20, 12, 2, 2, "F");
+      doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(71, 85, 105);
+      doc.text(`Permit No: ${m.balady_permit_number}`, 15, y + 8);
+      doc.text(`Stage: ${m.title || "N/A"}`, W / 2, y + 8);
+      y += 15;
+    });
+    y += 4;
+  }
+
+  // ── تذييل الصفحات ─────────────────────────────────────────────────────────
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFillColor(248, 250, 252);
+    doc.rect(0, 285, W, 12, "F");
+    doc.setFontSize(7); doc.setTextColor(148, 163, 184); doc.setFont("helvetica", "normal");
+    doc.text("Bytly Platform — Confidential Compliance Report — For Regulatory Use Only", W / 2, 291, { align: "center" });
+    doc.text(`Page ${i} of ${totalPages}`, W - 15, 291, { align: "right" });
+  }
+
+  doc.save(`compliance_${(project.title || "project").replace(/\s+/g, "_")}_${moment().format("YYYYMMDD")}.pdf`);
+}
+
 // ─── الصفحة الرئيسية ─────────────────────────────────────────────────────────
 export default function ComplianceDashboard() {
   const [projects, setProjects] = useState([]);
@@ -135,6 +327,7 @@ export default function ComplianceDashboard() {
   const [filterLevel, setFilterLevel] = useState("all");
   const [expandedProject, setExpandedProject] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
+  const [exportingPDF, setExportingPDF] = useState(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -393,6 +586,27 @@ export default function ComplianceDashboard() {
                           <LvlIcon className="w-3.5 h-3.5" />
                           {lvl.label}
                         </span>
+
+                        {/* زر تصدير PDF */}
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            setExportingPDF(project.id);
+                            setTimeout(() => {
+                              exportProjectPDF(project, contracts, techReviews, legalReviews, milestones);
+                              setExportingPDF(null);
+                            }, 100);
+                          }}
+                          disabled={exportingPDF === project.id}
+                          className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-[#6B5D4F] hover:bg-[#4A3F35] text-white text-xs rounded-lg transition-colors disabled:opacity-60"
+                          title="تصدير تقرير الامتثال PDF"
+                        >
+                          {exportingPDF === project.id
+                            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            : <FileDown className="w-3.5 h-3.5" />
+                          }
+                          <span className="hidden md:inline">PDF</span>
+                        </button>
 
                         <div className="shrink-0 text-slate-400">
                           {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
