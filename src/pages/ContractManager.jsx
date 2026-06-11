@@ -7,9 +7,11 @@ import {
   FileText, Upload, CheckCircle2, XCircle, Clock, Shield,
   ChevronDown, ChevronUp, Search, Plus, Eye, Download,
   PenLine, AlertTriangle, RefreshCw, FileCheck, Building2,
-  FileBadge, User, CalendarDays, Banknote, Hash, ArrowLeft
+  FileBadge, User, CalendarDays, Banknote, Hash, ArrowLeft,
+  ClipboardList
 } from "lucide-react";
 import moment from "moment";
+import SignaturePadModal from "@/components/contracts/SignaturePadModal";
 
 // ─── حالات العقد ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -168,11 +170,44 @@ function ContractForm({ projects, onSave, onCancel, editContract = null }) {
 // ─── لوحة تفاصيل العقد ──────────────────────────────────────────────────────
 function ContractDetail({ contract, project, onClose, onRefresh }) {
   const [uploading, setUploading] = useState(false);
-  const [signing, setSigning] = useState(null); // 'client' | 'engineer'
-  const [confirmSign, setConfirmSign] = useState(null);
+  const [signModal, setSignModal] = useState(null); // null | "client" | "engineer"
   const fileRef = useRef();
 
   const bothSigned = contract.client_signature && contract.engineer_signature;
+
+  // سجل الامتثال المحلي — مبني من بيانات العقد
+  const complianceLog = [
+    contract.created_date && {
+      label: "إنشاء العقد",
+      time: contract.created_date,
+      done: true,
+      icon: "📄",
+    },
+    {
+      label: "رفع النسخة الأصلية",
+      time: null,
+      done: !!contract.contract_pdf_url,
+      icon: "📎",
+    },
+    {
+      label: "توقيع العميل",
+      time: contract.client_signature_date,
+      done: !!contract.client_signature,
+      icon: "✍️",
+    },
+    {
+      label: "توقيع المهندس",
+      time: contract.engineer_signature_date,
+      done: !!contract.engineer_signature,
+      icon: "✍️",
+    },
+    {
+      label: "اكتمال التوثيق الرقمي",
+      time: bothSigned ? (contract.engineer_signature_date || contract.client_signature_date) : null,
+      done: bothSigned,
+      icon: "🔒",
+    },
+  ].filter(Boolean);
 
   async function handleUpload(e) {
     const file = e.target.files[0];
@@ -187,27 +222,17 @@ function ContractDetail({ contract, project, onClose, onRefresh }) {
     onRefresh();
   }
 
-  async function handleSign(party) {
-    setSigning(party);
+  async function handleSign(party, signatureDataUrl) {
     const now = new Date().toISOString();
     const update = party === "client"
-      ? { client_signature: true, client_signature_date: now }
-      : { engineer_signature: true, engineer_signature_date: now };
+      ? { client_signature: true, client_signature_date: now, client_signature_ip: signatureDataUrl }
+      : { engineer_signature: true, engineer_signature_date: now, engineer_signature_ip: signatureDataUrl };
 
-    // تحديث الحالة إذا وقّع الطرفان
-    const willBothSigned = party === "client"
-      ? contract.engineer_signature
-      : contract.client_signature;
-
-    if (willBothSigned) {
-      update.status = "signed";
-    } else {
-      update.status = "pending_signature";
-    }
+    const willBothSigned = party === "client" ? contract.engineer_signature : contract.client_signature;
+    update.status = willBothSigned ? "signed" : "pending_signature";
 
     await base44.entities.Contract.update(contract.id, update);
-    setSigning(null);
-    setConfirmSign(null);
+    setSignModal(null);
     onRefresh();
   }
 
@@ -315,110 +340,116 @@ function ContractDetail({ contract, project, onClose, onRefresh }) {
             )}
           </div>
 
-          {/* ─── التوقيعات الرقمية ─── */}
-          <div className="border border-slate-200 rounded-2xl p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <PenLine className="w-5 h-5 text-[#C9A66B]" />
-              <h3 className="font-bold text-slate-700">التوثيق الرقمي — الموافقة من الطرفين</h3>
+          {/* ─── التوقيعات الإلكترونية ─── */}
+          <div className="border border-slate-200 rounded-2xl p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <PenLine className="w-5 h-5 text-[#C9A66B]" />
+                <h3 className="font-bold text-slate-700">التوقيع الإلكتروني من الطرفين</h3>
+              </div>
+              {bothSigned && (
+                <span className="flex items-center gap-1.5 text-xs bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full font-semibold">
+                  <Shield className="w-3.5 h-3.5" /> موقع ومكتمل
+                </span>
+              )}
             </div>
 
-            {bothSigned && (
-              <div className="mb-4 flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl p-3">
-                <Shield className="w-4 h-4 text-emerald-500" />
-                <p className="text-sm font-semibold text-emerald-700">العقد موقع رقمياً من كلا الطرفين ✓</p>
-              </div>
-            )}
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* توقيع العميل */}
-              <div className={`rounded-xl p-4 border-2 ${contract.client_signature ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-slate-50"}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-slate-500" />
-                    <span className="font-semibold text-sm text-slate-700">العميل</span>
+              {[
+                { party: "client",   label: "العميل",   signed: contract.client_signature,   date: contract.client_signature_date,   imgData: contract.client_signature_ip },
+                { party: "engineer", label: "المهندس",  signed: contract.engineer_signature,  date: contract.engineer_signature_date,  imgData: contract.engineer_signature_ip },
+              ].map(({ party, label, signed, date, imgData }) => (
+                <div key={party} className={`rounded-2xl border-2 overflow-hidden transition-colors ${signed ? "border-emerald-200" : "border-slate-200"}`}>
+                  {/* رأس البطاقة */}
+                  <div className={`px-4 py-3 flex items-center justify-between ${signed ? "bg-emerald-50" : "bg-slate-50"}`}>
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-slate-400" />
+                      <span className="font-semibold text-sm text-slate-700">{label}</span>
+                    </div>
+                    {signed
+                      ? <span className="flex items-center gap-1 text-xs text-emerald-600 font-semibold"><CheckCircle2 className="w-4 h-4" /> موقّع</span>
+                      : <span className="flex items-center gap-1 text-xs text-amber-500"><Clock className="w-4 h-4" /> بانتظار التوقيع</span>
+                    }
                   </div>
-                  {contract.client_signature
-                    ? <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                    : <Clock className="w-5 h-5 text-amber-400" />
-                  }
-                </div>
-                {contract.client_signature ? (
-                  <div>
-                    <p className="text-xs text-emerald-600 font-semibold">✓ تمت الموافقة الرقمية</p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      {contract.client_signature_date ? moment(contract.client_signature_date).format("DD/MM/YYYY - HH:mm") : "—"}
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-xs text-slate-400 mb-3">لم يتم التوقيع بعد</p>
-                    {confirmSign === "client" ? (
-                      <div className="space-y-2">
-                        <p className="text-xs text-amber-700 bg-amber-50 rounded-lg p-2">
-                          بالضغط على "تأكيد"، أقرّ بموافقتي الرقمية على بنود هذا العقد وأن هذا الإجراء يُعدّ توقيعاً إلكترونياً ملزماً قانونياً.
-                        </p>
-                        <div className="flex gap-2">
-                          <button onClick={() => handleSign("client")} disabled={signing === "client"}
-                            className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white text-xs py-2 rounded-lg font-semibold transition-colors">
-                            {signing === "client" ? "جارٍ..." : "تأكيد الموافقة"}
-                          </button>
-                          <button onClick={() => setConfirmSign(null)} className="flex-1 bg-slate-200 text-slate-600 text-xs py-2 rounded-lg font-semibold">إلغاء</button>
-                        </div>
-                      </div>
-                    ) : (
-                      <button onClick={() => setConfirmSign("client")}
-                        className="w-full bg-[#6B5D4F] hover:bg-[#4A3F35] text-white text-xs py-2.5 rounded-lg font-semibold transition-colors flex items-center justify-center gap-1.5">
-                        <PenLine className="w-3.5 h-3.5" /> توقيع من طرف العميل
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
 
-              {/* توقيع المهندس */}
-              <div className={`rounded-xl p-4 border-2 ${contract.engineer_signature ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-slate-50"}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-slate-500" />
-                    <span className="font-semibold text-sm text-slate-700">المهندس</span>
-                  </div>
-                  {contract.engineer_signature
-                    ? <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                    : <Clock className="w-5 h-5 text-amber-400" />
-                  }
-                </div>
-                {contract.engineer_signature ? (
-                  <div>
-                    <p className="text-xs text-emerald-600 font-semibold">✓ تمت الموافقة الرقمية</p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      {contract.engineer_signature_date ? moment(contract.engineer_signature_date).format("DD/MM/YYYY - HH:mm") : "—"}
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-xs text-slate-400 mb-3">لم يتم التوقيع بعد</p>
-                    {confirmSign === "engineer" ? (
-                      <div className="space-y-2">
-                        <p className="text-xs text-amber-700 bg-amber-50 rounded-lg p-2">
-                          بالضغط على "تأكيد"، أقرّ بموافقتي الرقمية على بنود هذا العقد وأن هذا الإجراء يُعدّ توقيعاً إلكترونياً ملزماً قانونياً.
-                        </p>
-                        <div className="flex gap-2">
-                          <button onClick={() => handleSign("engineer")} disabled={signing === "engineer"}
-                            className="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white text-xs py-2 rounded-lg font-semibold transition-colors">
-                            {signing === "engineer" ? "جارٍ..." : "تأكيد الموافقة"}
-                          </button>
-                          <button onClick={() => setConfirmSign(null)} className="flex-1 bg-slate-200 text-slate-600 text-xs py-2 rounded-lg font-semibold">إلغاء</button>
+                  {/* محتوى */}
+                  <div className="p-4">
+                    {signed ? (
+                      <div className="space-y-3">
+                        {/* صورة التوقيع */}
+                        {imgData && imgData.startsWith("data:image") && (
+                          <div className="bg-white border border-slate-200 rounded-xl p-2 flex items-center justify-center" style={{ minHeight: 80 }}>
+                            <img src={imgData} alt="توقيع" className="max-h-20 object-contain" />
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2 bg-emerald-50 rounded-xl px-3 py-2">
+                          <Shield className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                          <div>
+                            <p className="text-xs font-semibold text-emerald-700">توقيع إلكتروني موثق</p>
+                            <p className="text-xs text-slate-400">{date ? moment(date).format("DD/MM/YYYY - HH:mm") : "—"}</p>
+                          </div>
                         </div>
                       </div>
                     ) : (
-                      <button onClick={() => setConfirmSign("engineer")}
-                        className="w-full bg-[#6B5D4F] hover:bg-[#4A3F35] text-white text-xs py-2.5 rounded-lg font-semibold transition-colors flex items-center justify-center gap-1.5">
-                        <PenLine className="w-3.5 h-3.5" /> توقيع من طرف المهندس
+                      <button
+                        onClick={() => setSignModal(party)}
+                        className="w-full border-2 border-dashed border-[#C9A66B]/50 hover:border-[#C9A66B] hover:bg-amber-50 rounded-xl py-6 flex flex-col items-center gap-2 transition-colors group"
+                      >
+                        <PenLine className="w-6 h-6 text-[#C9A66B] group-hover:scale-110 transition-transform" />
+                        <span className="text-sm font-semibold text-[#6B5D4F]">اضغط للتوقيع</span>
+                        <span className="text-xs text-slate-400">توقيع إلكتروني ملزم قانونياً</span>
                       </button>
                     )}
-                  </>
-                )}
-              </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ─── سجل الامتثال المرئي ─── */}
+          <div className="border border-amber-100 bg-gradient-to-b from-amber-50/60 to-white rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <ClipboardList className="w-5 h-5 text-[#C9A66B]" />
+              <h3 className="font-bold text-slate-700">سجل الامتثال للمشروع</h3>
+              <span className="text-xs bg-[#C9A66B]/20 text-[#6B5D4F] px-2 py-0.5 rounded-full font-medium">
+                {complianceLog.filter(l => l.done).length}/{complianceLog.length} مكتمل
+              </span>
+            </div>
+
+            {/* شريط تقدم */}
+            <div className="w-full bg-slate-100 rounded-full h-2 mb-4 overflow-hidden">
+              <div
+                className="h-2 rounded-full bg-gradient-to-l from-emerald-400 to-emerald-500 transition-all duration-700"
+                style={{ width: `${(complianceLog.filter(l => l.done).length / complianceLog.length) * 100}%` }}
+              />
+            </div>
+
+            {/* خطوات السجل */}
+            <div className="space-y-2">
+              {complianceLog.map((step, i) => (
+                <div key={i} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors ${step.done ? "bg-emerald-50" : "bg-slate-50"}`}>
+                  <span className="text-base shrink-0">{step.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${step.done ? "text-emerald-700" : "text-slate-500"}`}>{step.label}</p>
+                    {step.done && step.time && (
+                      <p className="text-xs text-slate-400">{moment(step.time).format("DD/MM/YYYY - HH:mm")}</p>
+                    )}
+                  </div>
+                  {step.done
+                    ? <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                    : <div className="w-4 h-4 rounded-full border-2 border-slate-300 shrink-0" />
+                  }
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 flex items-center justify-between">
+              <p className="text-xs text-slate-400">
+                {bothSigned ? "✓ هذا العقد محتسب كاملاً في سجل امتثال المشروع" : "⚠ يكتمل السجل بعد توقيع الطرفين"}
+              </p>
+              <Link to="/ComplianceDashboard" className="text-xs text-[#6B5D4F] underline hover:no-underline">
+                عرض لوحة الامتثال ←
+              </Link>
             </div>
           </div>
 
@@ -470,6 +501,16 @@ function ContractDetail({ contract, project, onClose, onRefresh }) {
           )}
         </div>
       </div>
+
+      {/* مودال لوحة التوقيع */}
+      {signModal && (
+        <SignaturePadModal
+          party={signModal}
+          contractNum={contract.contract_number}
+          onConfirm={(dataUrl) => handleSign(signModal, dataUrl)}
+          onCancel={() => setSignModal(null)}
+        />
+      )}
     </div>
   );
 }
