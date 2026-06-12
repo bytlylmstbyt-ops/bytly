@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Loader2, Share2, Users, UserPlus, CheckCircle, Copy, ExternalLink, Linkedin,
   Network, Search, Sparkles, ChevronDown, ChevronUp, Eye, Calendar, TrendingUp,
-  FileText, Clock, RefreshCw, Zap, BarChart2, Star, MessageSquare, ThumbsUp, Send
+  FileText, Clock, RefreshCw, Zap, BarChart2, Star, MessageSquare, ThumbsUp, Send,
+  Instagram, Image, Upload
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -170,9 +171,69 @@ export default function LinkedInManager() {
     engineerName: "", engineerSpecialization: "هندسة معمارية", engineerCity: "الرياض", customNote: "",
   });
 
+  // Instagram tab
+  const [igLoading, setIgLoading] = useState(false);
+  const [igResult, setIgResult] = useState(null);
+  const [igProfile, setIgProfile] = useState(null);
+  const [igGenerating, setIgGenerating] = useState(false);
+  const [igForm, setIgForm] = useState({
+    imageUrl: "",
+    projectTitle: "",
+    projectCategory: "interior",
+    description: "",
+    caption: "",
+  });
+
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
+    // load Instagram profile silently
+    base44.functions.invoke("instagramPortfolio", { action: "getProfile" })
+      .then(r => setIgProfile(r.profile)).catch(() => {});
   }, []);
+
+  const generateIgCaption = async () => {
+    if (!igForm.projectTitle) { toast.error("أدخل عنوان المشروع أولاً"); return; }
+    setIgGenerating(true);
+    try {
+      const res = await base44.integrations.Core.InvokeLLM({
+        prompt: `اكتب كابشن Instagram احترافي وجذاب لمنصة Bytly الهندسية (السعودية، 2026) عن هذا المشروع:
+العنوان: ${igForm.projectTitle}
+التصنيف: ${igForm.projectCategory}
+الوصف: ${igForm.description}
+شروط:
+- أسلوب إبداعي مع إيموجي
+- 3-6 هاشتاق ذات صلة بالهندسة والتصميم السعودي
+- لا يتجاوز 150 كلمة
+- اللغة العربية
+- انتهي بـ #Bytly #بيتلي`,
+      });
+      setIgForm(f => ({ ...f, caption: res }));
+    } catch (e) {
+      toast.error("فشل التوليد: " + e.message);
+    } finally {
+      setIgGenerating(false);
+    }
+  };
+
+  const publishToInstagram = async () => {
+    if (!igForm.imageUrl) { toast.error("أدخل رابط الصورة أولاً"); return; }
+    if (!igForm.caption) { toast.error("أنشئ كابشن أولاً"); return; }
+    setIgLoading(true); setIgResult(null);
+    try {
+      const res = await base44.functions.invoke("instagramPortfolio", {
+        action: "publishPhoto",
+        imageUrl: igForm.imageUrl,
+        caption: igForm.caption,
+      });
+      setIgResult(res);
+      if (res.success) toast.success("تم النشر على Instagram ✓");
+      else toast.error(res.error);
+    } catch (e) {
+      toast.error("حدث خطأ: " + e.message);
+    } finally {
+      setIgLoading(false);
+    }
+  };
 
   const copyToClipboard = (text) => { navigator.clipboard.writeText(text); toast.success("تم النسخ ✓"); };
 
@@ -457,9 +518,10 @@ ${clientForm.customNote ? `- ملاحظات: ${clientForm.customNote}` : ""}
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-5 w-full mb-6 h-auto">
+          <TabsList className="grid grid-cols-6 w-full mb-6 h-auto">
             {[
               { value: "share", icon: <Share2 className="w-4 h-4" />, label: "نشر" },
+              { value: "instagram", icon: <Instagram className="w-4 h-4" />, label: "Instagram" },
               { value: "calendar", icon: <Calendar className="w-4 h-4" />, label: "تقويم" },
               { value: "clients", icon: <Users className="w-4 h-4" />, label: "عملاء" },
               { value: "engineers", icon: <UserPlus className="w-4 h-4" />, label: "مهندسون" },
@@ -583,6 +645,129 @@ ${clientForm.customNote ? `- ملاحظات: ${clientForm.customNote}` : ""}
                       </a>
                     )}
                   </div>
+                )}
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* ── تبويب Instagram ── */}
+          <TabsContent value="instagram">
+            <div className="grid md:grid-cols-2 gap-5">
+              {/* النموذج */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Instagram className="w-4 h-4 text-pink-600" /> نشر صورة Portfolio على Instagram
+                  </CardTitle>
+                  {igProfile && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                        {igProfile.username?.charAt(0)?.toUpperCase()}
+                      </div>
+                      <span className="text-xs text-slate-500">@{igProfile.username}</span>
+                      <Badge className="bg-green-100 text-green-700 border-0 text-xs">🟢 متصل</Badge>
+                    </div>
+                  )}
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <label className="text-xs font-medium text-slate-600 mb-1 block">رابط الصورة (URL) *</label>
+                    <Input
+                      placeholder="https://example.com/project-photo.jpg"
+                      value={igForm.imageUrl}
+                      onChange={e => setIgForm({ ...igForm, imageUrl: e.target.value })}
+                    />
+                    <p className="text-xs text-slate-400 mt-1">يجب أن يكون الرابط عاماً وقابلاً للوصول</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-slate-600 mb-1 block">عنوان المشروع *</label>
+                      <Input placeholder="فيلا الرياض 2026" value={igForm.projectTitle} onChange={e => setIgForm({ ...igForm, projectTitle: e.target.value })} />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-slate-600 mb-1 block">التصنيف</label>
+                      <Select value={igForm.projectCategory} onValueChange={v => setIgForm({ ...igForm, projectCategory: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {[
+                            { value: "interior", label: "تصميم داخلي" },
+                            { value: "architecture", label: "هندسة معمارية" },
+                            { value: "landscape", label: "لاند سكيب" },
+                            { value: "civil", label: "هندسة مدنية" },
+                            { value: "furniture", label: "أثاث" },
+                          ].map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-slate-600 mb-1 block">وصف المشروع</label>
+                    <Textarea placeholder="اذكر تفاصيل المشروع..." value={igForm.description} onChange={e => setIgForm({ ...igForm, description: e.target.value })} rows={2} />
+                  </div>
+                  <Button
+                    className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white"
+                    onClick={generateIgCaption}
+                    disabled={igGenerating || !igForm.projectTitle}
+                  >
+                    {igGenerating ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Sparkles className="w-4 h-4 ml-2" />}
+                    توليد كابشن بالذكاء الاصطناعي
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* معاينة ونشر */}
+              <div className="space-y-3">
+                <span className="text-sm font-semibold text-slate-700 flex items-center gap-1.5"><Eye className="w-4 h-4" /> معاينة Instagram</span>
+
+                {/* صورة المعاينة */}
+                {igForm.imageUrl ? (
+                  <div className="border rounded-xl overflow-hidden bg-white shadow-sm">
+                    <div className="flex items-center gap-2 p-3 border-b">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">B</div>
+                      <span className="text-sm font-semibold">bytly.sa</span>
+                    </div>
+                    <img src={igForm.imageUrl} alt="preview" className="w-full aspect-square object-cover" onError={e => { e.target.style.display='none'; }} />
+                    {igForm.caption && <p className="text-xs text-slate-700 p-3 leading-relaxed whitespace-pre-line">{igForm.caption}</p>}
+                  </div>
+                ) : (
+                  <div className="border-2 border-dashed border-slate-200 rounded-xl h-48 flex items-center justify-center text-slate-400 text-sm">
+                    <div className="text-center">
+                      <Image className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                      أدخل رابط الصورة للمعاينة
+                    </div>
+                  </div>
+                )}
+
+                {igForm.caption && (
+                  <Textarea
+                    value={igForm.caption}
+                    onChange={e => setIgForm({ ...igForm, caption: e.target.value })}
+                    rows={4}
+                    className="text-xs"
+                    placeholder="الكابشن..."
+                  />
+                )}
+
+                <Button
+                  className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:opacity-90 text-white"
+                  onClick={publishToInstagram}
+                  disabled={igLoading || !igForm.imageUrl || !igForm.caption}
+                >
+                  {igLoading ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Upload className="w-4 h-4 ml-2" />}
+                  نشر على Instagram الآن
+                </Button>
+
+                {igResult?.success && (
+                  <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2 text-sm text-green-700">
+                    <CheckCircle className="w-4 h-4 shrink-0" />
+                    {igResult.message}
+                    <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer" className="mr-auto text-pink-600 hover:underline flex items-center gap-1">
+                      عرض <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                )}
+                {igResult?.error && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-700">{igResult.error}</div>
                 )}
               </div>
             </div>
