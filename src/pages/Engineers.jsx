@@ -150,10 +150,15 @@ export default function Engineers() {
   };
 
   const handleBulkVerify = async () => {
+    const user = await base44.auth.me();
     for (const id of selectedIds) {
-      await base44.entities.Engineer.update(id, { is_verified: true });
+      await base44.entities.Engineer.update(id, {
+        is_verified: true,
+        certified_at: new Date().toISOString(),
+        certified_by: user?.email || ''
+      });
     }
-    toast.success(`تم توثيق ${selectedIds.size} مهندس`);
+    toast.success(`تم اعتماد ${selectedIds.size} مهندس بنجاح`);
     setSelectedIds(new Set());
     loadEngineers();
   };
@@ -462,10 +467,13 @@ export default function Engineers() {
                             </Avatar>
                             
                             <div className="mt-4">
-                              <div className="flex items-center gap-2 mb-1">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
                                 <h3 className="font-bold text-lg text-[#1a1a2e]">{engineer.full_name}</h3>
                                 {engineer.is_verified && (
-                                  <CheckCircle className="w-5 h-5 text-blue-500" />
+                                  <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs gap-1 px-2 py-0.5 shadow-sm">
+                                    <CheckCircle className="w-3 h-3" />
+                                    مهندس معتمد
+                                  </Badge>
                                 )}
                               </div>
                               <p className="text-sm text-slate-600 mb-2">{engineer.specialization}</p>
@@ -498,10 +506,13 @@ export default function Engineers() {
                           </Avatar>
                           
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <h3 className="font-bold text-lg text-[#1a1a2e]">{engineer.full_name}</h3>
                               {engineer.is_verified && (
-                                <CheckCircle className="w-5 h-5 text-blue-500" />
+                                <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs gap-1 px-2 py-0.5 shadow-sm">
+                                  <CheckCircle className="w-3 h-3" />
+                                  مهندس معتمد
+                                </Badge>
                               )}
                               {engineer.subscription_type !== "none" && (
                                 <Badge className="bg-amber-500 text-white">{t('engineers.featured')}</Badge>

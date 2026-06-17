@@ -184,9 +184,14 @@ export default function EngineerProfile() {
                       {engineer.full_name}
                     </h1>
                     {engineer.is_verified && (
-                      <Badge className="bg-blue-100 text-blue-700 mx-auto md:mx-0">
-                        <CheckCircle className="w-4 h-4 ml-1" />
-                        موثق
+                      <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white mx-auto md:mx-0 gap-1.5 px-3 py-1 shadow-sm">
+                        <CheckCircle className="w-4 h-4" />
+                        مهندس معتمد
+                        {engineer.certified_at && (
+                          <span className="text-blue-200 text-xs font-normal mr-1">
+                            منذ {new Date(engineer.certified_at).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short' })}
+                          </span>
+                        )}
                       </Badge>
                     )}
                     {engineer.subscription_type !== "none" && (
