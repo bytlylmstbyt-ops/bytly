@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { BookingForm, AppointmentList } from '@/components/survey/AppointmentBooking';
 import SurveyReviewForm from '@/components/survey/SurveyReviewForm';
+import TransactionHistory from '@/components/survey/TransactionHistory';
 
 /* ─── Helpers ─── */
 const statusConfig = {
@@ -398,6 +399,7 @@ function RequestCard({ request, onRefresh }) {
 export default function SurveyClientDashboard() {
   const [user, setUser] = useState(null);
   const [requests, setRequests] = useState([]);
+  const [clientProfile, setClientProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('my-requests');
 
@@ -409,10 +411,21 @@ export default function SurveyClientDashboard() {
     finally { setLoading(false); }
   }, []);
 
+  const loadClientProfile = useCallback(async () => {
+    try {
+      const [client] = await base44.entities.Client.filter({ email: user?.email });
+      setClientProfile(client || null);
+    } catch (_) {}
+  }, [user]);
+
   useEffect(() => {
     base44.auth.me().then(setUser).catch(() => {});
     loadRequests();
   }, [loadRequests]);
+
+  useEffect(() => {
+    if (user) loadClientProfile();
+  }, [user, loadClientProfile]);
 
   const activeRequests = requests.filter(r => !['disbursed', 'cancelled'].includes(r.status));
   const completedRequests = requests.filter(r => r.status === 'disbursed');
@@ -440,6 +453,7 @@ export default function SurveyClientDashboard() {
             <TabsTrigger value="my-requests" className="gap-1.5"><Clock className="w-4 h-4" /> طلباتي ({activeRequests.length})</TabsTrigger>
             <TabsTrigger value="completed" className="gap-1.5"><CheckCircle2 className="w-4 h-4" /> المكتملة ({completedRequests.length})</TabsTrigger>
             <TabsTrigger value="appointments" className="gap-1.5"><Calendar className="w-4 h-4" /> المواعيد</TabsTrigger>
+            <TabsTrigger value="wallet" className="gap-1.5"><DollarSign className="w-4 h-4" /> محفظتي</TabsTrigger>
           </TabsList>
 
           <TabsContent value="new" className="mt-4">
@@ -471,6 +485,14 @@ export default function SurveyClientDashboard() {
 
           <TabsContent value="appointments" className="mt-4">
             <AppointmentList role="client" />
+          </TabsContent>
+
+          <TabsContent value="wallet" className="mt-4">
+            <TransactionHistory
+              userEmail={user?.email}
+              walletBalance={clientProfile?.wallet_balance || 0}
+              onRefresh={loadClientProfile}
+            />
           </TabsContent>
         </Tabs>
       </div>

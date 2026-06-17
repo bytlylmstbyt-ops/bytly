@@ -12,6 +12,7 @@ import {
   UserCheck, AlertTriangle, Calendar, ShieldCheck, Star, MessageSquare
 } from 'lucide-react';
 import { AppointmentList } from '@/components/survey/AppointmentBooking';
+import TransactionHistory from '@/components/survey/TransactionHistory';
 
 /* ─── Helpers ─── */
 const statusConfig = {
@@ -414,6 +415,7 @@ export default function SurveyorGigs() {
               <TabsTrigger value="my" className="gap-1.5"><Ruler className="w-4 h-4" /> طلباتي ({myRequests.length})</TabsTrigger>
               <TabsTrigger value="appointments" className="gap-1.5"><Calendar className="w-4 h-4" /> مواعيدي</TabsTrigger>
               <TabsTrigger value="reviews" className="gap-1.5"><Star className="w-4 h-4" /> تقييماتي ({reviews.length})</TabsTrigger>
+              <TabsTrigger value="wallet" className="gap-1.5"><DollarSign className="w-4 h-4" /> محفظتي</TabsTrigger>
             </TabsList>
             <Button size="sm" variant="outline" onClick={loadData} className="gap-1">
               <RefreshCw className="w-3.5 h-3.5" /> تحديث
@@ -510,6 +512,14 @@ export default function SurveyorGigs() {
                 </Card>
               ))
             )}
+          </TabsContent>
+
+          <TabsContent value="wallet" className="mt-4">
+            <TransactionHistory
+              userEmail={user?.email}
+              walletBalance={profile?.available_balance || 0}
+              onRefresh={loadData}
+            />
           </TabsContent>
         </Tabs>
       </div>
