@@ -7,8 +7,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   MapPin, Loader2, CheckCircle2, Clock, XCircle, DollarSign,
-  FileDown, FileText, Image, Ruler, Eye, AlertTriangle, Navigation, Plus, RefreshCw
+  FileDown, FileText, Image, Ruler, Eye, AlertTriangle, Navigation, Plus, RefreshCw, Calendar
 } from 'lucide-react';
+import { BookingForm, AppointmentList } from '@/components/survey/AppointmentBooking';
 
 /* ─── Helpers ─── */
 const statusConfig = {
@@ -320,6 +321,18 @@ function RequestCard({ request, onRefresh }) {
                 تم تسليم المخرجات — يرجى مراجعتها واعتمادها للصرف
               </div>
             )}
+
+            {/* Booking section — show when surveyor assigned */}
+            {request.surveyor_email && ['accepted', 'in_progress', 'submitted'].includes(request.status) && (
+              <BookingForm
+                requestId={request.id}
+                surveyorName={request.surveyor_name}
+                surveyorEmail={request.surveyor_email}
+                surveyorId={request.surveyor_id}
+                location={request.address}
+                onBooked={() => {}}
+              />
+            )}
           </div>
         )}
       </CardContent>
@@ -372,6 +385,7 @@ export default function SurveyClientDashboard() {
             <TabsTrigger value="new" className="gap-1.5"><Plus className="w-4 h-4" /> طلب جديد</TabsTrigger>
             <TabsTrigger value="my-requests" className="gap-1.5"><Clock className="w-4 h-4" /> طلباتي ({activeRequests.length})</TabsTrigger>
             <TabsTrigger value="completed" className="gap-1.5"><CheckCircle2 className="w-4 h-4" /> المكتملة ({completedRequests.length})</TabsTrigger>
+            <TabsTrigger value="appointments" className="gap-1.5"><Calendar className="w-4 h-4" /> المواعيد</TabsTrigger>
           </TabsList>
 
           <TabsContent value="new" className="mt-4">
@@ -399,6 +413,10 @@ export default function SurveyClientDashboard() {
             ) : (
               completedRequests.map(r => <RequestCard key={r.id} request={r} onRefresh={loadRequests} />)
             )}
+          </TabsContent>
+
+          <TabsContent value="appointments" className="mt-4">
+            <AppointmentList role="client" />
           </TabsContent>
         </Tabs>
       </div>

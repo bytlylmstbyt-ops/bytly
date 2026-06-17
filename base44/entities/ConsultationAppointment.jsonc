@@ -22,21 +22,22 @@
       "type": "string",
       "enum": [
         "engineer",
-        "firm"
+        "firm",
+        "surveyor"
       ],
-      "description": "\u0646\u0648\u0639 \u0627\u0644\u0647\u062f\u0641: \u0645\u0647\u0646\u062f\u0633 \u0623\u0648 \u0634\u0631\u0643\u0629"
+      "description": "\u0646\u0648\u0639 \u0627\u0644\u0647\u062f\u0641"
     },
     "target_id": {
       "type": "string",
-      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0647\u0646\u062f\u0633 \u0623\u0648 \u0627\u0644\u0634\u0631\u0643\u0629"
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0647\u0646\u062f\u0633 \u0623\u0648 \u0627\u0644\u0634\u0631\u0643\u0629 \u0623\u0648 \u0627\u0644\u0645\u0633\u0627\u062d"
     },
     "target_name": {
       "type": "string",
-      "description": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0647\u0646\u062f\u0633 \u0623\u0648 \u0627\u0644\u0634\u0631\u0643\u0629"
+      "description": "\u0627\u0633\u0645 \u0627\u0644\u0647\u062f\u0641"
     },
     "target_email": {
       "type": "string",
-      "description": "\u0628\u0631\u064a\u062f \u0627\u0644\u0645\u0647\u0646\u062f\u0633 \u0623\u0648 \u0627\u0644\u0634\u0631\u0643\u0629"
+      "description": "\u0628\u0631\u064a\u062f \u0627\u0644\u0647\u062f\u0641"
     },
     "appointment_date": {
       "type": "string",
@@ -47,22 +48,45 @@
       "type": "string",
       "description": "\u0648\u0642\u062a \u0627\u0644\u0645\u0648\u0639\u062f"
     },
+    "duration_minutes": {
+      "type": "number",
+      "default": 60,
+      "description": "\u0645\u062f\u0629 \u0627\u0644\u0645\u0648\u0639\u062f \u0628\u0627\u0644\u062f\u0642\u0627\u0626\u0642"
+    },
     "consultation_type": {
       "type": "string",
       "enum": [
         "video_call",
         "phone_call",
-        "in_person"
+        "in_person",
+        "site_visit"
       ],
-      "description": "\u0646\u0648\u0639 \u0627\u0644\u0627\u0633\u062a\u0634\u0627\u0631\u0629"
+      "default": "site_visit",
+      "description": "\u0646\u0648\u0639 \u0627\u0644\u0645\u0648\u0639\u062f"
     },
     "topic": {
       "type": "string",
-      "description": "\u0645\u0648\u0636\u0648\u0639 \u0627\u0644\u0627\u0633\u062a\u0634\u0627\u0631\u0629"
+      "description": "\u0645\u0648\u0636\u0648\u0639 \u0627\u0644\u0645\u0648\u0639\u062f"
     },
     "notes": {
       "type": "string",
       "description": "\u0645\u0644\u0627\u062d\u0638\u0627\u062a \u0625\u0636\u0627\u0641\u064a\u0629"
+    },
+    "location": {
+      "type": "string",
+      "description": "\u0645\u0648\u0642\u0639 \u0627\u0644\u0645\u0648\u0639\u062f"
+    },
+    "request_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0637\u0644\u0628 \u0627\u0644\u0645\u0633\u062d \u0627\u0644\u0645\u0631\u062a\u0628\u0637"
+    },
+    "google_event_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u062d\u062f\u062b \u0641\u064a Google Calendar"
+    },
+    "google_calendar_link": {
+      "type": "string",
+      "description": "\u0631\u0627\u0628\u0637 \u0627\u0644\u062d\u062f\u062b \u0641\u064a \u0627\u0644\u062a\u0642\u0648\u064a\u0645"
     },
     "status": {
       "type": "string",
@@ -72,8 +96,12 @@
         "cancelled",
         "completed"
       ],
-      "default": "pending",
-      "description": "\u062d\u0627\u0644\u0629 \u0627\u0644\u0645\u0648\u0639\u062f"
+      "default": "pending"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u0648\u0635\u0641 \u0627\u0644\u0645\u0648\u0639\u062f",
+      "maxLength": 1000
     }
   },
   "required": [

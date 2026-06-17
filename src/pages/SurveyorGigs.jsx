@@ -8,8 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   MapPin, Loader2, CheckCircle2, Clock, Navigation, Ruler,
   DollarSign, Upload, FileDown, FileText, Image, Map, RefreshCw,
-  UserCheck, AlertTriangle
+  UserCheck, AlertTriangle, Calendar
 } from 'lucide-react';
+import { AppointmentList } from '@/components/survey/AppointmentBooking';
 
 /* ─── Helpers ─── */
 const statusConfig = {
@@ -379,6 +380,7 @@ export default function SurveyorGigs() {
             <TabsList>
               <TabsTrigger value="available" className="gap-1.5"><MapPin className="w-4 h-4" /> الطلبات المتاحة ({availableGigs.length})</TabsTrigger>
               <TabsTrigger value="my" className="gap-1.5"><Ruler className="w-4 h-4" /> طلباتي ({myRequests.length})</TabsTrigger>
+              <TabsTrigger value="appointments" className="gap-1.5"><Calendar className="w-4 h-4" /> مواعيدي</TabsTrigger>
             </TabsList>
             <Button size="sm" variant="outline" onClick={loadData} className="gap-1">
               <RefreshCw className="w-3.5 h-3.5" /> تحديث
@@ -406,6 +408,10 @@ export default function SurveyorGigs() {
             ) : (
               myRequests.map(r => <GigCard key={r.id} request={r} onRefresh={loadData} />)
             )}
+          </TabsContent>
+
+          <TabsContent value="appointments" className="mt-4">
+            <AppointmentList role="surveyor" onRefresh={loadData} />
           </TabsContent>
         </Tabs>
       </div>
