@@ -443,6 +443,68 @@ Deno.serve(async (req) => {
     }
 
     // ══════════════════════════════════════════════════════════
+    // REVIEW — العميل يقيم المساح بعد اكتمال الطلب
+    // ══════════════════════════════════════════════════════════
+    if (action === 'review') {
+      const { request_id, surveyor_id, client_id, rating, quality_rating, delivery_rating, communication_rating, comment } = body;
+
+      if (!rating || rating < 1 || rating > 5) {
+        return Response.json({ error: 'التقييم العام مطلوب (من 1 إلى 5)' }, { status: 400 });
+      }
+
+      const [request] = await base44.entities.SurveyRequest.filter({ id: request_id });
+      if (!request) return Response.json({ error: 'الطلب غير موجود' }, { status: 404 });
+      if (request.client_email !== user.email) {
+        return Response.json({ error: 'غير مصرح لك بتقييم هذا الطلب' }, { status: 403 });
+      }
+
+      // Check if already reviewed
+      const existing = await base44.entities.Review.filter({
+        engineer_id: surveyor_id,
+        client_id,
+        project_id: request_id
+      });
+      if (existing.length > 0) {
+        return Response.json({ error: 'قمت بتقييم هذا المساح مسبقاً' }, { status: 400 });
+      }
+
+      // Create review
+      await base44.entities.Review.create({
+        engineer_id: surveyor_id,
+        client_id,
+        project_id: request_id,
+        milestone_title: `رفع مساحي - ${request.address || 'موقع العقار'}`,
+        rating,
+        quality_rating: quality_rating || 0,
+        communication_rating: communication_rating || 0,
+        delivery_rating: delivery_rating || 0,
+        comment: comment || '',
+        status: 'completed'
+      });
+
+      // Update surveyor rating
+      const allReviews = await base44.asServiceRole.entities.Review.filter({ engineer_id: surveyor_id });
+      if (allReviews.length > 0) {
+        const avgRating = allReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / allReviews.length;
+        await base44.asServiceRole.entities.SurveyorProfile.update(surveyor_id, {
+          rating: Math.round(avgRating * 10) / 10,
+          total_jobs: (request.total_jobs || 0) // already incremented in approve
+        });
+      }
+
+      // Notify surveyor
+      await base44.asServiceRole.entities.Notification.create({
+        recipient_email: request.surveyor_email,
+        title: '⭐ تقييم جديد!',
+        message: `قام العميل بتقييم أدائك بـ ${rating} نجوم في طلب المسح.`,
+        type: 'review',
+        priority: 'medium'
+      });
+
+      return Response.json({ success: true });
+    }
+
+    // ══════════════════════════════════════════════════════════
     // REGISTER — تسجيل مساح جديد
     // ══════════════════════════════════════════════════════════
     if (action === 'register') {

@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   MapPin, Loader2, CheckCircle2, Clock, Navigation, Ruler,
   DollarSign, Upload, FileDown, FileText, Image, Map, RefreshCw,
-  UserCheck, AlertTriangle, Calendar, ShieldCheck
+  UserCheck, AlertTriangle, Calendar, ShieldCheck, Star, MessageSquare
 } from 'lucide-react';
 import { AppointmentList } from '@/components/survey/AppointmentBooking';
 
@@ -283,6 +283,7 @@ export default function SurveyorGigs() {
   const [profile, setProfile] = useState(null);
   const [availableGigs, setAvailableGigs] = useState([]);
   const [myRequests, setMyRequests] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('available');
 
@@ -300,6 +301,14 @@ export default function SurveyorGigs() {
       if (p && !p.terms_accepted) { navigate('/SurveyorTerms'); return; }
       setAvailableGigs(availRes.data?.requests || []);
       setMyRequests(myRes.data?.requests || []);
+
+      // Load reviews for the surveyor
+      if (p) {
+        try {
+          const reviewData = await base44.entities.Review.filter({ engineer_id: p.id }, '-created_date', 20);
+          setReviews(reviewData || []);
+        } catch (_) { setReviews([]); }
+      }
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   }, [user]);
@@ -404,6 +413,7 @@ export default function SurveyorGigs() {
               <TabsTrigger value="available" className="gap-1.5"><MapPin className="w-4 h-4" /> الطلبات المتاحة ({availableGigs.length})</TabsTrigger>
               <TabsTrigger value="my" className="gap-1.5"><Ruler className="w-4 h-4" /> طلباتي ({myRequests.length})</TabsTrigger>
               <TabsTrigger value="appointments" className="gap-1.5"><Calendar className="w-4 h-4" /> مواعيدي</TabsTrigger>
+              <TabsTrigger value="reviews" className="gap-1.5"><Star className="w-4 h-4" /> تقييماتي ({reviews.length})</TabsTrigger>
             </TabsList>
             <Button size="sm" variant="outline" onClick={loadData} className="gap-1">
               <RefreshCw className="w-3.5 h-3.5" /> تحديث
@@ -435,6 +445,71 @@ export default function SurveyorGigs() {
 
           <TabsContent value="appointments" className="mt-4">
             <AppointmentList role="surveyor" onRefresh={loadData} />
+          </TabsContent>
+
+          <TabsContent value="reviews" className="mt-4 space-y-4">
+            {reviews.length === 0 ? (
+              <div className="text-center py-20 text-gray-500">
+                <Star className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <p>لا توجد تقييمات حتى الآن</p>
+                <p className="text-xs mt-1">ستظهر هنا تقييمات العملاء بعد اكتمال الطلبات</p>
+              </div>
+            ) : (
+              reviews.map(review => (
+                <Card key={review.id} className="border-gray-200">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-1">
+                            {[1, 2, 3, 4, 5].map(s => (
+                              <Star key={s} className={`w-4 h-4 ${s <= review.rating ? 'fill-[#C9A66B] text-[#C9A66B]' : 'text-gray-300'}`} />
+                            ))}
+                            <span className="text-sm font-bold text-[#C9A66B] mr-1">{review.rating}/5</span>
+                          </div>
+                          <span className="text-xs text-gray-400">
+                            {new Date(review.created_date).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' })}
+                          </span>
+                        </div>
+
+                        {review.milestone_title && (
+                          <Badge variant="outline" className="mb-2 text-xs gap-1">
+                            <MapPin className="w-3 h-3" /> {review.milestone_title}
+                          </Badge>
+                        )}
+
+                        {review.comment && (
+                          <p className="text-sm text-gray-600 leading-relaxed mb-2 flex items-start gap-1.5">
+                            <MessageSquare className="w-3.5 h-3.5 text-gray-400 mt-0.5 shrink-0" />
+                            {review.comment}
+                          </p>
+                        )}
+
+                        {(review.quality_rating > 0 || review.delivery_rating > 0 || review.communication_rating > 0) && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {review.quality_rating > 0 && (
+                              <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full">
+                                🏆 دقة الرفع {review.quality_rating}/5
+                              </span>
+                            )}
+                            {review.delivery_rating > 0 && (
+                              <span className="inline-flex items-center gap-1 text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full">
+                                📐 جودة الملفات {review.delivery_rating}/5
+                              </span>
+                            )}
+                            {review.communication_rating > 0 && (
+                              <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">
+                                ⏱️ الالتزام بالوقت {review.communication_rating}/5
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </TabsContent>
         </Tabs>
       </div>

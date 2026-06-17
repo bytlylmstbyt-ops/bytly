@@ -7,9 +7,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   MapPin, Loader2, CheckCircle2, Clock, XCircle, DollarSign,
-  FileDown, FileText, Image, Ruler, Eye, AlertTriangle, Navigation, Plus, RefreshCw, Calendar
+  FileDown, FileText, Image, Ruler, Eye, AlertTriangle, Navigation, Plus, RefreshCw, Calendar, Star
 } from 'lucide-react';
 import { BookingForm, AppointmentList } from '@/components/survey/AppointmentBooking';
+import SurveyReviewForm from '@/components/survey/SurveyReviewForm';
 
 /* ─── Helpers ─── */
 const statusConfig = {
@@ -200,6 +201,9 @@ function RequestCard({ request, onRefresh }) {
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [approving, setApproving] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [showReview, setShowReview] = useState(false);
+  const [alreadyReviewed, setAlreadyReviewed] = useState(false);
+  const [checkingReview, setCheckingReview] = useState(false);
   const statusCfg = statusConfig[request.status] || statusConfig.pending;
 
   const loadDetails = async () => {
@@ -229,6 +233,20 @@ function RequestCard({ request, onRefresh }) {
       onRefresh();
     } catch (e) { console.error(e); }
     finally { setCancelling(false); }
+  };
+
+  // Check if already reviewed
+  const checkReview = async () => {
+    if (!request.surveyor_id || alreadyReviewed) return;
+    setCheckingReview(true);
+    try {
+      const existing = await base44.entities.Review.filter({
+        engineer_id: request.surveyor_id,
+        project_id: request.id
+      });
+      setAlreadyReviewed(existing.length > 0);
+    } catch (e) { console.error(e); }
+    finally { setCheckingReview(false); }
   };
 
   return (
@@ -320,9 +338,45 @@ function RequestCard({ request, onRefresh }) {
                 <CheckCircle2 className="w-4 h-4" />
                 تم تسليم المخرجات — يرجى مراجعتها واعتمادها للصرف
               </div>
-            )}
+              )}
 
-            {/* Booking section — show when surveyor assigned */}
+              {/* Review section — show when approved/disbursed */}
+              {['approved', 'disbursed'].includes(request.status) && request.surveyor_id && (
+              <div className="mt-3">
+                {!checkingReview && !alreadyReviewed && !showReview && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-amber-800 flex items-center gap-1.5">
+                        <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                        قيّم تجربتك
+                      </p>
+                      <p className="text-xs text-amber-600 mt-0.5">شاركنا رأيك عن أداء المساح {request.surveyor_name}</p>
+                    </div>
+                    <Button size="sm" onClick={() => { checkReview(); setShowReview(true); }} className="bg-amber-500 hover:bg-amber-600 text-white gap-1 shrink-0">
+                      <Star className="w-3.5 h-3.5" /> تقييم
+                    </Button>
+                  </div>
+                )}
+                {alreadyReviewed && !showReview && (
+                  <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 rounded-lg px-3 py-2">
+                    <Star className="w-4 h-4 fill-green-500 text-green-500" />
+                    تم تقييم المساح — شكراً لمشاركتك!
+                  </div>
+                )}
+                {showReview && !alreadyReviewed && (
+                  <SurveyReviewForm
+                    requestId={request.id}
+                    surveyorId={request.surveyor_id}
+                    surveyorName={request.surveyor_name}
+                    clientId={request.client_id}
+                    onSubmitted={() => { setAlreadyReviewed(true); setShowReview(false); onRefresh(); }}
+                    onClose={() => setShowReview(false)}
+                  />
+                )}
+              </div>
+              )}
+
+              {/* Booking section — show when surveyor assigned */}
             {request.surveyor_email && ['accepted', 'in_progress', 'submitted'].includes(request.status) && (
               <BookingForm
                 requestId={request.id}
