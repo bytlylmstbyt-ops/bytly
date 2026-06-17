@@ -534,7 +534,7 @@ export default function Dashboard() {
                       </CardContent>
                     </Card>
                   </Link>
-                  <Link to={createPageUrl("AdminReports")}>
+    <Link to={createPageUrl("AdminReports")}>
                     <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-amber-200 hover:border-amber-400">
                       <CardContent className="p-6 text-center">
                         <div className="w-16 h-16 mx-auto bg-amber-100 rounded-full flex items-center justify-center mb-4">
@@ -542,6 +542,17 @@ export default function Dashboard() {
                         </div>
                         <h3 className="font-bold text-lg mb-2">{t('dashboard.adminPanel.reportsAndStats')}</h3>
                         <p className="text-sm text-slate-600">{t('dashboard.adminPanel.reportsDesc')}</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                  <Link to="/FinancialReports">
+                    <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-emerald-200 hover:border-emerald-400">
+                      <CardContent className="p-6 text-center">
+                        <div className="w-16 h-16 mx-auto bg-emerald-100 rounded-full flex items-center justify-center mb-4">
+                          <DollarSign className="w-8 h-8 text-emerald-600" />
+                        </div>
+                        <h3 className="font-bold text-lg mb-2">التقارير المالية</h3>
+                        <p className="text-sm text-slate-600">إجمالي العمليات، العمولات، وحالة المحافظ الإلكترونية</p>
                       </CardContent>
                     </Card>
                   </Link>

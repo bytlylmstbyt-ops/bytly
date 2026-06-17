@@ -31,6 +31,7 @@ const LeadsManager             = React.lazy(() => import('./pages/LeadsManager')
 const SocialAnalytics          = React.lazy(() => import('./pages/SocialAnalytics'));
 const EngineerFinancialDashboard = React.lazy(() => import('./pages/EngineerFinancialDashboard'));
 const MyContracts              = React.lazy(() => import('./pages/MyContracts'));
+const FinancialReports          = React.lazy(() => import('./pages/FinancialReports'));
 const EngineerMatcher          = React.lazy(() => import('./pages/EngineerMatcher'));
 const EngineerReviews          = React.lazy(() => import('./pages/EngineerReviews'));
 const Certificates             = React.lazy(() => import('./pages/Certificates'));
@@ -154,6 +155,7 @@ const AuthenticatedApp = () => {
         <Route path="/BudgetCalculator"           element={lazyRoute(React.lazy(() => import('./pages/BudgetCalculator')), "BudgetCalculator")} />
         <Route path="/PlatformDashboard"          element={lazyRoute(React.lazy(() => import('./pages/PlatformDashboard')), "PlatformDashboard")} />
         <Route path="/ContractManager"           element={lazyRoute(React.lazy(() => import('./pages/ContractManager')), "ContractManager")} />
+        <Route path="/FinancialReports"         element={lazyRoute(FinancialReports, "FinancialReports")} />
         <Route path="/Subscription"               element={lazyRoute(React.lazy(() => import('./pages/Subscription')), "Subscription")} />
       </Route>
 
