@@ -3,12 +3,13 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
+import {
   Search, Filter, MapPin, Star, CheckCircle, 
   Users, Grid3X3, List, ChevronDown, X,
   Building2, Palette, PenTool, SlidersHorizontal,
-  Trash2, Download, CheckSquare, Square, UserCheck
+  Trash2, Download, CheckSquare, Square, UserCheck, Map
 } from "lucide-react";
+import SurveyorsMap from "@/components/survey/SurveyorsMap";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -324,11 +325,17 @@ export default function Engineers() {
               >
                 <List className="w-5 h-5 text-slate-600" />
               </button>
+              <button
+                onClick={() => setViewMode("map")}
+                className={`p-2 rounded ${viewMode === "map" ? "bg-slate-100" : ""}`}
+              >
+                <Map className="w-5 h-5 text-slate-600" />
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Results Count + Selection Toggle */}
+        {viewMode !== "map" && (
         <div className="flex items-center justify-between mb-6">
           <p className="text-slate-600">
             {t('engineers.results').replace('{count}', filteredEngineers.length)}
@@ -343,9 +350,10 @@ export default function Engineers() {
             {isSelectionMode ? "إلغاء التحديد" : "تحديد متعدد"}
           </Button>
         </div>
+        )}
 
         {/* Bulk Action Toolbar */}
-        {isSelectionMode && (
+        {isSelectionMode && viewMode !== "map" && (
           <div className="flex flex-wrap items-center justify-between gap-3 bg-[#1a1a2e] text-white rounded-xl px-4 py-3 mb-6 shadow-lg">
             <div className="flex items-center gap-3">
               <button onClick={toggleSelectAll} className="flex items-center gap-2 text-sm hover:text-[#d4a574] transition-colors">
@@ -398,6 +406,8 @@ export default function Engineers() {
               </Card>
             ))}
           </div>
+        ) : viewMode === "map" ? (
+          <SurveyorsMap onClose={() => setViewMode("grid")} />
         ) : filteredEngineers.length > 0 ? (
           <AnimatePresence mode="wait">
             <motion.div
