@@ -46,6 +46,8 @@ const AdminMarketEntities      = React.lazy(() => import('./pages/AdminMarketEnt
 const MarketContracts          = React.lazy(() => import('./pages/MarketContracts'));
 const ProjectProposals         = React.lazy(() => import('./pages/ProjectProposals'));
 const DataClassification       = React.lazy(() => import('./pages/DataClassification'));
+const SurveyClientDashboard    = React.lazy(() => import('./pages/SurveyClientDashboard'));
+const SurveyorGigs             = React.lazy(() => import('./pages/SurveyorGigs'));
 
 // ── Page-level spinner fallback ───────────────────────────────────────────────
 function PageSpinner() {
@@ -145,6 +147,8 @@ const AuthenticatedApp = () => {
         <Route path="/MarketContracts"            element={lazyRoute(MarketContracts, "MarketContracts")} />
         <Route path="/ProjectProposals"           element={lazyRoute(ProjectProposals, "ProjectProposals")} />
         <Route path="/DataClassification"         element={lazyRoute(DataClassification, "DataClassification")} />
+        <Route path="/SurveyClientDashboard"       element={lazyRoute(SurveyClientDashboard, "SurveyClientDashboard")} />
+        <Route path="/SurveyorGigs"                element={lazyRoute(SurveyorGigs, "SurveyorGigs")} />
         <Route path="/ComplianceDashboard"        element={lazyRoute(React.lazy(() => import('./pages/ComplianceDashboard')), "ComplianceDashboard")} />
         <Route path="/BudgetCalculator"           element={lazyRoute(React.lazy(() => import('./pages/BudgetCalculator')), "BudgetCalculator")} />
         <Route path="/PlatformDashboard"          element={lazyRoute(React.lazy(() => import('./pages/PlatformDashboard')), "PlatformDashboard")} />

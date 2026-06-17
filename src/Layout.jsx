@@ -117,7 +117,7 @@ function LayoutContent({ children, currentPageName }) {
               {/* Bytly Sections Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className={`flex items-center gap-1 text-sm font-medium transition-colors hover:text-[#C9A66B] focus:outline-none ${['CostEstimator','ConstructionTracker','TechnicalResources','PermitApplication','EngineerMatcher','DesignMarketplace','AIEngineers'].includes(currentPageName) ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}>
+                  <button className={`flex items-center gap-1 text-sm font-medium transition-colors hover:text-[#C9A66B] focus:outline-none ${['CostEstimator','ConstructionTracker','TechnicalResources','PermitApplication','EngineerMatcher','DesignMarketplace','AIEngineers','SurveyClientDashboard','SurveyorGigs'].includes(currentPageName) ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}>
                     أقسام بيتلي
                     <ChevronDown className="w-3.5 h-3.5" />
                   </button>
@@ -164,6 +164,17 @@ function LayoutContent({ children, currentPageName }) {
                     <Link to="/AIEngineers" className="flex items-center gap-2 cursor-pointer">
                       <Bot className="w-4 h-4 text-[#C9A66B]" />
                       Bytly AI
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/SurveyClientDashboard" className="flex items-center gap-2 cursor-pointer">
+                      📍 الرفع المساحي والكروكي
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/SurveyorGigs" className="flex items-center gap-2 cursor-pointer">
+                      🗺️ لوحة المساحين
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -305,17 +316,19 @@ function LayoutContent({ children, currentPageName }) {
                 { to: "/EngineerMatcher", label: "✨ ابحث عن مهندسك" },
                 { to: createPageUrl("DesignMarketplace"), label: "🎨 متجر التصاميم" },
                 { to: "/AIEngineers", label: "🤖 Bytly AI" },
-              ].map(({ to, label }) => (
-                <Link
-                  key={to}
-                  to={to}
-                  className="flex items-center px-4 rounded-lg hover:bg-slate-100 text-slate-700 text-[14px]"
-                  style={{ minHeight: 44 }}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {label}
-                </Link>
-              ))}
+                                { to: "/SurveyClientDashboard", label: "📍 الرفع المساحي" },
+                                { to: "/SurveyorGigs", label: "🗺️ لوحة المساحين" },
+                                ].map(({ to, label }) => (
+                                <Link
+                                  key={to}
+                                  to={to}
+                                  className="flex items-center px-4 rounded-lg hover:bg-slate-100 text-slate-700 text-[14px]"
+                                  style={{ minHeight: 44 }}
+                                  onClick={() => setIsMenuOpen(false)}
+                                >
+                                  {label}
+                                </Link>
+                              ))}
             </div>
           </div>
         )}
