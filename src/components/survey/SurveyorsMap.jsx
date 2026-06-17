@@ -22,13 +22,17 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
 });
 
+function svgToDataUri(svg) {
+  return 'data:image/svg+xml,' + encodeURIComponent(svg.trim());
+}
+
 const surveyorIcon = new L.Icon({
-  iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+  iconUrl: svgToDataUri(`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 40" width="32" height="40">
       <defs>
         <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#1a1a2e"/>
-          <stop offset="100%" style="stop-color:#C9A66B"/>
+          <stop offset="0%" stop-color="#1a1a2e"/>
+          <stop offset="100%" stop-color="#C9A66B"/>
         </linearGradient>
       </defs>
       <path d="M16 0C10.5 0 6 4.5 6 10c0 7.5 10 20 10 20s10-12.5 10-20C26 4.5 21.5 0 16 0z" fill="url(#g)"/>
@@ -42,12 +46,12 @@ const surveyorIcon = new L.Icon({
 });
 
 const nearestIcon = new L.Icon({
-  iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+  iconUrl: svgToDataUri(`
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 45" width="36" height="45">
       <defs>
         <linearGradient id="ng" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#C9A66B"/>
-          <stop offset="100%" style="stop-color:#e74c3c"/>
+          <stop offset="0%" stop-color="#C9A66B"/>
+          <stop offset="100%" stop-color="#e74c3c"/>
         </linearGradient>
       </defs>
       <path d="M18 0C12 0 7 5 7 11c0 8 11 22 11 22s11-14 11-22C29 5 24 0 18 0z" fill="url(#ng)"/>
@@ -373,7 +377,7 @@ export default function SurveyorsMap({ onClose }) {
                 <Marker
                   position={[userLocation.lat, userLocation.lng]}
                   icon={new L.Icon({
-                    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+                    iconUrl: svgToDataUri(`
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="20" height="20">
                         <circle cx="10" cy="10" r="8" fill="#3B82F6" stroke="white" stroke-width="3" opacity="0.9"/>
                         <circle cx="10" cy="10" r="3" fill="white"/>
