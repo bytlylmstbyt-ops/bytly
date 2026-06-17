@@ -149,6 +149,7 @@ const AuthenticatedApp = () => {
         <Route path="/DataClassification"         element={lazyRoute(DataClassification, "DataClassification")} />
         <Route path="/SurveyClientDashboard"       element={lazyRoute(SurveyClientDashboard, "SurveyClientDashboard")} />
         <Route path="/SurveyorGigs"                element={lazyRoute(SurveyorGigs, "SurveyorGigs")} />
+        <Route path="/SurveyorTerms"              element={lazyRoute(React.lazy(() => import('./pages/SurveyorTerms')), "SurveyorTerms")} />
         <Route path="/ComplianceDashboard"        element={lazyRoute(React.lazy(() => import('./pages/ComplianceDashboard')), "ComplianceDashboard")} />
         <Route path="/BudgetCalculator"           element={lazyRoute(React.lazy(() => import('./pages/BudgetCalculator')), "BudgetCalculator")} />
         <Route path="/PlatformDashboard"          element={lazyRoute(React.lazy(() => import('./pages/PlatformDashboard')), "PlatformDashboard")} />

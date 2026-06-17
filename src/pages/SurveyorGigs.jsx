@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   MapPin, Loader2, CheckCircle2, Clock, Navigation, Ruler,
   DollarSign, Upload, FileDown, FileText, Image, Map, RefreshCw,
-  UserCheck, AlertTriangle, Calendar
+  UserCheck, AlertTriangle, Calendar, ShieldCheck
 } from 'lucide-react';
 import { AppointmentList } from '@/components/survey/AppointmentBooking';
 
@@ -277,6 +278,7 @@ function GigCard({ request, onAccept, onRefresh }) {
 
 /* ─── Main Page ─── */
 export default function SurveyorGigs() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [availableGigs, setAvailableGigs] = useState([]);
@@ -292,7 +294,10 @@ export default function SurveyorGigs() {
         base44.functions.invoke('surveyEngine', { action: 'list', role_type: 'available' }).catch(() => ({ data: { requests: [] } })),
         base44.functions.invoke('surveyEngine', { action: 'list', role_type: 'surveyor' }).catch(() => ({ data: { requests: [] } }))
       ]);
-      setProfile(profileRes?.[0] || null);
+      const p = profileRes?.[0] || null;
+      setProfile(p);
+      // Redirect to terms page if registered but terms not accepted yet
+      if (p && !p.terms_accepted) { navigate('/SurveyorTerms'); return; }
       setAvailableGigs(availRes.data?.requests || []);
       setMyRequests(myRes.data?.requests || []);
     } catch (e) { console.error(e); }
@@ -333,6 +338,24 @@ export default function SurveyorGigs() {
         </div>
         <div className="max-w-xl mx-auto px-4 py-6">
           <RegisterSurveyorForm onRegistered={loadData} />
+        </div>
+      </div>
+    );
+  }
+
+  // Registered but terms not accepted — show terms prompt inline
+  if (profile && !profile.terms_accepted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center" dir="rtl">
+        <div className="max-w-md w-full mx-auto px-4 py-16 text-center">
+          <ShieldCheck className="w-16 h-16 mx-auto mb-4 text-[#C9A66B]" />
+          <h2 className="text-xl font-bold text-[#4A3F35] mb-3">تفعيل الحساب مطلوب</h2>
+          <p className="text-gray-600 text-sm mb-6">
+            للمتابعة واستقبال طلبات الرفع المساحي، يجب الموافقة على الشروط والأحكام الفنية أولاً.
+          </p>
+          <Button onClick={() => navigate('/SurveyorTerms')} className="bg-[#4A3F35] hover:bg-[#3A2F25] text-white gap-2">
+            <FileText className="w-4 h-4" /> الاطلاع على الشروط والموافقة
+          </Button>
         </div>
       </div>
     );
