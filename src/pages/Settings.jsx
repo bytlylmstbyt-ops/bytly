@@ -24,6 +24,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useLanguage } from "@/components/i18n/LanguageContext";
+import LocationPicker from "@/components/engineers/LocationPicker";
 
 export default function Settings() {
   const { t, language } = useLanguage();
@@ -188,6 +189,12 @@ export default function Settings() {
               <Mail className="w-4 h-4" />
               {t('settings.tabs.email')}
             </TabsTrigger>
+            {userType === "engineer" && (
+              <TabsTrigger value="location" className="gap-2">
+                <MapPin className="w-4 h-4" />
+                النطاق الجغرافي
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="profile">
@@ -450,6 +457,33 @@ export default function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {userType === "engineer" && (
+            <TabsContent value="location">
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="w-5 h-5 text-[#C9A66B]" />
+                    النطاق الجغرافي والتغطية
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <LocationPicker
+                    initialLat={profile?.latitude}
+                    initialLng={profile?.longitude}
+                    initialRadius={profile?.geofencing_radius_km || 50}
+                    onSave={async ({ latitude, longitude, geofencing_radius_km }) => {
+                      await base44.entities.Engineer.update(profile.id, {
+                        latitude, longitude, geofencing_radius_km
+                      });
+                      toast.success('تم حفظ الموقع والنطاق الجغرافي بنجاح');
+                      loadUserData();
+                    }}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
 
           <TabsContent value="email">
             <Card className="border-0 shadow-lg">
