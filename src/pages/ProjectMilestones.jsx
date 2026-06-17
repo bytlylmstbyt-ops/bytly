@@ -18,6 +18,7 @@ import { motion } from "framer-motion";
 import { sendNotification } from "@/components/notifications/NotificationHelper";
 import CommissionExplainer from "@/components/payment/CommissionExplainer";
 import MilestoneReviewModal from "@/components/reviews/MilestoneReviewModal";
+import MeetCallButton from "@/components/project/MeetCallButton";
 
 export default function ProjectMilestones() {
   const navigate = useNavigate();
@@ -422,10 +423,17 @@ export default function ProjectMilestones() {
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="mb-8">
-            <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e] mb-2">
-              مراحل المشروع
-            </h1>
-            <p className="text-slate-600">{project.title}</p>
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e] mb-2">
+                  مراحل المشروع
+                </h1>
+                <p className="text-slate-600">{project.title}</p>
+              </div>
+              <div className="w-full sm:w-auto max-w-xs">
+                <MeetCallButton project={project} currentUser={user} />
+              </div>
+            </div>
           </div>
 
           {/* Commission Explainer */}
