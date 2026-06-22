@@ -9,7 +9,7 @@ import {
   Building2, Palette, PenTool, SlidersHorizontal,
   Trash2, Download, CheckSquare, Square, UserCheck, Map
 } from "lucide-react";
-import SurveyorsMap from "@/components/survey/SurveyorsMap";
+import EngineersMap from "@/components/engineers/EngineersMap";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -317,22 +317,25 @@ export default function Engineers() {
             />
 
             {/* View Mode */}
-            <div className="hidden md:flex bg-white rounded-lg shadow-sm p-1">
+            <div className="flex bg-white rounded-lg shadow-sm p-1">
               <button
                 onClick={() => setViewMode("grid")}
                 className={`p-2 rounded ${viewMode === "grid" ? "bg-slate-100" : ""}`}
+                title="عرض شبكي"
               >
                 <Grid3X3 className="w-5 h-5 text-slate-600" />
               </button>
               <button
                 onClick={() => setViewMode("list")}
                 className={`p-2 rounded ${viewMode === "list" ? "bg-slate-100" : ""}`}
+                title="عرض قائمة"
               >
                 <List className="w-5 h-5 text-slate-600" />
               </button>
               <button
                 onClick={() => setViewMode("map")}
                 className={`p-2 rounded ${viewMode === "map" ? "bg-slate-100" : ""}`}
+                title="عرض على الخريطة"
               >
                 <Map className="w-5 h-5 text-slate-600" />
               </button>
@@ -412,7 +415,7 @@ export default function Engineers() {
             ))}
           </div>
         ) : viewMode === "map" ? (
-          <SurveyorsMap onClose={() => setViewMode("grid")} />
+          <EngineersMap onClose={() => setViewMode("grid")} engineers={filteredEngineers} />
         ) : filteredEngineers.length > 0 ? (
           <AnimatePresence mode="wait">
             <motion.div
