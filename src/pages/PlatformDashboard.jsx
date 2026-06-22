@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import ProjectProfitPanel from "@/components/dashboard/ProjectProfitPanel";
+import DailyActiveUsersPanel from "@/components/dashboard/DailyActiveUsersPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -343,6 +344,9 @@ export default function PlatformDashboard() {
             }
           </CardContent>
         </Card>
+
+        {/* ── المستخدمون النشطون يومياً من Google Analytics ── */}
+        <DailyActiveUsersPanel />
 
         {/* ── قسم الربح الصافي المتوقع لكل مشروع ── */}
         <ProjectProfitPanel projects={projects} loading={loading} />
