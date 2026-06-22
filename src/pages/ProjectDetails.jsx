@@ -16,6 +16,7 @@ import { useAds } from "@/hooks/useAds";
 import ProjectChat from "@/components/project/ProjectChat";
 import MilestoneInvoicePanel from "@/components/invoices/MilestoneInvoicePanel";
 import MeetCallButton from "@/components/project/MeetCallButton";
+import AppointmentModal from "@/components/appointments/AppointmentModal";
 import EscrowTracker from "@/components/escrow/EscrowTracker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -801,6 +802,49 @@ export default function ProjectDetails() {
               {project?.status === "in_progress" && user && project.created_by === user.email && (
                 <MeetCallButton project={project} currentUser={user} />
               )}
+
+              {/* Design Review Meeting — Google Calendar integration */}
+              {project?.status === "in_progress" && user && project.assigned_engineer_id && (() => {
+                const assignedEngineer = engineers[project.assigned_engineer_id];
+                const isClient = project.created_by === user.email;
+                const isAssignedEngineer = userEngineer && project.assigned_engineer_id === userEngineer.id;
+                if (!isClient && !isAssignedEngineer) return null;
+
+                // Client → schedule with engineer; Engineer → schedule with client
+                const target = isClient
+                  ? { id: assignedEngineer?.id, name: assignedEngineer?.full_name, email: assignedEngineer?.email, type: "engineer" }
+                  : { id: userClient?.id || project.client_id, name: userClient?.full_name || project.created_by, email: project.created_by, type: "engineer" };
+
+                if (!target.email) return null;
+
+                return (
+                  <Card className="border-0 shadow-lg mb-6">
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                          <Calendar className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-[#1a1a2e]">اجتماع مراجعة المخططات</h4>
+                          <p className="text-sm text-slate-500">احجز موعداً مع {target.name} — يُحفظ في تقويم جوجل تلقائياً</p>
+                        </div>
+                      </div>
+                      <AppointmentModal
+                        targetId={target.id}
+                        targetName={target.name}
+                        targetType={target.type}
+                        targetEmail={target.email}
+                        trigger={
+                          <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white gap-2">
+                            <Calendar className="w-4 h-4" />
+                            حجز موعد مراجعة
+                          </Button>
+                        }
+                      />
+                    </CardContent>
+                  </Card>
+                );
+              })()}
 
               {/* Kanban Board - For in progress projects */}
                {project?.status === "in_progress" && (
