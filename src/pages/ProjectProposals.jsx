@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
   ArrowRight, Star, Clock, DollarSign, User, CheckCircle,
-  BarChart3, TrendingDown, Award, MessageSquare, ChevronDown, ChevronUp, X
+  BarChart3, TrendingDown, Award, MessageSquare, ChevronDown, ChevronUp, X, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,12 +78,23 @@ export default function ProjectProposals() {
 
   const compareProposals = proposals.filter(p => compareList.includes(p.id));
 
+  const [acceptingId, setAcceptingId] = useState(null);
+
   const handleAccept = async (proposalId) => {
-    await base44.entities.Proposal.update(proposalId, { status: "accepted" });
-    // Reject others
-    const others = proposals.filter(p => p.id !== proposalId);
-    await Promise.all(others.map(p => base44.entities.Proposal.update(p.id, { status: "rejected" })));
-    await loadData();
+    setAcceptingId(proposalId);
+    try {
+      await base44.entities.Proposal.update(proposalId, { status: "accepted" });
+      // Reject others
+      const others = proposals.filter(p => p.id !== proposalId);
+      await Promise.all(others.map(p => base44.entities.Proposal.update(p.id, { status: "rejected" })));
+      // Generate digital work contract automatically
+      await base44.functions.invoke("autoGenerateContract", { proposalId });
+      await loadData();
+    } catch (err) {
+      console.error("Accept failed:", err);
+    } finally {
+      setAcceptingId(null);
+    }
   };
 
   if (isLoading) {
@@ -301,10 +312,20 @@ export default function ProjectProposals() {
                             <Button
                               size="sm"
                               className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white text-xs"
+                              disabled={acceptingId === proposal.id}
                               onClick={() => handleAccept(proposal.id)}
                             >
-                              <CheckCircle className="w-3.5 h-3.5 ml-1" />
-                              قبول
+                              {acceptingId === proposal.id ? (
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin ml-1" />
+                                  جاري توليد العقد...
+                                </>
+                              ) : (
+                                <>
+                                  <CheckCircle className="w-3.5 h-3.5 ml-1" />
+                                  قبول
+                                </>
+                              )}
                             </Button>
                           )}
 
