@@ -84,6 +84,20 @@ export default function ChatWindow({
         attachments: data.attachments
       });
 
+      // حفظ نسخة تلقائية من المرفقات في سجل المشروع
+      if (data.attachments && data.attachments.length > 0 && conversation.project_id) {
+        try {
+          await base44.functions.invoke("saveChatAttachmentToProject", {
+            project_id: conversation.project_id,
+            attachments: data.attachments,
+            sender_email: user.email,
+            sender_name: user.full_name
+          });
+        } catch (e) {
+          console.error("Auto-save attachments to project failed:", e);
+        }
+      }
+
       // Update conversation last message
       await base44.entities.Conversation.update(conversation.id, {
         last_message: data.content,

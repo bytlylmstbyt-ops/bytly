@@ -143,6 +143,21 @@ export default function EnhancedChatWindow({
       attachments
     });
 
+    // حفظ نسخة تلقائية من المرفقات في سجل المشروع
+    if (conversation.project_id) {
+      try {
+        await base44.functions.invoke("saveChatAttachmentToProject", {
+          project_id: conversation.project_id,
+          attachments,
+          sender_email: currentUserEmail,
+          sender_name: user.full_name
+        });
+        toast.success("📄 تم حفظ الملفات في سجل المشروع تلقائياً");
+      } catch (e) {
+        console.error("Auto-save attachments to project failed:", e);
+      }
+    }
+
     await loadMessages();
   };
 
