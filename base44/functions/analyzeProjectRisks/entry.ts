@@ -60,7 +60,12 @@ Deno.serve(async (req) => {
     const scheduledDays = Math.floor((new Date(project.deadline).getTime() - new Date(project.start_date).getTime()) / (1000 * 60 * 60 * 24));
     const scheduleHealth = ((scheduledDays - daysElapsed) / scheduledDays) * 100;
 
-    const prompt = `أنت محلل متخصص في إدارة المشاريع. حلل بيانات المشروع التالي وحدد المخاطر المحتملة:
+    const remainingDays = scheduledDays - daysElapsed;
+    const burnRate = daysElapsed > 0 ? (completionRate / daysElapsed * scheduledDays) : 0;
+    const projectedCompletion = burnRate > 0 ? 100 / burnRate * scheduledDays : scheduledDays;
+    const budgetBurnRate = daysElapsed > 0 ? (budgetUtilization / daysElapsed) * scheduledDays : 0;
+
+    const prompt = `أنت محلل متخصص في إدارة المشاريع الهندسية. حلل بيانات المشروع التالي وحدد المخاطر الحالية والتوقعات التنبؤية للمخاطر المستقبلية:
 
 معلومات المشروع:
 - العنوان: ${project.title}
@@ -77,6 +82,10 @@ Deno.serve(async (req) => {
 - صحة الجدول الزمني: ${scheduleHealth.toFixed(1)}%
 - عدد الرسائل: ${messages.length}
 - أيام مضت: ${daysElapsed}/${scheduledDays}
+- الأيام المتبقية: ${remainingDays}
+- معدل الإنجاز المتوقع: ${burnRate.toFixed(1)}% يومياً
+- التوقع: سيكتمل المشروع بعد ${projectedCompletion.toFixed(0)} يوماً
+- معدل استهلاك الميزانية المتوقع: ${budgetBurnRate.toFixed(1)}%
 
 قدم التحليل كـ JSON مع الحقول التالية:
 {
@@ -93,14 +102,45 @@ Deno.serve(async (req) => {
   ],
   "overall_risk_score": <0-100>,
   "critical_alerts": ["alert1", "alert2"],
-  "summary": "ملخص عام"
+  "summary": "ملخص عام",
+  "forecast": {
+    "next_7_days": {
+      "predicted_risks": [
+        {
+          "title": "عنوان المخاطرة المتوقعة",
+          "probability": <0-100>,
+          "category": "delays|budget|scope|satisfaction",
+          "trigger": "السبب المتوقع لظهور المخاطرة"
+        }
+      ],
+      "recommended_actions": ["إجراء وقائي 1", "إجراء وقائي 2"]
+    },
+    "next_14_days": {
+      "predicted_risks": [
+        {
+          "title": "عنوان المخاطرة المتوقعة",
+          "probability": <0-100>,
+          "category": "delays|budget|scope|satisfaction",
+          "trigger": "السبب المتوقع"
+        }
+      ],
+      "recommended_actions": ["إجراء وقائي 1"]
+    },
+    "trend": "improving|stable|deteriorating",
+    "confidence_level": <0-100>,
+    "estimated_completion_date": "YYYY-MM-DD أو null إذا يتعذر التحديد",
+    "estimated_final_budget": <number - التوقع النهائي للتكلفة>
+  }
 }
 
 اعتمد على:
 1. المهام المتأخرة -> خطر تأخير
 2. استخدام الميزانية > 80% -> خطر تجاوز الميزانية
 3. الفرق بين المهام المخطط لها والمكتملة -> خطر زحف النطاق
-4. قلة الرسائل أو رسائل سلبية -> خطر عدم رضا العميل`;
+4. قلة الرسائل أو رسائل سلبية -> خطر عدم رضا العميل
+5. معدل الإنجاز مقابل الأيام المتبقية -> توقع التأخير
+6. معدل استهلاك الميزانية -> توقع تجاوز التكلفة
+7. الأنماط الزمنية -> التوقعات للمستقبل القريب (7 و 14 يوماً)`;
 
     const analysis = await base44.integrations.Core.InvokeLLM({
       prompt,
@@ -125,7 +165,52 @@ Deno.serve(async (req) => {
           },
           overall_risk_score: { type: "number" },
           critical_alerts: { type: "array", items: { type: "string" } },
-          summary: { type: "string" }
+          summary: { type: "string" },
+          forecast: {
+            type: "object",
+            properties: {
+              next_7_days: {
+                type: "object",
+                properties: {
+                  predicted_risks: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        title: { type: "string" },
+                        probability: { type: "number" },
+                        category: { type: "string" },
+                        trigger: { type: "string" }
+                      }
+                    }
+                  },
+                  recommended_actions: { type: "array", items: { type: "string" } }
+                }
+              },
+              next_14_days: {
+                type: "object",
+                properties: {
+                  predicted_risks: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        title: { type: "string" },
+                        probability: { type: "number" },
+                        category: { type: "string" },
+                        trigger: { type: "string" }
+                      }
+                    }
+                  },
+                  recommended_actions: { type: "array", items: { type: "string" } }
+                }
+              },
+              trend: { type: "string" },
+              confidence_level: { type: "number" },
+              estimated_completion_date: { type: "string" },
+              estimated_final_budget: { type: "number" }
+            }
+          }
         }
       }
     });
