@@ -15,10 +15,10 @@ export default function LanguageSwitcher({ variant = "ghost" }) {
     >
       <Globe className="w-4 h-4" />
       <span className="hidden sm:inline">
-        {language === 'ar' ? 'English' : 'العربية'}
+        {language === 'ar' ? 'العربية' : 'English'}
       </span>
       <span className="sm:hidden">
-        {language === 'ar' ? 'EN' : 'ع'}
+        {language === 'ar' ? 'ع' : 'EN'}
       </span>
     </Button>
   );
