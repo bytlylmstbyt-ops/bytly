@@ -62,7 +62,7 @@ export default function Logo({ className = "", size = "default", isDark = false 
           لمسة بيت
         </span>
         <span 
-          className={`font-normal ${currentSize.subtitle} opacity-80`}
+          className={`font-normal ${currentSize.subtitle} opacity-80 hidden md:block`}
           style={{ 
             color: isDark ? '#E5D4B8' : '#C9A66B',
             fontFamily: 'Cairo, system-ui, sans-serif',

@@ -152,9 +152,9 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <Badge className="bg-white/10 text-white border-white/20 mb-6 px-4 py-2">
-                <Sparkles className="w-4 h-4 ml-2" />
-                {t('home.hero.badge')}
+              <Badge className="bg-white/10 text-white border-white/20 mb-6 px-4 py-2 text-center text-xs sm:text-sm max-w-[90vw] sm:max-w-none">
+                <Sparkles className="w-4 h-4 ml-2 shrink-0" />
+                <span className="leading-tight">{t('home.hero.badge')}</span>
               </Badge>
               
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
