@@ -26,6 +26,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import SBCStandardsList from "@/components/technical/SBCStandardsList";
+import DesignComplianceChecker from "@/components/technical/DesignComplianceChecker";
 
 const CATEGORIES = [
   { key: "all", label: "الكل", icon: Layers, color: "bg-slate-100 text-slate-700" },
@@ -268,6 +269,11 @@ export default function TechnicalResources() {
         {/* SBC Standards Reference List */}
         <div className="mb-8">
           <SBCStandardsList />
+        </div>
+
+        {/* Design Compliance Checker */}
+        <div className="mb-8">
+          <DesignComplianceChecker />
         </div>
 
         {/* Search & Filter */}
