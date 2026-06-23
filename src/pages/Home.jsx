@@ -152,10 +152,12 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <Badge className="bg-white/10 text-white border-white/20 mb-6 px-4 py-2 text-center text-xs sm:text-sm max-w-[90vw] sm:max-w-none">
-                <Sparkles className="w-4 h-4 ml-2 shrink-0" />
-                <span className="leading-tight">{t('home.hero.badge')}</span>
-              </Badge>
+              <div className="flex md:justify-start mb-6">
+                <Badge className="bg-gradient-to-r from-white/15 to-white/5 text-white border-[#C9A66B]/40 px-5 py-2 text-center text-xs sm:text-sm shadow-lg shadow-[#C9A66B]/10 backdrop-blur-md">
+                  <Sparkles className="w-4 h-4 ml-2 shrink-0 text-[#C9A66B]" />
+                  <span className="leading-tight">{t('home.hero.badge')}</span>
+                </Badge>
+              </div>
               
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
                 {t('home.hero.title')}
