@@ -12,6 +12,7 @@ import {
 import { BookingForm, AppointmentList } from '@/components/survey/AppointmentBooking';
 import SurveyReviewForm from '@/components/survey/SurveyReviewForm';
 import TransactionHistory from '@/components/survey/TransactionHistory';
+import SurveyInteractiveMap from '@/components/survey/SurveyInteractiveMap';
 
 /* ─── Helpers ─── */
 const statusConfig = {
@@ -457,7 +458,10 @@ export default function SurveyClientDashboard() {
           </TabsList>
 
           <TabsContent value="new" className="mt-4">
-            <CreateRequestForm onCreated={loadRequests} />
+            <div className="space-y-4">
+              <SurveyInteractiveMap requests={requests} />
+              <CreateRequestForm onCreated={loadRequests} />
+            </div>
           </TabsContent>
 
           <TabsContent value="my-requests" className="mt-4 space-y-4">

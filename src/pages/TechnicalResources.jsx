@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import SBCStandardsList from "@/components/technical/SBCStandardsList";
 
 const CATEGORIES = [
   { key: "all", label: "الكل", icon: Layers, color: "bg-slate-100 text-slate-700" },
@@ -263,6 +264,11 @@ export default function TechnicalResources() {
             ))}
           </div>
         </motion.div>
+
+        {/* SBC Standards Reference List */}
+        <div className="mb-8">
+          <SBCStandardsList />
+        </div>
 
         {/* Search & Filter */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">

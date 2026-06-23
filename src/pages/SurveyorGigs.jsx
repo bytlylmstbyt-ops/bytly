@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { AppointmentList } from '@/components/survey/AppointmentBooking';
 import TransactionHistory from '@/components/survey/TransactionHistory';
+import SurveyInteractiveMap from '@/components/survey/SurveyInteractiveMap';
 
 /* ─── Helpers ─── */
 const statusConfig = {
@@ -430,7 +431,14 @@ export default function SurveyorGigs() {
                 <p className="text-xs mt-1">سيتم إشعارك فور وصول طلبات جديدة</p>
               </div>
             ) : (
-              availableGigs.map(r => <GigCard key={r.id} request={r} onRefresh={loadData} />)
+              <>
+                <SurveyInteractiveMap
+                  requests={availableGigs}
+                  surveyorLocation={profile?.latitude && profile?.longitude ? { lat: profile.latitude, lng: profile.longitude } : null}
+                  surveyorRadius={profile?.geofencing_radius_km}
+                />
+                {availableGigs.map(r => <GigCard key={r.id} request={r} onRefresh={loadData} />)}
+              </>
             )}
           </TabsContent>
 
@@ -441,7 +449,14 @@ export default function SurveyorGigs() {
                 <p>لم تقبل أي طلب بعد</p>
               </div>
             ) : (
-              myRequests.map(r => <GigCard key={r.id} request={r} onRefresh={loadData} />)
+              <>
+                <SurveyInteractiveMap
+                  requests={myRequests}
+                  surveyorLocation={profile?.latitude && profile?.longitude ? { lat: profile.latitude, lng: profile.longitude } : null}
+                  surveyorRadius={profile?.geofencing_radius_km}
+                />
+                {myRequests.map(r => <GigCard key={r.id} request={r} onRefresh={loadData} />)}
+              </>
             )}
           </TabsContent>
 
