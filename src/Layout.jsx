@@ -100,9 +100,9 @@ function LayoutContent({ children, currentPageName }) {
               {[
                 { to: createPageUrl("Home"), label: t('nav.home'), name: 'Home' },
                 { to: createPageUrl("Engineers"), label: t('nav.engineers'), name: 'Engineers' },
-                { to: createPageUrl("ConsultingFirms"), label: 'الشركات الاستشارية', name: 'ConsultingFirms' },
-                { to: createPageUrl("Projects"), label: 'المشاريع', name: 'Projects' },
-                { to: createPageUrl("Gallery"), label: 'معرض الأعمال', name: 'Gallery' },
+                { to: createPageUrl("ConsultingFirms"), label: t('nav.consultingFirms'), name: 'ConsultingFirms' },
+                { to: createPageUrl("Projects"), label: t('nav.projects'), name: 'Projects' },
+                { to: createPageUrl("Gallery"), label: t('nav.gallery'), name: 'Gallery' },
               ].map(({ to, label, name }) => (
                 <Link
                   key={name}
@@ -118,63 +118,63 @@ function LayoutContent({ children, currentPageName }) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className={`flex items-center gap-1 text-sm font-medium transition-colors hover:text-[#C9A66B] focus:outline-none ${['CostEstimator','ConstructionTracker','TechnicalResources','PermitApplication','EngineerMatcher','DesignMarketplace','AIEngineers','SurveyClientDashboard','SurveyorGigs'].includes(currentPageName) ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}>
-                    أقسام بيتلي
+                    {t('nav.bytlySections')}
                     <ChevronDown className="w-3.5 h-3.5" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56 mt-2">
                   <DropdownMenuItem asChild>
                     <Link to="/CostEstimator" className="flex items-center gap-2 cursor-pointer">
-                      🧮 حاسبة التكاليف
+                      🧮 {t('nav.costCalculator')}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/ConstructionTracker" className="flex items-center gap-2 cursor-pointer">
-                      🏗️ متابعة البناء
+                      🏗️ {t('nav.constructionTracker')}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/TechnicalResources" className="flex items-center gap-2 cursor-pointer">
-                      📐 المعايير الفنية
+                      📐 {t('nav.technicalResources')}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/PermitApplication" className="flex items-center gap-2 cursor-pointer">
-                      🏛️ رخصة البناء
+                      🏛️ {t('nav.buildingPermit')}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/EngineerMatcher" className="flex items-center gap-2 cursor-pointer">
-                      ✨ ابحث عن مهندسك
+                      ✨ {t('nav.findEngineer')}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to={createPageUrl("DesignMarketplace")} className="flex items-center gap-2 cursor-pointer">
-                      🎨 متجر التصاميم
+                      🎨 {t('nav.designMarketplace')}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/MarketEntities" className="flex items-center gap-2 cursor-pointer">
                       <Building2 className="w-4 h-4 text-[#C9A66B]" />
-                      سوق المطورين والمستثمرين
+                      {t('nav.marketEntities')}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/AIEngineers" className="flex items-center gap-2 cursor-pointer">
                       <Bot className="w-4 h-4 text-[#C9A66B]" />
-                      Bytly AI
+                      {t('nav.bytlyAI')}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to="/SurveyClientDashboard" className="flex items-center gap-2 cursor-pointer">
-                      📍 الرفع المساحي والكروكي
+                      📍 {t('nav.surveying')}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/SurveyorGigs" className="flex items-center gap-2 cursor-pointer">
-                      🗺️ لوحة المساحين
+                      🗺️ {t('nav.surveyorBoard')}
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -185,7 +185,7 @@ function LayoutContent({ children, currentPageName }) {
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] flex items-center gap-1.5 ${currentPageName === 'Messages' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
               >
                 <MessagesSquare className="w-4 h-4" />
-                المحادثات
+                {t('nav.chat')}
               </Link>
             </nav>
 
@@ -226,7 +226,7 @@ function LayoutContent({ children, currentPageName }) {
                       <DropdownMenuItem asChild>
                         <Link to="/MyContracts" className="flex items-center gap-2">
                           <Scale className="w-4 h-4" />
-                          عقودي
+                          {t('nav.contracts')}
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
@@ -291,10 +291,10 @@ function LayoutContent({ children, currentPageName }) {
               {[
                 { to: createPageUrl("Home"), label: t('nav.home') },
                 { to: createPageUrl("Engineers"), label: t('nav.engineers') },
-                { to: createPageUrl("ConsultingFirms"), label: 'الشركات الاستشارية' },
-                { to: createPageUrl("Projects"), label: 'المشاريع' },
-                { to: createPageUrl("Gallery"), label: 'معرض الأعمال' },
-                { to: createPageUrl("Messages"), label: 'المحادثات' },
+                { to: createPageUrl("ConsultingFirms"), label: t('nav.consultingFirms') },
+                { to: createPageUrl("Projects"), label: t('nav.projects') },
+                { to: createPageUrl("Gallery"), label: t('nav.gallery') },
+                { to: createPageUrl("Messages"), label: t('nav.chat') },
               ].map(({ to, label }) => (
                 <Link
                   key={to}
@@ -307,17 +307,17 @@ function LayoutContent({ children, currentPageName }) {
                 </Link>
               ))}
               {/* Bytly Sections group */}
-              <div className="pt-2 pb-1 px-4 text-xs font-semibold text-[#C9A66B] uppercase tracking-wide">أقسام بيتلي</div>
+              <div className="pt-2 pb-1 px-4 text-xs font-semibold text-[#C9A66B] uppercase tracking-wide">{t('nav.bytlySections')}</div>
               {[
-                { to: "/CostEstimator", label: "🧮 حاسبة التكاليف" },
-                { to: "/ConstructionTracker", label: "🏗️ متابعة البناء" },
-                { to: "/TechnicalResources", label: "📐 المعايير الفنية" },
-                { to: "/PermitApplication", label: "🏛️ رخصة البناء" },
-                { to: "/EngineerMatcher", label: "✨ ابحث عن مهندسك" },
-                { to: createPageUrl("DesignMarketplace"), label: "🎨 متجر التصاميم" },
-                { to: "/AIEngineers", label: "🤖 Bytly AI" },
-                                { to: "/SurveyClientDashboard", label: "📍 الرفع المساحي" },
-                                { to: "/SurveyorGigs", label: "🗺️ لوحة المساحين" },
+                { to: "/CostEstimator", label: `🧮 ${t('nav.costCalculator')}` },
+                { to: "/ConstructionTracker", label: `🏗️ ${t('nav.constructionTracker')}` },
+                { to: "/TechnicalResources", label: `📐 ${t('nav.technicalResources')}` },
+                { to: "/PermitApplication", label: `🏛️ ${t('nav.buildingPermit')}` },
+                { to: "/EngineerMatcher", label: `✨ ${t('nav.findEngineer')}` },
+                { to: createPageUrl("DesignMarketplace"), label: `🎨 ${t('nav.designMarketplace')}` },
+                { to: "/AIEngineers", label: `🤖 ${t('nav.bytlyAI')}` },
+                                { to: "/SurveyClientDashboard", label: `📍 ${t('nav.surveying')}` },
+                                { to: "/SurveyorGigs", label: `🗺️ ${t('nav.surveyorBoard')}` },
                                 ].map(({ to, label }) => (
                                 <Link
                                   key={to}
@@ -391,7 +391,7 @@ function LayoutContent({ children, currentPageName }) {
                   { to: createPageUrl("Terms"), label: t('footer.terms') },
                   { to: createPageUrl("Privacy"), label: t('footer.privacy') },
                   { to: createPageUrl("Copyright"), label: t('footer.copyright') },
-                  { to: "/Certificates", label: "🏅 شهادات المنصة وتراخيصها" },
+                  { to: "/Certificates", label: `🏅 ${t('nav.certificates')}` },
                 ].map(({ to, label }) => (
                   <li key={to}>
                     <Link to={to} className="flex items-center hover:text-[#C9A66B] transition-colors" style={{ minHeight: 44 }}>{label}</Link>
@@ -407,7 +407,7 @@ function LayoutContent({ children, currentPageName }) {
                 {[
                   { to: createPageUrl("Complaints"), label: t('footer.complaints') },
                   { to: createPageUrl("Support"), label: t('footer.technicalSupport') },
-                  { to: createPageUrl("ContactUs"), label: "اتصل بنا" },
+                  { to: createPageUrl("ContactUs"), label: t('footer.contactUs') },
                 ].map(({ to, label }) => (
                   <li key={to}>
                     <Link to={to} className="flex items-center hover:text-[#C9A66B] transition-colors" style={{ minHeight: 44 }}>{label}</Link>

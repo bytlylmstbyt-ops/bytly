@@ -15,7 +15,21 @@ export const translations = {
       settings: "الإعدادات",
       logout: "تسجيل الخروج",
       myProjects: "مشاريعي المشتراة",
-      topupWallet: "شحن المحفظة"
+      topupWallet: "شحن المحفظة",
+      consultingFirms: "الشركات الاستشارية",
+      chat: "المحادثات",
+      contracts: "عقودي",
+      certificates: "شهادات المنصة وتراخيصها",
+      bytlySections: "أقسام بيتلي",
+      costCalculator: "حاسبة التكاليف",
+      constructionTracker: "متابعة البناء",
+      technicalResources: "المعايير الفنية",
+      buildingPermit: "رخصة البناء",
+      findEngineer: "ابحث عن مهندسك",
+      marketEntities: "سوق المطورين والمستثمرين",
+      bytlyAI: "Bytly AI",
+      surveying: "الرفع المساحي والكروكي",
+      surveyorBoard: "لوحة المساحين"
     },
     home: {
       hero: {
@@ -694,7 +708,21 @@ export const translations = {
       settings: "Settings",
       logout: "Logout",
       myProjects: "My Purchased Projects",
-      topupWallet: "Top-up Wallet"
+      topupWallet: "Top-up Wallet",
+      consultingFirms: "Consulting Firms",
+      chat: "Chats",
+      contracts: "My Contracts",
+      certificates: "Platform Certificates",
+      bytlySections: "Bytly Sections",
+      costCalculator: "Cost Calculator",
+      constructionTracker: "Construction Tracker",
+      technicalResources: "Technical Resources",
+      buildingPermit: "Building Permit",
+      findEngineer: "Find Your Engineer",
+      marketEntities: "Developers & Investors Market",
+      bytlyAI: "Bytly AI",
+      surveying: "Surveying & Sketch",
+      surveyorBoard: "Surveyors Board"
     },
     home: {
       hero: {
