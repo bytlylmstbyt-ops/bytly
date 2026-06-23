@@ -9,6 +9,7 @@ import {
   Star, Download, Eye, ArrowLeft, Scale, Upload, X, Paperclip, Kanban
 } from "lucide-react";
 import ContractGenerator from "@/components/contracts/ContractGenerator";
+import SignedContractsPanel from "@/components/contracts/SignedContractsPanel";
 import ProposalComparison from "@/components/proposals/ProposalComparison";
 import ProjectChatbot from "@/components/chatbot/ProjectChatbot";
 import { AdSidebarSection } from "@/components/ads/SmartAdCard";
@@ -864,6 +865,16 @@ export default function ProjectDetails() {
                    </Card>
                  </Link>
                )}
+
+              {/* Signed Contracts Upload & Archive */}
+              {(project?.status === "in_progress" || project?.status === "completed" || project?.assigned_engineer_id) && user && (
+                <SignedContractsPanel
+                  project={project}
+                  user={user}
+                  userEngineer={userEngineer}
+                  userClient={userClient}
+                />
+              )}
 
               {/* Contract Generator - Only for assigned engineer or client */}
                {project?.status === "in_progress" && userEngineer && userClient && (
