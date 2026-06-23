@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { 
   Users, Search, Edit, Ban, CheckCircle, Loader2,
-  Mail, Phone, MapPin, Award, Star, DollarSign, Briefcase
+  Mail, Phone, MapPin, Award, Star, DollarSign, Briefcase,
+  FileText, ShieldCheck, XCircle, ExternalLink
 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -25,6 +26,7 @@ export default function AdminEngineersPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [editingEngineer, setEditingEngineer] = useState(null);
   const [editFormData, setEditFormData] = useState({});
+  const [reviewEngineer, setReviewEngineer] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -83,12 +85,51 @@ export default function AdminEngineersPage() {
 
   const toggleVerification = async (engineer) => {
     try {
-      await base44.entities.Engineer.update(engineer.id, { 
-        is_verified: !engineer.is_verified 
-      });
+      const user = await base44.auth.me();
+      if (engineer.is_verified) {
+        await base44.entities.Engineer.update(engineer.id, { 
+          is_verified: false,
+          certified_at: null,
+          certified_by: null
+        });
+      } else {
+        await base44.entities.Engineer.update(engineer.id, { 
+          is_verified: true,
+          certified_at: new Date().toISOString(),
+          certified_by: user.email,
+          status: "approved"
+        });
+      }
       await loadData();
     } catch (error) {
       alert("حدث خطأ في تحديث التوثيق");
+    }
+  };
+
+  const handleCertificationReview = async (engineer, approved, rejectionReason = "") => {
+    try {
+      const user = await base44.auth.me();
+      if (approved) {
+        await base44.entities.Engineer.update(engineer.id, {
+          is_verified: true,
+          certified_at: new Date().toISOString(),
+          certified_by: user.email,
+          status: "approved"
+        });
+        alert("تم اعتماد المهندس بنجاح");
+      } else {
+        await base44.entities.Engineer.update(engineer.id, {
+          is_verified: false,
+          status: "rejected",
+          certified_at: null,
+          certified_by: user.email
+        });
+        alert("تم رفض اعتماد المهندس");
+      }
+      setReviewEngineer(null);
+      await loadData();
+    } catch (error) {
+      alert("حدث خطأ في تحديث الاعتماد");
     }
   };
 
@@ -224,7 +265,7 @@ export default function AdminEngineersPage() {
               <Card className="hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row md:items-center gap-4">
-                    <div className="flex-1">
+                    <div className="flex-1" style={{minWidth: 0}}>
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-lg font-bold text-[#1a1a2e]">{engineer.full_name}</h3>
                         {engineer.status === "approved" && (
@@ -277,7 +318,37 @@ export default function AdminEngineersPage() {
                           <DollarSign className="w-4 h-4" />
                           {(engineer.wallet_balance || 0).toLocaleString('ar-SA')} ريال
                         </div>
+                        {engineer.registration_number && (
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            رقم القيد: {engineer.registration_number}
+                          </div>
+                        )}
                       </div>
+
+                      {engineer.graduation_certificate_url && (
+                        <div className="mt-3 flex items-center gap-2">
+                          <span className="text-xs text-slate-500">شهادة التخرج:</span>
+                          <a
+                            href={engineer.graduation_certificate_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            عرض المستند
+                          </a>
+                        </div>
+                      )}
+
+                      {engineer.is_verified && engineer.certified_at && (
+                        <div className="mt-2 flex items-center gap-2 text-xs text-green-600">
+                          <ShieldCheck className="w-4 h-4" />
+                          <span>اعتمد بواسطة: {engineer.certified_by || "—"}</span>
+                          <span className="text-slate-400">•</span>
+                          <span>{new Date(engineer.certified_at).toLocaleDateString('ar-SA')}</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex flex-wrap gap-2">
@@ -342,35 +413,29 @@ export default function AdminEngineersPage() {
                         </DialogContent>
                       </Dialog>
 
-                      {engineer.status === "pending" && (
-                        <>
-                          <Button
-                            variant="default"
-                            size="sm"
-                            onClick={() => updateStatus(engineer, "approved")}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <CheckCircle className="w-4 h-4 ml-2" />
-                            قبول
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => updateStatus(engineer, "rejected")}
-                          >
-                            <Ban className="w-4 h-4 ml-2" />
-                            رفض
-                          </Button>
-                        </>
+                      {(engineer.status === "pending" || !engineer.is_verified) && (
+                        <Button
+                          variant="default"
+                          size="sm"
+                          onClick={() => setReviewEngineer(engineer)}
+                          className="bg-[#1a1a2e] hover:bg-[#2a2a3e]"
+                        >
+                          <ShieldCheck className="w-4 h-4 ml-2" />
+                          مراجعة الاعتماد
+                        </Button>
                       )}
 
-                      <Button
-                        variant={engineer.is_verified ? "outline" : "default"}
-                        size="sm"
-                        onClick={() => toggleVerification(engineer)}
-                      >
-                        {engineer.is_verified ? "إلغاء التوثيق" : "توثيق"}
-                      </Button>
+                      {engineer.is_verified && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toggleVerification(engineer)}
+                          className="text-red-600 hover:bg-red-50"
+                        >
+                          <XCircle className="w-4 h-4 ml-2" />
+                          إلغاء الاعتماد
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -378,6 +443,101 @@ export default function AdminEngineersPage() {
             </motion.div>
           ))}
         </div>
+
+        {/* Certification Review Dialog */}
+        {reviewEngineer && (
+          <Dialog open={!!reviewEngineer} onOpenChange={(open) => !open && setReviewEngineer(null)}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-[#d4a574]" />
+                  مراجعة اعتماد المهندس
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-5 py-2">
+                <div className="bg-slate-50 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] flex items-center justify-center text-white font-bold text-lg shrink-0">
+                      {reviewEngineer.full_name?.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-bold text-[#1a1a2e]">{reviewEngineer.full_name}</p>
+                      <p className="text-sm text-slate-500">{reviewEngineer.specialization}</p>
+                    </div>
+                  </div>
+                  <div className="border-t pt-3 space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-slate-400" />
+                      {reviewEngineer.email}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-slate-400" />
+                      <span className="text-slate-500">رقم القيد:</span>
+                      <span className="font-medium">{reviewEngineer.registration_number || "غير متوفر"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {reviewEngineer.graduation_certificate_url ? (
+                  <div className="space-y-2">
+                    <Label>شهادة التخرج</Label>
+                    <div className="border rounded-xl p-4 bg-slate-50">
+                      {reviewEngineer.graduation_certificate_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                        <img
+                          src={reviewEngineer.graduation_certificate_url}
+                          alt="شهادة التخرج"
+                          className="w-full max-h-72 object-contain rounded-lg"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center py-8">
+                          <a
+                            href={reviewEngineer.graduation_certificate_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-blue-600 hover:underline"
+                          >
+                            <FileText className="w-6 h-6" />
+                            عرض ملف الشهادة (PDF)
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 flex items-center gap-2">
+                    <XCircle className="w-5 h-5 shrink-0" />
+                    لم يقم المهندس برفع شهادة التخرج
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    variant="default"
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    disabled={!reviewEngineer.graduation_certificate_url || !reviewEngineer.registration_number}
+                    onClick={() => handleCertificationReview(reviewEngineer, true)}
+                  >
+                    <CheckCircle className="w-4 h-4 ml-2" />
+                    اعتماد المهندس
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    className="flex-1"
+                    onClick={() => handleCertificationReview(reviewEngineer, false)}
+                  >
+                    <XCircle className="w-4 h-4 ml-2" />
+                    رفض الاعتماد
+                  </Button>
+                </div>
+                {(!reviewEngineer.graduation_certificate_url || !reviewEngineer.registration_number) && (
+                  <p className="text-xs text-amber-600 text-center">
+                    لا يمكن الاعتماد دون استكمال رقم القيد ورفع شهادة التخرج
+                  </p>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </div>
   );

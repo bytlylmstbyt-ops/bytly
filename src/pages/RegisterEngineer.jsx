@@ -76,7 +76,7 @@ export default function RegisterEngineer() {
 
   const isStep1Valid = formData.full_name && formData.email && formData.phone;
   const isStep2Valid = formData.specialization && formData.city && formData.country;
-  const isStep3Valid = formData.registration_number || formData.bio;
+  const isStep3Valid = formData.registration_number && formData.graduation_certificate_url;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-12">
@@ -128,10 +128,19 @@ export default function RegisterEngineer() {
             <CardTitle className="text-xl">
               {step === 1 && "المعلومات الأساسية"}
               {step === 2 && "التخصص والموقع"}
-              {step === 3 && "الوثائق والتفاصيل"}
+              {step === 3 && "الوثائق والاعتماد"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            {step === 3 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
+                <Award className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-semibold mb-1">نظام الاعتماد المهني</p>
+                  <p>رفع رقم القيد المهني وشهادة التخرج إلزامي للحصول على شارة "مهندس معتمد". ستتم مراجعة وثائقك من قبل إدارة المنصة قبل ظهور الشارة في ملفك الشخصي.</p>
+                </div>
+              </div>
+            )}
             {/* Step 1 */}
             {step === 1 && (
               <motion.div
@@ -253,7 +262,7 @@ export default function RegisterEngineer() {
                 className="space-y-4"
               >
                 <div className="space-y-2">
-                  <Label htmlFor="registration_number">رقم القيد المهني</Label>
+                  <Label htmlFor="registration_number">رقم القيد المهني <span className="text-red-500">*</span></Label>
                   <div className="relative">
                     <FileText className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <Input
@@ -261,7 +270,7 @@ export default function RegisterEngineer() {
                       value={formData.registration_number}
                       onChange={(e) => handleInputChange("registration_number", e.target.value)}
                       className="pr-10"
-                      placeholder="رقم التسجيل المهني"
+                      placeholder="رقم التسجيل المهني (إلزامي للاعتماد)"
                     />
                   </div>
                 </div>
@@ -301,7 +310,7 @@ export default function RegisterEngineer() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>شهادة التخرج</Label>
+                  <Label>شهادة التخرج <span className="text-red-500">*</span></Label>
                   <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#d4a574] transition-colors">
                     <input
                       type="file"
@@ -319,7 +328,7 @@ export default function RegisterEngineer() {
                       ) : (
                         <>
                           <FileText className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                          <p className="text-sm text-slate-500">اضغط لرفع الشهادة</p>
+                          <p className="text-sm text-slate-500">اضغط لرفع الشهادة (إلزامي للاعتماد)</p>
                         </>
                       )}
                     </label>
@@ -358,7 +367,7 @@ export default function RegisterEngineer() {
               ) : (
                 <Button
                   onClick={handleSubmit}
-                  disabled={isLoading}
+                  disabled={isLoading || !isStep3Valid}
                   className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white gap-2"
                 >
                   {isLoading ? (
