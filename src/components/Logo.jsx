@@ -61,6 +61,16 @@ export default function Logo({ className = "", size = "default", isDark = false 
         >
           لمسة بيت
         </span>
+        <span 
+          className={`font-normal ${currentSize.subtitle} opacity-80`}
+          style={{ 
+            color: isDark ? '#E5D4B8' : '#C9A66B',
+            fontFamily: 'Cairo, system-ui, sans-serif',
+            letterSpacing: '0.3px'
+          }}
+        >
+          للمنظومة الهندسية المتكاملة
+        </span>
       </div>
     </div>
   );
