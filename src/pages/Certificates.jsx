@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Award, X, ZoomIn, Calendar, Hash, User, FileText, Building2, ExternalLink } from "lucide-react";
+import React from "react";
+import { motion } from "framer-motion";
+import { Shield, Award, Hash } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const CERTIFICATES = [
@@ -24,111 +24,13 @@ const CERTIFICATES = [
   // Future certificates can be added here
 ];
 
-const WatermarkedImage = ({ src, alt }) => (
-  <div className="relative select-none overflow-hidden rounded-xl shadow-2xl" onContextMenu={e => e.preventDefault()}>
-    <img src={src} alt={alt} className="w-full object-contain pointer-events-none" draggable={false} />
-    {/* Watermark grid */}
-    <div className="absolute inset-0 pointer-events-none"
-      style={{
-        backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 60px, rgba(107,93,79,0.07) 60px, rgba(107,93,79,0.07) 120px)",
-      }}
-    />
-    {[...Array(12)].map((_, i) => (
-      <div key={i} className="absolute text-[#6B5D4F] font-bold opacity-10 rotate-[-35deg] select-none pointer-events-none"
-        style={{
-          fontSize: "22px",
-          top: `${(i % 4) * 28}%`,
-          left: `${Math.floor(i / 4) * 40 - 5}%`,
-          whiteSpace: "nowrap",
-          letterSpacing: "2px",
-        }}>
-        Bytly © بيتلي
-      </div>
-    ))}
-  </div>
-);
-
-const CertificateModal = ({ cert, onClose }) => (
-  <AnimatePresence>
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-      onClick={onClose}>
-      <motion.div initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.85, opacity: 0 }}
-        transition={{ type: "spring", damping: 20 }}
-        className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-        onClick={e => e.stopPropagation()} dir="rtl">
-
-        <button onClick={onClose}
-          className="absolute top-4 left-4 z-10 w-9 h-9 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center transition-colors">
-          <X className="w-5 h-5" />
-        </button>
-
-        <div className="p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: cert.color + "20" }}>
-              <Shield className="w-4 h-4" style={{ color: cert.color }} />
-            </div>
-            <Badge style={{ backgroundColor: cert.color + "20", color: cert.color }} className="border-0">
-              {cert.category}
-            </Badge>
-            <Badge className="bg-green-100 text-green-700 border-0 mr-auto">{cert.status}</Badge>
-          </div>
-
-          <WatermarkedImage src={cert.image_url} alt={cert.title} />
-
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[
-              { icon: Hash, label: "رقم التسجيل", value: cert.reg_number },
-              { icon: Calendar, label: "تاريخ التسجيل", value: `${cert.hijri_date} / ${cert.gregorian_date}` },
-              { icon: FileText, label: "عنوان المصنف", value: cert.product_title },
-              { icon: Building2, label: "نوع المصنف", value: cert.product_type },
-              { icon: User, label: "المؤلف", value: cert.authors.join("، ") },
-              { icon: User, label: "صاحب الحق", value: cert.rights_holders.join("، ") },
-            ].map(row => (
-              <div key={row.label} className="bg-slate-50 rounded-xl p-3">
-                <div className="flex items-center gap-2 mb-1">
-                  <row.icon className="w-4 h-4 text-slate-400" />
-                  <span className="text-xs text-slate-400">{row.label}</span>
-                </div>
-                <p className="text-sm font-semibold text-slate-800">{row.value}</p>
-              </div>
-            ))}
-          </div>
-
-          <p className="text-xs text-slate-400 text-center mt-4">
-            جميع حقوق الملكية الفكرية محفوظة لـ Bytly — لمسة بيت © {new Date().getFullYear()}
-          </p>
-        </div>
-      </motion.div>
-    </motion.div>
-  </AnimatePresence>
-);
-
-const CertCard = ({ cert, onClick }) => (
+const CertCard = ({ cert }) => (
   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
     whileHover={{ y: -4 }} transition={{ duration: 0.3 }}
-    className="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all overflow-hidden cursor-pointer"
-    onClick={onClick}>
+    className="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all overflow-hidden">
 
     {/* Top accent */}
     <div className="h-1.5 w-full" style={{ backgroundColor: cert.color }} />
-
-    {/* Image preview */}
-    <div className="relative overflow-hidden bg-slate-50 h-52">
-      <img src={cert.image_url} alt={cert.title}
-        className="w-full h-full object-contain p-3 pointer-events-none group-hover:scale-105 transition-transform duration-500"
-        draggable={false} onContextMenu={e => e.preventDefault()} />
-      {/* Watermark overlay on card too */}
-      <div className="absolute inset-0 pointer-events-none select-none flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="bg-black/40 rounded-lg px-4 py-2 flex items-center gap-2 text-white text-sm">
-          <ZoomIn className="w-4 h-4" />
-          عرض الشهادة
-        </div>
-      </div>
-      <div className="absolute top-2 right-2">
-        <Badge className="bg-green-100 text-green-700 border-0 text-xs">{cert.status}</Badge>
-      </div>
-    </div>
 
     <div className="p-5" dir="rtl">
       <div className="flex items-start justify-between gap-2 mb-3">
@@ -141,18 +43,13 @@ const CertCard = ({ cert, onClick }) => (
         </div>
       </div>
 
-      <div className="space-y-2 text-sm">
+      <div className="bg-slate-50 rounded-xl p-3">
         <div className="flex items-center gap-2 text-slate-600">
-          <Hash className="w-3.5 h-3.5 text-slate-400" />
-          <span className="font-mono text-xs">{cert.reg_number}</span>
-        </div>
-        <div className="flex items-center gap-2 text-slate-600">
-          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-          <span className="text-xs">{cert.hijri_date}</span>
-        </div>
-        <div className="flex items-center gap-2 text-slate-600">
-          <User className="w-3.5 h-3.5 text-slate-400" />
-          <span className="text-xs">{cert.authors[0]}</span>
+          <Hash className="w-4 h-4 text-slate-400" />
+          <div>
+            <p className="text-xs text-slate-400 mb-0.5">رقم التسجيل</p>
+            <span className="font-mono text-sm font-semibold text-[#1a1a2e]">{cert.reg_number}</span>
+          </div>
         </div>
       </div>
 
@@ -160,18 +57,13 @@ const CertCard = ({ cert, onClick }) => (
         <Badge style={{ backgroundColor: cert.color + "15", color: cert.color }} className="border-0 text-xs">
           {cert.category}
         </Badge>
-        <span className="text-xs text-slate-400 flex items-center gap-1">
-          <ZoomIn className="w-3 h-3" />
-          انقر للتكبير
-        </span>
+        <Badge className="bg-green-100 text-green-700 border-0 text-xs">{cert.status}</Badge>
       </div>
     </div>
   </motion.div>
 );
 
 export default function Certificates() {
-  const [selected, setSelected] = useState(null);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30" dir="rtl">
       {/* Hero */}
@@ -213,7 +105,7 @@ export default function Certificates() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {CERTIFICATES.map(cert => (
-            <CertCard key={cert.id} cert={cert} onClick={() => setSelected(cert)} />
+            <CertCard key={cert.id} cert={cert} />
           ))}
 
           {/* Upcoming licenses */}
@@ -257,7 +149,6 @@ export default function Certificates() {
         </motion.div>
       </div>
 
-      {selected && <CertificateModal cert={selected} onClose={() => setSelected(null)} />}
     </div>
   );
 }
