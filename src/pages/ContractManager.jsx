@@ -8,10 +8,11 @@ import {
   ChevronDown, ChevronUp, Search, Plus, Eye, Download,
   PenLine, AlertTriangle, RefreshCw, FileCheck, Building2,
   FileBadge, User, CalendarDays, Banknote, Hash, ArrowLeft,
-  ClipboardList, CloudUpload, ExternalLink
+  ClipboardList, CloudUpload, ExternalLink, Sparkles
 } from "lucide-react";
 import moment from "moment";
 import SignaturePadModal from "@/components/contracts/SignaturePadModal";
+import SmartContractWizard from "@/components/contracts/SmartContractWizard";
 
 // ─── حالات العقد ─────────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -589,6 +590,7 @@ export default function ContractManager() {
   const [showForm, setShowForm] = useState(false);
   const [editContract, setEditContract] = useState(null);
   const [detailContract, setDetailContract] = useState(null);
+  const [showSmartWizard, setShowSmartWizard] = useState(false);
 
   useEffect(() => { loadData(); }, []);
 
@@ -647,6 +649,10 @@ export default function ContractManager() {
                 className="flex items-center gap-1.5 px-4 py-2 border border-white/20 text-white text-sm rounded-lg hover:bg-white/10 transition-colors">
                 <Shield className="w-4 h-4" /> سجل الامتثال
               </Link>
+              <Button onClick={() => setShowSmartWizard(true)}
+                className="bg-white/15 hover:bg-white/25 text-white gap-2 border border-white/20">
+                <Sparkles className="w-4 h-4" /> المسار الذكي
+              </Button>
               <Button onClick={() => { setEditContract(null); setShowForm(true); }}
                 className="bg-[#C9A66B] hover:bg-[#b8945a] text-white gap-2">
                 <Plus className="w-4 h-4" /> عقد جديد
@@ -810,6 +816,18 @@ export default function ContractManager() {
               });
             });
           }}
+        />
+      )}
+
+      {showSmartWizard && (
+        <SmartContractWizard
+          projects={projects}
+          onContractCreated={(contract) => {
+            setShowSmartWizard(false);
+            loadData();
+            setDetailContract(contract);
+          }}
+          onClose={() => setShowSmartWizard(false)}
         />
       )}
     </div>
