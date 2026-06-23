@@ -49,6 +49,7 @@ const ProjectProposals         = React.lazy(() => import('./pages/ProjectProposa
 const DataClassification       = React.lazy(() => import('./pages/DataClassification'));
 const SurveyClientDashboard    = React.lazy(() => import('./pages/SurveyClientDashboard'));
 const SurveyorGigs             = React.lazy(() => import('./pages/SurveyorGigs'));
+const SBCProgressDashboard     = React.lazy(() => import('./pages/SBCProgressDashboard'));
 
 // ── Page-level spinner fallback ───────────────────────────────────────────────
 function PageSpinner() {
@@ -116,6 +117,7 @@ const AuthenticatedApp = () => {
       ))}
 
       {/* ── Public explicit lazy routes ─────────────────────────────── */}
+      <Route path="/SBCProgressDashboard"       element={lazyRoute(SBCProgressDashboard, "SBCProgressDashboard")} />
       <Route path="/CostEstimator"              element={lazyRoute(CostEstimator, "CostEstimator")} />
       <Route path="/ConstructionTracker"        element={lazyRoute(ConstructionTracker, "ConstructionTracker")} />
       <Route path="/TechnicalResources"         element={lazyRoute(TechnicalResources, "TechnicalResources")} />
