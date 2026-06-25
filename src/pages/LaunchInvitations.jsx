@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Send, Users, CheckCircle, XCircle, Loader2, Rocket } from "lucide-react";
+import { Mail, Send, Users, CheckCircle, XCircle, Loader2, Rocket, UploadCloud, FileSpreadsheet } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 
 export default function LaunchInvitations() {
@@ -21,6 +21,78 @@ export default function LaunchInvitations() {
   );
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null);
+  const [csvPreview, setCsvPreview] = useState([]);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const parseCSV = (text) => {
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length === 0) return [];
+    const splitLine = (line) => {
+      const cells = [];
+      let cur = "";
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') { inQuotes = !inQuotes; continue; }
+        if (ch === "," && !inQuotes) { cells.push(cur.trim()); cur = ""; continue; }
+        cur += ch;
+      }
+      cells.push(cur.trim());
+      return cells;
+    };
+    const header = splitLine(lines[0]).map(h => h.toLowerCase());
+    const emailIdx = header.findIndex(h => h.includes("email") || h.includes("بريد") || h.includes("e-mail"));
+    const nameIdx = header.findIndex(h => h.includes("name") || h.includes("اسم") || h.includes("first"));
+    const phoneIdx = header.findIndex(h => h.includes("phone") || h.includes("هاتف") || h.includes("mobile"));
+    const hasHeader = emailIdx >= 0;
+    const rows = hasHeader ? lines.slice(1) : lines;
+    return rows.map(line => {
+      const cells = splitLine(line);
+      const email = hasHeader ? cells[emailIdx] : cells.find(c => c.includes("@"));
+      const name = hasHeader && nameIdx >= 0 ? cells[nameIdx] : (email ? email.split("@")[0] : "");
+      const phone = hasHeader && phoneIdx >= 0 ? cells[phoneIdx] : "";
+      return { name: name || "", email: email || "", phone: phone || "" };
+    }).filter(r => r.email && r.email.includes("@"));
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportResult(null);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const contacts = parseCSV(ev.target.result);
+      setCsvPreview(contacts);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleImport = async () => {
+    if (csvPreview.length === 0) return;
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const leads = csvPreview.map(c => ({
+        name: c.name || c.email.split("@")[0],
+        email: c.email,
+        phone: c.phone || undefined,
+        source: "linkedin",
+        status: "new",
+        notes: "مستورد من ملف CSV لدعوة الإطلاق التجريبي"
+      }));
+      const created = await base44.entities.Lead.bulkCreate(leads);
+      const emails = csvPreview.map(c => c.email);
+      setSelectedEmails(prev => [...new Set([...prev, ...emails])]);
+      setImportResult({ success: true, count: Array.isArray(created) ? created.length : csvPreview.length });
+      setCsvPreview([]);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    } catch (err) {
+      setImportResult({ error: err.message });
+    }
+    setImporting(false);
+  };
 
   useEffect(() => {
     const loadRespondents = async () => {
@@ -142,6 +214,71 @@ export default function LaunchInvitations() {
                   </div>
                 )
             }
+          </CardContent>
+        </Card>
+
+        {/* CSV Import from LinkedIn */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold text-[#4A3F35] flex items-center gap-2">
+              <FileSpreadsheet className="w-4 h-4" />
+              استيراد جهات اتصال من ملف CSV (LinkedIn)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-xs text-slate-500 leading-relaxed">
+              صدّر جهات اتصالك من LinkedIn عبر: الإعدادات ← الخصوصية ← تصدير بيانات LinkedIn، ثم ارفع الملف هنا.
+              سيتم استيرادها كعملاء محتملين وإضافتها تلقائياً لقائمة المستلمين.
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            <Button
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full border-dashed border-2 border-[#C9A66B]/40 hover:border-[#C9A66B] hover:bg-amber-50/50"
+            >
+              <UploadCloud className="w-4 h-4 ml-2" />
+              اختيار ملف CSV
+            </Button>
+
+            {csvPreview.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-slate-500">{csvPreview.length} جهة اتصال في الملف</span>
+                  <Button size="sm" onClick={handleImport} disabled={importing}
+                    className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white">
+                    {importing
+                      ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> جارٍ الاستيراد...</>
+                      : "استيراد وإضافة للقائمة"}
+                  </Button>
+                </div>
+                <div className="max-h-40 overflow-y-auto rounded-lg border border-slate-100 divide-y divide-slate-50">
+                  {csvPreview.slice(0, 50).map((c, i) => (
+                    <div key={i} className="flex items-center justify-between px-3 py-1.5 text-xs">
+                      <span className="font-medium text-[#4A3F35] truncate">{c.name || c.email}</span>
+                      <span className="text-slate-400 truncate">{c.email}</span>
+                    </div>
+                  ))}
+                  {csvPreview.length > 50 && (
+                    <div className="px-3 py-1.5 text-xs text-slate-400 text-center">+{csvPreview.length - 50} أخرى</div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {importResult && (
+              <div className={`flex items-center gap-2 text-sm p-2 rounded-lg ${importResult.error ? "bg-red-50 text-red-600" : "bg-green-50 text-green-600"}`}>
+                {importResult.error
+                  ? <><XCircle className="w-4 h-4" /> {importResult.error}</>
+                  : <><CheckCircle className="w-4 h-4" /> تم استيراد {importResult.count} عميل محتمل وإضافتهم للقائمة</>
+                }
+              </div>
+            )}
           </CardContent>
         </Card>
 
