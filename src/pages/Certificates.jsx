@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Shield, Award, Hash } from "lucide-react";
+import { Shield, Award, Hash, Rocket } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const CERTIFICATES = [
@@ -91,6 +91,21 @@ export default function Certificates() {
             <span className="flex items-center gap-1"><Shield className="w-3 h-3 text-[#d4a574]" /> موثقة رسمياً</span>
             <span className="flex items-center gap-1"><Award className="w-3 h-3 text-[#d4a574]" /> محمية بحقوق الملكية</span>
           </div>
+
+          {/* Beta Launch Badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mt-8 inline-flex items-center gap-2 bg-gradient-to-r from-[#d4a574] to-[#e5c995] rounded-full px-5 py-2.5 shadow-lg shadow-[#d4a574]/30"
+          >
+            <Rocket className="w-4 h-4 text-[#1a1a2e]" />
+            <span className="text-[#1a1a2e] text-sm font-bold">المنصة في مرحلة الإطلاق التجريبي</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#1a1a2e] animate-pulse" />
+          </motion.div>
+          <p className="text-white/50 text-xs mt-2 max-w-md mx-auto">
+            نحن في مرحلة الإطلاق التجريبي — نجمع ملاحظاتكم لتحسين الخدمة قبل الإطلاق الرسمي
+          </p>
         </motion.div>
       </div>
 
