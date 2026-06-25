@@ -138,16 +138,10 @@
     "read": {
       "$or": [
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.client_email": "{{user.email}}"
-        },
-        {
-          "data.engineer_id": "{{user.id}}"
-        },
-        {
-          "data.project_id": {
-            "_filter": "Project",
-            "read": true
-          }
         },
         {
           "user_condition": {
@@ -165,27 +159,6 @@
           "user_condition": {
             "role": "admin"
           }
-        },
-        {
-          "$and": [
-            {
-              "data.client_email": "{{user.email}}"
-            },
-            {
-              "$or": [
-                {
-                  "status": {
-                    "$eq": "paid"
-                  }
-                },
-                {
-                  "status": {
-                    "$eq": "cancelled"
-                  }
-                }
-              ]
-            }
-          ]
         }
       ]
     },

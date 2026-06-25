@@ -143,6 +143,9 @@
           "user_condition": {
             "role": "admin"
           }
+        },
+        {
+          "created_by": "{{user.email}}"
         }
       ]
     },
