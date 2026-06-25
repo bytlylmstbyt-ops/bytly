@@ -18,7 +18,10 @@ import ProfessionalWelcomeSlides from "@/components/onboarding/ProfessionalWelco
 import FirmWelcomeSlides from "@/components/onboarding/FirmWelcomeSlides";
 import CorePillarsSection from "@/components/home/CorePillarsSection";
 import HowItWorksSection from "@/components/home/HowItWorksSection";
+import PreLaunchSurveyModal from "@/components/survey/PreLaunchSurveyModal";
 import { useLanguage } from "@/components/i18n/LanguageContext";
+import { ClipboardList } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 export default function Home() {
   const { t } = useLanguage();
@@ -28,11 +31,23 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
   const [userType, setUserType] = useState(null);
+  const [showSurvey, setShowSurvey] = useState(false);
 
   useEffect(() => {
     loadData();
     checkUserAndWelcome();
+
+    const surveySeen = localStorage.getItem("bytly_survey_seen");
+    if (!surveySeen) {
+      const timer = setTimeout(() => setShowSurvey(true), 8000);
+      return () => clearTimeout(timer);
+    }
   }, []);
+
+  const handleSurveyClose = () => {
+    localStorage.setItem("bytly_survey_seen", "true");
+    setShowSurvey(false);
+  };
 
   const checkUserAndWelcome = async () => {
     try {
@@ -473,6 +488,30 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Pre-launch Survey CTA */}
+      <section className="py-12 bg-gradient-to-br from-slate-50 to-amber-50/50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-3xl bg-white border-2 border-[#C9A66B]/20 p-8 md:p-10 text-center shadow-lg">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] flex items-center justify-center mb-4">
+              <ClipboardList className="w-7 h-7 text-white" />
+            </div>
+            <h3 className="text-xl md:text-2xl font-bold text-[#1a1a2e] mb-2">
+              {t('survey.ctaTitle')}
+            </h3>
+            <p className="text-slate-600 mb-6">
+              {t('survey.ctaSubtitle')}
+            </p>
+            <Button
+              onClick={() => setShowSurvey(true)}
+              className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white px-8 py-3"
+            >
+              <ClipboardList className="w-4 h-4" />
+              {t('survey.ctaButton')}
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* Core Pillars */}
       <CorePillarsSection />
 
@@ -480,6 +519,13 @@ export default function Home() {
       <HowItWorksSection />
 
 
+
+      {/* Pre-launch Survey Modal */}
+      <PreLaunchSurveyModal
+        open={showSurvey}
+        onClose={handleSurveyClose}
+        sourcePage="home"
+      />
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-[#d4a574] to-[#c9a227]">

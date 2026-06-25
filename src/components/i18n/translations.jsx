@@ -690,6 +690,61 @@ export const translations = {
         acceptProposal: "قبول العرض",
         attachments: "المرفقات ({count})"
       }
+    },
+    survey: {
+      title: "ساعدنا نفهمك أفضل",
+      subtitle: "نحن في مرحلة الإطلاق التجريبي - رأيك يصنع الفرق",
+      userRoleQuestion: "من أنت؟",
+      primaryNeedQuestion: "ما الخدمة التي تحتاجها أكثر؟",
+      biggestChallengeQuestion: "ما أكبر تحدٍ تواجهه في مشاريعك الهندسية؟",
+      biggestChallengePlaceholder: "مثال: صعوبة إيجاد مهندس موثوق، غموض الأسعار، تأخر التسليم...",
+      platformInterestQuestion: "هل ستستخدم منصة بيتلي عند إطلاقها؟",
+      conceptRatingQuestion: "كيف تقيم فكرة المنصة؟",
+      willingToPayQuestion: "هل أنت مستعد للدفع مقابل هذه الخدمات؟",
+      additionalCommentsQuestion: "أي ملاحظات إضافية تود مشاركتها؟",
+      additionalCommentsPlaceholder: "شاركنا أفكارك أو اقتراحاتك...",
+      nameLabel: "الاسم (اختياري)",
+      namePlaceholder: "اسمك",
+      emailLabel: "البريد (اختياري)",
+      emailPlaceholder: "بريدك الإلكتروني",
+      privacyNote: "بياناتك آمنة ولن تُشارك مع أي طرف ثالث. نستخدمها فقط لتطوير المنصة.",
+      next: "التالي",
+      back: "السابق",
+      submit: "إرسال",
+      requiredFieldsError: "يرجى إكمال الحقول المطلوبة",
+      submitError: "حدث خطأ، يرجى المحاولة مرة أخرى",
+      thankYouMessage: "شكراً لك! ملاحظاتك ستساعدنا في بناء منصة أفضل.",
+      roles: {
+        homeowner: "صاحب منزل",
+        investor: "مستثمر عقاري",
+        engineer: "مهندس / مصمم",
+        contractor: "مقاول",
+        other: "أخرى"
+      },
+      needs: {
+        interior_design: "تصميم داخلي",
+        architecture: "عمارة وتصميم خارجي",
+        civil_engineering: "هندسة مدنية وإنشائية",
+        surveying: "رفع مساحي وكروكي",
+        building_permit: "استخراج رخصة بناء",
+        construction_tracking: "متابعة البناء",
+        other: "خدمات أخرى"
+      },
+      interest: {
+        very_interested: "بالتأكيد، بانتظار الإطلاق!",
+        interested: "نعم، مهتم",
+        maybe: "ربما، أحتاج معرفة المزيد",
+        not_interested: "لا، لست مهتماً"
+      },
+      payment: {
+        yes: "نعم، مستعد للدفع",
+        after_trial: "بعد فترة تجريبية مجانية",
+        depends: "يعتمد على الأسعار والجودة",
+        no: "لا أفضّل الدفع"
+      },
+      ctaTitle: "شاركنا رأيك",
+      ctaButton: "ابدأ الاستطلاع",
+      ctaSubtitle: "دقيقتان فقط تساعداننا في بناء منصة تخدم احتياجاتك"
     }
   },
   en: {
@@ -1383,6 +1438,61 @@ export const translations = {
         acceptProposal: "Accept Proposal",
         attachments: "Attachments ({count})"
       }
+    },
+    survey: {
+      title: "Help Us Understand You",
+      subtitle: "We're in beta — your feedback shapes the platform",
+      userRoleQuestion: "Who are you?",
+      primaryNeedQuestion: "Which service do you need most?",
+      biggestChallengeQuestion: "What's your biggest challenge with engineering projects?",
+      biggestChallengePlaceholder: "e.g. Finding a trusted engineer, unclear pricing, delays...",
+      platformInterestQuestion: "Would you use Bytly when it launches?",
+      conceptRatingQuestion: "How do you rate the platform concept?",
+      willingToPayQuestion: "Are you willing to pay for these services?",
+      additionalCommentsQuestion: "Any additional comments?",
+      additionalCommentsPlaceholder: "Share your thoughts or suggestions...",
+      nameLabel: "Name (optional)",
+      namePlaceholder: "Your name",
+      emailLabel: "Email (optional)",
+      emailPlaceholder: "Your email",
+      privacyNote: "Your data is safe and never shared. We use it only to improve the platform.",
+      next: "Next",
+      back: "Back",
+      submit: "Submit",
+      requiredFieldsError: "Please complete the required fields",
+      submitError: "Something went wrong, please try again",
+      thankYouMessage: "Thank you! Your feedback helps us build a better platform.",
+      roles: {
+        homeowner: "Homeowner",
+        investor: "Real Estate Investor",
+        engineer: "Engineer / Designer",
+        contractor: "Contractor",
+        other: "Other"
+      },
+      needs: {
+        interior_design: "Interior Design",
+        architecture: "Architecture & Exterior",
+        civil_engineering: "Civil & Structural Engineering",
+        surveying: "Surveying & Site Plans",
+        building_permit: "Building Permit",
+        construction_tracking: "Construction Tracking",
+        other: "Other Services"
+      },
+      interest: {
+        very_interested: "Definitely, waiting for launch!",
+        interested: "Yes, interested",
+        maybe: "Maybe, need to know more",
+        not_interested: "No, not interested"
+      },
+      payment: {
+        yes: "Yes, willing to pay",
+        after_trial: "After a free trial",
+        depends: "Depends on pricing & quality",
+        no: "I'd rather not pay"
+      },
+      ctaTitle: "Share Your Feedback",
+      ctaButton: "Start Survey",
+      ctaSubtitle: "Two minutes that help us serve you better"
     }
   }
 };
