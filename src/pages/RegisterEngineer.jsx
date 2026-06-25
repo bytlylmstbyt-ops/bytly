@@ -70,6 +70,16 @@ export default function RegisterEngineer() {
       subscription_type: "none"
     });
 
+    base44.analytics.track({
+      eventName: "engineer_profile_created",
+      properties: {
+        user_type: formData.user_type,
+        specialization: formData.specialization,
+        city: formData.city,
+        country: formData.country
+      }
+    });
+
     setIsLoading(false);
     navigate(createPageUrl("RegistrationSuccess"));
   };
