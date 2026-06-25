@@ -745,6 +745,19 @@ export const translations = {
       ctaTitle: "شاركنا رأيك",
       ctaButton: "ابدأ الاستطلاع",
       ctaSubtitle: "دقيقتان فقط تساعداننا في بناء منصة تخدم احتياجاتك"
+    },
+    launchDashboard: {
+      title: "لوحة قياس الإطلاق التجريبي",
+      subtitle: "مؤشرات حية لنجاح الإطلاق التجريبي لمنصة بيتلي",
+      lastUpdate: "آخر تحديث",
+      refresh: "تحديث",
+      recentEngineers: "أحدث المهندسين المسجلين",
+      recentProjects: "أحدث المشاريع المطروحة",
+      noEngineers: "لا يوجد مهندسون مسجلون بعد",
+      noProjects: "لا توجد مشاريع مطروحة بعد",
+      statusApproved: "معتمد",
+      statusPending: "بانتظار المراجعة",
+      footerNote: "بيانات حية من قاعدة بيانات بيتلي"
     }
   },
   en: {
@@ -1493,6 +1506,19 @@ export const translations = {
       ctaTitle: "Share Your Feedback",
       ctaButton: "Start Survey",
       ctaSubtitle: "Two minutes that help us serve you better"
+    },
+    launchDashboard: {
+      title: "Soft Launch Metrics",
+      subtitle: "Live indicators for Bytly's soft launch success",
+      lastUpdate: "Last update",
+      refresh: "Refresh",
+      recentEngineers: "Latest Registered Engineers",
+      recentProjects: "Latest Listed Projects",
+      noEngineers: "No engineers registered yet",
+      noProjects: "No projects listed yet",
+      statusApproved: "Approved",
+      statusPending: "Pending Review",
+      footerNote: "Live data from Bytly's database"
     }
   }
 };
