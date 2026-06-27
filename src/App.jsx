@@ -53,6 +53,7 @@ const SBCProgressDashboard     = React.lazy(() => import('./pages/SBCProgressDas
 const LaunchDashboard          = React.lazy(() => import('./pages/LaunchDashboard'));
 const LaunchInvitations        = React.lazy(() => import('./pages/LaunchInvitations'));
 const PendingApprovals         = React.lazy(() => import('./pages/PendingApprovals'));
+const LaunchPerformanceDashboard = React.lazy(() => import('./pages/LaunchPerformanceDashboard'));
 
 // ── Page-level spinner fallback ───────────────────────────────────────────────
 function PageSpinner() {
@@ -124,6 +125,7 @@ const AuthenticatedApp = () => {
       <Route path="/LaunchDashboard"            element={lazyRoute(LaunchDashboard, "LaunchDashboard")} />
       <Route path="/LaunchInvitations"           element={lazyRoute(LaunchInvitations, "LaunchInvitations")} />
       <Route path="/PendingApprovals"            element={lazyRoute(PendingApprovals, "PendingApprovals")} />
+      <Route path="/LaunchPerformanceDashboard" element={lazyRoute(LaunchPerformanceDashboard, "LaunchPerformanceDashboard")} />
       <Route path="/CostEstimator"              element={lazyRoute(CostEstimator, "CostEstimator")} />
       <Route path="/ConstructionTracker"        element={lazyRoute(ConstructionTracker, "ConstructionTracker")} />
       <Route path="/TechnicalResources"         element={lazyRoute(TechnicalResources, "TechnicalResources")} />

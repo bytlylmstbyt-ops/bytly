@@ -564,6 +564,17 @@ export default function Dashboard() {
                       </CardContent>
                     </Card>
                   </Link>
+                  <Link to="/LaunchPerformanceDashboard">
+                    <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-orange-200 hover:border-orange-400">
+                      <CardContent className="p-6 text-center">
+                        <div className="w-16 h-16 mx-auto bg-orange-100 rounded-full flex items-center justify-center mb-4">
+                          <TrendingUp className="w-8 h-8 text-orange-600" />
+                        </div>
+                        <h3 className="font-bold text-lg mb-2">أداء الإطلاق التجريبي</h3>
+                        <p className="text-sm text-slate-600">رسوم بيانية حية لنمو المهندسين والمشاريع</p>
+                      </CardContent>
+                    </Card>
+                  </Link>
                 </div>
 
                 {/* Management Section */}
