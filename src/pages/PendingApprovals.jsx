@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, CheckCircle, XCircle, Clock, User, Building2, MapPin, Mail, Phone, Briefcase } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Clock, User, Building2, MapPin, Mail, Phone, Briefcase, FileSpreadsheet } from "lucide-react";
 import { motion } from "framer-motion";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 
@@ -11,6 +11,9 @@ export default function PendingApprovals() {
   const { isRTL } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState([]);
+  const [sheetPending, setSheetPending] = useState([]);
+  const [sheetLoading, setSheetLoading] = useState(true);
+  const [sheetError, setSheetError] = useState(null);
   const [acting, setActing] = useState(null);
   const [error, setError] = useState(null);
 
@@ -81,7 +84,36 @@ export default function PendingApprovals() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  const loadSheetData = useCallback(async () => {
+    setSheetLoading(true);
+    setSheetError(null);
+    try {
+      const res = await base44.functions.invoke("fetchPendingRegistrations", {});
+      setSheetPending(res.data?.pending || []);
+      if (res.data?.message) setSheetError(res.data.message);
+    } catch (err) {
+      setSheetError("تعذّر تحميل بيانات Google Sheets");
+    }
+    setSheetLoading(false);
+  }, []);
+
+  useEffect(() => { loadData(); loadSheetData(); }, [loadData, loadSheetData]);
+
+  const handleSheetAction = async (item, action) => {
+    setActing(`sheet-${item.row_number}-${action}`);
+    try {
+      await base44.functions.invoke("updateSheetRegistrationStatus", {
+        row_number: item.row_number,
+        status: action,
+        email: item.email,
+        spreadsheet_id: sheetPending.length > 0 ? undefined : undefined,
+      });
+      setSheetPending(prev => prev.filter(p => p.row_number !== item.row_number));
+    } catch (err) {
+      alert("حدث خطأ في التحديث");
+    }
+    setActing(null);
+  };
 
   const entityMap = {
     engineer: "Engineer",
@@ -153,12 +185,77 @@ export default function PendingApprovals() {
           </div>
         </motion.div>
 
-        {/* List */}
+        {/* Google Sheets Registrations */}
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <FileSpreadsheet className="w-5 h-5 text-green-600" />
+              <h2 className="text-base font-bold text-[#4A3F35]">تسجيلات Google Sheets</h2>
+              {sheetPending.length > 0 && (
+                <Badge className="bg-green-100 text-green-800">{sheetPending.length}</Badge>
+              )}
+            </div>
+            {sheetLoading ? (
+              <div className="h-16 bg-slate-100 rounded-lg animate-pulse" />
+            ) : sheetPending.length === 0 ? (
+              <p className="text-sm text-slate-400 text-center py-4">
+                {sheetError || "لا توجد تسجيلات معلقة في الجدول"}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {sheetPending.map((item, index) => (
+                  <motion.div
+                    key={`sheet-${item.row_number}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.04 }}
+                    className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border border-slate-100 hover:bg-slate-50"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-bold text-[#1a1a2e]">{item.full_name}</span>
+                        <Badge variant="outline" className="text-xs">{item.user_type}</Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-slate-500">
+                        <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{item.email}</span>
+                        {item.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{item.phone}</span>}
+                        {item.city && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{item.city}</span>}
+                        {item.specialization && <span className="flex items-center gap-1"><Briefcase className="w-3 h-3" />{item.specialization}</span>}
+                      </div>
+                    </div>
+                    <div className="flex gap-1.5 shrink-0">
+                      <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white h-8 px-3"
+                        disabled={acting === `sheet-${item.row_number}-approved`}
+                        onClick={() => handleSheetAction(item, "approved")}>
+                        {acting === `sheet-${item.row_number}-approved`
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : <CheckCircle className="w-3.5 h-3.5" />}
+                      </Button>
+                      <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 h-8 px-3"
+                        disabled={acting === `sheet-${item.row_number}-rejected`}
+                        onClick={() => handleSheetAction(item, "rejected")}>
+                        {acting === `sheet-${item.row_number}-rejected`
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : <XCircle className="w-3.5 h-3.5" />}
+                      </Button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Entity List */}
+        <div className="flex items-center gap-2 pt-2">
+          <User className="w-5 h-5 text-[#C9A66B]" />
+          <h2 className="text-base font-bold text-[#4A3F35]">طلابات قاعدة البيانات</h2>
+        </div>
         {pending.length === 0 ? (
           <Card>
-            <CardContent className="p-12 text-center">
-              <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
-              <p className="text-slate-500">لا توجد طلبات انضمام معلقة</p>
+            <CardContent className="p-8 text-center">
+              <CheckCircle className="w-10 h-10 text-green-500 mx-auto mb-2" />
+              <p className="text-sm text-slate-500">لا توجد طلبات معلقة في قاعدة البيانات</p>
             </CardContent>
           </Card>
         ) : (
