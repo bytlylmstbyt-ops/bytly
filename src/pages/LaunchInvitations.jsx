@@ -18,6 +18,7 @@ export default function LaunchInvitations() {
   const [selectedEmails, setSelectedEmails] = useState([]);
   const [manualEmails, setManualEmails] = useState("");
   const [randomCount, setRandomCount] = useState(10);
+  const [recipientNames, setRecipientNames] = useState({});
   const [subject, setSubject] = useState("🚀 انطلقت منصة بيتلي – كن من أوائل المهندسين المستخدمين!");
   const [body, setBody] = useState(
     `مرحباً بك،\n\nنحن متحمسون لإخبارك بأن منصة بيتلي – لمسة بيت قد أطلقت رسمياً في مرحلتها التجريبية!\n\nبيتلي هي أول منصة هندسية ذكية في المملكة العربية السعودية تربطك مباشرة بالعملاء الباحثين عن خبراتك الهندسية.\n\n✨ لماذا تنضم الآن؟\n- كن من أوائل المهندسين المعتمدين على المنصة\n- احصل على أولوية الظهور في نتائج البحث\n- أسعار خاصة للمستخدمين الأوائل\n- دعم مباشر من فريقنا\n- وصول مبكر للميزات الجديدة\n\nسجّل الدخول الآن وأكمل ملفك المهني:\nhttps://mybytly.com\n\nنتطلع لرؤيتك ضمن عائلة بيتلي!\n\nفريق بيتلي – لمسة بيت`
@@ -87,7 +88,10 @@ export default function LaunchInvitations() {
       }));
       const created = await base44.entities.Lead.bulkCreate(leads);
       const emails = csvPreview.map(c => c.email);
+      const names = {};
+      csvPreview.forEach(c => { if (c.name) names[c.email] = c.name; });
       setSelectedEmails(prev => [...new Set([...prev, ...emails])]);
+      setRecipientNames(prev => ({ ...prev, ...names }));
       setImportResult({ success: true, count: Array.isArray(created) ? created.length : csvPreview.length });
       setCsvPreview([]);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -120,25 +124,39 @@ export default function LaunchInvitations() {
     const pool = engineers.filter(e => e.email);
     const shuffled = [...pool].sort(() => Math.random() - 0.5);
     const count = Math.min(randomCount, shuffled.length);
-    const randomPicks = shuffled.slice(0, count).map(e => e.email);
-    setSelectedEmails(prev => [...new Set([...prev, ...randomPicks])]);
+    const randomPicks = shuffled.slice(0, count);
+    const emails = randomPicks.map(e => e.email);
+    const names = {};
+    randomPicks.forEach(e => { names[e.email] = e.full_name; });
+    setSelectedEmails(prev => [...new Set([...prev, ...emails])]);
+    setRecipientNames(prev => ({ ...prev, ...names }));
   };
 
   const selectAllEngineers = () => {
-    setSelectedEmails(prev => [...new Set([...prev, ...engineers.map(e => e.email)])]);
+    const emails = engineers.map(e => e.email);
+    const names = {};
+    engineers.forEach(e => { names[e.email] = e.full_name; });
+    setSelectedEmails(prev => [...new Set([...prev, ...emails])]);
+    setRecipientNames(prev => ({ ...prev, ...names }));
   };
 
-  const toggleEmail = (email) => {
+  const toggleEmail = (email, name) => {
     setSelectedEmails(prev =>
       prev.includes(email) ? prev.filter(e => e !== email) : [...prev, email]
     );
+    if (name) {
+      setRecipientNames(prev => ({ ...prev, [email]: name }));
+    }
   };
 
   const selectAllInterested = () => {
     const interested = surveyRespondents
-      .filter(r => r.platform_interest === "very_interested" || r.platform_interest === "interested")
-      .map(r => r.respondent_email);
-    setSelectedEmails(interested);
+      .filter(r => r.platform_interest === "very_interested" || r.platform_interest === "interested");
+    const emails = interested.map(r => r.respondent_email);
+    const names = {};
+    interested.forEach(r => { if (r.respondent_name) names[r.respondent_email] = r.respondent_name; });
+    setSelectedEmails(emails);
+    setRecipientNames(names);
   };
 
   const allRecipients = () => {
@@ -146,7 +164,8 @@ export default function LaunchInvitations() {
       .split(/[\n,;]/)
       .map(e => e.trim())
       .filter(e => e && e.includes("@"));
-    return [...new Set([...selectedEmails, ...manual])];
+    const allEmails = [...new Set([...selectedEmails, ...manual])];
+    return allEmails.map(email => ({ email, name: recipientNames[email] || "" }));
   };
 
   const handleSend = async () => {
@@ -161,8 +180,7 @@ export default function LaunchInvitations() {
       const res = await base44.functions.invoke("sendLaunchInvitation", {
         recipients,
         subject,
-        body,
-        from_name: "بيتلي - لمسة بيت"
+        body
       });
       setResult(res.data);
     } catch (err) {
@@ -212,7 +230,7 @@ export default function LaunchInvitations() {
                         <input
                           type="checkbox"
                           checked={selectedEmails.includes(r.respondent_email)}
-                          onChange={() => toggleEmail(r.respondent_email)}
+                          onChange={() => toggleEmail(r.respondent_email, r.respondent_name)}
                           className="w-4 h-4 accent-[#C9A66B]"
                         />
                         <div className="flex-1 min-w-0">
@@ -277,7 +295,7 @@ export default function LaunchInvitations() {
                         <input
                           type="checkbox"
                           checked={selectedEmails.includes(eng.email)}
-                          onChange={() => toggleEmail(eng.email)}
+                          onChange={() => toggleEmail(eng.email, eng.full_name)}
                           className="w-4 h-4 accent-[#C9A66B]"
                         />
                         <Avatar className="w-8 h-8 shrink-0">
