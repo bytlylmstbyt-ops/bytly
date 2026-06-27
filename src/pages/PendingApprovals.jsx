@@ -14,6 +14,7 @@ export default function PendingApprovals() {
   const [sheetPending, setSheetPending] = useState([]);
   const [sheetLoading, setSheetLoading] = useState(true);
   const [sheetError, setSheetError] = useState(null);
+  const [spreadsheetId, setSpreadsheetId] = useState(null);
   const [acting, setActing] = useState(null);
   const [error, setError] = useState(null);
 
@@ -90,7 +91,8 @@ export default function PendingApprovals() {
     try {
       const res = await base44.functions.invoke("fetchPendingRegistrations", {});
       setSheetPending(res.data?.pending || []);
-      if (res.data?.message) setSheetError(res.data.message);
+      setSpreadsheetId(res.data?.spreadsheet_id || null);
+      if (res.data?.message && (res.data?.pending || []).length === 0) setSheetError(res.data.message);
     } catch (err) {
       setSheetError("تعذّر تحميل بيانات Google Sheets");
     }
@@ -106,7 +108,7 @@ export default function PendingApprovals() {
         row_number: item.row_number,
         status: action,
         email: item.email,
-        spreadsheet_id: sheetPending.length > 0 ? undefined : undefined,
+        spreadsheet_id: spreadsheetId,
       });
       setSheetPending(prev => prev.filter(p => p.row_number !== item.row_number));
     } catch (err) {
