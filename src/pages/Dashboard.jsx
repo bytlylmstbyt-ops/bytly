@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import InvestorClientDashboard from "@/components/client/InvestorClientDashboard";
 import IndividualClientDashboard from "@/components/client/IndividualClientDashboard";
+import DailyFollowUpTasks from "@/components/dashboard/DailyFollowUpTasks";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import PullToRefreshWrapper from "@/components/mobile/PullToRefreshWrapper";
 
@@ -467,6 +468,13 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </motion.div>
+        )}
+
+        {/* Daily Follow-Up Tasks (Admin) */}
+        {isAdmin && (
+          <div className="mb-8">
+            <DailyFollowUpTasks />
+          </div>
         )}
 
         {/* Admin Quick Links */}
