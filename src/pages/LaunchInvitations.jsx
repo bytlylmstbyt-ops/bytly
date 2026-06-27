@@ -6,18 +6,21 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Send, Users, CheckCircle, XCircle, Loader2, Rocket, UploadCloud, FileSpreadsheet } from "lucide-react";
+import { Mail, Send, Users, CheckCircle, XCircle, Loader2, Rocket, UploadCloud, FileSpreadsheet, Shuffle, HardHat } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 
 export default function LaunchInvitations() {
   const { t, isRTL } = useLanguage();
   const [surveyRespondents, setSurveyRespondents] = useState([]);
+  const [engineers, setEngineers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedEmails, setSelectedEmails] = useState([]);
   const [manualEmails, setManualEmails] = useState("");
-  const [subject, setSubject] = useState("🚀 انطلقت منصة بيتلي – كن من أوائل المستخدمين!");
+  const [randomCount, setRandomCount] = useState(10);
+  const [subject, setSubject] = useState("🚀 انطلقت منصة بيتلي – كن من أوائل المهندسين المستخدمين!");
   const [body, setBody] = useState(
-    `مرحباً بك،\n\nنحن متحمسون لإخبارك بأن منصة بيتلي – لمسة بيت قد أطلقت رسمياً في مرحلتها التجريبية!\n\nبيتلي هي أول منصة هندسية ذكية في المملكة العربية السعودية تربطك مباشرة بالمهندسين والمعماريين والرسامين المؤهلين لتحويل رؤيتك إلى واقع.\n\n✨ لماذا تنضم الآن؟\n- أسعار خاصة للمستخدمين الأوائل\n- وصول مبكر للميزات الجديدة\n- دعم مباشر من فريقنا\n\nسجّل الآن مجاناً وكن جزءاً من رحلتنا:\nhttps://mybytly.com\n\nنتطلع لرؤيتك ضمن عائلة بيتلي!\n\nفريق بيتلي – لمسة بيت`
+    `مرحباً بك،\n\nنحن متحمسون لإخبارك بأن منصة بيتلي – لمسة بيت قد أطلقت رسمياً في مرحلتها التجريبية!\n\nبيتلي هي أول منصة هندسية ذكية في المملكة العربية السعودية تربطك مباشرة بالعملاء الباحثين عن خبراتك الهندسية.\n\n✨ لماذا تنضم الآن؟\n- كن من أوائل المهندسين المعتمدين على المنصة\n- احصل على أولوية الظهور في نتائج البحث\n- أسعار خاصة للمستخدمين الأوائل\n- دعم مباشر من فريقنا\n- وصول مبكر للميزات الجديدة\n\nسجّل الدخول الآن وأكمل ملفك المهني:\nhttps://mybytly.com\n\nنتطلع لرؤيتك ضمن عائلة بيتلي!\n\nفريق بيتلي – لمسة بيت`
   );
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null);
@@ -97,16 +100,33 @@ export default function LaunchInvitations() {
   useEffect(() => {
     const loadRespondents = async () => {
       try {
-        const responses = await base44.entities.SurveyResponse.list("-created_date", 500);
+        const [responses, engList] = await Promise.all([
+          base44.entities.SurveyResponse.list("-created_date", 500),
+          base44.entities.Engineer.list("-created_date", 500),
+        ]);
         const withEmail = (responses || []).filter(r => r.respondent_email);
         setSurveyRespondents(withEmail);
+        const engWithValidEmail = (engList || []).filter(e => e.email && e.email.includes("@"));
+        setEngineers(engWithValidEmail);
       } catch (e) {
-        console.error("Error loading survey responses:", e);
+        console.error("Error loading data:", e);
       }
       setLoading(false);
     };
     loadRespondents();
   }, []);
+
+  const selectRandomEngineers = () => {
+    const pool = engineers.filter(e => e.email);
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    const count = Math.min(randomCount, shuffled.length);
+    const randomPicks = shuffled.slice(0, count).map(e => e.email);
+    setSelectedEmails(prev => [...new Set([...prev, ...randomPicks])]);
+  };
+
+  const selectAllEngineers = () => {
+    setSelectedEmails(prev => [...new Set([...prev, ...engineers.map(e => e.email)])]);
+  };
 
   const toggleEmail = (email) => {
     setSelectedEmails(prev =>
@@ -208,6 +228,75 @@ export default function LaunchInvitations() {
                              : r.platform_interest === "maybe" ? "ربما"
                              : "غير مهتم"}
                           </Badge>
+                        )}
+                      </label>
+                    ))}
+                  </div>
+                )
+            }
+          </CardContent>
+        </Card>
+
+        {/* Engineers on the Platform */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <CardTitle className="text-sm font-semibold text-[#4A3F35] flex items-center gap-2">
+                <HardHat className="w-4 h-4 text-[#C9A66B]" />
+                المهندسون المسجّلون ({engineers.length})
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  min="1"
+                  max={engineers.length}
+                  value={randomCount}
+                  onChange={(e) => setRandomCount(Math.max(1, parseInt(e.target.value) || 1))}
+                  className="w-20 h-8 text-xs"
+                  dir="ltr"
+                />
+                <Button variant="outline" size="sm" onClick={selectRandomEngineers} disabled={loading || engineers.length === 0}>
+                  <Shuffle className="w-3.5 h-3.5 ml-1" />
+                  اختيار عشوائي
+                </Button>
+                <Button variant="ghost" size="sm" onClick={selectAllEngineers} disabled={loading || engineers.length === 0}>
+                  تحديد الكل
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading
+              ? <div className="h-24 bg-slate-100 rounded animate-pulse" />
+              : engineers.length === 0
+                ? <p className="text-slate-400 text-sm text-center py-6">لا يوجد مهندسون مسجّلون بعد</p>
+                : (
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {engineers.map((eng) => (
+                      <label key={eng.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedEmails.includes(eng.email)}
+                          onChange={() => toggleEmail(eng.email)}
+                          className="w-4 h-4 accent-[#C9A66B]"
+                        />
+                        <Avatar className="w-8 h-8 shrink-0">
+                          <AvatarImage src={eng.profile_image} />
+                          <AvatarFallback className="bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] text-white text-xs">
+                            {eng.full_name?.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-[#4A3F35] truncate">
+                            {eng.full_name || eng.email}
+                          </p>
+                          <p className="text-xs text-slate-400 truncate">{eng.email}</p>
+                        </div>
+                        {eng.status === "approved" && (
+                          <Badge className="bg-green-50 text-green-700 text-xs shrink-0">معتمد</Badge>
+                        )}
+                        {eng.specialization && (
+                          <Badge variant="outline" className="text-xs shrink-0 hidden sm:inline-flex">{eng.specialization}</Badge>
                         )}
                       </label>
                     ))}
