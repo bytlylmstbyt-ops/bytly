@@ -121,11 +121,6 @@ const AuthenticatedApp = () => {
       ))}
 
       {/* ── Public explicit lazy routes ─────────────────────────────── */}
-      <Route path="/SBCProgressDashboard"       element={lazyRoute(SBCProgressDashboard, "SBCProgressDashboard")} />
-      <Route path="/LaunchDashboard"            element={lazyRoute(LaunchDashboard, "LaunchDashboard")} />
-      <Route path="/LaunchInvitations"           element={lazyRoute(LaunchInvitations, "LaunchInvitations")} />
-      <Route path="/PendingApprovals"            element={lazyRoute(PendingApprovals, "PendingApprovals")} />
-      <Route path="/LaunchPerformanceDashboard" element={lazyRoute(LaunchPerformanceDashboard, "LaunchPerformanceDashboard")} />
       <Route path="/CostEstimator"              element={lazyRoute(CostEstimator, "CostEstimator")} />
       <Route path="/ConstructionTracker"        element={lazyRoute(ConstructionTracker, "ConstructionTracker")} />
       <Route path="/TechnicalResources"         element={lazyRoute(TechnicalResources, "TechnicalResources")} />
@@ -167,6 +162,11 @@ const AuthenticatedApp = () => {
         <Route path="/ContractManager"           element={lazyRoute(React.lazy(() => import('./pages/ContractManager')), "ContractManager")} />
         <Route path="/FinancialReports"         element={lazyRoute(FinancialReports, "FinancialReports")} />
         <Route path="/Subscription"               element={lazyRoute(React.lazy(() => import('./pages/Subscription')), "Subscription")} />
+        <Route path="/SBCProgressDashboard"       element={lazyRoute(SBCProgressDashboard, "SBCProgressDashboard")} />
+        <Route path="/LaunchDashboard"            element={lazyRoute(LaunchDashboard, "LaunchDashboard")} />
+        <Route path="/LaunchInvitations"           element={lazyRoute(LaunchInvitations, "LaunchInvitations")} />
+        <Route path="/PendingApprovals"            element={lazyRoute(PendingApprovals, "PendingApprovals")} />
+        <Route path="/LaunchPerformanceDashboard" element={lazyRoute(LaunchPerformanceDashboard, "LaunchPerformanceDashboard")} />
       </Route>
 
       <Route path="*" element={<NotFoundError />} />

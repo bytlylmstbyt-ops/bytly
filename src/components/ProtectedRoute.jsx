@@ -1,4 +1,5 @@
 import { Outlet } from 'react-router-dom';
+import { useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
@@ -9,20 +10,28 @@ const DefaultFallback = () => (
 );
 
 export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthenticatedElement }) {
-  const { isAuthenticated, isLoadingAuth, authError } = useAuth();
+  const { isAuthenticated, isLoadingAuth, authError, navigateToLogin } = useAuth();
 
-  if (isLoadingAuth) {
+  const needsLogin = !isLoadingAuth && (
+    (!isAuthenticated && !authError) ||
+    authError?.type === 'auth_required'
+  );
+
+  useEffect(() => {
+    if (needsLogin) {
+      navigateToLogin();
+    }
+  }, [needsLogin, navigateToLogin]);
+
+  if (isLoadingAuth || needsLogin) {
     return fallback;
   }
 
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
-    }
-    return unauthenticatedElement;
+  if (authError?.type === 'user_not_registered') {
+    return <UserNotRegisteredError />;
   }
 
-  if (!isAuthenticated) {
+  if (authError) {
     return unauthenticatedElement;
   }
 
