@@ -1,17 +1,17 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import Stripe from 'npm:stripe@14.21.0';
-
-const VALID_PRICE_IDS = [
-  'price_1TbQh4B6BI8uC0Au89E4VzRL', // Basic 99 SAR/mo
-  'price_1TbQh4B6BI8uC0AupdL39tcG', // Pro 249 SAR/mo
-  'price_1TbQh4B6BI8uC0Au7VTp4rPf', // Enterprise 599 SAR/mo
-];
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const VALID_PRICE_IDS = [
+      'price_1TbQh4B6BI8uC0Au89E4VzRL', // Basic 99 SAR/mo
+      'price_1TbQh4B6BI8uC0AupdL39tcG', // Pro 249 SAR/mo
+      'price_1TbQh4B6BI8uC0Au7VTp4rPf', // Enterprise 599 SAR/mo
+    ];
 
     const { price_id, plan_name } = await req.json();
 

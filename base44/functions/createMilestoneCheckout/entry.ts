@@ -1,14 +1,13 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import Stripe from 'npm:stripe@17.5.0';
-
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'), {
-  apiVersion: '2024-11-20.acacia'
-});
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
+    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'), {
+      apiVersion: '2024-11-20.acacia'
+    });
 
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });

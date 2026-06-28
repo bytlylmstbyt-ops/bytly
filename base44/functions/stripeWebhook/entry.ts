@@ -1,9 +1,5 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import Stripe from 'npm:stripe@17.5.0';
-
-const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'), {
-  apiVersion: '2024-11-20.acacia'
-});
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
@@ -11,6 +7,9 @@ Deno.serve(async (req) => {
   const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
 
   try {
+    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'), {
+      apiVersion: '2024-11-20.acacia'
+    });
     const body = await req.text();
     
     let event;
