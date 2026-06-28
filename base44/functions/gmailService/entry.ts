@@ -23,30 +23,44 @@ async function gmailRequest(accessToken, endpoint, method = 'GET', body = null) 
   return res.json();
 }
 
+function utf8ToBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  for (const b of bytes) binary += String.fromCharCode(b);
+  return btoa(binary);
+}
+
+function decodeBase64Utf8(b64) {
+  const binary = atob(b64.replace(/-/g, '+').replace(/_/g, '/'));
+  const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
 function encodeEmail(to, subject, body, fromName = 'Bytly') {
+  const bodyB64 = utf8ToBase64(body);
   const rawEmail = [
     `To: ${to}`,
-    `Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,
+    `Subject: =?UTF-8?B?${utf8ToBase64(subject)}?=`,
     `MIME-Version: 1.0`,
     `Content-Type: text/html; charset=UTF-8`,
     `Content-Transfer-Encoding: base64`,
     ``,
-    body,
+    bodyB64,
   ].join('\r\n');
-  return btoa(unescape(encodeURIComponent(rawEmail)))
+  return utf8ToBase64(rawEmail)
     .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 function parseEmailBody(payload) {
   if (!payload) return '';
   if (payload.body?.data) {
-    try { return atob(payload.body.data.replace(/-/g, '+').replace(/_/g, '/')); } catch { return ''; }
+    try { return decodeBase64Utf8(payload.body.data); } catch { return ''; }
   }
   if (payload.parts) {
     for (const part of payload.parts) {
       if (part.mimeType === 'text/plain' || part.mimeType === 'text/html') {
         if (part.body?.data) {
-          try { return atob(part.body.data.replace(/-/g, '+').replace(/_/g, '/')); } catch { return ''; }
+          try { return decodeBase64Utf8(part.body.data); } catch { return ''; }
         }
       }
     }
