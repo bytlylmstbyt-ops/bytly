@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 /**
  * BIM Automation Function
@@ -170,6 +170,10 @@ async function appendToSheet(token, spreadsheetId, model, driveLink) {
 Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
+        const isAuthenticated = await base44.auth.isAuthenticated();
+        if (!isAuthenticated) {
+            return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        }
         const body = await req.json();
 
         // Can be called directly with action, or from entity automation

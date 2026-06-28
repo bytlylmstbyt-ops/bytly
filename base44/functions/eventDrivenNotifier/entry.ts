@@ -13,7 +13,7 @@
  *  - milestone_approved      → data: { milestone, project, engineer, client }
  */
 
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const WHATSAPP_API_TOKEN = Deno.env.get("WHATSAPP_API_TOKEN");
 const PHONE_NUMBER_ID = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID");
@@ -407,6 +407,10 @@ async function handleMilestoneApproved(base44, { milestone, project, engineer, c
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const isAuthenticated = await base44.auth.isAuthenticated();
+    if (!isAuthenticated) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const payload = await req.json();
 
     // Support both direct calls and automation entity events
