@@ -47,25 +47,37 @@ Deno.serve(async (req) => {
         }
       }
 
-      // 2) fallback: جرّب عرض الخصائص مباشرةً
+      // 2) fallback: جرّب سرد الحسابات أولاً ثم الخصائص
+      let propData = null;
       if (!propertyId) {
-        console.log('No properties in accountSummaries, trying properties list...');
-        const propRes = await fetch('https://analyticsadmin.googleapis.com/v1beta/properties?pageSize=200', {
+        console.log('No properties in accountSummaries, trying accounts list...');
+        const accountsRes = await fetch('https://analyticsadmin.googleapis.com/v1beta/accounts?pageSize=200', {
           headers: { 'Authorization': `Bearer ${accessToken}` }
         });
-        const propData = await propRes.json();
+        const accountsData = await accountsRes.json();
+        console.log('GA accounts list:', JSON.stringify(accountsData).substring(0, 500));
 
-        if (!propData.error && propData.properties && propData.properties.length > 0) {
-          const prop = propData.properties[0];
-          propertyId = prop.name.replace('properties/', '');
-          propertyName = prop.displayName || '';
-          console.log(`Found property via properties list: ${propertyName} (${propertyId})`);
+        const accounts = accountsData.accounts || [];
+        for (const acct of accounts) {
+          const acctName = acct.name; // e.g. "accounts/123456"
+          const propRes = await fetch(
+            `https://analyticsadmin.googleapis.com/v1beta/properties?filter=parent:${acctName}&pageSize=200`,
+            { headers: { 'Authorization': `Bearer ${accessToken}` } }
+          );
+          propData = await propRes.json();
+          if (!propData.error && propData.properties && propData.properties.length > 0) {
+            const prop = propData.properties[0];
+            propertyId = prop.name.replace('properties/', '');
+            propertyName = prop.displayName || '';
+            console.log(`Found property: ${propertyName} (${propertyId})`);
+            break;
+          }
         }
       }
 
       if (!propertyId) {
         return Response.json({
-          error: 'لا توجد خصائص GA4 متاحة في حساب Google Analytics المتصل. تأكد من إعداد GA4 في Google Analytics (analytics.google.com) ثم أعد تشغيل الدالة. إذا كان لديك property_id محدد، مرّره في الحقل property_id.'
+          error: 'لا توجد خصائص GA4 متاحة في حساب Google Analytics المتصل (bytlylmstbyt@gmail.com). أنشئ خاصية GA4 في analytics.google.com، أو مرّر property_id يدوياً.'
         }, { status: 404 });
       }
     }
