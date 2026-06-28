@@ -1,9 +1,10 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const GMAIL_API = 'https://gmail.googleapis.com/gmail/v1/users/me';
 
 async function getAccessToken(base44) {
-  return await base44.asServiceRole.connectors.getAccessToken('gmail');
+  const { accessToken } = await base44.asServiceRole.connectors.getConnection('gmail');
+  return accessToken;
 }
 
 async function gmailRequest(accessToken, endpoint, method = 'GET', body = null) {
@@ -32,7 +33,8 @@ function utf8ToBase64(str) {
 
 function decodeBase64Utf8(b64) {
   const binary = atob(b64.replace(/-/g, '+').replace(/_/g, '/'));
-  const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return new TextDecoder('utf-8').decode(bytes);
 }
 
@@ -57,9 +59,10 @@ function parseEmailBody(payload) {
     try { return decodeBase64Utf8(payload.body.data); } catch { return ''; }
   }
   if (payload.parts) {
-    for (const part of payload.parts) {
-      if (part.mimeType === 'text/plain' || part.mimeType === 'text/html') {
-        if (part.body?.data) {
+    // Prefer text/html over text/plain for better rendering
+    for (const mimeType of ['text/html', 'text/plain']) {
+      for (const part of payload.parts) {
+        if (part.mimeType === mimeType && part.body?.data) {
           try { return decodeBase64Utf8(part.body.data); } catch { return ''; }
         }
       }
