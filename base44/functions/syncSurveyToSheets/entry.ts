@@ -124,6 +124,10 @@ async function appendRow(accessToken, spreadsheetId, values) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const isAuthenticated = await base44.auth.isAuthenticated();
+    if (!isAuthenticated) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const body = await req.json();
 
     // Entity automation payload: { event, data, old_data }
