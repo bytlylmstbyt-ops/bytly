@@ -1,12 +1,44 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
     try {
         // Set the service role token before any operations
         const base44 = createClientFromRequest(req);
 
-        const payload = await req.json();
-        
+        // ── Verify Tap Payments signature (HMAC-SHA256) ──────────────────────
+        const rawBody = await req.text();
+        const hashstring = req.headers.get('hashstring');
+
+        if (!hashstring) {
+            console.error('Tap webhook: missing hashstring header');
+            return Response.json({ error: 'Missing signature' }, { status: 401 });
+        }
+
+        const tapSecret = Deno.env.get('TAP_SECRET_KEY');
+        if (!tapSecret) {
+            console.error('Tap webhook: TAP_SECRET_KEY not configured');
+            return Response.json({ error: 'Webhook secret not configured' }, { status: 500 });
+        }
+
+        const encoder = new TextEncoder();
+        const key = await crypto.subtle.importKey(
+            'raw',
+            encoder.encode(tapSecret),
+            { name: 'HMAC', hash: 'SHA-256' },
+            false,
+            ['sign']
+        );
+        const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(rawBody));
+        const expectedHash = btoa(String.fromCharCode(...new Uint8Array(signature)));
+
+        if (hashstring !== expectedHash) {
+            console.error('Tap webhook: signature verification failed');
+            return Response.json({ error: 'Invalid signature' }, { status: 401 });
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
+        const payload = JSON.parse(rawBody);
+
         console.log('Tap Webhook received:', payload);
 
         const chargeId = payload.id;
