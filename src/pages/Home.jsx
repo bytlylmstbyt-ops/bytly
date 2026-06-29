@@ -20,11 +20,13 @@ import CorePillarsSection from "@/components/home/CorePillarsSection";
 import HowItWorksSection from "@/components/home/HowItWorksSection";
 import PreLaunchSurveyModal from "@/components/survey/PreLaunchSurveyModal";
 import { useLanguage } from "@/components/i18n/LanguageContext";
+import { useAuth } from "@/lib/AuthContext";
 import { ClipboardList } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 export default function Home() {
   const { t } = useLanguage();
+  const { user, isAuthenticated } = useAuth();
   const [engineers, setEngineers] = useState([]);
   const [portfolios, setPortfolios] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -35,62 +37,75 @@ export default function Home() {
 
   useEffect(() => {
     loadData();
-    checkUserAndWelcome();
-
-    const surveySeen = localStorage.getItem("bytly_survey_seen");
-    if (!surveySeen) {
-      const timer = setTimeout(() => setShowSurvey(true), 8000);
-      return () => clearTimeout(timer);
-    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Decouple welcome-check from auth state — runs once when auth resolves.
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      checkUserAndWelcome(user);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, user]);
 
   const handleSurveyClose = () => {
     localStorage.setItem("bytly_survey_seen", "true");
     setShowSurvey(false);
   };
 
-  const checkUserAndWelcome = async () => {
+  const checkUserAndWelcome = async (currentUser) => {
     try {
-      const isAuth = await base44.auth.isAuthenticated();
-      if (isAuth) {
-        const user = await base44.auth.me();
-        const hasSeenWelcome = localStorage.getItem(`bytly_seen_welcome_${user.email}`);
-        
-        if (!hasSeenWelcome) {
-          // Check if user is an engineer
-          const engineers = await base44.entities.Engineer.filter({ email: user.email }, null, 1);
-          if (engineers.length > 0) {
-            setUserType('engineer');
-            setShowWelcome(true);
-            return;
-          }
-          
-          // Check if user is a firm
-          const firms = await base44.entities.EngineeringFirm.filter({ email: user.email }, null, 1);
-          if (firms.length > 0) {
-            setUserType('firm');
-            setShowWelcome(true);
-            return;
-          }
-          
-          // Check if user is a client
-          const clients = await base44.entities.Client.filter({ email: user.email }, null, 1);
-          if (clients.length > 0) {
-            setUserType('client');
-            setShowWelcome(true);
-            return;
-          }
+      const hasSeenWelcome = localStorage.getItem(`bytly_seen_welcome_${currentUser.email}`);
+      if (hasSeenWelcome) return;
+
+      // Check if user is an engineer
+      try {
+        const engineers = await base44.entities.Engineer.filter({ email: currentUser.email }, null, 1);
+        if (engineers.length > 0) {
+          setUserType('engineer');
+          setShowWelcome(true);
+          return;
         }
+      } catch (e) {
+        // 401/403 = expired or invalid token — skip welcome, don't crash
+        if (e?.status !== 401 && e?.status !== 403) console.warn("Engineer check failed:", e.message);
+        else return; // token invalid — no point trying more entity calls
+      }
+
+      // Check if user is a firm
+      try {
+        const firms = await base44.entities.EngineeringFirm.filter({ email: currentUser.email }, null, 1);
+        if (firms.length > 0) {
+          setUserType('firm');
+          setShowWelcome(true);
+          return;
+        }
+      } catch (e) {
+        if (e?.status === 401 || e?.status === 403) return;
+        console.warn("Firm check failed:", e.message);
+      }
+
+      // Check if user is a client
+      try {
+        const clients = await base44.entities.Client.filter({ email: currentUser.email }, null, 1);
+        if (clients.length > 0) {
+          setUserType('client');
+          setShowWelcome(true);
+          return;
+        }
+      } catch (e) {
+        if (e?.status === 401 || e?.status === 403) return;
+        console.warn("Client check failed:", e.message);
       }
     } catch (error) {
-      console.log("Not authenticated or error checking user type");
+      console.warn("Welcome check failed:", error.message);
     }
   };
 
   const handleWelcomeComplete = async () => {
     try {
-      const user = await base44.auth.me();
-      localStorage.setItem(`bytly_seen_welcome_${user.email}`, 'true');
+      const currentUser = user || await base44.auth.me();
+      localStorage.setItem(`bytly_seen_welcome_${currentUser.email}`, 'true');
     } catch (error) {
       localStorage.setItem('bytly_seen_welcome', 'true');
     }

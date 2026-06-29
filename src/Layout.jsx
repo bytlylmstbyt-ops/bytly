@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "./utils";
 import { base44 } from "@/api/base44Client";
@@ -55,6 +55,11 @@ function LayoutContent({ children, currentPageName }) {
   const handleLogout = () => {
     base44.auth.logout();
   };
+
+  // Stable callback so PullToRefreshWrapper doesn't re-subscribe its touch listeners
+  const handlePullRefresh = useCallback(() => {
+    window.location.reload();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background text-foreground" dir={isRTL ? "rtl" : "ltr"}>
@@ -339,7 +344,7 @@ function LayoutContent({ children, currentPageName }) {
         className="min-h-screen pb-16 md:pb-0"
         style={{ paddingTop: "calc(4rem + env(safe-area-inset-top))" }}
       >
-        <PullToRefreshWrapper onRefresh={() => window.location.reload()} className="min-h-screen">
+        <PullToRefreshWrapper onRefresh={handlePullRefresh} className="min-h-screen">
           <PageTransition>
             {children}
           </PageTransition>
