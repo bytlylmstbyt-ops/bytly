@@ -9,11 +9,10 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 5173,
     open: false,
-    hmr: {
-      // Let Vite auto-detect the HMR host/port from the browser's location
-      // so the WebSocket connects correctly in iframe/preview environments
-      overlay: false
-    }
+    // Disable Vite's native HMR WebSocket — it fails in the iframe preview
+    // environment ("WebSocket closed without opened"). The base44 plugin's
+    // hmrNotifier handles reloads instead.
+    hmr: false
   },
   plugins: [
     base44({
