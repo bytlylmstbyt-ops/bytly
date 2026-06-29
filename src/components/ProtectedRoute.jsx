@@ -1,7 +1,10 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+
+// Paths that must NEVER trigger a login redirect — prevents redirect loops
+const AUTH_PATHS = ['/login', '/register', '/forgot-password', '/reset-password'];
 
 const DefaultFallback = () => (
   <div className="fixed inset-0 flex items-center justify-center">
@@ -10,9 +13,13 @@ const DefaultFallback = () => (
 );
 
 export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthenticatedElement }) {
-  const { isAuthenticated, isLoadingAuth, authError, navigateToLogin } = useAuth();
+  const location = useLocation();
+  const { isAuthenticated, isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
-  const needsLogin = !isLoadingAuth && (
+  // Redirect loop protection — skip redirect if already on an auth page
+  const isAuthPath = AUTH_PATHS.some(p => location.pathname === p || location.pathname.startsWith(p + '/'));
+
+  const needsLogin = !isLoadingAuth && !isLoadingPublicSettings && !isAuthPath && (
     (!isAuthenticated && !authError) ||
     authError?.type === 'auth_required'
   );
@@ -23,7 +30,7 @@ export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthe
     }
   }, [needsLogin, navigateToLogin]);
 
-  if (isLoadingAuth || needsLogin) {
+  if (isLoadingPublicSettings || isLoadingAuth || needsLogin) {
     return fallback;
   }
 

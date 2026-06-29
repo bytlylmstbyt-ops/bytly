@@ -6,7 +6,6 @@ import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import NotFoundError from './lib/NotFoundError';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
-import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import React, { Suspense } from 'react';
 
@@ -82,14 +81,11 @@ const lazyRoute = (Component, name) => (
 );
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingPublicSettings } = useAuth();
 
-  if (isLoadingPublicSettings || isLoadingAuth) {
+  // Only block on public settings; auth check is handled per-route by ProtectedRoute
+  if (isLoadingPublicSettings) {
     return <PageSpinner />;
-  }
-
-  if (authError && authError.type === 'user_not_registered') {
-    return <UserNotRegisteredError />;
   }
 
   return (
@@ -100,6 +96,8 @@ const AuthenticatedApp = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
 
+      {/* ── All other routes — protected by auth middleware ─────────── */}
+      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
       {/* Main page (from pagesConfig) */}
       <Route path="/" element={
         <LayoutWrapper currentPageName={mainPageKey}>
@@ -134,8 +132,7 @@ const AuthenticatedApp = () => {
       <Route path="/AIMaterialAdvisor"          element={lazyRoute(AIMaterialAdvisor, "AIMaterialAdvisor")} />
       <Route path="/AIRecommender"              element={lazyRoute(AIRecommender, "AIRecommender")} />
 
-      {/* ── Private explicit lazy routes (require sign-in) ──────────── */}
-      <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+      {/* ── Private explicit lazy routes ──────────────────────────── */}
         <Route path="/BuildingProgress"           element={lazyRoute(BuildingProgress, "BuildingProgress")} />
         <Route path="/PermitApplication"          element={lazyRoute(PermitApplication, "PermitApplication")} />
         <Route path="/PermitPaymentSuccess"       element={lazyRoute(PermitPaymentSuccess, "PermitPaymentSuccess")} />
@@ -167,9 +164,8 @@ const AuthenticatedApp = () => {
         <Route path="/LaunchInvitations"           element={lazyRoute(LaunchInvitations, "LaunchInvitations")} />
         <Route path="/PendingApprovals"            element={lazyRoute(PendingApprovals, "PendingApprovals")} />
         <Route path="/LaunchPerformanceDashboard" element={lazyRoute(LaunchPerformanceDashboard, "LaunchPerformanceDashboard")} />
+        <Route path="*" element={<NotFoundError />} />
       </Route>
-
-      <Route path="*" element={<NotFoundError />} />
     </Routes>
   );
 };
