@@ -32,9 +32,14 @@ export default function NavigationTracker() {
         }
 
         if (isAuthenticated && pageName) {
-            base44.appLogs.logUserInApp(pageName).catch(() => {
-                // Silently fail - logging shouldn't break the app
-            });
+            const timestamp = new Date().toISOString();
+            // Include a client-side timestamp to improve ordering in analytics.
+            try {
+                base44.appLogs.logUserInApp(pageName, { timestamp }).catch(() => {});
+            } catch (e) {
+                // If the SDK doesn't accept extra args, fall back to original call.
+                base44.appLogs.logUserInApp(pageName).catch(() => {});
+            }
         }
     }, [location, isAuthenticated, Pages, mainPageKey]);
 

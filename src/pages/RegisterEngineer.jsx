@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MobileSelect from "@/components/mobile/MobileSelect";
+import { toast } from "react-hot-toast";
 
 export default function RegisterEngineer() {
   const navigate = useNavigate();
@@ -21,7 +22,13 @@ export default function RegisterEngineer() {
   const userType = urlParams.get("type") || "engineer";
 
   const [step, setStep] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFileUploading, setIsFileUploading] = useState(false);
+  const [notice, setNotice] = useState({
+    type: "info",
+    title: "تنبيه خطة التكامل",
+    message: "قد يتعذر رفع الوثائق عند الوصول إلى حد التكامل في الخطة الحالية. إذا ظهر خطأ 402، يُفضّل ترقية الخطة قبل إكمال التسجيل."
+  });
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
@@ -45,43 +52,126 @@ export default function RegisterEngineer() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const withTimeout = (promise, timeoutMs = 30000) => {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error("timeout"));
+      }, timeoutMs);
+
+      promise.then((result) => {
+        clearTimeout(timer);
+        resolve(result);
+      }).catch((error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+    });
+  };
+
+  const isPlanLimitError = (error) => {
+    const status = error?.status || error?.response?.status || error?.code;
+    const message = `${error?.message || ""} ${error?.data?.message || ""} ${error?.data?.error || ""} ${error?.response?.data?.message || ""} ${error?.response?.data?.error || ""}`.toLowerCase();
+
+    return status === 402 || message.includes("limit") || message.includes("quota") || (message.includes("integration") && message.includes("month"));
+  };
+
   const handleFileUpload = async (e, field) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    setIsLoading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    handleInputChange(field, file_url);
-    setIsLoading(false);
+    setIsFileUploading(true);
+    setNotice({
+      type: "info",
+      title: "جارٍ رفع الملف",
+      message: "قد يستغرق هذا قليلًا، وإذا كان الحد المسموح به في الخطة قد انتهى فسيظهر خطأ واضح ويمكنك الترقية مباشرة."
+    });
+
+    try {
+      const { file_url } = await withTimeout(base44.integrations.Core.UploadFile({ file }), 30000);
+      handleInputChange(field, file_url);
+      setNotice({
+        type: "success",
+        title: "تم رفع الملف بنجاح",
+        message: "يمكنك المتابعة في إكمال التسجيل."
+      });
+    } catch (error) {
+      const base44Error = error;
+      const responseData = base44Error?.data || base44Error?.response?.data;
+      const message = isPlanLimitError(base44Error)
+        ? "تعذر رفع الملف لأن الخطة الحالية وصلت إلى حد التكامل. يُرجى ترقية الخطة قبل المتابعة."
+        : base44Error?.message === "timeout"
+          ? "انتهت مهلة الاتصال. يُرجى إعادة المحاولة لاحقًا."
+          : responseData?.message || responseData?.detail || responseData?.error || "تعذر رفع الملف مؤقتًا. يُرجى التحقق من الاتصال وإعادة المحاولة.";
+
+      setNotice({ type: "error", title: "تعذر رفع الملف", message });
+      toast.error(message);
+      console.error("RegisterEngineer upload error:", {
+        status: base44Error?.status,
+        code: base44Error?.code,
+        data: responseData,
+        originalError: base44Error?.originalError || base44Error
+      });
+    } finally {
+      setIsFileUploading(false);
+    }
   };
 
   const handleSubmit = async () => {
-    setIsLoading(true);
-    
-    await base44.entities.Engineer.create({
-      ...formData,
-      years_experience: parseInt(formData.years_experience) || 0,
-      status: "pending",
-      is_verified: false,
-      rating: 0,
-      total_reviews: 0,
-      completed_projects: 0,
-      wallet_balance: 0,
-      subscription_type: "none"
+    if (isSubmitting || isFileUploading) return;
+
+    setIsSubmitting(true);
+    setNotice({
+      type: "info",
+      title: "جارٍ إكمال التسجيل",
+      message: "نحن نراجع بياناتك والوثائق قبل حفظ التسجيل."
     });
 
-    base44.analytics.track({
-      eventName: "engineer_profile_created",
-      properties: {
-        user_type: formData.user_type,
-        specialization: formData.specialization,
-        city: formData.city,
-        country: formData.country
-      }
-    });
+    try {
+      await withTimeout(base44.entities.Engineer.create({
+        ...formData,
+        years_experience: parseInt(formData.years_experience) || 0,
+        status: "pending",
+        is_verified: false,
+        rating: 0,
+        total_reviews: 0,
+        completed_projects: 0,
+        wallet_balance: 0,
+        subscription_type: "none"
+      }), 30000);
 
-    setIsLoading(false);
-    navigate(createPageUrl("RegistrationSuccess"));
+      base44.analytics.track({
+        eventName: "engineer_profile_created",
+        properties: {
+          user_type: formData.user_type,
+          specialization: formData.specialization,
+          city: formData.city,
+          country: formData.country
+        }
+      });
+
+      setNotice({ type: "success", title: "تم إرسال الطلب", message: "تم حفظ طلب التسجيل بنجاح. ستتم مراجعة بياناتك قريبًا." });
+      navigate(createPageUrl("RegistrationSuccess"));
+    } catch (error) {
+      const base44Error = error;
+      const responseData = base44Error?.data || base44Error?.response?.data;
+      const message = isPlanLimitError(base44Error)
+        ? "تعذر إكمال التسجيل لأن الخطة الحالية وصلت إلى حد التكامل. يُرجى ترقية الخطة أو المحاولة لاحقًا."
+        : base44Error?.message === "timeout"
+          ? "انتهت مهلة الاتصال. يُرجى المحاولة مرة أخرى لاحقًا."
+          : responseData?.message || responseData?.detail || responseData?.error || "تعذر إكمال التسجيل مؤقتًا. يُرجى مراجعة البيانات وإعادة المحاولة.";
+
+      setNotice({ type: "error", title: "تعذر إكمال التسجيل", message });
+      toast.error(message);
+      console.error("RegisterEngineer submit error:", {
+        status: base44Error?.status,
+        code: base44Error?.code,
+        data: responseData,
+        originalError: base44Error?.originalError || base44Error
+      });
+    } finally {
+      setIsSubmitting(false);
+      setIsFileUploading(false);
+    }
   };
 
   const isStep1Valid = formData.full_name && formData.email && formData.phone;
@@ -111,6 +201,33 @@ export default function RegisterEngineer() {
           </h1>
           <p className="text-slate-600">أكمل بياناتك للانضمام إلى منصة بيتلي</p>
         </motion.div>
+
+        {notice && (
+          <div className={`rounded-2xl border p-4 mb-6 ${
+            notice.type === "error"
+              ? "border-red-200 bg-red-50 text-red-700"
+              : notice.type === "success"
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                : "border-blue-200 bg-blue-50 text-blue-700"
+          }`}>
+            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+              <div>
+                <p className="font-semibold">{notice.title}</p>
+                <p className="text-sm mt-1">{notice.message}</p>
+              </div>
+              {(notice.type === "error" || notice.type === "info") && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-white/80"
+                  onClick={() => navigate(createPageUrl("Subscription"))}
+                >
+                  ترقية الخطة
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Progress Steps */}
         <div className="flex justify-center items-center gap-4 mb-8">
@@ -305,6 +422,7 @@ export default function RegisterEngineer() {
                       onChange={(e) => handleFileUpload(e, "profile_image")}
                       className="hidden"
                       id="profile_image"
+                      disabled={isFileUploading || isSubmitting}
                     />
                     <label htmlFor="profile_image" className="cursor-pointer">
                       {formData.profile_image ? (
@@ -328,6 +446,7 @@ export default function RegisterEngineer() {
                       onChange={(e) => handleFileUpload(e, "graduation_certificate_url")}
                       className="hidden"
                       id="graduation_certificate"
+                      disabled={isFileUploading || isSubmitting}
                     />
                     <label htmlFor="graduation_certificate" className="cursor-pointer">
                       {formData.graduation_certificate_url ? (
@@ -377,10 +496,10 @@ export default function RegisterEngineer() {
               ) : (
                 <Button
                   onClick={handleSubmit}
-                  disabled={isLoading || !isStep3Valid}
+                  disabled={isSubmitting || !isStep3Valid || isFileUploading}
                   className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white gap-2"
                 >
-                  {isLoading ? (
+                  {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       جاري التسجيل...

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { appParams } from "@/lib/app-params";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,13 +35,15 @@ export default function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const returnUrl = appParams.fromUrl || "/";
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
       await base44.auth.loginViaEmailPassword(email, password);
-      window.location.href = "/";
+      window.location.href = returnUrl;
     } catch (err) {
       setError(err.message || "Invalid email or password");
     } finally {
@@ -48,10 +51,10 @@ export default function Login() {
     }
   };
 
-  const handleGoogle = () => base44.auth.loginWithProvider("google", "/");
-  const handleMicrosoft = () => base44.auth.loginWithProvider("microsoft", "/");
-  const handleFacebook = () => base44.auth.loginWithProvider("facebook", "/");
-  const handleApple = () => base44.auth.loginWithProvider("apple", "/");
+  const handleGoogle = () => base44.auth.loginWithProvider("google", returnUrl);
+  const handleMicrosoft = () => base44.auth.loginWithProvider("microsoft", returnUrl);
+  const handleFacebook = () => base44.auth.loginWithProvider("facebook", returnUrl);
+  const handleApple = () => base44.auth.loginWithProvider("apple", returnUrl);
 
   return (
     <AuthLayout

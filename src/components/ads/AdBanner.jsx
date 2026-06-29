@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { ExternalLink, CheckCircle } from "lucide-react";
 
@@ -16,9 +16,13 @@ const CATEGORY_LABELS = {
 };
 
 function SingleAdCard({ ad, variant = "horizontal" }) {
+  const clickedRef = useRef(false);
   const handleClick = () => {
-    // Async click tracking
-    base44.functions.invoke("trackAdClick", { ad_id: ad.id }).catch(() => {});
+    if (clickedRef.current) return;
+    clickedRef.current = true;
+    base44.functions.invoke("trackAdClick", { ad_id: ad.id, timestamp: new Date().toISOString() }).catch(() => {}).finally(() => {
+      setTimeout(() => { clickedRef.current = false; }, 700);
+    });
     window.open(ad.destination_url, "_blank", "noopener,noreferrer");
   };
 
@@ -26,6 +30,9 @@ function SingleAdCard({ ad, variant = "horizontal" }) {
     return (
       <div
         onClick={handleClick}
+        role="button"
+        tabIndex={0}
+        aria-label={`فتح الإعلان ${ad.title}`}
         className="cursor-pointer group rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all overflow-hidden"
       >
         <div className="relative">
@@ -65,6 +72,9 @@ function SingleAdCard({ ad, variant = "horizontal" }) {
   return (
     <div
       onClick={handleClick}
+      role="button"
+      tabIndex={0}
+      aria-label={`فتح الإعلان ${ad.title}`}
       className="cursor-pointer group flex gap-3 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all p-3 items-center"
     >
       <img
@@ -104,6 +114,7 @@ function SingleAdCard({ ad, variant = "horizontal" }) {
 export default function AdBanner({ placement, tags = [], variant = "horizontal", maxAds = 2 }) {
   const [ads, setAds] = useState([]);
   const [loaded, setLoaded] = useState(false);
+  const clickedRef = useRef(false);
 
   useEffect(() => {
     // Async load - doesn't block page render

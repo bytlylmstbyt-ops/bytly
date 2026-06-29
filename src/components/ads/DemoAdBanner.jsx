@@ -40,7 +40,7 @@ function DemoClickModal({ ad, onClose }) {
             <Megaphone className="w-5 h-5" />
             <span className="font-semibold text-sm">محاكاة وجهة الإعلان</span>
           </div>
-          <button onClick={onClose} className="text-white/70 hover:text-white">
+          <button type="button" onClick={onClose} aria-label="إغلاق محاكاة الإعلان" className="text-white/70 hover:text-white">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -77,7 +77,9 @@ function DemoClickModal({ ad, onClose }) {
             <p className="mt-1 font-mono text-slate-400 text-[10px] dir-ltr" dir="ltr">{ad.destination_url}</p>
           </div>
           <button
+            type="button"
             onClick={onClose}
+            aria-label="أغلق محاكاة الإعلان"
             className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white rounded-xl py-2.5 font-medium text-sm hover:opacity-90 transition-opacity"
           >
             حسناً، فهمت آلية العمل
@@ -91,12 +93,17 @@ function DemoClickModal({ ad, onClose }) {
 // Horizontal banner (between content sections)
 export function AdHorizontalBanner({ ads }) {
   const [clickedAd, setClickedAd] = useState(null);
+  const clickedRef = useRef(false);
 
   if (!ads || ads.length === 0) return null;
   const ad = ads[0];
 
   const handleClick = () => {
-    base44.functions.invoke("trackAdClick", { ad_id: ad.id }).catch(() => {});
+    if (clickedRef.current) return;
+    clickedRef.current = true;
+    base44.functions.invoke("trackAdClick", { ad_id: ad.id, timestamp: new Date().toISOString() }).catch(() => {}).finally(() => {
+      setTimeout(() => { clickedRef.current = false; }, 700);
+    });
     setClickedAd(ad);
   };
 
@@ -115,7 +122,9 @@ export function AdHorizontalBanner({ ads }) {
         </div>
 
         <button
+          type="button"
           onClick={handleClick}
+          aria-label={`فتح الإعلان ${ad.title}`}
           className="w-full flex items-center gap-4 px-4 pb-4 pt-2 text-right hover:bg-amber-50/50 transition-colors group"
         >
           <img
@@ -159,6 +168,7 @@ export function AdHorizontalBanner({ ads }) {
 // Sidebar cards
 export function AdSidebarCards({ ads }) {
   const [clickedAd, setClickedAd] = useState(null);
+  const clickedRef = useRef(false);
 
   if (!ads || ads.length === 0) return null;
 
@@ -176,7 +186,11 @@ export function AdSidebarCards({ ads }) {
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               onClick={() => {
-                base44.functions.invoke("trackAdClick", { ad_id: ad.id }).catch(() => {});
+                if (clickedRef.current) return;
+                clickedRef.current = true;
+                base44.functions.invoke("trackAdClick", { ad_id: ad.id, timestamp: new Date().toISOString() }).catch(() => {}).finally(() => {
+                  setTimeout(() => { clickedRef.current = false; }, 700);
+                });
                 setClickedAd(ad);
               }}
               className="w-full group rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-[#d4a574]/50 transition-all overflow-hidden text-right"

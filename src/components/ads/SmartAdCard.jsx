@@ -88,6 +88,7 @@ function AdMedia({ ad, className }) {
 // ─── IN-FEED CARD (blends with project cards) ───────────────────────────────
 export function AdInFeedCard({ ad, onDismiss }) {
   const [dismissed, setDismissed] = useState(false);
+  const clickedRef = useRef(false);
 
   if (dismissed) return null;
 
@@ -99,7 +100,12 @@ export function AdInFeedCard({ ad, onDismiss }) {
   };
 
   const handleClick = () => {
-    base44.functions.invoke("trackAdClick", { ad_id: ad.id }).catch(() => {});
+    if (clickedRef.current) return;
+    clickedRef.current = true;
+    // include client timestamp and prevent rapid double-clicks
+    base44.functions.invoke("trackAdClick", { ad_id: ad.id, timestamp: new Date().toISOString() }).catch(() => {}).finally(() => {
+      setTimeout(() => { clickedRef.current = false; }, 700);
+    });
     window.open(ad.destination_url, "_blank", "noopener,noreferrer");
   };
 
@@ -118,7 +124,9 @@ export function AdInFeedCard({ ad, onDismiss }) {
           <span className="text-[10px] text-[#d4a574] font-semibold tracking-wide">محتوى مدعوم</span>
         </div>
         <button
+          type="button"
           onClick={handleDismiss}
+          aria-label="إغلاق الإعلان"
           className="w-5 h-5 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors text-slate-400 hover:text-slate-600"
           title="إغلاق الإعلان"
         >
@@ -126,7 +134,7 @@ export function AdInFeedCard({ ad, onDismiss }) {
         </button>
       </div>
 
-      <button onClick={handleClick} className="w-full text-right px-4 pb-4 pt-1 flex gap-4 items-center hover:bg-amber-50/30 transition-colors">
+      <button type="button" onClick={handleClick} aria-label="فتح الإعلان في نافذة جديدة" className="w-full text-right px-4 pb-4 pt-1 flex gap-4 items-center hover:bg-amber-50/30 transition-colors">
         <AdMedia
           ad={ad}
           className="w-24 h-20 rounded-xl flex-shrink-0 shadow-sm"
@@ -163,6 +171,7 @@ export function AdInFeedCard({ ad, onDismiss }) {
 // ─── SIDEBAR CARD ────────────────────────────────────────────────────────────
 export function AdSidebarCard({ ad, onDismiss }) {
   const [dismissed, setDismissed] = useState(false);
+  const clickedRef = useRef(false);
 
   if (dismissed) return null;
 
@@ -173,7 +182,11 @@ export function AdSidebarCard({ ad, onDismiss }) {
   };
 
   const handleClick = () => {
-    base44.functions.invoke("trackAdClick", { ad_id: ad.id }).catch(() => {});
+    if (clickedRef.current) return;
+    clickedRef.current = true;
+    base44.functions.invoke("trackAdClick", { ad_id: ad.id, timestamp: new Date().toISOString() }).catch(() => {}).finally(() => {
+      setTimeout(() => { clickedRef.current = false; }, 700);
+    });
     window.open(ad.destination_url, "_blank", "noopener,noreferrer");
   };
 
@@ -187,14 +200,16 @@ export function AdSidebarCard({ ad, onDismiss }) {
     >
       {/* Dismiss button */}
       <button
-        onClick={handleDismiss}
-        className="absolute top-2 left-2 z-10 w-5 h-5 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 transition-colors text-white"
-        title="إغلاق"
-      >
+            type="button"
+            onClick={handleDismiss}
+            aria-label="إغلاق الإعلان"
+            className="absolute top-2 left-2 z-10 w-5 h-5 flex items-center justify-center rounded-full bg-black/40 hover:bg-black/60 transition-colors text-white"
+            title="إغلاق"
+          >
         <X className="w-3 h-3" />
       </button>
 
-      <button onClick={handleClick} className="w-full text-right">
+          <button type="button" onClick={handleClick} aria-label="فتح الإعلان في نافذة جديدة" className="w-full text-right">
         <AdMedia ad={ad} className="w-full h-32 rounded-none" />
         <div className="p-3">
           <div className="flex items-center gap-1 mb-1">

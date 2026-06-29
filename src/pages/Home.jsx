@@ -170,6 +170,8 @@ export default function Home() {
           <img 
             src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920"
             alt="Interior Design"
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a2e] via-transparent to-transparent" />
@@ -253,6 +255,8 @@ export default function Home() {
                       <img 
                         src="https://images.unsplash.com/photo-1600210492493-0946911123ea?w=400"
                         alt="Design 1"
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -260,6 +264,8 @@ export default function Home() {
                       <img 
                         src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=400"
                         alt="Design 2"
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -269,6 +275,8 @@ export default function Home() {
                       <img 
                         src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400"
                         alt="Design 3"
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -276,6 +284,8 @@ export default function Home() {
                       <img 
                         src="https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?w=400"
                         alt="Design 4"
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -389,6 +399,8 @@ export default function Home() {
                           <img 
                             src={engineer.cover_image} 
                             alt="" 
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover opacity-50" 
                           />
                         )}
@@ -470,10 +482,12 @@ export default function Home() {
                   <Link to={createPageUrl("Gallery") + `?id=${portfolio.id}`}>
                     <div className="aspect-square">
                       <img
-                        src={portfolio.images?.[0] || "https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?w=600"}
-                        alt={portfolio.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
+                          src={portfolio.images?.[0] || "https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?w=600"}
+                          alt={portfolio.title}
+                          loading="lazy"
+                          decoding="async"
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
                     </div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="absolute bottom-0 left-0 right-0 p-4">

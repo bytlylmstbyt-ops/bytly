@@ -88,6 +88,16 @@ const AuthenticatedApp = () => {
     return <PageSpinner />;
   }
 
+  const publicPages = [
+    'RegisterChoice',
+    'RegisterEngineer',
+    'RegisterClient',
+    'RegisterConsultant',
+    'RegisterFirm',
+    'RegisterLegalConsultant',
+    'RegistrationSuccess'
+  ];
+
   return (
     <Routes>
       {/* Auth routes — no layout wrapper */}
@@ -96,27 +106,44 @@ const AuthenticatedApp = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
 
+      {/* Public registration-related pages */}
+      {Object.entries(Pages)
+        .filter(([path]) => publicPages.includes(path))
+        .map(([path, Page]) => (
+          <Route
+            key={path}
+            path={`/${path}`}
+            element={
+              <LayoutWrapper currentPageName={path}>
+                <Page />
+              </LayoutWrapper>
+            }
+          />
+        ))}
+
       {/* ── All other routes — protected by auth middleware ─────────── */}
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-      {/* Main page (from pagesConfig) */}
-      <Route path="/" element={
-        <LayoutWrapper currentPageName={mainPageKey}>
-          <MainPage />
-        </LayoutWrapper>
-      } />
+        {/* Main page (from pagesConfig) */}
+        <Route path="/" element={
+          <LayoutWrapper currentPageName={mainPageKey}>
+            <MainPage />
+          </LayoutWrapper>
+        } />
 
-      {/* pagesConfig dynamic routes */}
-      {Object.entries(Pages).map(([path, Page]) => (
-        <Route
-          key={path}
-          path={`/${path}`}
-          element={
-            <LayoutWrapper currentPageName={path}>
-              <Page />
-            </LayoutWrapper>
-          }
-        />
-      ))}
+        {/* pagesConfig dynamic routes */}
+        {Object.entries(Pages)
+          .filter(([path]) => !publicPages.includes(path))
+          .map(([path, Page]) => (
+            <Route
+              key={path}
+              path={`/${path}`}
+              element={
+                <LayoutWrapper currentPageName={path}>
+                  <Page />
+                </LayoutWrapper>
+              }
+            />
+          ))}
 
       {/* ── Public explicit lazy routes ─────────────────────────────── */}
       <Route path="/CostEstimator"              element={lazyRoute(CostEstimator, "CostEstimator")} />
