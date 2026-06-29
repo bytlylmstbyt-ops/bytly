@@ -6,12 +6,13 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   logLevel: 'error', // Suppress warnings, only show errors
   server: {
-    host: '127.0.0.1',
+    host: '0.0.0.0',
     port: 5173,
     open: false,
     hmr: {
-      host: '127.0.0.1',
-      port: 5173
+      // Let Vite auto-detect the HMR host/port from the browser's location
+      // so the WebSocket connects correctly in iframe/preview environments
+      overlay: false
     }
   },
   plugins: [
