@@ -224,7 +224,7 @@ export default function RegisterEngineer() {
       const isFreeEligible = freeOffer.isEligible;
       const today = new Date();
       const trialEnd = new Date();
-      trialEnd.setFullYear(trialEnd.getFullYear() + 1);
+      trialEnd.setMonth(trialEnd.getMonth() + 3);
 
       await withTimeout(base44.entities.Engineer.create({
         ...formData,
@@ -324,7 +324,7 @@ export default function RegisterEngineer() {
             <div>
               <p className="font-bold text-emerald-800">🎉 تسجيل مجاني — أنت ضمن أول 100 مهندس!</p>
               <p className="text-sm text-emerald-700 mt-1">
-                ضمن الفترة التجريبية لقياس المنصة، يتمتع أول 100 مهندس باشتراك مجاني لمدة سنة كاملة.
+                ضمن الفترة التجريبية لقياس المنصة، يتمتع أول 100 مهندس باشتراك مجاني لمدة 3 أشهر.
                 المتاح حالياً: <span className="font-bold">{freeOffer.remaining}</span> مقعد مجاني.
               </p>
             </div>
