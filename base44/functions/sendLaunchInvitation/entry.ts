@@ -121,11 +121,11 @@ function buildHtmlEmail(personalizedBody) {
     <!-- CTA Button -->
     <tr>
       <td style="padding: 10px 30px 30px 30px; text-align: center;">
-        <a href="https://mybytly.com/login" target="_blank" rel="noopener"
+        <a href="/login"
            style="display: inline-block; background: linear-gradient(135deg, #6B5D4F, #C9A66B); color: #ffffff; padding: 16px 44px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 16px; box-shadow: 0 4px 16px rgba(201,166,107,0.35);">
-          🔗 تفعيل حسابك الآن
+          ابدأ الآن - انتقل للوحة التحكم 🚀
         </a>
-        <p style="color: #9CA3AF; font-size: 12px; margin: 14px 0 0 0;">أو انسخ الرابط: https://mybytly.com/login</p>
+        <p style="color: #9CA3AF; font-size: 12px; margin: 14px 0 0 0;">أو انقر على الزر أعلاه للانتقال إلى لوحة التحكم</p>
       </td>
     </tr>
 
