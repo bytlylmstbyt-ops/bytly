@@ -34,8 +34,8 @@ export const translations = {
     home: {
       hero: {
         badge: "بيتلي | المنظومة الهندسية المتكاملة",
-        title: "منظومة هندسية متكاملة",
-        titleHighlight: "لمشاريعك العقارية",
+        title: "حوّل رؤيتك إلى",
+        titleHighlight: "واقع هندسي",
         subtitle: "سواء كنت صاحب منزل، مستثمر عقاري، أو مهندس محترف - بيتلي هي منصتك الموثوقة لإنجاز مشاريعك بجودة واحترافية، حلولك الهندسية الذكية في مكان واحد.",
         searchPlaceholder: "ابحث عن مصمم أو تخصص...",
         searchButton: "ابحث الآن",
@@ -795,8 +795,8 @@ export const translations = {
     home: {
       hero: {
         badge: "Bytly | Integrated Engineering Ecosystem",
-        title: "Integrated Engineering Ecosystem",
-        titleHighlight: "for Your Real Estate Projects",
+        title: "Turn Your Vision into",
+        titleHighlight: "Engineering Reality",
         subtitle: "Whether you're a homeowner, real estate investor, or professional engineer - Bytly is your trusted platform to complete your projects with quality and professionalism. Your smart engineering solutions in one place.",
         searchPlaceholder: "Search for designer or specialization...",
         searchButton: "Search Now",
