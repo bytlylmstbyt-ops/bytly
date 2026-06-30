@@ -80,93 +80,25 @@ export default function Login() {
     }
   };
 
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const googleClickRef = useRef(false);
-  
-  const handleGoogle = async () => {
-    // Prevent double-clicks
-    if (googleClickRef.current || googleLoading) return;
-    googleClickRef.current = true;
-    
-    try {
-      setGoogleLoading(true);
-      // Use Gmail connector to get Google user info (bypasses platform OAuth)
-      const response = await base44.functions.invoke("googleOAuthLogin", {});
-      const userInfo = response.data;
-      
-      // Store Google info in session for registration flow
-      sessionStorage.setItem('googleUserInfo', JSON.stringify(userInfo));
-      
-      // Reset guard and redirect
-      googleClickRef.current = false;
-      // Use replace to prevent back button from returning to login
-      window.location.replace("/RegisterChoice");
-    } catch (err) {
-      googleClickRef.current = false;
-      setError("فشل تسجيل الدخول عبر Google. حاول مرة أخرى.");
-      console.error("Google login error:", err);
-      setGoogleLoading(false);
-    }
-  };
-  const handleMicrosoft = () => base44.auth.loginWithProvider("microsoft", returnUrl);
-  const handleFacebook = () => base44.auth.loginWithProvider("facebook", returnUrl);
-  const handleApple = () => base44.auth.loginWithProvider("apple", returnUrl);
-
   return (
     <AuthLayout
       icon={LogIn}
-      title="Welcome back"
-      subtitle="Log in to your account"
+      title="تسجيل الدخول"
+      subtitle="مرحباً بعودتك"
       footer={
-        <>
-          Don't have an account?{" "}
-          <Link to="/register" className="text-primary font-medium hover:underline">
-            Create one
+        <div className="flex flex-col gap-2 items-center">
+          <p className="text-sm text-muted-foreground">
+            ليس لديك حساب؟{" "}
+            <Link to="/register" className="text-primary font-medium hover:underline">
+              سجّل الآن
+            </Link>
+          </p>
+          <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+            هل نسيت كلمة السر؟
           </Link>
-        </>
+        </div>
       }
     >
-      <div className="grid grid-cols-2 gap-2 md:gap-3 mb-4 md:mb-6">
-        <Button 
-          variant="outline" 
-          className="h-10 md:h-11 text-xs md:text-sm font-medium" 
-          onClick={handleGoogle} 
-          disabled={googleLoading}
-          type="button"
-        >
-          <GoogleIcon className="w-4 h-4 md:w-5 md:h-5 mr-1.5 md:mr-2" />
-          {googleLoading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-              جاري...
-            </>
-          ) : (
-            "Google"
-          )}
-        </Button>
-        <Button variant="outline" className="h-10 md:h-11 text-xs md:text-sm font-medium" onClick={handleMicrosoft}>
-          <MicrosoftIcon />
-          Microsoft
-        </Button>
-        <Button variant="outline" className="h-10 md:h-11 text-xs md:text-sm font-medium" onClick={handleFacebook}>
-          <FacebookIcon />
-          Facebook
-        </Button>
-        <Button variant="outline" className="h-10 md:h-11 text-xs md:text-sm font-medium" onClick={handleApple}>
-          <AppleIcon />
-          Apple
-        </Button>
-      </div>
-
-      <div className="relative mb-4 md:mb-6">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-3 text-muted-foreground">or</span>
-        </div>
-      </div>
-
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-2">
           <span className="text-destructive shrink-0 mt-0.5">⚠</span>
@@ -174,9 +106,9 @@ export default function Login() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
-        <div className="space-y-1.5 md:space-y-2">
-          <Label htmlFor="email">Email</Label>
+      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-sm font-medium">بريد إلكتروني</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
@@ -189,7 +121,7 @@ export default function Login() {
               value={email}
               onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(""); }}
               onBlur={handleEmailBlur}
-              className={`pl-10 h-11 md:h-12 ${emailError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+              className={`pl-10 h-12 ${emailError ? "border-destructive focus-visible:ring-destructive" : ""}`}
               required
               aria-invalid={!!emailError}
               aria-describedby={emailError ? "email-error" : undefined}
@@ -199,12 +131,10 @@ export default function Login() {
             <p id="email-error" className="text-xs text-destructive mt-1">{emailError}</p>
           )}
         </div>
-        <div className="space-y-1.5 md:space-y-2">
+
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
-            <Link to="/forgot-password" className="text-xs text-primary hover:underline">
-              Forgot password?
-            </Link>
+            <Label htmlFor="password" className="text-sm font-medium">كلمة المرور</Label>
           </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
@@ -216,19 +146,20 @@ export default function Login() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 h-11 md:h-12"
+              className="pl-10 h-12"
               required
             />
           </div>
         </div>
-        <Button type="submit" className="w-full h-11 md:h-12 font-medium" disabled={loading}>
+
+        <Button type="submit" className="w-full h-12 font-medium text-base" disabled={loading}>
           {loading ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Logging in...
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              جاري تسجيل الدخول...
             </>
           ) : (
-            "Log in"
+            "تسجيل الدخول"
           )}
         </Button>
       </form>
