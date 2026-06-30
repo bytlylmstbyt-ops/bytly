@@ -7,37 +7,41 @@
     <link rel="manifest" href="/manifest.json" />
     <title>Base44 APP</title>
     <script>
-      // In the iframe preview, Vite's HMR WebSocket can't connect and throws
-      // "WebSocket closed without opened". Override the global WebSocket
-      // constructor to silently no-op same-origin connections (Vite dev server).
-      // Cross-origin WebSocket connections (e.g. Base44 realtime API) are unaffected.
+      // In the iframe preview, Vite's @vite/client creates a WebSocket for HMR
+      // that can't connect ("WebSocket closed without opened"). Suppress this
+      // harmless error at multiple levels.
       (function () {
-        if (window.top === window) return; // Only in iframe
-        var OriginalWebSocket = window.WebSocket;
-        window.WebSocket = function (url, protocols) {
-          try {
-            var parsed = new URL(url, window.location.href);
-            var isSameOrigin = parsed.origin === window.location.origin;
-            if (isSameOrigin) {
-              // Return a silent mock — never opens, never throws
-              return {
-                readyState: 3, CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3,
-                url: url, extensions: '', protocol: '', binaryType: 'blob',
-                bufferedAmount: 0,
-                send: function () {}, close: function () {},
-                addEventListener: function () {}, removeEventListener: function () {},
-                dispatchEvent: function () { return false; },
-                onopen: null, onclose: null, onerror: null, onmessage: null
-              };
-            }
-          } catch (e) { /* fall through to original */ }
-          return new OriginalWebSocket(url, protocols);
+        var MSG = 'WebSocket closed without opened';
+
+        // 1. Filter console.error / console.warn — Vite logs the error here
+        var origConsoleError = console.error;
+        var origConsoleWarn = console.warn;
+        console.error = function () {
+          var args = Array.prototype.slice.call(arguments);
+          if (args.some(function (a) { return typeof a === 'string' && a.indexOf(MSG) !== -1; })) return;
+          return origConsoleError.apply(console, args);
         };
-        window.WebSocket.prototype = OriginalWebSocket.prototype;
-        window.WebSocket.CONNECTING = 0;
-        window.WebSocket.OPEN = 1;
-        window.WebSocket.CLOSING = 2;
-        window.WebSocket.CLOSED = 3;
+        console.warn = function () {
+          var args = Array.prototype.slice.call(arguments);
+          if (args.some(function (a) { return typeof a === 'string' && a.indexOf(MSG) !== -1; })) return;
+          return origConsoleWarn.apply(console, args);
+        };
+
+        // 2. Catch thrown errors from @vite/client's WebSocket close handler
+        window.addEventListener('error', function (e) {
+          var msg = e.message || (e.error && e.error.message) || '';
+          if (typeof msg === 'string' && msg.indexOf(MSG) !== -1) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+        window.addEventListener('unhandledrejection', function (e) {
+          var msg = (e.reason && e.reason.message) || '';
+          if (typeof msg === 'string' && msg.indexOf(MSG) !== -1) {
+            e.preventDefault();
+          }
+        }, true);
       })();
     </script>
   </head>
