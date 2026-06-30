@@ -1,15 +1,17 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Share2, Facebook, Twitter, Linkedin, Copy, Check } from "lucide-react";
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 4;
 const DOUBLE_TAP_ZOOM = 2.5;
 
-export default function EnhancedLightbox({ images = [], initialIndex = 0, onClose }) {
+export default function EnhancedLightbox({ images = [], initialIndex = 0, onClose, portfolio }) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const touchRef = useRef({
     mode: null, // 'pan' | 'pinch' | 'swipe' | null
@@ -218,6 +220,12 @@ export default function EnhancedLightbox({ images = [], initialIndex = 0, onClos
           >
             <ZoomIn className="w-5 h-5 text-white" />
           </button>
+          <button
+            onClick={() => setShowShareMenu(!showShareMenu)}
+            className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-white/20 active:scale-95 transition-all"
+          >
+            <Share2 className="w-5 h-5 text-white" />
+          </button>
         </div>
       </div>
 
@@ -295,6 +303,108 @@ export default function EnhancedLightbox({ images = [], initialIndex = 0, onClos
           ))}
         </div>
       )}
+
+      {/* Share Menu */}
+      <AnimatePresence>
+        {showShareMenu && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-20 left-1/2 -translate-x-1/2 z-50 bg-white rounded-2xl shadow-2xl p-4 min-w-[320px]"
+            style={{ top: "calc(env(safe-area-inset-top) + 5rem)" }}
+          >
+            <div className="text-center mb-3">
+              <p className="font-semibold text-slate-800 mb-1">مشاركة العمل</p>
+              {portfolio?.title && (
+                <p className="text-sm text-slate-600">{portfolio.title}</p>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-4 gap-2 mb-3">
+              <ShareButton 
+                platform="facebook" 
+                icon={<Facebook className="w-5 h-5" />}
+                color="bg-blue-600 hover:bg-blue-700"
+                onClick={() => shareToPlatform('facebook')}
+              />
+              <ShareButton 
+                platform="twitter" 
+                icon={<Twitter className="w-5 h-5" />}
+                color="bg-sky-500 hover:bg-sky-600"
+                onClick={() => shareToPlatform('twitter')}
+              />
+              <ShareButton 
+                platform="linkedin" 
+                icon={<Linkedin className="w-5 h-5" />}
+                color="bg-blue-700 hover:bg-blue-800"
+                onClick={() => shareToPlatform('linkedin')}
+              />
+              <ShareButton 
+                platform="copy" 
+                icon={copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                color="bg-slate-600 hover:bg-slate-700"
+                onClick={copyLink}
+              />
+            </div>
+            
+            <button
+              onClick={() => setShowShareMenu(false)}
+              className="w-full py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              إغلاق
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
+
+  function ShareButton({ platform, icon, color, onClick }) {
+    return (
+      <button
+        onClick={onClick}
+        className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${color} text-white`}
+      >
+        {icon}
+        <span className="text-xs font-medium">
+          {platform === 'copy' ? 'نسخ' : platform === 'facebook' ? 'فيسبوك' : platform === 'twitter' ? 'تويتر' : 'لينكد إن'}
+        </span>
+      </button>
+    );
+  }
+
+  function shareToPlatform(platform) {
+    const currentImage = images[currentIndex];
+    const shareUrl = window.location.href;
+    const text = encodeURIComponent(portfolio?.title || 'أعمالي على منصة بيتلي');
+    
+    let shareLink = '';
+    switch(platform) {
+      case 'facebook':
+        shareLink = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`;
+        break;
+      case 'twitter':
+        shareLink = `https://twitter.com/intent/tweet?text=${text}&url=${shareUrl}`;
+        break;
+      case 'linkedin':
+        shareLink = `https://www.linkedin.com/sharing/share-offsite/?url=${shareUrl}`;
+        break;
+    }
+    
+    if (shareLink) {
+      window.open(shareLink, '_blank', 'width=600,height=400');
+      setShowShareMenu(false);
+    }
+  }
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  }
 }

@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { 
   MapPin, Star, CheckCircle, Briefcase, Award, Clock,
   MessageSquare, Share2, Heart, Grid3X3, ExternalLink,
-  Calendar, Phone, Mail, ChevronLeft, ChevronRight, PlusCircle
+  Calendar, Phone, Mail, PlusCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AppointmentModal from "@/components/appointments/AppointmentModal";
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import EngineerReviewForm from "@/components/reviews/EngineerReviewForm";
 import RatingStats from "@/components/reviews/RatingStats";
+import ImageGallerySlider from "@/components/portfolio/ImageGallerySlider";
 
 export default function EngineerProfile() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -115,19 +116,7 @@ export default function EngineerProfile() {
     }
   };
 
-  const allImages = portfolios.flatMap(p => p.images || []);
 
-  const handlePrevImage = () => {
-    const newIdx = currentImageIndex === 0 ? allImages.length - 1 : currentImageIndex - 1;
-    setCurrentImageIndex(newIdx);
-    setSelectedImage(allImages[newIdx]);
-  };
-
-  const handleNextImage = () => {
-    const newIdx = currentImageIndex === allImages.length - 1 ? 0 : currentImageIndex + 1;
-    setCurrentImageIndex(newIdx);
-    setSelectedImage(allImages[newIdx]);
-  };
 
   if (isLoading) {
     return (
@@ -451,61 +440,17 @@ export default function EngineerProfile() {
                 </CardHeader>
                 <CardContent>
                   {portfolios.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {portfolios.map((portfolio, index) => (
-                        portfolio.images?.map((image, imgIndex) => (
-                          <Dialog key={`${portfolio.id}-${imgIndex}`}>
-                            <DialogTrigger asChild>
-                              <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: (index * (portfolio.images?.length || 0) + imgIndex) * 0.05 }}
-                                className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer"
-                                onClick={() => {
-                                  const globalIndex = portfolios.slice(0, index).reduce((acc, p) => acc + (p.images?.length || 0), 0) + imgIndex;
-                                  setCurrentImageIndex(globalIndex);
-                                  setSelectedImage(image);
-                                }}
-                              >
-                                <img
-                                  src={image}
-                                  alt={portfolio.title}
-                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <div className="absolute bottom-3 right-3">
-                                    <p className="text-white text-sm font-medium">{portfolio.title}</p>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-4xl p-0 bg-black/95 border-0">
-                              <div className="relative">
-                                <img
-                                  src={selectedImage || image}
-                                  alt={portfolio.title}
-                                  className="w-full h-auto max-h-[80vh] object-contain"
-                                />
-                                {allImages.length > 1 && (
-                                  <>
-                                    <button
-                                      onClick={handlePrevImage}
-                                      className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
-                                    >
-                                      <ChevronRight className="w-6 h-6 text-white" />
-                                    </button>
-                                    <button
-                                      onClick={handleNextImage}
-                                      className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition-colors"
-                                    >
-                                      <ChevronLeft className="w-6 h-6 text-white" />
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        ))
+                    <div className="space-y-6">
+                      {portfolios.map((portfolio) => (
+                        <div key={portfolio.id} className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-semibold text-slate-800">{portfolio.title}</h4>
+                            <Badge variant="secondary">{portfolio.images?.length || 0} صور</Badge>
+                          </div>
+                          {portfolio.images && portfolio.images.length > 0 && (
+                            <ImageGallerySlider images={portfolio.images} portfolio={portfolio} />
+                          )}
+                        </div>
                       ))}
                     </div>
                   ) : (
