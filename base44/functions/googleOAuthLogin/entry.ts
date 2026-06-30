@@ -4,8 +4,17 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    // Get the Google connection using the workspace connector
-    const connectorId = "6a43fa24aa8bec5f45d4523f";
+    // Check if user is authenticated
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ 
+        error: 'Unauthorized',
+        details: 'User must be logged in first'
+      }, { status: 401 });
+    }
+    
+    // Get the Google connection using the new workspace connector
+    const connectorId = "6a43fb8c45f2e8f7a5d30b8b";
     const { accessToken } = await base44.asServiceRole.connectors.getCurrentAppUserConnection(connectorId);
     
     // Use the token to get user info from Google
@@ -31,7 +40,7 @@ Deno.serve(async (req) => {
     console.error('Google OAuth Error:', error);
     return Response.json({ 
       error: error.message,
-      details: 'Google OAuth connection failed. Please ensure you have authorized the connector.'
+      details: 'Google OAuth connection failed. Please connect your Google account first.'
     }, { status: 500 });
   }
 });

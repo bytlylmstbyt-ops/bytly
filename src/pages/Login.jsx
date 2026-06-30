@@ -80,27 +80,9 @@ export default function Login() {
     }
   };
 
-  const handleGoogle = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      
-      // Use the workspace Google OAuth connector for login
-      const oauthUrl = await base44.connectors.connectAppUser("6a43fa24aa8bec5f45d4523f");
-      window.open(oauthUrl, "_blank", "width=500,height=600");
-      
-      // Poll for popup close and redirect after OAuth completes
-      const checkPopup = setInterval(() => {
-        if (window.closed) {
-          clearInterval(checkPopup);
-          window.location.href = returnUrl;
-        }
-      }, 1000);
-      
-    } catch (err) {
-      setError("حدث خطأ أثناء تسجيل الدخول عبر Google: " + (err?.message || "غير معروف"));
-      setLoading(false);
-    }
+  const handleGoogle = () => {
+    // Use platform's built-in Google OAuth for reliable login
+    base44.auth.loginWithProvider("google", returnUrl);
   };
   const handleMicrosoft = () => base44.auth.loginWithProvider("microsoft", returnUrl);
   const handleFacebook = () => base44.auth.loginWithProvider("facebook", returnUrl);
