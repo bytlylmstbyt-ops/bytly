@@ -63,19 +63,11 @@
         MockWebSocket.CLOSING = 2;
         MockWebSocket.CLOSED = 3;
 
+        // Mock ALL WebSocket connections — the app uses HTTP polling (React Query)
+        // for data fetching, not WebSockets. This prevents @vite/client's HMR
+        // socket from throwing "WebSocket closed without opened" in the iframe.
         window.WebSocket = function (url, protocols) {
-          try {
-            var parsed = new URL(url, window.location.href);
-            var isViteDevServer =
-              parsed.hostname === window.location.hostname ||
-              parsed.hostname === 'localhost' ||
-              parsed.hostname === '127.0.0.1' ||
-              parsed.hostname === '0.0.0.0';
-            if (isViteDevServer) {
-              return new MockWebSocket(url, protocols);
-            }
-          } catch (e) { /* fall through to original */ }
-          return new OriginalWebSocket(url, protocols);
+          return new MockWebSocket(url, protocols);
         };
         window.WebSocket.prototype = MockWebSocket.prototype;
         window.WebSocket.CONNECTING = 0;
