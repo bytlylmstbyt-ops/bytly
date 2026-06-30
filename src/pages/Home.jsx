@@ -114,14 +114,19 @@ export default function Home() {
 
   const loadData = async () => {
     setIsLoading(true);
-    const [engineersData, portfoliosData] = await Promise.all([
-      base44.entities.Engineer.filter({ status: "approved", is_verified: true }, "-rating", 6),
-      base44.entities.Portfolio.filter({ is_featured: true }, "-created_date", 8)
-    ]);
-    
-    setEngineers(engineersData);
-    setPortfolios(portfoliosData);
-    setIsLoading(false);
+    try {
+      const [engineersData, portfoliosData] = await Promise.all([
+        base44.entities.Engineer.filter({ status: "approved", is_verified: true }, "-rating", 6),
+        base44.entities.Portfolio.filter({ is_featured: true }, "-created_date", 8)
+      ]);
+      
+      setEngineers(engineersData);
+      setPortfolios(portfoliosData);
+    } catch (error) {
+      console.error("loadData error:", error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const categories = [
@@ -211,6 +216,8 @@ export default function Home() {
                       placeholder={t('home.hero.searchPlaceholder')}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
+                      enterKeyHint="search"
+                      inputMode="search"
                       className="w-full pr-12 h-14 bg-white border-0 rounded-xl text-slate-800 placeholder:text-slate-400"
                     />
                   </div>

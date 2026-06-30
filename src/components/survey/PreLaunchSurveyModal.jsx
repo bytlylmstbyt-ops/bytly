@@ -221,6 +221,8 @@ export default function PreLaunchSurveyModal({ open, onClose, sourcePage = "home
                 placeholder={tr("biggestChallengePlaceholder")}
                 rows={3}
                 className="resize-none"
+                autoComplete="off"
+                enterKeyHint="next"
               />
             </div>
 
@@ -316,6 +318,8 @@ export default function PreLaunchSurveyModal({ open, onClose, sourcePage = "home
                 placeholder={tr("additionalCommentsPlaceholder")}
                 rows={3}
                 className="resize-none"
+                autoComplete="off"
+                enterKeyHint="next"
               />
             </div>
 
@@ -326,6 +330,9 @@ export default function PreLaunchSurveyModal({ open, onClose, sourcePage = "home
                   value={formData.respondent_name}
                   onChange={(e) => handleChange("respondent_name", e.target.value)}
                   placeholder={tr("namePlaceholder")}
+                  autoComplete="name"
+                  inputMode="text"
+                  enterKeyHint="next"
                 />
               </div>
               <div>
@@ -335,6 +342,9 @@ export default function PreLaunchSurveyModal({ open, onClose, sourcePage = "home
                   value={formData.respondent_email}
                   onChange={(e) => handleChange("respondent_email", e.target.value)}
                   placeholder={tr("emailPlaceholder")}
+                  autoComplete="email"
+                  inputMode="email"
+                  enterKeyHint="done"
                 />
               </div>
             </div>
