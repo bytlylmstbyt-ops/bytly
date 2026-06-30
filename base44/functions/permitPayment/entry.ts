@@ -20,6 +20,13 @@ Deno.serve(async (req) => {
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
     const appUrl = Deno.env.get('APP_URL') || 'https://app.base44.com';
 
+    // The 'distribute' action handles fund distribution — restrict to admin only
+    if (action === 'distribute') {
+      if (user.role !== 'admin') {
+        return Response.json({ error: 'Forbidden — admin only' }, { status: 403 });
+      }
+    }
+
     // ── Fetch Permit ──────────────────────────────────────────────────────────
     const permit = await base44.asServiceRole.entities.PermitApplication.get(permit_id);
     if (!permit) return Response.json({ error: 'Permit not found' }, { status: 404 });

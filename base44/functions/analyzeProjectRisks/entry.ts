@@ -4,6 +4,8 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
+    const isScheduled = req.headers.get('x-base44-scheduled') === 'true';
+
     // Support both: scheduled automation (no body) and manual call (with project_id)
     let project_id = null;
     try {
@@ -11,6 +13,13 @@ Deno.serve(async (req) => {
       project_id = body?.project_id;
     } catch (_) {
       // No body - running as scheduled automation
+    }
+
+    // Authenticate: scheduled calls skip auth, manual calls require admin
+    if (!isScheduled) {
+      const user = await base44.auth.me();
+      if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      if (user.role !== 'admin') return Response.json({ error: 'Forbidden — admin only' }, { status: 403 });
     }
 
     // Scheduled mode: analyze ALL active projects

@@ -76,10 +76,18 @@ export default function EnhancedChatWindow({
   }, [conversation.id, currentUserEmail]);
 
   const playNotificationSound = () => {
-    // Simple notification sound
-    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGGS57OihUBELTKXh8bllHAU2jdXty3YpBS1+zPDckEILFGCz6O6qVxMMR6Dg8r1tIwcxfsr03I5BCRVhtuvvq1kVDEih4PO9bSMHMH7K9NyOQAoVYbbr76tZFgxIoeDzvW0jBzB+yvTcjkAKFWG26++rWRUMSKHg871tIwcwfsr03I5AChVhtuvvq1kWDEih4PO9bSMHMH7K9NyOQAoVYbbr76tZFgxIoeDzvW0jBzB+yvTcjkAKFWG26++rWRUMSKHg871tIwcwfsr03I5AChVhtuvvq1kWDEih4PO9bSMHMH7K9NyOQAoVYbbr76tZFgxIoeDzvW0jBzB+yvTcjkAKFWG26++rWRUMSKHg871tIwcwfsr03I5AChVhtuvvq1kWDEih4PO9');
-    audio.volume = 0.3;
-    audio.play().catch(() => {}); // Ignore if autoplay blocked
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 800;
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.15);
+    } catch (e) { /* ignore */ }
   };
 
   const loadMessages = async () => {
