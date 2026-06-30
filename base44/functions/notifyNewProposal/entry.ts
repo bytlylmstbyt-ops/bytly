@@ -85,7 +85,16 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.Notification.update(notification.id, { email_sent: true });
     } catch (emailError) {
       console.error('Failed to send email:', emailError);
-      // Continue even if email fails - notification is already created
+    }
+
+    // Send WhatsApp notification for instant alert
+    try {
+      await base44.asServiceRole.functions.invoke('sendWhatsappNotification', {
+        recipient_phone: project.client_phone,
+        message: `🏗️ عرض جديد على مشروعك!\n\nقدم المهندس ${engineer.full_name} عرضاً على مشروع "${project.title}"\n\n💰 السعر: ${proposal.price} ريال\n⏱️ المدة: ${proposal.delivery_days || '-'} يوم\n\nراجع العرض الآن: https://mybytly.com/ProjectDetails?id=${project.id}`
+      });
+    } catch (whatsappError) {
+      console.error('Failed to send WhatsApp:', whatsappError);
     }
 
     return Response.json({
