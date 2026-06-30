@@ -19,10 +19,10 @@
         var OriginalWebSocket = window.WebSocket;
 
         function MockWebSocket(url, protocols) {
-          // Inherit EventTarget so addEventListener/removeEventListener work,
-          // but never dispatch any events — stays CONNECTING forever.
-          EventTarget.call(this);
-          this.readyState = 0; // CONNECTING — never changes
+          var self = this;
+          var listeners = {};
+
+          this.readyState = 0; // CONNECTING
           this.url = url;
           this.extensions = '';
           this.protocol = '';
@@ -32,11 +32,32 @@
           this.onclose = null;
           this.onerror = null;
           this.onmessage = null;
+
+          this.addEventListener = function (type, listener) {
+            if (!listeners[type]) listeners[type] = [];
+            listeners[type].push(listener);
+          };
+          this.removeEventListener = function (type, listener) {
+            if (!listeners[type]) return;
+            listeners[type] = listeners[type].filter(function (l) { return l !== listener; });
+          };
+          this.dispatchEvent = function (event) {
+            var arr = listeners[event.type];
+            if (arr) arr.forEach(function (l) { try { l(event); } catch (e) {} });
+            var handler = self['on' + event.type];
+            if (typeof handler === 'function') { try { handler(event); } catch (e) {} }
+            return true;
+          };
+          this.send = function () {};
+          this.close = function () {};
+
+          // Fire a fake 'open' so @vite/client thinks HMR connected.
+          // Never fire 'close' — prevents "WebSocket closed without opened".
+          setTimeout(function () {
+            self.readyState = 1; // OPEN
+            try { self.dispatchEvent({ type: 'open' }); } catch (e) {}
+          }, 0);
         }
-        MockWebSocket.prototype = Object.create(EventTarget.prototype);
-        MockWebSocket.prototype.constructor = MockWebSocket;
-        MockWebSocket.prototype.send = function () {};
-        MockWebSocket.prototype.close = function () {};
         MockWebSocket.CONNECTING = 0;
         MockWebSocket.OPEN = 1;
         MockWebSocket.CLOSING = 2;
