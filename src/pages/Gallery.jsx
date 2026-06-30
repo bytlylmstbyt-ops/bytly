@@ -19,6 +19,19 @@ const DESIGN_CATEGORIES = [
   { value: "executive_drawing", label: "رسم تنفيذي", icon: Grid3X3 },
 ];
 
+const DESIGN_STYLES = [
+  { value: "all", label: "جميع الأنماط" },
+  { value: "modern", label: "مودرن", keywords: ["مودرن", "حديث", "عصري", "معاصر", "modern", "contemporary"] },
+  { value: "classic", label: "كلاسيك", keywords: ["كلاسيك", "تقليدي", "كلاسيكي", "classic", "traditional"] },
+  { value: "islamic", label: "إسلامي", keywords: ["إسلامي", "عربي", "شرقي", "islamic", "arabic"] },
+  { value: "minimalist", label: "مينيماليست", keywords: ["مينيماليست", "بسيط", "تبسيطي", "minimalist", "minimal"] },
+  { value: "luxury", label: "فاخر", keywords: ["فاخر", "فخم", "ترف", "luxury", "luxurious"] },
+  { value: "industrial", label: "صناعي", keywords: ["صناعي", "صناعة", "industrial"] },
+  { value: "scandinavian", label: "اسكندنافي", keywords: ["اسكندنافي", "شمالي", "scandinavian", "nordic"] },
+  { value: "bohemian", label: "بوهيمي", keywords: ["بوهيمي", "bohemian", "boho"] },
+  { value: "mediterranean", label: "متوسطي", keywords: ["متوسطي", "بحر أبيض", "mediterranean"] },
+];
+
 const PROJECT_TYPES = [
   { value: "all", label: "جميع الأنواع" },
   { value: "residential", label: "سكني", icon: Home },
@@ -43,6 +56,7 @@ export default function Gallery() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedProjectType, setSelectedProjectType] = useState("all");
+  const [selectedStyle, setSelectedStyle] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [showFilters, setShowFilters] = useState(false);
 
@@ -71,6 +85,19 @@ export default function Gallery() {
       if (!p.images || p.images.length === 0) return false;
       if (selectedCategory !== "all" && p.category !== selectedCategory) return false;
       if (selectedProjectType !== "all" && p.project_type !== selectedProjectType) return false;
+      
+      // Smart style filtering
+      if (selectedStyle !== "all") {
+        const styleConfig = DESIGN_STYLES.find(s => s.value === selectedStyle);
+        if (styleConfig) {
+          const searchText = `${p.description || ''} ${p.title || ''} ${p.tags?.join(' ') || ''}`.toLowerCase();
+          const matchesStyle = styleConfig.keywords.some(keyword => 
+            searchText.includes(keyword.toLowerCase())
+          );
+          if (!matchesStyle) return false;
+        }
+      }
+      
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         return (
@@ -88,11 +115,12 @@ export default function Gallery() {
       return new Date(b.created_date) - new Date(a.created_date);
     });
 
-  const activeFiltersCount = (selectedCategory !== "all" ? 1 : 0) + (selectedProjectType !== "all" ? 1 : 0);
+  const activeFiltersCount = (selectedCategory !== "all" ? 1 : 0) + (selectedProjectType !== "all" ? 1 : 0) + (selectedStyle !== "all" ? 1 : 0);
 
   const clearFilters = () => {
     setSelectedCategory("all");
     setSelectedProjectType("all");
+    setSelectedStyle("all");
     setSearchQuery("");
     setSortBy("newest");
   };
@@ -192,6 +220,26 @@ export default function Gallery() {
                     }`}
                   >
                     {type.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Design Style Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-slate-500 font-medium">النمط:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {DESIGN_STYLES.map(style => (
+                  <button
+                    key={style.value}
+                    onClick={() => setSelectedStyle(style.value)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                      selectedStyle === style.value
+                        ? "bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white shadow-md"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
+                  >
+                    {style.label}
                   </button>
                 ))}
               </div>

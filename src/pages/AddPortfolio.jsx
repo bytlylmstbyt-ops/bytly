@@ -32,6 +32,7 @@ export default function AddPortfolio() {
     title: "",
     description: "",
     category: "",
+    style: "",
     project_type: "",
     location: "",
     year: new Date().getFullYear(),
@@ -52,6 +53,20 @@ export default function AddPortfolio() {
     { value: "civil_engineering", label: "هندسة مدنية" },
     { value: "structural_design", label: "تصميم إنشائي" },
     { value: "executive_drawing", label: "رسومات تنفيذية" }
+  ];
+
+  const styles = [
+    { value: "modern", label: "مودرن" },
+    { value: "classic", label: "كلاسيك" },
+    { value: "contemporary", label: "معاصر" },
+    { value: "traditional", label: "تقليدي" },
+    { value: "minimalist", label: "مينيماليست" },
+    { value: "luxury", label: "فاخر" },
+    { value: "industrial", label: "صناعي" },
+    { value: "scandinavian", label: "اسكندنافي" },
+    { value: "mediterranean", label: "متوسطي" },
+    { value: "islamic", label: "إسلامي" },
+    { value: "other", label: "آخر" }
   ];
 
   useEffect(() => {
@@ -266,8 +281,8 @@ export default function AddPortfolio() {
                   />
                 </div>
 
-                {/* Category & Project Type */}
-                <div className="grid md:grid-cols-2 gap-4">
+                {/* Category & Style & Project Type */}
+                <div className="grid md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label>التصنيف</Label>
                     <Select
@@ -281,6 +296,25 @@ export default function AddPortfolio() {
                         {categories.map(cat => (
                           <SelectItem key={cat.value} value={cat.value}>
                             {cat.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>النمط</Label>
+                    <Select
+                      value={formData.style}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, style: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر النمط" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {styles.map(style => (
+                          <SelectItem key={style.value} value={style.value}>
+                            {style.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
