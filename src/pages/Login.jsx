@@ -42,7 +42,7 @@ export default function Login() {
   const validateEmail = (value) => {
     if (!value) return "";
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(value)) return "البريد الإلكتروني غير صالح";
+    if (!emailRegex.test(value)) return "Invalid email address";
     return "";
   };
 
@@ -68,11 +68,11 @@ export default function Login() {
     } catch (err) {
       const msg = err?.message || err?.data?.message || "";
       if (msg.includes("password") || msg.toLowerCase().includes("credential")) {
-        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+        setError("Invalid email or password");
       } else if (err?.status === 0 || msg.includes("network") || msg.includes("fetch")) {
-        setError("تعذّر الاتصال بالخادم. تحقق من اتصالك بالإنترنت.");
+        setError("Unable to connect to server. Please check your internet connection.");
       } else {
-        setError(msg || "البريد الإلكتروني أو كلمة المرور غير صحيحة");
+        setError(msg || "Invalid email or password");
       }
     } finally {
       submitGuard.current = false;
@@ -83,18 +83,18 @@ export default function Login() {
   return (
     <AuthLayout
       icon={LogIn}
-      title="تسجيل الدخول"
-      subtitle="مرحباً بعودتك"
+      title="Login"
+      subtitle="Welcome back"
       footer={
         <div className="flex flex-col gap-2 items-center">
           <p className="text-sm text-muted-foreground">
-            ليس لديك حساب؟{" "}
+            Don't have an account?{" "}
             <Link to="/register" className="text-primary font-medium hover:underline">
-              سجّل الآن
+              Sign up now
             </Link>
           </p>
           <Link to="/forgot-password" className="text-xs text-primary hover:underline">
-            هل نسيت كلمة السر؟
+            Forgot password?
           </Link>
         </div>
       }
@@ -108,7 +108,7 @@ export default function Login() {
 
       <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-sm font-medium">بريد إلكتروني</Label>
+          <Label htmlFor="email" className="text-sm font-medium">Email</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
@@ -134,7 +134,7 @@ export default function Login() {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="text-sm font-medium">كلمة المرور</Label>
+            <Label htmlFor="password" className="text-sm font-medium">Password</Label>
           </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
@@ -156,10 +156,10 @@ export default function Login() {
           {loading ? (
             <>
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              جاري تسجيل الدخول...
+              Signing in...
             </>
           ) : (
-            "تسجيل الدخول"
+            "Login"
           )}
         </Button>
       </form>
