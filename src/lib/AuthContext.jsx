@@ -46,9 +46,9 @@ export const AuthProvider = ({ children }) => {
         }
         setIsLoadingPublicSettings(false);
       } catch (appError) {
-        console.error('App state check failed:', appError);
-        
         // Handle app-level errors
+        // 403 with a known reason (auth_required / user_not_registered) is expected
+        // flow for unauthenticated visitors and bots — NOT a real error. Suppress noise.
         if (appError.status === 403 && appError.data?.extra_data?.reason) {
           const reason = appError.data.extra_data.reason;
           if (reason === 'auth_required') {
@@ -68,6 +68,8 @@ export const AuthProvider = ({ children }) => {
             });
           }
         } else {
+          // Only log truly unexpected errors (network failures, 500s, etc.)
+          console.error('App state check failed:', appError);
           setAuthError({
             type: 'unknown',
             message: appError.message || 'Failed to load app'
@@ -96,16 +98,18 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(true);
       setIsLoadingAuth(false);
     } catch (error) {
-      console.error('User auth check failed:', error);
       setIsLoadingAuth(false);
       setIsAuthenticated(false);
       
-      // If user auth fails, it might be an expired token
+      // 401/403 from auth.me() means expired or invalid token — expected flow, not an error
       if (error.status === 401 || error.status === 403) {
         setAuthError({
           type: 'auth_required',
           message: 'Authentication required'
         });
+      } else {
+        // Only log truly unexpected errors (network failures, 500s, etc.)
+        console.error('User auth check failed:', error);
       }
     }
   };
