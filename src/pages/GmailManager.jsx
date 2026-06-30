@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
 
-function EmailRow({ email, onSelect, onMarkRead, onTrash }) {
+function EmailRow({ email, onSelect, onMarkRead, onTrash, isSent }) {
   return (
     <div
       onClick={() => onSelect(email)}
@@ -33,6 +33,12 @@ function EmailRow({ email, onSelect, onMarkRead, onTrash }) {
         </p>
         <p className="text-xs text-slate-400 truncate mt-0.5">{email.snippet}</p>
       </div>
+      {isSent && (
+        <div className="flex items-center gap-1 shrink-0 mt-0.5 px-2 py-1 rounded-full bg-green-50 border border-green-200">
+          <CheckCheck className="w-3.5 h-3.5 text-green-600" />
+          <span className="text-[10px] font-medium text-green-700">تم التسليم</span>
+        </div>
+      )}
       <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100" onClick={e => e.stopPropagation()}>
         {email.isUnread && (
           <button onClick={() => onMarkRead(email.id)} title="تحديد كمقروء" className="p-1 hover:bg-slate-200 rounded">
@@ -241,6 +247,7 @@ export default function GmailManager() {
                         onSelect={openEmail}
                         onMarkRead={handleMarkRead}
                         onTrash={handleTrash}
+                        isSent={activeTab === 'sent'}
                       />
                     ))}
                   </div>
