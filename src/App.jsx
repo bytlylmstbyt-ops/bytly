@@ -92,6 +92,19 @@ const AuthenticatedApp = () => {
   }
 
   const publicPages = [
+    'Home',
+    'Engineers',
+    'EngineerProfile',
+    'Gallery',
+    'Projects',
+    'ConsultingFirms',
+    'ContactUs',
+    'Terms',
+    'Privacy',
+    'Copyright',
+    'Complaints',
+    'Support',
+    'RegisterChoice',
     'RegisterEngineer',
     'RegisterClient',
     'RegisterConsultant',
@@ -107,6 +120,20 @@ const AuthenticatedApp = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+
+      {/* ── Public explicit lazy routes ─────────────────────────────── */}
+      <Route path="/CostEstimator"              element={lazyRoute(CostEstimator, "CostEstimator")} />
+      <Route path="/ConstructionTracker"        element={lazyRoute(ConstructionTracker, "ConstructionTracker")} />
+      <Route path="/TechnicalResources"         element={lazyRoute(TechnicalResources, "TechnicalResources")} />
+      <Route path="/EngineerMatcher"            element={lazyRoute(EngineerMatcher, "EngineerMatcher")} />
+      <Route path="/MarketEntities"             element={lazyRoute(MarketEntities, "MarketEntities")} />
+      <Route path="/AIEngineers"                element={lazyRoute(AIEngineers, "AIEngineers")} />
+      <Route path="/AIInteriorDesigner"         element={lazyRoute(AIInteriorDesigner, "AIInteriorDesigner")} />
+      <Route path="/AIArchitect"                element={lazyRoute(AIArchitect, "AIArchitect")} />
+      <Route path="/AIBudgetEstimator"          element={lazyRoute(AIBudgetEstimator, "AIBudgetEstimator")} />
+      <Route path="/AIRenovation"               element={lazyRoute(AIRenovation, "AIRenovation")} />
+      <Route path="/AIMaterialAdvisor"          element={lazyRoute(AIMaterialAdvisor, "AIMaterialAdvisor")} />
+      <Route path="/AIRecommender"              element={lazyRoute(AIRecommender, "AIRecommender")} />
 
       {/* Public registration-related pages */}
       {Object.entries(Pages)
@@ -146,20 +173,6 @@ const AuthenticatedApp = () => {
               }
             />
           ))}
-
-      {/* ── Public explicit lazy routes ─────────────────────────────── */}
-      <Route path="/CostEstimator"              element={lazyRoute(CostEstimator, "CostEstimator")} />
-      <Route path="/ConstructionTracker"        element={lazyRoute(ConstructionTracker, "ConstructionTracker")} />
-      <Route path="/TechnicalResources"         element={lazyRoute(TechnicalResources, "TechnicalResources")} />
-      <Route path="/EngineerMatcher"            element={lazyRoute(EngineerMatcher, "EngineerMatcher")} />
-      <Route path="/MarketEntities"             element={lazyRoute(MarketEntities, "MarketEntities")} />
-      <Route path="/AIEngineers"                element={lazyRoute(AIEngineers, "AIEngineers")} />
-      <Route path="/AIInteriorDesigner"         element={lazyRoute(AIInteriorDesigner, "AIInteriorDesigner")} />
-      <Route path="/AIArchitect"                element={lazyRoute(AIArchitect, "AIArchitect")} />
-      <Route path="/AIBudgetEstimator"          element={lazyRoute(AIBudgetEstimator, "AIBudgetEstimator")} />
-      <Route path="/AIRenovation"               element={lazyRoute(AIRenovation, "AIRenovation")} />
-      <Route path="/AIMaterialAdvisor"          element={lazyRoute(AIMaterialAdvisor, "AIMaterialAdvisor")} />
-      <Route path="/AIRecommender"              element={lazyRoute(AIRecommender, "AIRecommender")} />
 
       {/* ── Private explicit lazy routes ──────────────────────────── */}
         <Route path="/BuildingProgress"           element={lazyRoute(BuildingProgress, "BuildingProgress")} />
