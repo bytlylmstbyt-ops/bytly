@@ -7,21 +7,38 @@
     <link rel="manifest" href="/manifest.json" />
     <title>Base44 APP</title>
     <script>
-      // Suppress non-fatal Vite HMR WebSocket errors in the iframe preview
-      // ("WebSocket closed without opened") — HMR doesn't work in the preview
-      // environment, but the error is harmless and shouldn't surface to the user.
-      window.addEventListener('error', function (e) {
-        if (e.message && e.message.includes('WebSocket closed without opened')) {
-          e.preventDefault();
-          e.stopPropagation();
-          return true;
-        }
-      }, true);
-      window.addEventListener('unhandledrejection', function (e) {
-        if (e.reason && e.reason.message && e.reason.message.includes('WebSocket closed without opened')) {
-          e.preventDefault();
-        }
-      }, true);
+      // In the iframe preview, Vite's HMR WebSocket can't connect and throws
+      // "WebSocket closed without opened". Override the global WebSocket
+      // constructor to silently no-op same-origin connections (Vite dev server).
+      // Cross-origin WebSocket connections (e.g. Base44 realtime API) are unaffected.
+      (function () {
+        if (window.top === window) return; // Only in iframe
+        var OriginalWebSocket = window.WebSocket;
+        window.WebSocket = function (url, protocols) {
+          try {
+            var parsed = new URL(url, window.location.href);
+            var isSameOrigin = parsed.origin === window.location.origin;
+            if (isSameOrigin) {
+              // Return a silent mock — never opens, never throws
+              return {
+                readyState: 3, CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3,
+                url: url, extensions: '', protocol: '', binaryType: 'blob',
+                bufferedAmount: 0,
+                send: function () {}, close: function () {},
+                addEventListener: function () {}, removeEventListener: function () {},
+                dispatchEvent: function () { return false; },
+                onopen: null, onclose: null, onerror: null, onmessage: null
+              };
+            }
+          } catch (e) { /* fall through to original */ }
+          return new OriginalWebSocket(url, protocols);
+        };
+        window.WebSocket.prototype = OriginalWebSocket.prototype;
+        window.WebSocket.CONNECTING = 0;
+        window.WebSocket.OPEN = 1;
+        window.WebSocket.CLOSING = 2;
+        window.WebSocket.CLOSED = 3;
+      })();
     </script>
   </head>
   <body>
