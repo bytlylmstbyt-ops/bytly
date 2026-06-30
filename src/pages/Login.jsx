@@ -80,7 +80,28 @@ export default function Login() {
     }
   };
 
-  const handleGoogle = () => base44.auth.loginWithProvider("google", returnUrl);
+  const handleGoogle = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      
+      // Check if user is authenticated first
+      const isAuth = await base44.auth.isAuthenticated();
+      if (isAuth) {
+        // Already logged in, just connect Google and redirect
+        const oauthUrl = await base44.connectors.connectAppUser("googlecalendar");
+        window.open(oauthUrl, "_blank");
+        window.location.href = returnUrl;
+        return;
+      }
+      
+      // Not authenticated - use platform OAuth for login
+      base44.auth.loginWithProvider("google", returnUrl);
+    } catch (err) {
+      setError("حدث خطأ أثناء تسجيل الدخول عبر Google: " + (err?.message || "غير معروف"));
+      setLoading(false);
+    }
+  };
   const handleMicrosoft = () => base44.auth.loginWithProvider("microsoft", returnUrl);
   const handleFacebook = () => base44.auth.loginWithProvider("facebook", returnUrl);
   const handleApple = () => base44.auth.loginWithProvider("apple", returnUrl);
