@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { appParams } from "@/lib/app-params";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
@@ -30,6 +32,7 @@ const AppleIcon = () => (
 );
 
 export default function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -38,6 +41,12 @@ export default function Login() {
   const submitGuard = useRef(false);
 
   const returnUrl = appParams.fromUrl || "/";
+
+  const handleGoogleLogin = () => {
+    // Save return URL and redirect to Google OAuth
+    sessionStorage.setItem('loginReturnUrl', returnUrl);
+    base44.auth.loginWithProvider('google', createPageUrl('RegisterChoice'));
+  };
 
   const validateEmail = (value) => {
     if (!value) return "";
@@ -163,6 +172,52 @@ export default function Login() {
           )}
         </Button>
       </form>
+
+      {/* Divider */}
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-muted"></div>
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+        </div>
+      </div>
+
+      {/* Social Login Buttons */}
+      <div className="space-y-3">
+        <Button
+          variant="outline"
+          className="w-full h-12"
+          onClick={handleGoogleLogin}
+        >
+          <GoogleIcon />
+          Continue with Google
+        </Button>
+        <Button
+          variant="outline"
+          className="w-full h-12"
+          onClick={() => base44.auth.loginWithProvider('microsoft', returnUrl)}
+        >
+          <MicrosoftIcon />
+          Continue with Microsoft
+        </Button>
+        <Button
+          variant="outline"
+          className="w-full h-12"
+          onClick={() => base44.auth.loginWithProvider('facebook', returnUrl)}
+        >
+          <FacebookIcon />
+          Continue with Facebook
+        </Button>
+        <Button
+          variant="outline"
+          className="w-full h-12"
+          onClick={() => base44.auth.loginWithProvider('apple', returnUrl)}
+        >
+          <AppleIcon />
+          Continue with Apple
+        </Button>
+      </div>
     </AuthLayout>
   );
 }
