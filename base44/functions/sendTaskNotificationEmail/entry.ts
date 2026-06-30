@@ -165,10 +165,9 @@ function buildTaskEmailHtml({ task, projectName, assigneeName, recipientName, al
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const isAuthenticated = await base44.auth.isAuthenticated();
-    if (!isAuthenticated) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user.role !== 'admin') return Response.json({ error: 'Forbidden — admin only' }, { status: 403 });
     const body = await req.json();
     const { taskId, recipientEmail, recipientName, alertType, appUrl } = body;
 
