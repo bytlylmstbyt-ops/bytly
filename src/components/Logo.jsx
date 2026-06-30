@@ -47,7 +47,7 @@ export default function Logo({ className = "", size = "default", isDark = false 
       </div>
 
       {/* Brand text */}
-      <div className="flex flex-col leading-tight">
+      <div className="flex flex-col leading-normal">
         <span
           className={`font-bold ${currentSize.main}`}
           style={{
