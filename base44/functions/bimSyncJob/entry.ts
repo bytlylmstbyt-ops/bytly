@@ -5,12 +5,10 @@ Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
 
-        const isScheduled = req.headers.get('x-base44-scheduled') === 'true';
-        if (!isScheduled) {
-          const user = await base44.auth.me();
-          if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-          if (user.role !== 'admin') return Response.json({ error: 'Forbidden — admin only' }, { status: 403 });
-        }
+        // Always require admin authentication — scheduled automations run with admin context
+        const user = await base44.auth.me();
+        if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+        if (user.role !== 'admin') return Response.json({ error: 'Forbidden — admin only' }, { status: 403 });
 
         const clientId = Deno.env.get("AUTODESK_CLIENT_ID");
         const clientSecret = Deno.env.get("AUTODESK_CLIENT_SECRET");
