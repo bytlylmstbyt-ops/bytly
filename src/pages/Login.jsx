@@ -99,26 +99,26 @@ export default function Login() {
         </>
       }
     >
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <Button variant="outline" className="h-11 text-sm font-medium" onClick={handleGoogle}>
-          <GoogleIcon className="w-5 h-5 mr-2" />
+      <div className="grid grid-cols-2 gap-2 md:gap-3 mb-4 md:mb-6">
+        <Button variant="outline" className="h-10 md:h-11 text-xs md:text-sm font-medium" onClick={handleGoogle}>
+          <GoogleIcon className="w-4 h-4 md:w-5 md:h-5 mr-1.5 md:mr-2" />
           Google
         </Button>
-        <Button variant="outline" className="h-11 text-sm font-medium" onClick={handleMicrosoft}>
+        <Button variant="outline" className="h-10 md:h-11 text-xs md:text-sm font-medium" onClick={handleMicrosoft}>
           <MicrosoftIcon />
           Microsoft
         </Button>
-        <Button variant="outline" className="h-11 text-sm font-medium" onClick={handleFacebook}>
+        <Button variant="outline" className="h-10 md:h-11 text-xs md:text-sm font-medium" onClick={handleFacebook}>
           <FacebookIcon />
           Facebook
         </Button>
-        <Button variant="outline" className="h-11 text-sm font-medium" onClick={handleApple}>
+        <Button variant="outline" className="h-10 md:h-11 text-xs md:text-sm font-medium" onClick={handleApple}>
           <AppleIcon />
           Apple
         </Button>
       </div>
 
-      <div className="relative mb-6">
+      <div className="relative mb-4 md:mb-6">
         <div className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-border" />
         </div>
@@ -134,8 +134,8 @@ export default function Login() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
+      <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
+        <div className="space-y-1.5 md:space-y-2">
           <Label htmlFor="email">Email</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
@@ -149,7 +149,7 @@ export default function Login() {
               value={email}
               onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(""); }}
               onBlur={handleEmailBlur}
-              className={`pl-10 h-12 ${emailError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+              className={`pl-10 h-11 md:h-12 ${emailError ? "border-destructive focus-visible:ring-destructive" : ""}`}
               required
               aria-invalid={!!emailError}
               aria-describedby={emailError ? "email-error" : undefined}
@@ -159,7 +159,7 @@ export default function Login() {
             <p id="email-error" className="text-xs text-destructive mt-1">{emailError}</p>
           )}
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1.5 md:space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">Password</Label>
             <Link to="/forgot-password" className="text-xs text-primary hover:underline">
@@ -176,12 +176,12 @@ export default function Login() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 h-12"
+              className="pl-10 h-11 md:h-12"
               required
             />
           </div>
         </div>
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
+        <Button type="submit" className="w-full h-11 md:h-12 font-medium" disabled={loading}>
           {loading ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
