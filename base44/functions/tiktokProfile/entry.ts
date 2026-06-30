@@ -3,13 +3,25 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { accessToken } = await base44.asServiceRole.connectors.getConnection("tiktok");
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
+    let connection;
+    try {
+      connection = await base44.asServiceRole.connectors.getConnection("tiktok");
+    } catch (e) {
+      return Response.json({ error: 'TikTok not connected' });
+    }
+
+    if (!connection?.accessToken) {
+      return Response.json({ error: 'TikTok not connected' });
+    }
 
     const response = await fetch(
       "https://open.tiktokapis.com/v2/user/info/?fields=display_name,is_verified,avatar_url,follower_count,following_count,video_count,profile_deep_link",
       {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${connection.accessToken}`,
         },
       }
     );
@@ -17,7 +29,8 @@ Deno.serve(async (req) => {
     const data = await response.json();
 
     if (!response.ok || data.error?.code !== "ok") {
-      return Response.json({ error: data.error?.message || "Failed to fetch TikTok profile" }, { status: 400 });
+      console.warn('TikTok API error:', JSON.stringify(data));
+      return Response.json({ error: data.error?.message || 'TikTok API error' });
     }
 
     const tiktokUser = data.data?.user || {};
@@ -31,6 +44,7 @@ Deno.serve(async (req) => {
       profile_deep_link: tiktokUser.profile_deep_link,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('tiktokProfile error:', error.message);
+    return Response.json({ error: error.message });
   }
 });

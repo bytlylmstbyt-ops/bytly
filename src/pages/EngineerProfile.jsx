@@ -80,7 +80,9 @@ export default function EngineerProfile() {
       if (ttRes.data && !ttRes.data.error) {
         setTiktokData(ttRes.data);
       }
-    } catch (_) {}
+    } catch (e) {
+      console.warn('TikTok profile fetch failed:', e?.message || e);
+    }
 
     setIsLoading(false);
   };
