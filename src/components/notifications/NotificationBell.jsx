@@ -10,10 +10,15 @@ import { Badge } from "@/components/ui/badge";
 const typeIcons = {
   approval: <CheckCircle className="w-4 h-4 text-green-500" />,
   project_update: <Briefcase className="w-4 h-4 text-blue-500" />,
+  project_status: <Briefcase className="w-4 h-4 text-blue-500" />,
+  proposal: <DollarSign className="w-4 h-4 text-amber-500" />,
+  contract: <CheckCircle className="w-4 h-4 text-indigo-500" />,
+  milestone: <Briefcase className="w-4 h-4 text-purple-500" />,
   payment: <DollarSign className="w-4 h-4 text-emerald-500" />,
   new_message: <MessageSquare className="w-4 h-4 text-purple-500" />,
   withdrawal: <DollarSign className="w-4 h-4 text-amber-500" />,
   review: <AlertCircle className="w-4 h-4 text-orange-500" />,
+  complaint: <AlertCircle className="w-4 h-4 text-red-500" />,
   default: <Bell className="w-4 h-4 text-slate-400" />,
 };
 
@@ -21,6 +26,7 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
   const [userEmail, setUserEmail] = useState(null);
+  const [toastNotif, setToastNotif] = useState(null);
   const ref = useRef(null);
 
   useEffect(() => {
@@ -43,6 +49,10 @@ export default function NotificationBell() {
           if (event.data?.recipient_email === user.email) {
             if (event.type === "create") {
               setNotifications((prev) => [event.data, ...prev].slice(0, 20));
+              // Show instant toast popup for high/urgent priority
+              if (event.data.priority === "high" || event.data.priority === "urgent") {
+                setToastNotif(event.data);
+              }
               if (Notification.permission === "granted") {
                 new Notification(event.data.title || "إشعار جديد", {
                   body: event.data.message,
@@ -85,6 +95,13 @@ export default function NotificationBell() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  // Auto-dismiss toast after 6 seconds
+  useEffect(() => {
+    if (!toastNotif) return;
+    const timer = setTimeout(() => setToastNotif(null), 6000);
+    return () => clearTimeout(timer);
+  }, [toastNotif]);
 
   const unread = notifications.filter((n) => !n.is_read);
 
@@ -191,11 +208,46 @@ export default function NotificationBell() {
                 className="text-sm text-[#d4a574] hover:text-[#1a1a2e] font-medium transition-colors"
               >
                 عرض كل الإشعارات ←
-              </Link>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
+                </Link>
+                </div>
+                </motion.div>
+                )}
+                </AnimatePresence>
+
+                {/* Instant Toast Popup for high-priority notifications */}
+                <AnimatePresence>
+                {toastNotif && (
+                <motion.div
+                initial={{ opacity: 0, y: -50, x: "-50%" }}
+                animate={{ opacity: 1, y: 0, x: "-50%" }}
+                exit={{ opacity: 0, y: -50, x: "-50%" }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                className="fixed top-20 left-1/2 z-[200] w-[calc(100vw-2rem)] max-w-md"
+                dir="rtl"
+                >
+                <div className="bg-white rounded-2xl shadow-2xl border-r-4 border-[#C9A66B] p-4 flex items-start gap-3 cursor-pointer hover:shadow-lg transition-shadow"
+                 onClick={() => {
+                   setOpen(true);
+                   setToastNotif(null);
+                 }}
+                >
+                 <div className="mt-0.5 shrink-0">
+                   {typeIcons[toastNotif.type] || typeIcons.default}
+                 </div>
+                 <div className="flex-1 min-w-0">
+                   <p className="font-semibold text-sm text-slate-900">{toastNotif.title}</p>
+                   <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{toastNotif.message}</p>
+                 </div>
+                 <button
+                   onClick={(e) => { e.stopPropagation(); setToastNotif(null); }}
+                   className="shrink-0 text-slate-400 hover:text-slate-600"
+                 >
+                   <X className="w-4 h-4" />
+                 </button>
+                </div>
+                </motion.div>
+                )}
+                </AnimatePresence>
+                </div>
+                );
+                }

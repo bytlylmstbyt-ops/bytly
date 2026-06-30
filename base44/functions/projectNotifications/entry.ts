@@ -38,54 +38,72 @@ Deno.serve(async (req) => {
     const eventType = event.type;
     const entityName = event.entity_name;
 
+    // Helper: create in-app notification with correct schema fields
+    const createNotification = async (recipientEmail, title, message, type, relatedProjectId, relatedEntityId, actionUrl, priority) => {
+      await base44.asServiceRole.entities.Notification.create({
+        recipient_email: recipientEmail,
+        title,
+        message,
+        type,
+        related_project_id: relatedProjectId || null,
+        related_entity_id: relatedEntityId || null,
+        action_url: actionUrl || null,
+        is_read: false,
+        priority: priority || "medium"
+      });
+    };
+
+    // Helper: send email (best-effort, don't fail the whole function if email fails)
+    const sendEmail = async (to, subject, htmlBody) => {
+      try {
+        await base44.asServiceRole.integrations.Core.SendEmail({
+          to,
+          subject,
+          body: htmlBody
+        });
+      } catch (emailErr) {
+        console.error("Email send failed:", emailErr.message);
+      }
+    };
+
     // ─── NEW PROPOSAL ────────────────────────────────────────────────────────
     if (entityName === "Proposal" && eventType === "create") {
       const proposal = data;
-      const project = await base44.asServiceRole.entities.Project.filter({ id: proposal.project_id });
-      if (!project.length) return Response.json({ ok: true });
+      const projects = await base44.asServiceRole.entities.Project.filter({ id: proposal.project_id });
+      if (!projects.length) return Response.json({ ok: true });
 
-      const proj = project[0];
-      const engineer = await base44.asServiceRole.entities.Engineer.filter({ id: proposal.engineer_id });
-      const engineerName = engineer.length ? engineer[0].full_name : "مهندس";
+      const proj = projects[0];
+      const engineers = await base44.asServiceRole.entities.Engineer.filter({ id: proposal.engineer_id });
+      const engineerName = engineers.length ? engineers[0].full_name : "مهندس";
 
-      // Get client email from Client entity
+      // Get client email
+      let clientEmail = null;
       const clients = await base44.asServiceRole.entities.Client.filter({ id: proj.client_id });
-      const clientEmail = clients.length ? clients[0].email : null;
+      if (clients.length) clientEmail = clients[0].email;
 
       const notifTitle = "عرض سعر جديد على مشروعك";
       const notifBody = `قدّم ${engineerName} عرض سعر بقيمة ${proposal.price?.toLocaleString()} ريال على مشروع "${proj.title}"`;
 
-      // In-app notification for client
-      if (clientEmail) {
-        await base44.asServiceRole.entities.Notification.create({
-          user_email: clientEmail,
-          title: notifTitle,
-          message: notifBody,
-          type: "proposal",
-          related_id: proposal.project_id,
-          is_read: false
-        });
+      const actionUrl = `/ProjectDetails?id=${proj.id}`;
+      const emailHtml = `
+        <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #6B5D4F;">عرض سعر جديد على مشروعك</h2>
+          <p>${notifBody}</p>
+          <p style="color: #666;">المشروع: <strong>${proj.title}</strong></p>
+          <p style="color: #666;">قيمة العرض: <strong>${proposal.price?.toLocaleString()} ريال</strong></p>
+          <p style="color: #666;">مدة التسليم: <strong>${proposal.delivery_days} يوم</strong></p>
+          <a href="https://app.mybytly.com/ProjectDetails?id=${proj.id}" 
+             style="display:inline-block; background: linear-gradient(135deg,#6B5D4F,#C9A66B); color:white; padding:12px 24px; border-radius:8px; text-decoration:none; margin-top:16px;">
+            مراجعة العرض
+          </a>
+          <hr style="margin-top:24px; border:none; border-top:1px solid #eee;">
+          <p style="color:#aaa; font-size:12px;">بايتلي - منصة الهندسة والاستشارات</p>
+        </div>
+      `;
 
-        // Email notification
-        await base44.asServiceRole.integrations.Core.SendEmail({
-          to: clientEmail,
-          subject: `💼 ${notifTitle} - بايتلي`,
-          body: `
-            <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h2 style="color: #6B5D4F;">عرض سعر جديد على مشروعك</h2>
-              <p>${notifBody}</p>
-              <p style="color: #666;">المشروع: <strong>${proj.title}</strong></p>
-              <p style="color: #666;">قيمة العرض: <strong>${proposal.price?.toLocaleString()} ريال</strong></p>
-              <p style="color: #666;">مدة التسليم: <strong>${proposal.delivery_days} يوم</strong></p>
-              <a href="https://app.mybytly.com/ProjectDetails?id=${proj.id}" 
-                 style="display:inline-block; background: linear-gradient(135deg,#6B5D4F,#C9A66B); color:white; padding:12px 24px; border-radius:8px; text-decoration:none; margin-top:16px;">
-                مراجعة العرض
-              </a>
-              <hr style="margin-top:24px; border:none; border-top:1px solid #eee;">
-              <p style="color:#aaa; font-size:12px;">بايتلي - منصة الهندسة والاستشارات</p>
-            </div>
-          `
-        });
+      if (clientEmail) {
+        await createNotification(clientEmail, notifTitle, notifBody, "proposal", proj.id, proposal.id, actionUrl, "high");
+        await sendEmail(clientEmail, `💼 ${notifTitle} - بايتلي`, emailHtml);
       }
     }
 
@@ -105,6 +123,7 @@ Deno.serve(async (req) => {
       const notifTitle = `تغيّرت حالة المشروع إلى: ${newStatusLabel}`;
       const notifBody = `تم تحديث حالة مشروع "${project.title}" من "${oldStatusLabel}" إلى "${newStatusLabel}"`;
 
+      const actionUrl = `/ProjectDetails?id=${project.id}`;
       const emailHtml = `
         <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h2 style="color: #6B5D4F;">تحديث حالة المشروع</h2>
@@ -126,38 +145,25 @@ Deno.serve(async (req) => {
       // Notify client
       const clients = await base44.asServiceRole.entities.Client.filter({ id: project.client_id });
       if (clients.length) {
-        await base44.asServiceRole.entities.Notification.create({
-          user_email: clients[0].email,
-          title: notifTitle,
-          message: notifBody,
-          type: "project_status",
-          related_id: project.id,
-          is_read: false
-        });
-        await base44.asServiceRole.integrations.Core.SendEmail({
-          to: clients[0].email,
-          subject: `🔔 ${notifTitle} - بايتلي`,
-          body: emailHtml
-        });
+        await createNotification(clients[0].email, notifTitle, notifBody, "project_status", project.id, null, actionUrl, "high");
+        await sendEmail(clients[0].email, `🔔 ${notifTitle} - بايتلي`, emailHtml);
       }
 
       // Notify assigned engineer
       if (project.assigned_engineer_id) {
         const engineers = await base44.asServiceRole.entities.Engineer.filter({ id: project.assigned_engineer_id });
         if (engineers.length) {
-          await base44.asServiceRole.entities.Notification.create({
-            user_email: engineers[0].email,
-            title: notifTitle,
-            message: notifBody,
-            type: "project_status",
-            related_id: project.id,
-            is_read: false
-          });
-          await base44.asServiceRole.integrations.Core.SendEmail({
-            to: engineers[0].email,
-            subject: `🔔 ${notifTitle} - بايتلي`,
-            body: emailHtml
-          });
+          await createNotification(engineers[0].email, notifTitle, notifBody, "project_status", project.id, null, actionUrl, "high");
+          await sendEmail(engineers[0].email, `🔔 ${notifTitle} - بايتلي`, emailHtml);
+        }
+      }
+
+      // Notify technical consultant if assigned
+      if (project.technical_consultant_id) {
+        const consultants = await base44.asServiceRole.entities.Consultant.filter({ id: project.technical_consultant_id });
+        if (consultants.length) {
+          await createNotification(consultants[0].email, notifTitle, notifBody, "project_status", project.id, null, actionUrl, "medium");
+          await sendEmail(consultants[0].email, `🔔 ${notifTitle} - بايتلي`, emailHtml);
         }
       }
     }
@@ -176,6 +182,7 @@ Deno.serve(async (req) => {
       const notifTitle = `تحديث العقد: ${newStatusLabel}`;
       const notifBody = `تم تحديث حالة العقد الخاص بمشروع رقم ${contract.project_id} إلى "${newStatusLabel}"`;
 
+      const actionUrl = `/Contract?id=${contract.id}`;
       const emailHtml = `
         <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h2 style="color: #6B5D4F;">تحديث العقد</h2>
@@ -197,27 +204,16 @@ Deno.serve(async (req) => {
 
       if (contract.client_id) {
         const clients = await base44.asServiceRole.entities.Client.filter({ id: contract.client_id });
-        if (clients.length) recipients.push({ email: clients[0].email, role: "client" });
+        if (clients.length) recipients.push({ email: clients[0].email });
       }
       if (contract.engineer_id) {
         const engineers = await base44.asServiceRole.entities.Engineer.filter({ id: contract.engineer_id });
-        if (engineers.length) recipients.push({ email: engineers[0].email, role: "engineer" });
+        if (engineers.length) recipients.push({ email: engineers[0].email });
       }
 
       for (const recipient of recipients) {
-        await base44.asServiceRole.entities.Notification.create({
-          user_email: recipient.email,
-          title: notifTitle,
-          message: notifBody,
-          type: "contract",
-          related_id: contract.id,
-          is_read: false
-        });
-        await base44.asServiceRole.integrations.Core.SendEmail({
-          to: recipient.email,
-          subject: `📄 ${notifTitle} - بايتلي`,
-          body: emailHtml
-        });
+        await createNotification(recipient.email, notifTitle, notifBody, "contract", contract.project_id, contract.id, actionUrl, "high");
+        await sendEmail(recipient.email, `📄 ${notifTitle} - بايتلي`, emailHtml);
       }
     }
 
