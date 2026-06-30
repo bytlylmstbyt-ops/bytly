@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Loader2, Star, Briefcase, ShieldAlert, Bell, 
   MapPin, Mail, Phone, Plus, TrendingUp, DollarSign,
-  CheckCircle, Clock, AlertCircle, Edit, FileText, Wallet, Shield
+  CheckCircle, Clock, AlertCircle, Edit, FileText, Wallet, Shield,
+  PieChart, Target, Award
 } from "lucide-react";
 import { AdSidebarSection } from "@/components/ads/SmartAdCard";
 import { useAds } from "@/hooks/useAds";
@@ -73,7 +74,25 @@ export default function EngineerDashboard() {
   const unreadNotifications = notifications.filter(n => !n.is_read);
   const pendingProposals = proposals.filter(p => p.status === 'pending');
   const acceptedProposals = proposals.filter(p => p.status === 'accepted');
+  const rejectedProposals = proposals.filter(p => p.status === 'rejected');
   const totalEarnings = completedProjects.reduce((sum, p) => sum + (p.engineer_payment || 0), 0);
+
+  // Proposal stats
+  const proposalStats = {
+    total: proposals.length,
+    pending: pendingProposals.length,
+    accepted: acceptedProposals.length,
+    rejected: rejectedProposals.length,
+    acceptanceRate: proposals.length > 0 ? ((acceptedProposals.length / proposals.length) * 100).toFixed(1) : 0
+  };
+
+  // Project status breakdown
+  const projectStatusBreakdown = {
+    in_progress: activeProjects.length,
+    completed: completedProjects.length,
+    escrow_held: escrowHeldProjects.length,
+    pending_escrow: pendingEscrowProjects.length
+  };
 
   const averageRating = reviews.length > 0 
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
@@ -265,6 +284,146 @@ export default function EngineerDashboard() {
               </CardContent>
             </Card>
           </Link>
+        </div>
+
+        {/* Visual Summary Section - Proposals & Requests */}
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          {/* Proposals Summary Card */}
+          <Card className="border-0 shadow-md overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Target className="w-5 h-5 text-blue-600" />
+                ملخص العروض المقدمة
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="text-center p-3 bg-amber-50 rounded-lg">
+                  <p className="text-2xl font-bold text-amber-600">{proposalStats.pending}</p>
+                  <p className="text-xs text-amber-700 mt-1">قيد المراجعة</p>
+                </div>
+                <div className="text-center p-3 bg-green-50 rounded-lg">
+                  <p className="text-2xl font-bold text-green-600">{proposalStats.accepted}</p>
+                  <p className="text-xs text-green-700 mt-1">مقبولة</p>
+                </div>
+                <div className="text-center p-3 bg-red-50 rounded-lg">
+                  <p className="text-2xl font-bold text-red-600">{proposalStats.rejected}</p>
+                  <p className="text-xs text-red-700 mt-1">مرفوضة</p>
+                </div>
+              </div>
+
+              {/* Acceptance Rate Progress */}
+              <div className="mb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-slate-700">معدل القبول</span>
+                  <span className="text-sm font-bold text-blue-600">{proposalStats.acceptanceRate}%</span>
+                </div>
+                <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full transition-all duration-500"
+                    style={{ width: `${proposalStats.acceptanceRate}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Total Proposals */}
+              <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <span className="text-sm text-slate-600">إجمالي العروض</span>
+                <span className="text-lg font-bold text-slate-900">{proposalStats.total}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Project Requests Status Card */}
+          <Card className="border-0 shadow-md overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50 pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <PieChart className="w-5 h-5 text-emerald-600" />
+                حالة الطلبات الحالية
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4">
+              {/* Status Bars */}
+              <div className="space-y-3 mb-4">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-slate-600 flex items-center gap-1">
+                      <Briefcase className="w-4 h-4 text-blue-500" />
+                      قيد التنفيذ
+                    </span>
+                    <span className="text-sm font-bold text-blue-600">{projectStatusBreakdown.in_progress}</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2.5">
+                    <div 
+                      className="bg-blue-500 h-full rounded-full transition-all duration-500"
+                      style={{ width: `${projects.length > 0 ? (projectStatusBreakdown.in_progress / projects.length) * 100 : 0}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-slate-600 flex items-center gap-1">
+                      <CheckCircle className="w-4 h-4 text-green-500" />
+                      مكتملة
+                    </span>
+                    <span className="text-sm font-bold text-green-600">{projectStatusBreakdown.completed}</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2.5">
+                    <div 
+                      className="bg-green-500 h-full rounded-full transition-all duration-500"
+                      style={{ width: `${projects.length > 0 ? (projectStatusBreakdown.completed / projects.length) * 100 : 0}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-slate-600 flex items-center gap-1">
+                      <Shield className="w-4 h-4 text-purple-500" />
+                      ضمان محجوز
+                    </span>
+                    <span className="text-sm font-bold text-purple-600">{projectStatusBreakdown.escrow_held}</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2.5">
+                    <div 
+                      className="bg-purple-500 h-full rounded-full transition-all duration-500"
+                      style={{ width: `${projects.length > 0 ? (projectStatusBreakdown.escrow_held / projects.length) * 100 : 0}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-slate-600 flex items-center gap-1">
+                      <Clock className="w-4 h-4 text-amber-500" />
+                      انتظار الضمان
+                    </span>
+                    <span className="text-sm font-bold text-amber-600">{projectStatusBreakdown.pending_escrow}</span>
+                  </div>
+                  <div className="w-full bg-slate-200 rounded-full h-2.5">
+                    <div 
+                      className="bg-amber-500 h-full rounded-full transition-all duration-500"
+                      style={{ width: `${projects.length > 0 ? (projectStatusBreakdown.pending_escrow / projects.length) * 100 : 0}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-2 bg-emerald-50 rounded-lg text-center">
+                  <p className="text-lg font-bold text-emerald-600">{activeProjects.length}</p>
+                  <p className="text-xs text-emerald-700">نشطة</p>
+                </div>
+                <div className="p-2 bg-slate-50 rounded-lg text-center">
+                  <p className="text-lg font-bold text-slate-600">{projects.length}</p>
+                  <p className="text-xs text-slate-700">كلية</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Financial Dashboard Quick Link */}
