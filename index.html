@@ -6,6 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="/manifest.json" />
     <title>Base44 APP</title>
+    <script>
+      // Suppress non-fatal Vite HMR WebSocket errors in the iframe preview
+      // ("WebSocket closed without opened") — HMR doesn't work in the preview
+      // environment, but the error is harmless and shouldn't surface to the user.
+      window.addEventListener('error', function (e) {
+        if (e.message && e.message.includes('WebSocket closed without opened')) {
+          e.preventDefault();
+          e.stopPropagation();
+          return true;
+        }
+      }, true);
+      window.addEventListener('unhandledrejection', function (e) {
+        if (e.reason && e.reason.message && e.reason.message.includes('WebSocket closed without opened')) {
+          e.preventDefault();
+        }
+      }, true);
+    </script>
   </head>
   <body>
     <div id="root"></div>
