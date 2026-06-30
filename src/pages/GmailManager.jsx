@@ -33,12 +33,22 @@ function EmailRow({ email, onSelect, onMarkRead, onTrash, isSent }) {
         </p>
         <p className="text-xs text-slate-400 truncate mt-0.5">{email.snippet}</p>
       </div>
-      {isSent && (
-        <div className="flex items-center gap-1 shrink-0 mt-0.5 px-2 py-1 rounded-full bg-green-50 border border-green-200">
-          <CheckCheck className="w-3.5 h-3.5 text-green-600" />
-          <span className="text-[10px] font-medium text-green-700">تم التسليم</span>
-        </div>
-      )}
+      {isSent && (() => {
+        const bounceKeywords = ['delivery status', 'mail delivery failed', 'undelivered', 'returned mail', 'failure notice', 'delivery failure', 'bounced', 'could not be delivered'];
+        const checkText = `${email.subject || ''} ${email.snippet || ''}`.toLowerCase();
+        const isBounced = bounceKeywords.some(k => checkText.includes(k));
+        return isBounced ? (
+          <div className="flex items-center gap-1 shrink-0 mt-0.5 px-2 py-1 rounded-full bg-red-50 border border-red-200">
+            <X className="w-3.5 h-3.5 text-red-600" />
+            <span className="text-[10px] font-medium text-red-700">لم يتم التسليم</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1 shrink-0 mt-0.5 px-2 py-1 rounded-full bg-green-50 border border-green-200">
+            <CheckCheck className="w-3.5 h-3.5 text-green-600" />
+            <span className="text-[10px] font-medium text-green-700">تم التسليم</span>
+          </div>
+        );
+      })()}
       <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100" onClick={e => e.stopPropagation()}>
         {email.isUnread && (
           <button onClick={() => onMarkRead(email.id)} title="تحديد كمقروء" className="p-1 hover:bg-slate-200 rounded">
