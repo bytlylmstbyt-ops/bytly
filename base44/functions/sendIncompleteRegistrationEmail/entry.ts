@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
 
     <!-- CTA Button -->
     <div style="text-align: center; margin: 30px 0;">
-      <a href="https://mybytly.com/RegisterChoice" 
+      <a href="/RegisterChoice" 
          style="display: inline-block; background: linear-gradient(135deg, #6B5D4F 0%, #C9A66B 100%); color: #ffffff; text-decoration: none; padding: 15px 40px; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(107, 93, 79, 0.3);">
         اختر نوع حسابك وابدأ الآن
       </a>
@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
     <!-- Alternative Link -->
     <p style="text-align: center; color: #888; font-size: 14px; margin: 20px 0;">
       أو انسخ الرابط: 
-      <a href="https://mybytly.com/RegisterChoice" style="color: #C9A66B; text-decoration: none;">https://mybytly.com/RegisterChoice</a>
+      <a href="/RegisterChoice" style="color: #C9A66B; text-decoration: none;">/RegisterChoice</a>
     </p>
 
     <!-- Footer -->

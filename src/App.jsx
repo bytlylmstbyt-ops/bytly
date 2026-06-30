@@ -92,7 +92,6 @@ const AuthenticatedApp = () => {
   }
 
   const publicPages = [
-    'RegisterChoice',
     'RegisterEngineer',
     'RegisterClient',
     'RegisterConsultant',
