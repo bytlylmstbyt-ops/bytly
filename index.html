@@ -90,14 +90,22 @@
         // 2. Backup: filter the WebSocket error message everywhere it might surface
         var origConsoleError = console.error;
         var origConsoleWarn = console.warn;
+        // Check if all args are empty/undefined/null — suppress noise with no diagnostic value
+        var isEmptyWarning = function (args) {
+          if (args.length === 0) return true;
+          return args.every(function (a) { return a === undefined || a === null || a === '' || (typeof a === 'string' && a.trim() === ''); });
+        };
+
         console.error = function () {
           var args = Array.prototype.slice.call(arguments);
           if (args.some(function (a) { return typeof a === 'string' && a.indexOf(MSG) !== -1; })) return;
+          if (isEmptyWarning(args)) return;
           return origConsoleError.apply(console, args);
         };
         console.warn = function () {
           var args = Array.prototype.slice.call(arguments);
           if (args.some(function (a) { return typeof a === 'string' && a.indexOf(MSG) !== -1; })) return;
+          if (isEmptyWarning(args)) return;
           return origConsoleWarn.apply(console, args);
         };
 

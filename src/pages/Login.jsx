@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { appParams } from "@/lib/app-params";
@@ -35,6 +35,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [emailError, setEmailError] = useState("");
   const [loading, setLoading] = useState(false);
+  const submitGuard = useRef(false);
 
   const returnUrl = appParams.fromUrl || "/";
 
@@ -51,9 +52,12 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitGuard.current) return;
+    submitGuard.current = true;
     setError("");
     const emailValidation = validateEmail(email);
     if (emailValidation) {
+      submitGuard.current = false;
       setEmailError(emailValidation);
       return;
     }
@@ -71,6 +75,7 @@ export default function Login() {
         setError(msg || "البريد الإلكتروني أو كلمة المرور غير صحيحة");
       }
     } finally {
+      submitGuard.current = false;
       setLoading(false);
     }
   };
