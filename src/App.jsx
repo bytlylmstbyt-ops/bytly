@@ -53,6 +53,7 @@ const LaunchDashboard          = React.lazy(() => import('./pages/LaunchDashboar
 const LaunchInvitations        = React.lazy(() => import('./pages/LaunchInvitations'));
 const PendingApprovals         = React.lazy(() => import('./pages/PendingApprovals'));
 const LaunchPerformanceDashboard = React.lazy(() => import('./pages/LaunchPerformanceDashboard'));
+const CommissionManager          = React.lazy(() => import('./pages/CommissionManager'));
 
 // ── Page-level spinner fallback ───────────────────────────────────────────────
 function PageSpinner() {
@@ -191,6 +192,7 @@ const AuthenticatedApp = () => {
         <Route path="/LaunchInvitations"           element={lazyRoute(LaunchInvitations, "LaunchInvitations")} />
         <Route path="/PendingApprovals"            element={lazyRoute(PendingApprovals, "PendingApprovals")} />
         <Route path="/LaunchPerformanceDashboard" element={lazyRoute(LaunchPerformanceDashboard, "LaunchPerformanceDashboard")} />
+        <Route path="/CommissionManager"           element={lazyRoute(CommissionManager, "CommissionManager")} />
         <Route path="*" element={<NotFoundError />} />
       </Route>
     </Routes>
