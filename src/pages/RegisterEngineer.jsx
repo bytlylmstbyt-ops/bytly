@@ -34,6 +34,8 @@ export default function RegisterEngineer() {
     email: "",
     phone: "",
     user_type: userType === "painter" ? "painter" : "engineer",
+    // إذا كان النوع "surveyor"، التخصص الافتراضي "هندسة المساحة" ويُحفظ كمهندس
+    specialization: userType === "surveyor" ? "هندسة المساحة" : "",
     specialization: "",
     registration_number: "",
     bio: "",
@@ -46,7 +48,18 @@ export default function RegisterEngineer() {
 
   const specializations = userType === "painter"
     ? ["رسم معماري", "رسم داخلي", "رسم هندسي 3D", "رسم مخططات", "رسم تنفيذي", "رسم مناظير طبيعية", "رسم تفاصيل إنشائية"]
-    : [
+    : userType === "surveyor"
+      ? [
+        "هندسة المساحة",
+        "المساحة الطبوغرافية",
+        "المساحة الميكانيكية",
+        "المساحة الفوتوغرامترية",
+        "المساحة الجوية والطائرات المسيّرة",
+        "مساحة الأراضي والقطع",
+        "تخطيط المدن والعقارات",
+        "تحديد الإحداثيات والمواقع"
+      ]
+      : [
       "هندسة مدنية",
       "هندسة معمارية",
       "هندسة إنشائية",
@@ -243,7 +256,9 @@ export default function RegisterEngineer() {
           className="text-center mb-8"
         >
           <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${
-            userType === "painter" ? "from-violet-500 to-purple-500" : "from-blue-500 to-cyan-500"
+            userType === "painter" ? "from-violet-500 to-purple-500"
+              : userType === "surveyor" ? "from-green-500 to-emerald-600"
+              : "from-blue-500 to-cyan-500"
           } flex items-center justify-center mb-4`}>
             {userType === "painter" ? (
               <PenTool className="w-8 h-8 text-white" />
@@ -252,7 +267,11 @@ export default function RegisterEngineer() {
             )}
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e] mb-2">
-            {userType === "painter" ? "التسجيل كرسام هندسي" : "التسجيل كمهندس"}
+            {userType === "painter"
+              ? "التسجيل كرسام هندسي"
+              : userType === "surveyor"
+                ? "التسجيل كمهندس مساحة"
+                : "التسجيل كمهندس"}
           </h1>
           <p className="text-slate-600">أكمل بياناتك للانضمام إلى منصة بيتلي</p>
         </motion.div>

@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import { 
   Palette, Building2, PenTool, Briefcase, 
-  ArrowLeft, CheckCircle, Star, Scale
+  ArrowLeft, CheckCircle, Star, Scale, MapPin
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,15 @@ export default function RegisterChoice() {
       features: t('registerChoice.roles.engineer.features'),
       color: "from-blue-500 to-cyan-500",
       link: createPageUrl("RegisterEngineer") + "?type=engineer"
+    },
+    {
+      id: "surveyor",
+      icon: MapPin,
+      title: "مهندس مساحة",
+      description: "سجّل كمساح معتمد لاستقبال طلبات المساحة والخرائط",
+      features: ["استقبال طلبات مساحة قريبة منك", "رفع مخرجات مساحية (CAD)", "نظام دفع وضمان آمن"],
+      color: "from-green-500 to-emerald-600",
+      link: createPageUrl("RegisterEngineer") + "?type=surveyor"
     },
     {
       id: "firm",
