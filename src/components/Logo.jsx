@@ -16,8 +16,7 @@ export default function Logo({ className = "", size = "default", isDark = false 
   const subTextColor = isDark ? '#C9A66B' : '#9B8B7E';
 
   const brandName = isRTL ? 'بيتلي' : 'Bytly';
-  const brandSub = isRTL ? 'لمسة بيت' : 'Touch of Home';
-  const tagline = isRTL ? 'للمنظومة الهندسية المتكاملة' : 'Integrated Engineering Ecosystem';
+  const brandSub = isRTL ? 'المنظومة الهندسية المتكاملة' : 'Integrated Engineering Ecosystem';
 
   return (
     <div className={`flex items-center gap-2 md:gap-3 ${className}`}>
@@ -66,16 +65,6 @@ export default function Logo({ className = "", size = "default", isDark = false 
           }}
         >
           {brandSub}
-        </span>
-        <span
-          className={`font-normal ${currentSize.tagline} opacity-80 hidden md:block`}
-          style={{
-            color: isDark ? '#E5D4B8' : '#C9A66B',
-            fontFamily: isRTL ? 'Cairo, system-ui, sans-serif' : 'system-ui, sans-serif',
-            letterSpacing: '0.3px'
-          }}
-        >
-          {tagline}
         </span>
       </div>
     </div>
