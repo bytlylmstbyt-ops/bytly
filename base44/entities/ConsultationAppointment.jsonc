@@ -39,6 +39,10 @@
       "type": "string",
       "description": "\u0628\u0631\u064a\u062f \u0627\u0644\u0647\u062f\u0641"
     },
+    "target_phone": {
+      "type": "string",
+      "description": "\u0647\u0627\u062a\u0641 \u0627\u0644\u0647\u062f\u0641"
+    },
     "appointment_date": {
       "type": "string",
       "format": "date",
@@ -87,6 +91,10 @@
     "google_calendar_link": {
       "type": "string",
       "description": "\u0631\u0627\u0628\u0637 \u0627\u0644\u062d\u062f\u062b \u0641\u064a \u0627\u0644\u062a\u0642\u0648\u064a\u0645"
+    },
+    "meet_link": {
+      "type": "string",
+      "description": "\u0631\u0627\u0628\u0637 \u0644\u0642\u0627\u0621 Google Meet"
     },
     "status": {
       "type": "string",
@@ -138,6 +146,16 @@
       "type": "string",
       "description": "\u0648\u0635\u0641 \u0627\u0644\u0645\u0648\u0639\u062f",
       "maxLength": 1000
+    },
+    "reminder_24h": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u062a\u0630\u0643\u064a\u0631 24 \u0633\u0627\u0639\u0629"
+    },
+    "reminder_1h": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u062a\u0645 \u0625\u0631\u0633\u0627\u0644 \u062a\u0630\u0643\u064a\u0631 1 \u0633\u0627\u0639\u0629"
     }
   },
   "required": [

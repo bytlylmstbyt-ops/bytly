@@ -26,18 +26,41 @@ Deno.serve(async (req) => {
     // ══════════════════════════════════════════════════════════
     if (action === 'notify_new_appointment') {
       const notifications = [];
+      const typeLabels = {
+        video_call: 'مكالمة فيديو',
+        phone_call: 'مكالمة هاتفية',
+        in_person: 'لقاء شخصي',
+        site_visit: 'معاينة موقع'
+      };
 
       // Notify engineer/target
       if (appointment.target_email) {
+        const engineerMsg = [
+          `📅 موعد استشارة جديد`,
+          `━━━━━━━━━━━━━━━━━━`,
+          `👤 العميل: ${appointment.client_name}`,
+          `📧 البريد: ${appointment.client_email}`,
+          appointment.client_phone ? `📞 الهاتف: ${appointment.client_phone}` : '',
+          `📆 التاريخ: ${appointment.appointment_date}`,
+          `⏰ الوقت: ${appointment.appointment_time}`,
+          `🎯 النوع: ${typeLabels[appointment.consultation_type] || 'استشارة'}`,
+          appointment.topic ? `📝 الموضوع: ${appointment.topic}` : '',
+          appointment.notes ? `🗒️ ملاحظات: ${appointment.notes}` : '',
+          appointment.location ? `📍 الموقع: ${appointment.location}` : '',
+          `━━━━━━━━━━━━━━━━━━`,
+          `تمت إضافة الموعد تلقائياً إلى تقويم Google Calendar الخاص بك.`
+        ].filter(Boolean).join('\n');
+
         notifications.push(
           base44.asServiceRole.entities.Notification.create({
             recipient_email: appointment.target_email,
-            title: '📅 موعد جديد مطلوب',
-            message: `طلب ${appointment.client_name} حجز موعد معك يوم ${appointment.appointment_date} الساعة ${appointment.appointment_time}.\n\nالموضوع: ${appointment.topic || 'استشارة'}\nالنوع: ${appointment.consultation_type === 'video_call' ? 'مكالمة فيديو' : appointment.consultation_type === 'phone_call' ? 'مكالمة هاتفية' : appointment.consultation_type === 'in_person' ? 'لقاء شخصي' : 'معاينة موقع'}`,
+            title: '📅 موعد استشارة جديد',
+            message: engineerMsg,
             type: 'approval',
             priority: 'high',
             related_entity_id: appointment.id,
-            description: `طلب حجز موعد جديد من ${appointment.client_name}`
+            description: `طلب حجز موعد جديد من ${appointment.client_name}`,
+            action_url: '/EngineerCalendar'
           }).catch(e => console.error('Error creating engineer notification:', e.message))
         );
 
@@ -45,7 +68,7 @@ Deno.serve(async (req) => {
         try {
           await base44.functions.invoke('sendWhatsappNotification', {
             to: appointment.target_phone || '',
-            message: `📅 موعد جديد مطلوب\n\nالعميل: ${appointment.client_name}\nالتاريخ: ${appointment.appointment_date}\nالوقت: ${appointment.appointment_time}\nالنوع: ${appointment.consultation_type}\n\nيرجى الموافقة أو التأجيل من لوحة التحكم.`
+            message: `📅 موعد جديد مطلوب\n\nالعميل: ${appointment.client_name}\nالتاريخ: ${appointment.appointment_date}\nالوقت: ${appointment.appointment_time}\nالنوع: ${typeLabels[appointment.consultation_type]}\n\nتمت الإضافة إلى تقويمك.`
           });
         } catch (e) {
           console.error('WhatsApp notification error:', e.message);
@@ -54,17 +77,57 @@ Deno.serve(async (req) => {
 
       // Notify client (confirmation)
       if (appointment.client_email) {
+        const clientMsg = [
+          `✅ تم تأكيد موعد الاستشارة`,
+          `━━━━━━━━━━━━━━━━━━`,
+          `👨‍💼 المهندس: ${appointment.target_name || 'المهندس'}`,
+          `📆 التاريخ: ${appointment.appointment_date}`,
+          `⏰ الوقت: ${appointment.appointment_time}`,
+          `🎯 النوع: ${typeLabels[appointment.consultation_type] || 'استشارة'}`,
+          appointment.topic ? `📝 الموضوع: ${appointment.topic}` : '',
+          `━━━━━━━━━━━━━━━━━━`,
+          `تم إرسال دعوة Google Calendar إلى بريدك الإلكتروني.`,
+          appointment.google_calendar_link ? `\n📌 رابط التقويم: ${appointment.google_calendar_link}` : '',
+          appointment.meet_link ? `\n📹 رابط اللقاء: ${appointment.meet_link}` : ''
+        ].filter(Boolean).join('\n');
+
         notifications.push(
           base44.asServiceRole.entities.Notification.create({
             recipient_email: appointment.client_email,
-            title: '✅ تم إرسال طلب الموعد',
-            message: `تم إرسال طلب حجز الموعد إلى ${appointment.target_name || 'المهندس'} وسيتواصل معك قريباً للتأكيد.\n\nالتاريخ: ${appointment.appointment_date}\nالوقت: ${appointment.appointment_time}`,
+            title: '✅ تم تأكيد موعد الاستشارة',
+            message: clientMsg,
             type: 'approval',
             priority: 'medium',
             related_entity_id: appointment.id,
-            description: 'تم إرسال طلب الموعد بنجاح'
+            description: 'تم تأكيد موعد الاستشارة بنجاح',
+            action_url: '/EngineerCalendar'
           }).catch(e => console.error('Error creating client notification:', e.message))
         );
+
+        // Send email confirmation to client
+        try {
+          await base44.functions.invoke('emailService', {
+            to: appointment.client_email,
+            subject: `✅ تأكيد موعد استشارة - ${appointment.appointment_date}`,
+            body: `
+              <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right;">
+                <h2 style="color: #6B5D4F;">✅ تم تأكيد موعد الاستشارة</h2>
+                <hr style="border: 1px solid #C9A66B;">
+                <p><strong>المهندس:</strong> ${appointment.target_name || 'المهندس'}</p>
+                <p><strong>التاريخ:</strong> ${appointment.appointment_date}</p>
+                <p><strong>الوقت:</strong> ${appointment.appointment_time}</p>
+                <p><strong>النوع:</strong> ${typeLabels[appointment.consultation_type] || 'استشارة'}</p>
+                ${appointment.topic ? `<p><strong>الموضوع:</strong> ${appointment.topic}</p>` : ''}
+                ${appointment.google_calendar_link ? `<p><a href="${appointment.google_calendar_link}" style="color: #6B5D4F;">📅 فتح في Google Calendar</a></p>` : ''}
+                ${appointment.meet_link ? `<p><a href="${appointment.meet_link}" style="color: #6B5D4F;">📹 رابط لقاء الفيديو</a></p>` : ''}
+                <hr style="border: 1px solid #C9A66B;">
+                <p style="color: #888; font-size: 14px;">شكراً لاستخدامك منصة بيتلي</p>
+              </div>
+            `
+          });
+        } catch (e) {
+          console.error('Email notification error:', e.message);
+        }
       }
 
       await Promise.all(notifications);

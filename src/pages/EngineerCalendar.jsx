@@ -153,6 +153,16 @@ export default function EngineerCalendar() {
     today: appointments.filter(a => a.appointment_date === new Date().toISOString().split("T")[0]).length
   };
 
+  // Get appointments with upcoming reminders
+  const upcomingReminders = appointments
+    .filter(apt => {
+      const aptDate = new Date(`${apt.appointment_date}T${apt.appointment_time}:00+03:00`);
+      const now = new Date();
+      const hoursUntil = (aptDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+      return apt.status === 'confirmed' && hoursUntil > 0 && hoursUntil <= 24;
+    })
+    .sort((a, b) => new Date(`${a.appointment_date}T${a.appointment_time}`) - new Date(`${b.appointment_date}T${b.appointment_time}`));
+
   return (
     <div className="container mx-auto p-6 space-y-6" dir={isRTL ? "rtl" : "ltr"}>
       {/* Header */}
@@ -297,6 +307,32 @@ export default function EngineerCalendar() {
         </TabsContent>
 
         <TabsContent value="list" className="space-y-4">
+          {/* Upcoming Reminders Banner */}
+          {upcomingReminders.length > 0 && (
+            <Card className="border-amber-300 bg-amber-50">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2 text-amber-800">
+                  ⏰ تذكيرات قريبة
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {upcomingReminders.map(apt => (
+                    <div key={apt.id} className="flex items-center justify-between p-2 bg-white rounded border">
+                      <div>
+                        <p className="font-medium text-slate-800">{apt.topic}</p>
+                        <p className="text-sm text-slate-600">
+                          {apt.appointment_date} {apt.appointment_time} - {apt.client_name}
+                        </p>
+                      </div>
+                      <Badge className="bg-amber-100 text-amber-700">قريباً</Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Upcoming Appointments */}
             <Card>
@@ -407,6 +443,15 @@ export default function EngineerCalendar() {
                     <p className="text-slate-700">{selectedAppointment.notes}</p>
                   </div>
                 )}
+                {selectedAppointment.reminder_24h && (
+                  <div className="col-span-2">
+                    <p className="text-sm text-slate-600 mb-1">التذكيرات</p>
+                    <Badge className="bg-green-100 text-green-700">✓ تم إرسال تذكير 24 ساعة</Badge>
+                    {selectedAppointment.reminder_1h && (
+                      <Badge className="bg-green-100 text-green-700 mr-2">✓ تم إرسال تذكير 1 ساعة</Badge>
+                    )}
+                  </div>
+                )}
               </div>
 
               {selectedAppointment.approval_status === "pending" && (
@@ -432,7 +477,7 @@ export default function EngineerCalendar() {
               )}
 
               {selectedAppointment.google_calendar_link && (
-                <div className="pt-4 border-t">
+                <div className="pt-4 border-t space-y-2">
                   <a
                     href={selectedAppointment.google_calendar_link}
                     target="_blank"
@@ -442,6 +487,17 @@ export default function EngineerCalendar() {
                     <CalendarIcon className="w-4 h-4" />
                     فتح في Google Calendar
                   </a>
+                  {selectedAppointment.meet_link && (
+                    <a
+                      href={selectedAppointment.meet_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-purple-600 hover:underline flex items-center gap-2"
+                    >
+                      <Video className="w-4 h-4" />
+                      رابط لقاء الفيديو (Google Meet)
+                    </a>
+                  )}
                 </div>
               )}
             </div>
