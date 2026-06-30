@@ -234,6 +234,33 @@ export default function ProjectDetails() {
     window.location.href = createPageUrl("Payment") + `?project=${projectId}&proposal=${proposal.id}`;
   };
 
+  const handleCreateContractFromProposal = async (proposal) => {
+    if (!window.confirm("هل أنت متأكد من قبول هذا العرض وإنشاء العقد؟")) return;
+
+    try {
+      const response = await base44.functions.invoke("createContractFromProposal", {
+        proposal_id: proposal.id
+      });
+
+      if (response.data.success) {
+        alert("تم قبول العرض وإنشاء العقد بنجاح! سيتم توجيهك لصفحة العقود للتوقيع.");
+        // Update local state
+        setProposals(prev => prev.map(p =>
+          p.id === proposal.id ? { ...p, status: "accepted" } : p
+        ));
+        // Refresh data
+        loadData();
+        // Redirect to contracts page
+        setTimeout(() => {
+          window.location.href = createPageUrl("MyContracts");
+        }, 1500);
+      }
+    } catch (error) {
+      console.error("Error creating contract:", error);
+      alert("حدث خطأ أثناء إنشاء العقد. يرجى المحاولة مرة أخرى.");
+    }
+  };
+
   const categories = {
     interior: "تصميم داخلي",
     architecture: "تصميم معماري",
@@ -690,7 +717,7 @@ export default function ProjectDetails() {
                               </Badge>
 
                               {project.status === "open" && proposal.status === "pending" && (
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 flex-wrap">
                                   <Link to={createPageUrl("Messages") + `?engineer=${proposal.engineer_id}`}>
                                     <Button variant="outline" size="sm">
                                       <MessageSquare className="w-4 h-4 ml-1" />
@@ -699,12 +726,21 @@ export default function ProjectDetails() {
                                   </Link>
                                   <Button 
                                     size="sm"
+                                    onClick={() => handleCreateContractFromProposal(proposal)}
+                                    disabled={isSubmitting}
+                                    className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white"
+                                  >
+                                    <Scale className="w-4 h-4 ml-1" />
+                                    قبول وإنشاء عقد
+                                  </Button>
+                                  <Button 
+                                    size="sm"
                                     onClick={() => handleAcceptProposal(proposal)}
                                     disabled={isSubmitting}
                                     className="bg-green-600 hover:bg-green-700"
                                   >
                                     <CheckCircle className="w-4 h-4 ml-1" />
-                                    قبول العرض
+                                    قبول فقط
                                   </Button>
                                 </div>
                               )}
