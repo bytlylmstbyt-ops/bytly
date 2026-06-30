@@ -109,15 +109,31 @@ export default function RegisterEngineer() {
     } catch (error) {
       const base44Error = error;
       const responseData = base44Error?.data || base44Error?.response?.data;
-      const message = isPlanLimitError(base44Error)
-        ? "تعذر رفع الملف لأن الخطة الحالية وصلت إلى حد التكامل. يُرجى ترقية الخطة قبل المتابعة."
-        : base44Error?.message === "timeout"
+      const isPlanLimit = isPlanLimitError(base44Error);
+
+      if (isPlanLimit) {
+        // السماح بالتسجيل دون الملف عند الوصول لحد الخطة (الشهادة غير إلزامية تقنياً للحفظ)
+        const fieldLabel = field === "graduation_certificate_url" ? "شهادة التخرج" : "الصورة الشخصية";
+        const skipMessage = `تعذر رفع ${fieldLabel} بسبب حد التكامل في الخطة. يمكنك إكمال التسجيل الآن وإضافة ${fieldLabel} لاحقًا من إعدادات الملف الشخصي، أو ترقية الخطة.`;
+        setNotice({
+          type: "warning",
+          title: "تعذر رفع الملف - يمكنك المتابعة",
+          message: skipMessage
+        });
+        toast(skipMessage, {
+          icon: "⚠️",
+          duration: 8000
+        });
+      } else {
+        const message = base44Error?.message === "timeout"
           ? "انتهت مهلة رفع الملف. حاول استخدام ملف أصغر أو إعادة المحاولة لاحقًا."
           : responseData?.message || responseData?.detail || responseData?.error || "تعذر رفع الملف مؤقتًا. يُرجى التحقق من الاتصال وإعادة المحاولة.";
+        setNotice({ type: "error", title: "تعذر رفع الملف", message });
+        toast.error(message);
+      }
 
-      setNotice({ type: "error", title: "تعذر رفع الملف", message });
-      toast.error(message);
       console.error("RegisterEngineer upload error:", {
+        field,
         status: base44Error?.status,
         code: base44Error?.code,
         data: responseData,
@@ -188,7 +204,8 @@ export default function RegisterEngineer() {
 
   const isStep1Valid = formData.full_name && formData.email && formData.phone;
   const isStep2Valid = formData.specialization && formData.city && formData.country;
-  const isStep3Valid = formData.registration_number && formData.graduation_certificate_url;
+  // شهادة التخرج مطلوبة للاعتماد لكن يمكن إكمال التسجيل بدونها عند الوصول لحد الخطة
+  const isStep3Valid = formData.registration_number;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-12">
@@ -220,14 +237,16 @@ export default function RegisterEngineer() {
               ? "border-red-200 bg-red-50 text-red-700"
               : notice.type === "success"
                 ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                : "border-blue-200 bg-blue-50 text-blue-700"
+                : notice.type === "warning"
+                  ? "border-amber-300 bg-amber-50 text-amber-800"
+                  : "border-blue-200 bg-blue-50 text-blue-700"
           }`}>
             <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
               <div>
                 <p className="font-semibold">{notice.title}</p>
                 <p className="text-sm mt-1">{notice.message}</p>
               </div>
-              {(notice.type === "error" || notice.type === "info") && (
+              {(notice.type === "error" || notice.type === "info" || notice.type === "warning") && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -450,7 +469,7 @@ export default function RegisterEngineer() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>شهادة التخرج <span className="text-red-500">*</span></Label>
+                  <Label>شهادة التخرج</Label>
                   <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#d4a574] transition-colors">
                     <input
                       type="file"
@@ -469,7 +488,7 @@ export default function RegisterEngineer() {
                       ) : (
                         <>
                           <FileText className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                          <p className="text-sm text-slate-500">اضغط لرفع الشهادة (إلزامي للاعتماد)</p>
+                          <p className="text-sm text-slate-500">اضغط لرفع الشهادة (مطلوبة للاعتماد)</p>
                         </>
                       )}
                     </label>
