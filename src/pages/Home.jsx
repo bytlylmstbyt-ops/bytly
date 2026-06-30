@@ -191,9 +191,9 @@ export default function Home() {
                 </Badge>
               </div>
               
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6 break-words text-balance">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6 break-words text-balance px-1">
                 {t('home.hero.title')}
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#d4a574] to-[#e8c9a8]">
+                <span className="inline-block py-1 px-2 text-transparent bg-clip-text bg-gradient-to-r from-[#d4a574] to-[#e8c9a8]">
                   {t('home.hero.titleHighlight')}
                 </span>
               </h1>
