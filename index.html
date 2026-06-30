@@ -8,12 +8,44 @@
     <title>Base44 APP</title>
     <script>
       // In the iframe preview, Vite's @vite/client creates a WebSocket for HMR
-      // that can't connect ("WebSocket closed without opened"). Suppress this
-      // harmless error at multiple levels.
+      // that can't connect and throws "WebSocket closed without opened".
+      // 1. Mock the WebSocket so @vite/client never gets the chance to throw.
+      // 2. Suppress the error message at all levels as a backup.
       (function () {
         var MSG = 'WebSocket closed without opened';
 
-        // 1. Filter console.error / console.warn — Vite logs the error here
+        // 1. Override WebSocket — mock connections to the Vite dev server (same origin or localhost)
+        // Real app WebSockets (cross-origin, different host) pass through unchanged.
+        var OriginalWebSocket = window.WebSocket;
+        window.WebSocket = function (url, protocols) {
+          try {
+            var parsed = new URL(url, window.location.href);
+            var isViteDevServer =
+              parsed.origin === window.location.origin ||
+              parsed.hostname === 'localhost' ||
+              parsed.hostname === '127.0.0.1' ||
+              parsed.hostname === '0.0.0.0';
+            if (isViteDevServer) {
+              return {
+                readyState: 3, CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3,
+                url: url, extensions: '', protocol: '', binaryType: 'blob',
+                bufferedAmount: 0,
+                send: function () {}, close: function () {},
+                addEventListener: function () {}, removeEventListener: function () {},
+                dispatchEvent: function () { return false; },
+                onopen: null, onclose: null, onerror: null, onmessage: null
+              };
+            }
+          } catch (e) { /* fall through to original */ }
+          return new OriginalWebSocket(url, protocols);
+        };
+        window.WebSocket.prototype = OriginalWebSocket.prototype;
+        window.WebSocket.CONNECTING = 0;
+        window.WebSocket.OPEN = 1;
+        window.WebSocket.CLOSING = 2;
+        window.WebSocket.CLOSED = 3;
+
+        // 2. Backup: filter the error message everywhere it might surface
         var origConsoleError = console.error;
         var origConsoleWarn = console.warn;
         console.error = function () {
@@ -27,13 +59,10 @@
           return origConsoleWarn.apply(console, args);
         };
 
-        // 2a. window.onerror — highest priority, fires before addEventListener
         window.onerror = function (message, source, lineno, colno, error) {
           if (typeof message === 'string' && message.indexOf(MSG) !== -1) return true;
           if (error && error.message && error.message.indexOf(MSG) !== -1) return true;
         };
-
-        // 2b. Catch thrown errors from @vite/client's WebSocket close handler
         window.addEventListener('error', function (e) {
           var msg = e.message || (e.error && e.error.message) || '';
           if (typeof msg === 'string' && msg.indexOf(MSG) !== -1) {
