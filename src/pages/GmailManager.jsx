@@ -49,14 +49,14 @@ function EmailRow({ email, onSelect, onMarkRead, onTrash, isSent }) {
           </div>
         );
       })()}
-      <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100" onClick={e => e.stopPropagation()}>
+      <div className="flex gap-1 shrink-0 md:opacity-0 md:group-hover:opacity-100" onClick={e => e.stopPropagation()}>
         {email.isUnread && (
-          <button onClick={() => onMarkRead(email.id)} title="تحديد كمقروء" className="p-1 hover:bg-slate-200 rounded">
-            <CheckCheck className="w-3.5 h-3.5 text-blue-500" />
+          <button onClick={() => onMarkRead(email.id)} title="تحديد كمقروء" className="p-1.5 hover:bg-slate-200 rounded-md" style={{ minHeight: 36, minWidth: 36 }}>
+            <CheckCheck className="w-4 h-4 text-blue-500" />
           </button>
         )}
-        <button onClick={() => onTrash(email.id)} title="حذف" className="p-1 hover:bg-red-100 rounded">
-          <Trash2 className="w-3.5 h-3.5 text-red-400" />
+        <button onClick={() => onTrash(email.id)} title="حذف" className="p-1.5 hover:bg-red-100 rounded-md" style={{ minHeight: 36, minWidth: 36 }}>
+          <Trash2 className="w-4 h-4 text-red-400" />
         </button>
       </div>
       {email.isUnread && <div className="w-2 h-2 bg-blue-500 rounded-full shrink-0 mt-1.5" />}
@@ -188,7 +188,7 @@ export default function GmailManager() {
   const unreadCount = emails.filter(e => e.isUnread).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white p-6" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white p-3 sm:p-6" dir="rtl">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -238,7 +238,7 @@ export default function GmailManager() {
                   />
                 </div>
               </CardHeader>
-              <CardContent className="p-0 max-h-[600px] overflow-y-auto">
+              <CardContent className="p-0 max-h-[450px] md:max-h-[600px] overflow-y-auto">
                 {loading ? (
                   <div className="flex items-center justify-center py-16">
                     <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
@@ -287,14 +287,14 @@ export default function GmailManager() {
                         <p>التاريخ: <span className="text-slate-700">{emailDetail?.date || selectedEmail.date}</span></p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1.5 shrink-0">
                       <Button size="sm" variant="outline" onClick={generateAIDraft} disabled={draftLoading || !emailDetail}>
                         {draftLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 text-amber-500" />}
-                        <span className="mr-1 text-xs">رد ذكي</span>
+                        <span className="mr-1 text-xs hidden sm:inline">رد ذكي</span>
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => setReplyOpen(true)} disabled={!emailDetail}>
                         <Reply className="w-3.5 h-3.5" />
-                        <span className="mr-1 text-xs">رد</span>
+                        <span className="mr-1 text-xs hidden sm:inline">رد</span>
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => handleTrash(selectedEmail.id)}>
                         <Trash2 className="w-3.5 h-3.5 text-red-400" />
