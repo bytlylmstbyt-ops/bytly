@@ -36,6 +36,25 @@ export default function RegisterEngineer() {
     registeredCount: 0
   });
 
+  // Load Google user info if available
+  useEffect(() => {
+    const storedInfo = sessionStorage.getItem('googleUserInfo');
+    if (storedInfo) {
+      try {
+        const userInfo = JSON.parse(storedInfo);
+        setFormData(prev => ({
+          ...prev,
+          full_name: userInfo.name || prev.full_name,
+          email: userInfo.email || prev.email,
+          profile_image: userInfo.picture || prev.profile_image
+        }));
+        sessionStorage.removeItem('googleUserInfo');
+      } catch (err) {
+        console.error('Error loading Google user info:', err);
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const checkEligibility = async () => {
       try {

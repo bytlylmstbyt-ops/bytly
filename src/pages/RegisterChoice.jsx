@@ -1,5 +1,5 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import { 
@@ -12,6 +12,23 @@ import { useLanguage } from "@/components/i18n/LanguageContext";
 
 export default function RegisterChoice() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+  const [googleUserInfo, setGoogleUserInfo] = useState(null);
+
+  useEffect(() => {
+    // Check if user logged in via Google
+    const storedInfo = sessionStorage.getItem('googleUserInfo');
+    if (storedInfo) {
+      try {
+        const userInfo = JSON.parse(storedInfo);
+        setGoogleUserInfo(userInfo);
+        // Clear from session after reading
+        sessionStorage.removeItem('googleUserInfo');
+      } catch (err) {
+        console.error('Error parsing Google user info:', err);
+      }
+    }
+  }, []);
   
   const options = [
     {

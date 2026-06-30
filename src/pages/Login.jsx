@@ -80,9 +80,26 @@ export default function Login() {
     }
   };
 
-  const handleGoogle = () => {
-    // Use platform's built-in Google OAuth for reliable login
-    base44.auth.loginWithProvider("google", returnUrl);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  
+  const handleGoogle = async () => {
+    try {
+      setGoogleLoading(true);
+      // Use Gmail connector to get Google user info (bypasses platform OAuth)
+      const response = await base44.functions.invoke("googleOAuthLogin", {});
+      const userInfo = response.data;
+      
+      // Store Google info in session for registration flow
+      sessionStorage.setItem('googleUserInfo', JSON.stringify(userInfo));
+      
+      // Redirect to registration choice where we can create/login the user
+      window.location.href = "/RegisterChoice";
+    } catch (err) {
+      setError("فشل تسجيل الدخول عبر Google. حاول مرة أخرى.");
+      console.error("Google login error:", err);
+    } finally {
+      setGoogleLoading(false);
+    }
   };
   const handleMicrosoft = () => base44.auth.loginWithProvider("microsoft", returnUrl);
   const handleFacebook = () => base44.auth.loginWithProvider("facebook", returnUrl);
@@ -103,9 +120,9 @@ export default function Login() {
       }
     >
       <div className="grid grid-cols-2 gap-2 md:gap-3 mb-4 md:mb-6">
-        <Button variant="outline" className="h-10 md:h-11 text-xs md:text-sm font-medium" onClick={handleGoogle}>
+        <Button variant="outline" className="h-10 md:h-11 text-xs md:text-sm font-medium" onClick={handleGoogle} disabled={googleLoading}>
           <GoogleIcon className="w-4 h-4 md:w-5 md:h-5 mr-1.5 md:mr-2" />
-          Google
+          {googleLoading ? "جاري..." : "Google"}
         </Button>
         <Button variant="outline" className="h-10 md:h-11 text-xs md:text-sm font-medium" onClick={handleMicrosoft}>
           <MicrosoftIcon />

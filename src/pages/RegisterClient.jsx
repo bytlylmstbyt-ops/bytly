@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
@@ -26,6 +26,25 @@ export default function RegisterClient() {
     client_type: "individual",
     company_name: ""
   });
+
+  // Load Google user info if available
+  useEffect(() => {
+    const storedInfo = sessionStorage.getItem('googleUserInfo');
+    if (storedInfo) {
+      try {
+        const userInfo = JSON.parse(storedInfo);
+        setFormData(prev => ({
+          ...prev,
+          full_name: userInfo.name || prev.full_name,
+          email: userInfo.email || prev.email,
+          profile_image: userInfo.picture || prev.profile_image
+        }));
+        sessionStorage.removeItem('googleUserInfo');
+      } catch (err) {
+        console.error('Error loading Google user info:', err);
+      }
+    }
+  }, []);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
