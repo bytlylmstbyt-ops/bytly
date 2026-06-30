@@ -17,6 +17,31 @@
         // 1. Override WebSocket — mock connections to the Vite dev server (same origin or localhost)
         // Real app WebSockets (cross-origin, different host) pass through unchanged.
         var OriginalWebSocket = window.WebSocket;
+
+        function MockWebSocket(url, protocols) {
+          // Inherit EventTarget so addEventListener/removeEventListener work,
+          // but never dispatch any events — stays CONNECTING forever.
+          EventTarget.call(this);
+          this.readyState = 0; // CONNECTING — never changes
+          this.url = url;
+          this.extensions = '';
+          this.protocol = '';
+          this.binaryType = 'blob';
+          this.bufferedAmount = 0;
+          this.onopen = null;
+          this.onclose = null;
+          this.onerror = null;
+          this.onmessage = null;
+        }
+        MockWebSocket.prototype = Object.create(EventTarget.prototype);
+        MockWebSocket.prototype.constructor = MockWebSocket;
+        MockWebSocket.prototype.send = function () {};
+        MockWebSocket.prototype.close = function () {};
+        MockWebSocket.CONNECTING = 0;
+        MockWebSocket.OPEN = 1;
+        MockWebSocket.CLOSING = 2;
+        MockWebSocket.CLOSED = 3;
+
         window.WebSocket = function (url, protocols) {
           try {
             var parsed = new URL(url, window.location.href);
@@ -26,20 +51,12 @@
               parsed.hostname === '127.0.0.1' ||
               parsed.hostname === '0.0.0.0';
             if (isViteDevServer) {
-              return {
-                readyState: 0, CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3,
-                url: url, extensions: '', protocol: '', binaryType: 'blob',
-                bufferedAmount: 0,
-                send: function () {}, close: function () {},
-                addEventListener: function () {}, removeEventListener: function () {},
-                dispatchEvent: function () { return false; },
-                onopen: null, onclose: null, onerror: null, onmessage: null
-              };
+              return new MockWebSocket(url, protocols);
             }
           } catch (e) { /* fall through to original */ }
           return new OriginalWebSocket(url, protocols);
         };
-        window.WebSocket.prototype = OriginalWebSocket.prototype;
+        window.WebSocket.prototype = MockWebSocket.prototype;
         window.WebSocket.CONNECTING = 0;
         window.WebSocket.OPEN = 1;
         window.WebSocket.CLOSING = 2;

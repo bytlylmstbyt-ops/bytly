@@ -20,7 +20,7 @@ export default defineConfig({
       // can be removed if the code has been updated to use the new SDK imports from @base44/sdk
       legacySDKImports: process.env.BASE44_LEGACY_SDK_IMPORTS === 'true',
       hmrNotifier: false,
-      navigationNotifier: true,
+      navigationNotifier: false,
       visualEditAgent: false
     }),
     react(),
