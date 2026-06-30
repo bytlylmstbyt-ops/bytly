@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { 
   User, Mail, Phone, MapPin, Briefcase, Award,
   Upload, FileText, ArrowLeft, ArrowRight, CheckCircle,
-  Building2, PenTool, Palette, Loader2
+  Building2, PenTool, Palette, Loader2, Gift
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,32 @@ export default function RegisterEngineer() {
     title: "تنبيه خطة التكامل",
     message: "قد يتعذر رفع الوثائق عند الوصول إلى حد التكامل في الخطة الحالية. إذا ظهر خطأ 402، يُفضّل ترقية الخطة قبل إكمال التسجيل."
   });
+  const [freeOffer, setFreeOffer] = useState({
+    loading: true,
+    isEligible: false,
+    remaining: 0,
+    registeredCount: 0
+  });
+
+  useEffect(() => {
+    const checkEligibility = async () => {
+      try {
+        const res = await base44.functions.invoke("checkFreeRegistrationEligibility", {});
+        const data = res.data || res;
+        setFreeOffer({
+          loading: false,
+          isEligible: !!data.is_eligible,
+          remaining: data.remaining_free_slots || 0,
+          registeredCount: data.registered_count || 0
+        });
+      } catch (e) {
+        // في حال الخطأ، نتعامل بودّ: نسمح بالتسجيل المجاني لتجنب حجب المستخدم
+        setFreeOffer({ loading: false, isEligible: true, remaining: 100, registeredCount: 0 });
+      }
+    };
+    checkEligibility();
+  }, []);
+
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
@@ -194,6 +220,12 @@ export default function RegisterEngineer() {
     });
 
     try {
+      // أول 100 مهندس: تسجيل مجاني لمدة سنة كاملة خلال الفترة التجريبية
+      const isFreeEligible = freeOffer.isEligible;
+      const today = new Date();
+      const trialEnd = new Date();
+      trialEnd.setFullYear(trialEnd.getFullYear() + 1);
+
       await withTimeout(base44.entities.Engineer.create({
         ...formData,
         years_experience: parseInt(formData.years_experience) || 0,
@@ -203,7 +235,10 @@ export default function RegisterEngineer() {
         total_reviews: 0,
         completed_projects: 0,
         wallet_balance: 0,
-        subscription_type: "none"
+        subscription_type: isFreeEligible ? "free_trial" : "none",
+        is_subscription_active: isFreeEligible,
+        subscription_start_date: isFreeEligible ? today.toISOString().split("T")[0] : undefined,
+        trial_end_date: isFreeEligible ? trialEnd.toISOString().split("T")[0] : undefined
       }), 30000);
 
       base44.analytics.track({
@@ -275,6 +310,31 @@ export default function RegisterEngineer() {
           </h1>
           <p className="text-slate-600">أكمل بياناتك للانضمام إلى منصة بيتلي</p>
         </motion.div>
+
+        {/* لافتة التسجيل المجاني لأول 100 مهندس */}
+        {!freeOffer.loading && freeOffer.isEligible && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="rounded-2xl border border-emerald-300 bg-gradient-to-br from-emerald-50 to-teal-50 p-4 mb-6 flex items-start gap-3"
+          >
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0">
+              <Gift className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="font-bold text-emerald-800">🎉 تسجيل مجاني — أنت ضمن أول 100 مهندس!</p>
+              <p className="text-sm text-emerald-700 mt-1">
+                ضمن الفترة التجريبية لقياس المنصة، يتمتع أول 100 مهندس باشتراك مجاني لمدة سنة كاملة.
+                المتاح حالياً: <span className="font-bold">{freeOffer.remaining}</span> مقعد مجاني.
+              </p>
+            </div>
+          </motion.div>
+        )}
+        {!freeOffer.loading && !freeOffer.isEligible && (
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 mb-6 text-sm text-amber-800">
+            تم اكتمال قائمة أول 100 مهندس المجانيين. التسجيل متاح بالاشتراكات العادية بعد الموافقة.
+          </div>
+        )}
 
         {notice && (
           <div className={`rounded-2xl border p-4 mb-6 ${
