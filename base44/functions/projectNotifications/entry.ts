@@ -168,6 +168,115 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ─── NEW USER REGISTRATION ───────────────────────────────────────────────
+    if (entityName === "Engineer" && eventType === "create") {
+      const engineer = data;
+      const notifTitle = "تسجيل مهندس جديد";
+      const notifBody = `تم تسجيل المهندس ${engineer.full_name} (${engineer.email}) بنجاح`;
+      
+      // Send welcome email to engineer
+      await sendEmail(
+        engineer.email,
+        "مرحباً بك في منصة بتلي - مهندس",
+        `<div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #6B5D4F;">أهلاً بك في منصة بتلي</h2>
+          <p>أهلاً بك ${engineer.full_name}،</p>
+          <p>تم تسجيل حسابك بنجاح في منصة بتلي للهندسة والاستشارات.</p>
+          <p><strong>تخصصك:</strong> ${engineer.specialization || engineer.user_type}</p>
+          <p>فريق بتلي يتمنى لك التوفيق والنجاح!</p>
+          <hr style="margin-top:24px; border:none; border-top:1px solid #eee;">
+          <p style="color:#aaa; font-size:12px;">بايتلي - منصة الهندسة والاستشارات</p>
+        </div>`
+      );
+      
+      // Notify admins
+      const admins = await base44.asServiceRole.entities.User.filter({ role: "admin" });
+      for (const admin of admins) {
+        await createNotification(
+          admin.email,
+          notifTitle,
+          notifBody,
+          "system",
+          null,
+          engineer.id,
+          "/AdminEngineers",
+          "medium"
+        );
+      }
+    }
+
+    if (entityName === "Client" && eventType === "create") {
+      const client = data;
+      const notifTitle = "تسجيل عميل جديد";
+      const notifBody = `تم تسجيل العميل ${client.full_name} (${client.email}) بنجاح`;
+      
+      // Send welcome email to client
+      await sendEmail(
+        client.email,
+        "مرحباً بك في منصة بتلي - عميل",
+        `<div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #6B5D4F;">أهلاً بك في منصة بتلي</h2>
+          <p>أهلاً بك ${client.full_name}،</p>
+          <p>تم تسجيل حسابك بنجاح في منصة بتلي للهندسة والاستشارات.</p>
+          <p>نحن هنا لمساعدتك في جميع احتياجاتك الهندسية.</p>
+          <p>فريق بتلي يتمنى لك تجربة مميزة!</p>
+          <hr style="margin-top:24px; border:none; border-top:1px solid #eee;">
+          <p style="color:#aaa; font-size:12px;">بايتلي - منصة الهندسة والاستشارات</p>
+        </div>`
+      );
+      
+      // Notify admins
+      const admins = await base44.asServiceRole.entities.User.filter({ role: "admin" });
+      for (const admin of admins) {
+        await createNotification(
+          admin.email,
+          notifTitle,
+          notifBody,
+          "system",
+          null,
+          client.id,
+          "/AdminClients",
+          "medium"
+        );
+      }
+    }
+
+    if (entityName === "EngineeringFirm" && eventType === "create") {
+      const firm = data;
+      const notifTitle = "تسجيل شركة جديدة";
+      const notifBody = `تم تسجيل شركة ${firm.company_name} (${firm.email}) بنجاح`;
+      
+      // Send welcome email to firm
+      await sendEmail(
+        firm.email,
+        "مرحباً بك في منصة بتلي - شركة",
+        `<div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #6B5D4F;">أهلاً بك في منصة بتلي</h2>
+          <p>أهلاً بك في منصة بتلي للهندسة والاستشارات،</p>
+          <p>تم تسجيل شركة <strong>${firm.company_name}</strong> بنجاح.</p>
+          <p><strong>السجل التجاري:</strong> ${firm.commercial_registration}</p>
+          <p>نتطلع إلى شراكة ناجحة ومثمرة!</p>
+          <hr style="margin-top:24px; border:none; border-top:1px solid #eee;">
+          <p style="color:#aaa; font-size:12px;">بايتلي - منصة الهندسة والاستشارات</p>
+        </div>`
+      );
+      
+      // Notify admins
+      const admins = await base44.asServiceRole.entities.User.filter({ role: "admin" });
+      for (const admin of admins) {
+        await createNotification(
+          admin.email,
+          notifTitle,
+          notifBody,
+          "system",
+          null,
+          firm.id,
+          "/AdminClients",
+          "high"
+        );
+      }
+    }
+
     // ─── CONTRACT UPDATE ──────────────────────────────────────────────────────
     if (entityName === "Contract" && eventType === "update") {
       const contract = data;
