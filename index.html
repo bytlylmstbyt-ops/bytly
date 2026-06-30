@@ -27,7 +27,13 @@
           return origConsoleWarn.apply(console, args);
         };
 
-        // 2. Catch thrown errors from @vite/client's WebSocket close handler
+        // 2a. window.onerror — highest priority, fires before addEventListener
+        window.onerror = function (message, source, lineno, colno, error) {
+          if (typeof message === 'string' && message.indexOf(MSG) !== -1) return true;
+          if (error && error.message && error.message.indexOf(MSG) !== -1) return true;
+        };
+
+        // 2b. Catch thrown errors from @vite/client's WebSocket close handler
         window.addEventListener('error', function (e) {
           var msg = e.message || (e.error && e.error.message) || '';
           if (typeof msg === 'string' && msg.indexOf(MSG) !== -1) {
