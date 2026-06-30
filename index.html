@@ -67,7 +67,7 @@
           try {
             var parsed = new URL(url, window.location.href);
             var isViteDevServer =
-              parsed.origin === window.location.origin ||
+              parsed.hostname === window.location.hostname ||
               parsed.hostname === 'localhost' ||
               parsed.hostname === '127.0.0.1' ||
               parsed.hostname === '0.0.0.0';
