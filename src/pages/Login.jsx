@@ -81,8 +81,13 @@ export default function Login() {
   };
 
   const [googleLoading, setGoogleLoading] = useState(false);
+  const googleClickRef = useRef(false);
   
   const handleGoogle = async () => {
+    // Prevent double-clicks
+    if (googleClickRef.current || googleLoading) return;
+    googleClickRef.current = true;
+    
     try {
       setGoogleLoading(true);
       // Use Gmail connector to get Google user info (bypasses platform OAuth)
@@ -92,12 +97,14 @@ export default function Login() {
       // Store Google info in session for registration flow
       sessionStorage.setItem('googleUserInfo', JSON.stringify(userInfo));
       
-      // Redirect to registration choice where we can create/login the user
-      window.location.href = "/RegisterChoice";
+      // Reset guard and redirect
+      googleClickRef.current = false;
+      // Use replace to prevent back button from returning to login
+      window.location.replace("/RegisterChoice");
     } catch (err) {
+      googleClickRef.current = false;
       setError("فشل تسجيل الدخول عبر Google. حاول مرة أخرى.");
       console.error("Google login error:", err);
-    } finally {
       setGoogleLoading(false);
     }
   };
@@ -120,9 +127,22 @@ export default function Login() {
       }
     >
       <div className="grid grid-cols-2 gap-2 md:gap-3 mb-4 md:mb-6">
-        <Button variant="outline" className="h-10 md:h-11 text-xs md:text-sm font-medium" onClick={handleGoogle} disabled={googleLoading}>
+        <Button 
+          variant="outline" 
+          className="h-10 md:h-11 text-xs md:text-sm font-medium" 
+          onClick={handleGoogle} 
+          disabled={googleLoading}
+          type="button"
+        >
           <GoogleIcon className="w-4 h-4 md:w-5 md:h-5 mr-1.5 md:mr-2" />
-          {googleLoading ? "جاري..." : "Google"}
+          {googleLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+              جاري...
+            </>
+          ) : (
+            "Google"
+          )}
         </Button>
         <Button variant="outline" className="h-10 md:h-11 text-xs md:text-sm font-medium" onClick={handleMicrosoft}>
           <MicrosoftIcon />
