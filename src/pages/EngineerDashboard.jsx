@@ -11,7 +11,7 @@ import {
   Loader2, Star, Briefcase, ShieldAlert, Bell, 
   MapPin, Mail, Phone, Plus, TrendingUp, DollarSign,
   CheckCircle, Clock, AlertCircle, Edit, FileText, Wallet, Shield,
-  PieChart, Target, Award, Calendar as CalendarIcon
+  PieChart, Target, Award, Calendar as CalendarIcon, Eye
 } from "lucide-react";
 import { AdSidebarSection } from "@/components/ads/SmartAdCard";
 import { useAds } from "@/hooks/useAds";
@@ -557,12 +557,71 @@ export default function EngineerDashboard() {
         {/* Contextual Ads - Dashboard */}
         <AdSidebarSection ads={dashboardAds} />
 
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <Link to={createPageUrl("AddPortfolio")}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-[#d4a574]/40 bg-gradient-to-br from-[#6B5D4F]/5 to-[#C9A66B]/10">
+              <CardContent className="py-4 flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-[#C9A66B] flex items-center justify-center">
+                  <Plus className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold text-[#1a1a2e]">إضافة عمل جديد</p>
+                  <p className="text-xs text-slate-500">أضف مشروعاً لمعرضك</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to={createPageUrl("EngineerReviews")}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-blue-200/60 bg-gradient-to-br from-blue-50 to-indigo-50/50">
+              <CardContent className="py-4 flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center">
+                  <Star className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold text-[#1a1a2e]">إدارة التقييمات</p>
+                  <p className="text-xs text-slate-500">تابع تقييمات العملاء</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to={createPageUrl("EngineerProfile") + `?id=${engineer.id}`}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-purple-200/60 bg-gradient-to-br from-purple-50 to-pink-50/50">
+              <CardContent className="py-4 flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-purple-600 flex items-center justify-center">
+                  <Award className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold text-[#1a1a2e]">الملف العام</p>
+                  <p className="text-xs text-slate-500">شاهد ملفك للعملاء</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to={createPageUrl("Projects")}>
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-emerald-200/60 bg-gradient-to-br from-emerald-50 to-teal-50/50">
+              <CardContent className="py-4 flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center">
+                  <Briefcase className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <p className="font-semibold text-[#1a1a2e]">تصفح المشاريع</p>
+                  <p className="text-xs text-slate-500">احصل على عملاء جدد</p>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        </div>
+
         {/* Tabs Section */}
         <Tabs defaultValue="projects" className="space-y-6">
           <TabsList className="bg-white shadow-sm">
             <TabsTrigger value="projects">المشاريع</TabsTrigger>
-            <TabsTrigger value="proposals">العروض المقدمة</TabsTrigger>
-            <TabsTrigger value="portfolio">معرض الأعمال</TabsTrigger>
+            <TabsTrigger value="proposals">العروض</TabsTrigger>
+            <TabsTrigger value="portfolio">أعمالي</TabsTrigger>
             <TabsTrigger value="reviews">التقييمات</TabsTrigger>
           </TabsList>
 
@@ -681,44 +740,136 @@ export default function EngineerDashboard() {
           </TabsContent>
 
           <TabsContent value="portfolio">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>معرض الأعمال</CardTitle>
-                <Link to={createPageUrl("AddPortfolio")}>
-                  <Button size="sm" className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B]">
-                    <Plus className="w-4 h-4 ml-2" />
-                    إضافة عمل
-                  </Button>
-                </Link>
-              </CardHeader>
-              <CardContent>
-                {portfolio.length === 0 ? (
-                  <div className="text-center py-12">
-                    <TrendingUp className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-600 mb-3">لم تضف أي أعمال بعد</p>
-                    <Link to={createPageUrl("AddPortfolio")}>
-                      <Button variant="outline">إضافة أول عمل</Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {portfolio.map(item => (
-                      <div key={item.id} className="group relative rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow">
-                        <img 
-                          src={item.images?.[0] || '/placeholder.jpg'} 
-                          alt={item.title}
-                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                        <div className="p-3 bg-white">
-                          <h3 className="font-medium text-slate-900 line-clamp-1">{item.title}</h3>
-                          <p className="text-sm text-slate-600 line-clamp-2">{item.description}</p>
-                        </div>
+            <div className="space-y-4">
+              {/* Portfolio Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="pt-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <Briefcase className="w-5 h-5 text-blue-600" />
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                      <div>
+                        <p className="text-2xl font-bold">{portfolio.length}</p>
+                        <p className="text-xs text-slate-500">عمل معرض</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold">{portfolio.filter(p => p.is_featured).length}</p>
+                        <p className="text-xs text-slate-500">أعمال مميزة</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                        <Award className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold">{portfolio.filter(p => p.certification_url).length}</p>
+                        <p className="text-xs text-slate-500">موثقة</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Link to={createPageUrl("AddPortfolio")}>
+                  <Card className="hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] text-white">
+                    <CardContent className="pt-4 flex flex-col items-center justify-center h-full">
+                      <Plus className="w-8 h-8 mb-2" />
+                      <p className="font-semibold text-sm">إضافة عمل جديد</p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </div>
+
+              {/* Portfolio Grid */}
+              {portfolio.length === 0 ? (
+                <Card>
+                  <CardContent className="pt-6 text-center py-12">
+                    <TrendingUp className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                    <h3 className="text-lg font-semibold text-slate-700 mb-2">معرضك فارغ</h3>
+                    <p className="text-slate-600 mb-4 max-w-md mx-auto">
+                      أضف أعمالك الأولى لعرض مهاراتك وجذب المزيد من العملاء. المعرض يساعد في زيادة فرص قبول عروضك.
+                    </p>
+                    <Link to={createPageUrl("AddPortfolio")}>
+                      <Button className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B]">
+                        <Plus className="w-4 h-4 ml-2" />
+                        إضافة أول عمل
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {portfolio.map(item => (
+                    <Link
+                      key={item.id}
+                      to={createPageUrl("EngineerProfile") + `?id=${engineer.id}&portfolio=${item.id}`}
+                      className="block group"
+                    >
+                      <Card className="overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1">
+                        <div className="relative h-56 overflow-hidden">
+                          <img 
+                            src={item.images?.[0] || '/placeholder.jpg'} 
+                            alt={item.title}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          />
+                          <div className="absolute top-3 right-3 flex gap-2">
+                            {item.is_featured && (
+                              <Badge className="bg-amber-500 text-white">
+                                <Star className="w-3 h-3 ml-1 fill-white" />
+                                مميز
+                              </Badge>
+                            )}
+                            {item.has_certification && (
+                              <Badge className="bg-blue-500 text-white">
+                                <Award className="w-3 h-3 ml-1" />
+                                موثق
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                            <p className="text-white font-semibold line-clamp-1">{item.title}</p>
+                            <p className="text-white/80 text-xs">{item.category}</p>
+                          </div>
+                        </div>
+                        <CardContent className="p-4">
+                          <p className="text-sm text-slate-600 line-clamp-2 mb-3">{item.description}</p>
+                          <div className="flex items-center justify-between text-xs text-slate-500">
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {item.location || 'غير محدد'}
+                            </span>
+                            <span>{item.year || '-'}</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              {portfolio.length > 0 && (
+                <div className="flex justify-center mt-6">
+                  <Link to={createPageUrl("EngineerProfile") + `?id=${engineer.id}`}>
+                    <Button variant="outline" className="gap-2">
+                      <Eye className="w-4 h-4" />
+                      عرض المعرض الكامل في ملفي العام
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="reviews">
