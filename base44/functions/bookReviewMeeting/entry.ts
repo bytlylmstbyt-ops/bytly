@@ -150,25 +150,29 @@ Deno.serve(async (req) => {
         calendarError = calErr.message;
       }
 
-      // Notify both parties
+      // Send notifications via dedicated function
       try {
-        await Promise.all([
-          base44.asServiceRole.entities.Notification.create({
-            recipient_email: user.email,
-            title: '✅ تم حجز اجتماع مراجعة المخططات',
-            message: `تم تأكيد موعدك مع ${target_name || 'المهندس'} يوم ${appointment_date} الساعة ${appointment_time}.${googleLink ? ' تمت إضافته تلقائياً إلى تقويم جوجل — تحقق من بريدك.' : ''}`,
-            type: 'approval',
-            priority: 'high'
-          }),
-          target_email ? base44.asServiceRole.entities.Notification.create({
-            recipient_email: target_email,
-            title: '📐 اجتماع مراجعة مخططات جديد',
-            message: `حجز ${user.full_name} اجتماع مراجعة مخططات معك يوم ${appointment_date} الساعة ${appointment_time}. الموضوع: ${topic}.${googleLink ? ' تمت إضافة الموعد إلى تقويمك — تحقق من بريدك.' : ''}`,
-            type: 'approval',
-            priority: 'high'
-          }) : Promise.resolve()
-        ]);
-      } catch (e) { console.error('Notification error:', e.message); }
+        await base44.functions.invoke('sendAppointmentNotification', {
+          action: 'notify_new_appointment',
+          appointment: {
+            id: appointment.id,
+            client_id: user.id,
+            client_name: user.full_name,
+            client_email: user.email,
+            client_phone: body.client_phone || '',
+            target_type: target_type || 'engineer',
+            target_id,
+            target_name: target_name || '',
+            target_email: target_email || '',
+            appointment_date,
+            appointment_time,
+            consultation_type: consultation_type || 'video_call',
+            topic
+          }
+        });
+      } catch (e) {
+        console.error('Appointment notification error:', e.message);
+      }
 
       return Response.json({
         success: true,

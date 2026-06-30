@@ -130,9 +130,12 @@ export default function AppointmentModal({ targetId, targetName, targetType, tar
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-green-600" />
             </div>
-            <h3 className="text-lg font-bold text-green-700 mb-2">تم حجز الاجتماع بنجاح!</h3>
+            <h3 className="text-lg font-bold text-green-700 mb-2">✅ تم إرسال طلب الموعد بنجاح!</h3>
             <p className="text-slate-600 text-sm mb-4">
-              تم تأكيد موعدك مع {targetName} يوم {form.appointment_date} الساعة {form.appointment_time}.
+              تم إرسال طلب حجز الموعد إلى {targetName} وسيتواصل معك قريباً للتأكيد.
+            </p>
+            <p className="text-slate-500 text-xs mb-4">
+              التاريخ: {form.appointment_date} | الوقت: {form.appointment_time}
             </p>
 
             {result.google_calendar_link && (
