@@ -108,6 +108,7 @@ const AuthenticatedApp = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/RegisterChoice" element={lazyRoute(React.lazy(() => import('./pages/RegisterChoice')), "RegisterChoice")} />
 
       {/* Public registration-related pages */}
       {Object.entries(Pages)
