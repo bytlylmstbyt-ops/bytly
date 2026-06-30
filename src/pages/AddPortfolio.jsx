@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
-  Palette, MapPin, Calendar, Upload, X, 
-  Loader2, CheckCircle, Image, Plus
+  Upload, X, Plus, CheckCircle, Loader2, Image as ImageIcon,
+  Trash2, Edit3
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -20,12 +18,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function AddPortfolio() {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const [engineer, setEngineer] = useState(null);
+  
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -33,363 +35,369 @@ export default function AddPortfolio() {
     project_type: "",
     location: "",
     year: new Date().getFullYear(),
-    images: [],
-    is_featured: false,
-    budget: "",
-    duration_days: "",
-    start_date: "",
-    completion_date: "",
     client_name: "",
-    team_size: "",
     tags: []
   });
+  
+  const [images, setImages] = useState([]);
+  const [tagInput, setTagInput] = useState("");
+
+  const categories = [
+    { value: "interior", label: "تصميم داخلي" },
+    { value: "architecture", label: "عمارة" },
+    { value: "painting", label: "رسم" },
+    { value: "landscape", label: "تنسيق حدائق" },
+    { value: "furniture", label: "أثاث" },
+    { value: "lighting", label: "إضاءة" },
+    { value: "civil_engineering", label: "هندسة مدنية" },
+    { value: "structural_design", label: "تصميم إنشائي" },
+    { value: "executive_drawing", label: "رسومات تنفيذية" }
+  ];
 
   useEffect(() => {
-    loadEngineerData();
+    loadEngineer();
   }, []);
 
-  const loadEngineerData = async () => {
-    const user = await base44.auth.me();
-    const engineerData = await base44.entities.Engineer.filter({ email: user.email });
-    if (engineerData.length > 0) {
-      setEngineer(engineerData[0]);
+  const loadEngineer = async () => {
+    try {
+      const user = await base44.auth.me();
+      const engineers = await base44.entities.Engineer.filter({ email: user.email });
+      
+      if (engineers.length === 0) {
+        toast({
+          title: "تنبيه",
+          description: "يجب إنشاء ملف مهندس أولاً",
+          variant: "destructive"
+        });
+        navigate("/Dashboard");
+        return;
+      }
+      
+      setEngineer(engineers[0]);
+    } catch (error) {
+      console.error("Error loading engineer:", error);
     }
-  };
-
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     if (files.length === 0) return;
 
-    setIsUploading(true);
+    setUploadingImages(true);
     
-    const uploadedUrls = [];
-    for (const file of files) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      uploadedUrls.push(file_url);
+    try {
+      const uploadPromises = files.map(async (file) => {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        return file_url;
+      });
+
+      const uploadedUrls = await Promise.all(uploadPromises);
+      setImages(prev => [...prev, ...uploadedUrls]);
+      
+      toast({
+        title: "تم الرفع",
+        description: `تم رفع ${uploadedUrls.length} صورة بنجاح`,
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "فشل رفع الصور",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingImages(false);
     }
-    
-    setFormData(prev => ({
-      ...prev,
-      images: [...prev.images, ...uploadedUrls]
-    }));
-    setIsUploading(false);
   };
 
   const removeImage = (index) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const addTag = () => {
+    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        tags: [...prev.tags, tagInput.trim()]
+      }));
+      setTagInput("");
+    }
+  };
+
+  const removeTag = (tagToRemove) => {
     setFormData(prev => ({
       ...prev,
-      images: prev.images.filter((_, i) => i !== index)
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (!engineer) {
-      alert("يرجى إكمال تسجيل حساب المهندس أولاً");
+      toast({
+        title: "خطأ",
+        description: "يجب إنشاء ملف مهندس أولاً",
+        variant: "destructive"
+      });
       return;
     }
 
-    setIsLoading(true);
-    
-    await base44.entities.Portfolio.create({
-      ...formData,
-      engineer_id: engineer.id,
-      year: parseInt(formData.year),
-      budget: formData.budget ? parseFloat(formData.budget) : undefined,
-      duration_days: formData.duration_days ? parseInt(formData.duration_days) : undefined,
-      team_size: formData.team_size ? parseInt(formData.team_size) : undefined
-    });
+    if (images.length === 0) {
+      toast({
+        title: "تنبيه",
+        description: "يجب رفع صورة واحدة على الأقل",
+        variant: "destructive"
+      });
+      return;
+    }
 
-    setIsLoading(false);
-    navigate(createPageUrl("Dashboard"));
+    setLoading(true);
+
+    try {
+      await base44.entities.Portfolio.create({
+        ...formData,
+        engineer_id: engineer.id,
+        images
+      });
+
+      toast({
+        title: "تم الحفظ",
+        description: "تمت إضافة العمل للمعرض بنجاح",
+      });
+
+      navigate(`/EngineerProfile?id=${engineer.id}`);
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: error?.message || "فشل الحفظ",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const categories = [
-    { value: "interior", label: "تصميم داخلي" },
-    { value: "architecture", label: "تصميم معماري" },
-    { value: "painting", label: "رسم هندسي" },
-    { value: "landscape", label: "تنسيق حدائق" },
-    { value: "furniture", label: "تصميم أثاث" },
-    { value: "lighting", label: "تصميم إضاءة" },
-    { value: "civil_engineering", label: "هندسة مدنية" },
-    { value: "structural_design", label: "تصميم إنشائي" },
-    { value: "executive_drawing", label: "رسومات تنفيذية" }
-  ];
-
-  const projectTypes = [
-    "فيلا", "شقة", "مكتب", "محل تجاري", "مطعم", "فندق", 
-    "مستشفى", "مدرسة", "مسجد", "حديقة", "أخرى"
-  ];
-
-  const isFormValid = formData.title && formData.category && formData.images.length > 0;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-12">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
         >
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] flex items-center justify-center mb-4">
-            <Palette className="w-8 h-8 text-white" />
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-[#1a1a2e] mb-2">إضافة عمل جديد</h1>
+            <p className="text-slate-600">أضف مشروعاً جديداً إلى معرض أعمالك</p>
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e] mb-2">
-            إضافة عمل جديد
-          </h1>
-          <p className="text-slate-600">أضف أعمالك لعرضها على العملاء المحتملين</p>
-        </motion.div>
 
-        <Card className="border-0 shadow-xl">
-          <CardContent className="p-6 md:p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Images Upload */}
-              <div className="space-y-2">
-                <Label>صور العمل * (يمكن رفع حتى 10 صور)</Label>
-                <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-                  {formData.images.map((url, index) => (
-                    <div key={index} className="relative group aspect-square">
-                      <img 
-                        src={url} 
-                        alt="" 
-                        className="w-full h-full object-cover rounded-xl"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute top-2 right-2 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                      <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/70 text-white text-xs rounded">
-                        {index + 1}
+          <Card className="border-0 shadow-xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ImageIcon className="w-5 h-5 text-[#d4a574]" />
+                معلومات المشروع
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Images Upload */}
+                <div className="space-y-2">
+                  <Label>صور المشروع *</Label>
+                  <div className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center hover:border-[#d4a574] transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageUpload}
+                      disabled={uploadingImages}
+                      className="hidden"
+                      id="image-upload"
+                    />
+                    <label htmlFor="image-upload">
+                      <div className="cursor-pointer">
+                        <Upload className="w-12 h-12 text-slate-400 mx-auto mb-3" />
+                        <p className="text-sm text-slate-600 mb-1">
+                          {uploadingImages ? "جاري الرفع..." : "اضغط لرفع الصور"}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          PNG, JPG حتى 10MB
+                        </p>
                       </div>
-                    </div>
-                  ))}
-                  
-                  {formData.images.length < 10 && (
-                    <label className="aspect-square border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#d4a574] transition-colors">
-                      <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                      />
-                      {isUploading ? (
-                        <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
-                      ) : (
-                        <>
-                          <Plus className="w-8 h-8 text-slate-400 mb-2" />
-                          <span className="text-xs text-slate-500 text-center px-2">إضافة صور</span>
-                        </>
-                      )}
                     </label>
+                  </div>
+
+                  {images.length > 0 && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+                      {images.map((url, index) => (
+                        <div key={index} className="relative group aspect-square rounded-lg overflow-hidden border">
+                          <img src={url} alt="" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(index)}
+                            className="absolute top-1 right-1 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
-                <p className="text-xs text-slate-500">رفعت {formData.images.length} من 10 صور</p>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="title">عنوان العمل *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => handleInputChange("title", e.target.value)}
-                  placeholder="مثال: تصميم فيلا فاخرة"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">وصف العمل</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange("description", e.target.value)}
-                  placeholder="اشرح تفاصيل العمل ومميزاته..."
-                  rows={4}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+                {/* Title */}
                 <div className="space-y-2">
-                  <Label>التصنيف *</Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value) => handleInputChange("category", value)}
+                  <Label htmlFor="title">عنوان المشروع *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="مثال: تصميم فيلا مودرن"
                     required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر التصنيف" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map(cat => (
-                        <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                 </div>
 
+                {/* Description */}
                 <div className="space-y-2">
-                  <Label>نوع المشروع</Label>
-                  <Select
-                    value={formData.project_type}
-                    onValueChange={(value) => handleInputChange("project_type", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="اختر النوع" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {projectTypes.map(type => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="description">وصف المشروع</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    placeholder="اكتب وصفاً تفصيلياً للمشروع..."
+                    rows={4}
+                  />
                 </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="location">موقع المشروع</Label>
-                  <div className="relative">
-                    <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                {/* Category & Project Type */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>التصنيف</Label>
+                    <Select
+                      value={formData.category}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="اختر التصنيف" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map(cat => (
+                          <SelectItem key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="project_type">نوع المشروع</Label>
                     <Input
-                      id="location"
-                      value={formData.location}
-                      onChange={(e) => handleInputChange("location", e.target.value)}
-                      className="pr-10"
-                      placeholder="المدينة"
+                      id="project_type"
+                      value={formData.project_type}
+                      onChange={(e) => setFormData(prev => ({ ...prev, project_type: e.target.value }))}
+                      placeholder="مثال: سكني، تجاري..."
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="year">سنة التنفيذ</Label>
-                  <div className="relative">
-                    <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                {/* Location & Year */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="location">الموقع</Label>
+                    <Input
+                      id="location"
+                      value={formData.location}
+                      onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                      placeholder="المدينة، الدولة"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="year">سنة التنفيذ</Label>
                     <Input
                       id="year"
                       type="number"
                       value={formData.year}
-                      onChange={(e) => handleInputChange("year", e.target.value)}
-                      className="pr-10"
-                      min={2000}
+                      onChange={(e) => setFormData(prev => ({ ...prev, year: parseInt(e.target.value) }))}
+                      min={1900}
                       max={new Date().getFullYear()}
                     />
                   </div>
                 </div>
-              </div>
 
-              {/* Budget and Duration */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="budget">الميزانية (ريال)</Label>
-                  <Input
-                    id="budget"
-                    type="number"
-                    value={formData.budget}
-                    onChange={(e) => handleInputChange("budget", e.target.value)}
-                    placeholder="50000"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="duration_days">مدة التنفيذ (أيام)</Label>
-                  <Input
-                    id="duration_days"
-                    type="number"
-                    value={formData.duration_days}
-                    onChange={(e) => handleInputChange("duration_days", e.target.value)}
-                    placeholder="60"
-                  />
-                </div>
-              </div>
-
-              {/* Dates */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="start_date">تاريخ البدء</Label>
-                  <Input
-                    id="start_date"
-                    type="date"
-                    value={formData.start_date}
-                    onChange={(e) => handleInputChange("start_date", e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="completion_date">تاريخ الإنجاز</Label>
-                  <Input
-                    id="completion_date"
-                    type="date"
-                    value={formData.completion_date}
-                    onChange={(e) => handleInputChange("completion_date", e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Client and Team */}
-              <div className="grid grid-cols-2 gap-4">
+                {/* Client Name */}
                 <div className="space-y-2">
                   <Label htmlFor="client_name">اسم العميل (اختياري)</Label>
                   <Input
                     id="client_name"
                     value={formData.client_name}
-                    onChange={(e) => handleInputChange("client_name", e.target.value)}
-                    placeholder="اسم العميل"
+                    onChange={(e) => setFormData(prev => ({ ...prev, client_name: e.target.value }))}
+                    placeholder="اسم العميل أو الشركة"
                   />
                 </div>
 
+                {/* Tags */}
                 <div className="space-y-2">
-                  <Label htmlFor="team_size">عدد أفراد الفريق</Label>
-                  <Input
-                    id="team_size"
-                    type="number"
-                    value={formData.team_size}
-                    onChange={(e) => handleInputChange("team_size", e.target.value)}
-                    placeholder="5"
-                    min="1"
-                  />
+                  <Label>الوسوم</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
+                      placeholder="أضف وسماً واضغط Enter"
+                    />
+                    <Button type="button" onClick={addTag} variant="outline">
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  {formData.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {formData.tags.map((tag, index) => (
+                        <Badge key={index} variant="secondary" className="gap-1">
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(tag)}
+                            className="hover:text-red-500"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
 
-              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-                <div>
-                  <Label htmlFor="featured" className="text-base">عمل مميز</Label>
-                  <p className="text-sm text-slate-500">سيظهر في الصفحة الرئيسية</p>
+                {/* Submit */}
+                <div className="flex gap-3 pt-4">
+                  <Button 
+                    type="submit" 
+                    className="flex-1 bg-gradient-to-r from-[#1a1a2e] to-[#d4a574]"
+                    disabled={loading || uploadingImages}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        جاري الحفظ...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4 ml-2" />
+                        حفظ المشروع
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => navigate(-1)}
+                    disabled={loading}
+                  >
+                    إلغاء
+                  </Button>
                 </div>
-                <Switch
-                  id="featured"
-                  checked={formData.is_featured}
-                  onCheckedChange={(checked) => handleInputChange("is_featured", checked)}
-                />
-              </div>
-
-              <Button
-                type="submit"
-                disabled={!isFormValid || isLoading}
-                className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white py-6 text-lg"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin ml-2" />
-                    جاري الإضافة...
-                  </>
-                ) : (
-                  <>
-                    إضافة العمل
-                    <CheckCircle className="w-5 h-5 mr-2" />
-                  </>
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+              </form>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );

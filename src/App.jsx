@@ -19,6 +19,7 @@ import ResetPassword from './pages/ResetPassword';
 const TechnicalResources       = React.lazy(() => import('./pages/TechnicalResources'));
 const AdManager                = React.lazy(() => import('./pages/AdManager'));
 const AIEngineers              = React.lazy(() => import('./pages/AIEngineers'));
+const AddPortfolio             = React.lazy(() => import('./pages/AddPortfolio'));
 const AIInteriorDesigner       = React.lazy(() => import('./pages/AIInteriorDesigner'));
 const AIArchitect              = React.lazy(() => import('./pages/AIArchitect'));
 const AIBudgetEstimator        = React.lazy(() => import('./pages/AIBudgetEstimator'));
@@ -195,6 +196,7 @@ const AuthenticatedApp = () => {
         <Route path="/LaunchPerformanceDashboard" element={lazyRoute(LaunchPerformanceDashboard, "LaunchPerformanceDashboard")} />
         <Route path="/CommissionManager"           element={lazyRoute(CommissionManager, "CommissionManager")} />
         <Route path="/NotificationCenter"          element={lazyRoute(NotificationCenter, "NotificationCenter")} />
+        <Route path="/AddPortfolio"                element={lazyRoute(AddPortfolio, "AddPortfolio")} />
         <Route path="*" element={<NotFoundError />} />
       </Route>
     </Routes>

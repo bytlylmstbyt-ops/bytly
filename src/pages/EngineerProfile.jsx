@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { 
   MapPin, Star, CheckCircle, Briefcase, Award, Clock,
   MessageSquare, Share2, Heart, Grid3X3, ExternalLink,
-  Calendar, Phone, Mail, ChevronLeft, ChevronRight
+  Calendar, Phone, Mail, ChevronLeft, ChevronRight, PlusCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AppointmentModal from "@/components/appointments/AppointmentModal";
@@ -36,6 +36,7 @@ export default function EngineerProfile() {
   const [currentClient, setCurrentClient] = useState(null);
   const [hasReviewed, setHasReviewed] = useState(false);
   const [tiktokData, setTiktokData] = useState(null);
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     if (engineerId) {
@@ -68,6 +69,9 @@ export default function EngineerProfile() {
     setEngineer(engineerData[0]);
     setPortfolios(portfolioData);
     setReviews(reviewData);
+
+    // Check if current user is the engineer
+    setIsOwner(engineerData[0]?.email === user.email);
 
     if (clientData.length > 0) {
       const alreadyReviewed = reviewData.some(r => r.client_id === clientData[0].id);
@@ -433,7 +437,17 @@ export default function EngineerProfile() {
                     <Grid3X3 className="w-5 h-5" />
                     معرض الأعمال
                   </CardTitle>
-                  <Badge variant="secondary">{portfolios.length} عمل</Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{portfolios.length} عمل</Badge>
+                    {isOwner && (
+                      <Link to="/AddPortfolio">
+                        <Button size="sm" className="gap-1">
+                          <PlusCircle className="w-4 h-4" />
+                          إضافة مشروع
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {portfolios.length > 0 ? (
