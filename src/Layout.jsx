@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "./utils";
 import { base44 } from "@/api/base44Client";
 import BytlyAdvisorChat from "@/components/chatbot/BytlyAdvisorChat";
-import MessageNotificationBadge from "@/components/notifications/MessageNotificationBadge";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { LanguageProvider, useLanguage } from "@/components/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";

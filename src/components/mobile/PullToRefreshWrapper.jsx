@@ -10,7 +10,7 @@ export default function PullToRefreshWrapper({ onRefresh, children, className = 
   const { isRefreshing, pullDistance, containerRef } = usePullToRefresh({ onRefresh });
 
   return (
-    <div ref={containerRef} className={`relative overflow-y-auto h-full ${className}`} style={{ WebkitOverflowScrolling: "touch" }}>
+    <div ref={containerRef} className={`relative ${className}`}>
       {/* Pull indicator */}
       <div
         className="absolute top-0 left-0 right-0 flex items-center justify-center z-10 pointer-events-none transition-all duration-150"

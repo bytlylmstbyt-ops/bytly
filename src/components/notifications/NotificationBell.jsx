@@ -25,22 +25,24 @@ export default function NotificationBell() {
 
   useEffect(() => {
     let unsubscribe;
+    let cancelled = false;
     const init = async () => {
       try {
         const user = await base44.auth.me();
+        if (cancelled) return;
         setUserEmail(user.email);
         const recent = await base44.entities.Notification.filter(
           { recipient_email: user.email },
           "-created_date",
           20
         );
+        if (cancelled) return;
         setNotifications(recent);
 
         unsubscribe = base44.entities.Notification.subscribe((event) => {
           if (event.data?.recipient_email === user.email) {
             if (event.type === "create") {
               setNotifications((prev) => [event.data, ...prev].slice(0, 20));
-              // Browser notification if permission granted
               if (Notification.permission === "granted") {
                 new Notification(event.data.title || "إشعار جديد", {
                   body: event.data.message,
@@ -55,17 +57,24 @@ export default function NotificationBell() {
           }
         });
       } catch (e) {
-        // not authenticated
+        // 401/403 = not authenticated — expected, no log needed
+        if (e?.status !== 401 && e?.status !== 403) {
+          console.warn("[NotificationBell] init failed:", e?.message || e);
+        }
       }
     };
     init();
 
-    // Request browser notification permission
     if (typeof Notification !== "undefined" && Notification.permission === "default") {
       Notification.requestPermission();
     }
 
-    return () => unsubscribe && unsubscribe();
+    return () => {
+      cancelled = true;
+      if (unsubscribe) {
+        try { unsubscribe(); } catch (e) {}
+      }
+    };
   }, []);
 
   // Close on outside click

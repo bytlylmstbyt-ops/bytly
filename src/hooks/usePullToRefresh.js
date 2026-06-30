@@ -32,8 +32,8 @@ export function usePullToRefresh({ onRefresh, threshold = 70 }) {
     if (!el) return;
 
     const onTouchStart = (e) => {
-      // Only trigger when scrolled to the very top
-      const scrollTop = el.scrollTop ?? window.scrollY;
+      // Only trigger when the window is scrolled to the very top
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
       if (scrollTop > 0) return;
       startY.current = e.touches[0].clientY;
       pulling.current = true;
