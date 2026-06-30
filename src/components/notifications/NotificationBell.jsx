@@ -203,12 +203,12 @@ export default function NotificationBell() {
             {/* Footer */}
             <div className="px-4 py-3 bg-slate-50 border-t text-center">
               <Link
-                to={createPageUrl("NotificationCenter")}
+                to="/NotificationCenter"
                 onClick={() => setOpen(false)}
                 className="text-sm text-[#d4a574] hover:text-[#1a1a2e] font-medium transition-colors"
               >
                 عرض كل الإشعارات ←
-                </Link>
+              </Link>
                 </div>
                 </motion.div>
                 )}
