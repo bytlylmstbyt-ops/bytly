@@ -531,13 +531,30 @@ export default function EngineerProfile() {
                     التقييمات والمراجعات
                   </CardTitle>
                   <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold text-[#1a1a2e]">{engineer.rating?.toFixed(1) || "0.0"}</span>
-                    <div className="flex">
-                      {[1,2,3,4,5].map(s => (
-                        <Star key={s} className={`w-4 h-4 ${s <= Math.round(engineer.rating||0) ? "fill-amber-400 text-amber-400" : "text-slate-300"}`} />
-                      ))}
+                    {currentClient && !hasReviewed && (
+                      <EngineerReviewForm
+                        engineerId={engineerId}
+                        engineerName={engineer.full_name}
+                        clientId={currentClient.id}
+                        clientName={currentClient.full_name}
+                        onSubmitted={loadData}
+                        trigger={
+                          <Button size="sm" className="bg-gradient-to-r from-amber-500 to-amber-600 text-white gap-1">
+                            <Star className="w-4 h-4 fill-white" />
+                            اكتب تقييم
+                          </Button>
+                        }
+                      />
+                    )}
+                    <div className="flex items-center gap-2">
+                      <span className="text-2xl font-bold text-[#1a1a2e]">{engineer.rating?.toFixed(1) || "0.0"}</span>
+                      <div className="flex">
+                        {[1,2,3,4,5].map(s => (
+                          <Star key={s} className={`w-4 h-4 ${s <= Math.round(engineer.rating||0) ? "fill-amber-400 text-amber-400" : "text-slate-300"}`} />
+                        ))}
+                      </div>
+                      <span className="text-sm text-slate-500">({engineer.total_reviews || 0})</span>
                     </div>
-                    <span className="text-sm text-slate-500">({engineer.total_reviews || 0})</span>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -573,6 +590,15 @@ export default function EngineerProfile() {
                                 </div>
                               )}
 
+                              {review.highlights?.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 mb-2">
+                                  {review.highlights.map((h, idx) => (
+                                    <span key={idx} className="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded-full border border-amber-200">
+                                      ✓ {h}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
                               {review.comment && (
                                 <p className="text-slate-700 text-sm leading-relaxed mb-3">{review.comment}</p>
                               )}

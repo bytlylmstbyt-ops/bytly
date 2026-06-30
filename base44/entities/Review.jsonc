@@ -46,6 +46,13 @@
       "type": "string",
       "description": "\u0627\u0644\u062a\u0639\u0644\u064a\u0642 \u0627\u0644\u0645\u0644\u062e\u0635"
     },
+    "highlights": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u0627\u0644\u0646\u0642\u0627\u0637 \u0627\u0644\u0645\u0645\u064a\u0632\u0629 \u0627\u0644\u0645\u062e\u062a\u0627\u0631\u0629"
+    },
     "sentiment": {
       "type": "string",
       "enum": [

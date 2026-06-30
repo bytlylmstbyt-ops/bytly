@@ -87,7 +87,8 @@ export default function EngineerReviewForm({ engineerId, engineerName, clientId,
       quality_rating: qualityRating || rating,
       communication_rating: communicationRating || rating,
       delivery_rating: deliveryRating || rating,
-      comment: fullComment
+      comment: fullComment,
+      highlights: selectedHighlights
     });
 
     const allReviews = await base44.entities.Review.filter({ engineer_id: engineerId });
