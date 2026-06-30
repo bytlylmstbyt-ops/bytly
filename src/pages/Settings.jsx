@@ -61,49 +61,55 @@ export default function Settings() {
 
   const loadUserData = async () => {
     setIsLoading(true);
-    const currentUser = await base44.auth.me();
-    setUser(currentUser);
+    try {
+      const currentUser = await base44.auth.me();
+      if (!currentUser) { setIsLoading(false); return; }
+      setUser(currentUser);
 
-    const [engineerData, clientData] = await Promise.all([
-      base44.entities.Engineer.filter({ email: currentUser.email }),
-      base44.entities.Client.filter({ email: currentUser.email })
-    ]);
+      const [engineerData, clientData] = await Promise.all([
+        base44.entities.Engineer.filter({ email: currentUser.email }),
+        base44.entities.Client.filter({ email: currentUser.email })
+      ]);
 
-    if (engineerData.length > 0) {
-      setUserType("engineer");
-      setProfile(engineerData[0]);
-      setFormData(engineerData[0]);
-    } else if (clientData.length > 0) {
-      setUserType("client");
-      setProfile(clientData[0]);
-      setFormData(clientData[0]);
-    }
+      if (engineerData.length > 0) {
+        setUserType("engineer");
+        setProfile(engineerData[0]);
+        setFormData(engineerData[0]);
+      } else if (clientData.length > 0) {
+        setUserType("client");
+        setProfile(clientData[0]);
+        setFormData(clientData[0]);
+      }
 
-    // Load notification settings
-    const notifSettings = await base44.entities.NotificationSettings.filter({
-      user_email: currentUser.email
-    });
-    
-    if (notifSettings.length > 0) {
-      setNotificationSettings({
-        email_notifications: notifSettings[0].email_notifications ?? true,
-        in_app_notifications: notifSettings[0].in_app_notifications ?? true,
-        notification_preferences: notifSettings[0].notification_preferences || {
-          project_updates: true,
-          contract_updates: true,
-          payment_reminders: true,
-          milestone_reminders: true,
-          new_proposals: true,
-          deadline_reminders: true,
-          system_notifications: true,
-          dispute_updates: true,
-          new_messages: true,
-          review_requests: true
-        }
+      // Load notification settings
+      const notifSettings = await base44.entities.NotificationSettings.filter({
+        user_email: currentUser.email
       });
+      
+      if (notifSettings.length > 0) {
+        setNotificationSettings({
+          email_notifications: notifSettings[0].email_notifications ?? true,
+          in_app_notifications: notifSettings[0].in_app_notifications ?? true,
+          notification_preferences: notifSettings[0].notification_preferences || {
+            project_updates: true,
+            contract_updates: true,
+            payment_reminders: true,
+            milestone_reminders: true,
+            new_proposals: true,
+            deadline_reminders: true,
+            system_notifications: true,
+            dispute_updates: true,
+            new_messages: true,
+            review_requests: true
+          }
+        });
+      }
+    } catch (error) {
+      console.error('loadUserData error:', error);
+      toast.error(t('settings.profile.saveError'));
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   const handleInputChange = (field, value) => {
@@ -115,9 +121,16 @@ export default function Settings() {
     if (!file) return;
 
     setIsSaving(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    handleInputChange("profile_image", file_url);
-    setIsSaving(false);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      handleInputChange("profile_image", file_url);
+      toast.success(t('settings.profile.saveSuccess'));
+    } catch (error) {
+      console.error('Image upload error:', error);
+      toast.error(t('settings.profile.saveError'));
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSave = async () => {
@@ -172,27 +185,27 @@ export default function Settings() {
         </motion.div>
 
         <Tabs defaultValue="profile" className="space-y-6">
-          <TabsList className="bg-white shadow-sm">
-            <TabsTrigger value="profile" className="gap-2">
-              <User className="w-4 h-4" />
-              {t('settings.tabs.profile')}
+          <TabsList className="bg-white shadow-sm overflow-x-auto flex w-full justify-start md:justify-center sm:flex-nowrap whitespace-nowrap">
+            <TabsTrigger value="profile" className="gap-1.5 flex-1 sm:flex-initial">
+              <User className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">{t('settings.tabs.profile')}</span>
             </TabsTrigger>
-            <TabsTrigger value="security" className="gap-2">
-              <Shield className="w-4 h-4" />
-              {t('settings.tabs.security')}
+            <TabsTrigger value="security" className="gap-1.5 flex-1 sm:flex-initial">
+              <Shield className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">{t('settings.tabs.security')}</span>
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="gap-2">
-              <Bell className="w-4 h-4" />
-              {t('settings.tabs.notifications')}
+            <TabsTrigger value="notifications" className="gap-1.5 flex-1 sm:flex-initial">
+              <Bell className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">{t('settings.tabs.notifications')}</span>
             </TabsTrigger>
-            <TabsTrigger value="email" className="gap-2">
-              <Mail className="w-4 h-4" />
-              {t('settings.tabs.email')}
+            <TabsTrigger value="email" className="gap-1.5 flex-1 sm:flex-initial">
+              <Mail className="w-4 h-4 shrink-0" />
+              <span className="hidden sm:inline">{t('settings.tabs.email')}</span>
             </TabsTrigger>
             {userType === "engineer" && (
-              <TabsTrigger value="location" className="gap-2">
-                <MapPin className="w-4 h-4" />
-                النطاق الجغرافي
+              <TabsTrigger value="location" className="gap-1.5 flex-1 sm:flex-initial">
+                <MapPin className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline">النطاق</span>
               </TabsTrigger>
             )}
           </TabsList>
@@ -582,25 +595,6 @@ export default function Settings() {
           </TabsContent>
         </Tabs>
 
-        {/* Delete Account Section */}
-        <div className="mt-8 p-5 border border-red-200 rounded-xl bg-red-50">
-          <div className="flex items-center gap-3 mb-2">
-            <Trash2 className="w-5 h-5 text-red-600" />
-            <h3 className="font-semibold text-red-700">حذف الحساب</h3>
-          </div>
-          <p className="text-sm text-red-600 mb-4">
-            سيؤدي حذف حسابك إلى إزالة جميع بياناتك الشخصية بشكل نهائي وفق سياسة الخصوصية. هذا الإجراء لا يمكن التراجع عنه.
-          </p>
-          <Button
-            variant="outline"
-            className="border-red-300 text-red-600 hover:bg-red-100"
-            style={{ minHeight: 44 }}
-            onClick={() => { setShowDeleteDialog(true); setDeleteStep(1); setDeleteReason(""); setDeleteConfirmText(""); }}
-          >
-            <Trash2 className="w-4 h-4 ml-2" />
-            طلب حذف الحساب
-          </Button>
-        </div>
       </div>
 
       {/* Multi-Step Delete Dialog (App Store Compliant) */}
