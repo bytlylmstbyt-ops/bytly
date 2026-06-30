@@ -11,7 +11,7 @@ import {
   Loader2, Star, Briefcase, ShieldAlert, Bell, 
   MapPin, Mail, Phone, Plus, TrendingUp, DollarSign,
   CheckCircle, Clock, AlertCircle, Edit, FileText, Wallet, Shield,
-  PieChart, Target, Award
+  PieChart, Target, Award, Calendar as CalendarIcon
 } from "lucide-react";
 import { AdSidebarSection } from "@/components/ads/SmartAdCard";
 import { useAds } from "@/hooks/useAds";
@@ -26,6 +26,7 @@ export default function EngineerDashboard() {
   const [disputes, setDisputes] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [proposals, setProposals] = useState([]);
+  const [appointments, setAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -42,19 +43,21 @@ export default function EngineerDashboard() {
       const eng = engineerData[0];
       setEngineer(eng);
 
-      const [projectsData, portfolioData, reviewsData, disputesData, notificationsData, proposalsData] = await Promise.all([
+      const [projectsData, portfolioData, reviewsData, disputesData, notificationsData, proposalsData, appointmentsData] = await Promise.all([
         base44.entities.Project.filter({ assigned_engineer_id: eng.id }),
         base44.entities.Portfolio.filter({ engineer_id: eng.id }),
         base44.entities.Review.filter({ engineer_id: eng.id }),
         base44.entities.Dispute.list("-created_date"),
         base44.entities.Notification.filter({ recipient_email: currentUser.email }, "-created_date", 5),
-        base44.entities.Proposal.filter({ engineer_id: eng.id })
+        base44.entities.Proposal.filter({ engineer_id: eng.id }),
+        base44.entities.ConsultationAppointment.filter({ target_email: currentUser.email })
       ]);
 
       setProjects(projectsData);
       setPortfolio(portfolioData.slice(0, 6));
       setReviews(reviewsData);
       setProposals(proposalsData);
+      setAppointments(appointmentsData);
       
       const engineerDisputes = disputesData.filter(
         d => d.raised_by === currentUser.email || d.raised_against === currentUser.email
@@ -279,6 +282,22 @@ export default function EngineerDashboard() {
                   <div>
                     <p className="text-2xl font-bold text-slate-900">{(engineer.available_balance || 0).toLocaleString('ar-SA')}</p>
                     <p className="text-sm text-slate-600">رصيد متاح</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/EngineerCalendar" className="block">
+            <Card className="h-full hover:shadow-lg transition-shadow">
+              <CardContent className="pt-6">
+                <div className="flex flex-col gap-2">
+                  <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
+                    <CalendarIcon className="w-6 h-6 text-amber-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-900">{appointments.filter(a => a.appointment_date === new Date().toISOString().split("T")[0]).length}</p>
+                    <p className="text-sm text-slate-600">مواعيد اليوم</p>
                   </div>
                 </div>
               </CardContent>

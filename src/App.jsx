@@ -56,6 +56,7 @@ const PendingApprovals         = React.lazy(() => import('./pages/PendingApprova
 const LaunchPerformanceDashboard = React.lazy(() => import('./pages/LaunchPerformanceDashboard'));
 const CommissionManager          = React.lazy(() => import('./pages/CommissionManager'));
 const NotificationCenter         = React.lazy(() => import('./pages/NotificationCenter'));
+const EngineerCalendar           = React.lazy(() => import('./pages/EngineerCalendar'));
 
 // ── Page-level spinner fallback ───────────────────────────────────────────────
 function PageSpinner() {
@@ -209,6 +210,7 @@ const AuthenticatedApp = () => {
         <Route path="/CommissionManager"           element={lazyRoute(CommissionManager, "CommissionManager")} />
         <Route path="/NotificationCenter"          element={lazyRoute(NotificationCenter, "NotificationCenter")} />
         <Route path="/AddPortfolio"                element={lazyRoute(AddPortfolio, "AddPortfolio")} />
+        <Route path="/EngineerCalendar"            element={lazyRoute(EngineerCalendar, "EngineerCalendar")} />
         <Route path="*" element={<NotFoundError />} />
       </Route>
     </Routes>
