@@ -4,8 +4,9 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     
-    // Get the Google connection (uses the authorized googlecalendar connector)
-    const { accessToken } = await base44.asServiceRole.connectors.getConnection("googlecalendar");
+    // Get the Google connection using the workspace connector
+    const connectorId = "6a43fa24aa8bec5f45d4523f";
+    const { accessToken } = await base44.asServiceRole.connectors.getCurrentAppUserConnection(connectorId);
     
     // Use the token to get user info from Google
     const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
@@ -27,9 +28,10 @@ Deno.serve(async (req) => {
       picture: userInfo.picture
     });
   } catch (error) {
+    console.error('Google OAuth Error:', error);
     return Response.json({ 
       error: error.message,
-      details: 'Google OAuth connection failed. Please check OAuth credentials.'
+      details: 'Google OAuth connection failed. Please ensure you have authorized the connector.'
     }, { status: 500 });
   }
 });

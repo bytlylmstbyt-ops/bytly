@@ -85,18 +85,18 @@ export default function Login() {
       setLoading(true);
       setError("");
       
-      // Check if user is authenticated first
-      const isAuth = await base44.auth.isAuthenticated();
-      if (isAuth) {
-        // Already logged in, just connect Google and redirect
-        const oauthUrl = await base44.connectors.connectAppUser("googlecalendar");
-        window.open(oauthUrl, "_blank");
-        window.location.href = returnUrl;
-        return;
-      }
+      // Use the workspace Google OAuth connector for login
+      const oauthUrl = await base44.connectors.connectAppUser("6a43fa24aa8bec5f45d4523f");
+      window.open(oauthUrl, "_blank", "width=500,height=600");
       
-      // Not authenticated - use platform OAuth for login
-      base44.auth.loginWithProvider("google", returnUrl);
+      // Poll for popup close and redirect after OAuth completes
+      const checkPopup = setInterval(() => {
+        if (window.closed) {
+          clearInterval(checkPopup);
+          window.location.href = returnUrl;
+        }
+      }, 1000);
+      
     } catch (err) {
       setError("حدث خطأ أثناء تسجيل الدخول عبر Google: " + (err?.message || "غير معروف"));
       setLoading(false);
