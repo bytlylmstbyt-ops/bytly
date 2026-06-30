@@ -33,19 +33,43 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const returnUrl = appParams.fromUrl || "/";
 
+  const validateEmail = (value) => {
+    if (!value) return "";
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) return "البريد الإلكتروني غير صالح";
+    return "";
+  };
+
+  const handleEmailBlur = () => {
+    setEmailError(validateEmail(email));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    const emailValidation = validateEmail(email);
+    if (emailValidation) {
+      setEmailError(emailValidation);
+      return;
+    }
     setLoading(true);
     try {
       await base44.auth.loginViaEmailPassword(email, password);
       window.location.href = returnUrl;
     } catch (err) {
-      setError(err.message || "Invalid email or password");
+      const msg = err?.message || err?.data?.message || "";
+      if (msg.includes("password") || msg.toLowerCase().includes("credential")) {
+        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+      } else if (err?.status === 0 || msg.includes("network") || msg.includes("fetch")) {
+        setError("تعذّر الاتصال بالخادم. تحقق من اتصالك بالإنترنت.");
+      } else {
+        setError(msg || "البريد الإلكتروني أو كلمة المرور غير صحيحة");
+      }
     } finally {
       setLoading(false);
     }
@@ -99,8 +123,9 @@ export default function Login() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-          {error}
+        <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-2">
+          <span className="text-destructive shrink-0 mt-0.5">⚠</span>
+          <span>{error}</span>
         </div>
       )}
 
@@ -112,15 +137,22 @@ export default function Login() {
             <Input
               id="email"
               type="email"
+              inputMode="email"
               autoComplete="email"
-              autoFocus
+              enterKeyHint="next"
               placeholder="you@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 h-12"
+              onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(""); }}
+              onBlur={handleEmailBlur}
+              className={`pl-10 h-12 ${emailError ? "border-destructive focus-visible:ring-destructive" : ""}`}
               required
+              aria-invalid={!!emailError}
+              aria-describedby={emailError ? "email-error" : undefined}
             />
           </div>
+          {emailError && (
+            <p id="email-error" className="text-xs text-destructive mt-1">{emailError}</p>
+          )}
         </div>
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -135,6 +167,7 @@ export default function Login() {
               id="password"
               type="password"
               autoComplete="current-password"
+              enterKeyHint="done"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
