@@ -75,19 +75,31 @@ export default function RegisterEngineer() {
     return status === 402 || message.includes("limit") || message.includes("quota") || (message.includes("integration") && message.includes("month"));
   };
 
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
   const handleFileUpload = async (e, field) => {
     const file = e.target.files[0];
+    // إعادة تعيين قيمة الحقل دائمًا حتى يتمكن المستخدم من إعادة اختيار الملف
+    e.target.value = "";
     if (!file) return;
+
+    // التحقق من حجم الملف
+    if (file.size > MAX_FILE_SIZE) {
+      const message = `حجم الملف ${(file.size / 1024 / 1024).toFixed(1)} ميجابايت. الحد الأقصى 10 ميجابايت.`;
+      setNotice({ type: "error", title: "حجم الملف كبير", message });
+      toast.error(message);
+      return;
+    }
 
     setIsFileUploading(true);
     setNotice({
       type: "info",
       title: "جارٍ رفع الملف",
-      message: "قد يستغرق هذا قليلًا، وإذا كان الحد المسموح به في الخطة قد انتهى فسيظهر خطأ واضح ويمكنك الترقية مباشرة."
+      message: `جارٍ رفع: ${file.name} — قد يستغرق ذلك قليلًا...`
     });
 
     try {
-      const { file_url } = await withTimeout(base44.integrations.Core.UploadFile({ file }), 30000);
+      const { file_url } = await withTimeout(base44.integrations.Core.UploadFile({ file }), 120000);
       handleInputChange(field, file_url);
       setNotice({
         type: "success",
@@ -100,7 +112,7 @@ export default function RegisterEngineer() {
       const message = isPlanLimitError(base44Error)
         ? "تعذر رفع الملف لأن الخطة الحالية وصلت إلى حد التكامل. يُرجى ترقية الخطة قبل المتابعة."
         : base44Error?.message === "timeout"
-          ? "انتهت مهلة الاتصال. يُرجى إعادة المحاولة لاحقًا."
+          ? "انتهت مهلة رفع الملف. حاول استخدام ملف أصغر أو إعادة المحاولة لاحقًا."
           : responseData?.message || responseData?.detail || responseData?.error || "تعذر رفع الملف مؤقتًا. يُرجى التحقق من الاتصال وإعادة المحاولة.";
 
       setNotice({ type: "error", title: "تعذر رفع الملف", message });
