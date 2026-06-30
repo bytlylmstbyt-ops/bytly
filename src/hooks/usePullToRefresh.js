@@ -11,7 +11,7 @@ import { useState, useEffect, useRef } from "react";
  * pullDistance/isRefreshing change causes a stack overflow on mobile where
  * touchmove fires dozens of times per second.
  */
-export function usePullToRefresh({ onRefresh, threshold = 70 }) {
+export function usePullToRefresh({ onRefresh, threshold = 100 }) {
   const containerRef = useRef(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
@@ -34,13 +34,22 @@ export function usePullToRefresh({ onRefresh, threshold = 70 }) {
     const onTouchStart = (e) => {
       // Only trigger when the window is scrolled to the very top
       const scrollTop = window.scrollY || document.documentElement.scrollTop;
-      if (scrollTop > 0) return;
+      if (scrollTop > 2) return;
+      // Ignore multi-touch (pinch zoom) — only single-finger pull
+      if (e.touches.length > 1) return;
       startY.current = e.touches[0].clientY;
       pulling.current = true;
     };
 
     const onTouchMove = (e) => {
       if (!pulling.current || isRefreshingRef.current) return;
+      // Cancel if user starts scrolling normally (multi-touch or horizontal)
+      if (e.touches.length > 1) {
+        pulling.current = false;
+        pullDistanceRef.current = 0;
+        setPullDistance(0);
+        return;
+      }
       const delta = e.touches[0].clientY - startY.current;
       if (delta < 0) {
         pulling.current = false;
@@ -48,14 +57,14 @@ export function usePullToRefresh({ onRefresh, threshold = 70 }) {
         setPullDistance(0);
         return;
       }
+      // Only start preventing default scroll after a clear downward pull (>20px)
+      // so normal taps and small scrolls aren't intercepted
+      if (delta < 20) return;
       // Apply resistance
-      const newDist = Math.min(delta * 0.5, threshold * 1.5);
+      const newDist = Math.min((delta - 20) * 0.5, threshold * 1.5);
       pullDistanceRef.current = newDist;
       setPullDistance(newDist);
-      if (delta > 10) {
-        // Prevent native scroll bounce while pulling
-        e.preventDefault();
-      }
+      e.preventDefault();
     };
 
     const onTouchEnd = async () => {

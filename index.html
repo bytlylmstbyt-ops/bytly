@@ -63,36 +63,36 @@
         MockWebSocket.CLOSING = 2;
         MockWebSocket.CLOSED = 3;
 
-        // Mock ALL WebSocket connections — the app uses HTTP polling (React Query)
-        // for data fetching, not WebSockets. This prevents both @vite/client's HMR
-        // socket errors and Base44 SDK realtime subscription reconnection loops
-        // from producing empty console errors in the iframe preview.
+        // Only mock WebSocket connections to the Vite dev server (same origin or localhost).
+        // Real app WebSockets (Base44 SDK realtime subscriptions, cross-origin) pass through
+        // to the real implementation so they can connect/reconnect normally.
         window.WebSocket = function (url, protocols) {
-          return new MockWebSocket(url, protocols);
+          var isViteHmr = false;
+          try {
+            var parsed = new URL(url, window.location.origin);
+            isViteHmr = parsed.origin === window.location.origin ||
+                        parsed.hostname === 'localhost' ||
+                        parsed.hostname === '127.0.0.1';
+          } catch (e) {
+            isViteHmr = false; // unparseable URL → let real WebSocket handle it
+          }
+          if (isViteHmr) {
+            return new MockWebSocket(url, protocols);
+          }
+          return new OriginalWebSocket(url, protocols);
         };
-        window.WebSocket.prototype = MockWebSocket.prototype;
+        window.WebSocket.prototype = OriginalWebSocket.prototype;
         window.WebSocket.CONNECTING = 0;
         window.WebSocket.OPEN = 1;
         window.WebSocket.CLOSING = 2;
         window.WebSocket.CLOSED = 3;
 
-        // 2. Backup: filter the error message everywhere it might surface
-        //    AND enrich empty error messages with stack traces for debugging
+        // 2. Backup: filter the WebSocket error message everywhere it might surface
         var origConsoleError = console.error;
         var origConsoleWarn = console.warn;
         console.error = function () {
           var args = Array.prototype.slice.call(arguments);
           if (args.some(function (a) { return typeof a === 'string' && a.indexOf(MSG) !== -1; })) return;
-          // Enrich empty/undefined error messages with caller info
-          args = args.map(function (a) {
-            if (a === undefined || a === null || a === '') {
-              try { return new Error('Empty console.error (captured)').stack; } catch (e) { return a; }
-            }
-            if (a instanceof Error && !a.message) {
-              return a.stack || 'Error with empty message (captured)';
-            }
-            return a;
-          });
           return origConsoleError.apply(console, args);
         };
         console.warn = function () {
@@ -104,15 +104,6 @@
         window.onerror = function (message, source, lineno, colno, error) {
           if (typeof message === 'string' && message.indexOf(MSG) !== -1) return true;
           if (error && error.message && error.message.indexOf(MSG) !== -1) return true;
-          // Log full error details for non-WebSocket errors
-          if (error) {
-            origConsoleError('[Global Error]', {
-              message: error.message || '(empty message)',
-              source: source,
-              line: lineno + ':' + colno,
-              stack: error.stack
-            });
-          }
         };
         window.addEventListener('error', function (e) {
           var msg = e.message || (e.error && e.error.message) || '';
@@ -126,15 +117,7 @@
           var msg = (e.reason && e.reason.message) || '';
           if (typeof msg === 'string' && msg.indexOf(MSG) !== -1) {
             e.preventDefault();
-            return;
           }
-          // Log full rejection details
-          var reason = e.reason;
-          origConsoleError('[Unhandled Rejection]', {
-            message: (reason && reason.message) || '(empty message)',
-            reason: reason,
-            stack: reason && reason.stack
-          });
         }, true);
       })();
     </script>

@@ -55,9 +55,11 @@ function LayoutContent({ children, currentPageName }) {
     base44.auth.logout();
   };
 
-  // Stable callback so PullToRefreshWrapper doesn't re-subscribe its touch listeners
+  // Stable callback so PullToRefreshWrapper doesn't re-subscribe its touch listeners.
+  // Dispatch a custom event instead of a full page reload — pages can listen and
+  // re-fetch their data without losing UI state.
   const handlePullRefresh = useCallback(() => {
-    window.location.reload();
+    window.dispatchEvent(new CustomEvent('app:pull-refresh'));
   }, []);
 
   return (
