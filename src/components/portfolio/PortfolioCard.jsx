@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, MapPin, Calendar, DollarSign, Eye, MessageSquare, CheckCircle, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Calendar, DollarSign, Eye, MessageSquare, CheckCircle, X, Maximize2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import EnhancedLightbox from "@/components/portfolio/EnhancedLightbox";
 
 const categoryLabels = {
   interior: "تصميم داخلي",
@@ -29,93 +30,129 @@ const projectTypeLabels = {
 
 export default function PortfolioCard({ portfolio, engineerName }) {
   const [currentImage, setCurrentImage] = useState(0);
+  const [showLightbox, setShowLightbox] = useState(false);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const images = portfolio.images || [];
 
+  const touchRef = useRef({ startX: 0, startY: 0, moved: false });
+
   const nextImage = (e) => {
-    e.stopPropagation();
+    e?.stopPropagation();
     setCurrentImage((prev) => (prev + 1) % images.length);
   };
 
   const prevImage = (e) => {
-    e.stopPropagation();
+    e?.stopPropagation();
     setCurrentImage((prev) => (prev - 1 + images.length) % images.length);
   };
+
+  const onTouchStart = (e) => {
+    const t = e.touches[0];
+    touchRef.current = { startX: t.clientX, startY: t.clientY, moved: false };
+  };
+
+  const onTouchEnd = (e) => {
+    if (!touchRef.current.moved) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchRef.current.startX;
+    const dy = t.clientY - touchRef.current.startY;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+      // RTL: swipe left = next, right = prev
+      if (dx < 0) setCurrentImage((p) => (p + 1) % images.length);
+      else setCurrentImage((p) => (p - 1 + images.length) % images.length);
+    }
+  };
+
+  const onTouchMove = () => {
+    touchRef.current.moved = true;
+  };
+
+  if (images.length === 0) return null;
 
   return (
     <>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 group"
+        className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 group"
       >
-        {/* Image Slider */}
-        <div className="relative h-64 overflow-hidden bg-slate-100">
-          {images.length > 0 ? (
+        {/* Image Slider — swipeable on mobile */}
+        <div
+          className="relative h-64 overflow-hidden bg-slate-100 cursor-pointer"
+          onClick={() => setShowLightbox(true)}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={currentImage}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              src={images[currentImage]}
+              alt={portfolio.title}
+              className="w-full h-full object-cover"
+              draggable={false}
+            />
+          </AnimatePresence>
+
+          {/* Nav arrows — always visible on touch, hover on desktop */}
+          {images.length > 1 && (
             <>
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={currentImage}
-                  initial={{ opacity: 0, scale: 1.05 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  src={images[currentImage]}
-                  alt={portfolio.title}
-                  className="w-full h-full object-cover"
-                />
-              </AnimatePresence>
+              <button
+                onClick={prevImage}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white md:opacity-0 md:group-hover:opacity-100 opacity-80 transition-opacity hover:bg-black/60 active:scale-90"
+                aria-label="السابق"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+              <button
+                onClick={nextImage}
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white md:opacity-0 md:group-hover:opacity-100 opacity-80 transition-opacity hover:bg-black/60 active:scale-90"
+                aria-label="التالي"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
 
-              {/* Nav arrows */}
-              {images.length > 1 && (
-                <>
+              {/* Progress dots */}
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                {images.map((_, i) => (
                   <button
-                    onClick={prevImage}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={nextImage}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                  {/* Dots */}
-                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-                    {images.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={(e) => { e.stopPropagation(); setCurrentImage(i); }}
-                        className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentImage ? "bg-white w-4" : "bg-white/50"}`}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-
-              {/* Image count badge */}
-              <div className="absolute top-3 left-3 px-2 py-1 rounded-full bg-black/50 backdrop-blur-sm text-white text-xs flex items-center gap-1">
-                <Eye className="w-3 h-3" />
-                {images.length} صورة
+                    key={i}
+                    onClick={(e) => { e.stopPropagation(); setCurrentImage(i); }}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === currentImage ? "bg-white w-4" : "bg-white/50 w-1.5"
+                    }`}
+                    aria-label={`الصورة ${i + 1}`}
+                  />
+                ))}
               </div>
             </>
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-slate-200">
-              <span className="text-slate-400">لا توجد صور</span>
-            </div>
           )}
+
+          {/* Image count badge */}
+          <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-sm text-white text-xs flex items-center gap-1">
+            <Eye className="w-3 h-3" />
+            {images.length}
+          </div>
+
+          {/* Fullscreen hint */}
+          <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white opacity-80">
+            <Maximize2 className="w-3.5 h-3.5" />
+          </div>
 
           {/* Category badge */}
           {portfolio.category && (
-            <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-amber-500/90 text-white text-xs font-medium">
+            <div className="absolute top-11 right-3 px-2.5 py-1 rounded-full bg-amber-500/90 text-white text-xs font-medium">
               {categoryLabels[portfolio.category] || portfolio.category}
             </div>
           )}
 
           {/* Featured badge */}
           {portfolio.is_featured && (
-            <div className="absolute top-10 right-3 px-2 py-1 rounded-full bg-[#6B5D4F]/90 text-white text-xs font-medium flex items-center gap-1">
+            <div className="absolute top-[4.75rem] right-3 px-2.5 py-1 rounded-full bg-[#6B5D4F]/90 text-white text-xs font-medium flex items-center gap-1">
               <CheckCircle className="w-3 h-3" />
               مميز
             </div>
@@ -182,6 +219,17 @@ export default function PortfolioCard({ portfolio, engineerName }) {
         </div>
       </motion.div>
 
+      {/* Enhanced Lightbox with pinch-zoom */}
+      <AnimatePresence>
+        {showLightbox && (
+          <EnhancedLightbox
+            images={images}
+            initialIndex={currentImage}
+            onClose={() => setShowLightbox(false)}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Quote Request Modal */}
       <AnimatePresence>
         {showQuoteModal && (
@@ -202,7 +250,7 @@ function QuoteRequestModal({ portfolio, engineerName, onClose }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
       onClick={onClose}
     >
       <motion.div
