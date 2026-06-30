@@ -33,9 +33,9 @@ export const translations = {
     },
     home: {
       hero: {
-        badge: "بيتلي | لمسة بيت | المنظومة الهندسية المتكاملة",
-        title: "حوّل منزلك إلى",
-        titleHighlight: "تحفة فنية",
+        badge: "بيتلي | المنظومة الهندسية المتكاملة",
+        title: "منظومة هندسية متكاملة",
+        titleHighlight: "لمشاريعك العقارية",
         subtitle: "سواء كنت صاحب منزل، مستثمر عقاري، أو مهندس محترف - بيتلي هي منصتك الموثوقة لإنجاز مشاريعك بجودة واحترافية، حلولك الهندسية الذكية في مكان واحد.",
         searchPlaceholder: "ابحث عن مصمم أو تخصص...",
         searchButton: "ابحث الآن",
@@ -794,9 +794,9 @@ export const translations = {
     },
     home: {
       hero: {
-        badge: "Bytly | Lamsat Bait | Integrated Engineering Solutions",
-        title: "Transform Your Home into",
-        titleHighlight: "A Masterpiece",
+        badge: "Bytly | Integrated Engineering Ecosystem",
+        title: "Integrated Engineering Ecosystem",
+        titleHighlight: "for Your Real Estate Projects",
         subtitle: "Whether you're a homeowner, real estate investor, or professional engineer - Bytly is your trusted platform to complete your projects with quality and professionalism. Your smart engineering solutions in one place.",
         searchPlaceholder: "Search for designer or specialization...",
         searchButton: "Search Now",
