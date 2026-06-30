@@ -7,18 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Bell, CheckCircle, Clock, AlertCircle, DollarSign,
-  MessageSquare, Briefcase, Search, Filter, Trash2, X
+  MessageSquare, Briefcase, Search, Filter, Trash2, X, Calendar
 } from "lucide-react";
+import AppointmentResponseModal from "@/components/appointments/AppointmentResponseModal";
+import AppointmentDetailModal from "@/components/appointments/AppointmentDetailModal";
 
 const TYPE_CONFIG = {
-  approval:       { label: "قبول عرض",      icon: CheckCircle,    color: "text-green-600",  bg: "bg-green-50",  badge: "bg-green-100 text-green-700" },
-  project_update: { label: "تحديث مشروع",   icon: Briefcase,      color: "text-blue-600",   bg: "bg-blue-50",   badge: "bg-blue-100 text-blue-700" },
-  payment:        { label: "دفعة / سحب",     icon: DollarSign,     color: "text-emerald-600",bg: "bg-emerald-50",badge: "bg-emerald-100 text-emerald-700" },
-  withdrawal:     { label: "طلب سحب",        icon: DollarSign,     color: "text-amber-600",  bg: "bg-amber-50",  badge: "bg-amber-100 text-amber-700" },
-  new_message:    { label: "رسالة جديدة",    icon: MessageSquare,  color: "text-purple-600", bg: "bg-purple-50", badge: "bg-purple-100 text-purple-700" },
-  review:         { label: "مراجعة فنية",    icon: AlertCircle,    color: "text-orange-600", bg: "bg-orange-50", badge: "bg-orange-100 text-orange-700" },
-  milestone:      { label: "تحديث مرحلة",   icon: Clock,          color: "text-sky-600",    bg: "bg-sky-50",    badge: "bg-sky-100 text-sky-700" },
-  default:        { label: "عام",            icon: Bell,           color: "text-slate-500",  bg: "bg-slate-50",  badge: "bg-slate-100 text-slate-700" },
+  approval: { label: "قبول عرض", icon: CheckCircle, color: "text-green-600", bg: "bg-green-50", badge: "bg-green-100 text-green-700" },
+  project_update: { label: "تحديث مشروع", icon: Briefcase, color: "text-blue-600", bg: "bg-blue-50", badge: "bg-blue-100 text-blue-700" },
+  payment: { label: "دفعة / سحب", icon: DollarSign, color: "text-emerald-600", bg: "bg-emerald-50", badge: "bg-emerald-100 text-emerald-700" },
+  withdrawal: { label: "طلب سحب", icon: DollarSign, color: "text-amber-600", bg: "bg-amber-50", badge: "bg-amber-100 text-amber-700" },
+  new_message: { label: "رسالة جديدة", icon: MessageSquare, color: "text-purple-600", bg: "bg-purple-50", badge: "bg-purple-100 text-purple-700" },
+  review: { label: "مراجعة فنية", icon: AlertCircle, color: "text-orange-600", bg: "bg-orange-50", badge: "bg-orange-100 text-orange-700" },
+  milestone: { label: "تحديث مرحلة", icon: Clock, color: "text-sky-600", bg: "bg-sky-50", badge: "bg-sky-100 text-sky-700" },
+  default: { label: "عام", icon: Bell, color: "text-slate-500", bg: "bg-slate-50", badge: "bg-slate-100 text-slate-700" },
 };
 
 const PRIORITY_LABELS = { high: "عالية", medium: "متوسطة", low: "منخفضة", urgent: "عاجلة" };
@@ -29,8 +31,11 @@ export default function NotificationCenter() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [readFilter, setReadFilter] = useState("all"); // all | unread | read
+  const [readFilter, setReadFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [responseModalOpen, setResponseModalOpen] = useState(false);
+  const [detailAppointment, setDetailAppointment] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -70,6 +75,33 @@ export default function NotificationCenter() {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
+  const handleAppointmentResponse = async (notification) => {
+    if (!notification.related_entity_id) return;
+    try {
+      const [appointment] = await base44.entities.ConsultationAppointment.filter({ id: notification.related_entity_id });
+      if (appointment) {
+        setSelectedAppointment(appointment);
+        setResponseModalOpen(true);
+      }
+    } catch (error) {
+      console.error('Error loading appointment:', error);
+    }
+  };
+
+  const handleViewAppointment = async (notification) => {
+    if (!notification.related_entity_id) return;
+    try {
+      const [appointment] = await base44.entities.ConsultationAppointment.filter({ id: notification.related_entity_id });
+      if (appointment) setDetailAppointment(appointment);
+    } catch (error) {
+      console.error('Error loading appointment:', error);
+    }
+  };
+
+  const handleAppointmentResponseComplete = () => {
+    loadData();
+  };
+
   const filtered = notifications.filter((n) => {
     if (readFilter === "unread" && n.is_read) return false;
     if (readFilter === "read" && !n.is_read) return false;
@@ -83,17 +115,12 @@ export default function NotificationCenter() {
   const allTypes = [...new Set(notifications.map((n) => n.type))].filter(Boolean);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]" />
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]" /></div>;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8" dir="rtl">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center justify-between">
             <div>
@@ -105,21 +132,17 @@ export default function NotificationCenter() {
             </div>
             <div className="flex items-center gap-3">
               {unreadCount > 0 && (
-                <Badge className="bg-red-100 text-red-700 text-base px-3 py-1.5">
-                  {unreadCount} غير مقروء
-                </Badge>
+                <Badge className="bg-red-100 text-red-700 text-base px-3 py-1.5">{unreadCount} غير مقروء</Badge>
               )}
               {unreadCount > 0 && (
                 <Button variant="outline" size="sm" onClick={markAllRead} className="gap-1">
-                  <CheckCircle className="w-4 h-4" />
-                  تحديد الكل كمقروء
+                  <CheckCircle className="w-4 h-4" /> تحديد الكل كمقروء
                 </Button>
               )}
             </div>
           </div>
         </motion.div>
 
-        {/* Stats Row */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           {[
             { label: "الكل", value: notifications.length, color: "bg-slate-100 text-slate-700" },
@@ -134,21 +157,12 @@ export default function NotificationCenter() {
           ))}
         </div>
 
-        {/* Filters */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}
           className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-6 space-y-3">
-          {/* Search */}
           <div className="relative">
             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <Input
-              placeholder="ابحث في الإشعارات..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pr-9"
-            />
+            <Input placeholder="ابحث في الإشعارات..." value={search} onChange={(e) => setSearch(e.target.value)} className="pr-9" />
           </div>
-
-          {/* Filter Pills */}
           <div className="flex flex-wrap gap-2">
             <span className="text-xs text-slate-500 flex items-center gap-1 ml-1"><Filter className="w-3 h-3" /> حالة:</span>
             {[{ v: "all", l: "الكل" }, { v: "unread", l: "غير مقروء" }, { v: "read", l: "مقروء" }].map((f) => (
@@ -158,7 +172,6 @@ export default function NotificationCenter() {
               </button>
             ))}
           </div>
-
           <div className="flex flex-wrap gap-2">
             <span className="text-xs text-slate-500 flex items-center gap-1 ml-1"><Bell className="w-3 h-3" /> النوع:</span>
             <button onClick={() => setTypeFilter("all")}
@@ -175,7 +188,6 @@ export default function NotificationCenter() {
               );
             })}
           </div>
-
           <div className="flex flex-wrap gap-2">
             <span className="text-xs text-slate-500 flex items-center gap-1 ml-1"><AlertCircle className="w-3 h-3" /> الأولوية:</span>
             {[{ v: "all", l: "الكل" }, { v: "urgent", l: "عاجلة" }, { v: "high", l: "عالية" }, { v: "medium", l: "متوسطة" }].map((f) => (
@@ -187,10 +199,8 @@ export default function NotificationCenter() {
           </div>
         </motion.div>
 
-        {/* Results count */}
         <p className="text-sm text-slate-500 mb-4">{filtered.length} إشعار</p>
 
-        {/* Notification List */}
         <div className="space-y-3">
           {filtered.length === 0 ? (
             <div className="text-center py-16">
@@ -214,29 +224,35 @@ export default function NotificationCenter() {
                             <p className={`text-sm ${!n.is_read ? "font-bold text-slate-900" : "font-medium text-slate-700"}`}>{n.title}</p>
                             <Badge className={`text-xs ${cfg.badge}`}>{cfg.label}</Badge>
                             {n.priority && n.priority !== "medium" && (
-                              <Badge className={`text-xs ${PRIORITY_COLORS[n.priority] || ""}`}>
-                                {PRIORITY_LABELS[n.priority]}
-                              </Badge>
+                              <Badge className={`text-xs ${PRIORITY_COLORS[n.priority] || ""}`}>{PRIORITY_LABELS[n.priority]}</Badge>
                             )}
                             {!n.is_read && <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />}
                           </div>
                           <p className="text-sm text-slate-500">{n.message}</p>
+                          {n.type === 'approval' && n.related_entity_id && (
+                            <div className="flex gap-2 mt-3">
+                              <Button size="sm" onClick={() => handleAppointmentResponse(n)} className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white">
+                                <CheckCircle className="w-4 h-4 ml-1" /> موافق
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => handleAppointmentResponse(n)} className="border-amber-500 text-amber-700 hover:bg-amber-50">
+                                <Clock className="w-4 h-4 ml-1" /> تأجيل
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={() => handleViewAppointment(n)}>
+                                <Calendar className="w-4 h-4 ml-1" /> عرض التفاصيل
+                              </Button>
+                            </div>
+                          )}
                           <p className="text-xs text-slate-400 mt-1.5">
-                            {new Date(n.created_date).toLocaleString("ar-SA", {
-                              weekday: "short", year: "numeric", month: "short",
-                              day: "numeric", hour: "2-digit", minute: "2-digit"
-                            })}
+                            {new Date(n.created_date).toLocaleString("ar-SA", { weekday: "short", year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
                           </p>
                         </div>
                         <div className="flex gap-1 shrink-0">
                           {!n.is_read && (
-                            <Button size="icon" variant="ghost" className="w-8 h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50"
-                              onClick={() => markAsRead(n.id)} title="تحديد كمقروء">
+                            <Button size="icon" variant="ghost" className="w-8 h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={() => markAsRead(n.id)}>
                               <CheckCircle className="w-4 h-4" />
                             </Button>
                           )}
-                          <Button size="icon" variant="ghost" className="w-8 h-8 text-red-400 hover:text-red-600 hover:bg-red-50"
-                            onClick={() => deleteNotification(n.id)} title="حذف">
+                          <Button size="icon" variant="ghost" className="w-8 h-8 text-red-400 hover:text-red-600 hover:bg-red-50" onClick={() => deleteNotification(n.id)}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -249,6 +265,23 @@ export default function NotificationCenter() {
           )}
         </div>
       </div>
+
+      {selectedAppointment && (
+        <AppointmentResponseModal
+          appointment={selectedAppointment}
+          open={responseModalOpen}
+          onOpenChange={setResponseModalOpen}
+          onSuccess={handleAppointmentResponseComplete}
+        />
+      )}
+
+      {detailAppointment && (
+        <AppointmentDetailModal
+          appointment={detailAppointment}
+          open={!!detailAppointment}
+          onOpenChange={() => setDetailAppointment(null)}
+        />
+      )}
     </div>
   );
 }
