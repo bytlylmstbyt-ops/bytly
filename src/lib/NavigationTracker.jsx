@@ -41,7 +41,8 @@ export default function NavigationTracker() {
                 base44.appLogs.logUserInApp(pageName).catch(() => {});
             }
         }
-    }, [location, isAuthenticated, Pages, mainPageKey]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location, isAuthenticated]); // Removed Pages and mainPageKey to prevent re-triggering
 
     return null;
 }

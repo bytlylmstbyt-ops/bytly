@@ -42,19 +42,11 @@ export default function Login() {
 
   const returnUrl = appParams.fromUrl || "/";
 
-  const handleGoogleLogin = async () => {
-    try {
-      // Save return URL and redirect to Google OAuth
-      sessionStorage.setItem('loginReturnUrl', returnUrl);
-      await base44.auth.loginWithProvider('google', createPageUrl('RegisterChoice'));
-    } catch (err) {
-      console.error('Google login error:', err);
-      setError(
-        err?.message?.includes('access_denied') || err?.message?.includes('blocked')
-          ? 'تم رفض الوصول. يرجى التأكد من أن حساب Google الخاص بك مسموح له بتسجيل الدخول.'
-          : 'فشل تسجيل الدخول عبر Google. يرجى المحاولة مرة أخرى.'
-      );
-    }
+  const handleGoogleLogin = () => {
+    // Save return URL and redirect to Google OAuth
+    // Note: loginWithProvider redirects immediately, so we don't await it
+    sessionStorage.setItem('loginReturnUrl', returnUrl);
+    base44.auth.loginWithProvider('google', createPageUrl('RegisterChoice'));
   };
 
   const validateEmail = (value) => {
@@ -226,7 +218,10 @@ export default function Login() {
         <Button
           variant="outline"
           className="w-full h-12"
-          onClick={() => base44.auth.loginWithProvider('microsoft', returnUrl)}
+          onClick={() => {
+            sessionStorage.setItem('loginReturnUrl', returnUrl);
+            base44.auth.loginWithProvider('microsoft', createPageUrl('RegisterChoice'));
+          }}
         >
           <MicrosoftIcon />
           تسجيل الدخول عبر Microsoft
@@ -234,7 +229,10 @@ export default function Login() {
         <Button
           variant="outline"
           className="w-full h-12"
-          onClick={() => base44.auth.loginWithProvider('facebook', returnUrl)}
+          onClick={() => {
+            sessionStorage.setItem('loginReturnUrl', returnUrl);
+            base44.auth.loginWithProvider('facebook', createPageUrl('RegisterChoice'));
+          }}
         >
           <FacebookIcon />
           تسجيل الدخول عبر Facebook
@@ -242,7 +240,10 @@ export default function Login() {
         <Button
           variant="outline"
           className="w-full h-12"
-          onClick={() => base44.auth.loginWithProvider('apple', returnUrl)}
+          onClick={() => {
+            sessionStorage.setItem('loginReturnUrl', returnUrl);
+            base44.auth.loginWithProvider('apple', createPageUrl('RegisterChoice'));
+          }}
         >
           <AppleIcon />
           تسجيل الدخول عبر Apple

@@ -32,7 +32,8 @@ export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthe
       hasRedirectedRef.current = true;
       navigateToLogin();
     }
-  }, [needsLogin, navigateToLogin, isAuthPath, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needsLogin, isAuthPath]); // Removed navigateToLogin and navigate to prevent re-triggering
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return fallback;

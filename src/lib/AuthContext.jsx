@@ -15,7 +15,8 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     checkAppState();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array - only run on mount
 
   const checkAppState = async () => {
     try {
@@ -129,7 +130,10 @@ export const AuthProvider = ({ children }) => {
 
   const navigateToLogin = () => {
     // Use the SDK's redirectToLogin method
-    base44.auth.redirectToLogin(window.location.href);
+    // Store the current URL for redirect after login
+    const currentPath = window.location.pathname + window.location.search;
+    sessionStorage.setItem('loginReturnUrl', currentPath);
+    base44.auth.redirectToLogin(currentPath);
   };
 
   return (
