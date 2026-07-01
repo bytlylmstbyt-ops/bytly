@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { UserPlus, Mail, Lock, Loader2 } from "lucide-react";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import AuthLayout from "@/components/AuthLayout";
+import GoogleIcon from "@/components/GoogleIcon";
 
 import { toast } from "@/components/ui/use-toast";
 
@@ -203,6 +204,26 @@ export default function Register() {
           )}
         </Button>
       </form>
+
+      {/* Divider */}
+      <div className="relative my-6">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-muted"></div>
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">or continue with</span>
+        </div>
+      </div>
+
+      {/* Google Sign-Up */}
+      <Button
+        variant="outline"
+        className="w-full h-12"
+        onClick={() => base44.auth.loginWithProvider('google', '/')}
+      >
+        <GoogleIcon />
+        Continue with Google
+      </Button>
     </AuthLayout>
   );
 }
