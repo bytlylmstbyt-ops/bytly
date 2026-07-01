@@ -1,5 +1,5 @@
-import { Outlet, useLocation } from 'react-router-dom';
-import { useEffect } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
@@ -14,7 +14,9 @@ const DefaultFallback = () => (
 
 export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthenticatedElement }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated, isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const hasRedirectedRef = useRef(false);
 
   // Redirect loop protection — skip redirect if already on an auth page
   const isAuthPath = AUTH_PATHS.some(p => location.pathname === p || location.pathname.startsWith(p + '/'));
@@ -25,20 +27,27 @@ export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthe
   );
 
   useEffect(() => {
-    if (needsLogin) {
+    // Only redirect once per mount/session to prevent loops
+    if (needsLogin && !isAuthPath && !hasRedirectedRef.current) {
+      hasRedirectedRef.current = true;
       navigateToLogin();
     }
-  }, [needsLogin, navigateToLogin]);
+  }, [needsLogin, navigateToLogin, isAuthPath, navigate]);
 
-  if (isLoadingPublicSettings || isLoadingAuth || needsLogin) {
+  if (isLoadingPublicSettings || isLoadingAuth) {
     return fallback;
+  }
+
+  // Don't render fallback for needsLogin - let the user stay on auth pages
+  if (isAuthPath) {
+    return <Outlet />;
   }
 
   if (authError?.type === 'user_not_registered') {
     return <UserNotRegisteredError />;
   }
 
-  if (authError) {
+  if (authError || !isAuthenticated) {
     return unauthenticatedElement;
   }
 

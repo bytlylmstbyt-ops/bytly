@@ -125,7 +125,12 @@ export default function Login() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5" dir="rtl">
+      <form onSubmit={(e) => {
+        // Prevent default form submission behavior
+        e.preventDefault();
+        // Call the actual handler
+        handleSubmit(e);
+      }} className="space-y-4 md:space-y-5" dir="rtl">
         <div className="space-y-2">
           <Label htmlFor="email" className="text-sm font-medium">البريد الإلكتروني</Label>
           <div className="relative">
@@ -144,6 +149,7 @@ export default function Login() {
               required
               aria-invalid={!!emailError}
               aria-describedby={emailError ? "email-error" : undefined}
+              disabled={loading}
             />
           </div>
           {emailError && (
@@ -167,11 +173,16 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
               className="pl-10 h-12"
               required
+              disabled={loading}
             />
           </div>
         </div>
 
-        <Button type="submit" className="w-full h-12 font-medium text-base" disabled={loading || !!emailError}>
+        <Button 
+          type="submit" 
+          className="w-full h-12 font-medium text-base" 
+          disabled={loading || !!emailError}
+        >
           {loading ? (
             <>
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
