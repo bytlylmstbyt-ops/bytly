@@ -76,22 +76,33 @@ export default function Login() {
     }
     
     try {
-      await base44.auth.loginViaEmailPassword(email, password);
+      const response = await base44.auth.loginViaEmailPassword(email, password);
+      console.log('Login successful:', response?.user?.email);
       window.location.href = returnUrl;
     } catch (err) {
-      console.error('Login error:', err);
-      const msg = err?.message || err?.data?.message || "";
-      const status = err?.status || err?.response?.status;
+      console.error('Login error details:', {
+        status: err?.status,
+        message: err?.message,
+        data: err?.data,
+        response: err?.response?.data
+      });
       
-      // Handle specific error types with better logging
-      if (status === 400 || status === 401 || status === 403) {
-        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
-      } else if (status === 404) {
+      const msg = err?.message || "";
+      const status = err?.status;
+      const dataMsg = err?.data?.message || err?.response?.data?.message || "";
+      
+      // Handle specific error types
+      if (status === 403) {
+        // Email not verified
+        setError("يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب");
+      } else if (status === 404 || (msg && msg.includes("not found"))) {
         setError("المستخدم غير مسجل في التطبيق");
-      } else if (err?.status === 0 || msg.includes("network") || msg.includes("fetch") || msg.includes("NotFoundError")) {
+      } else if (status === 400 || status === 401 || msg.includes("credentials") || msg.includes("password") || dataMsg.includes("credentials")) {
+        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+      } else if (status === 0 || msg.includes("network") || msg.includes("fetch") || msg.includes("NotFoundError")) {
         setError("تعذر الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت.");
       } else {
-        setError(msg || "البريد الإلكتروني أو كلمة المرور غير صحيحة");
+        setError(dataMsg || msg || "البريد الإلكتروني أو كلمة المرور غير صحيحة");
       }
     } finally {
       submitGuard.current = false;

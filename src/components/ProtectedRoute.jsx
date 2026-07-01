@@ -30,11 +30,18 @@ export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthe
     // Only redirect once per mount/session to prevent loops
     if (needsLogin && !isAuthPath && !hasRedirectedRef.current) {
       hasRedirectedRef.current = true;
-      try {
-        navigateToLogin();
-      } catch (err) {
-        console.error('Redirect to login failed:', err);
-      }
+      const redirect = () => {
+        try {
+          navigateToLogin();
+        } catch (err) {
+          console.error('Redirect to login failed:', err);
+          // Fallback: direct redirect
+          window.location.href = '/login';
+        }
+      };
+      
+      // Use setTimeout to avoid React state update during render
+      setTimeout(redirect, 0);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [needsLogin, isAuthPath]);

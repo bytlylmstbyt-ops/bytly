@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { appParams } from '@/lib/app-params';
 import { createAxiosClient } from '@base44/sdk/dist/utils/axios-client';
@@ -11,14 +11,21 @@ export const AuthProvider = ({ children }) => {
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(true);
   const [authError, setAuthError] = useState(null);
-  const [appPublicSettings, setAppPublicSettings] = useState(null); // Contains only { id, public_settings }
+  const [appPublicSettings, setAppPublicSettings] = useState(null);
+  const isMounted = useRef(true);
 
   useEffect(() => {
+    isMounted.current = true;
     checkAppState();
+    return () => {
+      isMounted.current = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty dependency array - only run on mount
+  }, []);
 
   const checkAppState = async () => {
+    if (!isMounted.current) return;
+    
     try {
       setIsLoadingPublicSettings(true);
       setAuthError(null);
@@ -36,16 +43,17 @@ export const AuthProvider = ({ children }) => {
       
       try {
         const publicSettings = await appClient.get(`/prod/public-settings/by-id/${appParams.appId}`);
-        setAppPublicSettings(publicSettings);
-        
-        // If we got the app public settings successfully, check if user is authenticated
-        if (appParams.token) {
-          await checkUserAuth();
-        } else {
-          setIsLoadingAuth(false);
-          setIsAuthenticated(false);
+        if (isMounted.current) {
+          setAppPublicSettings(publicSettings);
+          
+          if (appParams.token) {
+            await checkUserAuth();
+          } else {
+            setIsLoadingAuth(false);
+            setIsAuthenticated(false);
+          }
+          setIsLoadingPublicSettings(false);
         }
-        setIsLoadingPublicSettings(false);
       } catch (appError) {
         // Handle app-level errors
         // 403 with a known reason (auth_required / user_not_registered) is expected
@@ -92,25 +100,26 @@ export const AuthProvider = ({ children }) => {
 
   const checkUserAuth = async () => {
     try {
-      // Now check if the user is authenticated
       setIsLoadingAuth(true);
       const currentUser = await base44.auth.me();
-      setUser(currentUser);
-      setIsAuthenticated(true);
-      setIsLoadingAuth(false);
+      if (isMounted.current) {
+        setUser(currentUser);
+        setIsAuthenticated(true);
+        setIsLoadingAuth(false);
+      }
     } catch (error) {
-      setIsLoadingAuth(false);
-      setIsAuthenticated(false);
-      
-      // 401/403 from auth.me() means expired or invalid token — expected flow, not an error
-      if (error.status === 401 || error.status === 403) {
-        setAuthError({
-          type: 'auth_required',
-          message: 'Authentication required'
-        });
-      } else {
-        // Only log truly unexpected errors (network failures, 500s, etc.)
-        console.error('User auth check failed:', error);
+      if (isMounted.current) {
+        setIsLoadingAuth(false);
+        setIsAuthenticated(false);
+        
+        if (error.status === 401 || error.status === 403) {
+          setAuthError({
+            type: 'auth_required',
+            message: 'Authentication required'
+          });
+        } else {
+          console.error('User auth check failed:', error);
+        }
       }
     }
   };
