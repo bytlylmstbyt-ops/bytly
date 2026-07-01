@@ -75,13 +75,23 @@ export default function Login() {
       await base44.auth.loginViaEmailPassword(email, password);
       window.location.href = returnUrl;
     } catch (err) {
+      console.error('Login error:', err);
       const msg = err?.message || err?.data?.message || "";
-      if (msg.includes("password") || msg.toLowerCase().includes("credential")) {
-        setError("Invalid email or password");
-      } else if (err?.status === 0 || msg.includes("network") || msg.includes("fetch")) {
-        setError("Unable to connect to server. Please check your internet connection.");
+      const status = err?.status || err?.response?.status;
+      
+      // Handle specific error types
+      if (status === 400) {
+        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+      } else if (status === 401 || status === 403) {
+        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+      } else if (status === 404) {
+        setError("المستخدم غير مسجل في التطبيق");
+      } else if (err?.status === 0 || msg.includes("network") || msg.includes("fetch") || msg.includes("NotFoundError")) {
+        setError("تعذر الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت.");
+      } else if (msg.includes("password") || msg.toLowerCase().includes("credential")) {
+        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
       } else {
-        setError(msg || "Invalid email or password");
+        setError(msg || "البريد الإلكتروني أو كلمة المرور غير صحيحة");
       }
     } finally {
       submitGuard.current = false;
@@ -92,32 +102,32 @@ export default function Login() {
   return (
     <AuthLayout
       icon={LogIn}
-      title="Login"
-      subtitle="Welcome back"
+      title="تسجيل الدخول"
+      subtitle="مرحباً بعودتك"
       footer={
         <div className="flex flex-col gap-2 items-center">
           <p className="text-sm text-muted-foreground">
-            Don't have an account?{" "}
+            ليس لديك حساب؟{" "}
             <Link to="/register" className="text-primary font-medium hover:underline">
-              Sign up now
+              سجّل الآن
             </Link>
           </p>
           <Link to="/forgot-password" className="text-xs text-primary hover:underline">
-            Forgot password?
+            نسيت كلمة المرور؟
           </Link>
         </div>
       }
     >
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-2">
+        <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-2" dir="rtl">
           <span className="text-destructive shrink-0 mt-0.5">⚠</span>
           <span>{error}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5" dir="rtl">
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+          <Label htmlFor="email" className="text-sm font-medium">البريد الإلكتروني</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
             <Input
@@ -143,7 +153,7 @@ export default function Login() {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+            <Label htmlFor="password" className="text-sm font-medium">كلمة المرور</Label>
           </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
@@ -161,14 +171,14 @@ export default function Login() {
           </div>
         </div>
 
-        <Button type="submit" className="w-full h-12 font-medium text-base" disabled={loading}>
+        <Button type="submit" className="w-full h-12 font-medium text-base" disabled={loading || !!emailError}>
           {loading ? (
             <>
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              Signing in...
+              جاري تسجيل الدخول...
             </>
           ) : (
-            "Login"
+            "تسجيل الدخول"
           )}
         </Button>
       </form>
@@ -179,7 +189,7 @@ export default function Login() {
           <div className="w-full border-t border-muted"></div>
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+          <span className="bg-background px-2 text-muted-foreground">أو تابع باستخدام</span>
         </div>
       </div>
 
@@ -191,7 +201,7 @@ export default function Login() {
           onClick={handleGoogleLogin}
         >
           <GoogleIcon />
-          Continue with Google
+          تسجيل الدخول عبر Google
         </Button>
         <Button
           variant="outline"
@@ -199,7 +209,7 @@ export default function Login() {
           onClick={() => base44.auth.loginWithProvider('microsoft', returnUrl)}
         >
           <MicrosoftIcon />
-          Continue with Microsoft
+          تسجيل الدخول عبر Microsoft
         </Button>
         <Button
           variant="outline"
@@ -207,7 +217,7 @@ export default function Login() {
           onClick={() => base44.auth.loginWithProvider('facebook', returnUrl)}
         >
           <FacebookIcon />
-          Continue with Facebook
+          تسجيل الدخول عبر Facebook
         </Button>
         <Button
           variant="outline"
@@ -215,7 +225,7 @@ export default function Login() {
           onClick={() => base44.auth.loginWithProvider('apple', returnUrl)}
         >
           <AppleIcon />
-          Continue with Apple
+          تسجيل الدخول عبر Apple
         </Button>
       </div>
     </AuthLayout>
