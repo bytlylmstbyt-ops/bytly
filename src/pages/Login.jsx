@@ -42,10 +42,19 @@ export default function Login() {
 
   const returnUrl = appParams.fromUrl || "/";
 
-  const handleGoogleLogin = () => {
-    // Save return URL and redirect to Google OAuth
-    sessionStorage.setItem('loginReturnUrl', returnUrl);
-    base44.auth.loginWithProvider('google', createPageUrl('RegisterChoice'));
+  const handleGoogleLogin = async () => {
+    try {
+      // Save return URL and redirect to Google OAuth
+      sessionStorage.setItem('loginReturnUrl', returnUrl);
+      await base44.auth.loginWithProvider('google', createPageUrl('RegisterChoice'));
+    } catch (err) {
+      console.error('Google login error:', err);
+      setError(
+        err?.message?.includes('access_denied') || err?.message?.includes('blocked')
+          ? 'تم رفض الوصول. يرجى التأكد من أن حساب Google الخاص بك مسموح له بتسجيل الدخول.'
+          : 'فشل تسجيل الدخول عبر Google. يرجى المحاولة مرة أخرى.'
+      );
+    }
   };
 
   const validateEmail = (value) => {
