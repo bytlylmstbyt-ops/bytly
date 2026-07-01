@@ -30,10 +30,14 @@ export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthe
     // Only redirect once per mount/session to prevent loops
     if (needsLogin && !isAuthPath && !hasRedirectedRef.current) {
       hasRedirectedRef.current = true;
-      navigateToLogin();
+      try {
+        navigateToLogin();
+      } catch (err) {
+        console.error('Redirect to login failed:', err);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [needsLogin, isAuthPath]); // Removed navigateToLogin and navigate to prevent re-triggering
+  }, [needsLogin, isAuthPath]);
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return fallback;

@@ -129,11 +129,17 @@ export const AuthProvider = ({ children }) => {
   };
 
   const navigateToLogin = () => {
-    // Use the SDK's redirectToLogin method
-    // Store the current URL for redirect after login
-    const currentPath = window.location.pathname + window.location.search;
-    sessionStorage.setItem('loginReturnUrl', currentPath);
-    base44.auth.redirectToLogin(currentPath);
+    try {
+      // Use the SDK's redirectToLogin method
+      // Store the current URL for redirect after login
+      const currentPath = window.location.pathname + window.location.search;
+      sessionStorage.setItem('loginReturnUrl', currentPath);
+      base44.auth.redirectToLogin(currentPath);
+    } catch (err) {
+      console.error('navigateToLogin failed:', err);
+      // Fallback: direct redirect to login
+      window.location.href = '/login';
+    }
   };
 
   return (

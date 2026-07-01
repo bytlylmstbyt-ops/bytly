@@ -64,14 +64,17 @@ export default function Login() {
     e.preventDefault();
     if (submitGuard.current) return;
     submitGuard.current = true;
+    setLoading(true);
     setError("");
+    
     const emailValidation = validateEmail(email);
     if (emailValidation) {
       submitGuard.current = false;
       setEmailError(emailValidation);
+      setLoading(false);
       return;
     }
-    setLoading(true);
+    
     try {
       await base44.auth.loginViaEmailPassword(email, password);
       window.location.href = returnUrl;
@@ -80,17 +83,13 @@ export default function Login() {
       const msg = err?.message || err?.data?.message || "";
       const status = err?.status || err?.response?.status;
       
-      // Handle specific error types
-      if (status === 400) {
-        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
-      } else if (status === 401 || status === 403) {
+      // Handle specific error types with better logging
+      if (status === 400 || status === 401 || status === 403) {
         setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
       } else if (status === 404) {
         setError("المستخدم غير مسجل في التطبيق");
       } else if (err?.status === 0 || msg.includes("network") || msg.includes("fetch") || msg.includes("NotFoundError")) {
         setError("تعذر الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت.");
-      } else if (msg.includes("password") || msg.toLowerCase().includes("credential")) {
-        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
       } else {
         setError(msg || "البريد الإلكتروني أو كلمة المرور غير صحيحة");
       }
@@ -126,12 +125,7 @@ export default function Login() {
         </div>
       )}
 
-      <form onSubmit={(e) => {
-        // Prevent default form submission behavior
-        e.preventDefault();
-        // Call the actual handler
-        handleSubmit(e);
-      }} className="space-y-4 md:space-y-5" dir="rtl">
+      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5" dir="rtl">
         <div className="space-y-2">
           <Label htmlFor="email" className="text-sm font-medium">البريد الإلكتروني</Label>
           <div className="relative">
