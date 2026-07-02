@@ -67,6 +67,16 @@ export const translations = {
         noEngineers: "لا يوجد مهندسين حالياً",
         viewProfile: "عرض الملف"
       },
+      topRated: {
+        title: "نخبة المهندسين",
+        subtitle: "تقييم لحظي مبني على الأداء وجودة العمل ورضا العملاء",
+        viewAll: "عرض كل المهندسين",
+        rank: "الترتيب",
+        score: "درجة الأداء",
+        reviews: "مراجعة",
+        projects: "مشروع مكتمل",
+        noEngineers: "لا توجد بيانات كافية حالياً"
+      },
       portfolio: {
         title: "معرض الأعمال المميزة",
         subtitle: "استلهم من أفضل التصاميم والأعمال المنفذة",
@@ -827,6 +837,16 @@ export const translations = {
         projects: "Projects",
         noEngineers: "No engineers currently available",
         viewProfile: "View Profile"
+      },
+      topRated: {
+        title: "Top-Rated Engineers",
+        subtitle: "Live ranking based on performance, work quality, and client satisfaction",
+        viewAll: "View All Engineers",
+        rank: "Rank",
+        score: "Performance Score",
+        reviews: "reviews",
+        projects: "Completed Projects",
+        noEngineers: "Not enough data available yet"
       },
       portfolio: {
         title: "Featured Portfolio Gallery",

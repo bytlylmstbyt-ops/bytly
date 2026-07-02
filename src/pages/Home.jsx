@@ -18,6 +18,7 @@ import ProfessionalWelcomeSlides from "@/components/onboarding/ProfessionalWelco
 import FirmWelcomeSlides from "@/components/onboarding/FirmWelcomeSlides";
 import CorePillarsSection from "@/components/home/CorePillarsSection";
 import HowItWorksSection from "@/components/home/HowItWorksSection";
+import TopRatedEngineers from "@/components/home/TopRatedEngineers";
 import PreLaunchSurveyModal from "@/components/survey/PreLaunchSurveyModal";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useAuth } from "@/lib/AuthContext";
@@ -455,6 +456,9 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* Top-Rated Engineers Leaderboard */}
+      <TopRatedEngineers />
 
       {/* Portfolio Gallery */}
       <section className="py-20 bg-white">
