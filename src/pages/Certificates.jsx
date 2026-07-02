@@ -65,7 +65,7 @@ const CertCard = ({ cert }) => (
 
 export default function Certificates() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30" dir="rtl">
+    <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-white to-amber-50/30" dir="rtl">
       {/* Hero */}
       <div className="bg-gradient-to-br from-[#1a1a2e] via-[#2d2d4e] to-[#1a1a2e] py-20 px-4 text-center relative overflow-hidden">
         {/* Decorative */}
@@ -109,58 +109,18 @@ export default function Certificates() {
         </motion.div>
       </div>
 
-      {/* Gallery */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-xl font-bold text-[#1a1a2e]">معرض الشهادات</h2>
-            <p className="text-slate-400 text-sm mt-0.5">{CERTIFICATES.length} شهادة مسجلة</p>
+      {/* Beta Lock — replaces gallery while in trial launch */}
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-14 text-center" dir="rtl">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl border-2 border-dashed border-amber-200 bg-amber-50/40 p-10">
+          <div className="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center mx-auto mb-4">
+            <Rocket className="w-8 h-8 text-amber-500" />
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {CERTIFICATES.map(cert => (
-            <CertCard key={cert.id} cert={cert} />
-          ))}
-
-          {/* Upcoming licenses */}
-          {[
-            { title: "السجل التجاري", sub: "وزارة التجارة السعودية" },
-            { title: "رخصة الاستثمار", sub: "هيئة الاستثمار السعودية" },
-          ].map((item) => (
-            <motion.div key={item.title} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="rounded-2xl border-2 border-dashed border-amber-200 bg-amber-50/40 flex flex-col items-center justify-center p-10 text-center min-h-[320px] gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2a10 10 0 0 1 0 20A10 10 0 0 1 12 2z" opacity=".15" fill="currentColor"/>
-                  <path d="M12 6v6l3 3"/>
-                  <path d="M5.6 5.6l.7.7M18.4 5.6l-.7.7M5.6 18.4l.7-.7M18.4 18.4l-.7-.7"/>
-                  <path d="M12 2v2M12 20v2M2 12h2M20 12h2"/>
-                </svg>
-              </div>
-              <div>
-                <p className="font-bold text-slate-700 text-base">{item.title}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{item.sub}</p>
-              </div>
-              <span className="inline-flex items-center gap-1.5 bg-amber-100 text-amber-700 text-xs font-semibold px-3 py-1 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                قيد العمل
-              </span>
-              <p className="text-xs text-slate-400 max-w-[160px] leading-relaxed">المنصة في مرحلة توسع قانوني مستمر</p>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Trust banner */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="mt-12 bg-gradient-to-r from-[#1a1a2e] to-[#2d2d4e] rounded-2xl p-6 text-center">
-          <Shield className="w-8 h-8 text-[#d4a574] mx-auto mb-3" />
-          <h3 className="text-white font-bold mb-2">حماية الملكية الفكرية</h3>
-          <p className="text-white/60 text-sm max-w-lg mx-auto">
-            منصة Bytly — لمسة بيت مسجلة ومحمية بموجب قوانين الملكية الفكرية السعودية.
-            أي نسخ أو استخدام غير مصرح به يُعد انتهاكاً للقانون.
+          <h2 className="text-lg font-bold text-slate-800 mb-2">التراخيص قيد الإطلاق التجريبي</h2>
+          <p className="text-sm text-slate-500 leading-relaxed max-w-md mx-auto">
+            مستندات التراخيص والشهادات الرسمية غير متاحة للعرض العام حالياً خلال مرحلة الإطلاق التجريبي.
+            سيتم كشفها تدريجياً بعد الإطلاق الرسمي.
           </p>
-          <p className="text-[#d4a574] text-xs mt-3">رقم التسجيل: 26-12-71723621 | الهيئة السعودية للملكية الفكرية</p>
         </motion.div>
       </div>
 
