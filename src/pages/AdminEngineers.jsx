@@ -326,18 +326,36 @@ export default function AdminEngineersPage() {
                         )}
                       </div>
 
-                      {engineer.graduation_certificate_url && (
-                        <div className="mt-3 flex items-center gap-2">
-                          <span className="text-xs text-slate-500">شهادة التخرج:</span>
-                          <a
-                            href={engineer.graduation_certificate_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                            عرض المستند
-                          </a>
+                      {(engineer.graduation_certificate_url || engineer.saudi_engineers_council_certificate_url) && (
+                        <div className="mt-3 flex flex-wrap items-center gap-3">
+                          {engineer.graduation_certificate_url && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-slate-500">شهادة التخرج:</span>
+                              <a
+                                href={engineer.graduation_certificate_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                                عرض المستند
+                              </a>
+                            </div>
+                          )}
+                          {engineer.saudi_engineers_council_certificate_url && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-slate-500">شهادة القيد (الهيئة السعودية للمهندسين):</span>
+                              <a
+                                href={engineer.saudi_engineers_council_certificate_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                                عرض المستند
+                              </a>
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -510,11 +528,43 @@ export default function AdminEngineersPage() {
                   </div>
                 )}
 
+                {reviewEngineer.saudi_engineers_council_certificate_url ? (
+                  <div className="space-y-2">
+                    <Label>شهادة القيد في الهيئة السعودية للمهندسين</Label>
+                    <div className="border rounded-xl p-4 bg-slate-50">
+                      {reviewEngineer.saudi_engineers_council_certificate_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                        <img
+                          src={reviewEngineer.saudi_engineers_council_certificate_url}
+                          alt="شهادة القيد في الهيئة السعودية للمهندسين"
+                          className="w-full max-h-72 object-contain rounded-lg"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center py-8">
+                          <a
+                            href={reviewEngineer.saudi_engineers_council_certificate_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-blue-600 hover:underline"
+                          >
+                            <FileText className="w-6 h-6" />
+                            عرض ملف الشهادة (PDF)
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700 flex items-center gap-2">
+                    <XCircle className="w-5 h-5 shrink-0" />
+                    لم يقم المهندس برفع شهادة القيد في الهيئة السعودية للمهندسين
+                  </div>
+                )}
+
                 <div className="flex gap-3 pt-2">
                   <Button
                     variant="default"
                     className="flex-1 bg-green-600 hover:bg-green-700"
-                    disabled={!reviewEngineer.graduation_certificate_url || !reviewEngineer.registration_number}
+                    disabled={!reviewEngineer.graduation_certificate_url || !reviewEngineer.saudi_engineers_council_certificate_url || !reviewEngineer.registration_number}
                     onClick={() => handleCertificationReview(reviewEngineer, true)}
                   >
                     <CheckCircle className="w-4 h-4 ml-2" />
@@ -529,9 +579,9 @@ export default function AdminEngineersPage() {
                     رفض الاعتماد
                   </Button>
                 </div>
-                {(!reviewEngineer.graduation_certificate_url || !reviewEngineer.registration_number) && (
+                {(!reviewEngineer.graduation_certificate_url || !reviewEngineer.saudi_engineers_council_certificate_url || !reviewEngineer.registration_number) && (
                   <p className="text-xs text-amber-600 text-center">
-                    لا يمكن الاعتماد دون استكمال رقم القيد ورفع شهادة التخرج
+                    لا يمكن الاعتماد دون استكمال رقم القيد ورفع شهادة التخرج وشهادة القيد في الهيئة السعودية للمهندسين
                   </p>
                 )}
               </div>
