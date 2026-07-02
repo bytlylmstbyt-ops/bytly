@@ -89,7 +89,24 @@ export default function GmailManager() {
     try {
       const labelIds = activeTab === 'inbox' ? ['INBOX'] : activeTab === 'sent' ? ['SENT'] : ['UNREAD'];
       const result = await invoke('listEmails', { maxResults: 30, labelIds, q: searchQuery });
-      setEmails(result.emails || []);
+      let combined = result.emails || [];
+
+      // Merge system-sent emails into the "sent" tab
+      if (activeTab === 'sent') {
+        try {
+          const sysResult = await invoke('listSystemSent', { maxResults: 50 });
+          const sysEmails = (sysResult.emails || []).filter(e =>
+            !searchQuery ||
+            (e.to || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (e.subject || '').toLowerCase().includes(searchQuery.toLowerCase())
+          );
+          combined = [...combined, ...sysEmails].sort((a, b) =>
+            new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()
+          );
+        } catch (e) { console.error('Failed to load system emails:', e); }
+      }
+
+      setEmails(combined);
     } catch (e) {
       toast.error('فشل تحميل الرسائل: ' + e.message);
     } finally {
@@ -103,6 +120,18 @@ export default function GmailManager() {
     setSelectedEmail(email);
     setDetailLoading(true);
     try {
+      // System-sent emails already have full body — no need to fetch from Gmail
+      if (email.isSystemEmail) {
+        setEmailDetail({
+          id: email.id,
+          from: 'Bytly System',
+          to: email.to,
+          subject: email.subject,
+          date: email.date,
+          body: email.body,
+        });
+        return;
+      }
       const result = await invoke('getEmail', { messageId: email.id });
       setEmailDetail(result.email);
       if (email.isUnread) {

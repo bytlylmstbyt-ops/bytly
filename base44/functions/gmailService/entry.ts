@@ -184,6 +184,56 @@ Deno.serve(async (req) => {
         return Response.json({ success: true, labels: result.labels || [] });
       }
 
+      // Send system email (via Core.SendEmail) and save record to SentEmail entity
+      case 'sendSystemEmail': {
+        const { to, subject, body, source = 'system', recipient_name = '' } = data;
+        try {
+          await base44.integrations.Core.SendEmail({ to, subject, body });
+          const record = await base44.asServiceRole.entities.SentEmail.create({
+            to_email: to,
+            recipient_name,
+            subject,
+            body,
+            source,
+            sent_at: new Date().toISOString(),
+            status: 'sent'
+          });
+          return Response.json({ success: true, record_id: record.id, message: 'تم إرسال البريد وحفظ السجل' });
+        } catch (err) {
+          await base44.asServiceRole.entities.SentEmail.create({
+            to_email: to,
+            recipient_name,
+            subject,
+            body,
+            source,
+            sent_at: new Date().toISOString(),
+            status: 'failed'
+          }).catch(() => {});
+          return Response.json({ error: err.message }, { status: 500 });
+        }
+      }
+
+      // List system-sent emails (from SentEmail entity)
+      case 'listSystemSent': {
+        const { maxResults = 50 } = data || {};
+        const records = await base44.asServiceRole.entities.SentEmail.list('-sent_at', maxResults);
+        const emails = (records || []).map(r => ({
+          id: `system_${r.id}`,
+          threadId: null,
+          snippet: (r.body || '').replace(/<[^>]*>/g, '').substring(0, 100),
+          from: 'Bytly System',
+          to: r.recipient_name ? `${r.recipient_name} <${r.to_email}>` : r.to_email,
+          subject: r.subject || '(بدون موضوع)',
+          date: r.sent_at,
+          labelIds: ['SENT'],
+          isUnread: false,
+          isSystemEmail: true,
+          body: r.body,
+          source: r.source
+        }));
+        return Response.json({ success: true, emails });
+      }
+
       // AI-draft reply
       case 'draftReply': {
         const { emailBody, emailFrom, emailSubject, context } = data;
