@@ -27,6 +27,8 @@ export default function AdminEngineersPage() {
   const [editingEngineer, setEditingEngineer] = useState(null);
   const [editFormData, setEditFormData] = useState({});
   const [reviewEngineer, setReviewEngineer] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -106,7 +108,8 @@ export default function AdminEngineersPage() {
     }
   };
 
-  const handleCertificationReview = async (engineer, approved, rejectionReason = "") => {
+  const handleCertificationReview = async (engineer, approved) => {
+    setSubmittingReview(true);
     try {
       const user = await base44.auth.me();
       if (approved) {
@@ -116,7 +119,6 @@ export default function AdminEngineersPage() {
           certified_by: user.email,
           status: "approved"
         });
-        alert("تم اعتماد المهندس بنجاح");
       } else {
         await base44.entities.Engineer.update(engineer.id, {
           is_verified: false,
@@ -124,12 +126,27 @@ export default function AdminEngineersPage() {
           certified_at: null,
           certified_by: user.email
         });
-        alert("تم رفض اعتماد المهندس");
       }
+
+      // Send notification to the engineer (in-app + email)
+      try {
+        await base44.functions.invoke("reviewEngineerCertificate", {
+          engineer_id: engineer.id,
+          approved,
+          rejection_reason: approved ? "" : rejectionReason
+        });
+      } catch (notifError) {
+        console.error("Notification error:", notifError);
+      }
+
+      alert(approved ? "تم اعتماد المهندس وإرسال تنبيه له بنجاح" : "تم رفض الاعتماد وإرسال تنبيه للمهندس");
       setReviewEngineer(null);
+      setRejectionReason("");
       await loadData();
     } catch (error) {
       alert("حدث خطأ في تحديث الاعتماد");
+    } finally {
+      setSubmittingReview(false);
     }
   };
 
@@ -560,22 +577,34 @@ export default function AdminEngineersPage() {
                   </div>
                 )}
 
+                <div className="space-y-2">
+                  <Label>سبب الرفض (اختياري عند الرفض)</Label>
+                  <textarea
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    rows={3}
+                    placeholder="اذكر سبب الرفض ليتم إرساله للمهندس..."
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                  />
+                </div>
+
                 <div className="flex gap-3 pt-2">
                   <Button
                     variant="default"
                     className="flex-1 bg-green-600 hover:bg-green-700"
-                    disabled={!reviewEngineer.graduation_certificate_url || !reviewEngineer.saudi_engineers_council_certificate_url || !reviewEngineer.registration_number}
+                    disabled={(!reviewEngineer.graduation_certificate_url || !reviewEngineer.saudi_engineers_council_certificate_url || !reviewEngineer.registration_number) || submittingReview}
                     onClick={() => handleCertificationReview(reviewEngineer, true)}
                   >
-                    <CheckCircle className="w-4 h-4 ml-2" />
+                    {submittingReview ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <CheckCircle className="w-4 h-4 ml-2" />}
                     اعتماد المهندس
                   </Button>
                   <Button
                     variant="destructive"
                     className="flex-1"
+                    disabled={submittingReview}
                     onClick={() => handleCertificationReview(reviewEngineer, false)}
                   >
-                    <XCircle className="w-4 h-4 ml-2" />
+                    {submittingReview ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <XCircle className="w-4 h-4 ml-2" />}
                     رفض الاعتماد
                   </Button>
                 </div>
