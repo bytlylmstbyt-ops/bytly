@@ -30,6 +30,7 @@ export default function Messages() {
   const { t, language } = useLanguage();
   const urlParams = new URLSearchParams(window.location.search);
   const engineerIdFromUrl = urlParams.get("engineer");
+  const projectFromUrl = urlParams.get("project");
 
   const [user, setUser] = useState(null);
   const [conversations, setConversations] = useState([]);
@@ -78,12 +79,12 @@ export default function Messages() {
     if (engineerIdFromUrl) {
       const engineer = engineersData.find(e => e.id === engineerIdFromUrl);
       if (engineer) {
-        const existing = convos.find(c => c.participants?.includes(engineer.email) && c.participants?.includes(currentUser.email));
+        const existing = convos.find(c => c.participants?.includes(engineer.email) && c.participants?.includes(currentUser.email) && c.project_id === (projectFromUrl || "direct"));
         if (existing) {
           setSelectedConversation(existing);
         } else {
           const newConvo = await base44.entities.Conversation.create({
-            project_id: "direct",
+            project_id: projectFromUrl || "direct",
             participants: [currentUser.email, engineer.email],
             participant_roles: { engineer: engineer.email, client: currentUser.email },
             type: "direct",

@@ -296,6 +296,13 @@ export default function ProjectProposals() {
 
                         {/* Actions */}
                         <div className="flex flex-row md:flex-col gap-2 shrink-0">
+                          <Link to={`/Messages?engineer=${proposal.engineer_id}&project=${projectId}`}>
+                            <Button variant="outline" size="sm" className="text-xs border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700">
+                              <MessageSquare className="w-3.5 h-3.5 ml-1" />
+                              محادثة
+                            </Button>
+                          </Link>
+
                           <button
                             onClick={() => toggleCompare(proposal.id)}
                             disabled={!isInCompare && compareList.length >= 3}
