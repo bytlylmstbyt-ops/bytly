@@ -211,6 +211,7 @@ const AuthenticatedApp = () => {
         <Route path="/NotificationCenter"          element={lazyRoute(NotificationCenter, "NotificationCenter")} />
         <Route path="/AddPortfolio"                element={lazyRoute(AddPortfolio, "AddPortfolio")} />
         <Route path="/EngineerCalendar"            element={lazyRoute(EngineerCalendar, "EngineerCalendar")} />
+        <Route path="/SentEmailsLog"               element={lazyRoute(React.lazy(() => import('./pages/SentEmailsLog')), "SentEmailsLog")} />
         <Route path="*" element={<NotFoundError />} />
       </Route>
     </Routes>

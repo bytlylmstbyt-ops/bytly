@@ -228,6 +228,7 @@ Deno.serve(async (req) => {
           labelIds: ['SENT'],
           isUnread: false,
           isSystemEmail: true,
+          isFailed: r.status === 'failed',
           body: r.body,
           source: r.source
         }));
