@@ -88,6 +88,7 @@ export default function RegisterEngineer() {
     country: "",
     years_experience: "",
     graduation_certificate_url: "",
+    saudi_engineers_council_certificate_url: "",
     profile_image: ""
   });
 
@@ -197,7 +198,7 @@ export default function RegisterEngineer() {
 
       if (isPlanLimit) {
         // السماح بالتسجيل دون الملف عند الوصول لحد الخطة (الشهادة غير إلزامية تقنياً للحفظ)
-        const fieldLabel = field === "graduation_certificate_url" ? "شهادة التخرج" : "الصورة الشخصية";
+        const fieldLabel = field === "graduation_certificate_url" ? "شهادة التخرج" : field === "saudi_engineers_council_certificate_url" ? "شهادة القيد بالهيئة السعودية للمهندسين" : "الصورة الشخصية";
         const skipMessage = `تعذر رفع ${fieldLabel} بسبب حد التكامل في الخطة. يمكنك إكمال التسجيل الآن وإضافة ${fieldLabel} لاحقًا من إعدادات الملف الشخصي، أو ترقية الخطة.`;
         setNotice({
           type: "warning",
@@ -297,8 +298,8 @@ export default function RegisterEngineer() {
 
   const isStep1Valid = formData.full_name && formData.email && formData.phone;
   const isStep2Valid = formData.specialization && formData.city && formData.country;
-  // شهادة التخرج مطلوبة للاعتماد لكن يمكن إكمال التسجيل بدونها عند الوصول لحد الخطة
-  const isStep3Valid = formData.registration_number;
+  // شهادة التخرج وشهادة القيد بالهيئة السعودية للمهندسين مطلوبتان للاعتماد
+  const isStep3Valid = formData.registration_number && formData.graduation_certificate_url && formData.saudi_engineers_council_certificate_url;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-12">
@@ -419,7 +420,7 @@ export default function RegisterEngineer() {
                 <Award className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
                 <div className="text-sm text-blue-800">
                   <p className="font-semibold mb-1">نظام الاعتماد المهني</p>
-                  <p>رفع رقم القيد المهني وشهادة التخرج إلزامي للحصول على شارة "مهندس معتمد". ستتم مراجعة وثائقك من قبل إدارة المنصة قبل ظهور الشارة في ملفك الشخصي.</p>
+                  <p>رفع رقم القيد المهني وشهادة التخرج وشهادة القيد في الهيئة السعودية للمهندسين إلزامي للحصول على شارة "مهندس معتمد". ستتم مراجعة وثائقك من قبل إدارة المنصة قبل ظهور الشارة في ملفك الشخصي.</p>
                 </div>
               </div>
             )}
@@ -593,7 +594,7 @@ export default function RegisterEngineer() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>شهادة التخرج</Label>
+                  <Label>شهادة التخرج <span className="text-red-500">*</span></Label>
                   <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#d4a574] transition-colors">
                     <input
                       type="file"
@@ -613,6 +614,33 @@ export default function RegisterEngineer() {
                         <>
                           <FileText className="w-10 h-10 text-slate-400 mx-auto mb-2" />
                           <p className="text-sm text-slate-500">اضغط لرفع الشهادة (مطلوبة للاعتماد)</p>
+                        </>
+                      )}
+                    </label>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>شهادة القيد في الهيئة السعودية للمهندسين <span className="text-red-500">*</span></Label>
+                  <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#d4a574] transition-colors">
+                    <input
+                      type="file"
+                      accept=".pdf,image/*"
+                      onChange={(e) => handleFileUpload(e, "saudi_engineers_council_certificate_url")}
+                      className="hidden"
+                      id="saudi_engineers_council_certificate"
+                      disabled={isFileUploading || isSubmitting}
+                    />
+                    <label htmlFor="saudi_engineers_council_certificate" className="cursor-pointer">
+                      {formData.saudi_engineers_council_certificate_url ? (
+                        <div className="flex items-center justify-center gap-2 text-green-600">
+                          <CheckCircle className="w-6 h-6" />
+                          <span>تم رفع الشهادة</span>
+                        </div>
+                      ) : (
+                        <>
+                          <FileText className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+                          <p className="text-sm text-slate-500">اضغط لرفع شهادة القيد (مطلوبة للاعتماد)</p>
                         </>
                       )}
                     </label>
