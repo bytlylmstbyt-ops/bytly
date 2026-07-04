@@ -53,11 +53,30 @@ export default function ProjectStagesSimulator() {
     status === "in_review" ? 2 :
     status === "completed" ? 4 : 0;
 
-  const handleDeposit = () => {
-    setStageStatuses((prev) => ({
-      ...prev,
-      [activeStage]: "deposited",
-    }));
+  const ACTION_LABELS = {
+    pending: "إيداع",
+    deposited: "تأكيد المخرجات",
+    in_review: "اعتماد التدقيق",
+  };
+
+  const NEXT_STATUS = {
+    pending: "deposited",
+    deposited: "in_review",
+    in_review: "completed",
+  };
+
+  const handleAction = () => {
+    setStageStatuses((prev) => {
+      const currentStatus = prev[activeStage];
+      if (currentStatus === "completed") return prev;
+      const next = NEXT_STATUS[currentStatus];
+      const updated = { ...prev, [activeStage]: next };
+      // بعد اكتمال مرحلة، انتقل تلقائياً للمرحلة التالية إن وُجدت
+      if (next === "completed" && activeStage < STAGES.length) {
+        setTimeout(() => setActiveStage(activeStage + 1), 600);
+      }
+      return updated;
+    });
   };
 
   const handleReset = () => {
@@ -128,24 +147,32 @@ export default function ProjectStagesSimulator() {
             <div className="mt-auto">
               <p className="text-white/60 text-sm mb-3">اتخاذ الإجراء كطرف في العقد:</p>
               <button
-                onClick={handleDeposit}
-                disabled={status !== "pending"}
+                onClick={handleAction}
+                disabled={status === "completed"}
                 className={`w-full flex items-center justify-center gap-3 py-4 rounded-xl text-sm font-bold transition-all ${
-                  status === "pending"
-                    ? "bg-[#C9A66B] text-[#1A1A1A] hover:bg-[#D4B06B]"
-                    : "bg-white/10 text-white/40 cursor-not-allowed"
+                  status === "completed"
+                    ? "bg-green-500/15 text-green-400 cursor-default"
+                    : "bg-[#C9A66B] text-[#1A1A1A] hover:bg-[#D4B06B] active:scale-[0.98]"
                 }`}
               >
-                <Landmark className="w-5 h-5" strokeWidth={1.5} />
-                {status === "pending"
-                  ? `إيداع الدفعة في حساب الضمان لبيتلي (${current.amount.toLocaleString()} ر.س)`
-                  : "تم إيداع الدفعة في الضمان"}
+                {status === "completed" ? (
+                  <CheckCircle2 className="w-5 h-5" strokeWidth={1.5} />
+                ) : (
+                  <Landmark className="w-5 h-5" strokeWidth={1.5} />
+                )}
+                {status === "pending" && `إيداع الدفعة في حساب الضمان لبيتلي (${current.amount.toLocaleString()} ر.س)`}
+                {status === "deposited" && "تأكيد استلام المخرجات من المصمم"}
+                {status === "in_review" && "اعتماد التدقيق الاستشاري وتحرير الدفعة"}
+                {status === "completed" && "تم تحرير الدفعة للمهندس بنجاح"}
               </button>
 
               <div className="flex items-center gap-2 mt-4">
                 <ShieldCheck className="w-4 h-4 text-[#C9A66B] shrink-0" strokeWidth={1.5} />
                 <p className="text-white/50 text-xs leading-relaxed">
-                  مرحباً بك في محاكي حوكمة بيتلي، ابدأ بإيداع المرحلة الأولى في حساب الضمان.
+                  {status === "pending" && "مرحباً بك في محاكي حوكمة بيتلي، ابدأ بإيداع المرحلة في حساب الضمان."}
+                  {status === "deposited" && "تم إيداع المبلغ في الضمان — انتظر تسليم المصمم للمخرجات."}
+                  {status === "in_review" && "المخرجات قيد التدقيق الاستشاري قبل تحرير الدفعة للمهندس."}
+                  {status === "completed" && "اكتملت المرحلة وتحررت الدفعة للمهندس. انتقل للمرحلة التالية."}
                 </p>
               </div>
             </div>
