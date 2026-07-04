@@ -32,6 +32,7 @@ const STAGES = [
 ];
 
 const STEPS = ["إيداع المالك", "مخرجات المصمم", "تدقيق استشاري", "تحرير الدفعة"];
+const COMMISSION_RATE = 0.15; // 15% عمولة المنصة
 
 const stageStatusMap = {
   pending: { label: "انتظار الإيداع", className: "bg-[#F5F5F5] text-[#888]" },
@@ -92,6 +93,9 @@ export default function ProjectStagesSimulator() {
     (sum, s) => (stageStatuses[s.id] === "completed" ? sum + s.amount : sum),
     0
   );
+  const commission = Math.round(released * COMMISSION_RATE);
+  const netToEngineer = released - commission;
+  const totalProject = STAGES.reduce((sum, s) => sum + s.amount, 0);
 
   return (
     <section className="py-16 bg-white">
@@ -217,9 +221,14 @@ export default function ProjectStagesSimulator() {
                       </div>
                     </div>
                     <div className="flex items-center justify-between pr-7">
-                      <span className="text-sm font-bold text-[#C9A66B]">
-                        {stage.amount.toLocaleString()} ر.س
-                      </span>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-sm font-bold text-[#C9A66B]">
+                          {stage.amount.toLocaleString()} ر.س
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          عمولة بيتلي: {Math.round(stage.amount * COMMISSION_RATE).toLocaleString()} ر.س · صافي المهندس: {(stage.amount - Math.round(stage.amount * COMMISSION_RATE)).toLocaleString()} ر.س
+                        </span>
+                      </div>
                       <span className={`text-xs px-3 py-1 rounded-full ${statusInfo.className} inline-flex items-center gap-1`}>
                         {stStatus === "pending" ? (
                           <Clock className="w-3 h-3" strokeWidth={1.5} />
@@ -236,13 +245,21 @@ export default function ProjectStagesSimulator() {
 
             {/* Totals */}
             <div className="grid grid-cols-2 gap-3 pt-4 border-t border-[#EBEBEB]">
-              <div className="bg-[#F9F9F9] rounded-xl p-4 text-center">
-                <p className="text-xs text-slate-400 mb-1">المستلم للمهندس</p>
-                <p className="text-lg font-bold text-[#333]">{released.toLocaleString()} ر.س</p>
-              </div>
               <div className="bg-[#C9A66B]/5 rounded-xl p-4 text-center border border-[#C9A66B]/20">
                 <p className="text-xs text-slate-400 mb-1">في حساب الضمان لبيتلي</p>
                 <p className="text-lg font-bold text-[#C9A66B]">{inEscrow.toLocaleString()} ر.س</p>
+              </div>
+              <div className="bg-[#F9F9F9] rounded-xl p-4 text-center">
+                <p className="text-xs text-slate-400 mb-1">المستمل للمهندس (صافي)</p>
+                <p className="text-lg font-bold text-[#333]">{netToEngineer.toLocaleString()} ر.س</p>
+              </div>
+              <div className="bg-[#4A3F35]/5 rounded-xl p-4 text-center border border-[#4A3F35]/15">
+                <p className="text-xs text-slate-400 mb-1">عمولة بيتلي ({Math.round(COMMISSION_RATE * 100)}%)</p>
+                <p className="text-lg font-bold text-[#4A3F35]">{commission.toLocaleString()} ر.س</p>
+              </div>
+              <div className="bg-[#F9F9F9] rounded-xl p-4 text-center">
+                <p className="text-xs text-slate-400 mb-1">إجمالي قيمة المشروع</p>
+                <p className="text-lg font-bold text-[#333]">{totalProject.toLocaleString()} ر.س</p>
               </div>
             </div>
           </div>
