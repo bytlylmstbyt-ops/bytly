@@ -18,6 +18,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/components/i18n/LanguageContext";
+import CloudWorkspace from "@/components/chat/CloudWorkspace";
+import { Cloud } from "lucide-react";
 
 const CATEGORY_FILTERS = [
   { key: "all", label: "الكل", icon: Filter },
@@ -47,6 +49,7 @@ export default function Messages() {
   const [isRecording, setIsRecording] = useState(false);
   const [showNewChat, setShowNewChat] = useState(false);
   const [userSearch, setUserSearch] = useState("");
+  const [showCloudWorkspace, setShowCloudWorkspace] = useState(false);
   const messagesEndRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -297,6 +300,18 @@ export default function Messages() {
     );
   }
 
+  if (showCloudWorkspace) {
+    return (
+      <div className="bg-slate-50" dir="rtl">
+        <CloudWorkspace
+          user={user}
+          usersMap={usersMap}
+          onBack={() => setShowCloudWorkspace(false)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="h-[calc(100vh-80px)] bg-slate-50" dir="rtl">
       <div className="max-w-7xl mx-auto h-full">
@@ -308,14 +323,25 @@ export default function Messages() {
             <div className="p-4 border-b space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-[#1a1a2e]">المحادثات</h2>
-                <Button
-                  size="sm"
-                  onClick={() => setShowNewChat(true)}
-                  className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white gap-1"
-                >
-                  <Plus className="w-4 h-4" />
-                  محادثة جديدة
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowCloudWorkspace(true)}
+                    className="gap-1 border-[#C9A66B] text-[#C9A66B] hover:bg-[#f3f0e8]"
+                  >
+                    <Cloud className="w-4 h-4" />
+                    مساحة العمل السحابية
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => setShowNewChat(true)}
+                    className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white gap-1"
+                  >
+                    <Plus className="w-4 h-4" />
+                    محادثة جديدة
+                  </Button>
+                </div>
               </div>
 
               {/* Search */}
