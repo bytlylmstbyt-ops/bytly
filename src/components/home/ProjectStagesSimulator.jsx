@@ -33,6 +33,7 @@ const STAGES = [
 
 const STEPS = ["إيداع المالك", "مخرجات المصمم", "تدقيق استشاري", "تحرير الدفعة"];
 const COMMISSION_RATE = 0.15; // 15% عمولة المنصة
+const CONSULTANT_FEE_RATE = 0.05; // 5% أتعاب الاستشاري التدقيق
 
 const stageStatusMap = {
   pending: { label: "انتظار الإيداع", className: "bg-[#F5F5F5] text-[#888]" },
@@ -94,7 +95,8 @@ export default function ProjectStagesSimulator() {
     0
   );
   const commission = Math.round(released * COMMISSION_RATE);
-  const netToEngineer = released - commission;
+  const consultantFee = Math.round(released * CONSULTANT_FEE_RATE);
+  const netToEngineer = released - commission - consultantFee;
   const totalProject = STAGES.reduce((sum, s) => sum + s.amount, 0);
 
   return (
@@ -226,7 +228,7 @@ export default function ProjectStagesSimulator() {
                           {stage.amount.toLocaleString()} ر.س
                         </span>
                         <span className="text-[10px] text-slate-400">
-                          عمولة بيتلي: {Math.round(stage.amount * COMMISSION_RATE).toLocaleString()} ر.س · صافي المهندس: {(stage.amount - Math.round(stage.amount * COMMISSION_RATE)).toLocaleString()} ر.س
+                          عمولة بيتلي: {Math.round(stage.amount * COMMISSION_RATE).toLocaleString()} ر.س · أتعاب الاستشاري: {Math.round(stage.amount * CONSULTANT_FEE_RATE).toLocaleString()} ر.س · صافي المهندس: {(stage.amount - Math.round(stage.amount * COMMISSION_RATE) - Math.round(stage.amount * CONSULTANT_FEE_RATE)).toLocaleString()} ر.س
                         </span>
                       </div>
                       <span className={`text-xs px-3 py-1 rounded-full ${statusInfo.className} inline-flex items-center gap-1`}>
@@ -256,6 +258,10 @@ export default function ProjectStagesSimulator() {
               <div className="bg-[#4A3F35]/5 rounded-xl p-4 text-center border border-[#4A3F35]/15">
                 <p className="text-xs text-slate-400 mb-1">عمولة بيتلي ({Math.round(COMMISSION_RATE * 100)}%)</p>
                 <p className="text-lg font-bold text-[#4A3F35]">{commission.toLocaleString()} ر.س</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-4 text-center border border-blue-100">
+                <p className="text-xs text-slate-400 mb-1">أتعاب الاستشاري ({Math.round(CONSULTANT_FEE_RATE * 100)}%)</p>
+                <p className="text-lg font-bold text-blue-600">{consultantFee.toLocaleString()} ر.س</p>
               </div>
               <div className="bg-[#F9F9F9] rounded-xl p-4 text-center">
                 <p className="text-xs text-slate-400 mb-1">إجمالي قيمة المشروع</p>
