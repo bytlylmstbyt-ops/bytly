@@ -20,6 +20,7 @@ import CorePillarsSection from "@/components/home/CorePillarsSection";
 import HowItWorksSection from "@/components/home/HowItWorksSection";
 import TopRatedEngineers from "@/components/home/TopRatedEngineers";
 import ProblemSection from "@/components/home/ProblemSection";
+import SpecialtiesSection from "@/components/home/SpecialtiesSection";
 import PreLaunchSurveyModal from "@/components/survey/PreLaunchSurveyModal";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useAuth } from "@/lib/AuthContext";
@@ -309,48 +310,8 @@ export default function Home() {
       {/* Problem Section */}
       <ProblemSection />
 
-      {/* Categories Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-[#1a1a2e] mb-4">
-              {t('home.categories.title')}
-            </h2>
-            <p className="text-slate-600 max-w-2xl mx-auto">
-              {t('home.categories.subtitle')}
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {categories.map((category, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Link to={createPageUrl("Engineers") + `?category=${category.title}`}>
-                  <Card className="group hover-lift cursor-pointer border-0 shadow-lg hover:shadow-xl">
-                    <CardContent className="p-6 text-center">
-                      <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${category.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                        <category.icon className="w-8 h-8 text-white" />
-                      </div>
-                      <h3 className="font-semibold text-[#1a1a2e] mb-1">{category.title}</h3>
-                      <p className="text-sm text-slate-500">{category.count} {t('home.categories.specialist')}</p>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Specialties Section */}
+      <SpecialtiesSection />
 
       {/* Featured Engineers */}
       <section className="py-20 bg-gradient-to-br from-slate-50 to-amber-50/30">
