@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import ProjectProfitPanel from "@/components/dashboard/ProjectProfitPanel";
 import DailyActiveUsersPanel from "@/components/dashboard/DailyActiveUsersPanel";
+import PlatformFeeCalculator from "@/components/dashboard/PlatformFeeCalculator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -350,6 +351,9 @@ export default function PlatformDashboard() {
 
         {/* ── قسم الربح الصافي المتوقع لكل مشروع ── */}
         <ProjectProfitPanel projects={projects} loading={loading} />
+
+        {/* ── حاسبة أتعاب بيتلي والاستشاري ── */}
+        <PlatformFeeCalculator />
 
         <p className="text-center text-xs text-slate-300 pb-4">بيانات حية من قاعدة بيانات بيتلي — {moment(lastRefresh).format("DD/MM/YYYY HH:mm")}</p>
       </div>
