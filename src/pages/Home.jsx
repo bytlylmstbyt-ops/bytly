@@ -19,6 +19,7 @@ import FirmWelcomeSlides from "@/components/onboarding/FirmWelcomeSlides";
 import CorePillarsSection from "@/components/home/CorePillarsSection";
 import HowItWorksSection from "@/components/home/HowItWorksSection";
 import TopRatedEngineers from "@/components/home/TopRatedEngineers";
+import ProblemSection from "@/components/home/ProblemSection";
 import PreLaunchSurveyModal from "@/components/survey/PreLaunchSurveyModal";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useAuth } from "@/lib/AuthContext";
@@ -304,6 +305,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Problem Section */}
+      <ProblemSection />
 
       {/* Categories Section */}
       <section className="py-20 bg-white">
