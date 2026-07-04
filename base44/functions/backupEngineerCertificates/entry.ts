@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const FOLDER_NAME = 'bytly - شهادات المهندسين';
-const FOLDER_STATE_KEY = 'googledrive_certificates_folder';
+const ROOT_FOLDER_NAME = 'bytly - شهادات المهندسين';
+const ROOT_FOLDER_STATE_KEY = 'googledrive_certificates_folder';
 
 Deno.serve(async (req) => {
   try {
@@ -25,14 +25,14 @@ Deno.serve(async (req) => {
       certificates.push({
         type: 'graduation',
         url: engineer.graduation_certificate_url,
-        fileName: `${engineer.full_name || engineer.email || engineer.id}_شهادة_التخرج`
+        fileName: 'شهادة_التخرج'
       });
     }
     if (engineer.saudi_engineers_council_certificate_url) {
       certificates.push({
         type: 'saudi_engineers_council',
         url: engineer.saudi_engineers_council_certificate_url,
-        fileName: `${engineer.full_name || engineer.email || engineer.id}_شهادة_الهيئة_السعودية_للمهندسين`
+        fileName: 'شهادة_الهيئة_السعودية_للمهندسين'
       });
     }
 
@@ -40,59 +40,94 @@ Deno.serve(async (req) => {
       return Response.json({ message: 'No certificates to back up', skipped: true });
     }
 
-    // ── Find or create the backup folder ──────────────────────────
-    let folderId = null;
+    // ── 1. Find or create the ROOT folder ──────────────────────────
+    let rootFolderId = null;
 
-    const syncStates = await base44.asServiceRole.entities.SyncState.filter({ service: FOLDER_STATE_KEY });
+    const syncStates = await base44.asServiceRole.entities.SyncState.filter({ service: ROOT_FOLDER_STATE_KEY });
     if (syncStates.length > 0 && syncStates[0].sync_token) {
-      folderId = syncStates[0].sync_token;
+      rootFolderId = syncStates[0].sync_token;
       // Verify the folder still exists
       const checkRes = await fetch(
-        `https://www.googleapis.com/drive/v3/files/${folderId}?fields=id,name`,
+        `https://www.googleapis.com/drive/v3/files/${rootFolderId}?fields=id,name`,
         { headers: authHeader }
       );
-      if (!checkRes.ok) folderId = null;
+      if (!checkRes.ok) rootFolderId = null;
     }
 
-    if (!folderId) {
+    if (!rootFolderId) {
       const folderRes = await fetch('https://www.googleapis.com/drive/v3/files', {
         method: 'POST',
         headers: { ...authHeader, 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: FOLDER_NAME,
+          name: ROOT_FOLDER_NAME,
           mimeType: 'application/vnd.google-apps.folder'
         })
       });
       if (!folderRes.ok) {
         const err = await folderRes.text();
-        return Response.json({ error: 'Failed to create folder: ' + err }, { status: 500 });
+        return Response.json({ error: 'Failed to create root folder: ' + err }, { status: 500 });
       }
       const folder = await folderRes.json();
-      folderId = folder.id;
+      rootFolderId = folder.id;
 
       if (syncStates.length > 0) {
         await base44.asServiceRole.entities.SyncState.update(syncStates[0].id, {
-          sync_token: folderId,
+          sync_token: rootFolderId,
           last_sync: new Date().toISOString()
         });
       } else {
         await base44.asServiceRole.entities.SyncState.create({
-          service: FOLDER_STATE_KEY,
-          sync_token: folderId,
+          service: ROOT_FOLDER_STATE_KEY,
+          sync_token: rootFolderId,
           last_sync: new Date().toISOString(),
-          description: 'Folder ID for engineer certificates backup in Google Drive'
+          description: 'Root folder ID for engineer certificates backup in Google Drive'
         });
       }
     }
 
-    // ── Upload each certificate ─────────────────────────────────────
+    // ── 2. Find or create engineer subfolder ────────────────────────
+    // Sanitize folder name — remove characters not allowed in Drive folder names
+    const engineerName = (engineer.full_name || engineer.email || engineer.id)
+      .replace(/[\/\\:*?"<>|]/g, ' ').trim() || engineer.id;
+
+    let engineerFolderId = null;
+
+    // Search for existing subfolder inside the root folder
+    const searchFolderRes = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`name='${engineerName.replace(/'/g, "\\'")}' and '${rootFolderId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`)}&fields=files(id,name)`,
+      { headers: authHeader }
+    );
+    const searchFolderData = await searchFolderRes.json();
+    if (searchFolderData.files && searchFolderData.files.length > 0) {
+      engineerFolderId = searchFolderData.files[0].id;
+    }
+
+    if (!engineerFolderId) {
+      const createFolderRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+        method: 'POST',
+        headers: { ...authHeader, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: engineerName,
+          mimeType: 'application/vnd.google-apps.folder',
+          parents: [rootFolderId]
+        })
+      });
+      if (!createFolderRes.ok) {
+        const err = await createFolderRes.text();
+        return Response.json({ error: 'Failed to create engineer folder: ' + err }, { status: 500 });
+      }
+      const engFolder = await createFolderRes.json();
+      engineerFolderId = engFolder.id;
+    }
+
+    // ── 3. Upload each certificate ──────────────────────────────────
     const results = [];
 
     for (const cert of certificates) {
       try {
-        // Skip if already backed up (check by file name among app-created files)
+        // Skip if already backed up in the engineer's subfolder
         const searchRes = await fetch(
-          `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`name='${cert.fileName}' and trashed=false`)}&fields=files(id,name)&pageSize=1`,
+          `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(`name='${cert.fileName}' and '${engineerFolderId}' in parents and trashed=false`)}&fields=files(id,name)&pageSize=1`,
           { headers: authHeader }
         );
         const searchResult = await searchRes.json();
@@ -129,7 +164,7 @@ Deno.serve(async (req) => {
         const boundary = 'bytly_boundary_' + crypto.randomUUID().replace(/-/g, '');
         const metadata = {
           name: cert.fileName + extension,
-          parents: [folderId]
+          parents: [engineerFolderId]
         };
 
         const encoder = new TextEncoder();
@@ -141,7 +176,7 @@ Deno.serve(async (req) => {
         const uploadBody = new Blob([head, new Uint8Array(fileBuffer), tail]);
 
         const uploadRes = await fetch(
-          'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',
+          'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink',
           {
             method: 'POST',
             headers: {
@@ -154,7 +189,7 @@ Deno.serve(async (req) => {
 
         if (uploadRes.ok) {
           const uploadedFile = await uploadRes.json();
-          results.push({ type: cert.type, status: 'uploaded', file_id: uploadedFile.id, file_name: uploadedFile.name });
+          results.push({ type: cert.type, status: 'uploaded', file_id: uploadedFile.id, file_name: uploadedFile.name, drive_link: uploadedFile.webViewLink });
         } else {
           const errText = await uploadRes.text();
           results.push({ type: cert.type, status: 'upload_failed', error: errText });
@@ -168,7 +203,9 @@ Deno.serve(async (req) => {
       success: true,
       engineer_id: engineer.id,
       engineer_name: engineer.full_name,
-      folder_id: folderId,
+      root_folder_id: rootFolderId,
+      engineer_folder_id: engineerFolderId,
+      engineer_folder_name: engineerName,
       results
     });
 
