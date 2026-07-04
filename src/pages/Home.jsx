@@ -21,7 +21,6 @@ import HowItWorksSection from "@/components/home/HowItWorksSection";
 import TopRatedEngineers from "@/components/home/TopRatedEngineers";
 import ProblemSection from "@/components/home/ProblemSection";
 import SpecialtiesSection from "@/components/home/SpecialtiesSection";
-import ProjectStagesSimulator from "@/components/home/ProjectStagesSimulator";
 import PreLaunchSurveyModal from "@/components/survey/PreLaunchSurveyModal";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useAuth } from "@/lib/AuthContext";
@@ -313,9 +312,6 @@ export default function Home() {
 
       {/* Specialties Section */}
       <SpecialtiesSection />
-
-      {/* Project Stages Simulator */}
-      <ProjectStagesSimulator />
 
       {/* Featured Engineers */}
       <section className="py-20 bg-gradient-to-br from-slate-50 to-amber-50/30">

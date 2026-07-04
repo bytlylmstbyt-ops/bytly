@@ -135,6 +135,11 @@ function LayoutContent({ children, currentPageName }) {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <Link to="/ProjectStages" className="flex items-center gap-2 cursor-pointer">
+                      🛡️ محاكي حوكمة مراحل المشروع
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/ConstructionTracker" className="flex items-center gap-2 cursor-pointer">
                       🏗️ {t('nav.constructionTracker')}
                     </Link>
@@ -316,6 +321,7 @@ function LayoutContent({ children, currentPageName }) {
               <div className="pt-2 pb-1 px-4 text-xs font-semibold text-[#C9A66B] uppercase tracking-wide">{t('nav.bytlySections')}</div>
               {[
                 { to: "/CostEstimator", label: `🧮 ${t('nav.costCalculator')}` },
+                { to: "/ProjectStages", label: `🛡️ محاكي حوكمة مراحل المشروع` },
                 { to: "/ConstructionTracker", label: `🏗️ ${t('nav.constructionTracker')}` },
                 { to: "/TechnicalResources", label: `📐 ${t('nav.technicalResources')}` },
                 { to: "/PermitApplication", label: `🏛️ ${t('nav.buildingPermit')}` },

@@ -40,6 +40,7 @@ const BuildingProgress         = React.lazy(() => import('./pages/BuildingProgre
 const PermitApplication        = React.lazy(() => import('./pages/PermitApplication'));
 const PermitPaymentSuccess     = React.lazy(() => import('./pages/PermitPaymentSuccess'));
 const CostEstimator            = React.lazy(() => import('./pages/CostEstimator'));
+const ProjectStages            = React.lazy(() => import('./pages/ProjectStages'));
 const ConstructionTracker      = React.lazy(() => import('./pages/ConstructionTracker'));
 const RiskDashboard            = React.lazy(() => import('./pages/RiskDashboard'));
 const MarketEntities           = React.lazy(() => import('./pages/MarketEntities'));
@@ -124,6 +125,7 @@ const AuthenticatedApp = () => {
 
       {/* ── Public explicit lazy routes ─────────────────────────────── */}
       <Route path="/CostEstimator"              element={lazyRoute(CostEstimator, "CostEstimator")} />
+      <Route path="/ProjectStages"             element={lazyRoute(ProjectStages, "ProjectStages")} />
       <Route path="/ConstructionTracker"        element={lazyRoute(ConstructionTracker, "ConstructionTracker")} />
       <Route path="/TechnicalResources"         element={lazyRoute(TechnicalResources, "TechnicalResources")} />
       <Route path="/EngineerMatcher"            element={lazyRoute(EngineerMatcher, "EngineerMatcher")} />
