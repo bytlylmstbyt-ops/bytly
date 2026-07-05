@@ -48,6 +48,19 @@ function LayoutContent({ children, currentPageName }) {
     checkAuth();
   }, []);
 
+  // Heartbeat — تتبع المستخدمين المسجلين النشطين الآن (كل 60 ثانية)
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+    const sendHeartbeat = () => {
+      base44.functions.invoke('trackUserActivity', {
+        current_page: window.location.pathname
+      }).catch(() => {});
+    };
+    sendHeartbeat();
+    const interval = setInterval(sendHeartbeat, 60000);
+    return () => clearInterval(interval);
+  }, [isAuthenticated, user]);
+
   const publicPages = ["Home", "Engineers", "EngineerProfile", "Login", "RegisterEngineer", "RegisterClient"];
   const isPublicPage = publicPages.includes(currentPageName);
 

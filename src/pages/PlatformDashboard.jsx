@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import ProjectProfitPanel from "@/components/dashboard/ProjectProfitPanel";
 import DailyActiveUsersPanel from "@/components/dashboard/DailyActiveUsersPanel";
 import PlatformFeeCalculator from "@/components/dashboard/PlatformFeeCalculator";
+import LiveVisitorsPanel from "@/components/dashboard/LiveVisitorsPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -211,6 +212,9 @@ export default function PlatformDashboard() {
             </button>
           </div>
         </div>
+
+        {/* ── الزوار المباشرون الآن ── */}
+        <LiveVisitorsPanel />
 
         {/* KPIs Row 1 – المشاريع والإيرادات */}
         <div>
