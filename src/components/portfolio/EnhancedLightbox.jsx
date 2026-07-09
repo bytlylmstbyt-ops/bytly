@@ -12,6 +12,7 @@ export default function EnhancedLightbox({ images = [], initialIndex = 0, onClos
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showHint, setShowHint] = useState(true);
 
   const touchRef = useRef({
     mode: null, // 'pan' | 'pinch' | 'swipe' | null
@@ -62,6 +63,12 @@ export default function EnhancedLightbox({ images = [], initialIndex = 0, onClos
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  // Auto-hide the swipe hint after 4 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => setShowHint(false), 4000);
+    return () => clearTimeout(timer);
   }, []);
 
   const getDistance = (t1, t2) => {
@@ -122,7 +129,8 @@ export default function EnhancedLightbox({ images = [], initialIndex = 0, onClos
       const dy = touches[0].clientY - t.startY;
       setPan({ x: t.startPanX + dx, y: t.startPanY + dy });
     } else if (t.mode === "swipe" && touches.length === 1) {
-      // Track last position for swipe end detection
+      // Prevent browser's native scroll (body is locked) so our swipe works
+      e.preventDefault();
       t.lastX = touches[0].clientX;
       t.lastY = touches[0].clientY;
     }
@@ -204,6 +212,7 @@ export default function EnhancedLightbox({ images = [], initialIndex = 0, onClos
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[100] bg-black flex items-center justify-center select-none"
+      style={{ touchAction: 'none' }}
       ref={containerRef}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
@@ -295,8 +304,8 @@ export default function EnhancedLightbox({ images = [], initialIndex = 0, onClos
         </div>
       )}
 
-      {/* Swipe/scroll hint — shown briefly when not zoomed */}
-      {zoom === 1 && images.length > 1 && (
+      {/* Swipe/scroll hint — auto-hides after a few seconds */}
+      {zoom === 1 && images.length > 1 && showHint && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-[35vh] md:translate-y-[30vh] px-4 py-2 rounded-full bg-white/5 backdrop-blur-sm text-white/60 text-xs z-30 pointer-events-none animate-pulse">
           اسحب أو مرر للتنقل بين الصور
         </div>
