@@ -22,6 +22,7 @@ import {
 import EngineerReviewForm from "@/components/reviews/EngineerReviewForm";
 import RatingStats from "@/components/reviews/RatingStats";
 import ImageGallerySlider from "@/components/portfolio/ImageGallerySlider";
+import EngineerPerformancePanel from "@/components/engineers/EngineerPerformancePanel";
 
 export default function EngineerProfile() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -308,6 +309,11 @@ export default function EngineerProfile() {
             </CardContent>
           </Card>
         </motion.div>
+
+        {/* Performance Panel */}
+        <div className="mt-8">
+          <EngineerPerformancePanel engineer={engineer} reviews={reviews} />
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
           {/* Main Content */}
