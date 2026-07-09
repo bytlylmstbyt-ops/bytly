@@ -135,10 +135,15 @@ export default function EnhancedLightbox({ images = [], initialIndex = 0, onClos
     if (t.mode === "swipe" && t.moved) {
       const dx = t.lastX - t.startX;
       const dy = t.lastY - t.startY;
-      // Horizontal swipe only when zoom === 1
+      // Horizontal swipe (when zoom === 1)
       if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) {
         // RTL: swipe left = next, swipe right = prev
         if (dx < 0) goNext();
+        else goPrev();
+      }
+      // Vertical swipe (when zoom === 1) — swipe up = next, swipe down = prev
+      else if (Math.abs(dy) > 60 && Math.abs(dy) > Math.abs(dx)) {
+        if (dy < 0) goNext();
         else goPrev();
       }
     }
@@ -146,11 +151,23 @@ export default function EnhancedLightbox({ images = [], initialIndex = 0, onClos
     t.mode = null;
   };
 
-  // Mouse wheel zoom (desktop)
+  // Wheel: zoom when zoomed in, navigate images when at zoom === 1
+  const wheelAccumulator = useRef(0);
   const onWheel = (e) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.2 : 0.2;
-    setZoom((z) => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z + delta)));
+    if (zoom > 1) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.2 : 0.2;
+      setZoom((z) => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, z + delta)));
+    } else {
+      e.preventDefault();
+      // Navigate images on scroll when not zoomed
+      wheelAccumulator.current += e.deltaY;
+      if (Math.abs(wheelAccumulator.current) > 50) {
+        if (wheelAccumulator.current > 0) goNext();
+        else goPrev();
+        wheelAccumulator.current = 0;
+      }
+    }
   };
 
   // Mouse drag pan (desktop) when zoomed
@@ -191,6 +208,7 @@ export default function EnhancedLightbox({ images = [], initialIndex = 0, onClos
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
+      onWheel={onWheel}
     >
       {/* Top Bar */}
       <div className="absolute top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/70 to-transparent"
@@ -266,11 +284,6 @@ export default function EnhancedLightbox({ images = [], initialIndex = 0, onClos
             cursor: zoom > 1 ? "grab" : "default",
             willChange: "transform",
           }}
-          onWheel={onWheel}
-          onMouseDown={onMouseDown}
-          onMouseMove={onMouseMove}
-          onMouseUp={onMouseUp}
-          onMouseLeave={onMouseUp}
           draggable={false}
         />
       </AnimatePresence>
@@ -279,6 +292,13 @@ export default function EnhancedLightbox({ images = [], initialIndex = 0, onClos
       {zoom > 1 && (
         <div className="absolute bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm text-white text-xs font-medium z-40">
           {Math.round(zoom * 100)}%
+        </div>
+      )}
+
+      {/* Swipe/scroll hint — shown briefly when not zoomed */}
+      {zoom === 1 && images.length > 1 && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-[35vh] md:translate-y-[30vh] px-4 py-2 rounded-full bg-white/5 backdrop-blur-sm text-white/60 text-xs z-30 pointer-events-none animate-pulse">
+          اسحب أو مرر للتنقل بين الصور
         </div>
       )}
 
