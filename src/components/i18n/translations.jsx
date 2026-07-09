@@ -160,20 +160,20 @@ export const translations = {
       forEngineers: "للمهندسين",
       ownerSteps: {
         step1: {
-          title: "اطرح مشروعك",
-          description: "حدد التفاصيل والميزانية والموعد النهائي للمشروع"
+          title: "🏠 ابدأ مشروعك خلال دقائق",
+          description: "أضف متطلباتك واحصل على عروض من متخصصين مناسبين لمشروعك."
         },
         step2: {
-          title: "استقبل العروض",
-          description: "قارن بين المهندسين والأسعار والمدة المقترحة"
+          title: "👨‍💼 اختر الخبير المناسب بثقة",
+          description: "قارن بين الأعمال السابقة والتقييمات والعروض المقدمة."
         },
         step3: {
-          title: "ادفع بأمان",
-          description: "المبلغ يُحفظ في نظام الضمان حتى تستلم العمل كاملاً"
+          title: "🔒 احفظ أموالك حتى اكتمال العمل",
+          description: "يتم الاحتفاظ بالمبلغ في نظام الضمان لحماية جميع الأطراف."
         },
         step4: {
-          title: "اعتمد واستلم",
-          description: "راجع التصميم، اعتمده، واحصل على جميع الملفات"
+          title: "✅ استلم مشروعك جاهزاً",
+          description: "راجع المخرجات النهائية واحصل على جميع الملفات المعتمدة."
         }
       },
       engineerSteps: {
@@ -931,20 +931,20 @@ export const translations = {
       forEngineers: "For Engineers",
       ownerSteps: {
         step1: {
-          title: "Post Your Project",
-          description: "Define details, budget, and project deadline"
+          title: "🏠 Start Your Project in Minutes",
+          description: "Add your requirements and receive offers from suitable specialists for your project."
         },
         step2: {
-          title: "Receive Proposals",
-          description: "Compare engineers, prices, and proposed timelines"
+          title: "👨‍💼 Choose the Right Expert with Confidence",
+          description: "Compare past works, ratings, and submitted proposals."
         },
         step3: {
-          title: "Pay Securely",
-          description: "Amount is held in escrow until you receive the complete work"
+          title: "🔒 Keep Your Money Until Work is Complete",
+          description: "The amount is held in escrow to protect all parties."
         },
         step4: {
-          title: "Approve & Receive",
-          description: "Review the design, approve it, and get all files"
+          title: "✅ Receive Your Project Ready",
+          description: "Review the final deliverables and get all approved files."
         }
       },
       engineerSteps: {
