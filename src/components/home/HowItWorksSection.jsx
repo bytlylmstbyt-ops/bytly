@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
   Search, FileText, CheckCircle, Wallet,
-  Upload, Users, Star, DollarSign
+  Upload, Users, Star, DollarSign, ClipboardCheck
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLanguage } from "@/components/i18n/LanguageContext";
@@ -68,9 +68,16 @@ export default function HowItWorksSection() {
     },
     {
       step: 4,
-      icon: DollarSign,
+      icon: ClipboardCheck,
       title: t('howItWorks.engineerSteps.step4.title'),
       description: t('howItWorks.engineerSteps.step4.description'),
+      color: "from-amber-500 to-orange-500"
+    },
+    {
+      step: 5,
+      icon: Wallet,
+      title: t('howItWorks.engineerSteps.step5.title'),
+      description: t('howItWorks.engineerSteps.step5.description'),
       color: "from-green-500 to-emerald-500"
     }
   ];
@@ -142,7 +149,7 @@ export default function HowItWorksSection() {
 
           {/* Engineer Flow */}
           <TabsContent value="engineer">
-            <div className="grid md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
               {engineerSteps.map((step, index) => (
                 <motion.div
                   key={step.step}

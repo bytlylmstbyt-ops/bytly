@@ -178,20 +178,24 @@ export const translations = {
       },
       engineerSteps: {
         step1: {
-          title: "أنشئ ملفك",
-          description: "ارفع أعمالك السابقة وحدد تخصصاتك الرئيسية"
+          title: "اعرض أعمالك السابقة",
+          description: "حدد تخصصاتك وخبراتك الهندسية"
         },
         step2: {
-          title: "تصفح المشاريع",
-          description: "ابحث عن فرص عمل تناسب خبرتك وتخصصك"
+          title: "استعرض المشاريع المناسبة",
+          description: "تصفح المشاريع المطروحة واختر الفرص التي تناسب تخصصك وخبرتك"
         },
         step3: {
-          title: "قدّم عرضك",
-          description: "حدد السعر والمدة الزمنية والبدء في العمل"
+          title: "قدم عرضك وابدأ العمل",
+          description: "حدد نطاق العمل والسعر والمدة الزمنية وابدأ تنفيذ المشروع"
         },
         step4: {
-          title: "استلم مستحقاتك",
-          description: "بعد موافقة العميل، يُحول المبلغ لمحفظتك فوراً"
+          title: "اعتماد المخرجات",
+          description: "تتم مراجعة وتسليم الأعمال وفق آلية المنصة واعتماد المستشار الهندسي عند الحاجة"
+        },
+        step5: {
+          title: "استلم مستحقاتك بأمان",
+          description: "بعد اعتماد وتسليم المشروع يتم تحويل مستحقاتك إلى محفظتك الإلكترونية"
         }
       }
     },
@@ -949,20 +953,24 @@ export const translations = {
       },
       engineerSteps: {
         step1: {
-          title: "Create Your Profile",
-          description: "Upload your previous works and define your main specializations"
+          title: "Showcase Your Past Work",
+          description: "Define your specializations and engineering expertise"
         },
         step2: {
-          title: "Browse Projects",
-          description: "Search for work opportunities matching your expertise and specialization"
+          title: "Browse Suitable Projects",
+          description: "Explore posted projects and choose opportunities that match your specialization and experience"
         },
         step3: {
-          title: "Submit Your Proposal",
-          description: "Set the price and timeline and start working"
+          title: "Submit Your Proposal & Start",
+          description: "Define the scope of work, price, and timeline, then start executing the project"
         },
         step4: {
-          title: "Receive Your Payment",
-          description: "After client approval, amount is transferred to your wallet immediately"
+          title: "Deliverable Approval",
+          description: "Work is reviewed and delivered according to the platform's process, with engineering consultant approval when needed"
+        },
+        step5: {
+          title: "Receive Your Dues Securely",
+          description: "After project approval and delivery, your dues are transferred to your digital wallet"
         }
       }
     },
