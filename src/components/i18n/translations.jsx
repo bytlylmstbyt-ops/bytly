@@ -100,7 +100,7 @@ export const translations = {
       complaints: "الشكاوى والاقتراحات",
       technicalSupport: "الدعم الفني",
       contactUs: "تواصل معنا",
-      rightsReserved: "بيتلي - لمسة بيت. جميع الحقوق محفوظة."
+      rightsReserved: "بيتلي - المنظومة الهندسية المتكاملة. جميع الحقوق محفوظة."
     },
     common: {
       loading: "جاري التحميل...",
@@ -962,7 +962,7 @@ export const translations = {
       complaints: "Complaints & Suggestions",
       technicalSupport: "Technical Support",
       contactUs: "Contact Us",
-      rightsReserved: "Bytly - A Touch of Home. All Rights Reserved."
+      rightsReserved: "Bytly - Integrated Engineering Ecosystem. All Rights Reserved."
     },
     common: {
       loading: "Loading...",
