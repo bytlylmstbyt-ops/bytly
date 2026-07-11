@@ -773,6 +773,10 @@ export const translations = {
       statusPending: "بانتظار المراجعة",
       footerNote: "بيانات حية من قاعدة بيانات بيتلي"
     },
+    marketingPhrase: {
+      prefix: "حوّل رؤيتك إلى",
+      highlight: "واقع هندسي"
+    },
     problemSection: {
       title: "المشكلة التي نحلها في السوق العقاري السعودي",
       problems: {
@@ -1630,6 +1634,10 @@ export const translations = {
       statusApproved: "Approved",
       statusPending: "Pending Review",
       footerNote: "Live data from Bytly's database"
+    },
+    marketingPhrase: {
+      prefix: "Turn your vision into",
+      highlight: "engineering reality"
     },
     problemSection: {
       title: "The Problem We Solve in the Saudi Real Estate Market",

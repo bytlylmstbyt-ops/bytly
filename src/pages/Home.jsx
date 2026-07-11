@@ -212,9 +212,9 @@ export default function Home() {
 
               {/* Marketing Phrase */}
               <h2 className="text-2xl sm:text-3xl font-bold text-white mb-8 max-w-lg">
-                حوّل رؤيتك إلى{" "}
+                {t('marketingPhrase.prefix')}{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4a574] to-[#e8c9a8]">
-                  واقع هندسي
+                  {t('marketingPhrase.highlight')}
                 </span>
               </h2>
 
