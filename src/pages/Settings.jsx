@@ -37,6 +37,7 @@ export default function Settings() {
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleteStep, setDeleteStep] = useState(1);
   const [deleteReason, setDeleteReason] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({});
   const [notificationSettings, setNotificationSettings] = useState({
     email_notifications: true,
@@ -650,7 +651,7 @@ export default function Settings() {
               <div className="space-y-3 py-2">
                 <p className="text-sm text-slate-600">سيتم حذف البيانات التالية بشكل <strong>نهائي وغير قابل للاسترداد</strong>:</p>
                 <ul className="space-y-2 text-sm text-red-700">
-                  {["ملفك الشخصي وجميع بياناتك", "مشاريعك النشطة والمكتملة", "عقودك ومحادثاتك", "رصيد محفظتك وسجل المعاملات", "تقييماتك وتوصياتك"].map(item => (
+                  {["ملفك الشخصي وجميع بياناتك", "مشاريعك الهندسية النشطة والمكتملة", "مسودات العقود والاتفاقيات", "رصيد محفظتك الإلكترونية وسجل المعاملات", "تقييماتك وتوصياتك"].map(item => (
                     <li key={item} className="flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
                       {item}
@@ -697,21 +698,42 @@ export default function Settings() {
               <DialogFooter className="gap-2">
                 <Button variant="outline" style={{ minHeight: 44 }} onClick={() => setDeleteStep(2)}>رجوع</Button>
                 <Button
-                  disabled={deleteConfirmText !== "احذف حسابي"}
+                  disabled={deleteConfirmText !== "احذف حسابي" || isDeleting}
                   style={{ minHeight: 44 }}
                   className="bg-red-600 hover:bg-red-700 text-white"
                   onClick={async () => {
+                    setIsDeleting(true);
                     try {
-                      await base44.functions.invoke('deleteAccount', { reason: deleteReason });
+                      const currentUser = await base44.auth.me();
+                      if (!currentUser) {
+                        toast.error("لم يتم التعرف على المستخدم. يرجى إعادة تسجيل الدخول.");
+                        setIsDeleting(false);
+                        return;
+                      }
+                      await base44.functions.invoke('deleteAccount', {
+                        reason: deleteReason,
+                        user_email: currentUser.email,
+                      });
                     } catch (e) {
                       console.error('deleteAccount error', e);
+                      toast.error("حدث خطأ أثناء حذف الحساب. يرجى المحاولة مرة أخرى.");
                     } finally {
+                      setIsDeleting(false);
                       base44.auth.logout();
                     }
                   }}
                 >
-                  <Trash2 className="w-4 h-4 ml-2" />
-                  حذف الحساب نهائياً
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                      جاري الحذف...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 ml-2" />
+                      حذف الحساب نهائياً
+                    </>
+                  )}
                 </Button>
               </DialogFooter>
             </>
