@@ -90,7 +90,7 @@ export const translations = {
       }
     },
     footer: {
-      description: "منصة احترافية تجمع مهندسي التصميم الداخلي والمعماريين والرسامين مع أصحاب المشاريع. نساعدك في العثور على أفضل المصممين لتحويل أحلامك إلى واقع.",
+      description: "بيتلي — المنظومة الهندسية المتكاملة التي تربطك بأفضل الكفاءات الهندسية في بيئة رقمية آمنة، تضمن حقوقك وتسهل إدارة مشروعك من الفكرة إلى التنفيذ.",
       quickLinks: "روابط سريعة",
       termsAndPolicies: "الشروط والسياسات",
       terms: "الشروط والأحكام",
@@ -952,7 +952,7 @@ export const translations = {
       }
     },
     footer: {
-      description: "A professional platform connecting interior designers, architects, and drafters with project owners. We help you find the best designers to turn your dreams into reality.",
+      description: "Bytly — the integrated engineering ecosystem connecting you with top engineering talent in a secure digital environment that safeguards your rights and streamlines project management from concept to execution.",
       quickLinks: "Quick Links",
       termsAndPolicies: "Terms & Policies",
       terms: "Terms & Conditions",
