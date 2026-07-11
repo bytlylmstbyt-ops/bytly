@@ -1,26 +1,17 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Building2, ShieldCheck, Clock } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageContext";
 
-const PROBLEMS = [
-  {
-    icon: Building2,
-    title: "فجوة الإشراف الهندسي",
-    description: "إخضاع العمليات والاتفاقيات لإشراف مستشارين قانونيين ومهندسين استشاريين لتقليل نسب التأخير وتجنب سوء الفهم.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "اختلاف التوقعات وغياب الضامن",
-    description: "نعمل كطرف ضامن يضمن التزام المصمم بمعايير التسليم، وفي الوقت نفسه يضمن استلام المهندس لمستحقاته المالية.",
-  },
-  {
-    icon: Clock,
-    title: "تعثر المواعيد وضياع الوقت",
-    description: "أغلب تعثرات المشاريع المعمارية تعود لسوء التنظيم والتواصل وضياع الحقوق، وليس لضعف التصميم نفسه.",
-  },
+const PROBLEM_KEYS = [
+  { icon: Building2, key: "supervision" },
+  { icon: ShieldCheck, key: "guarantee" },
+  { icon: Clock, key: "delays" },
 ];
 
 export default function ProblemSection() {
+  const { t } = useLanguage();
+
   return (
     <section className="py-20 bg-[#FCFCFC]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -31,12 +22,12 @@ export default function ProblemSection() {
           className="text-center mb-12"
         >
           <h2 className="text-2xl md:text-3xl font-bold text-[#888888]">
-            المشكلة التي نحلها في السوق العقاري السعودي
+            {t('problemSection.title')}
           </h2>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {PROBLEMS.map((item, index) => (
+          {PROBLEM_KEYS.map((item, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
@@ -49,10 +40,10 @@ export default function ProblemSection() {
                 <item.icon className="w-7 h-7 text-[#C9A66B]" strokeWidth={1.5} />
               </div>
               <h3 className="text-lg font-bold text-[#333333] mb-3">
-                {item.title}
+                {t(`problemSection.problems.${item.key}.title`)}
               </h3>
               <p className="text-sm leading-relaxed text-[#666666]">
-                {item.description}
+                {t(`problemSection.problems.${item.key}.description`)}
               </p>
             </motion.div>
           ))}

@@ -772,6 +772,89 @@ export const translations = {
       statusApproved: "معتمد",
       statusPending: "بانتظار المراجعة",
       footerNote: "بيانات حية من قاعدة بيانات بيتلي"
+    },
+    problemSection: {
+      title: "المشكلة التي نحلها في السوق العقاري السعودي",
+      problems: {
+        supervision: {
+          title: "فجوة الإشراف الهندسي",
+          description: "إخضاع العمليات والاتفاقيات لإشراف مستشارين قانونيين ومهندسين استشاريين لتقليل نسب التأخير وتجنب سوء الفهم."
+        },
+        guarantee: {
+          title: "اختلاف التوقعات وغياب الضامن",
+          description: "نعمل كطرف ضامن يضمن التزام المصمم بمعايير التسليم، وفي الوقت نفسه يضمن استلام المهندس لمستحقاته المالية."
+        },
+        delays: {
+          title: "تعثر المواعيد وضياع الوقت",
+          description: "أغلب تعثرات المشاريع المعمارية تعود لسوء التنظيم والتواصل وضياع الحقوق، وليس لضعف التصميم نفسه."
+        }
+      }
+    },
+    specialtiesSection: {
+      title: "تخصصات بيتلي الهندسية",
+      subtitle: "دليل تفصيلي لمتطلبات المشاريع السكنية مع حماية كاملة لحقوقك",
+      specialistsCount: "متخصص",
+      bytlyProtection: "حماية بيتلي",
+      guideLabel: "دليل تفصيلي لمتطلبات المشاريع السكنية",
+      buildingCodeLabel: "حالة كود البناء السعودي",
+      durationLabel: "متوسط مدة الإنجاز المتوقعة",
+      priceLabel: "متوسط سعر السوق السعودي",
+      budgetAction: "احسب ميزانية وهيكل ميثاق هذا التخصص",
+      hireAction: "تصفح وتوظيف مهندس",
+      charter: {
+        title: "ميثاق أمان المعاملات",
+        advisory: "نصيحة بيتلي الاستشارية:",
+        points: [
+          "أتعاب التخصص تودع بالكامل في حساب الضمان التابع لبيتلي.",
+          "يتم المراجعة والتدقيق الإنشائي لكل مخرج قبل السداد.",
+          "حق التعديلات مفتوح ومحفوظ بحوكمة بيتلي المهنية."
+        ],
+        advisoryText: "للراغبين ببناء فيلا، يوصى بالجمع بين التصميم المعماري والتصميم الداخلي منذ البداية لضمان تطابق أماكن الأعمدة مع توزيع الأثاث والتكييف المخفي."
+      },
+      specialties: {
+        interior: {
+          title: "تصميم داخلي",
+          description: "تصميم الفراغات الداخلية، توزيع الأثاث والإنارة، اختيار الألوان والخامات المناسبة لتحقيق بيئة سكنية جمالية وعملية متكاملة.",
+          buildingCode: "اختياري / يوصى به لرفع القيمة العقارية للمنزل وتوفير الهدر قبل الشراء.",
+          duration: "١٥ - ٣٠ يوم",
+          price: "٤٥ - ١٢٠ ر.س / م²"
+        },
+        architecture: {
+          title: "تصميم معماري",
+          description: "تصميم الواجهات المعمارية، توزيع الفراغات، والمخططات الأولية للمبنى بما يحقق التوازن بين الجمال والوظيفة والاستدامة وفق متطلبات البلدية.",
+          buildingCode: "إلزامي / ركيزة أساسية للحصول على رخصة البناء.",
+          duration: "٢٠ - ٤٥ يوم",
+          price: "٣٥ - ٩٥ ر.س / م²"
+        },
+        civil: {
+          title: "هندسة مدنية",
+          description: "إجراء الحسابات الإنشائية الدقيقة، وتصميم القواعد، والأعمدة، والأسقف لضمان استقرار المبنى ومقاومته للزلازل والأحمال بموجب الكود السعودي.",
+          buildingCode: "إلزامي / لضمان السلامة الإنشائية ومطابقة تقرير فحص التربة المعتمد.",
+          duration: "١٠ - ٢٠ يوم",
+          price: "٢٥ - ٦٠ ر.س / م²"
+        },
+        drafting: {
+          title: "رسم هندسي",
+          description: "تحويل الأفكار والاسكتشات الأولية إلى مخططات رقمية دقيقة ثنائية الأبعاد (2D) وثلاثية الأبعاد (3D) باستخدام أحدث برامج الرسم الهندسي.",
+          buildingCode: "مطلوب لتوضيح أبعاد الكتل وحساب المسطحات بدقة للمقاول والبلدية.",
+          duration: "٧ - ١٥ يوم",
+          price: "١٥ - ٤٠ ر.س / م²"
+        },
+        executive: {
+          title: "رسم تنفيذي",
+          description: "إعداد المخططات التنفيذية التفصيلية (Shop Drawings) التي توضح مسارات التمديدات، تفاصيل العزل، وتفاصيل تركيب الرخام والبورسلان لتفادي أخطاء الموقع.",
+          buildingCode: "أساسي للمقاول والمهندس المشرف لمنع التضارب في مسارات التكييف والصرف والكهرباء.",
+          duration: "١٠ - ١٨ يوم",
+          price: "٢٠ - ٥٠ ر.س / م²"
+        },
+        decor: {
+          title: "ديكور وإكسسوارات",
+          description: "اختيار قطع الأثاث والستائر، وتصميم توزيع السجاد واللوحات الجدارية والإكسسوارات الدقيقة لتنسيق الطابع الروحي والجمالي النهائي للمنزل.",
+          buildingCode: "لمسة فنية نهائية تعطي منزلك دفئاً فريداً يعكس شخصية العائلة.",
+          duration: "5 - 12 يوم",
+          price: "مقطوعية (حسب الفراغ)"
+        }
+      }
     }
   },
   en: {
@@ -1547,6 +1630,89 @@ export const translations = {
       statusApproved: "Approved",
       statusPending: "Pending Review",
       footerNote: "Live data from Bytly's database"
+    },
+    problemSection: {
+      title: "The Problem We Solve in the Saudi Real Estate Market",
+      problems: {
+        supervision: {
+          title: "Engineering Supervision Gap",
+          description: "Subjecting operations and agreements to the supervision of legal consultants and engineering advisors to reduce delay rates and avoid misunderstandings."
+        },
+        guarantee: {
+          title: "Mismatched Expectations & Missing Guarantor",
+          description: "We act as a guarantor ensuring the designer's commitment to delivery standards, while simultaneously guaranteeing the engineer receives their financial dues."
+        },
+        delays: {
+          title: "Schedule Delays & Wasted Time",
+          description: "Most architectural project delays stem from poor organization and communication and loss of rights, not from weak design itself."
+        }
+      }
+    },
+    specialtiesSection: {
+      title: "Bytly Engineering Specialties",
+      subtitle: "A detailed guide for residential project requirements with full protection of your rights",
+      specialistsCount: "specialists",
+      bytlyProtection: "Bytly Protection",
+      guideLabel: "A detailed guide for residential project requirements",
+      buildingCodeLabel: "Saudi Building Code Status",
+      durationLabel: "Avg. Expected Completion",
+      priceLabel: "Avg. Saudi Market Price",
+      budgetAction: "Calculate budget and charter structure for this specialty",
+      hireAction: "Browse and hire an",
+      charter: {
+        title: "Transaction Safety Charter",
+        advisory: "Bytly Advisory Tip:",
+        points: [
+          "Specialty fees are fully deposited into Bytly's escrow account.",
+          "Structural review and audit of every deliverable before payment.",
+          "Unlimited revision rights preserved under Bytly's professional governance."
+        ],
+        advisoryText: "For those planning to build a villa, combining architectural and interior design from the start is recommended to ensure column placements align with furniture layout and concealed AC units."
+      },
+      specialties: {
+        interior: {
+          title: "Interior Design",
+          description: "Designing interior spaces, furniture and lighting layout, selecting colors and materials to achieve an integrated aesthetic and functional living environment.",
+          buildingCode: "Optional / Recommended to increase property value and reduce waste before purchase.",
+          duration: "15 - 30 days",
+          price: "45 - 120 SAR / m²"
+        },
+        architecture: {
+          title: "Architectural Design",
+          description: "Designing architectural facades, space layout, and initial building plans achieving balance between aesthetics, function, and sustainability per municipal requirements.",
+          buildingCode: "Mandatory / Essential for obtaining a building permit.",
+          duration: "20 - 45 days",
+          price: "35 - 95 SAR / m²"
+        },
+        civil: {
+          title: "Civil Engineering",
+          description: "Performing precise structural calculations, designing foundations, columns, and slabs to ensure building stability and resistance to earthquakes and loads per the Saudi Code.",
+          buildingCode: "Mandatory / To ensure structural safety and compliance with certified soil test reports.",
+          duration: "10 - 20 days",
+          price: "25 - 60 SAR / m²"
+        },
+        drafting: {
+          title: "Engineering Drafting",
+          description: "Converting initial ideas and sketches into precise 2D and 3D digital drawings using the latest engineering drafting software.",
+          buildingCode: "Required to illustrate block dimensions and accurately calculate areas for contractors and municipality.",
+          duration: "7 - 15 days",
+          price: "15 - 40 SAR / m²"
+        },
+        executive: {
+          title: "Execution Drawing",
+          description: "Preparing detailed shop drawings showing utility routes, insulation details, and marble and porcelain installation details to avoid on-site errors.",
+          buildingCode: "Essential for contractors and supervising engineers to prevent conflicts in AC, drainage, and electrical routes.",
+          duration: "10 - 18 days",
+          price: "20 - 50 SAR / m²"
+        },
+        decor: {
+          title: "Decor & Accessories",
+          description: "Selecting furniture and curtains, designing rug and wall art placement, and fine accessories to coordinate the final spiritual and aesthetic character of the home.",
+          buildingCode: "A final artistic touch giving your home unique warmth reflecting the family's personality.",
+          duration: "5 - 12 days",
+          price: "Lump sum (per space)"
+        }
+      }
     }
   }
 };
