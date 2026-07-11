@@ -34,9 +34,9 @@ export const translations = {
     home: {
       hero: {
         badge: "بيتلي | المنظومة الهندسية المتكاملة",
-        title: "أدر مشروعك الهندسي",
-        titleHighlight: "من الفكرة إلى التنفيذ",
-        subtitle: "منصة بيتلي المنظومة الهندسية المتكاملة تجمع بينك وبين أفضل الكفاءات الهندسية في بيئة رقمية متكاملة، تضمن حقوقك، وتسهل إدارة مشروعك من الفكرة إلى التنفيذ.",
+        title: "منصة بيتلي المنظومة الهندسية المتكاملة",
+        titleHighlight: "تجمع بينك وبين أفضل الكفاءات",
+        subtitle: "بيئة رقمية متكاملة تضمن حقوقك، وتسهل إدارة مشروعك الهندسي من الفكرة إلى التنفيذ.",
         searchPlaceholder: "ابحث عن مصمم أو تخصص...",
         searchButton: "ابحث الآن",
         stats: {
@@ -809,9 +809,9 @@ export const translations = {
     home: {
       hero: {
         badge: "Bytly | Integrated Engineering Ecosystem",
-        title: "Manage Your Engineering Project",
-        titleHighlight: "From Concept to Execution",
-        subtitle: "Bytly — the Integrated Engineering Ecosystem — connects you with the best engineering talent in an integrated digital environment that safeguards your rights and streamlines your project management from concept to execution.",
+        title: "Bytly — The Integrated Engineering Ecosystem",
+        titleHighlight: "Connecting You with the Best Talent",
+        subtitle: "An integrated digital environment that safeguards your rights and streamlines your engineering project management from concept to execution.",
         searchPlaceholder: "Search for designer or specialization...",
         searchButton: "Search Now",
         stats: {
