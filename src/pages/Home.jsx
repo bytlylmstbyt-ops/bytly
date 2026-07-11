@@ -206,9 +206,17 @@ export default function Home() {
                 </span>
               </h1>
               
-              <p className="text-lg text-slate-300 mb-8 max-w-lg">
+              <p className="text-lg text-slate-300 mb-6 max-w-lg">
                 {t('home.hero.subtitle')}
               </p>
+
+              {/* Marketing Phrase */}
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-8 max-w-lg">
+                حوّل رؤيتك إلى{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4a574] to-[#e8c9a8]">
+                  واقع هندسي
+                </span>
+              </h2>
 
               {/* Search Box */}
               <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-2 border border-white/20">
