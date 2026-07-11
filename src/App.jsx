@@ -58,6 +58,7 @@ const LaunchPerformanceDashboard = React.lazy(() => import('./pages/LaunchPerfor
 const CommissionManager          = React.lazy(() => import('./pages/CommissionManager'));
 const NotificationCenter         = React.lazy(() => import('./pages/NotificationCenter'));
 const EngineerCalendar           = React.lazy(() => import('./pages/EngineerCalendar'));
+const About                      = React.lazy(() => import('./pages/About'));
 
 // ── Page-level spinner fallback ───────────────────────────────────────────────
 function PageSpinner() {
@@ -112,7 +113,8 @@ const AuthenticatedApp = () => {
     'RegisterConsultant',
     'RegisterFirm',
     'RegisterLegalConsultant',
-    'RegistrationSuccess'
+    'RegistrationSuccess',
+    'About'
   ];
 
   return (
@@ -137,6 +139,7 @@ const AuthenticatedApp = () => {
       <Route path="/AIRenovation"               element={lazyRoute(AIRenovation, "AIRenovation")} />
       <Route path="/AIMaterialAdvisor"          element={lazyRoute(AIMaterialAdvisor, "AIMaterialAdvisor")} />
       <Route path="/AIRecommender"              element={lazyRoute(AIRecommender, "AIRecommender")} />
+      <Route path="/About"                      element={lazyRoute(About, "About")} />
 
       {/* Public registration-related pages */}
       {Object.entries(Pages)

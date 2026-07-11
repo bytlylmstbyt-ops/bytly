@@ -100,7 +100,26 @@ export const translations = {
       complaints: "الشكاوى والاقتراحات",
       technicalSupport: "الدعم الفني",
       contactUs: "تواصل معنا",
-      rightsReserved: "بيتلي - المنظومة الهندسية المتكاملة. جميع الحقوق محفوظة."
+      rightsReserved: "بيتلي - المنظومة الهندسية المتكاملة. جميع الحقوق محفوظة.",
+      about: "من نحن",
+      aboutPage: {
+        title: "صفحة 'من نحن'",
+        subtitle: "المشروع، تبادل الملفات والمخططات، والتواصل مع فريق العمل بسهولة وأمان.",
+        cta: "ابدأ مشروعك الآن",
+        whoWeAreTitle: "من نحن",
+        whoWeAreText: "بيتلي هي منصة هندسة رقمية متخصصة تهدف إلى تسهيل إدارة وتنفيذ المشاريع الهندسية والعقارية من خلال جمع أصحاب المشاريع والمهندسين والمصممين والاستشاريين في بيئة عمل موحدة.",
+        visionTitle: "رؤيتنا",
+        visionText: "بناء منظومة هندسة رقمية متكاملة تساعد الأفراد والشركات على تنفيذ مشاريعهم بكفاءة وجودة عالية من خلال التقنيات الحديثة والخدمات الرقمية.",
+        whatWeOfferTitle: "ماذا نقدم؟",
+        offerings: {
+          management: "إدارة المشاريع الهندسية.",
+          communication: "التواصل بين أصحاب المشاريع والمهندسين.",
+          fileSharing: "مشاركة الملفات والمخططات الهندسية.",
+          executionTracking: "متابعة مراحل التنفيذ.",
+          contractsManagement: "إدارة الطلبات والعقود الفنية.",
+          professionalProfiles: "بناء ملفات تعريف مهنية للمهندسين والمكاتب الهندسية."
+        }
+      }
     },
     common: {
       loading: "جاري التحميل...",
@@ -962,7 +981,26 @@ export const translations = {
       complaints: "Complaints & Suggestions",
       technicalSupport: "Technical Support",
       contactUs: "Contact Us",
-      rightsReserved: "Bytly - Integrated Engineering Ecosystem. All Rights Reserved."
+      rightsReserved: "Bytly - Integrated Engineering Ecosystem. All Rights Reserved.",
+      about: "About Us",
+      aboutPage: {
+        title: "About Us",
+        subtitle: "Projects, file and blueprint sharing, and team communication — easily and securely.",
+        cta: "Start Your Project Now",
+        whoWeAreTitle: "Who We Are",
+        whoWeAreText: "Bytly is a specialized digital engineering platform aimed at facilitating the management and execution of engineering and real estate projects by bringing together project owners, engineers, designers, and consultants in a unified work environment.",
+        visionTitle: "Our Vision",
+        visionText: "Building an integrated digital engineering ecosystem that helps individuals and companies execute their projects efficiently and with high quality through modern technologies and digital services.",
+        whatWeOfferTitle: "What We Offer",
+        offerings: {
+          management: "Engineering project management.",
+          communication: "Communication between project owners and engineers.",
+          fileSharing: "Sharing engineering files and blueprints.",
+          executionTracking: "Tracking execution phases.",
+          contractsManagement: "Managing requests and technical contracts.",
+          professionalProfiles: "Building professional profiles for engineers and engineering firms."
+        }
+      }
     },
     common: {
       loading: "Loading...",

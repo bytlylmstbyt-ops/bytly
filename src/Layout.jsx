@@ -400,6 +400,7 @@ function LayoutContent({ children, currentPageName }) {
                   { to: createPageUrl("Engineers"), label: t('nav.engineers') },
                   { to: createPageUrl("Projects"), label: t('nav.projects') },
                   { to: createPageUrl("Gallery"), label: t('nav.gallery') },
+                  { to: createPageUrl("About"), label: t('footer.about') },
                 ].map(({ to, label }) => (
                   <li key={to}>
                     <Link to={to} className="flex items-center hover:text-[#C9A66B] transition-colors" style={{ minHeight: 44 }}>{label}</Link>
