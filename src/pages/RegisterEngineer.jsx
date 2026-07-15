@@ -6,8 +6,9 @@ import { motion } from "framer-motion";
 import { 
   User, Mail, Phone, MapPin, Briefcase, Award,
   Upload, FileText, ArrowLeft, ArrowRight, CheckCircle,
-  Building2, PenTool, Palette, Loader2, Gift
+  Building2, PenTool, Palette, Loader2, Gift, Images, Plus
 } from "lucide-react";
+import PortfolioStep from "@/components/registration/PortfolioStep";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,6 +36,7 @@ export default function RegisterEngineer() {
     remaining: 0,
     registeredCount: 0
   });
+  const [portfolioItems, setPortfolioItems] = useState([]);
 
   // Load Google user info if available
   useEffect(() => {
@@ -89,7 +91,8 @@ export default function RegisterEngineer() {
     years_experience: "",
     graduation_certificate_url: "",
     saudi_engineers_council_certificate_url: "",
-    profile_image: ""
+    profile_image: "",
+    completed_projects: ""
   });
 
   const specializations = userType === "painter"
@@ -246,20 +249,34 @@ export default function RegisterEngineer() {
       const trialEnd = new Date();
       trialEnd.setMonth(trialEnd.getMonth() + 3);
 
-      await withTimeout(base44.entities.Engineer.create({
+      const engineer = await withTimeout(base44.entities.Engineer.create({
         ...formData,
         years_experience: parseInt(formData.years_experience) || 0,
+        completed_projects: parseInt(formData.completed_projects) || 0,
         status: "pending",
         is_verified: false,
         rating: 0,
         total_reviews: 0,
-        completed_projects: 0,
         wallet_balance: 0,
         subscription_type: isFreeEligible ? "free_trial" : "none",
         is_subscription_active: isFreeEligible,
         subscription_start_date: isFreeEligible ? today.toISOString().split("T")[0] : undefined,
         trial_end_date: isFreeEligible ? trialEnd.toISOString().split("T")[0] : undefined
       }), 30000);
+
+      // إنشاء عناصر البرتفوليو (الأعمال السابقة)
+      if (portfolioItems.length > 0) {
+        await Promise.all(
+          portfolioItems
+            .filter(item => item.title || item.images.length > 0)
+            .map(item => base44.entities.Portfolio.create({
+              engineer_id: engineer.id,
+              title: item.title || "عمل سابق",
+              description: item.description || "",
+              images: item.images
+            }))
+        );
+      }
 
       base44.analytics.track({
         eventName: "engineer_profile_created",
@@ -387,7 +404,7 @@ export default function RegisterEngineer() {
 
         {/* Progress Steps */}
         <div className="flex justify-center items-center gap-4 mb-8">
-          {[1, 2, 3].map((s) => (
+          {[1, 2, 3, 4].map((s) => (
             <div key={s} className="flex items-center">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
                 step >= s 
@@ -396,7 +413,7 @@ export default function RegisterEngineer() {
               }`}>
                 {step > s ? <CheckCircle className="w-5 h-5" /> : s}
               </div>
-              {s < 3 && (
+              {s < 4 && (
                 <div className={`w-16 h-1 mx-2 rounded ${
                   step > s ? "bg-gradient-to-r from-[#1a1a2e] to-[#d4a574]" : "bg-slate-200"
                 }`} />
@@ -412,6 +429,7 @@ export default function RegisterEngineer() {
               {step === 1 && "المعلومات الأساسية"}
               {step === 2 && "التخصص والموقع"}
               {step === 3 && "الوثائق والاعتماد"}
+              {step === 4 && "الأعمال السابقة"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -534,6 +552,21 @@ export default function RegisterEngineer() {
                     />
                   </div>
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="completed_projects">عدد المشاريع المنجزة</Label>
+                  <div className="relative">
+                    <Briefcase className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <Input
+                      id="completed_projects"
+                      type="number"
+                      value={formData.completed_projects}
+                      onChange={(e) => handleInputChange("completed_projects", e.target.value)}
+                      className="pr-10"
+                      placeholder="عدد المشاريع التي أنجزتها في مسيرتك"
+                    />
+                  </div>
+                </div>
               </motion.div>
             )}
 
@@ -649,6 +682,16 @@ export default function RegisterEngineer() {
               </motion.div>
             )}
 
+            {/* Step 4 — الأعمال السابقة */}
+            {step === 4 && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+              >
+                <PortfolioStep portfolioItems={portfolioItems} setPortfolioItems={setPortfolioItems} />
+              </motion.div>
+            )}
+
             {/* Navigation Buttons */}
             <div className="flex justify-between pt-6">
               {step > 1 ? (
@@ -664,7 +707,7 @@ export default function RegisterEngineer() {
                 <div />
               )}
 
-              {step < 3 ? (
+              {step < 4 ? (
                 <Button
                   onClick={() => setStep(step + 1)}
                   disabled={
