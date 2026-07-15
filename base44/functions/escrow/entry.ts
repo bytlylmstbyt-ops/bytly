@@ -384,6 +384,42 @@ Deno.serve(async (req) => {
             body: emailBody
           });
 
+          // ── Send invoice copy to client's email via Gmail (reliable delivery) ──
+          try {
+            await sendGmail(
+              base44,
+              user.email,
+              `📄 نسخة فاتورتك الضريبية - ${invoice.invoice_number}`,
+              emailBody
+            );
+            // Log the sent email for tracking
+            await base44.asServiceRole.entities.SentEmail.create({
+              to_email: user.email,
+              subject: `📄 نسخة فاتورتك الضريبية - ${invoice.invoice_number}`,
+              body: emailBody,
+              source: 'escrow_release_auto_invoice',
+              sent_at: new Date().toISOString(),
+              status: 'sent',
+              description: `فاتورة ضريبية تلقائية (${invoice.invoice_number}) أُرسلت للعميل عند إتمام المشروع "${project.title}".`
+            });
+          } catch (gmailErr) {
+            console.error('Failed to send invoice via Gmail to client:', gmailErr);
+            // Log failure
+            try {
+              await base44.asServiceRole.entities.SentEmail.create({
+                to_email: user.email,
+                subject: `📄 نسخة فاتورتك الضريبية - ${invoice.invoice_number}`,
+                body: emailBody,
+                source: 'escrow_release_auto_invoice',
+                sent_at: new Date().toISOString(),
+                status: 'failed',
+                description: `فشل إرسال الفاتورة الضريبية (${invoice.invoice_number}) للعميل عند إتمام المشروع "${project.title}".`
+              });
+            } catch (logErr) {
+              console.error('Failed to log email send failure:', logErr);
+            }
+          }
+
           // ── Send invoice copy to admin's personal email via Gmail ──
           try {
             const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
