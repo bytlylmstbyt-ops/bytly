@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { AdSidebarSection } from "@/components/ads/SmartAdCard";
 import { useAds } from "@/hooks/useAds";
+import ProjectScheduleCalendar from "@/components/engineers/ProjectScheduleCalendar";
 
 export default function EngineerDashboard() {
   const { ads: dashboardAds } = useAds({ placement: "engineer_dashboard", tags: ["مدني", "هندسة", "مقاولات"], maxAds: 2 });
@@ -303,6 +304,11 @@ export default function EngineerDashboard() {
               </CardContent>
             </Card>
           </Link>
+        </div>
+
+        {/* Project Schedule Calendar — تقويم مشاريع المهندس */}
+        <div className="mb-8">
+          <ProjectScheduleCalendar engineerId={engineer.id} />
         </div>
 
         {/* Visual Summary Section - Proposals & Requests */}
