@@ -12,14 +12,14 @@ Deno.serve(async (req) => {
       'price_1TbQh4B6BI8uC0Au89E4VzRL', // Basic 99
       'price_1TbQh4B6BI8uC0AupdL39tcG', // Pro 249
       'price_1TbQh4B6BI8uC0Au7VTp4rPf', // Enterprise 599
-      // Contractor plans
-      'price_1TtaFNB6BI8uC0AuD9yKVwfh', // Contractor Basic 99
-      'price_1TtaFNB6BI8uC0AuHlGTlvid', // Contractor Pro 249
-      'price_1TtaFNB6BI8uC0AuW1e0uVSd', // Contractor Enterprise 599
-      // Supplier plans
-      'price_1TtaFNB6BI8uC0AuWLlqYmrM', // Supplier Basic 99
-      'price_1TtaFNB6BI8uC0AuUeUgEkLw', // Supplier Pro 249
-      'price_1TtaFNB6BI8uC0AuGqIWvrER', // Supplier Enterprise 599
+      // Contractor plans (SAR)
+      'price_1TtaI3B6BI8uC0AupOhXOnac', // Contractor Basic 99 SAR
+      'price_1TtaI4B6BI8uC0AuEky91mYl', // Contractor Pro 249 SAR
+      'price_1TtaI4B6BI8uC0Au3YdkJTlY', // Contractor Enterprise 599 SAR
+      // Supplier plans (SAR)
+      'price_1TtaI4B6BI8uC0Au133PiiYo', // Supplier Basic 99 SAR
+      'price_1TtaI4B6BI8uC0AuyidDyMj9', // Supplier Pro 249 SAR
+      'price_1TtaI4B6BI8uC0Auf8LmiGct', // Supplier Enterprise 599 SAR
     ];
 
     const { price_id, plan_name, provider_type } = await req.json();
