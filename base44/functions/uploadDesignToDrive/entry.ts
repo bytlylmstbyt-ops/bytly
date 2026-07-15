@@ -123,6 +123,8 @@ async function getOrCreateRootFolder(base44, accessToken) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const isAuthenticated = await base44.auth.isAuthenticated();
+    if (!isAuthenticated) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
 
     const { entity_name, entity_id, event_type, data, old_data } = body;
