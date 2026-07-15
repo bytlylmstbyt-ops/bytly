@@ -197,6 +197,11 @@ function LayoutContent({ children, currentPageName }) {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <Link to="/ContractorDashboard" className="flex items-center gap-2 cursor-pointer">
+                      🏗️ المقاولون
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/SurveyorGigs" className="flex items-center gap-2 cursor-pointer">
                       🗺️ {t('nav.surveyorBoard')}
                     </Link>
@@ -342,6 +347,7 @@ function LayoutContent({ children, currentPageName }) {
                 { to: createPageUrl("DesignMarketplace"), label: `🎨 ${t('nav.designMarketplace')}` },
                 { to: "/AIEngineers", label: `🤖 ${t('nav.bytlyAI')}` },
                                 { to: "/SurveyClientDashboard", label: `📍 ${t('nav.surveying')}` },
+                                { to: "/ContractorDashboard", label: `🏗️ المقاولون` },
                                 { to: "/SurveyorGigs", label: `🗺️ ${t('nav.surveyorBoard')}` },
                                 ].map(({ to, label }) => (
                                 <Link
