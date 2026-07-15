@@ -10,9 +10,22 @@
       "type": "string",
       "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0639\u0645\u064a\u0644"
     },
+    "provider_type": {
+      "type": "string",
+      "enum": [
+        "engineer",
+        "contractor"
+      ],
+      "default": "engineer",
+      "description": "\u0646\u0648\u0639 \u0645\u0642\u062f\u0645 \u0627\u0644\u062e\u062f\u0645\u0629: \u0645\u0647\u0646\u062f\u0633 \u0623\u0648 \u0645\u0642\u0627\u0648\u0644"
+    },
     "engineer_id": {
       "type": "string",
       "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0647\u0646\u062f\u0633"
+    },
+    "contractor_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0642\u0627\u0648\u0644"
     },
     "contract_type": {
       "type": "string",
@@ -28,7 +41,7 @@
     },
     "service_description": {
       "type": "string",
-      "description": "\u0648\u0635\u0641 \u0627\u0644\u062e\u062f\u0645\u0629"
+      "description": "\u0648\u0635\u0641 \u0627\u0644\u062e\u062f\u0645\u0629 \u2014 \u064a\u062d\u062a\u0648\u064a \u0639\u0644\u0649 \u0646\u0635 \u0627\u0644\u0639\u0642\u062f \u0627\u0644\u0643\u0627\u0645\u0644"
     },
     "total_amount": {
       "type": "number",
@@ -74,7 +87,7 @@
     "engineer_signature": {
       "type": "boolean",
       "default": false,
-      "description": "\u062a\u0648\u0642\u064a\u0639 \u0627\u0644\u0645\u0647\u0646\u062f\u0633"
+      "description": "\u062a\u0648\u0642\u064a\u0639 \u0627\u0644\u0645\u0647\u0646\u062f\u0633 / \u0645\u0642\u062f\u0645 \u0627\u0644\u062e\u062f\u0645\u0629"
     },
     "client_signature_date": {
       "type": "string",
@@ -84,7 +97,7 @@
     "engineer_signature_date": {
       "type": "string",
       "format": "date-time",
-      "description": "\u062a\u0627\u0631\u064a\u062e \u062a\u0648\u0642\u064a\u0639 \u0627\u0644\u0645\u0647\u0646\u062f\u0633"
+      "description": "\u062a\u0627\u0631\u064a\u062e \u062a\u0648\u0642\u064a\u0639 \u0645\u0642\u062f\u0645 \u0627\u0644\u062e\u062f\u0645\u0629"
     },
     "client_signature_ip": {
       "type": "string",
@@ -92,7 +105,7 @@
     },
     "engineer_signature_ip": {
       "type": "string",
-      "description": "IP \u062a\u0648\u0642\u064a\u0639 \u0627\u0644\u0645\u0647\u0646\u062f\u0633 \u0644\u0644\u062a\u0648\u062b\u064a\u0642"
+      "description": "IP \u062a\u0648\u0642\u064a\u0639 \u0645\u0642\u062f\u0645 \u0627\u0644\u062e\u062f\u0645\u0629 \u0644\u0644\u062a\u0648\u062b\u064a\u0642"
     },
     "contract_pdf_url": {
       "type": "string",
@@ -139,7 +152,7 @@
   "required": [
     "project_id",
     "client_id",
-    "engineer_id",
+    "provider_type",
     "contract_type",
     "total_amount"
   ],
@@ -159,6 +172,9 @@
           "data.engineer_id": "{{user.id}}"
         },
         {
+          "data.contractor_id": "{{user.id}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -175,6 +191,9 @@
         },
         {
           "data.engineer_id": "{{user.id}}"
+        },
+        {
+          "data.contractor_id": "{{user.id}}"
         },
         {
           "user_condition": {
