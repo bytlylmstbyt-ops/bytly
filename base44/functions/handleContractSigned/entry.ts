@@ -175,9 +175,26 @@ Deno.serve(async (req) => {
         `
       });
 
+      // ── حفظ نسخة احتياطية من العقد الموقع في Google Drive (مجلد المشروع) ──
+      try {
+        await base44.asServiceRole.functions.invoke('backupContractToDrive', {
+          contractId: contract.id,
+          contractNumber: contract.contract_number,
+          projectTitle: project.title,
+          projectId: project.id,
+          contractType: contract.contract_type,
+          status: contract.status,
+          signedDate: contract.client_signature_date || contract.engineer_signature_date || new Date().toISOString(),
+          fileUrl: contract.contract_pdf_url,
+        });
+        console.log('Contract backed up to Drive for project:', project.title);
+      } catch (backupErr) {
+        console.error('Drive backup failed (non-blocking):', backupErr.message);
+      }
+
       return Response.json({ 
         success: true,
-        message: 'Contract fully signed, project updated to in_progress'
+        message: 'Contract fully signed, project updated to in_progress, backed up to Drive'
       });
     }
 
