@@ -224,23 +224,129 @@ Deno.serve(async (req) => {
         description: `عمولة منصة — ${project.title}`, project_id
       });
 
+      // ── Auto-generate project completion invoice ──────────────────────
+      // Checks for existing invoice to avoid duplicates
+      const existingInvoice = await base44.asServiceRole.entities.Invoice.filter({
+        project_id: project.id,
+        invoice_type: 'project_milestone'
+      });
+
+      let invoice = null;
+      if (existingInvoice.length === 0) {
+        const commissionRate = project.platform_commission || 15;
+        const taxRate = 0.15;
+        const taxAmount = Math.round(escrowAmount * taxRate * 100) / 100;
+        const totalAmount = Math.round((escrowAmount + taxAmount) * 100) / 100;
+
+        const issueDate = new Date().toISOString().split('T')[0];
+        const dueDateObj = new Date();
+        dueDateObj.setDate(dueDateObj.getDate() + 7);
+        const dueDate = dueDateObj.toISOString().split('T')[0];
+
+        const invoiceNumber = `INV-PRJ-${Date.now().toString().slice(-8)}`;
+
+        invoice = await base44.asServiceRole.entities.Invoice.create({
+          invoice_number: invoiceNumber,
+          client_id: project.client_id,
+          client_email: user.email,
+          project_id: project.id,
+          invoice_type: 'project_milestone',
+          amount: escrowAmount,
+          tax_amount: taxAmount,
+          total_amount: totalAmount,
+          paid_amount: totalAmount,
+          status: 'paid',
+          issue_date: issueDate,
+          due_date: dueDate,
+          payment_date: new Date().toISOString(),
+          payment_method: 'stripe',
+          payment_terms: 0,
+          notes: `فاتورة إتمام مشروع: "${project.title}". المبلغ الإجمالي: ${escrowAmount.toLocaleString('ar-SA')} ريال. عمولة المنصة (${commissionRate}%): ${commission.toLocaleString('ar-SA')} ريال. صافي المبلغ للمهندس: ${engineerPayment.toLocaleString('ar-SA')} ريال. ضريبة القيمة المضافة (15%): ${taxAmount.toLocaleString('ar-SA')} ريال. الإجمالي شامل الضريبة: ${totalAmount.toLocaleString('ar-SA')} ريال.`
+        });
+
+        // PlatformRevenue record for the commission
+        await base44.asServiceRole.entities.PlatformRevenue.create({
+          transaction_id: invoice.id,
+          source_type: 'project_milestone',
+          project_id: project.id,
+          total_amount: escrowAmount,
+          commission_rate: commissionRate,
+          commission_amount: commission,
+          seller_email: engineer.email,
+          seller_earnings: engineerPayment,
+          status: 'collected',
+          payment_date: new Date().toISOString(),
+          stripe_payment_intent: project.escrow_status,
+          description: `عمولة منصة (${commissionRate}%) من مشروع مكتمل: "${project.title}". المبلغ الإجمالي: ${escrowAmount} ريال، صافي المهندس: ${engineerPayment} ريال.`
+        });
+      }
+
       // Notifications
       await Promise.all([
         base44.asServiceRole.entities.Notification.create({
           recipient_email: engineer.email,
           title: '🎉 تم تحرير مدفوعاتك!',
-          message: `وافق العميل على مشروع "${project.title}". تم إضافة ${engineerPayment.toLocaleString('ar-SA')} ريال لرصيدك.`,
+          message: `وافق العميل على مشروع "${project.title}". تم إضافة ${engineerPayment.toLocaleString('ar-SA')} ريال لرصيدك.${invoice ? ` رقم الفاتورة: ${invoice.invoice_number}` : ''}`,
           type: 'payment', related_project_id: project_id, priority: 'urgent'
         }),
         base44.asServiceRole.entities.Notification.create({
           recipient_email: user.email,
           title: '✅ تم إتمام المشروع وتحرير المبلغ',
-          message: `تم تحرير ${engineerPayment.toLocaleString('ar-SA')} ريال للمهندس. مشروع "${project.title}" مكتمل.`,
+          message: `تم تحرير ${engineerPayment.toLocaleString('ar-SA')} ريال للمهندس. مشروع "${project.title}" مكتمل.${invoice ? ` تم إصدار الفاتورة ${invoice.invoice_number} تلقائياً.` : ''}`,
           type: 'payment', related_project_id: project_id, priority: 'high'
-        })
+        }),
+        ...(invoice ? [base44.asServiceRole.entities.Notification.create({
+          recipient_email: engineer.email,
+          title: '📄 فاتورة إتمام المشروع',
+          message: `تم إصدار فاتورة ${invoice.invoice_number} للمشروع "${project.title}". المبلغ الإجمالي: ${escrowAmount.toLocaleString('ar-SA')} ريال، عمولة المنصة: ${commission.toLocaleString('ar-SA')} ريال، صافي أرباحك: ${engineerPayment.toLocaleString('ar-SA')} ريال.`,
+          type: 'payment', related_project_id: project_id, related_entity_id: invoice.id,
+          action_url: '/MyContracts', priority: 'medium'
+        })] : [])
       ]);
 
-      return Response.json({ success: true, engineer_payment: engineerPayment, commission });
+      // Send invoice email to both parties
+      if (invoice) {
+        try {
+          const emailBody = `
+            <div dir="rtl" style="font-family: Arial, sans-serif; max-width:600px; margin:0 auto;">
+              <div style="background:linear-gradient(135deg,#6B5D4F,#C9A66B); padding:24px; border-radius:12px 12px 0 0; text-align:center;">
+                <h1 style="color:white; margin:0; font-size:22px;">Bytly بيتلي</h1>
+                <p style="color:rgba(255,255,255,0.8); margin:8px 0 0;">فاتورة إتمام مشروع</p>
+              </div>
+              <div style="background:#f8f9fa; padding:24px; border-radius:0 0 12px 12px;">
+                <h2 style="color:#4A3F35;">${invoice.invoice_number}</h2>
+                <div style="background:white; border-right:4px solid #C9A66B; padding:16px; border-radius:8px; margin:16px 0;">
+                  <p><strong>المشروع:</strong> ${project.title}</p>
+                  <p><strong>تاريخ الإصدار:</strong> ${new Date().toLocaleDateString('ar-SA')}</p>
+                  <hr style="border:none; border-top:1px solid #e2e8f0; margin:12px 0;">
+                  <p><strong>المبلغ الإجمالي للمشروع:</strong> ${escrowAmount.toLocaleString('ar-SA')} ريال</p>
+                  <p><strong>عمولة المنصة (${project.platform_commission || 15}%):</strong> <span style="color:#ef4444;">- ${commission.toLocaleString('ar-SA')} ريال</span></p>
+                  <p><strong>صافي أرباح المهندس:</strong> <span style="color:#22c55e;">${engineerPayment.toLocaleString('ar-SA')} ريال</span></p>
+                  <hr style="border:none; border-top:1px solid #e2e8f0; margin:12px 0;">
+                  <p><strong>ضريبة القيمة المضافة (15%):</strong> ${Math.round(escrowAmount * 0.15 * 100) / 100} ريال</p>
+                  <p style="font-size:16px;"><strong>الإجمالي شامل الضريبة:</strong> ${Math.round((escrowAmount + escrowAmount * 0.15) * 100) / 100} ريال</p>
+                </div>
+                <p style="color:#718096; font-size:14px;">تم سداد هذه الفاتورة بالكامل وتحرير المبلغ للمهندس.</p>
+              </div>
+              <p style="color:#999; font-size:12px; text-align:center; margin-top:16px;">منصة بيتلي - لمسة بيت</p>
+            </div>
+          `;
+          await base44.asServiceRole.integrations.Core.SendEmail({
+            to: engineer.email,
+            subject: `📄 فاتورة إتمام مشروع - ${invoice.invoice_number}`,
+            body: emailBody
+          });
+          await base44.asServiceRole.integrations.Core.SendEmail({
+            to: user.email,
+            subject: `📄 فاتورة إتمام مشروع - ${invoice.invoice_number}`,
+            body: emailBody
+          });
+        } catch (emailErr) {
+          console.error('Failed to send invoice email:', emailErr);
+        }
+      }
+
+      return Response.json({ success: true, engineer_payment: engineerPayment, commission, invoice_id: invoice?.id, invoice_number: invoice?.invoice_number });
     }
 
     // ══════════════════════════════════════════════════════════
