@@ -230,6 +230,18 @@ export default function ProjectDetails() {
       });
     }
 
+    // Notify project owner (confirmation) — instant in-platform alert
+    await base44.entities.Notification.create({
+      recipient_email: user.email,
+      title: "✅ تم قبول العرض بنجاح",
+      message: `تم قبول عرض ${engineer?.full_name || 'المهندس'} على مشروع "${project.title}" بقيمة ${proposal.price} ريال. سيتم توجيهك لإتمام الدفع.`,
+      type: "approval",
+      related_project_id: projectId,
+      related_entity_id: proposal.id,
+      action_url: `/ProjectDetails?id=${projectId}`,
+      priority: "high"
+    });
+
     // Redirect to payment page
     window.location.href = createPageUrl("Payment") + `?project=${projectId}&proposal=${proposal.id}`;
   };
