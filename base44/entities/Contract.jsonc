@@ -184,21 +184,37 @@
     "update": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.client_id": "{{user.id}}"
-        },
-        {
-          "data.engineer_id": "{{user.id}}"
-        },
-        {
-          "data.contractor_id": "{{user.id}}"
-        },
-        {
           "user_condition": {
             "role": "admin"
           }
+        },
+        {
+          "$and": [
+            {
+              "$or": [
+                {
+                  "created_by": "{{user.email}}"
+                },
+                {
+                  "data.client_id": "{{user.id}}"
+                },
+                {
+                  "data.engineer_id": "{{user.id}}"
+                },
+                {
+                  "data.contractor_id": "{{user.id}}"
+                }
+              ]
+            },
+            {
+              "data.status": {
+                "$in": [
+                  "draft",
+                  "pending_signature"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
