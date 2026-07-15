@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
-import { Search, Grid3X3, Building2, Home, Store, Factory, Paintbrush, Trees, Layers, SlidersHorizontal, X } from "lucide-react";
+import { Search, Grid3X3, Building2, Home, Store, Factory, Paintbrush, Trees, Layers, SlidersHorizontal, X, Tag, Sparkles, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import PortfolioCard from "@/components/portfolio/PortfolioCard";
@@ -58,7 +58,7 @@ export default function Gallery() {
   const [selectedProjectType, setSelectedProjectType] = useState("all");
   const [selectedStyle, setSelectedStyle] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
-  const [showFilters, setShowFilters] = useState(false);
+  const [activeTag, setActiveTag] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -71,7 +71,6 @@ export default function Gallery() {
       base44.entities.Engineer.list("-created_date", 200),
     ]);
 
-    // Map engineers by id
     const engineerMap = {};
     engineerData.forEach(e => { engineerMap[e.id] = e.full_name; });
 
@@ -80,24 +79,44 @@ export default function Gallery() {
     setIsLoading(false);
   };
 
+  // Collect all unique tags across portfolios
+  const allTags = useMemo(() => {
+    const tagSet = new Set();
+    portfolios.forEach(p => {
+      if (p.style) tagSet.add(p.style);
+      (p.tags || []).forEach(t => tagSet.add(t));
+    });
+    return Array.from(tagSet).slice(0, 20);
+  }, [portfolios]);
+
+  const handleTagClick = (tag) => {
+    setActiveTag(prev => prev === tag ? null : tag);
+  };
+
   const filteredPortfolios = portfolios
     .filter(p => {
       if (!p.images || p.images.length === 0) return false;
       if (selectedCategory !== "all" && p.category !== selectedCategory) return false;
       if (selectedProjectType !== "all" && p.project_type !== selectedProjectType) return false;
-      
+
+      // Tag filter
+      if (activeTag) {
+        const pTags = [...(p.style ? [p.style] : []), ...(p.tags || [])];
+        if (!pTags.includes(activeTag)) return false;
+      }
+
       // Smart style filtering
       if (selectedStyle !== "all") {
         const styleConfig = DESIGN_STYLES.find(s => s.value === selectedStyle);
         if (styleConfig) {
           const searchText = `${p.description || ''} ${p.title || ''} ${p.tags?.join(' ') || ''}`.toLowerCase();
-          const matchesStyle = styleConfig.keywords.some(keyword => 
+          const matchesStyle = styleConfig.keywords.some(keyword =>
             searchText.includes(keyword.toLowerCase())
           );
           if (!matchesStyle) return false;
         }
       }
-      
+
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         return (
@@ -115,7 +134,13 @@ export default function Gallery() {
       return new Date(b.created_date) - new Date(a.created_date);
     });
 
-  const activeFiltersCount = (selectedCategory !== "all" ? 1 : 0) + (selectedProjectType !== "all" ? 1 : 0) + (selectedStyle !== "all" ? 1 : 0);
+  // Split featured vs regular for display
+  const featuredPortfolios = filteredPortfolios.filter(p => p.is_featured).slice(0, 3);
+  const regularPortfolios = sortBy === "featured"
+    ? filteredPortfolios.slice(3)
+    : filteredPortfolios.filter(p => !p.is_featured || !featuredPortfolios.includes(p));
+
+  const activeFiltersCount = (selectedCategory !== "all" ? 1 : 0) + (selectedProjectType !== "all" ? 1 : 0) + (selectedStyle !== "all" ? 1 : 0) + (activeTag ? 1 : 0);
 
   const clearFilters = () => {
     setSelectedCategory("all");
@@ -123,18 +148,28 @@ export default function Gallery() {
     setSelectedStyle("all");
     setSearchQuery("");
     setSortBy("newest");
+    setActiveTag(null);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30" dir="rtl">
       {/* Hero Header */}
-      <div className="bg-gradient-to-br from-[#1a1a2e] via-[#2d2d4e] to-[#1a1a2e] py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bg-gradient-to-br from-[#1a1a2e] via-[#2d2d4e] to-[#1a1a2e] py-16 relative overflow-hidden">
+        {/* Decorative background blobs */}
+        <div className="absolute top-0 left-1/4 w-64 h-64 bg-[#C9A66B]/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-[#6B5D4F]/10 rounded-full blur-3xl" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-6">
+              <Sparkles className="w-4 h-4 text-[#C9A66B]" />
+              <span className="text-amber-200 text-sm font-medium">أعمال إبداعية من نخبة المصممين</span>
+            </div>
+
             <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">
               معرض الأعمال الهندسية
             </h1>
@@ -201,6 +236,44 @@ export default function Gallery() {
             </button>
           ))}
         </div>
+
+        {/* Quick Tags Filter */}
+        {allTags.length > 0 && (
+          <div className="mb-6 bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+            <div className="flex items-center gap-2 mb-3">
+              <Tag className="w-4 h-4 text-[#C9A66B]" />
+              <span className="text-sm font-semibold text-slate-700">وسوم سريعة</span>
+              {activeTag && (
+                <button
+                  onClick={() => setActiveTag(null)}
+                  className="mr-auto text-xs text-red-500 hover:text-red-600 flex items-center gap-1"
+                >
+                  <X className="w-3 h-3" />
+                  إزالة الوسم
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {allTags.map(tag => {
+                const isActive = activeTag === tag;
+                return (
+                  <button
+                    key={tag}
+                    onClick={() => handleTagClick(tag)}
+                    className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-full border transition-all ${
+                      isActive
+                        ? "bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white border-transparent shadow-md scale-105"
+                        : "bg-amber-50/50 text-[#6B5D4F] border-amber-100 hover:bg-amber-100/60 hover:border-amber-200"
+                    }`}
+                  >
+                    <Tag className="w-2.5 h-2.5" />
+                    {tag}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Filters Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6 bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
@@ -278,8 +351,41 @@ export default function Gallery() {
           <p className="text-slate-500 text-sm">
             عرض <span className="font-semibold text-[#1a1a2e]">{filteredPortfolios.length}</span> مشروع
             {searchQuery && <span> لـ "<span className="text-[#C9A66B]">{searchQuery}</span>"</span>}
+            {activeTag && <span> بوسم <span className="text-[#C9A66B]">«{activeTag}»</span></span>}
           </p>
         </div>
+
+        {/* Featured Section */}
+        {!isLoading && featuredPortfolios.length > 0 && !activeTag && (
+          <div className="mb-10">
+            <div className="flex items-center gap-2 mb-5">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#C9A66B] to-[#6B5D4F] flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-[#1a1a2e]">أعمال مميزة</h2>
+                <p className="text-xs text-slate-400">مختارة بعناية من نخبة المشاريع</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredPortfolios.map((portfolio, index) => (
+                <motion.div
+                  key={portfolio.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(index * 0.08, 0.4) }}
+                >
+                  <PortfolioCard
+                    portfolio={portfolio}
+                    engineerName={engineers[portfolio.engineer_id]}
+                    onTagClick={handleTagClick}
+                    activeTag={activeTag}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Gallery Grid */}
         {isLoading ? (
@@ -295,23 +401,33 @@ export default function Gallery() {
               </div>
             ))}
           </div>
-        ) : filteredPortfolios.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPortfolios.map((portfolio, index) => (
-              <motion.div
-                key={portfolio.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(index * 0.05, 0.5) }}
-              >
-                <PortfolioCard
-                  portfolio={portfolio}
-                  engineerName={engineers[portfolio.engineer_id]}
-                />
-              </motion.div>
-            ))}
-          </div>
-        ) : (
+        ) : regularPortfolios.length > 0 ? (
+          <>
+            {featuredPortfolios.length > 0 && !activeTag && (
+              <div className="flex items-center gap-2 mb-5">
+                <Filter className="w-4 h-4 text-slate-400" />
+                <h2 className="text-lg font-bold text-[#1a1a2e]">جميع الأعمال</h2>
+              </div>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {regularPortfolios.map((portfolio, index) => (
+                <motion.div
+                  key={portfolio.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: Math.min(index * 0.05, 0.5) }}
+                >
+                  <PortfolioCard
+                    portfolio={portfolio}
+                    engineerName={engineers[portfolio.engineer_id]}
+                    onTagClick={handleTagClick}
+                    activeTag={activeTag}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </>
+        ) : filteredPortfolios.length === 0 ? (
           <div className="text-center py-20">
             <div className="w-24 h-24 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
               <Grid3X3 className="w-10 h-10 text-slate-300" />
@@ -322,7 +438,7 @@ export default function Gallery() {
               مسح جميع الفلاتر
             </Button>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

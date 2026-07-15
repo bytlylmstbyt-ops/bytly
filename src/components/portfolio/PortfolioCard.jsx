@@ -1,9 +1,8 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, MapPin, Calendar, DollarSign, Eye, MessageSquare, CheckCircle, X, Maximize2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Calendar, Eye, MessageSquare, CheckCircle, X, Maximize2, Tag, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import EnhancedLightbox from "@/components/portfolio/EnhancedLightbox";
 
 const categoryLabels = {
@@ -18,6 +17,18 @@ const categoryLabels = {
   executive_drawing: "رسم تنفيذي",
 };
 
+const categoryColors = {
+  interior: "from-rose-500 to-pink-600",
+  architecture: "from-blue-500 to-indigo-600",
+  painting: "from-purple-500 to-violet-600",
+  landscape: "from-green-500 to-emerald-600",
+  furniture: "from-amber-500 to-orange-600",
+  lighting: "from-yellow-500 to-amber-600",
+  civil_engineering: "from-slate-500 to-gray-700",
+  structural_design: "from-cyan-500 to-blue-700",
+  executive_drawing: "from-teal-500 to-cyan-700",
+};
+
 const projectTypeLabels = {
   residential: "سكني",
   commercial: "تجاري",
@@ -28,11 +39,13 @@ const projectTypeLabels = {
   other: "أخرى",
 };
 
-export default function PortfolioCard({ portfolio, engineerName }) {
+export default function PortfolioCard({ portfolio, engineerName, onTagClick, activeTag }) {
   const [currentImage, setCurrentImage] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const images = portfolio.images || [];
+  const tags = portfolio.tags || [];
+  const styleLabel = portfolio.style ? portfolio.style : null;
 
   const touchRef = useRef({ startX: 0, startY: 0, moved: false });
 
@@ -57,7 +70,6 @@ export default function PortfolioCard({ portfolio, engineerName }) {
     const dx = t.clientX - touchRef.current.startX;
     const dy = t.clientY - touchRef.current.startY;
     if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
-      // RTL: swipe left = next, right = prev
       if (dx < 0) setCurrentImage((p) => (p + 1) % images.length);
       else setCurrentImage((p) => (p - 1 + images.length) % images.length);
     }
@@ -69,16 +81,21 @@ export default function PortfolioCard({ portfolio, engineerName }) {
 
   if (images.length === 0) return null;
 
+  const gradient = categoryColors[portfolio.category] || "from-[#6B5D4F] to-[#C9A66B]";
+
+  // Collect quick tags: style + tags array (max 4)
+  const quickTags = [...(styleLabel ? [styleLabel] : []), ...tags].slice(0, 4);
+
   return (
     <>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 group"
+        className="bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 group relative"
       >
-        {/* Image Slider — swipeable on mobile */}
+        {/* Image Slider */}
         <div
-          className="relative h-64 overflow-hidden bg-slate-100 cursor-pointer"
+          className="relative h-72 overflow-hidden bg-slate-100 cursor-pointer"
           onClick={() => setShowLightbox(true)}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
@@ -87,18 +104,32 @@ export default function PortfolioCard({ portfolio, engineerName }) {
           <AnimatePresence mode="wait">
             <motion.img
               key={currentImage}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, scale: 1.05 }}
+              animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
+              transition={{ duration: 0.35 }}
               src={images[currentImage]}
               alt={portfolio.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               draggable={false}
             />
           </AnimatePresence>
 
-          {/* Nav arrows — always visible on touch, hover on desktop */}
+          {/* Gradient overlay for better text readability on hover */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0 opacity-60 group-hover:opacity-90 transition-opacity duration-300" />
+
+          {/* Hover overlay with title */}
+          <div className="absolute bottom-0 right-0 left-0 p-4 translate-y-2 group-hover:translate-y-0 opacity-80 group-hover:opacity-100 transition-all duration-300">
+            <h3 className="font-bold text-lg text-white mb-1 drop-shadow-lg">{portfolio.title}</h3>
+            {engineerName && (
+              <div className="flex items-center gap-1.5 text-white/80 text-xs">
+                <User className="w-3 h-3" />
+                {engineerName}
+              </div>
+            )}
+          </div>
+
+          {/* Nav arrows */}
           {images.length > 1 && (
             <>
               <button
@@ -143,16 +174,16 @@ export default function PortfolioCard({ portfolio, engineerName }) {
             <Maximize2 className="w-3.5 h-3.5" />
           </div>
 
-          {/* Category badge */}
+          {/* Category badge with gradient */}
           {portfolio.category && (
-            <div className="absolute top-11 right-3 px-2.5 py-1 rounded-full bg-amber-500/90 text-white text-xs font-medium">
+            <div className={`absolute top-11 right-3 px-3 py-1 rounded-full bg-gradient-to-r ${gradient} text-white text-xs font-bold shadow-lg`}>
               {categoryLabels[portfolio.category] || portfolio.category}
             </div>
           )}
 
           {/* Featured badge */}
           {portfolio.is_featured && (
-            <div className="absolute top-[4.75rem] right-3 px-2.5 py-1 rounded-full bg-[#6B5D4F]/90 text-white text-xs font-medium flex items-center gap-1">
+            <div className="absolute top-[4.75rem] right-3 px-2.5 py-1 rounded-full bg-[#6B5D4F]/90 text-white text-xs font-medium flex items-center gap-1 shadow-lg">
               <CheckCircle className="w-3 h-3" />
               مميز
             </div>
@@ -161,10 +192,35 @@ export default function PortfolioCard({ portfolio, engineerName }) {
 
         {/* Content */}
         <div className="p-5">
-          <h3 className="font-bold text-lg text-[#1a1a2e] mb-1 line-clamp-1">{portfolio.title}</h3>
-
+          {/* Description */}
           {portfolio.description && (
             <p className="text-slate-500 text-sm mb-3 line-clamp-2">{portfolio.description}</p>
+          )}
+
+          {/* Quick Tags */}
+          {quickTags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {quickTags.map((tag, i) => {
+                const isActive = activeTag === tag;
+                return (
+                  <button
+                    key={i}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onTagClick?.(tag);
+                    }}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full border transition-all ${
+                      isActive
+                        ? "bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white border-transparent shadow-md"
+                        : "bg-amber-50/50 text-[#6B5D4F] border-amber-100 hover:bg-amber-100/60 hover:border-amber-200"
+                    }`}
+                  >
+                    <Tag className="w-2.5 h-2.5" />
+                    {tag}
+                  </button>
+                );
+              })}
+            </div>
           )}
 
           {/* Metadata */}
@@ -186,17 +242,7 @@ export default function PortfolioCard({ portfolio, engineerName }) {
                 {portfolio.year}
               </span>
             )}
-            {portfolio.budget && (
-              <span className="flex items-center gap-1 px-2.5 py-1 bg-green-50 text-green-700 text-xs rounded-full border border-green-100">
-                <DollarSign className="w-3 h-3" />
-                {portfolio.budget.toLocaleString()} ر.س
-              </span>
-            )}
           </div>
-
-          {engineerName && (
-            <p className="text-xs text-slate-400 mb-3">المصمم: {engineerName}</p>
-          )}
 
           {/* Actions */}
           <div className="flex gap-2">
@@ -219,7 +265,7 @@ export default function PortfolioCard({ portfolio, engineerName }) {
         </div>
       </motion.div>
 
-      {/* Enhanced Lightbox with pinch-zoom */}
+      {/* Enhanced Lightbox */}
       <AnimatePresence>
         {showLightbox && (
           <EnhancedLightbox
