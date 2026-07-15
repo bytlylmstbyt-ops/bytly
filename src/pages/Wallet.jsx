@@ -11,6 +11,8 @@ import InvestorFinancialView from "../components/wallet/InvestorFinancialView";
 import CommissionTracker from "../components/wallet/CommissionTracker";
 import DepositPanel from "../components/wallet/DepositPanel";
 import LiveWalletDashboard from "../components/wallet/LiveWalletDashboard";
+import WalletTransactionChart from "../components/wallet/WalletTransactionChart";
+import QuickWithdrawalButton from "../components/wallet/QuickWithdrawalButton";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -147,12 +149,17 @@ export default function WalletPage() {
               </div>
             )}
             </div>
-            <Link to={createPageUrl("WalletRecharge")}>
-              <Button className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
-                <Plus className="w-5 h-5 ml-2" />
-                {t('wallet.rechargeWallet')}
-              </Button>
-            </Link>
+            <div className="flex items-center gap-2">
+              {userType === "engineer" && (
+                <QuickWithdrawalButton engineer={userProfile} onSuccess={loadWalletData} />
+              )}
+              <Link to={createPageUrl("WalletRecharge")}>
+                <Button className="bg-gradient-to-r from-green-600 to-emerald-600 text-white">
+                  <Plus className="w-5 h-5 ml-2" />
+                  {t('wallet.rechargeWallet')}
+                </Button>
+              </Link>
+            </div>
           </div>
           <p className="text-slate-600">{t('wallet.subtitle')}</p>
         </motion.div>
@@ -165,6 +172,9 @@ export default function WalletPage() {
               userType="engineer"
               userEmail={user?.email}
             />
+            <div className="mt-6">
+              <WalletTransactionChart transactions={transactions} />
+            </div>
             <div className="mt-6 grid md:grid-cols-2 gap-6">
               <WithdrawalForm
                 engineer={userProfile}
@@ -181,24 +191,30 @@ export default function WalletPage() {
 
         {/* Client Wallet View */}
         {userType === "client" && (
-          <ClientWalletView
-            client={userProfile}
-            transactions={transactions}
-            projects={projects}
-            onRefresh={loadWalletData}
-            userEmail={user?.email}
-          />
+          <div className="space-y-6">
+            <WalletTransactionChart transactions={transactions} />
+            <ClientWalletView
+              client={userProfile}
+              transactions={transactions}
+              projects={projects}
+              onRefresh={loadWalletData}
+              userEmail={user?.email}
+            />
+          </div>
         )}
 
         {/* Investor Financial View */}
         {userType === "investor" && (
-          <InvestorFinancialView
-            client={userProfile}
-            transactions={transactions}
-            projects={projects}
-            onRefresh={loadWalletData}
-            userEmail={user?.email}
-          />
+          <div className="space-y-6">
+            <WalletTransactionChart transactions={transactions} />
+            <InvestorFinancialView
+              client={userProfile}
+              transactions={transactions}
+              projects={projects}
+              onRefresh={loadWalletData}
+              userEmail={user?.email}
+            />
+          </div>
         )}
 
         {/* Firm Wallet View */}
