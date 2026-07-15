@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Settings, BarChart3, Workflow, MessageSquare } from "lucide-react";
 import KanbanColumn from "@/components/kanban/KanbanColumn";
 import TaskDetailModal from "@/components/kanban/TaskDetailModal";
+import TaskActivityHistory from "@/components/project/TaskActivityHistory";
 
 const COLUMN_CONFIG = [
   { status: "todo", title: "للقيام به", color: "from-slate-50 to-slate-50" },
@@ -243,6 +244,11 @@ export default function ProjectKanban() {
             setSelectedTask(null);
           }}
         />
+
+        {/* Task Activity History — سجل شفاف للتعديلات */}
+        <div className="mt-8">
+          <TaskActivityHistory projectId={projectId} />
+        </div>
       </div>
     </div>
   );
