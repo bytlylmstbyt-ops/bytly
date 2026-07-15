@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { Bell, CheckCircle, Briefcase, DollarSign, MessageSquare, AlertCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "@/components/ui/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +23,10 @@ const TYPE_ICONS = {
   new_message: "💬",
   review: "📝",
   milestone: "🎯",
+  proposal: "📋",
+  contract: "📜",
+  project_status: "🏗️",
+  complaint: "⚠️",
   system: "🔔"
 };
 
@@ -29,26 +34,62 @@ export default function NotificationBell() {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const userEmailRef = useRef(null);
 
   useEffect(() => {
-    loadNotifications();
-    
-    const unsubscribe = base44.entities.Notification.subscribe((event) => {
-      if (event.type === "create") {
-        setNotifications((prev) => [event.data, ...prev].slice(0, 10));
-        setUnreadCount((prev) => prev + 1);
-      } else if (event.type === "update") {
-        setNotifications((prev) => prev.map((n) => n.id === event.id ? event.data : n));
-        if (event.data.is_read) {
-          setUnreadCount((prev) => Math.max(0, prev - 1));
-        }
-      } else if (event.type === "delete") {
-        setNotifications((prev) => prev.filter((n) => n.id !== event.id));
-      }
-    });
+    let unsubscribe = null;
 
-    return () => unsubscribe();
+    (async () => {
+      try {
+        const user = await base44.auth.me();
+        userEmailRef.current = user.email;
+        await loadNotifications();
+
+        // ── Realtime subscription: instant toast on new notification ──
+        unsubscribe = base44.entities.Notification.subscribe((event) => {
+          if (event.type === "create" && event.data) {
+            // Only show toast if this notification belongs to the current user
+            if (event.data.recipient_email === userEmailRef.current) {
+              showToastPopup(event.data);
+            }
+            setNotifications((prev) => [event.data, ...prev].slice(0, 10));
+            setUnreadCount((prev) => prev + 1);
+          } else if (event.type === "update") {
+            setNotifications((prev) => prev.map((n) => n.id === event.id ? event.data : n));
+            if (event.data.is_read) {
+              setUnreadCount((prev) => Math.max(0, prev - 1));
+            }
+          } else if (event.type === "delete") {
+            setNotifications((prev) => prev.filter((n) => n.id !== event.id));
+          }
+        });
+      } catch (e) {
+        console.error("NotificationBell init error:", e);
+      }
+    })();
+
+    return () => { if (unsubscribe) unsubscribe(); };
   }, []);
+
+  // ── Instant popup (toast) when a new notification arrives ──
+  const showToastPopup = (notif) => {
+    const icon = TYPE_ICONS[notif.type] || "🔔";
+    const actionUrl = notif.action_url || (notif.related_project_id ? `/ProjectDetails?id=${notif.related_project_id}` : null);
+
+    toast({
+      title: `${icon} ${notif.title || "إشعار جديد"}`,
+      description: notif.message || "",
+      duration: 6000,
+      action: actionUrl ? (
+        <Link
+          to={actionUrl}
+          className="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-[#C9A66B] px-3 text-xs font-medium text-white hover:bg-[#6B5D4F] transition-colors"
+        >
+          عرض
+        </Link>
+      ) : undefined,
+    });
+  };
 
   const loadNotifications = async () => {
     try {
