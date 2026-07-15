@@ -8,16 +8,19 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ShoppingBag, Eye, MessageSquare, CheckCircle, 
-  Clock, AlertCircle, Download, FileText, Loader2
+  Clock, AlertCircle, Download, FileText, Loader2, Star
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { sendNotification } from "@/components/notifications/NotificationHelper";
+import EngineerReviewForm from "@/components/reviews/EngineerReviewForm";
 
 export default function MyPurchasedProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState([]);
   const [engineers, setEngineers] = useState({});
   const [user, setUser] = useState(null);
+  const [clientId, setClientId] = useState(null);
+  const [reviewedProjects, setReviewedProjects] = useState({});
 
   useEffect(() => {
     loadData();
@@ -33,6 +36,7 @@ export default function MyPurchasedProjectsPage() {
       if (clients.length === 0) return;
 
       const clientId = clients[0].id;
+      setClientId(clientId);
 
       // Get all projects where client is the owner
       const allProjects = await base44.entities.Project.filter({ 
@@ -56,6 +60,19 @@ export default function MyPurchasedProjectsPage() {
         engMap[eng.id] = eng;
       });
       setEngineers(engMap);
+
+      // Check which completed projects already have reviews from this client
+      const completedIds = paidProjects
+        .filter(p => p.status === "completed")
+        .map(p => p.id);
+      if (completedIds.length > 0) {
+        const allReviews = await base44.entities.Review.filter({ client_id: clientId });
+        const reviewedMap = {};
+        allReviews.forEach(r => {
+          if (r.project_id) reviewedMap[r.project_id] = true;
+        });
+        setReviewedProjects(reviewedMap);
+      }
 
     } catch (error) {
       console.error("Error loading data:", error);
@@ -379,6 +396,33 @@ export default function MyPurchasedProjectsPage() {
                             <CheckCircle className="w-4 h-4 ml-2" />
                             تم الاستلام النهائي
                           </Button>
+                        )}
+
+                        {project.status === "completed" && engineer && !reviewedProjects[project.id] && (
+                          <EngineerReviewForm
+                            engineerId={engineer.id}
+                            engineerName={engineer.full_name}
+                            clientId={clientId || user.id}
+                            clientName={user.full_name || user.email}
+                            projectId={project.id}
+                            onSubmitted={() => {
+                              setReviewedProjects(prev => ({ ...prev, [project.id]: true }));
+                              loadData();
+                            }}
+                            trigger={
+                              <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white">
+                                <Star className="w-4 h-4 ml-2" />
+                                قيّم المهندس
+                              </Button>
+                            }
+                          />
+                        )}
+
+                        {project.status === "completed" && reviewedProjects[project.id] && (
+                          <Badge className="bg-green-100 text-green-700">
+                            <CheckCircle className="w-3 h-3 ml-1" />
+                            تم التقييم
+                          </Badge>
                         )}
                       </div>
                     </CardContent>

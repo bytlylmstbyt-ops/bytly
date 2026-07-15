@@ -53,7 +53,7 @@ const HIGHLIGHTS = [
   "محترف ودقيق"
 ];
 
-export default function EngineerReviewForm({ engineerId, engineerName, clientId, clientName, onSubmitted, trigger }) {
+export default function EngineerReviewForm({ engineerId, engineerName, clientId, clientName, projectId, onSubmitted, trigger }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [rating, setRating] = useState(0);
@@ -83,12 +83,15 @@ export default function EngineerReviewForm({ engineerId, engineerName, clientId,
     await base44.entities.Review.create({
       engineer_id: engineerId,
       client_id: clientId,
+      project_id: projectId,
+      target_type: 'engineer',
       rating,
       quality_rating: qualityRating || rating,
       communication_rating: communicationRating || rating,
       delivery_rating: deliveryRating || rating,
       comment: fullComment,
-      highlights: selectedHighlights
+      highlights: selectedHighlights,
+      status: 'completed'
     });
 
     const allReviews = await base44.entities.Review.filter({ engineer_id: engineerId });
