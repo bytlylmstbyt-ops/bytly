@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText, CheckCircle, Clock, AlertCircle, Search, Filter,
   Download, Eye, Plus, Loader2, Scale, Shield, Calendar,
-  DollarSign, User, Building2, ChevronDown, Printer, X
+  DollarSign, User, Building2, ChevronDown, Printer, X, Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,9 +112,9 @@ function ContractCard({ contract, project, client, engineer, currentUserEmail, o
             المهندس
           </div>
           {contract.client_signature && contract.engineer_signature && (
-            <div className="flex items-center gap-1 text-xs text-green-700 font-semibold">
-              <Shield className="w-3.5 h-3.5" />
-              موثّق بالكامل
+            <div className="flex items-center gap-1 text-xs text-green-700 font-semibold bg-green-50 px-2 py-1 rounded-full">
+              <Lock className="w-3 h-3" />
+              مقفل وموثّق
             </div>
           )}
         </div>

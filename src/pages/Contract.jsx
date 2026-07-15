@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { 
   FileText, Download, CheckCircle, AlertCircle, 
   Loader2, Calendar, DollarSign, User, Building2,
-  Scale, Shield, Clock, Send, Printer, PenLine
+  Scale, Shield, Clock, Send, Printer, PenLine, Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -169,6 +169,25 @@ export default function ContractPage() {
             )}
           </div>
         </div>
+
+        {/* Lock Banner */}
+        {contract && ["active", "signed", "completed"].includes(contract.status) && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl p-4 flex items-center gap-3 print:hidden"
+          >
+            <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center shrink-0">
+              <Lock className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="font-bold text-green-900">العقد مقفل وموثّق</p>
+              <p className="text-sm text-green-700">
+                تم توقيع العقد من كلا الطرفين وهو الآن مغلق لأي تعديلات لحماية حقوق الطرفين. لأي تعديل يرجى استخدام نظام التعديلات.
+              </p>
+            </div>
+          </motion.div>
+        )}
 
         {/* Contract Document */}
         <Card className="border-0 shadow-xl mb-8 print:shadow-none">
