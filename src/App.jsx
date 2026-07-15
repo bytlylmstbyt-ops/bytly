@@ -63,6 +63,8 @@ const RegisterContractor         = React.lazy(() => import('./pages/RegisterCont
 const ContractorDashboard        = React.lazy(() => import('./pages/ContractorDashboard'));
 const RegisterSupplier           = React.lazy(() => import('./pages/RegisterSupplier'));
 const SupplierDashboard          = React.lazy(() => import('./pages/SupplierDashboard'));
+const AdvertiseWithUs            = React.lazy(() => import('./pages/AdvertiseWithUs'));
+const AdvertiserPortal           = React.lazy(() => import('./pages/AdvertiserPortal'));
 
 // ── Page-level spinner fallback ───────────────────────────────────────────────
 function PageSpinner() {
@@ -146,6 +148,8 @@ const AuthenticatedApp = () => {
       <Route path="/About"                      element={lazyRoute(About, "About")} />
       <Route path="/RegisterContractor"         element={lazyRoute(RegisterContractor, "RegisterContractor")} />
       <Route path="/RegisterSupplier"           element={lazyRoute(RegisterSupplier, "RegisterSupplier")} />
+      <Route path="/AdvertiseWithUs"            element={lazyRoute(AdvertiseWithUs, "AdvertiseWithUs")} />
+      <Route path="/AdvertiserPortal"           element={lazyRoute(AdvertiserPortal, "AdvertiserPortal")} />
 
       {/* Public registration-related pages */}
       {Object.entries(Pages)
