@@ -6,6 +6,8 @@ const ROOT_FOLDER_STATE_KEY = 'googledrive_certificates_folder';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const isAuthenticated = await base44.auth.isAuthenticated();
+    if (!isAuthenticated) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     // Get Google Drive access token (shared connector — builder's account)
     const { accessToken } = await base44.asServiceRole.connectors.getConnection("googledrive");

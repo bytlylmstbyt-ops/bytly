@@ -8,6 +8,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.32';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
+    if (!user || user.role !== 'admin') return Response.json({ error: 'Forbidden — admin only' }, { status: 403 });
 
     // Get current date in Asia/Riyadh timezone
     const now = new Date();

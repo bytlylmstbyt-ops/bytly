@@ -10,12 +10,9 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
 
     // Admin-only: this is a scheduled/system function
-    const isScheduled = req.headers.get("x-base44-scheduled") === "true";
-    if (!isScheduled) {
-      const user = await base44.auth.me();
-      if (user?.role !== "admin") {
-        return Response.json({ error: "Forbidden" }, { status: 403 });
-      }
+    const user = await base44.auth.me();
+    if (!user || user.role !== "admin") {
+      return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const today = new Date();

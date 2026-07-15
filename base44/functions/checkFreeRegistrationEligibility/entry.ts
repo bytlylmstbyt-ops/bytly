@@ -5,6 +5,8 @@ const FREE_LIMIT = 100;
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const isAuthenticated = await base44.auth.isAuthenticated();
+    if (!isAuthenticated) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     // Count ALL engineers regardless of status (service role for full visibility)
     // during the beta/trial period to measure market size.

@@ -3,6 +3,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
 Deno.serve(async (req) => {
     try {
         const base44 = createClientFromRequest(req);
+        const isAuthenticated = await base44.auth.isAuthenticated();
+        if (!isAuthenticated) return Response.json({ error: 'Unauthorized' }, { status: 401 });
         const { name, email, phone, subject, message } = await req.json();
 
         if (!name || !email || !message) {
