@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import { 
   Palette, Building2, PenTool, Briefcase, 
-  ArrowLeft, CheckCircle, Star, Scale, MapPin
+  ArrowLeft, CheckCircle, Star, Scale, MapPin, HardHat
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -85,6 +85,15 @@ export default function RegisterChoice() {
       features: t('registerChoice.roles.legal.features'),
       color: "from-slate-600 to-gray-700",
       link: createPageUrl("RegisterLegalConsultant")
+    },
+    {
+      id: "contractor",
+      icon: HardHat,
+      title: "مقاول",
+      description: "سجّل كمقاول معتمد لاستقبال مشاريع التنفيذ والتشطيبات",
+      features: ["استعراض المشاريع المتاحة", "تقديم العروض على المشاريع", "إدارة مشاريعك من لوحة واحدة"],
+      color: "from-orange-600 to-amber-600",
+      link: createPageUrl("RegisterContractor")
     }
   ];
 
