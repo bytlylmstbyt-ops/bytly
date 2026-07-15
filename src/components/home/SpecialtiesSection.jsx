@@ -21,11 +21,7 @@ export default function SpecialtiesSection() {
   const [selected, setSelected] = useState(0);
   const specialty = SPECIALTIES[selected];
 
-  const charterPoints = [
-    t('specialtiesSection.charter.points[0]'),
-    t('specialtiesSection.charter.points[1]'),
-    t('specialtiesSection.charter.points[2]'),
-  ];
+  const charterPoints = t('specialtiesSection.charter.points') || [];
 
   return (
     <section className="py-20 bg-[#FAFAFA]">
