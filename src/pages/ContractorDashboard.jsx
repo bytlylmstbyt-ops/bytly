@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
   HardHat, Briefcase, CheckCircle, DollarSign,
-  Settings, Star, Eye, Plus, Clock, FileText
+  Settings, Star, Eye, Plus, Clock, FileText, Crown
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -161,7 +161,13 @@ export default function ContractorDashboard() {
                   </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  <Link to="/ProviderSubscription?type=contractor">
+                    <Button className="gap-2 bg-gradient-to-r from-[#C9A66B] to-[#8B6914] text-white">
+                      <Crown className="w-4 h-4" />
+                      ترقية الاشتراك
+                    </Button>
+                  </Link>
                   <Link to={createPageUrl("Settings")}>
                     <Button variant="outline" className="gap-2">
                       <Settings className="w-4 h-4" />
