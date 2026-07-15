@@ -1,5 +1,5 @@
 import React from "react";
-import { Droppable } from "@hello-pangea/dnd";
+import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import KanbanCard from "./KanbanCard";
@@ -64,16 +64,25 @@ export default function KanbanColumn({
                 </div>
               ) : (
                 columnTasks.map((task, index) => (
-                  <div
-                    key={task.id}
-                    draggable
-                  >
-                    <KanbanCard
-                      task={task}
-                      engineer={engineerMap[task.assigned_to]}
-                      onClick={() => onTaskClick?.(task)}
-                    />
-                  </div>
+                  <Draggable key={task.id} draggableId={task.id} index={index}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
+                        style={{
+                          ...provided.draggableProps.style,
+                          opacity: snapshot.isDragging ? 0.8 : 1
+                        }}
+                      >
+                        <KanbanCard
+                          task={task}
+                          engineer={engineerMap[task.assigned_to]}
+                          onClick={() => onTaskClick?.(task)}
+                        />
+                      </div>
+                    )}
+                  </Draggable>
                 ))
               )}
               {provided.placeholder}
