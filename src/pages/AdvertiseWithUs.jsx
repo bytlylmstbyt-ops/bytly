@@ -1,5 +1,7 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { base44 } from "@/api/base44Client";
 import {
   Megaphone, Target, TrendingUp, Shield, Eye, MousePointerClick,
   Check, ArrowLeft, Sparkles, BarChart3, Users
@@ -38,6 +40,22 @@ const PACKAGES = [
 ];
 
 export default function AdvertiseWithUs({ onStart, hasAds }) {
+  const navigate = useNavigate();
+
+  const handleStart = async () => {
+    if (onStart) { onStart(); return; }
+    try {
+      const authed = await base44.auth.isAuthenticated();
+      if (authed) {
+        navigate("/AdvertiserPortal");
+      } else {
+        base44.auth.redirectToLogin("/AdvertiserPortal");
+      }
+    } catch {
+      base44.auth.redirectToLogin("/AdvertiserPortal");
+    }
+  };
+
   return (
     <div dir="rtl" className="min-h-screen bg-gradient-to-b from-white via-amber-50/20 to-white">
       {/* Hero */}
@@ -59,7 +77,7 @@ export default function AdvertiseWithUs({ onStart, hasAds }) {
               أعلن عن منتجاتك في المكان والوقت المناسب.
             </p>
             <Button
-              onClick={onStart}
+              onClick={handleStart}
               size="lg"
               className="bg-gradient-to-r from-[#C9A66B] to-[#E5D4B8] text-[#4A3F35] hover:opacity-90 gap-2"
             >
@@ -184,7 +202,7 @@ export default function AdvertiseWithUs({ onStart, hasAds }) {
                 ))}
               </ul>
               <Button
-                onClick={onStart}
+                onClick={handleStart}
                 className={`w-full gap-2 ${
                   pkg.highlight
                     ? "bg-gradient-to-r from-[#C9A66B] to-[#E5D4B8] text-[#4A3F35] hover:opacity-90"
@@ -206,7 +224,7 @@ export default function AdvertiseWithUs({ onStart, hasAds }) {
           <h2 className="text-2xl md:text-3xl font-bold mb-3">جاهز للبدء؟</h2>
           <p className="text-slate-300 mb-8">أنشئ إعلانك الأول خلال دقائق وابدأ بالوصول لجمهورك المستهدف</p>
           <Button
-            onClick={onStart}
+            onClick={handleStart}
             size="lg"
             className="bg-gradient-to-r from-[#C9A66B] to-[#E5D4B8] text-[#4A3F35] hover:opacity-90 gap-2"
           >
