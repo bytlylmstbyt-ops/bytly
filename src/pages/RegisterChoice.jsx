@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import { 
   Palette, Building2, PenTool, Briefcase, 
-  ArrowLeft, CheckCircle, Star, Scale, MapPin, HardHat
+  ArrowLeft, CheckCircle, Star, Scale, MapPin, HardHat, Package
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -94,6 +94,15 @@ export default function RegisterChoice() {
       features: ["استعراض المشاريع المتاحة", "تقديم العروض على المشاريع", "إدارة مشاريعك من لوحة واحدة"],
       color: "from-orange-600 to-amber-600",
       link: createPageUrl("RegisterContractor")
+    },
+    {
+      id: "supplier",
+      icon: Package,
+      title: "مورد",
+      description: "سجّل كمورد معتمد لتوريد المواد والمنتجات للمشاريع",
+      features: ["استعراض الطلبات المتاحة", "عرض فئات منتجاتك", "إدارة طلباتك من لوحة واحدة"],
+      color: "from-indigo-600 to-blue-600",
+      link: createPageUrl("RegisterSupplier")
     }
   ];
 

@@ -202,6 +202,11 @@ function LayoutContent({ children, currentPageName }) {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
+                    <Link to="/SupplierDashboard" className="flex items-center gap-2 cursor-pointer">
+                      📦 الموردون
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link to="/SurveyorGigs" className="flex items-center gap-2 cursor-pointer">
                       🗺️ {t('nav.surveyorBoard')}
                     </Link>
@@ -348,6 +353,7 @@ function LayoutContent({ children, currentPageName }) {
                 { to: "/AIEngineers", label: `🤖 ${t('nav.bytlyAI')}` },
                                 { to: "/SurveyClientDashboard", label: `📍 ${t('nav.surveying')}` },
                                 { to: "/ContractorDashboard", label: `🏗️ المقاولون` },
+                                { to: "/SupplierDashboard", label: `📦 الموردون` },
                                 { to: "/SurveyorGigs", label: `🗺️ ${t('nav.surveyorBoard')}` },
                                 ].map(({ to, label }) => (
                                 <Link
