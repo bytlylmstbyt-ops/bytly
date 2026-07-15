@@ -6,9 +6,22 @@
       "type": "string",
       "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0634\u0631\u0648\u0639"
     },
+    "provider_type": {
+      "type": "string",
+      "enum": [
+        "engineer",
+        "contractor"
+      ],
+      "default": "engineer",
+      "description": "\u0646\u0648\u0639 \u0645\u0642\u062f\u0645 \u0627\u0644\u0639\u0631\u0636: \u0645\u0647\u0646\u062f\u0633 \u0623\u0648 \u0645\u0642\u0627\u0648\u0644"
+    },
     "engineer_id": {
       "type": "string",
       "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0647\u0646\u062f\u0633"
+    },
+    "contractor_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0642\u0627\u0648\u0644"
     },
     "price": {
       "type": "number",
@@ -61,8 +74,8 @@
   },
   "required": [
     "project_id",
-    "engineer_id",
-    "price"
+    "price",
+    "provider_type"
   ],
   "rls": {
     "create": {
@@ -77,10 +90,7 @@
           "data.engineer_id": "{{user.id}}"
         },
         {
-          "data.project_id": {
-            "_filter": "Project",
-            "read": true
-          }
+          "data.contractor_id": "{{user.id}}"
         },
         {
           "user_condition": {
@@ -96,6 +106,9 @@
         },
         {
           "data.engineer_id": "{{user.id}}"
+        },
+        {
+          "data.contractor_id": "{{user.id}}"
         },
         {
           "user_condition": {
