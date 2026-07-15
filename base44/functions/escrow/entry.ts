@@ -22,6 +22,48 @@ function calcCommission(amount, rate = COMMISSION_RATE) {
   };
 }
 
+// ── Gmail helpers (send via authorized shared connector) ──────────────────
+const GMAIL_API = 'https://gmail.googleapis.com/gmail/v1/users/me';
+
+function utf8ToBase64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  for (const b of bytes) binary += String.fromCharCode(b);
+  return btoa(binary);
+}
+
+function encodeEmailRaw(to, subject, body) {
+  const bodyB64 = utf8ToBase64(body);
+  const rawEmail = [
+    `To: ${to}`,
+    `Subject: =?UTF-8?B?${utf8ToBase64(subject)}?=`,
+    `MIME-Version: 1.0`,
+    `Content-Type: text/html; charset=UTF-8`,
+    `Content-Transfer-Encoding: base64`,
+    ``,
+    bodyB64,
+  ].join('\r\n');
+  return utf8ToBase64(rawEmail).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+async function sendGmail(base44, to, subject, body) {
+  const { accessToken } = await base44.asServiceRole.connectors.getConnection('gmail');
+  const raw = encodeEmailRaw(to, subject, body);
+  const res = await fetch(`${GMAIL_API}/messages/send`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ raw }),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Gmail API error: ${res.status} - ${err}`);
+  }
+  return res.json();
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -341,6 +383,21 @@ Deno.serve(async (req) => {
             subject: `📄 فاتورة إتمام مشروع - ${invoice.invoice_number}`,
             body: emailBody
           });
+
+          // ── Send invoice copy to admin's personal email via Gmail ──
+          try {
+            const admins = await base44.asServiceRole.entities.User.filter({ role: 'admin' });
+            if (admins.length > 0) {
+              await sendGmail(
+                base44,
+                admins[0].email,
+                `📄 نسخة فاتورة ضريبية - ${invoice.invoice_number}`,
+                emailBody
+              );
+            }
+          } catch (gmailErr) {
+            console.error('Failed to send invoice via Gmail to admin:', gmailErr);
+          }
         } catch (emailErr) {
           console.error('Failed to send invoice email:', emailErr);
         }
