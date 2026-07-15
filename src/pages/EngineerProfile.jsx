@@ -62,8 +62,12 @@ export default function EngineerProfile() {
       setIsFavorited(favorites.length > 0);
     }
 
+    // If engineerId is an email, filter by email; otherwise filter by id
+    const isEmail = engineerId && engineerId.includes('@');
+    const engineerQuery = isEmail ? { email: engineerId } : { id: engineerId };
+
     const [engineerData, portfolioData, reviewData] = await Promise.all([
-      base44.entities.Engineer.filter({ id: engineerId }),
+      base44.entities.Engineer.filter(engineerQuery),
       base44.entities.Portfolio.filter({ engineer_id: engineerId }, "-created_date"),
       base44.entities.Review.filter({ engineer_id: engineerId }, "-created_date")
     ]);
@@ -71,6 +75,9 @@ export default function EngineerProfile() {
     setEngineer(engineerData[0]);
     setPortfolios(portfolioData);
     setReviews(reviewData);
+
+    // Resolve the real engineer id (in case an email was passed)
+    const realEngineerId = engineerData[0]?.id || engineerId;
 
     // Check if current user is the engineer
     setIsOwner(engineerData[0]?.email === user.email);
