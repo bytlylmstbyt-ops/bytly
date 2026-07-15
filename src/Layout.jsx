@@ -9,7 +9,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { 
   Search, MessageSquare, User, Menu, X, 
   LogOut, Briefcase, Settings, Wallet, Bell, 
-  PlusCircle, ChevronDown, Instagram, Facebook, Mail, Phone, MessagesSquare, Scale, Linkedin, Twitter, Bot, Building2
+  PlusCircle, ChevronDown, Instagram, Facebook, Mail, Phone, MessagesSquare, Scale, Linkedin, Twitter, Bot, Building2, Megaphone
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import BottomNav from "@/components/mobile/BottomNav";
@@ -211,6 +211,12 @@ function LayoutContent({ children, currentPageName }) {
                       🗺️ {t('nav.surveyorBoard')}
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/AdvertiseWithUs" className="flex items-center gap-2 cursor-pointer">
+                      <Megaphone className="w-4 h-4 text-[#C9A66B]" />
+                      المعلنون
+                    </Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -355,6 +361,7 @@ function LayoutContent({ children, currentPageName }) {
                                 { to: "/ContractorDashboard", label: `🏗️ المقاولون` },
                                 { to: "/SupplierDashboard", label: `📦 الموردون` },
                                 { to: "/SurveyorGigs", label: `🗺️ ${t('nav.surveyorBoard')}` },
+                                { to: "/AdvertiseWithUs", label: `📢 المعلنون` },
                                 ].map(({ to, label }) => (
                                 <Link
                                   key={to}
