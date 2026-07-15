@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import ProjectScheduleCalendar from "@/components/engineers/ProjectScheduleCalendar";
 
 export default function IndividualClientDashboard({ client, stats, recentProjects }) {
   return (
@@ -156,6 +157,15 @@ export default function IndividualClientDashboard({ client, stats, recentProject
             </Card>
           </motion.div>
         )}
+
+        {/* Project Schedule Calendar — تقويم مشاريع العميل */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <ProjectScheduleCalendar clientId={client.id} />
+        </motion.div>
 
         {/* Recent Projects */}
         <motion.div

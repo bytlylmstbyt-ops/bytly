@@ -23,20 +23,23 @@ function daysBetween(d1, d2) {
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
-export default function ProjectScheduleCalendar({ engineerId }) {
+export default function ProjectScheduleCalendar({ engineerId, clientId }) {
   const [projects, setProjects] = useState([]);
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   useEffect(() => {
-    if (!engineerId) return;
+    if (!engineerId && !clientId) return;
     loadData();
-  }, [engineerId]);
+  }, [engineerId, clientId]);
 
   const loadData = async () => {
     try {
-      const projectsData = await base44.entities.Project.filter({ assigned_engineer_id: engineerId });
+      const filter = engineerId
+        ? { assigned_engineer_id: engineerId }
+        : { client_id: clientId };
+      const projectsData = await base44.entities.Project.filter(filter);
       setProjects(projectsData);
 
       // Fetch contracts for these projects to get start_date and delivery_date
