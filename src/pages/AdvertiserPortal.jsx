@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import AdvertiseWithUs from "@/pages/AdvertiseWithUs";
 import AdForm from "@/components/ads/AdForm";
+import AdReportsPanel from "@/components/ads/AdReportsPanel";
 
 export default function AdvertiserPortal() {
   const [user, setUser] = useState(null);
@@ -146,6 +147,9 @@ export default function AdvertiserPortal() {
             </motion.div>
           ))}
         </div>
+
+        {/* Performance Reports Panel */}
+        {ads.length > 0 && <AdReportsPanel ads={ads} />}
 
         {/* My Ads */}
         {ads.length === 0 ? (
