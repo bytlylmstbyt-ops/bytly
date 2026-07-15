@@ -8,8 +8,10 @@ const CONTRACTOR_PLANS = [
   {
     name: "الباقة الأساسية",
     subtitle: "Basic",
-    price: 99,
-    price_id: "price_1TtaI3B6BI8uC0AupOhXOnac",
+    monthly_price: 99,
+    yearly_price: 990,
+    monthly_price_id: "price_1TtaI3B6BI8uC0AupOhXOnac",
+    yearly_price_id: "price_1TtaKdB6BI8uC0Aucf4VKbgH",
     Icon: Star,
     headerClass: "from-slate-600 to-slate-800",
     popular: false,
@@ -25,8 +27,10 @@ const CONTRACTOR_PLANS = [
   {
     name: "الباقة الاحترافية",
     subtitle: "Pro",
-    price: 249,
-    price_id: "price_1TtaI4B6BI8uC0AuEky91mYl",
+    monthly_price: 249,
+    yearly_price: 2490,
+    monthly_price_id: "price_1TtaI4B6BI8uC0AuEky91mYl",
+    yearly_price_id: "price_1TtaKdB6BI8uC0AuGeGLc5kM",
     Icon: Zap,
     headerClass: "from-[#C9A66B] to-[#8B6914]",
     popular: true,
@@ -44,8 +48,10 @@ const CONTRACTOR_PLANS = [
   {
     name: "باقة الشركات",
     subtitle: "Enterprise",
-    price: 599,
-    price_id: "price_1TtaI4B6BI8uC0Au3YdkJTlY",
+    monthly_price: 599,
+    yearly_price: 5990,
+    monthly_price_id: "price_1TtaI4B6BI8uC0Au3YdkJTlY",
+    yearly_price_id: "price_1TtaKdB6BI8uC0AufitB50dF",
     Icon: Building2,
     headerClass: "from-[#4a3c31] to-[#2a1e14]",
     popular: false,
@@ -66,8 +72,10 @@ const SUPPLIER_PLANS = [
   {
     name: "الباقة الأساسية",
     subtitle: "Basic",
-    price: 99,
-    price_id: "price_1TtaI4B6BI8uC0Au133PiiYo",
+    monthly_price: 99,
+    yearly_price: 990,
+    monthly_price_id: "price_1TtaI4B6BI8uC0Au133PiiYo",
+    yearly_price_id: "price_1TtaKdB6BI8uC0AuUruT6tic",
     Icon: Star,
     headerClass: "from-slate-600 to-slate-800",
     popular: false,
@@ -83,8 +91,10 @@ const SUPPLIER_PLANS = [
   {
     name: "الباقة الاحترافية",
     subtitle: "Pro",
-    price: 249,
-    price_id: "price_1TtaI4B6BI8uC0AuyidDyMj9",
+    monthly_price: 249,
+    yearly_price: 2490,
+    monthly_price_id: "price_1TtaI4B6BI8uC0AuyidDyMj9",
+    yearly_price_id: "price_1TtaKdB6BI8uC0AuLXssmsMR",
     Icon: Zap,
     headerClass: "from-[#C9A66B] to-[#8B6914]",
     popular: true,
@@ -102,8 +112,10 @@ const SUPPLIER_PLANS = [
   {
     name: "باقة الشركات",
     subtitle: "Enterprise",
-    price: 599,
-    price_id: "price_1TtaI4B6BI8uC0Auf8LmiGct",
+    monthly_price: 599,
+    yearly_price: 5990,
+    monthly_price_id: "price_1TtaI4B6BI8uC0Auf8LmiGct",
+    yearly_price_id: "price_1TtaKdB6BI8uC0Aup05HTOIQ",
     Icon: Building2,
     headerClass: "from-[#4a3c31] to-[#2a1e14]",
     popular: false,
@@ -131,6 +143,7 @@ export default function ProviderSubscription() {
   const [user, setUser] = useState(null);
   const [banner, setBanner] = useState(null);
   const [providerType, setProviderType] = useState("contractor");
+  const [billingCycle, setBillingCycle] = useState("monthly");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -157,9 +170,10 @@ export default function ProviderSubscription() {
       base44.auth.redirectToLogin(window.location.pathname + window.location.search);
       return;
     }
-    setLoadingId(plan.price_id);
+    const price_id = billingCycle === "yearly" ? plan.yearly_price_id : plan.monthly_price_id;
+    setLoadingId(price_id);
     const res = await base44.functions.invoke("createSubscriptionCheckout", {
-      price_id: plan.price_id,
+      price_id,
       plan_name: plan.name,
       provider_type: providerType,
     });
@@ -197,6 +211,29 @@ export default function ProviderSubscription() {
             باقات اشتراك {config.label}
           </h1>
           <p className="text-slate-500 max-w-xl mx-auto">{config.desc}</p>
+
+          {/* Billing cycle toggle */}
+          <div className="inline-flex items-center gap-1 bg-white rounded-full shadow-md p-1 mt-6">
+            <button
+              onClick={() => setBillingCycle("monthly")}
+              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${billingCycle === "monthly"
+                ? "bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white"
+                : "text-slate-500 hover:text-[#4a3c31]"}`}
+            >
+              شهري
+            </button>
+            <button
+              onClick={() => setBillingCycle("yearly")}
+              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all flex items-center gap-2 ${billingCycle === "yearly"
+                ? "bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white"
+                : "text-slate-500 hover:text-[#4a3c31]"}`}
+            >
+              سنوي
+              <span className={`text-[10px] px-2 py-0.5 rounded-full ${billingCycle === "yearly" ? "bg-white/25" : "bg-green-100 text-green-700"}`}>
+                وفّر شهرين
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* Plans */}
@@ -224,9 +261,18 @@ export default function ProviderSubscription() {
                   </div>
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-extrabold">{plan.price}</span>
-                  <span className="text-white/80 text-sm">ريال / شهر</span>
+                  <span className="text-4xl font-extrabold">
+                    {billingCycle === "yearly" ? plan.yearly_price : plan.monthly_price}
+                  </span>
+                  <span className="text-white/80 text-sm">
+                    ريال / {billingCycle === "yearly" ? "سنة" : "شهر"}
+                  </span>
                 </div>
+                {billingCycle === "yearly" && (
+                  <p className="text-white/70 text-xs mt-1">
+                    ≈ {Math.round(plan.yearly_price / 12)} ريال / شهر
+                  </p>
+                )}
               </div>
 
               <CardContent className="p-5">
@@ -251,9 +297,9 @@ export default function ProviderSubscription() {
                   onClick={() => handleSubscribe(plan)}
                   disabled={!!loadingId}
                 >
-                  {loadingId === plan.price_id
+                  {loadingId === (billingCycle === "yearly" ? plan.yearly_price_id : plan.monthly_price_id)
                     ? <><Loader2 className="w-4 h-4 animate-spin" /> جارٍ التحميل...</>
-                    : `اشترك الآن — ${plan.price} ريال/شهر`}
+                    : `اشترك الآن — ${billingCycle === "yearly" ? plan.yearly_price + " ريال/سنة" : plan.monthly_price + " ريال/شهر"}`}
                 </Button>
               </CardContent>
             </div>

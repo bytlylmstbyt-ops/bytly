@@ -12,14 +12,22 @@ Deno.serve(async (req) => {
       'price_1TbQh4B6BI8uC0Au89E4VzRL', // Basic 99
       'price_1TbQh4B6BI8uC0AupdL39tcG', // Pro 249
       'price_1TbQh4B6BI8uC0Au7VTp4rPf', // Enterprise 599
-      // Contractor plans (SAR)
-      'price_1TtaI3B6BI8uC0AupOhXOnac', // Contractor Basic 99 SAR
-      'price_1TtaI4B6BI8uC0AuEky91mYl', // Contractor Pro 249 SAR
-      'price_1TtaI4B6BI8uC0Au3YdkJTlY', // Contractor Enterprise 599 SAR
-      // Supplier plans (SAR)
-      'price_1TtaI4B6BI8uC0Au133PiiYo', // Supplier Basic 99 SAR
-      'price_1TtaI4B6BI8uC0AuyidDyMj9', // Supplier Pro 249 SAR
-      'price_1TtaI4B6BI8uC0Auf8LmiGct', // Supplier Enterprise 599 SAR
+      // Contractor plans monthly (SAR)
+      'price_1TtaI3B6BI8uC0AupOhXOnac', // Contractor Basic 99 SAR/mo
+      'price_1TtaI4B6BI8uC0AuEky91mYl', // Contractor Pro 249 SAR/mo
+      'price_1TtaI4B6BI8uC0Au3YdkJTlY', // Contractor Enterprise 599 SAR/mo
+      // Contractor plans yearly (SAR)
+      'price_1TtaKdB6BI8uC0Aucf4VKbgH', // Contractor Basic 990 SAR/yr
+      'price_1TtaKdB6BI8uC0AuGeGLc5kM', // Contractor Pro 2490 SAR/yr
+      'price_1TtaKdB6BI8uC0AufitB50dF', // Contractor Enterprise 5990 SAR/yr
+      // Supplier plans monthly (SAR)
+      'price_1TtaI4B6BI8uC0Au133PiiYo', // Supplier Basic 99 SAR/mo
+      'price_1TtaI4B6BI8uC0AuyidDyMj9', // Supplier Pro 249 SAR/mo
+      'price_1TtaI4B6BI8uC0Auf8LmiGct', // Supplier Enterprise 599 SAR/mo
+      // Supplier plans yearly (SAR)
+      'price_1TtaKdB6BI8uC0AuUruT6tic', // Supplier Basic 990 SAR/yr
+      'price_1TtaKdB6BI8uC0AuLXssmsMR', // Supplier Pro 2490 SAR/yr
+      'price_1TtaKdB6BI8uC0Aup05HTOIQ', // Supplier Enterprise 5990 SAR/yr
     ];
 
     const { price_id, plan_name, provider_type } = await req.json();
