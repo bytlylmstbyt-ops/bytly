@@ -46,7 +46,7 @@ export default function Login() {
     // Save return URL and redirect to Google OAuth
     // Note: loginWithProvider redirects immediately, so we don't await it
     sessionStorage.setItem('loginReturnUrl', returnUrl);
-    base44.auth.loginWithProvider('google', createPageUrl('RegisterChoice'));
+    base44.auth.loginWithProvider('google', returnUrl);
   };
 
   const validateEmail = (value) => {
@@ -225,7 +225,7 @@ export default function Login() {
           className="w-full h-12"
           onClick={() => {
             sessionStorage.setItem('loginReturnUrl', returnUrl);
-            base44.auth.loginWithProvider('microsoft', createPageUrl('RegisterChoice'));
+            base44.auth.loginWithProvider('microsoft', returnUrl);
           }}
         >
           <MicrosoftIcon />
@@ -236,7 +236,7 @@ export default function Login() {
           className="w-full h-12"
           onClick={() => {
             sessionStorage.setItem('loginReturnUrl', returnUrl);
-            base44.auth.loginWithProvider('facebook', createPageUrl('RegisterChoice'));
+            base44.auth.loginWithProvider('facebook', returnUrl);
           }}
         >
           <FacebookIcon />
@@ -247,7 +247,7 @@ export default function Login() {
           className="w-full h-12"
           onClick={() => {
             sessionStorage.setItem('loginReturnUrl', returnUrl);
-            base44.auth.loginWithProvider('apple', createPageUrl('RegisterChoice'));
+            base44.auth.loginWithProvider('apple', returnUrl);
           }}
         >
           <AppleIcon />
