@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, ShieldCheck, FileText } from 'lucide-react';
+import { Loader2, ShieldCheck, FileText, ChevronRight } from 'lucide-react';
 
 const TERMS_CONTENT = [
   {
@@ -112,7 +112,17 @@ export default function SurveyorTerms() {
     <div className="min-h-screen bg-gray-50" dir="rtl">
       {/* Header */}
       <div className="bg-gradient-to-l from-[#4A3F35] to-[#6B5D4F] text-white px-6 py-10">
-        <div className="max-w-4xl mx-auto text-center">
+        <div className="max-w-4xl mx-auto">
+          <button
+            onClick={() => { if (window.history.length > 1) { navigate(-1); } else { navigate('/'); } }}
+            className="md:hidden flex items-center gap-1 text-white/80 hover:text-white mb-6 transition-colors"
+            aria-label="رجوع"
+            style={{ minHeight: 44 }}
+          >
+            <ChevronRight className="w-5 h-5" />
+            <span className="text-sm">رجوع</span>
+          </button>
+          <div className="text-center">
           <ShieldCheck className="w-14 h-14 mx-auto mb-4 text-[#C9A66B]" />
           <h1 className="text-2xl md:text-3xl font-bold mb-2">
             اتفاقية الشروط والأحكام الفنية للمساحين
@@ -121,6 +131,7 @@ export default function SurveyorTerms() {
             تعتبر هذه الشروط والأحكام الفنية ملحقاً إلزامياً لشروط الاستخدام العامة لمنصة بيتلي (Bytly).
             بموجب موافقتك الإلكترونية على هذه الاتفاقية، تلتزم بكافة المعايير والضوابط الفنية أدناه لتقديم خدمات الرفع المساحي وإعداد الكروكيات.
           </p>
+          </div>
         </div>
       </div>
 

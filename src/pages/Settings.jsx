@@ -596,6 +596,37 @@ export default function Settings() {
           </TabsContent>
         </Tabs>
 
+        {/* Account Deletion — bottom of page */}
+        <Card className="border-0 shadow-lg border-red-200 mt-6">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-red-700">
+              <Trash2 className="w-5 h-5" />
+              حذف الحساب
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+              <div className="flex items-start gap-3 mb-3">
+                <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-red-700 mb-1">حذف حسابك نهائياً</h3>
+                  <p className="text-sm text-red-600 leading-relaxed">
+                    سيؤدي حذف حسابك إلى إزالة جميع بياناتك الشخصية، مشاريعك، عقودك، ومحادثاتك بشكل <strong>نهائي وغير قابل للاسترداد</strong>.
+                  </p>
+                </div>
+              </div>
+              <Button
+                className="bg-red-600 hover:bg-red-700 text-white"
+                style={{ minHeight: 44 }}
+                onClick={() => { setShowDeleteDialog(true); setDeleteStep(1); setDeleteReason(""); setDeleteConfirmText(""); }}
+              >
+                <Trash2 className="w-4 h-4 ml-2" />
+                حذف حسابي
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
       </div>
 
       {/* Multi-Step Delete Dialog (App Store Compliant) */}

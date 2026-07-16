@@ -220,6 +220,17 @@ export default function ConsultantApprovalPage() {
   return (
     <div className="min-h-screen py-8 px-4" dir="rtl">
       <div className="max-w-4xl mx-auto space-y-6">
+        {/* Mobile back button */}
+        <button
+          onClick={() => { if (window.history.length > 1) { navigate(-1); } else { navigate('/'); } }}
+          className="md:hidden flex items-center gap-1 text-slate-600 hover:text-slate-900 mb-4 transition-colors"
+          aria-label="رجوع"
+          style={{ minHeight: 44 }}
+        >
+          <ArrowRight className="w-5 h-5" />
+          <span className="text-sm">رجوع</span>
+        </button>
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
