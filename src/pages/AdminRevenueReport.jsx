@@ -8,13 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import MobileSelect from "@/components/mobile/MobileSelect";
 
 export default function AdminRevenueReport() {
   const [revenues, setRevenues] = useState([]);
@@ -141,16 +135,18 @@ export default function AdminRevenueReport() {
           {/* Filters */}
           <div className="flex items-center gap-3 mb-6">
             <Filter className="w-5 h-5 text-slate-500" />
-            <Select value={filterSource} onValueChange={setFilterSource}>
-              <SelectTrigger className="w-[200px] bg-white">
-                <SelectValue placeholder="جميع المصادر" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={null}>جميع المصادر</SelectItem>
-                <SelectItem value="project_milestone">مشاريع فقط</SelectItem>
-                <SelectItem value="design_purchase">متجر التصاميم فقط</SelectItem>
-              </SelectContent>
-            </Select>
+            <MobileSelect
+              value={filterSource}
+              onValueChange={setFilterSource}
+              placeholder="جميع المصادر"
+              label="مصدر الإيراد"
+              options={[
+                { value: "", label: "جميع المصادر" },
+                { value: "project_milestone", label: "مشاريع فقط" },
+                { value: "design_purchase", label: "متجر التصاميم فقط" },
+              ]}
+              triggerClassName="w-[200px] bg-white"
+            />
           </div>
 
           {/* Revenue Table */}

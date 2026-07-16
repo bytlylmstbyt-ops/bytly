@@ -6,13 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import MobileSelect from "@/components/mobile/MobileSelect";
 import { 
   FileCheck, Loader2, CheckCircle, AlertCircle, 
   Upload, Download, FileText, Award 
@@ -268,20 +262,18 @@ export default function TechnicalReviewPage() {
             {/* Compliance Status */}
             <div className="space-y-2">
               <Label>حالة المطابقة *</Label>
-              <Select
+              <MobileSelect
                 value={reviewData.compliance_status}
                 onValueChange={(value) => setReviewData({ ...reviewData, compliance_status: value })}
+                placeholder="حالة المطابقة"
+                label="حالة المطابقة"
                 disabled={existingReview?.approval_status === "approved"}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="compliant">مطابق</SelectItem>
-                  <SelectItem value="compliant_with_notes">مطابق مع ملاحظات</SelectItem>
-                  <SelectItem value="non_compliant">غير مطابق</SelectItem>
-                </SelectContent>
-              </Select>
+                options={[
+                  { value: "compliant", label: "مطابق" },
+                  { value: "compliant_with_notes", label: "مطابق مع ملاحظات" },
+                  { value: "non_compliant", label: "غير مطابق" },
+                ]}
+              />
             </div>
 
             {/* Saudi Code Compliance */}
