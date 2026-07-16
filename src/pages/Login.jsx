@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { appParams } from "@/lib/app-params";
@@ -10,6 +10,23 @@ import { Label } from "@/components/ui/label";
 import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
+
+// Extract a relative path from fromUrl; if it's the login/register page itself, default to "/"
+const getReturnUrl = () => {
+  const raw = appParams.fromUrl;
+  if (!raw) return "/";
+  try {
+    const url = new URL(raw, window.location.origin);
+    if (["/login", "/register", "/forgot-password", "/reset-password"].includes(url.pathname)) {
+      return "/";
+    }
+    return url.pathname + url.search;
+  } catch {
+    // Already a relative path — check if it's a login/auth page
+    if (["/login", "/register", "/forgot-password", "/reset-password"].includes(raw)) return "/";
+    return raw;
+  }
+};
 
 // Simple SVG icons for Microsoft, Facebook, Apple
 const MicrosoftIcon = () => (
@@ -40,7 +57,18 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const submitGuard = useRef(false);
 
-  const returnUrl = appParams.fromUrl || "/";
+  const returnUrl = getReturnUrl();
+
+  // Redirect already-authenticated users away from the login page
+  useEffect(() => {
+    let cancelled = false;
+    base44.auth.isAuthenticated().then((authed) => {
+      if (authed && !cancelled) {
+        window.location.href = returnUrl;
+      }
+    });
+    return () => { cancelled = true; };
+  }, [returnUrl]);
 
   const handleGoogleLogin = () => {
     // Save return URL and redirect to Google OAuth
