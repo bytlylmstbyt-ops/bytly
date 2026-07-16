@@ -17,6 +17,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Approval not found' }, { status: 404 });
     }
 
+    // Authorization: only the designated approver (requested_from) or an admin can respond
+    if (approvalData.requested_from !== user.email && user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: you are not authorized to respond to this approval' }, { status: 403 });
+    }
+
     const [workflowData] = await base44.asServiceRole.entities.ProjectWorkflow.filter({ id: approvalData.workflow_id });
     const [projectData] = await base44.asServiceRole.entities.Project.filter({ id: approvalData.project_id });
 

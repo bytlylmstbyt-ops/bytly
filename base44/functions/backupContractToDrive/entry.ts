@@ -98,7 +98,16 @@ Deno.serve(async (req) => {
 
     // ── 4. إذا وُجد ملف PDF للعقد، نرفعه مباشرةً بجانب وثيقة HTML ────────
     let pdfUploadResult = null;
-    if (fileUrl && fileUrl.startsWith('http')) {
+    // Validate fileUrl belongs to a trusted Base44 storage domain to prevent SSRF
+    const trustedHosts = ['media.base44.com', 'storage.base44.com', 'files.base44.com'];
+    let isTrustedUrl = false;
+    if (fileUrl && fileUrl.startsWith('https://')) {
+      try {
+        const parsed = new URL(fileUrl);
+        isTrustedUrl = trustedHosts.includes(parsed.hostname);
+      } catch { isTrustedUrl = false; }
+    }
+    if (fileUrl && isTrustedUrl) {
       try {
         const pdfRes = await fetch(fileUrl);
         if (pdfRes.ok) {

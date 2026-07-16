@@ -29,9 +29,10 @@ Deno.serve(async (req) => {
       return Response.json({ skipped: true, reason: 'invoice already exists' });
     }
 
-    const projects = await base44.asServiceRole.entities.Project.filter({ id: milestone.project_id });
+    // Use user-scoped SDK so RLS filters out projects the caller doesn't own
+    const projects = await base44.entities.Project.filter({ id: milestone.project_id });
     const project = projects[0];
-    if (!project) return Response.json({ error: 'Project not found' }, { status: 404 });
+    if (!project) return Response.json({ error: 'Project not found or access denied' }, { status: 403 });
 
     const clients = await base44.asServiceRole.entities.Client.filter({ id: project.client_id });
     const client = clients[0];

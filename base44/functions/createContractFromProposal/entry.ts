@@ -27,6 +27,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Project not found' }, { status: 404 });
     }
 
+    // Authorization: only the project owner (client) or assigned engineer can create a contract
+    const isOwner = project.created_by === user.email;
+    let isAssignedEngineer = false;
+    if (!isOwner && project.assigned_engineer_id) {
+      const engineerRec = await base44.asServiceRole.entities.Engineer.get(project.assigned_engineer_id);
+      isAssignedEngineer = engineerRec?.email === user.email;
+    }
+    const isAdmin = user.role === 'admin';
+    if (!isOwner && !isAssignedEngineer && !isAdmin) {
+      return Response.json({ error: 'Forbidden: you are not authorized to create a contract for this project' }, { status: 403 });
+    }
+
     // Fetch client and engineer details
     const client = await base44.asServiceRole.entities.Client.filter({ email: project.created_by });
     const engineer = await base44.asServiceRole.entities.Engineer.get(proposal.engineer_id);
