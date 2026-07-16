@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Mail, Search, RefreshCw, Loader2, Calendar, User, Send, Filter } from "lucide-react";
 import moment from "moment";
+import MobileSelect from "@/components/mobile/MobileSelect";
 
 export default function SentEmailsLog() {
   const { toast } = useToast();
@@ -157,29 +158,29 @@ export default function SentEmailsLog() {
                 <label className="text-xs text-slate-500 mb-1 flex items-center gap-1">
                   <User className="w-3 h-3" /> الحالة
                 </label>
-                <select
+                <MobileSelect
                   value={statusFilter}
-                  onChange={e => setStatusFilter(e.target.value)}
-                  className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  <option value="all">الكل</option>
-                  <option value="sent">مرسلة بنجاح</option>
-                  <option value="failed">فاشلة</option>
-                </select>
+                  onValueChange={(v) => setStatusFilter(v)}
+                  placeholder="الحالة"
+                  label="الحالة"
+                  options={[
+                    { value: "all", label: "الكل" },
+                    { value: "sent", label: "مرسلة بنجاح" },
+                    { value: "failed", label: "فاشلة" },
+                  ]}
+                />
               </div>
               <div>
                 <label className="text-xs text-slate-500 mb-1 flex items-center gap-1">
                   <Filter className="w-3 h-3" /> المصدر
                 </label>
-                <select
+                <MobileSelect
                   value={sourceFilter}
-                  onChange={e => setSourceFilter(e.target.value)}
-                  className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-                >
-                  {sources.map(s => (
-                    <option key={s} value={s}>{s === "all" ? "الكل" : s}</option>
-                  ))}
-                </select>
+                  onValueChange={(v) => setSourceFilter(v)}
+                  placeholder="المصدر"
+                  label="المصدر"
+                  options={sources.map(s => ({ value: s, label: s === "all" ? "الكل" : s }))}
+                />
               </div>
             </div>
             {(searchQuery || dateFrom || dateTo || statusFilter !== "all" || sourceFilter !== "all") && (
