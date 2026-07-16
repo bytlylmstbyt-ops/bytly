@@ -72,9 +72,10 @@ export default function Login() {
 
   const handleGoogleLogin = () => {
     // Save return URL and redirect to Google OAuth
-    // Note: loginWithProvider redirects immediately, so we don't await it
+    // Use absolute URL so the platform redirects to the custom domain, not Base44 dashboard
+    const absoluteReturnUrl = window.location.origin + returnUrl;
     sessionStorage.setItem('loginReturnUrl', returnUrl);
-    base44.auth.loginWithProvider('google', returnUrl);
+    base44.auth.loginWithProvider('google', absoluteReturnUrl);
   };
 
   const validateEmail = (value) => {
@@ -253,7 +254,7 @@ export default function Login() {
           className="w-full h-12"
           onClick={() => {
             sessionStorage.setItem('loginReturnUrl', returnUrl);
-            base44.auth.loginWithProvider('microsoft', returnUrl);
+            base44.auth.loginWithProvider('microsoft', window.location.origin + returnUrl);
           }}
         >
           <MicrosoftIcon />
@@ -264,7 +265,7 @@ export default function Login() {
           className="w-full h-12"
           onClick={() => {
             sessionStorage.setItem('loginReturnUrl', returnUrl);
-            base44.auth.loginWithProvider('facebook', returnUrl);
+            base44.auth.loginWithProvider('facebook', window.location.origin + returnUrl);
           }}
         >
           <FacebookIcon />
@@ -275,7 +276,7 @@ export default function Login() {
           className="w-full h-12"
           onClick={() => {
             sessionStorage.setItem('loginReturnUrl', returnUrl);
-            base44.auth.loginWithProvider('apple', returnUrl);
+            base44.auth.loginWithProvider('apple', window.location.origin + returnUrl);
           }}
         >
           <AppleIcon />
