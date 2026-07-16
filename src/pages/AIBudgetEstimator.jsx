@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import AIChat from "@/components/ai/AIChat";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
+import MobileSelect from "@/components/mobile/MobileSelect";
 
 const cities = ["الرياض", "جدة", "الدمام", "مكة المكرمة", "المدينة المنورة", "الخبر", "تبوك", "أبها", "أخرى"];
 const finishTypes = [
@@ -95,15 +96,21 @@ export default function AIBudgetEstimator() {
 
             <div>
               <label className="text-xs text-slate-400 mb-1 block">نوع المشروع</label>
-              <select
+              <MobileSelect
                 value={form.projectType}
-                onChange={e => setForm(p => ({ ...p, projectType: e.target.value }))}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-green-500/50"
-              >
-                {["فيلا سكنية", "شقة سكنية", "مبنى استثماري", "استراحة", "مكاتب تجارية", "محلات تجارية"].map(t => (
-                  <option key={t} value={t} className="bg-slate-800">{t}</option>
-                ))}
-              </select>
+                onValueChange={(v) => setForm(p => ({ ...p, projectType: v }))}
+                placeholder="اختر نوع المشروع"
+                label="نوع المشروع"
+                options={[
+                  { value: "فيلا سكنية", label: "فيلا سكنية" },
+                  { value: "شقة سكنية", label: "شقة سكنية" },
+                  { value: "مبنى استثماري", label: "مبنى استثماري" },
+                  { value: "استراحة", label: "استراحة" },
+                  { value: "مكاتب تجارية", label: "مكاتب تجارية" },
+                  { value: "محلات تجارية", label: "محلات تجارية" },
+                ]}
+                triggerClassName="!bg-white/5 !border-white/10 rounded-xl !text-white"
+              />
             </div>
 
             <div>
@@ -130,14 +137,14 @@ export default function AIBudgetEstimator() {
 
             <div>
               <label className="text-xs text-slate-400 mb-1 block">المدينة</label>
-              <select
+              <MobileSelect
                 value={form.city}
-                onChange={e => setForm(p => ({ ...p, city: e.target.value }))}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white outline-none focus:border-green-500/50"
-              >
-                <option value="" className="bg-slate-800">اختر المدينة</option>
-                {cities.map(c => <option key={c} value={c} className="bg-slate-800">{c}</option>)}
-              </select>
+                onValueChange={(v) => setForm(p => ({ ...p, city: v }))}
+                placeholder="اختر المدينة"
+                label="المدينة"
+                options={cities.map(c => ({ value: c, label: c }))}
+                triggerClassName="!bg-white/5 !border-white/10 rounded-xl !text-white"
+              />
             </div>
 
             <Button

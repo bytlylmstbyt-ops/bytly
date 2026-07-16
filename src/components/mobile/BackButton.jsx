@@ -10,7 +10,13 @@ export default function BackButton() {
 
   return (
     <button
-      onClick={() => navigate(-1)}
+      onClick={() => {
+        if (window.history.length > 1) {
+          navigate(-1);
+        } else {
+          navigate("/");
+        }
+      }}
       className="md:hidden flex items-center justify-center w-11 h-11 rounded-full hover:bg-slate-100 transition-colors select-none"
       aria-label="رجوع"
     >
