@@ -86,7 +86,8 @@ export default function AdvertiserPortal() {
           hasAds={false}
           onStart={() => {
             if (!user) {
-              base44.auth.redirectToLogin(window.location.pathname);
+              sessionStorage.setItem('loginReturnUrl', window.location.pathname);
+              window.location.href = '/login';
               return;
             }
             setShowPortal(true);

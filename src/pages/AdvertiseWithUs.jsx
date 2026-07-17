@@ -49,10 +49,12 @@ export default function AdvertiseWithUs({ onStart, hasAds }) {
       if (authed) {
         navigate("/AdvertiserPortal");
       } else {
-        base44.auth.redirectToLogin("/AdvertiserPortal");
+        sessionStorage.setItem('loginReturnUrl', '/AdvertiserPortal');
+        window.location.href = '/login';
       }
     } catch {
-      base44.auth.redirectToLogin("/AdvertiserPortal");
+      sessionStorage.setItem('loginReturnUrl', '/AdvertiserPortal');
+      window.location.href = '/login';
     }
   };
 

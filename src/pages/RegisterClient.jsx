@@ -275,7 +275,7 @@ export default function RegisterClient() {
           <p className="text-slate-500">
             لديك حساب بالفعل؟{" "}
             <button 
-              onClick={() => base44.auth.redirectToLogin()}
+              onClick={() => window.location.href = '/login'}
               className="text-[#d4a574] font-medium hover:underline"
             >
               تسجيل الدخول

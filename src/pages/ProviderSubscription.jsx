@@ -167,7 +167,8 @@ export default function ProviderSubscription() {
       return;
     }
     if (!user) {
-      base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+      sessionStorage.setItem('loginReturnUrl', window.location.pathname + window.location.search);
+      window.location.href = '/login';
       return;
     }
     const price_id = billingCycle === "yearly" ? plan.yearly_price_id : plan.monthly_price_id;

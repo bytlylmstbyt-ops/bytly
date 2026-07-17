@@ -127,28 +127,20 @@ export const AuthProvider = ({ children }) => {
   const logout = (shouldRedirect = true) => {
     setUser(null);
     setIsAuthenticated(false);
-    
+    // Clear the token locally, then redirect to the app's own /login page
+    // (NOT base44.auth.logout(redirectUrl) which can route through Base44).
+    base44.auth.logout();
     if (shouldRedirect) {
-      // Use the SDK's logout method which handles token cleanup and redirect
-      base44.auth.logout(window.location.href);
-    } else {
-      // Just remove the token without redirect
-      base44.auth.logout();
+      window.location.href = '/login';
     }
   };
 
   const navigateToLogin = () => {
-    try {
-      // Use the SDK's redirectToLogin method
-      // Store the current URL for redirect after login
-      const currentPath = window.location.pathname + window.location.search;
-      sessionStorage.setItem('loginReturnUrl', currentPath);
-      base44.auth.redirectToLogin(currentPath);
-    } catch (err) {
-      console.error('navigateToLogin failed:', err);
-      // Fallback: direct redirect to login
-      window.location.href = '/login';
-    }
+    // Redirect to the app's own /login page (NOT base44.auth.redirectToLogin
+    // which sends users to the Base44-hosted login page).
+    const currentPath = window.location.pathname + window.location.search;
+    sessionStorage.setItem('loginReturnUrl', currentPath);
+    window.location.href = '/login';
   };
 
   return (

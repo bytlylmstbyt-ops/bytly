@@ -66,6 +66,7 @@ function LayoutContent({ children, currentPageName }) {
 
   const handleLogout = () => {
     base44.auth.logout();
+    window.location.href = '/login';
   };
 
   // Stable callback so PullToRefreshWrapper doesn't re-subscribe its touch listeners.
@@ -305,7 +306,7 @@ function LayoutContent({ children, currentPageName }) {
                 <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
-                    onClick={() => base44.auth.redirectToLogin()}
+                    onClick={() => window.location.href = '/login'}
                     className="text-[#6B5D4F] hover:text-[#C9A66B]"
                   >
                     {t('nav.login')}

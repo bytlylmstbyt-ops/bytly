@@ -169,7 +169,7 @@ export default function PermitApplication() {
       <div className="text-center space-y-4">
         <Building2 className="w-12 h-12 text-slate-300 mx-auto" />
         <p className="text-slate-600">يرجى تسجيل الدخول لتقديم طلب رخصة</p>
-        <Button onClick={() => base44.auth.redirectToLogin()} className="bg-[#C9A66B] hover:bg-[#B8936D] text-white">
+        <Button onClick={() => { sessionStorage.setItem('loginReturnUrl', window.location.pathname); window.location.href = '/login'; }} className="bg-[#C9A66B] hover:bg-[#B8936D] text-white">
           تسجيل الدخول
         </Button>
       </div>

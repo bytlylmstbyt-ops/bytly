@@ -181,7 +181,7 @@ export default function RegisterChoice() {
           <p className="text-slate-500">
             {t('registerChoice.alreadyHaveAccount')}{" "}
             <button 
-              onClick={() => window.base44?.auth?.redirectToLogin()}
+              onClick={() => window.location.href = '/login'}
               className="text-[#d4a574] font-medium hover:underline"
             >
               {t('registerChoice.login')}

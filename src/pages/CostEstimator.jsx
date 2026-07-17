@@ -152,7 +152,7 @@ export default function CostEstimator() {
   };
 
   const handleSendRequests = async () => {
-    if (!user) { base44.auth.redirectToLogin(); return; }
+    if (!user) { sessionStorage.setItem('loginReturnUrl', window.location.pathname); window.location.href = '/login'; return; }
     setIsSending(true);
     const targets = [...engineers.slice(0, 3), ...firms.slice(0, 2)];
     for (const target of targets) {

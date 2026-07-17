@@ -35,7 +35,6 @@ export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthe
           navigateToLogin();
         } catch (err) {
           console.error('Redirect to login failed:', err);
-          // Fallback: direct redirect
           window.location.href = '/login';
         }
       };
