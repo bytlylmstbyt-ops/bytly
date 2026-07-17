@@ -237,7 +237,7 @@ export default function Register() {
       <Button
         variant="outline"
         className="w-full h-12"
-        onClick={() => base44.auth.loginWithProvider('google', '/')}
+        onClick={() => base44.auth.loginWithProvider('google', window.location.origin + '/')}
       >
         <GoogleIcon />
         Continue with Google
