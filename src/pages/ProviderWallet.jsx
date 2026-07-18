@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import LiveWalletDashboard from "@/components/wallet/LiveWalletDashboard";
 import WalletTransactionChart from "@/components/wallet/WalletTransactionChart";
 import ProviderWithdrawalForm from "@/components/wallet/ProviderWithdrawalForm";
+import ProviderFinancialReport from "@/components/wallet/ProviderFinancialReport";
 
 export default function ProviderWallet() {
   const [user, setUser] = useState(null);
@@ -121,6 +122,15 @@ export default function ProviderWallet() {
             provider={profile}
             providerType={providerType}
             onSuccess={loadWalletData}
+          />
+        </div>
+
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold text-slate-800 mb-4">التقارير المالية</h2>
+          <ProviderFinancialReport
+            provider={profile}
+            providerType={providerType}
+            userEmail={user?.email}
           />
         </div>
       </div>
