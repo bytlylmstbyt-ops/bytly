@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
   Package, ShoppingCart, CheckCircle, DollarSign,
-  Settings, Star, Clock, FileText, PackageSearch, Crown
+  Settings, Star, Clock, FileText, PackageSearch, Crown, Wallet
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -171,6 +171,12 @@ export default function SupplierDashboard() {
                 </div>
 
                 <div className="flex gap-2 flex-wrap">
+                  <Link to="/ProviderWallet">
+                    <Button variant="outline" className="gap-2">
+                      <Wallet className="w-4 h-4" />
+                      المحفظة
+                    </Button>
+                  </Link>
                   <Link to="/ProviderSubscription?type=supplier">
                     <Button className="gap-2 bg-gradient-to-r from-[#C9A66B] to-[#8B6914] text-white">
                       <Crown className="w-4 h-4" />

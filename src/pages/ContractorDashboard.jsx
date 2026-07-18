@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
   HardHat, Briefcase, CheckCircle, DollarSign,
-  Settings, Star, Eye, Plus, Clock, FileText, Crown
+  Settings, Star, Eye, Plus, Clock, FileText, Crown, Wallet
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -162,6 +162,12 @@ export default function ContractorDashboard() {
                 </div>
 
                 <div className="flex gap-2 flex-wrap">
+                  <Link to="/ProviderWallet">
+                    <Button variant="outline" className="gap-2">
+                      <Wallet className="w-4 h-4" />
+                      المحفظة
+                    </Button>
+                  </Link>
                   <Link to="/ProviderSubscription?type=contractor">
                     <Button className="gap-2 bg-gradient-to-r from-[#C9A66B] to-[#8B6914] text-white">
                       <Crown className="w-4 h-4" />

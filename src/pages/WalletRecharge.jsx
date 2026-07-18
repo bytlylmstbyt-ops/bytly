@@ -38,6 +38,18 @@ export default function WalletRecharge() {
     const [firmData] = await base44.entities.EngineeringFirm.filter({ email: currentUser.email });
     if (firmData) {
       setProfile({ ...firmData, type: "firm" });
+      return;
+    }
+
+    const [contractorData] = await base44.entities.Contractor.filter({ email: currentUser.email });
+    if (contractorData) {
+      setProfile({ ...contractorData, type: "contractor" });
+      return;
+    }
+
+    const [supplierData] = await base44.entities.Supplier.filter({ email: currentUser.email });
+    if (supplierData) {
+      setProfile({ ...supplierData, type: "supplier" });
     }
   };
 

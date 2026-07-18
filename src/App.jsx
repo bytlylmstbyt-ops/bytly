@@ -68,6 +68,7 @@ const AdvertiserPortal           = React.lazy(() => import('./pages/AdvertiserPo
 const ServiceReviews             = React.lazy(() => import('./pages/ServiceReviews'));
 const ProviderSubscription       = React.lazy(() => import('./pages/ProviderSubscription'));
 const RevenueDashboard           = React.lazy(() => import('./pages/RevenueDashboard'));
+const ProviderWallet             = React.lazy(() => import('./pages/ProviderWallet'));
 
 // ── Page-level spinner fallback ───────────────────────────────────────────────
 function PageSpinner() {
@@ -234,6 +235,7 @@ const AuthenticatedApp = () => {
         <Route path="/ServiceReviews"              element={lazyRoute(ServiceReviews, "ServiceReviews")} />
       <Route path="/ProviderSubscription"        element={lazyRoute(ProviderSubscription, "ProviderSubscription")} />
       <Route path="/RevenueDashboard"           element={lazyRoute(RevenueDashboard, "RevenueDashboard")} />
+        <Route path="/ProviderWallet"             element={lazyRoute(ProviderWallet, "ProviderWallet")} />
         <Route path="/SentEmailsLog"               element={lazyRoute(React.lazy(() => import('./pages/SentEmailsLog')), "SentEmailsLog")} />
         <Route path="*" element={<NotFoundError />} />
       </Route>
