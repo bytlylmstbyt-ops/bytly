@@ -17,7 +17,9 @@ Deno.serve(async (req) => {
       comment,
       highlights,
       targetName,
-      projectId
+      projectId,
+      milestoneId,
+      milestoneTitle
     } = body;
 
     if (!targetType || !targetId || !rating) {
@@ -47,6 +49,8 @@ Deno.serve(async (req) => {
     if (targetType === 'contractor') reviewData.contractor_id = targetId;
     if (targetType === 'supplier') reviewData.supplier_id = targetId;
     if (projectId) reviewData.project_id = projectId;
+    if (milestoneId) reviewData.milestone_id = milestoneId;
+    if (milestoneTitle) reviewData.milestone_title = milestoneTitle;
 
     // Create the review (service role bypasses RLS)
     const review = await base44.asServiceRole.entities.Review.create(reviewData);

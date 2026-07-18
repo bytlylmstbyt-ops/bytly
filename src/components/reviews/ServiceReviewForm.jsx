@@ -64,6 +64,9 @@ export default function ServiceReviewForm({
   targetType = "engineer",
   targetId,
   targetName,
+  milestoneId,
+  milestoneTitle,
+  projectId,
   open,
   onOpenChange,
   onSubmitted
@@ -107,6 +110,9 @@ export default function ServiceReviewForm({
         deliveryRating,
         comment: fullComment,
         highlights: selectedHighlights,
+        milestoneId,
+        milestoneTitle,
+        projectId,
       });
       setLoading(false);
       setSubmitted(true);

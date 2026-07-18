@@ -99,8 +99,9 @@ export default function ServiceReviews() {
   const [providers, setProviders] = useState([]);
   const [loadingProviders, setLoadingProviders] = useState(false);
   const [reviews, setReviews] = useState([]);
+  const [pendingReviews, setPendingReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
-  const [reviewDialog, setReviewDialog] = useState({ open: false, provider: null });
+  const [reviewDialog, setReviewDialog] = useState({ open: false, provider: null, pending: null });
 
   useEffect(() => {
     base44.auth.me()
@@ -132,11 +133,14 @@ export default function ServiceReviews() {
         "-created_date",
         50
       );
-      setReviews(list);
+      setReviews(list.filter(r => r.status === 'completed'));
+      setPendingReviews(list.filter(r => r.status === 'pending_response'));
     } catch {
       try {
         const list = await base44.entities.Review.list("-created_date", 200);
-        setReviews(list.filter(r => r.client_id === user.id));
+        const mine = list.filter(r => r.client_id === user.id);
+        setReviews(mine.filter(r => r.status === 'completed'));
+        setPendingReviews(mine.filter(r => r.status === 'pending_response'));
       } catch {}
     } finally {
       setLoadingReviews(false);
@@ -168,10 +172,25 @@ export default function ServiceReviews() {
   );
 
   const handleReviewSubmitted = () => {
-    setReviewDialog({ open: false, provider: null });
+    setReviewDialog({ open: false, provider: null, pending: null });
     fetchReviews();
     fetchProviders(activeTab);
     toast({ title: "تم إرسال تقييمك بنجاح" });
+  };
+
+  const handleCompletePending = (pending) => {
+    const tabKey = pending.target_type;
+    const tab = TARGET_TABS.find(t => t.key === tabKey);
+    if (!tab) return;
+    setActiveTab(tabKey);
+    setReviewDialog({
+      open: true,
+      provider: {
+        id: pending.contractor_id || pending.supplier_id || pending.engineer_id,
+        [tab.nameField]: pending.target_name
+      },
+      pending
+    });
   };
 
   if (loadingUser) {
@@ -240,6 +259,39 @@ export default function ServiceReviews() {
         ))}
       </Tabs>
 
+      {/* Pending Reviews (from completed milestones) */}
+      {pendingReviews.length > 0 && (
+        <Card className="border-amber-200 bg-amber-50/50">
+          <CardContent className="p-4 space-y-3">
+            <h2 className="font-bold text-[#4A3F35] flex items-center gap-2">
+              <Star className="w-5 h-5 text-amber-500 fill-amber-500" />
+              تقييمات بانتظارك ({pendingReviews.length})
+            </h2>
+            <p className="text-sm text-slate-500">أكملت مراحل عمل — شارك رأيك في جودة العمل وسرعة الإنجاز</p>
+            <div className="space-y-2">
+              {pendingReviews.map(pr => (
+                <div key={pr.id} className="flex items-center justify-between bg-white rounded-lg p-3 border border-amber-100">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-slate-800 truncate">{pr.target_name || "مقدم خدمة"}</p>
+                    <p className="text-xs text-slate-500">
+                      {pr.milestone_title ? `مرحلة: ${pr.milestone_title}` : ""}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white shrink-0"
+                    onClick={() => handleCompletePending(pr)}
+                  >
+                    <Star className="w-4 h-4 ml-1" />
+                    قيّم الآن
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* My Reviews History */}
       <div className="pt-4">
         <h2 className="text-lg font-bold text-[#4A3F35] mb-3 flex items-center gap-2">
@@ -270,8 +322,11 @@ export default function ServiceReviews() {
           targetType={activeTab}
           targetId={reviewDialog.provider.id}
           targetName={reviewDialog.provider[currentTab.nameField]}
+          milestoneId={reviewDialog.pending?.milestone_id}
+          milestoneTitle={reviewDialog.pending?.milestone_title}
+          projectId={reviewDialog.pending?.project_id}
           open={reviewDialog.open}
-          onOpenChange={(open) => setReviewDialog({ open, provider: open ? reviewDialog.provider : null })}
+          onOpenChange={(open) => setReviewDialog({ open, provider: open ? reviewDialog.provider : null, pending: open ? reviewDialog.pending : null })}
           onSubmitted={handleReviewSubmitted}
         />
       )}
