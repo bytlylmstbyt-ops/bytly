@@ -5,7 +5,6 @@ import { Loader2, HardHat, Package, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import LiveWalletDashboard from "@/components/wallet/LiveWalletDashboard";
-import WalletTransactionChart from "@/components/wallet/WalletTransactionChart";
 import ProviderWithdrawalForm from "@/components/wallet/ProviderWithdrawalForm";
 import ProviderFinancialReport from "@/components/wallet/ProviderFinancialReport";
 
@@ -112,10 +111,6 @@ export default function ProviderWallet() {
           userType={providerType}
           userEmail={user?.email}
         />
-
-        <div className="mt-6">
-          <WalletTransactionChart transactions={transactions} />
-        </div>
 
         <div className="mt-6">
           <ProviderWithdrawalForm

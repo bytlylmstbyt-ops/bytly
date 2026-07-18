@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Wallet, TrendingUp, TrendingDown, Percent, ArrowDownLeft, ArrowUpRight,
   Clock, CheckCircle2, XCircle, Lock, RefreshCw, Zap, DollarSign,
-  BarChart3, List, Shield, AlertCircle
+  BarChart3, List, Shield, AlertCircle, ChevronDown, Building2, User
 } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import moment from "moment";
@@ -80,6 +80,7 @@ function BalanceCard({ title, amount, subtitle, icon: Icon, gradient, border, ba
 }
 
 function TransactionRow({ tx }) {
+  const [expanded, setExpanded] = useState(false);
   const meta = TYPE_META[tx.type] || { label: tx.type, color: "text-slate-600", bg: "bg-slate-50", icon: DollarSign };
   const Icon = meta.icon;
   const debit = isDebit(tx.type);
@@ -87,28 +88,72 @@ function TransactionRow({ tx }) {
   const amount = tx.net_amount || tx.amount || 0;
   const commission = tx.commission_amount || 0;
 
+  const hasDetails = tx.reference_id || tx.payment_method || tx.balance_before != null ||
+    tx.balance_after != null || tx.from_wallet || tx.to_wallet || tx.related_transaction_id ||
+    (tx.metadata && Object.keys(tx.metadata).length > 0);
+
   return (
-    <div className={`flex items-center gap-3 p-3.5 rounded-xl border hover:shadow-sm transition-all ${meta.bg} border-transparent hover:border-slate-200`}>
-      <div className="w-9 h-9 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
-        <Icon className={`w-4 h-4 ${meta.color}`} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-semibold text-slate-800">{meta.label}</span>
-          <Badge className={`text-[10px] px-1.5 py-0 border ${status.cls}`}>{status.label}</Badge>
-          {commission > 0 && (
-            <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-600 border border-orange-200">
-              عمولة {fmt(commission)} ر.س
-            </Badge>
+    <div className={`rounded-xl border hover:shadow-sm transition-all ${meta.bg} border-transparent hover:border-slate-200 overflow-hidden`}>
+      <button
+        className={`flex items-center gap-3 p-3.5 w-full text-right ${hasDetails ? "cursor-pointer" : "cursor-default"}`}
+        onClick={() => hasDetails && setExpanded(!expanded)}
+      >
+        <div className="w-9 h-9 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
+          <Icon className={`w-4 h-4 ${meta.color}`} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm font-semibold text-slate-800">{meta.label}</span>
+            <Badge className={`text-[10px] px-1.5 py-0 border ${status.cls}`}>{status.label}</Badge>
+            {commission > 0 && (
+              <Badge className="text-[10px] px-1.5 py-0 bg-orange-100 text-orange-600 border border-orange-200">
+                عمولة {fmt(commission)} ر.س
+              </Badge>
+            )}
+            {hasDetails && (
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform mr-auto ${expanded ? "rotate-180" : ""}`} />
+            )}
+          </div>
+          {tx.description && <p className="text-xs text-slate-500 mt-0.5 truncate">{tx.description}</p>}
+          <p className="text-[10px] text-slate-400 mt-0.5">{moment(tx.created_date).format("DD/MM/YYYY – HH:mm")} · {moment(tx.created_date).fromNow()}</p>
+        </div>
+        <p className={`text-base font-bold shrink-0 ${debit ? "text-red-600" : "text-green-600"}`}>
+          {debit ? "−" : "+"}{fmt(amount)}
+          <span className="text-[10px] font-normal text-slate-400 mr-0.5"> ر.س</span>
+        </p>
+      </button>
+      {expanded && hasDetails && (
+        <div className="px-4 pb-4 pt-1 border-t border-slate-200/60 bg-white/50">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs mt-2">
+            {tx.reference_id && <DetailItem label="رقم المرجع" value={tx.reference_id} mono />}
+            {tx.payment_method && <DetailItem label="طريقة الدفع" value={tx.payment_method} />}
+            {tx.balance_before != null && <DetailItem label="الرصيد قبل" value={`${fmt(tx.balance_before)} ر.س`} />}
+            {tx.balance_after != null && <DetailItem label="الرصيد بعد" value={`${fmt(tx.balance_after)} ر.س`} />}
+            {tx.from_wallet && <DetailItem label="من محفظة" value={tx.from_wallet} />}
+            {tx.to_wallet && <DetailItem label="إلى محفظة" value={tx.to_wallet} />}
+            {tx.related_transaction_id && <DetailItem label="معاملة مرتبطة" value={tx.related_transaction_id} mono />}
+            {tx.project_id && <DetailItem label="المشروع" value={tx.project_id} mono />}
+            {tx.milestone_id && <DetailItem label="المرحلة" value={tx.milestone_id} mono />}
+          </div>
+          {tx.metadata && Object.keys(tx.metadata).length > 0 && (
+            <div className="mt-3 pt-2 border-t border-slate-100">
+              <p className="text-[10px] font-semibold text-slate-500 mb-1">بيانات إضافية</p>
+              <pre className="text-[10px] text-slate-600 bg-slate-50 rounded p-2 overflow-x-auto" dir="ltr">
+                {JSON.stringify(tx.metadata, null, 2)}
+              </pre>
+            </div>
           )}
         </div>
-        {tx.description && <p className="text-xs text-slate-500 mt-0.5 truncate">{tx.description}</p>}
-        <p className="text-[10px] text-slate-400 mt-0.5">{moment(tx.created_date).format("DD/MM/YYYY – HH:mm")} · {moment(tx.created_date).fromNow()}</p>
-      </div>
-      <p className={`text-base font-bold shrink-0 ${debit ? "text-red-600" : "text-green-600"}`}>
-        {debit ? "−" : "+"}{fmt(amount)}
-        <span className="text-[10px] font-normal text-slate-400 mr-0.5"> ر.س</span>
-      </p>
+      )}
+    </div>
+  );
+}
+
+function DetailItem({ label, value, mono }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-slate-400">{label}</span>
+      <span className={`font-medium text-slate-700 truncate ${mono ? "font-mono" : ""}`}>{value}</span>
     </div>
   );
 }
@@ -177,6 +222,82 @@ function CommissionPanel({ transactions }) {
         </div>
       )}
     </div>
+  );
+}
+
+function HeldAmountsPanel({ transactions, profile }) {
+  const escrowHolds = transactions.filter(t => t.type === "escrow_hold" && t.status === "held_in_escrow");
+  const totalEscrowHeld = escrowHolds.reduce((s, t) => s + (t.amount || 0), 0);
+  const pendingBalance = profile?.pending_balance || 0;
+  const totalHeld = totalEscrowHeld + pendingBalance;
+
+  // Group escrow holds by project
+  const byProject = escrowHolds.reduce((acc, t) => {
+    const key = t.project_id || "غير محدد";
+    if (!acc[key]) acc[key] = { project: key, amount: 0, count: 0 };
+    acc[key].amount += t.amount || 0;
+    acc[key].count += 1;
+    return acc;
+  }, {});
+  const projectBreakdown = Object.values(byProject);
+
+  const heldItems = [
+    { label: "رصيد معلق (قيد اعتماد العميل)", amount: pendingBalance, icon: Clock, color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
+    { label: "مبالغ محجوزة في الضمان", amount: totalEscrowHeld, icon: Lock, color: "text-purple-600", bg: "bg-purple-50", border: "border-purple-100" },
+  ];
+
+  return (
+    <Card className="border-2 border-slate-100">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm flex items-center gap-2 text-slate-700">
+          <Lock className="w-4 h-4 text-purple-500" />
+          المبالغ المحجوزة
+          <Badge className="text-[10px] px-1.5 py-0 bg-purple-100 text-purple-700 border border-purple-200">
+            الإجمالي: {fmt(totalHeld)} ر.س
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {heldItems.map(({ label, amount, icon: Icon, color, bg, border }) => (
+            <div key={label} className={`flex items-center gap-3 p-3 rounded-xl border ${bg} ${border}`}>
+              <div className="p-2 rounded-lg bg-white shadow-sm">
+                <Icon className={`w-4 h-4 ${color}`} />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-slate-500">{label}</p>
+                <p className={`text-base font-bold ${color}`}>{fmt(amount)} <span className="text-[10px] font-normal">ر.س</span></p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {projectBreakdown.length > 0 && (
+          <div className="pt-2 border-t border-slate-100">
+            <p className="text-xs font-medium text-slate-500 mb-2">تفصيل المبالغ المحجوزة حسب المشروع</p>
+            <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+              {projectBreakdown.map(({ project, amount, count }) => (
+                <div key={project} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg text-xs">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                    <span className="font-mono text-slate-500 truncate">{project}</span>
+                    <Badge className="text-[9px] px-1 py-0 bg-white text-slate-500 border border-slate-200">{count} حجز</Badge>
+                  </div>
+                  <span className="font-bold text-purple-600 shrink-0">{fmt(amount)} ر.س</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {totalHeld === 0 && (
+          <div className="text-center py-6 text-slate-400">
+            <CheckCircle2 className="w-8 h-8 mx-auto mb-2 opacity-30" />
+            <p className="text-sm">لا توجد مبالغ محجوزة حالياً</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -329,6 +450,9 @@ export default function LiveWalletDashboard({ profile, userType, userEmail }) {
           </Card>
         ))}
       </div>
+
+      {/* Held Amounts Panel */}
+      <HeldAmountsPanel transactions={transactions} profile={profile} />
 
       {/* Chart */}
       {chartData.length > 1 && (
