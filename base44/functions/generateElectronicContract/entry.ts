@@ -44,6 +44,14 @@ Deno.serve(async (req) => {
 
     if (!provider) return Response.json({ error: 'Provider not found' }, { status: 404 });
 
+    // ── Authorization: caller must be the project owner or the provider ─
+    const isCallerAdmin = user.role === 'admin';
+    const isProjectOwner = project.created_by === user.email;
+    const isProvider = providerEmail === user.email;
+    if (!isCallerAdmin && !isProjectOwner && !isProvider) {
+      return Response.json({ error: 'Forbidden: you are not authorized to generate a contract for this proposal' }, { status: 403 });
+    }
+
     // ── Build provider display fields (engineer vs contractor) ───────────
     let providerName, providerEmail, providerPhone, providerLicense, providerSpecialization, providerIdField;
 

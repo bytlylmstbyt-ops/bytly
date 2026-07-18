@@ -3,10 +3,8 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const isAuthenticated = await base44.auth.isAuthenticated();
-    if (!isAuthenticated) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
     const { data, old_data } = body;
     const milestone = data;
@@ -40,6 +38,14 @@ Deno.serve(async (req) => {
       if (clients[0]?.email) clientEmail = clients[0].email;
     }
     if (!clientEmail) clientEmail = project.created_by;
+
+    // ── Authorization: caller must be the project client or assigned engineer ─
+    const isCallerAdmin = user.role === 'admin';
+    const isClient = clientEmail === user.email;
+    const isEngineer = engineerEmail === user.email;
+    if (!isCallerAdmin && !isClient && !isEngineer) {
+      return Response.json({ error: 'Forbidden: you are not authorized to manage calendar for this project' }, { status: 403 });
+    }
 
     // Get Google Calendar access token
     const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlecalendar');

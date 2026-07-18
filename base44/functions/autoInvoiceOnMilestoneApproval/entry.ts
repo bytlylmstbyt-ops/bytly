@@ -10,14 +10,23 @@ Deno.serve(async (req) => {
     }
     const body = await req.json();
     const { data } = body;
-    const milestone = data;
+    const submittedMilestone = data;
 
     // Only trigger when client_approved becomes true
-    if (!milestone?.client_approved) {
+    if (!submittedMilestone?.client_approved) {
       return Response.json({ skipped: true, reason: 'not approved yet' });
     }
 
-    console.log(`Milestone approved: ${milestone.id}, project: ${milestone.project_id}`);
+    if (!submittedMilestone?.id) {
+      return Response.json({ error: 'milestone id is required' }, { status: 400 });
+    }
+
+    console.log(`Milestone approved: ${submittedMilestone.id}, project: ${submittedMilestone.project_id}`);
+
+    // ── Fetch the milestone from the DB to get a trusted amount ─────────
+    const dbMilestones = await base44.asServiceRole.entities.ProjectMilestone.filter({ id: submittedMilestone.id });
+    const milestone = dbMilestones[0];
+    if (!milestone) return Response.json({ error: 'Milestone not found' }, { status: 404 });
 
     // Check if invoice already exists
     const existing = await base44.asServiceRole.entities.Invoice.filter({
