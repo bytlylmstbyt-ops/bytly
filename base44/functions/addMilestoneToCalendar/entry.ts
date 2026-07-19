@@ -7,10 +7,19 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
     const { data, old_data } = body;
-    const milestone = data;
+    const milestonePayload = data;
+
+    if (!milestonePayload?.id) {
+      return Response.json({ error: 'Milestone ID is required' }, { status: 400 });
+    }
+
+    // Fetch the milestone from the DB — never trust the request body for IDs/fields
+    const milestonesFromDb = await base44.asServiceRole.entities.ProjectMilestone.filter({ id: milestonePayload.id });
+    const milestone = milestonesFromDb[0];
+    if (!milestone) return Response.json({ error: 'Milestone not found' }, { status: 404 });
 
     // Only run when due_date is set or changed
-    if (!milestone?.due_date) {
+    if (!milestone.due_date) {
       return Response.json({ skipped: true, reason: 'no due_date' });
     }
     if (old_data?.due_date === milestone.due_date && milestone.google_event_id) {

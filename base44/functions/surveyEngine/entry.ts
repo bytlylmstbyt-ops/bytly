@@ -146,6 +146,9 @@ Deno.serve(async (req) => {
       const { request_id } = body;
       const [request] = await base44.entities.SurveyRequest.filter({ id: request_id });
       if (!request) return Response.json({ error: 'الطلب غير موجود' }, { status: 404 });
+      if (request.client_email !== user.email && user.role !== 'admin') {
+        return Response.json({ error: 'غير مصرح لك بالاطلاع على هذا الطلب' }, { status: 403 });
+      }
 
       const allSurveyors = await base44.asServiceRole.entities.SurveyorProfile.filter({
         status: 'approved',
@@ -387,6 +390,9 @@ Deno.serve(async (req) => {
       const { request_id } = body;
       const [request] = await base44.entities.SurveyRequest.filter({ id: request_id });
       if (!request) return Response.json({ error: 'الطلب غير موجود' }, { status: 404 });
+      if (request.client_email !== user.email && request.surveyor_email !== user.email && user.role !== 'admin') {
+        return Response.json({ error: 'غير مصرح لك بالاطلاع على هذا الطلب' }, { status: 403 });
+      }
 
       const deliverables = await base44.entities.SurveyDeliverable.filter({ request_id }, '-created_date', 5);
 

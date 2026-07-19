@@ -3,6 +3,31 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 const ROOT_FOLDER_NAME = 'bytly - شهادات المهندسين';
 const ROOT_FOLDER_STATE_KEY = 'googledrive_certificates_folder';
 
+// Reject internal/private/loopback hosts to prevent SSRF
+function isInternalHost(hostname) {
+  const h = hostname.toLowerCase();
+  if (h === 'localhost' || h === '::1' || h === '[::1]') return true;
+  if (/^127\./.test(h)) return true;
+  if (/^10\./.test(h)) return true;
+  if (/^192\.168\./.test(h)) return true;
+  if (/^169\.254\./.test(h)) return true;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(h)) return true;
+  if (/^fc00:/.test(h) || /^fd/.test(h)) return true;
+  if (/^0\./.test(h) || h === '0.0.0.0') return true;
+  return false;
+}
+
+function isSafeFileUrl(urlStr) {
+  try {
+    const u = new URL(urlStr);
+    if (u.protocol !== 'https:') return false;
+    if (isInternalHost(u.hostname)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -138,7 +163,12 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Download the file from the uploaded URL
+        // Download the file from the uploaded URL — validate to prevent SSRF
+        if (!isSafeFileUrl(cert.url)) {
+          results.push({ type: cert.type, status: 'blocked', error: 'URL failed safety validation' });
+          continue;
+        }
+
         const fileRes = await fetch(cert.url);
         if (!fileRes.ok) {
           results.push({ type: cert.type, status: 'download_failed', error: `HTTP ${fileRes.status}` });
