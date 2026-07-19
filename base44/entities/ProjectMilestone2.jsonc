@@ -41,36 +41,17 @@
   ],
   "rls": {
     "create": {
-      "created_by": "{{user.email}}"
+      "created_by_id": "{{user.id}}"
     },
     "read": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.project_id": {
-            "_filter": "TaskProject",
-            "read": true
-          }
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "created_by_id": {
+        "$ne": null
+      }
     },
     "update": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.project_id": {
-            "_filter": "TaskProject",
-            "update": true
-          }
+          "created_by_id": "{{user.id}}"
         },
         {
           "user_condition": {
@@ -80,22 +61,9 @@
       ]
     },
     "delete": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.project_id": {
-            "_filter": "TaskProject",
-            "delete": true
-          }
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }

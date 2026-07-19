@@ -76,33 +76,15 @@
   ],
   "rls": {
     "create": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "created_by_id": "{{user.id}}"
     },
     "read": {
       "$or": [
         {
+          "created_by_id": "{{user.id}}"
+        },
+        {
           "data.legal_consultant_id": "{{user.id}}"
-        },
-        {
-          "data.complaint_id": {
-            "_filter": "Complaint",
-            "read": true
-          }
-        },
-        {
-          "data.project_id": {
-            "_filter": "Project",
-            "read": true
-          }
         },
         {
           "user_condition": {

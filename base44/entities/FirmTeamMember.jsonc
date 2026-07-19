@@ -64,18 +64,12 @@
   ],
   "rls": {
     "create": {
-      "created_by": "{{user.email}}"
+      "created_by_id": "{{user.id}}"
     },
     "read": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.firm_id": {
-            "_filter": "EngineeringFirm",
-            "read": true
-          }
+          "created_by_id": "{{user.id}}"
         },
         {
           "data.email": "{{user.email}}"
@@ -90,10 +84,10 @@
     "update": {
       "$or": [
         {
-          "data.firm_id": {
-            "_filter": "EngineeringFirm",
-            "update": true
-          }
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "data.email": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -103,19 +97,9 @@
       ]
     },
     "delete": {
-      "$or": [
-        {
-          "data.firm_id": {
-            "_filter": "EngineeringFirm",
-            "delete": true
-          }
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }

@@ -100,18 +100,15 @@
   ],
   "rls": {
     "create": {
-      "created_by": "{{user.email}}"
+      "created_by_id": "{{user.id}}"
     },
     "read": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "created_by_id": "{{user.id}}"
         },
         {
-          "data.contract_id": {
-            "_filter": "Contract",
-            "read": true
-          }
+          "data.requested_by": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -123,13 +120,10 @@
     "update": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
+          "created_by_id": "{{user.id}}"
         },
         {
-          "data.contract_id": {
-            "_filter": "Contract",
-            "update": true
-          }
+          "data.requested_by": "{{user.email}}"
         },
         {
           "user_condition": {
@@ -139,19 +133,9 @@
       ]
     },
     "delete": {
-      "$or": [
-        {
-          "data.contract_id": {
-            "_filter": "Contract",
-            "delete": true
-          }
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     }
   }
 }

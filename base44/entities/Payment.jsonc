@@ -86,7 +86,7 @@
   ],
   "rls": {
     "create": {
-      "created_by": "{{user.email}}"
+      "created_by_id": "{{user.id}}"
     },
     "read": {
       "$or": [
@@ -95,12 +95,6 @@
         },
         {
           "data.payee_email": "{{user.email}}"
-        },
-        {
-          "data.invoice_id": {
-            "_filter": "Invoice",
-            "read": true
-          }
         },
         {
           "user_condition": {
@@ -112,13 +106,7 @@
     "update": {
       "$or": [
         {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "data.payer_email": "{{user.email}}"
-        },
-        {
-          "data.payee_email": "{{user.email}}"
+          "created_by_id": "{{user.id}}"
         },
         {
           "user_condition": {
