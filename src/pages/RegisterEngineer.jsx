@@ -25,11 +25,7 @@ export default function RegisterEngineer() {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFileUploading, setIsFileUploading] = useState(false);
-  const [notice, setNotice] = useState({
-    type: "info",
-    title: "تنبيه خطة التكامل",
-    message: "قد يتعذر رفع الوثائق عند الوصول إلى حد التكامل في الخطة الحالية. إذا ظهر خطأ 402، يُفضّل ترقية الخطة قبل إكمال التسجيل."
-  });
+  const [notice, setNotice] = useState(null);
   const [freeOffer, setFreeOffer] = useState({
     loading: true,
     isEligible: false,
