@@ -6,7 +6,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await req.json();
-    const { data, old_data } = body;
+    const { data } = body;
     const milestonePayload = data;
 
     if (!milestonePayload?.id) {
@@ -22,10 +22,6 @@ Deno.serve(async (req) => {
     if (!milestone.due_date) {
       return Response.json({ skipped: true, reason: 'no due_date' });
     }
-    if (old_data?.due_date === milestone.due_date && milestone.google_event_id) {
-      return Response.json({ skipped: true, reason: 'due_date unchanged and event exists' });
-    }
-
     console.log(`Adding calendar event for milestone: ${milestone.id}, due: ${milestone.due_date}`);
 
     // Fetch project

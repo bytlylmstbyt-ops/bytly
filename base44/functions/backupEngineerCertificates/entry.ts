@@ -21,7 +21,11 @@ function isSafeFileUrl(urlStr) {
   try {
     const u = new URL(urlStr);
     if (u.protocol !== 'https:') return false;
+    if (u.port && u.port !== '443') return false; // reject non-standard ports
     if (isInternalHost(u.hostname)) return false;
+    // Reject raw IP addresses — only allow domain hostnames from trusted storage
+    if (/^\d{1,3}(\.\d{1,3}){3}$/.test(u.hostname)) return false;
+    if (u.hostname.includes('metadata') || u.hostname.includes('internal')) return false;
     return true;
   } catch {
     return false;
@@ -40,11 +44,16 @@ Deno.serve(async (req) => {
 
     // Parse payload — works for both direct invocation and entity automation
     const body = await req.json();
-    const engineer = body.data || body;
+    const engineerPayload = body.data || body;
 
-    if (!engineer || !engineer.id) {
+    if (!engineerPayload || !engineerPayload.id) {
       return Response.json({ error: 'Engineer data is required' }, { status: 400 });
     }
+
+    // Fetch the engineer from the DB — never trust certificate URLs from the request body (SSRF prevention)
+    const engineersFromDb = await base44.asServiceRole.entities.Engineer.filter({ id: engineerPayload.id });
+    const engineer = engineersFromDb[0];
+    if (!engineer) return Response.json({ error: 'Engineer not found' }, { status: 404 });
 
     // Collect certificates to back up
     const certificates = [];
