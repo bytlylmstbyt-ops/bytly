@@ -173,7 +173,7 @@ export default function Engineers() {
 
   return (
     <PullToRefreshWrapper onRefresh={loadEngineers} className="min-h-screen">
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       {/* Hero Header */}
       <div className="bg-gradient-to-br from-[#1a1a2e] to-[#1a1a2e]/90 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -212,7 +212,7 @@ export default function Engineers() {
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div className="flex flex-wrap items-center gap-3">
             {/* User Type Tabs */}
-            <div className="flex bg-white rounded-xl shadow-sm p-1">
+            <div className="flex bg-white dark:bg-slate-900 rounded-xl shadow-sm p-1">
               {userTypes.map(type => (
                 <button
                   key={type.value}
@@ -220,7 +220,7 @@ export default function Engineers() {
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     filters.userType === type.value
                       ? "bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
-                      : "text-slate-600 hover:bg-slate-100"
+                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:bg-slate-800"
                   }`}
                 >
                   <type.icon className="w-4 h-4" />
@@ -295,7 +295,7 @@ export default function Engineers() {
 
             {/* Clear Filters */}
             {activeFiltersCount > 0 && (
-              <Button variant="ghost" onClick={clearFilters} className="text-slate-500 hidden md:flex">
+              <Button variant="ghost" onClick={clearFilters} className="text-slate-500 dark:text-slate-400 hidden md:flex">
                 <X className="w-4 h-4 ml-1" />
                 {t('engineers.filters.applyFilters')} ({activeFiltersCount})
               </Button>
@@ -317,27 +317,27 @@ export default function Engineers() {
             />
 
             {/* View Mode */}
-            <div className="flex bg-white rounded-lg shadow-sm p-1">
+            <div className="flex bg-white dark:bg-slate-900 rounded-lg shadow-sm p-1">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-2 rounded ${viewMode === "grid" ? "bg-slate-100" : ""}`}
+                className={`p-2 rounded ${viewMode === "grid" ? "bg-slate-100 dark:bg-slate-800" : ""}`}
                 title="عرض شبكي"
               >
-                <Grid3X3 className="w-5 h-5 text-slate-600" />
+                <Grid3X3 className="w-5 h-5 text-slate-600 dark:text-slate-300" />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 rounded ${viewMode === "list" ? "bg-slate-100" : ""}`}
+                className={`p-2 rounded ${viewMode === "list" ? "bg-slate-100 dark:bg-slate-800" : ""}`}
                 title="عرض قائمة"
               >
-                <List className="w-5 h-5 text-slate-600" />
+                <List className="w-5 h-5 text-slate-600 dark:text-slate-300" />
               </button>
               <button
                 onClick={() => setViewMode("map")}
-                className={`p-2 rounded ${viewMode === "map" ? "bg-slate-100" : ""}`}
+                className={`p-2 rounded ${viewMode === "map" ? "bg-slate-100 dark:bg-slate-800" : ""}`}
                 title="عرض على الخريطة"
               >
-                <Map className="w-5 h-5 text-slate-600" />
+                <Map className="w-5 h-5 text-slate-600 dark:text-slate-300" />
               </button>
             </div>
           </div>
@@ -345,14 +345,14 @@ export default function Engineers() {
 
         {viewMode !== "map" && (
         <div className="flex items-center justify-between mb-6">
-          <p className="text-slate-600">
+          <p className="text-slate-600 dark:text-slate-300">
             {t('engineers.results').replace('{count}', filteredEngineers.length)}
           </p>
           <Button
             variant="outline"
             size="sm"
             onClick={() => { setIsSelectionMode(!isSelectionMode); setSelectedIds(new Set()); }}
-            className={isSelectionMode ? "bg-slate-100 border-slate-400" : ""}
+            className={isSelectionMode ? "bg-slate-100 dark:bg-slate-800 border-slate-400" : ""}
           >
             {isSelectionMode ? <X className="w-4 h-4 ml-1" /> : <CheckSquare className="w-4 h-4 ml-1" />}
             {isSelectionMode ? "إلغاء التحديد" : "تحديد متعدد"}
@@ -403,13 +403,13 @@ export default function Engineers() {
               <Card key={i} className="animate-pulse">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-16 h-16 rounded-full bg-slate-200" />
+                    <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-700" />
                     <div className="space-y-2 flex-1">
-                      <div className="h-4 w-3/4 bg-slate-200 rounded" />
-                      <div className="h-3 w-1/2 bg-slate-200 rounded" />
+                      <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-700 rounded" />
+                      <div className="h-3 w-1/2 bg-slate-200 dark:bg-slate-700 rounded" />
                     </div>
                   </div>
-                  <div className="h-16 bg-slate-200 rounded" />
+                  <div className="h-16 bg-slate-200 dark:bg-slate-700 rounded" />
                 </CardContent>
               </Card>
             ))}
@@ -471,7 +471,7 @@ export default function Engineers() {
                             
                             <div className="mt-4">
                               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <h3 className="font-bold text-lg text-[#1a1a2e]">{engineer.full_name}</h3>
+                                <h3 className="font-bold text-lg text-[#1a1a2e] dark:text-slate-100">{engineer.full_name}</h3>
                                 {engineer.is_verified && (
                                   <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs gap-1 px-2 py-0.5 shadow-sm">
                                     <CheckCircle className="w-3 h-3" />
@@ -479,9 +479,9 @@ export default function Engineers() {
                                   </Badge>
                                 )}
                               </div>
-                              <p className="text-sm text-slate-600 mb-2">{engineer.specialization}</p>
+                              <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">{engineer.specialization}</p>
                               
-                              <div className="flex items-center gap-2 text-sm text-slate-500 mb-3">
+                              <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-3">
                                 <MapPin className="w-4 h-4" />
                                 <span>{engineer.city}, {engineer.country}</span>
                               </div>
@@ -492,7 +492,7 @@ export default function Engineers() {
                                   <span className="font-semibold">{engineer.rating?.toFixed(1) || "0.0"}</span>
                                   <span className="text-slate-400 text-sm">({engineer.total_reviews || 0})</span>
                                 </div>
-                                <Badge variant="secondary" className="bg-slate-100">
+                                <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800">
                                   {engineer.completed_projects || 0} {t('engineers.projects')}
                                 </Badge>
                               </div>
@@ -510,7 +510,7 @@ export default function Engineers() {
                           
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <h3 className="font-bold text-lg text-[#1a1a2e]">{engineer.full_name}</h3>
+                              <h3 className="font-bold text-lg text-[#1a1a2e] dark:text-slate-100">{engineer.full_name}</h3>
                               {engineer.is_verified && (
                                 <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs gap-1 px-2 py-0.5 shadow-sm">
                                   <CheckCircle className="w-3 h-3" />
@@ -521,8 +521,8 @@ export default function Engineers() {
                                 <Badge className="bg-amber-500 text-white">{t('engineers.featured')}</Badge>
                               )}
                             </div>
-                            <p className="text-sm text-slate-600 mb-2">{engineer.specialization}</p>
-                            <div className="flex items-center gap-4 text-sm text-slate-500">
+                            <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">{engineer.specialization}</p>
+                            <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400">
                               <span className="flex items-center gap-1">
                                 <MapPin className="w-4 h-4" />
                                 {engineer.city}, {engineer.country}
@@ -535,10 +535,10 @@ export default function Engineers() {
                           </div>
 
                           <div className="text-left">
-                            <Badge variant="secondary" className="bg-slate-100 mb-2">
+                            <Badge variant="secondary" className="bg-slate-100 dark:bg-slate-800 mb-2">
                               {engineer.completed_projects || 0} {t('engineers.projects')}
                             </Badge>
-                            <p className="text-sm text-slate-500">{engineer.years_experience || 0} {t('engineers.yearsExperience')}</p>
+                            <p className="text-sm text-slate-500 dark:text-slate-400">{engineer.years_experience || 0} {t('engineers.yearsExperience')}</p>
                           </div>
                         </CardContent>
                       )}
@@ -552,8 +552,8 @@ export default function Engineers() {
         ) : (
           <div className="text-center py-16">
             <Users className="w-20 h-20 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-slate-700 mb-2">{t('engineers.noResults')}</h3>
-            <p className="text-slate-500 mb-4">{t('engineers.noResultsMessage')}</p>
+            <h3 className="text-xl font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('engineers.noResults')}</h3>
+            <p className="text-slate-500 dark:text-slate-400 mb-4">{t('engineers.noResultsMessage')}</p>
             <Button onClick={clearFilters} variant="outline">
               {t('engineers.filters.clearFilters')}
             </Button>

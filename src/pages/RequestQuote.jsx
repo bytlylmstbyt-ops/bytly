@@ -176,7 +176,7 @@ export default function RequestQuote() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -185,9 +185,9 @@ export default function RequestQuote() {
           <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-12 h-12 text-green-600" />
           </div>
-          <h2 className="text-3xl font-bold text-[#1a1a2e] mb-3">تم إرسال طلبك بنجاح!</h2>
-          <p className="text-slate-600 mb-2">سيتواصل معك المهندس قريباً بعرض السعر المناسب.</p>
-          <p className="text-slate-500 text-sm mb-8">يمكنك متابعة طلبك من لوحة التحكم الخاصة بك.</p>
+          <h2 className="text-3xl font-bold text-[#1a1a2e] dark:text-slate-100 mb-3">تم إرسال طلبك بنجاح!</h2>
+          <p className="text-slate-600 dark:text-slate-300 mb-2">سيتواصل معك المهندس قريباً بعرض السعر المناسب.</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mb-8">يمكنك متابعة طلبك من لوحة التحكم الخاصة بك.</p>
           <div className="flex gap-3 justify-center">
             <Link to={createPageUrl("Dashboard")}>
               <Button className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white">
@@ -204,12 +204,12 @@ export default function RequestQuote() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950" dir="rtl">
       <div className="max-w-3xl mx-auto px-4 py-10">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[#1a1a2e] mb-2">طلب عرض سعر</h1>
-          <p className="text-slate-500">
+          <h1 className="text-3xl font-bold text-[#1a1a2e] dark:text-slate-100 mb-2">طلب عرض سعر</h1>
+          <p className="text-slate-500 dark:text-slate-400">
             {form.target_engineer_name
               ? `إرسال طلب إلى: ${form.target_engineer_name}`
               : "أرسل تفاصيل مشروعك واحصل على تقدير دقيق من المهندسين"}
@@ -225,7 +225,7 @@ export default function RequestQuote() {
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
                     currentStep > step.id ? "bg-green-500 text-white" :
                     currentStep === step.id ? "bg-[#C9A66B] text-white" :
-                    "bg-slate-200 text-slate-500"
+                    "bg-slate-200 text-slate-500 dark:text-slate-400"
                   }`}>
                     {currentStep > step.id ? <CheckCircle className="w-5 h-5" /> : step.id}
                   </div>
@@ -258,7 +258,7 @@ export default function RequestQuote() {
                 {currentStep === 1 && (
                   <div>
                     <h2 className="text-xl font-bold mb-2">ما نوع مشروعك؟</h2>
-                    <p className="text-slate-500 text-sm mb-6">اختر التصنيف الأنسب لمشروعك</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">اختر التصنيف الأنسب لمشروعك</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                       {PROJECT_TYPES.map(pt => (
                         <button
@@ -267,11 +267,11 @@ export default function RequestQuote() {
                           className={`p-4 rounded-xl border-2 text-center transition-all hover:border-[#C9A66B] ${
                             form.project_type === pt.value
                               ? "border-[#C9A66B] bg-amber-50 shadow-md"
-                              : "border-slate-200 bg-white"
+                              : "border-slate-200 dark:border-slate-700 bg-white"
                           }`}
                         >
                           <div className="text-3xl mb-2">{pt.icon}</div>
-                          <div className="text-sm font-medium text-[#1a1a2e]">{pt.label}</div>
+                          <div className="text-sm font-medium text-[#1a1a2e] dark:text-slate-100">{pt.label}</div>
                         </button>
                       ))}
                     </div>
@@ -290,7 +290,7 @@ export default function RequestQuote() {
                         value={form.project_title}
                         onChange={e => update("project_title", e.target.value)}
                         placeholder="مثال: فيلا سكنية في الرياض"
-                        className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right"
                       />
                     </div>
 
@@ -301,7 +301,7 @@ export default function RequestQuote() {
                         onChange={e => update("project_description", e.target.value)}
                         placeholder="اشرح تفاصيل مشروعك، متطلباتك، وأي معلومات إضافية مفيدة..."
                         rows={4}
-                        className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right resize-none"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right resize-none"
                       />
                     </div>
 
@@ -312,7 +312,7 @@ export default function RequestQuote() {
                         value={form.location}
                         onChange={e => update("location", e.target.value)}
                         placeholder="المدينة، الحي"
-                        className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right"
                       />
                     </div>
 
@@ -324,7 +324,7 @@ export default function RequestQuote() {
                           value={form.land_area}
                           onChange={e => update("land_area", e.target.value)}
                           placeholder="500"
-                          className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right"
+                          className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right"
                         />
                       </div>
                       <div>
@@ -334,7 +334,7 @@ export default function RequestQuote() {
                           value={form.floors_count}
                           onChange={e => update("floors_count", e.target.value)}
                           placeholder="2"
-                          className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right"
+                          className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right"
                         />
                       </div>
                     </div>
@@ -350,7 +350,7 @@ export default function RequestQuote() {
                           { value: "", label: "اختر نطاق الميزانية" },
                           ...BUDGET_RANGES.map(b => ({ value: b.value, label: b.label }))
                         ]}
-                        triggerClassName="border-slate-200 rounded-lg focus:ring-[#C9A66B] text-right bg-white"
+                        triggerClassName="border-slate-200 dark:border-slate-700 rounded-lg focus:ring-[#C9A66B] text-right bg-white"
                       />
                     </div>
 
@@ -361,7 +361,7 @@ export default function RequestQuote() {
                         value={form.timeline}
                         onChange={e => update("timeline", e.target.value)}
                         placeholder="مثال: 6 أشهر، سنة كاملة"
-                        className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right"
                       />
                     </div>
 
@@ -372,7 +372,7 @@ export default function RequestQuote() {
                         onChange={e => update("special_requirements", e.target.value)}
                         placeholder="أي اشتراطات أو رغبات خاصة..."
                         rows={3}
-                        className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right resize-none"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right resize-none"
                       />
                     </div>
                   </div>
@@ -382,7 +382,7 @@ export default function RequestQuote() {
                 {currentStep === 3 && (
                   <div>
                     <h2 className="text-xl font-bold mb-2">رفع الملفات الهندسية</h2>
-                    <p className="text-slate-500 text-sm mb-6">ارفع المخططات والوثائق الهندسية لتساعد المهندس في تقدير التكلفة بدقة أكبر (اختياري)</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">ارفع المخططات والوثائق الهندسية لتساعد المهندس في تقدير التكلفة بدقة أكبر (اختياري)</p>
 
                     {/* Drop Zone */}
                     <div
@@ -395,7 +395,7 @@ export default function RequestQuote() {
                       onClick={() => document.getElementById("file-input").click()}
                     >
                       <Upload className={`w-12 h-12 mx-auto mb-4 ${dragOver ? "text-[#C9A66B]" : "text-slate-400"}`} />
-                      <p className="text-slate-600 font-medium mb-1">اسحب وأفلت الملفات هنا</p>
+                      <p className="text-slate-600 dark:text-slate-300 font-medium mb-1">اسحب وأفلت الملفات هنا</p>
                       <p className="text-slate-400 text-sm">أو انقر للاختيار من جهازك</p>
                       <p className="text-slate-400 text-xs mt-2">PDF, DWG, DXF, PNG, JPG, ZIP مدعومة</p>
                       <input
@@ -451,7 +451,7 @@ export default function RequestQuote() {
                 {currentStep === 4 && (
                   <div className="space-y-5">
                     <h2 className="text-xl font-bold mb-2">معلومات التواصل</h2>
-                    <p className="text-slate-500 text-sm mb-4">سيتواصل معك المهندس على هذه البيانات</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">سيتواصل معك المهندس على هذه البيانات</p>
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1.5">الاسم الكامل *</label>
@@ -460,7 +460,7 @@ export default function RequestQuote() {
                         value={form.client_name}
                         onChange={e => update("client_name", e.target.value)}
                         placeholder="اسمك الكامل"
-                        className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right"
                       />
                     </div>
 
@@ -471,7 +471,7 @@ export default function RequestQuote() {
                         value={form.client_email}
                         onChange={e => update("client_email", e.target.value)}
                         placeholder="example@email.com"
-                        className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-left"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-left"
                         dir="ltr"
                       />
                     </div>
@@ -483,15 +483,15 @@ export default function RequestQuote() {
                         value={form.client_phone}
                         onChange={e => update("client_phone", e.target.value)}
                         placeholder="+966 5X XXX XXXX"
-                        className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-left"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-left"
                         dir="ltr"
                       />
                     </div>
 
                     {/* Summary */}
                     <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                      <h3 className="font-semibold text-[#1a1a2e] mb-3">ملخص طلبك</h3>
-                      <div className="space-y-2 text-sm text-slate-600">
+                      <h3 className="font-semibold text-[#1a1a2e] dark:text-slate-100 mb-3">ملخص طلبك</h3>
+                      <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
                         <div className="flex justify-between">
                           <span>نوع المشروع:</span>
                           <span className="font-medium">{PROJECT_TYPES.find(p => p.value === form.project_type)?.label}</span>

@@ -127,7 +127,7 @@ function LayoutContent({ children, currentPageName }) {
                 <Link
                   key={name}
                   to={to}
-                  className={`inline-flex items-center justify-center px-3 text-[14px] font-medium transition-colors hover:text-[#C9A66B] rounded-md ${currentPageName === name ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
+                  className={`inline-flex items-center justify-center px-3 text-[14px] font-medium transition-colors hover:text-[#C9A66B] rounded-md ${currentPageName === name ? 'text-[#C9A66B]' : 'text-[#6B5D4F] dark:text-slate-300'}`}
                   style={{ minHeight: 44 }}
                 >
                   {label}
@@ -137,7 +137,7 @@ function LayoutContent({ children, currentPageName }) {
               {/* Bytly Sections Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className={`flex items-center gap-1 text-sm font-medium transition-colors hover:text-[#C9A66B] focus:outline-none ${['CostEstimator','ConstructionTracker','TechnicalResources','PermitApplication','EngineerMatcher','DesignMarketplace','AIEngineers','SurveyClientDashboard','SurveyorGigs'].includes(currentPageName) ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}>
+                  <button className={`flex items-center gap-1 text-sm font-medium transition-colors hover:text-[#C9A66B] focus:outline-none ${['CostEstimator','ConstructionTracker','TechnicalResources','PermitApplication','EngineerMatcher','DesignMarketplace','AIEngineers','SurveyClientDashboard','SurveyorGigs'].includes(currentPageName) ? 'text-[#C9A66B]' : 'text-[#6B5D4F] dark:text-slate-300'}`}>
                     {t('nav.bytlySections')}
                     <ChevronDown className="w-3.5 h-3.5" />
                   </button>
@@ -223,7 +223,7 @@ function LayoutContent({ children, currentPageName }) {
 
               <Link 
                 to={createPageUrl("Messages")} 
-                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] flex items-center gap-1.5 ${currentPageName === 'Messages' ? 'text-[#C9A66B]' : 'text-[#6B5D4F]'}`}
+                className={`text-sm font-medium transition-colors hover:text-[#C9A66B] flex items-center gap-1.5 ${currentPageName === 'Messages' ? 'text-[#C9A66B]' : 'text-[#6B5D4F] dark:text-slate-300'}`}
               >
                 <MessagesSquare className="w-4 h-4" />
                 {t('nav.chat')}
@@ -307,7 +307,7 @@ function LayoutContent({ children, currentPageName }) {
                   <Button
                     variant="ghost"
                     onClick={() => window.location.href = '/login'}
-                    className="text-[#6B5D4F] hover:text-[#C9A66B]"
+                    className="text-[#6B5D4F] dark:text-slate-300 hover:text-[#C9A66B]"
                   >
                     {t('nav.login')}
                   </Button>
@@ -404,7 +404,7 @@ function LayoutContent({ children, currentPageName }) {
       <BytlyAdvisorChat />
 
       {/* Footer */}
-      <footer className="bg-[#4A3F35] text-white">
+      <footer className="bg-[#4A3F35] text-white hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-6 gap-8">
             {/* Brand */}
