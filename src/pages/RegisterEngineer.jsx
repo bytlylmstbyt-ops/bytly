@@ -232,6 +232,15 @@ export default function RegisterEngineer() {
     if (isSubmitting || isFileUploading) return;
 
     setIsSubmitting(true);
+    base44.analytics.track({
+      eventName: "engineer_registration_submitted",
+      properties: {
+        user_type: formData.user_type,
+        specialization: formData.specialization,
+        city: formData.city,
+        country: formData.country
+      }
+    });
     setNotice({
       type: "info",
       title: "جارٍ إكمال التسجيل",
