@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import MobileSelect from "@/components/mobile/MobileSelect";
 
 const PROJECT_TYPES = [
   { value: "residential", label: "سكني", icon: "🏠" },
@@ -340,16 +341,17 @@ export default function RequestQuote() {
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1.5">نطاق الميزانية</label>
-                      <select
+                      <MobileSelect
                         value={form.budget_range}
-                        onChange={e => update("budget_range", e.target.value)}
-                        className="w-full border border-slate-200 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right bg-white"
-                      >
-                        <option value="">اختر نطاق الميزانية</option>
-                        {BUDGET_RANGES.map(b => (
-                          <option key={b.value} value={b.value}>{b.label}</option>
-                        ))}
-                      </select>
+                        onValueChange={v => update("budget_range", v)}
+                        placeholder="اختر نطاق الميزانية"
+                        label="نطاق الميزانية"
+                        options={[
+                          { value: "", label: "اختر نطاق الميزانية" },
+                          ...BUDGET_RANGES.map(b => ({ value: b.value, label: b.label }))
+                        ]}
+                        triggerClassName="border-slate-200 rounded-lg focus:ring-[#C9A66B] text-right bg-white"
+                      />
                     </div>
 
                     <div>

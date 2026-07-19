@@ -112,6 +112,25 @@
   body {
     @apply bg-background text-foreground;
     overscroll-behavior: none;
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Hide scrollbars globally for WebView/mobile compatibility */
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Internal scroll containers — prevent bouncy rubber-banding */
+  .scroll-container,
+  [class*="overflow-y-auto"],
+  [class*="overflow-auto"],
+  [role="scroll-area"] {
+    overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
   }
 

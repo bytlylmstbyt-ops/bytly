@@ -6,7 +6,8 @@ export default function BackButton() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  if (location.pathname === "/") return null;
+  const ROOT_TABS = ["/", "/Engineers", "/Projects", "/Gallery", "/Messages"];
+  if (ROOT_TABS.includes(location.pathname)) return null;
 
   return (
     <button
