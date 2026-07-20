@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Loader2, Navigation, CheckCircle2, Compass } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 
-const GOOGLE_API_KEY = 'AIzaSyBapVL5Izu8nOXsZIXg8spZoQW-mR7QmE4';
 const DEFAULT_CENTER = { lat: 24.7136, lng: 46.6753 }; // Riyadh
 
 export default function LocationPicker({ initialLat, initialLng, initialRadius, onSave, onCancel }) {
@@ -19,7 +19,7 @@ export default function LocationPicker({ initialLat, initialLng, initialRadius, 
   const circleRef = useRef(null);
   const mapDivRef = useRef(null);
 
-  // Load Google Maps script
+  // Load Google Maps script using API key fetched from backend
   useEffect(() => {
     if (window.google?.maps) { setMapLoaded(true); return; }
 
@@ -30,16 +30,20 @@ export default function LocationPicker({ initialLat, initialLng, initialRadius, 
       return;
     }
 
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_API_KEY}&language=ar&region=SA`;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => setMapLoaded(true);
-    document.head.appendChild(script);
+    let cancelled = false;
+    base44.functions.invoke('getGoogleMapsApiKey')
+      .then(({ api_key }) => {
+        if (cancelled || !api_key) return;
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${api_key}&language=ar&region=SA`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => setMapLoaded(true);
+        document.head.appendChild(script);
+      })
+      .catch((err) => console.error('Failed to load Google Maps API key:', err));
 
-    return () => {
-      // Don't remove — other components might use it
-    };
+    return () => { cancelled = true; };
   }, []);
 
   // Initialize map
