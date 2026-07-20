@@ -18,6 +18,13 @@ Deno.serve(async (req) => {
     const project = projects[0];
     if (!project) return Response.json({ error: 'Project not found' }, { status: 404 });
 
+    // Verify the caller is the project client or an admin
+    const isClient = project.client_id === user.id || project.created_by === user.email;
+    const isAdmin = user.role === 'admin';
+    if (!isClient && !isAdmin) {
+      return Response.json({ error: 'Forbidden: only the project client can generate this invoice' }, { status: 403 });
+    }
+
     // Check if invoice already exists
     const existing = await base44.asServiceRole.entities.Invoice.filter({
       milestone_id: milestone.id,
