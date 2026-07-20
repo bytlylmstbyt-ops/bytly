@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import { 
   Palette, Building2, PenTool, Briefcase, 
-  ArrowLeft, CheckCircle, Star, Scale, MapPin, HardHat, Package
+  ArrowLeft, CheckCircle, Star, Scale, MapPin, HardHat, Package, Compass
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -85,6 +85,15 @@ export default function RegisterChoice() {
       features: t('registerChoice.roles.legal.features'),
       color: "from-slate-600 to-gray-700",
       link: createPageUrl("RegisterLegalConsultant")
+    },
+    {
+      id: "consultant",
+      icon: Compass,
+      title: "مستشار فني",
+      description: "سجّل كمستشار فني معتمد لمراجعة وتدقيق المشاريع الهندسية",
+      features: ["مراجعة المخرجات الفنية للمشاريع", "اعتماد تقارير الإنجاز والجودة", "دخل إضافي عبر استشاراتك"],
+      color: "from-amber-600 to-yellow-600",
+      link: createPageUrl("RegisterConsultant")
     },
     {
       id: "contractor",
