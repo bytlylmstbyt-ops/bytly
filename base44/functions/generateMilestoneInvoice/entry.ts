@@ -14,9 +14,17 @@ Deno.serve(async (req) => {
     const milestone = milestones[0];
     if (!milestone) return Response.json({ error: 'Milestone not found' }, { status: 404 });
 
-    const projects = await base44.asServiceRole.entities.Project.filter({ id: project_id || milestone.project_id });
+    // Use the milestone's own project_id as the source of truth — a caller-supplied
+    // project_id could otherwise point to a project they own while the milestone
+    // belongs to someone else, bypassing the authorization check below.
+    const projects = await base44.asServiceRole.entities.Project.filter({ id: milestone.project_id });
     const project = projects[0];
     if (!project) return Response.json({ error: 'Project not found' }, { status: 404 });
+
+    // Reject mismatched project_id to prevent cross-project authorization bypass
+    if (project_id && project_id !== project.id) {
+      return Response.json({ error: 'Milestone does not belong to the specified project' }, { status: 400 });
+    }
 
     // Verify the caller is the project client or an admin
     const isClient = project.client_id === user.id || project.created_by === user.email;
