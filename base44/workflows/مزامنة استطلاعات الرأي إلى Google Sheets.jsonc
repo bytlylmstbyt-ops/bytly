@@ -1,0 +1,34 @@
+{
+  "name": "\u0645\u0632\u0627\u0645\u0646\u0629 \u0627\u0633\u062a\u0637\u0644\u0627\u0639\u0627\u062a \u0627\u0644\u0631\u0623\u064a \u0625\u0644\u0649 Google Sheets",
+  "description": "\u062d\u0641\u0638 \u0625\u062c\u0627\u0628\u0627\u062a \u0627\u0633\u062a\u0637\u0644\u0627\u0639\u0627\u062a \u0627\u0644\u0631\u0623\u064a \u062a\u0644\u0642\u0627\u0626\u064a\u0627\u064b \u0641\u064a Google Sheets \u0639\u0646\u062f \u0625\u0646\u0634\u0627\u0626\u0647\u0627",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "SurveyResponse"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "google_sheets",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "syncSurveyToSheets",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  }
+}
