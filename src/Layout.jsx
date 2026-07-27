@@ -288,6 +288,14 @@ function LayoutContent({ children, currentPageName }) {
                           {t('nav.topupWallet')}
                         </Link>
                       </DropdownMenuItem>
+                      {user.role === "admin" && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/AdminControlCenter" className="flex items-center gap-2 text-[#C9A66B] font-medium">
+                            <ShieldCheck className="w-4 h-4" />
+                            مركز إدارة المنصة
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem asChild>
                         <Link to={createPageUrl("Settings")} className="flex items-center gap-2">
                           <Settings className="w-4 h-4" />
