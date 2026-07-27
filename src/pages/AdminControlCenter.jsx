@@ -3,10 +3,9 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
   LayoutDashboard, Users, FileText, Wallet, Scale, Bell, BarChart3, Settings as SettingsIcon,
-  Loader2, ShieldAlert, ChevronLeft, ChevronRight, ArrowUpRight
+  Loader2, ShieldAlert, ArrowUpRight
 } from "lucide-react";
 
 // ── Category → page map ────────────────────────────────────────────────────
