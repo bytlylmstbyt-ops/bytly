@@ -21,6 +21,9 @@ import HowItWorksSection from "@/components/home/HowItWorksSection";
 import TopRatedEngineers from "@/components/home/TopRatedEngineers";
 import ProblemSection from "@/components/home/ProblemSection";
 import SpecialtiesSection from "@/components/home/SpecialtiesSection";
+import PurchasingSection from "@/components/home/PurchasingSection";
+import ProcessTimeline from "@/components/home/ProcessTimeline";
+import FAQSection from "@/components/home/FAQSection";
 import PreLaunchSurveyModal from "@/components/survey/PreLaunchSurveyModal";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useAuth } from "@/lib/AuthContext";
@@ -210,13 +213,25 @@ export default function Home() {
                 {t('home.hero.subtitle')}
               </p>
 
-              {/* Marketing Phrase */}
-              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-8 max-w-lg">
+              {/* Marketing Phrase — measurable outcome */}
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 max-w-lg">
                 {t('marketingPhrase.prefix')}{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4a574] to-[#e8c9a8]">
                   {t('marketingPhrase.highlight')}
                 </span>
               </h2>
+
+              {/* Positioning — target audience + reason to choose */}
+              <div className="mb-6 space-y-2 max-w-lg">
+                <p className="text-sm text-[#e8c9a8] font-medium flex items-start gap-2">
+                  <Users className="w-4 h-4 mt-0.5 shrink-0 text-[#C9A66B]" />
+                  {t('home.hero.targetAudience')}
+                </p>
+                <p className="text-sm text-slate-300 flex items-start gap-2">
+                  <Shield className="w-4 h-4 mt-0.5 shrink-0 text-[#C9A66B]" />
+                  {t('home.hero.reasonToChoose')}
+                </p>
+              </div>
 
               {/* Search Box */}
               <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-2 border border-white/20">
@@ -422,6 +437,15 @@ export default function Home() {
       {/* How It Works */}
       <HowItWorksSection />
 
+      {/* Purchasing Options — how customers start */}
+      <PurchasingSection />
+
+      {/* Process Timeline — signup to delivery */}
+      <ProcessTimeline />
+
+      {/* FAQ — biggest buyer concerns */}
+      <FAQSection />
+
 
 
       {/* Pre-launch Survey Modal */}
@@ -451,6 +475,11 @@ export default function Home() {
                 <ArrowLeft className="w-5 h-5 mr-2" />
               </Button>
             </Link>
+            {/* Microcopy — what happens next */}
+            <p className="text-white/80 text-sm mt-4 flex items-center justify-center gap-2">
+              <CheckCircle className="w-4 h-4 text-white" />
+              {t('home.cta.microcopy')}
+            </p>
           </motion.div>
         </div>
       </section>

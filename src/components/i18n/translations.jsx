@@ -33,10 +33,12 @@ export const translations = {
     },
     home: {
       hero: {
-        badge: "بيتلي | المنظومة الهندسية المتكاملة",
-        title: "أدر مشروعك الهندسي",
-        titleHighlight: "من الفكرة إلى التنفيذ",
-        subtitle: "منصة بيتلي المنظومة الهندسية المتكاملة تجمع بينك وبين أفضل الكفاءات الهندسية في بيئة رقمية متكاملة، تضمن حقوقك، وتسهل إدارة مشروعك من الفكرة إلى التنفيذ.",
+        badge: "خمس طبقات بيانات متزامنة + مسار عمل هندسي محكم",
+        title: "أدر مشروعك الهندسي ببيانات لحظية،",
+        titleHighlight: "وتسليم أسرع وأخطاء تنسيق أقل",
+        subtitle: "بيتلي تربط التصميم والإنشاء والرخص والمدفوعات والمتابعة في خمس طبقات بيانات متزامنة — لتقليل التتبع اليدوي، وتقصير زمن التسليم، وتفادي أخطاء التنسيق بين الأطراف.",
+        targetAudience: "مصممة لأصحاب المشاريع الهندسية والمقاولين والمطورين العقاريين في السعودية",
+        reasonToChoose: "الفرق: ضمان مالي محجوز، مراجعة استشارية، وبيانات متزامنة لحظياً — في منصة واحدة بدل جداول متفرقة.",
         searchPlaceholder: "ابحث عن مصمم أو تخصص...",
         searchButton: "ابحث الآن",
         stats: {
@@ -86,7 +88,88 @@ export const translations = {
       cta: {
         title: "انضم إلى بيتلي اليوم",
         subtitle: "سواء كنت تبحث عن تصميم منزلك، أو مهندس تريد عرض خدماتك، أو شركة استشارية ترغب في تقديم خدماتك - بيتلي هي منصتك المثالية.",
-        joinButton: "انضم لـ بيتلي"
+        joinButton: "انضم لـ بيتلي",
+        microcopy: "نراجع طلبك ونرد عليك خلال 24 ساعة"
+      },
+      purchasing: {
+        title: "كيف تبدأ مع بيتلي؟",
+        subtitle: "ابدأ بالطريقة المناسبة لك — تسجيل، حزمة، عرض سعر، أو اشتراك — ثم وسّع استخدامك حسب نمو مشروعك.",
+        footer: "تجربة مجانية لأول مشروع، ثم اختر الباقة المناسبة لحجم نشاطك.",
+        cta: "ابدأ التسجيل المجاني",
+        steps: {
+          register: {
+            title: "سجّل حسابك",
+            desc: "أنشئ حساباً مجانياً واختر دورك (صاحب مشروع، مهندس، شركة، مقاول)."
+          },
+          package: {
+            title: "اختر حزمة الخدمة",
+            desc: "حدد نطاق مشروعك: خدمة سريعة أم مشروع بناء كامل بمراجعة استشارية."
+          },
+          quote: {
+            title: "احصل على عرض سعر",
+            desc: "استقبل عروضاً مقارنة من مهندسين معتمدين بميزانيات واضحة."
+          },
+          subscription: {
+            title: "فعّل اشتراكك",
+            desc: "باشتراك شهري أو سنوي افتح كل المزايا ووسّع محفظة مشاريعك."
+          }
+        }
+      },
+      process: {
+        title: "مسار العمل من التسجيل إلى التسليم",
+        subtitle: "خمس خطوات واضحة من لحظة تسجيلك حتى اعتماد مخرجات مشروعك",
+        steps: {
+          register: {
+            title: "التسجيل",
+            desc: "أنشئ حسابك وحدد دورك في دقائق."
+          },
+          setup: {
+            title: "الإعداد",
+            desc: "أكمل ملفك ووثائقك الاعتمادية."
+          },
+          create: {
+            title: "إنشاء المشروع",
+            desc: "اطرح متطلباتك وحدد الميزانية والمراحل."
+          },
+          track: {
+            title: "المتابعة",
+            desc: "تابع المراحل بنظام الإشارات والتنبيهات اللحظية."
+          },
+          review: {
+            title: "المراجعة والاعتماد",
+            desc: "اعتمد المخرجات وحرّر الدفعات من الضمان."
+          }
+        }
+      },
+      faq: {
+        title: "الأسئلة الشائعة",
+        subtitle: "أهم ما يهم مشتري الخدمات الهندسية قبل البدء",
+        items: {
+          pricing: {
+            q: "كيف يعمل التسعير في بيتلي؟",
+            a: "تحدد ميزانية مشروعك مسبقاً، وتتلقى عروضاً من مهندسين معتمدين. المبلغ يُحجز في حساب ضمان ولا يُحرَّر إلا بعد اعتمادك للمخرجات. لا رسوم خفية — عمولة المنصة شفافة ومذكورة في العرض."
+          },
+          trial: {
+            q: "هل توجد فترة تجريبية مجانية؟",
+            a: "نعم، أول مشروع لك يعمل كتجربة كاملة المزايا دون رسوم اشتراك. بعدها تختار بين اشتراك شهري أو سنوي حسب حجم نشاطك، مع إمكانية الإلغاء في أي وقت."
+          },
+          escrow: {
+            q: "كيف تحمون أموالي أثناء التنفيذ؟",
+            a: "نظام الضمان (Escrow) يحتجز المبلغ كاملاً عند توقيع العقد، ولا يُحوَّل للمهندس إلا بعد اعتماد كل مرحلة منك أو من المستشار الفني. في حالة النزاع يبقى المبلغ محجوزاً حتى الحل."
+          },
+          timeline: {
+            q: "كم يستغرق إنجاز مشروع هندسي؟",
+            a: "الخدمة السريعة (واجهات/ديكور) تُسلّم خلال 7-15 يوماً. المشاريع الإنشائية الكاملة تمر بست مراحل وتستغرق عادة 6-12 أسبوعاً حسب التعديلات والموافقات البلدية."
+          },
+          verfication: {
+            q: "هل المهندسون موثوقون ومعتمدون؟",
+            a: "كل مهندس يمر بمراجعة وثائق (شهادة التخرج، القيد المهني، رخصة مزاولة المهنة) قبل اعتماده. تظهر شارة التوثيق على ملفه مع تقييمات حقيقية من عملاء سابقين."
+          },
+          support: {
+            q: "ماذا لو حدث خلاف مع المهندس؟",
+            a: "بيتلي تتوسط عبر مستشار فني وقانوني لحل النزاع. إذا تعذّر الحل، يُسترَد المبلغ المحجوز لك وفق شروط الاتفاقية. فريق الدعم متاح خلال 24 ساعة للرد على أي طلب."
+          }
+        }
       }
     },
     footer: {
@@ -793,8 +876,8 @@ export const translations = {
       footerNote: "بيانات حية من قاعدة بيانات بيتلي"
     },
     marketingPhrase: {
-      prefix: "حوّل رؤيتك إلى",
-      highlight: "واقع هندسي"
+      prefix: "قلل أخطاء التنسيق ووفّر وقت التتبع اليدوي بنسبة",
+      highlight: "تصل إلى 40%"
     },
     problemSection: {
       title: "المشكلة التي نحلها في السوق العقاري السعودي",
@@ -914,10 +997,12 @@ export const translations = {
     },
     home: {
       hero: {
-        badge: "Bytly | Integrated Engineering Ecosystem",
-        title: "Manage Your Engineering Project",
-        titleHighlight: "From Concept to Execution",
-        subtitle: "Bytly — the Integrated Engineering Ecosystem — connects you with the best engineering talent in an integrated digital environment that safeguards your rights and streamlines your project management from concept to execution.",
+        badge: "Five synced data layers + a governed engineering workflow",
+        title: "Run your engineering project on live data —",
+        titleHighlight: "faster delivery, fewer coordination errors",
+        subtitle: "Bytly unites design, construction, permits, payments and tracking into five real-time data layers — cutting manual tracking, shortening delivery time, and preventing cross-party coordination mistakes.",
+        targetAudience: "Built for engineering project owners, contractors and real-estate developers in Saudi Arabia",
+        reasonToChoose: "The difference: escrow-protected payments, consultant review, and real-time synced data — in one platform instead of scattered spreadsheets.",
         searchPlaceholder: "Search for designer or specialization...",
         searchButton: "Search Now",
         stats: {
@@ -967,7 +1052,88 @@ export const translations = {
       cta: {
         title: "Join Bytly Today",
         subtitle: "Whether you're looking to design your home, an engineer wanting to showcase your services, or a consulting firm wanting to provide your services - Bytly is your ideal platform.",
-        joinButton: "Join Bytly"
+        joinButton: "Join Bytly",
+        microcopy: "We review your request and respond within 24 hours"
+      },
+      purchasing: {
+        title: "How do you start with Bytly?",
+        subtitle: "Start the way that fits you — register, a package, a quote, or a subscription — then scale as your project grows.",
+        footer: "Free trial for your first project, then choose the plan that fits your activity volume.",
+        cta: "Start free registration",
+        steps: {
+          register: {
+            title: "Register your account",
+            desc: "Create a free account and choose your role (owner, engineer, firm, contractor)."
+          },
+          package: {
+            title: "Pick a service package",
+            desc: "Define your project scope: express service or a full construction project with consultant review."
+          },
+          quote: {
+            title: "Get a quote",
+            desc: "Receive comparable offers from certified engineers with clear budgets."
+          },
+          subscription: {
+            title: "Activate your subscription",
+            desc: "Monthly or yearly subscription unlocks all features and scales your portfolio."
+          }
+        }
+      },
+      process: {
+        title: "Workflow from signup to delivery",
+        subtitle: "Five clear steps from the moment you register until your deliverables are approved",
+        steps: {
+          register: {
+            title: "Registration",
+            desc: "Create your account and pick your role in minutes."
+          },
+          setup: {
+            title: "Setup",
+            desc: "Complete your profile and accreditation documents."
+          },
+          create: {
+            title: "Create Project",
+            desc: "Post requirements and set budget and milestones."
+          },
+          track: {
+            title: "Tracking",
+            desc: "Follow stages with traffic-light signals and instant alerts."
+          },
+          review: {
+            title: "Review & Approval",
+            desc: "Approve deliverables and release escrow payments."
+          }
+        }
+      },
+      faq: {
+        title: "Frequently Asked Questions",
+        subtitle: "What engineering service buyers ask most before starting",
+        items: {
+          pricing: {
+            q: "How does pricing work on Bytly?",
+            a: "You set your budget upfront and receive offers from certified engineers. The amount is held in escrow and only released after you approve the deliverables. No hidden fees — the platform commission is transparent and shown in each offer."
+          },
+          trial: {
+            q: "Is there a free trial?",
+            a: "Yes, your first project runs as a full-feature trial with no subscription fee. After that you choose a monthly or yearly plan based on your activity volume, and you can cancel anytime."
+          },
+          escrow: {
+            q: "How do you protect my money during execution?",
+            a: "The escrow system holds the full amount when the contract is signed, and transfers to the engineer only after each milestone is approved by you or the technical consultant. In a dispute the funds stay locked until resolution."
+          },
+          timeline: {
+            q: "How long does an engineering project take?",
+            a: "Express services (facades/decor) deliver within 7-15 days. Full construction projects go through six stages and usually take 6-12 weeks depending on revisions and municipal approvals."
+          },
+          verfication: {
+            q: "Are the engineers verified and certified?",
+            a: "Every engineer goes through document review (graduation certificate, professional registration, practice license) before approval. A verified badge appears on their profile alongside real reviews from past clients."
+          },
+          support: {
+            q: "What if I disagree with the engineer?",
+            a: "Bytly mediates via a technical and legal consultant to resolve the dispute. If no resolution is reached, your escrowed funds are refunded per the agreement terms. Support replies to any request within 24 hours."
+          }
+        }
       }
     },
     footer: {
@@ -1674,8 +1840,8 @@ export const translations = {
       footerNote: "Live data from Bytly's database"
     },
     marketingPhrase: {
-      prefix: "Turn your vision into",
-      highlight: "engineering reality"
+      prefix: "Cut coordination errors and save up to",
+      highlight: "40% of manual tracking time"
     },
     problemSection: {
       title: "The Problem We Solve in the Saudi Real Estate Market",
