@@ -330,6 +330,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Purchasing Options — how customers start (moved above elite engineers) */}
+      <PurchasingSection />
+
       {/* Problem Section */}
       <ProblemSection />
 
@@ -436,9 +439,6 @@ export default function Home() {
 
       {/* How It Works */}
       <HowItWorksSection />
-
-      {/* Purchasing Options — how customers start */}
-      <PurchasingSection />
 
       {/* Process Timeline — signup to delivery */}
       <ProcessTimeline />
