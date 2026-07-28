@@ -24,6 +24,9 @@ import SpecialtiesSection from "@/components/home/SpecialtiesSection";
 import PurchasingSection from "@/components/home/PurchasingSection";
 import ProcessTimeline from "@/components/home/ProcessTimeline";
 import FAQSection from "@/components/home/FAQSection";
+import DifferentiatorSection from "@/components/home/DifferentiatorSection";
+import ComparisonSection from "@/components/home/ComparisonSection";
+import MissionSection from "@/components/home/MissionSection";
 import PreLaunchSurveyModal from "@/components/survey/PreLaunchSurveyModal";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useAuth } from "@/lib/AuthContext";
@@ -333,6 +336,12 @@ export default function Home() {
       {/* Purchasing Options — how customers start (moved above elite engineers) */}
       <PurchasingSection />
 
+      {/* Differentiator — unique capabilities */}
+      <DifferentiatorSection />
+
+      {/* Comparison — Bytly vs alternatives */}
+      <ComparisonSection />
+
       {/* Problem Section */}
       <ProblemSection />
 
@@ -445,6 +454,9 @@ export default function Home() {
 
       {/* FAQ — biggest buyer concerns */}
       <FAQSection />
+
+      {/* Mission — about us short section */}
+      <MissionSection />
 
 
 

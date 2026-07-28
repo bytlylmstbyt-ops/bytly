@@ -28,8 +28,11 @@ export default function About() {
           <h1 className="text-4xl md:text-5xl font-bold text-[#4A3F35] mb-6">
             {t('footer.aboutPage.whoWeAreTitle')}
           </h1>
-          <p className="text-lg text-[#6B5D4F] mb-10 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg text-[#6B5D4F] mb-6 max-w-2xl mx-auto leading-relaxed">
             {t('footer.aboutPage.whoWeAreText')}
+          </p>
+          <p className="text-sm font-semibold text-[#C9A66B] bg-[#C9A66B]/10 inline-block px-4 py-2 rounded-full mb-10">
+            {t('home.differentiator.spotlight.title')}
           </p>
           <Link to={createPageUrl('CreateProject')}>
             <Button className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white hover:opacity-90 text-lg px-8 py-6">

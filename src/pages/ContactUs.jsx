@@ -48,6 +48,9 @@ export default function ContactUs() {
                         <p className="text-slate-300 text-lg max-w-xl mx-auto">
                             نحن هنا للإجابة على استفساراتك ومساعدتك في كل ما تحتاج. تواصل معنا وسنرد عليك في أقرب وقت.
                         </p>
+                        <p className="text-sm font-semibold text-[#d4a574] bg-white/10 inline-block px-4 py-2 rounded-full mt-4">
+                            محرك مطابقة بيتلي — الإدارة الهندسية الذكية التي لا تُقلد
+                        </p>
                     </motion.div>
                 </div>
             </div>

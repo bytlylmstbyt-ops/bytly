@@ -141,6 +141,62 @@ export const translations = {
           }
         }
       },
+      differentiator: {
+        badge: "ما الذي يميّز بيتلي؟",
+        title: "أربع قدرات لا تجدها مجتمعة في أي أداة إدارة مشاريع هندسية أخرى",
+        subtitle: "ليست مجرد لوحة مهام — بل بنية بيانات هندسية متكاملة تربط التصميم بالتنفيذ والمدفوعات والمراجعة في مسار واحد محكم.",
+        features: {
+          dataModel: {
+            title: "نموذج البيانات الخماسي المتزامن",
+            desc: "خمس طبقات بيانات لحظية: التصميم، التنفيذ، الرخص، المدفوعات، المتابعة — تتحدث معاً في وقت واحد بدل جداول منفصلة."
+          },
+          milestoneFramework: {
+            title: "إطار مراحل بيتلي (Bytly Milestone Framework)",
+            desc: "كل مشروع يمر بإطار مراحل موحد قابل للتكرار: توقيع → معمارى → تطوير → رخصة → تنفيذي → تسليم. نفس الهيكل في كل مكان بالمنصة."
+          },
+          matchingEngine: {
+            title: "محرك مطابقة المهندسين الذكي",
+            desc: "خوارزمية تطابق المشروع بمهندس معتمد حسب التخصص والموقع وكود البناء السعودي والتقييم — لا يدوي ولا عشوائي."
+          },
+          escrowReview: {
+            title: "الضمان المالي + المراجعة الاستشارية",
+            desc: "أموالك محجوزة في ضمان، ولا تُحرَّر إلا بعد مراجعة فنية استشارية لكل مخرج — حماية مزدوجة لا توجد في الجداول."
+          }
+        },
+        outcomes: {
+          coordination: "→ تنسيق أسرع بين الأطراف",
+          approvals: "→ موافقات أبسط وأوضح",
+          matching: "→ مطابقة دقيقة من اليوم الأول",
+          compliance: "→ مطابقة أعلى للكود السعودي"
+        },
+        spotlight: {
+          title: "محرك مطابقة بيتلي — الميزة التي لا تُقلد",
+          desc: "بينما تتركك الأدوات الأخرى تبحث يدوياً في القوائم، يحلل محركنا بيانات كل مشروع (التخصص، الموقع، الميزانية، كود البناء) ويطابقه تلقائياً مع المهندس الأنسب من قاعدة المعتمدين — في ثوانٍ."
+        }
+      },
+      comparison: {
+        title: "بيتلي مقابل البدائل التقليدية",
+        subtitle: "لماذا تكفي الجداول وأدوات المهام العامة لفترة، لكنها تتعثر مع تعقيد المشاريع الهندسية؟",
+        oneLiner: "الجداول تتبع ما تكتبه أنت يدوياً — بيتلي تربط بيانات المشروع لحظياً وتحرس حقوقك مالياً وفنياً في مكان واحد.",
+        table: {
+          capability: "القدرة",
+          spreadsheets: "جداول البيانات",
+          generalTools: "أدوات المهام العامة",
+          traditionalTracking: "التتبع التقليدي",
+          rows: {
+            coordination: "تنسيق لحظي بين الأطراف",
+            compliance: "مراجعة مطابقة الكود السعودي",
+            reporting: "تقارير موحدة تلقائية",
+            payments: "ضمان مالي محجوز",
+            matching: "مطابقة ذكية للمهندسين"
+          }
+        }
+      },
+      mission: {
+        title: "مهمتنا في بيتلي",
+        body: "تمكين كل صاحب مشروع هندسي ومقاول ومطور عقاري من تنفيذ مشاريعه بكفاءة وشفافية وأمان — عبر منظومة رقمية واحدة تربط التصميم بالتنفيذ، وتحمي حقوق كل طرف، وتقلل الهدر في الوقت والمال.",
+        vision: "رؤيتنا: أن تصبح بيتلي المرجع الموحد لإدارة المشاريع الهندسية في السعودية والخليج — حيث لا مشروع يتعثر بسبب سوء التنظيم."
+      },
       faq: {
         title: "الأسئلة الشائعة",
         subtitle: "أهم ما يهم مشتري الخدمات الهندسية قبل البدء",
@@ -1104,6 +1160,62 @@ export const translations = {
             desc: "Approve deliverables and release escrow payments."
           }
         }
+      },
+      differentiator: {
+        badge: "What sets Bytly apart?",
+        title: "Four capabilities you won't find combined in any other engineering PM tool",
+        subtitle: "Not just a task board — an integrated engineering data structure linking design, execution, payments and review in one governed pipeline.",
+        features: {
+          dataModel: {
+            title: "Five-Layer Synced Data Model",
+            desc: "Five real-time data layers — design, execution, permits, payments, tracking — updating together instead of scattered spreadsheets."
+          },
+          milestoneFramework: {
+            title: "Bytly Milestone Framework",
+            desc: "Every project follows one repeatable milestone framework: sign → architectural → development → permit → executive → delivery. Same structure everywhere on the platform."
+          },
+          matchingEngine: {
+            title: "Smart Engineer Matching Engine",
+            desc: "An algorithm matches each project to a certified engineer by specialization, location, Saudi building code and rating — not manual, not random."
+          },
+          escrowReview: {
+            title: "Escrow + Consultant Review",
+            desc: "Your funds are held in escrow and only released after a technical consultant reviews each deliverable — double protection no spreadsheet offers."
+          }
+        },
+        outcomes: {
+          coordination: "→ Faster cross-party coordination",
+          approvals: "→ Simpler, clearer approvals",
+          matching: "→ Accurate matching from day one",
+          compliance: "→ Higher Saudi Code compliance"
+        },
+        spotlight: {
+          title: "The Bytly Matching Engine — the feature that can't be copied",
+          desc: "While other tools leave you searching lists manually, our engine analyzes each project's data (specialty, location, budget, building code) and auto-matches the best-fit certified engineer in seconds."
+        }
+      },
+      comparison: {
+        title: "Bytly vs traditional alternatives",
+        subtitle: "Why spreadsheets and general task tools work for a while, but stumble as engineering projects grow complex?",
+        oneLiner: "Spreadsheets track what you type manually — Bytly connects project data in real time and guards your rights financially and technically in one place.",
+        table: {
+          capability: "Capability",
+          spreadsheets: "Spreadsheets",
+          generalTools: "General Task Tools",
+          traditionalTracking: "Traditional Tracking",
+          rows: {
+            coordination: "Real-time cross-party coordination",
+            compliance: "Saudi Code compliance review",
+            reporting: "Unified automatic reports",
+            payments: "Escrow-protected payments",
+            matching: "Smart engineer matching"
+          }
+        }
+      },
+      mission: {
+        title: "Our mission at Bytly",
+        body: "Empowering every engineering project owner, contractor and real-estate developer to execute projects efficiently, transparently and safely — through one digital ecosystem that links design to execution, protects every party's rights, and cuts waste in time and money.",
+        vision: "Our vision: to become the unified reference for engineering project management in Saudi Arabia and the Gulf — where no project stalls because of poor organization."
       },
       faq: {
         title: "Frequently Asked Questions",
