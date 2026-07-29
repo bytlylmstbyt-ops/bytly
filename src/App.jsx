@@ -155,6 +155,7 @@ const AuthenticatedApp = () => {
       <Route path="/AdvertiseWithUs"            element={lazyRoute(AdvertiseWithUs, "AdvertiseWithUs")} />
       <Route path="/AdvertiserPortal"           element={lazyRoute(AdvertiserPortal, "AdvertiserPortal")} />
       <Route path="/landing"                    element={lazyRoute(React.lazy(() => import('./pages/Landing')), "Landing")} />
+      <Route path="/FAQ"                         element={lazyRoute(React.lazy(() => import('./pages/FAQ')), "FAQ")} />
 
       {/* Public registration-related pages */}
       {Object.entries(Pages)

@@ -12,7 +12,6 @@ import {
   PlusCircle, ChevronDown, Instagram, Facebook, Mail, Phone, MessagesSquare, Scale, Linkedin, Twitter, Bot, Building2, Megaphone, Star, ShieldCheck
 } from "lucide-react";
 import Logo from "@/components/Logo";
-import FAQSection from "@/components/home/FAQSection";
 import BottomNav from "@/components/mobile/BottomNav";
 import BackButton from "@/components/mobile/BackButton";
 import PageTransition from "@/components/mobile/PageTransition";
@@ -412,9 +411,6 @@ function LayoutContent({ children, currentPageName }) {
       {/* Bytly AI Advisor */}
       <BytlyAdvisorChat />
 
-      {/* FAQ — above footer */}
-      <FAQSection />
-
       {/* Footer */}
       <footer className="bg-[#4A3F35] text-white hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -439,6 +435,7 @@ function LayoutContent({ children, currentPageName }) {
                   { to: createPageUrl("Projects"), label: t('nav.projects') },
                   { to: createPageUrl("Gallery"), label: t('nav.gallery') },
                   { to: createPageUrl("About"), label: t('footer.about') },
+                  { to: "/FAQ", label: t('home.faq.title') },
                 ].map(({ to, label }) => (
                   <li key={to}>
                     <Link to={to} className="flex items-center hover:text-[#C9A66B] transition-colors" style={{ minHeight: 44 }}>{label}</Link>
