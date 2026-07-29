@@ -17,12 +17,10 @@ import WelcomeSlides from "@/components/onboarding/WelcomeSlides";
 import ProfessionalWelcomeSlides from "@/components/onboarding/ProfessionalWelcomeSlides";
 import FirmWelcomeSlides from "@/components/onboarding/FirmWelcomeSlides";
 import CorePillarsSection from "@/components/home/CorePillarsSection";
-import HowItWorksSection from "@/components/home/HowItWorksSection";
 import TopRatedEngineers from "@/components/home/TopRatedEngineers";
 import ProblemSection from "@/components/home/ProblemSection";
 import SpecialtiesSection from "@/components/home/SpecialtiesSection";
 import PurchasingSection from "@/components/home/PurchasingSection";
-import ProcessTimeline from "@/components/home/ProcessTimeline";
 import FAQSection from "@/components/home/FAQSection";
 import DifferentiatorSection from "@/components/home/DifferentiatorSection";
 import ComparisonSection from "@/components/home/ComparisonSection";
@@ -445,12 +443,6 @@ export default function Home() {
 
       {/* Core Pillars */}
       <CorePillarsSection />
-
-      {/* How It Works */}
-      <HowItWorksSection />
-
-      {/* Process Timeline — signup to delivery */}
-      <ProcessTimeline />
 
       {/* FAQ — biggest buyer concerns */}
       <FAQSection />
