@@ -417,30 +417,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pre-launch Survey CTA */}
-      <section className="py-12 bg-gradient-to-br from-slate-50 to-amber-50/50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="rounded-3xl bg-white border-2 border-[#C9A66B]/20 p-8 md:p-10 text-center shadow-lg">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] flex items-center justify-center mb-4">
-              <ClipboardList className="w-7 h-7 text-white" />
-            </div>
-            <h3 className="text-xl md:text-2xl font-bold text-[#1a1a2e] mb-2">
-              {t('survey.ctaTitle')}
-            </h3>
-            <p className="text-slate-600 mb-6">
-              {t('survey.ctaSubtitle')}
-            </p>
-            <Button
-              onClick={() => setShowSurvey(true)}
-              className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white px-8 py-3"
-            >
-              <ClipboardList className="w-4 h-4" />
-              {t('survey.ctaButton')}
-            </Button>
-          </div>
-        </div>
-      </section>
-
       {/* Core Pillars */}
       <CorePillarsSection />
 
@@ -485,6 +461,30 @@ export default function Home() {
               {t('home.cta.microcopy')}
             </p>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Pre-launch Survey CTA — end of page */}
+      <section className="py-16 md:py-20 bg-gradient-to-b from-slate-50 to-[#F5F0E8]/50">
+        <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-3xl bg-white border border-[#C9A66B]/15 p-8 md:p-10 text-center shadow-xl">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[#C8AA82] to-[#A88555] flex items-center justify-center mb-5 shadow-lg">
+              <ClipboardList className="w-7 h-7 text-white" />
+            </div>
+            <h3 className="text-xl md:text-2xl font-bold text-[#2D2A42] mb-2">
+              {t('survey.ctaTitle')}
+            </h3>
+            <p className="text-[#666666] mb-6 text-sm md:text-base">
+              {t('survey.ctaSubtitle')}
+            </p>
+            <Button
+              onClick={() => setShowSurvey(true)}
+              className="bg-gradient-to-r from-[#C8AA82] to-[#A88555] text-white px-8 py-3 h-12 hover:opacity-90"
+            >
+              <ClipboardList className="w-4 h-4" />
+              {t('survey.ctaButton')}
+            </Button>
+          </div>
         </div>
       </section>
     </div>
