@@ -333,14 +333,14 @@ export default function Home() {
       {/* Purchasing Options — how customers start (moved above elite engineers) */}
       <PurchasingSection />
 
+      {/* Problem Section — under "how to start with Bytly" */}
+      <ProblemSection />
+
       {/* Differentiator — unique capabilities */}
       <DifferentiatorSection />
 
       {/* Comparison — Bytly vs alternatives */}
       <ComparisonSection />
-
-      {/* Problem Section */}
-      <ProblemSection />
 
       {/* Specialties Section */}
       <SpecialtiesSection />
