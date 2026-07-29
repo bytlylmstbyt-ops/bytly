@@ -21,7 +21,6 @@ import TopRatedEngineers from "@/components/home/TopRatedEngineers";
 import ProblemSection from "@/components/home/ProblemSection";
 import SpecialtiesSection from "@/components/home/SpecialtiesSection";
 import PurchasingSection from "@/components/home/PurchasingSection";
-import FAQSection from "@/components/home/FAQSection";
 import DifferentiatorSection from "@/components/home/DifferentiatorSection";
 import ComparisonSection from "@/components/home/ComparisonSection";
 import MissionSection from "@/components/home/MissionSection";
@@ -419,9 +418,6 @@ export default function Home() {
 
       {/* Core Pillars */}
       <CorePillarsSection />
-
-      {/* FAQ — biggest buyer concerns */}
-      <FAQSection />
 
       {/* Mission — about us short section */}
       <MissionSection />
