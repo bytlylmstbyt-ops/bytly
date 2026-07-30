@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Building2, Upload, Loader2, CheckCircle } from "lucide-react";
+import { Building2, Upload, Loader2, CheckCircle, FileText, Info, Phone, Globe, MapPin, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 export default function RegisterFirm() {
@@ -166,159 +166,194 @@ export default function RegisterFirm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-12">
-      <div className="max-w-4xl mx-auto px-4">
-        <Card className="border-0 shadow-xl">
-          <CardHeader className="text-center space-y-2 pb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] rounded-2xl flex items-center justify-center mx-auto mb-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-6 md:py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <Card className="border-0 shadow-xl overflow-hidden">
+          <CardHeader className="text-center space-y-3 pb-6 md:pb-8 px-5 md:px-8 pt-6 md:pt-8 bg-gradient-to-b from-[#FDFBF7] to-white">
+            <div className="w-16 h-16 bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-lg">
               <Building2 className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-3xl">تسجيل شركة هندسية استشارية</CardTitle>
-            <p className="text-slate-600">انضم إلى شبكة الشركات الهندسية الاستشارية المعتمدة</p>
-            </CardHeader>
+            <CardTitle className="text-2xl md:text-3xl font-bold text-[#4A3F35]">تسجيل شركة هندسية استشارية</CardTitle>
+            <p className="text-slate-500 text-sm md:text-base">انضم إلى شبكة الشركات الهندسية الاستشارية المعتمدة</p>
+            <div className="flex items-start gap-2 bg-amber-50/60 border border-amber-100 rounded-lg p-3 text-right">
+              <Info className="w-4 h-4 text-[#C9A66B] shrink-0 mt-0.5" />
+              <p className="text-xs text-slate-600 leading-relaxed">
+                الحقول المطلوبة مميزة بعلامة <span className="text-red-500 font-bold">*</span> — سيتم مراجعة طلبك من إدارة المنصة خلال 24 ساعة.
+              </p>
+            </div>
+          </CardHeader>
 
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+          <CardContent className="px-5 md:px-8 pb-6 md:pb-8">
+            <form onSubmit={handleSubmit} className="space-y-8">
               {/* Company Basic Info */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-slate-900 pb-2 border-b">معلومات الشركة</h3>
-                
-                <div className="grid md:grid-cols-2 gap-4">
+              <section>
+                <div className="flex items-center gap-2 mb-4 pb-2 border-b-2 border-[#C9A66B]/30">
+                  <div className="w-7 h-7 rounded-full bg-[#6B5D4F] text-white text-sm font-bold flex items-center justify-center">1</div>
+                  <h3 className="text-base md:text-lg font-semibold text-[#4A3F35]">معلومات الشركة الأساسية</h3>
+                </div>
+
+                <div className="space-y-5">
                   <div>
-                    <Label>اسم الشركة *</Label>
+                    <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">
+                      اسم الشركة <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       value={formData.company_name}
                       onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                       placeholder="مثال: شركة التصميم الحديث"
                       required
+                      className="h-12 text-base"
                     />
                   </div>
 
                   <div>
-                    <Label>رقم السجل التجاري *</Label>
+                    <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">
+                      رقم السجل التجاري <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       value={formData.commercial_registration}
                       onChange={(e) => setFormData({ ...formData, commercial_registration: e.target.value })}
                       placeholder="1234567890"
                       required
+                      inputMode="numeric"
+                      className="h-12 text-base"
+                    />
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-5">
+                    <div>
+                      <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">
+                        رقم الهاتف
+                      </Label>
+                      <Input
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        placeholder="+966 5XXXXXXXX"
+                        inputMode="tel"
+                        className="h-12 text-base"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">
+                        الموقع الإلكتروني
+                      </Label>
+                      <Input
+                        value={formData.website}
+                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                        placeholder="https://example.com"
+                        inputMode="url"
+                        className="h-12 text-base"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-3 gap-5">
+                    <div>
+                      <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">المدينة</Label>
+                      <Input
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        placeholder="الرياض"
+                        className="h-12 text-base"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">الدولة</Label>
+                      <Input
+                        value={formData.country}
+                        onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                        className="h-12 text-base"
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">سنة التأسيس</Label>
+                      <Input
+                        type="number"
+                        value={formData.established_year}
+                        onChange={(e) => setFormData({ ...formData, established_year: parseInt(e.target.value) })}
+                        className="h-12 text-base"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">نبذة عن الشركة</Label>
+                    <Textarea
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="اكتب نبذة تعريفية عن الشركة وخدماتها..."
+                      rows={4}
+                      className="text-base"
                     />
                   </div>
                 </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <Label>رقم الهاتف</Label>
-                    <Input
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="+966 5XXXXXXXX"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>الموقع الإلكتروني</Label>
-                    <Input
-                      value={formData.website}
-                      onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                      placeholder="https://example.com"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div>
-                    <Label>المدينة</Label>
-                    <Input
-                      value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      placeholder="الرياض"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>الدولة</Label>
-                    <Input
-                      value={formData.country}
-                      onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>سنة التأسيس</Label>
-                    <Input
-                      type="number"
-                      value={formData.established_year}
-                      onChange={(e) => setFormData({ ...formData, established_year: parseInt(e.target.value) })}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label>نبذة عن الشركة</Label>
-                  <Textarea
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="اكتب نبذة تعريفية عن الشركة وخدماتها..."
-                    rows={4}
-                  />
-                </div>
-              </div>
+              </section>
 
               {/* Specializations */}
-              <div className="space-y-3">
-                <Label>التخصصات</Label>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {specializations.map((spec) => (
-                    <button
-                      key={spec}
-                      type="button"
-                      onClick={() => toggleSpecialization(spec)}
-                      className={`p-3 rounded-lg border text-sm transition-all ${
-                        formData.specializations.includes(spec)
-                          ? "border-[#d4a574] bg-amber-50 text-[#1a1a2e] font-medium"
-                          : "border-slate-200 hover:border-slate-300"
-                      }`}
-                    >
-                      {formData.specializations.includes(spec) && (
-                        <CheckCircle className="w-4 h-4 inline ml-1 text-green-600" />
-                      )}
-                      {spec}
-                    </button>
-                  ))}
+              <section>
+                <div className="flex items-center gap-2 mb-4 pb-2 border-b-2 border-[#C9A66B]/30">
+                  <div className="w-7 h-7 rounded-full bg-[#6B5D4F] text-white text-sm font-bold flex items-center justify-center">2</div>
+                  <h3 className="text-base md:text-lg font-semibold text-[#4A3F35]">التخصصات الهندسية</h3>
+                  <span className="text-xs text-slate-400 mr-auto">(اختياري — اختر ما يناسبك)</span>
                 </div>
-              </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                  {specializations.map((spec) => {
+                    const selected = formData.specializations.includes(spec);
+                    return (
+                      <button
+                        key={spec}
+                        type="button"
+                        onClick={() => toggleSpecialization(spec)}
+                        className={`flex items-center gap-2 p-3 rounded-xl border-2 text-sm transition-all text-right min-h-[48px] ${
+                          selected
+                            ? "border-[#C9A66B] bg-amber-50 text-[#4A3F35] font-medium"
+                            : "border-slate-200 bg-white text-slate-600 hover:border-[#C9A66B]/50"
+                        }`}
+                      >
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                          selected ? "border-[#C9A66B] bg-[#C9A66B]" : "border-slate-300"
+                        }`}>
+                          {selected && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                        </div>
+                        <span className="leading-tight">{spec}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
 
               {/* Images Upload */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label>شعار الشركة</Label>
-                  <div className="mt-2">
+              <section>
+                <div className="flex items-center gap-2 mb-4 pb-2 border-b-2 border-[#C9A66B]/30">
+                  <div className="w-7 h-7 rounded-full bg-[#6B5D4F] text-white text-sm font-bold flex items-center justify-center">3</div>
+                  <h3 className="text-base md:text-lg font-semibold text-[#4A3F35]">الشعار وصورة الغلاف</h3>
+                  <span className="text-xs text-slate-400 mr-auto">(اختياري)</span>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-5">
+                  <div>
+                    <Label className="block mb-2 text-sm font-medium text-[#4A3F35]">شعار الشركة</Label>
                     {formData.company_logo ? (
-                      <div className="relative">
-                        <img 
-                          src={formData.company_logo} 
-                          alt="Logo" 
-                          className="w-32 h-32 object-cover rounded-lg border"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="mt-2"
-                          onClick={() => setFormData({ ...formData, company_logo: "" })}
-                        >
+                      <div className="flex items-center gap-3">
+                        <img src={formData.company_logo} alt="الشعار" className="w-20 h-20 object-cover rounded-lg border-2 border-[#C9A66B]/30" />
+                        <Button type="button" variant="outline" size="sm" onClick={() => setFormData({ ...formData, company_logo: "" })}>
                           تغيير
                         </Button>
                       </div>
                     ) : (
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-slate-50">
+                      <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:bg-amber-50/40 hover:border-[#C9A66B] transition-colors min-h-[112px]">
                         <div className="flex flex-col items-center">
                           {uploadingLogo ? (
-                            <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+                            <Loader2 className="w-7 h-7 animate-spin text-[#C9A66B]" />
                           ) : (
                             <>
-                              <Upload className="w-8 h-8 text-slate-400 mb-2" />
-                              <span className="text-sm text-slate-600">رفع الشعار</span>
+                              <Upload className="w-6 h-6 text-[#C9A66B] mb-1.5" />
+                              <span className="text-sm text-slate-500 font-medium">رفع الشعار</span>
+                              <span className="text-xs text-slate-400 mt-0.5">PNG, JPG</span>
                             </>
                           )}
                         </div>
@@ -326,37 +361,26 @@ export default function RegisterFirm() {
                       </label>
                     )}
                   </div>
-                </div>
 
-                <div>
-                  <Label>صورة الغلاف</Label>
-                  <div className="mt-2">
+                  <div>
+                    <Label className="block mb-2 text-sm font-medium text-[#4A3F35]">صورة الغلاف</Label>
                     {formData.cover_image ? (
-                      <div className="relative">
-                        <img 
-                          src={formData.cover_image} 
-                          alt="Cover" 
-                          className="w-full h-32 object-cover rounded-lg border"
-                        />
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="mt-2"
-                          onClick={() => setFormData({ ...formData, cover_image: "" })}
-                        >
+                      <div>
+                        <img src={formData.cover_image} alt="الغلاف" className="w-full h-28 object-cover rounded-xl border-2 border-[#C9A66B]/30" />
+                        <Button type="button" variant="outline" size="sm" className="mt-2" onClick={() => setFormData({ ...formData, cover_image: "" })}>
                           تغيير
                         </Button>
                       </div>
                     ) : (
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-slate-50">
+                      <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:bg-amber-50/40 hover:border-[#C9A66B] transition-colors min-h-[112px]">
                         <div className="flex flex-col items-center">
                           {uploadingCover ? (
-                            <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+                            <Loader2 className="w-7 h-7 animate-spin text-[#C9A66B]" />
                           ) : (
                             <>
-                              <Upload className="w-8 h-8 text-slate-400 mb-2" />
-                              <span className="text-sm text-slate-600">رفع صورة الغلاف</span>
+                              <Upload className="w-6 h-6 text-[#C9A66B] mb-1.5" />
+                              <span className="text-sm text-slate-500 font-medium">رفع صورة الغلاف</span>
+                              <span className="text-xs text-slate-400 mt-0.5">PNG, JPG</span>
                             </>
                           )}
                         </div>
@@ -365,39 +389,46 @@ export default function RegisterFirm() {
                     )}
                   </div>
                 </div>
-              </div>
+              </section>
 
               {/* Documents */}
-              <div>
-                <Label>المستندات الرسمية (السجل التجاري، الرخصة، إلخ)</Label>
-                <div className="mt-2">
-                  <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-lg cursor-pointer hover:bg-slate-50">
-                    <div className="flex flex-col items-center">
-                      {uploadingDocs ? (
-                        <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
-                      ) : (
-                        <>
-                          <Upload className="w-6 h-6 text-slate-400 mb-1" />
-                          <span className="text-sm text-slate-600">رفع المستندات</span>
-                        </>
-                      )}
-                    </div>
-                    <input type="file" className="hidden" onChange={handleDocumentsUpload} accept=".pdf,.jpg,.jpeg,.png" multiple />
-                  </label>
-                  {formData.documents.length > 0 && (
-                    <p className="text-sm text-green-600 mt-2">
-                      تم رفع {formData.documents.length} مستند
-                    </p>
-                  )}
+              <section>
+                <div className="flex items-center gap-2 mb-4 pb-2 border-b-2 border-[#C9A66B]/30">
+                  <div className="w-7 h-7 rounded-full bg-[#6B5D4F] text-white text-sm font-bold flex items-center justify-center">4</div>
+                  <h3 className="text-base md:text-lg font-semibold text-[#4A3F35]">المستندات الرسمية</h3>
                 </div>
-              </div>
+
+                <Label className="block mb-2 text-sm font-medium text-[#4A3F35]">
+                  السجل التجاري، الرخصة، وما إلى ذلك
+                </Label>
+                <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:bg-amber-50/40 hover:border-[#C9A66B] transition-colors min-h-[96px]">
+                  <div className="flex flex-col items-center">
+                    {uploadingDocs ? (
+                      <Loader2 className="w-6 h-6 animate-spin text-[#C9A66B]" />
+                    ) : (
+                      <>
+                        <FileText className="w-6 h-6 text-[#C9A66B] mb-1" />
+                        <span className="text-sm text-slate-500 font-medium">رفع المستندات</span>
+                        <span className="text-xs text-slate-400 mt-0.5">PDF, JPG, PNG — يمكن رفع أكثر من ملف</span>
+                      </>
+                    )}
+                  </div>
+                  <input type="file" className="hidden" onChange={handleDocumentsUpload} accept=".pdf,.jpg,.jpeg,.png" multiple />
+                </label>
+                {formData.documents.length > 0 && (
+                  <p className="text-sm text-green-600 mt-2 flex items-center gap-1">
+                    <CheckCircle className="w-4 h-4" />
+                    تم رفع {formData.documents.length} مستند
+                  </p>
+                )}
+              </section>
 
               {/* Submit */}
-              <div className="flex gap-3 pt-4">
+              <div className="pt-2">
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
+                  className="w-full h-13 bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white text-base font-semibold py-3.5 min-h-[52px]"
                 >
                   {loading ? (
                     <>
@@ -415,4 +446,4 @@ export default function RegisterFirm() {
       </div>
     </div>
   );
-}
+  }
