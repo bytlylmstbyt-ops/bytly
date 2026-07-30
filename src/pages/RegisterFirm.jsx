@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 export default function RegisterFirm() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingDocs, setUploadingDocs] = useState(false);
@@ -32,6 +33,18 @@ export default function RegisterFirm() {
     specializations: [],
     documents: []
   });
+
+  useEffect(() => {
+    base44.auth.isAuthenticated().then((ok) => {
+      if (!ok) {
+        window.location.href = "/login";
+        return;
+      }
+      setAuthChecked(true);
+    }).catch(() => {
+      window.location.href = "/login";
+    });
+  }, []);
 
   const specializations = [
     "تصميم داخلي",
@@ -133,11 +146,24 @@ export default function RegisterFirm() {
       navigate(createPageUrl("RegistrationSuccess"));
     } catch (error) {
       console.error("Error:", error);
+      if (error?.status === 401 || error?.message?.includes("401")) {
+        toast.error("انتهت الجلسة، يرجى تسجيل الدخول");
+        window.location.href = "/login";
+        return;
+      }
       toast.error("حدث خطأ أثناء التسجيل");
     } finally {
       setLoading(false);
     }
   };
+
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#d4a574]" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-12">
