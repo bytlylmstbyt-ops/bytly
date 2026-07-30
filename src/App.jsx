@@ -66,6 +66,7 @@ const SupplierDashboard          = React.lazy(() => import('./pages/SupplierDash
 const AdvertiseWithUs            = React.lazy(() => import('./pages/AdvertiseWithUs'));
 const AdvertiserPortal           = React.lazy(() => import('./pages/AdvertiserPortal'));
 const ServiceReviews             = React.lazy(() => import('./pages/ServiceReviews'));
+const CompareProposals           = React.lazy(() => import('./pages/CompareProposals'));
 const ProviderSubscription       = React.lazy(() => import('./pages/ProviderSubscription'));
 const RevenueDashboard           = React.lazy(() => import('./pages/RevenueDashboard'));
 const ProviderWallet             = React.lazy(() => import('./pages/ProviderWallet'));
@@ -236,6 +237,7 @@ const AuthenticatedApp = () => {
         <Route path="/ContractorDashboard"          element={lazyRoute(ContractorDashboard, "ContractorDashboard")} />
         <Route path="/SupplierDashboard"             element={lazyRoute(SupplierDashboard, "SupplierDashboard")} />
         <Route path="/ServiceReviews"              element={lazyRoute(ServiceReviews, "ServiceReviews")} />
+        <Route path="/CompareProposals"            element={lazyRoute(CompareProposals, "CompareProposals")} />
       <Route path="/ProviderSubscription"        element={lazyRoute(ProviderSubscription, "ProviderSubscription")} />
       <Route path="/RevenueDashboard"           element={lazyRoute(RevenueDashboard, "RevenueDashboard")} />
         <Route path="/ProviderWallet"             element={lazyRoute(ProviderWallet, "ProviderWallet")} />

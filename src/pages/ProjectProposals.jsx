@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
   ArrowRight, Star, Clock, DollarSign, User, CheckCircle,
-  BarChart3, TrendingDown, Award, MessageSquare, ChevronDown, ChevronUp, X, Loader2
+  BarChart3, TrendingDown, Award, MessageSquare, ChevronDown, ChevronUp, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,6 @@ export default function ProjectProposals() {
   const [engineers, setEngineers] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [compareList, setCompareList] = useState([]);
-  const [showCompare, setShowCompare] = useState(false);
   const [expandedProposal, setExpandedProposal] = useState(null);
   const [sortBy, setSortBy] = useState("price_asc");
 
@@ -75,8 +74,6 @@ export default function ProjectProposals() {
       prev.includes(id) ? prev.filter(x => x !== id) : prev.length < 3 ? [...prev, id] : prev
     );
   };
-
-  const compareProposals = proposals.filter(p => compareList.includes(p.id));
 
   const [acceptingId, setAcceptingId] = useState(null);
 
@@ -138,11 +135,11 @@ export default function ProjectProposals() {
               </Badge>
               {compareList.length > 1 && (
                 <Button
-                  onClick={() => setShowCompare(true)}
+                  onClick={() => navigate(`/CompareProposals?ids=${compareList.join(",")}&project_id=${projectId}`)}
                   className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white"
                 >
                   <BarChart3 className="w-4 h-4 ml-2" />
-                  مقارنة ({compareList.length})
+                  مقارنة جانبية ({compareList.length})
                 </Button>
               )}
             </div>
@@ -395,99 +392,6 @@ export default function ProjectProposals() {
         )}
       </div>
 
-      {/* Compare Modal */}
-      {showCompare && compareProposals.length > 1 && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowCompare(false)}>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-auto"
-            onClick={e => e.stopPropagation()}
-            dir="rtl"
-          >
-            <div className="sticky top-0 bg-white p-5 border-b flex items-center justify-between z-10">
-              <h2 className="text-lg font-bold text-[#1a1a2e] flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-[#C9A66B]" />
-                مقارنة العروض
-              </h2>
-              <button onClick={() => setShowCompare(false)} className="p-2 hover:bg-slate-100 rounded-full">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-5 overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr>
-                    <td className="font-semibold text-slate-500 py-3 pl-4 w-32">البند</td>
-                    {compareProposals.map(p => {
-                      const eng = engineers[p.engineer_id];
-                      return (
-                        <td key={p.id} className="text-center py-3 px-4">
-                          <Avatar className="w-10 h-10 mx-auto mb-1">
-                            <AvatarImage src={eng?.profile_image} />
-                            <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] text-white text-xs">
-                              {eng?.full_name?.charAt(0) || "م"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <p className="font-semibold text-[#1a1a2e] text-xs">{eng?.full_name || "مهندس"}</p>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    { label: "السعر", key: "price", render: v => `${v?.toLocaleString()} ر.س`, best: "min" },
-                    { label: "التسليم", key: "delivery_days", render: v => `${v} يوم`, best: "min" },
-                    { label: "التقييم", key: null, render: (_, p) => engineers[p.engineer_id]?.rating?.toFixed(1) || "—", best: "max_eng_rating" },
-                    { label: "مشاريع مكتملة", key: null, render: (_, p) => engineers[p.engineer_id]?.completed_projects || 0, best: "max_eng_cp" },
-                    { label: "الحالة", key: "status", render: v => v === "accepted" ? "✓ مقبول" : "قيد الانتظار", best: null },
-                  ].map(row => {
-                    const values = compareProposals.map(p =>
-                      row.key ? p[row.key] : row.render(null, p)
-                    );
-                    const nums = values.map(v => parseFloat(v));
-                    const bestVal = row.best === "min" ? Math.min(...nums.filter(n => !isNaN(n))) : Math.max(...nums.filter(n => !isNaN(n)));
-
-                    return (
-                      <tr key={row.label} className="border-t border-slate-50">
-                        <td className="py-3 pl-4 text-slate-500 font-medium">{row.label}</td>
-                        {compareProposals.map((p, i) => {
-                          const displayVal = row.key ? row.render(p[row.key], p) : row.render(null, p);
-                          const numVal = parseFloat(values[i]);
-                          const isBest = row.best && !isNaN(numVal) && numVal === bestVal;
-                          return (
-                            <td key={p.id} className={`text-center py-3 px-4 font-semibold ${isBest ? "text-green-600" : "text-[#1a1a2e]"}`}>
-                              {isBest && <span className="text-xs">⭐ </span>}
-                              {displayVal}
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-
-              <div className="mt-6 flex gap-3 justify-center flex-wrap">
-                {compareProposals.map(p => (
-                  p.status !== "accepted" && (
-                    <Button
-                      key={p.id}
-                      className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white"
-                      onClick={async () => { await handleAccept(p.id); setShowCompare(false); }}
-                    >
-                      <CheckCircle className="w-4 h-4 ml-2" />
-                      قبول {engineers[p.engineer_id]?.full_name || "هذا العرض"}
-                    </Button>
-                  )
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
     </div>
   );
 }
