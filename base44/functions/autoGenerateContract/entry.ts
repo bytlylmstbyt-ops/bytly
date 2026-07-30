@@ -36,6 +36,20 @@ Deno.serve(async (req) => {
     const [client] = await base44.asServiceRole.entities.Client.filter({ id: project.client_id });
     const [engineer] = await base44.asServiceRole.entities.Engineer.filter({ id: proposal.engineer_id });
 
+    // ── Authorization check ────────────────────────────────────────────────
+    // Only the project owner (client), the proposal engineer, or an admin
+    // may trigger contract generation for this proposal.
+    const currentUser = await base44.auth.me();
+    const callerEmail = currentUser?.email;
+    const isAdmin = currentUser?.role === 'admin';
+
+    const isProjectOwner = client?.email === callerEmail || project.created_by === callerEmail;
+    const isProposalEngineer = engineer?.email === callerEmail;
+
+    if (!isAdmin && !isProjectOwner && !isProposalEngineer) {
+      return Response.json({ error: 'Forbidden — not authorized to generate contract for this proposal' }, { status: 403 });
+    }
+
     // Check if contract already exists for this project
     const existingContracts = await base44.asServiceRole.entities.Contract.filter({
       project_id: project.id
