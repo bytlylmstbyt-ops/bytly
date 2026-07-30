@@ -4,6 +4,11 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
+    // Auth guard — only authenticated users (typically admin via scheduled automation) may trigger
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (user.role !== 'admin') return Response.json({ error: 'Forbidden — admin only' }, { status: 403 });
+
     // Fetch all active (in-progress) projects
     const activeProjects = await base44.asServiceRole.entities.Project.filter({
       status: 'in_progress',
