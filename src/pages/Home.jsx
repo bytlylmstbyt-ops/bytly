@@ -22,7 +22,6 @@ import ProblemSection from "@/components/home/ProblemSection";
 import SpecialtiesSection from "@/components/home/SpecialtiesSection";
 import PurchasingSection from "@/components/home/PurchasingSection";
 import DifferentiatorSection from "@/components/home/DifferentiatorSection";
-import ComparisonSection from "@/components/home/ComparisonSection";
 import MissionSection from "@/components/home/MissionSection";
 import PreLaunchSurveyModal from "@/components/survey/PreLaunchSurveyModal";
 import { useLanguage } from "@/components/i18n/LanguageContext";
@@ -338,9 +337,6 @@ export default function Home() {
 
       {/* Differentiator — unique capabilities */}
       <DifferentiatorSection />
-
-      {/* Comparison — Bytly vs alternatives */}
-      <ComparisonSection />
 
       {/* Specialties Section */}
       <SpecialtiesSection />

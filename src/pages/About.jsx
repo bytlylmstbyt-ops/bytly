@@ -4,6 +4,7 @@ import { useLanguage } from '@/components/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
 import { Target, Eye, Sparkles, CheckCircle2 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
+import ComparisonSection from '@/components/home/ComparisonSection';
 
 export default function About() {
   const { t, isRTL } = useLanguage();
@@ -74,6 +75,9 @@ export default function About() {
             ))}
           </ul>
         </section>
+
+        {/* بيتلي مقابل البدائل التقليدية */}
+        <ComparisonSection />
       </div>
     </div>
   );
