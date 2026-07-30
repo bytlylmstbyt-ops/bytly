@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Share2, Facebook, Twitter, Linkedin, Copy, Check } from "lucide-react";
+import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Share2, Facebook, Twitter, Linkedin, Copy, Check, Maximize, Minimize, Loader2 } from "lucide-react";
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 4;
@@ -13,6 +13,9 @@ export default function EnhancedLightbox({ images = [], initialIndex = 0, onClos
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showHint, setShowHint] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const loadedImages = useRef(new Set());
 
   const touchRef = useRef({
     mode: null, // 'pan' | 'pinch' | 'swipe' | null
@@ -40,9 +43,33 @@ export default function EnhancedLightbox({ images = [], initialIndex = 0, onClos
     setCurrentIndex((prev) => {
       const next = (idx + images.length) % images.length;
       if (next !== prev) resetTransforms();
+      if (!loadedImages.current.has(next)) setIsLoading(true);
       return next;
     });
   }, [images.length, resetTransforms]);
+
+  const onImageLoad = useCallback(() => {
+    loadedImages.current.add(currentIndex);
+    setIsLoading(false);
+  }, [currentIndex]);
+
+  const toggleFullscreen = useCallback(async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await containerRef.current?.requestFullscreen?.();
+      } else {
+        await document.exitFullscreen?.();
+      }
+    } catch (e) {
+      console.warn("Fullscreen not available:", e.message);
+    }
+  }, []);
+
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
 
   const goNext = useCallback(() => goToIndex(currentIndex + 1), [currentIndex, goToIndex]);
   const goPrev = useCallback(() => goToIndex(currentIndex - 1), [currentIndex, goToIndex]);
@@ -248,6 +275,13 @@ export default function EnhancedLightbox({ images = [], initialIndex = 0, onClos
             <ZoomIn className="w-5 h-5 text-white" />
           </button>
           <button
+            onClick={toggleFullscreen}
+            className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-white/20 active:scale-95 transition-all"
+            title={isFullscreen ? "إنهاء ملء الشاشة" : "ملء الشاشة"}
+          >
+            {isFullscreen ? <Minimize className="w-5 h-5 text-white" /> : <Maximize className="w-5 h-5 text-white" />}
+          </button>
+          <button
             onClick={() => setShowShareMenu(!showShareMenu)}
             className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center hover:bg-white/20 active:scale-95 transition-all"
           >
@@ -284,6 +318,7 @@ export default function EnhancedLightbox({ images = [], initialIndex = 0, onClos
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
+          onLoad={onImageLoad}
           className="max-w-full max-h-full object-contain"
           style={{
             transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
@@ -296,6 +331,13 @@ export default function EnhancedLightbox({ images = [], initialIndex = 0, onClos
           draggable={false}
         />
       </AnimatePresence>
+
+      {/* Loading spinner for high-res images */}
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <Loader2 className="w-10 h-10 text-white/70 animate-spin" />
+        </div>
+      )}
 
       {/* Zoom indicator */}
       {zoom > 1 && (
