@@ -1,6 +1,16 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 import Stripe from 'npm:stripe@14.21.0';
 
+function escapeHtml(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -46,7 +56,9 @@ Deno.serve(async (req) => {
     const clients = await base44.asServiceRole.entities.Client.filter({ id: project.client_id });
     const client = clients[0];
     const clientEmail = client?.email || project.created_by;
-    const clientName = client?.name || 'العميل الكريم';
+    const clientName = escapeHtml(client?.name || 'العميل الكريم');
+    const projectTitle = escapeHtml(project.title);
+    const milestoneTitle = escapeHtml(milestone.title);
 
     const taxRate = 0.15;
     const amount = milestone.amount || 0;
@@ -73,7 +85,7 @@ Deno.serve(async (req) => {
       status: 'sent',
       issue_date: issueDate,
       due_date: dueDate,
-      notes: `فاتورة المرحلة: ${milestone.title} - مشروع: ${project.title}`,
+      notes: `فاتورة المرحلة: ${milestoneTitle} - مشروع: ${projectTitle}`,
       payment_terms: 7
     });
 
@@ -92,7 +104,7 @@ Deno.serve(async (req) => {
             currency: 'sar',
             product_data: {
               name: `فاتورة ${invoiceNumber}`,
-              description: `المرحلة: ${milestone.title} — المشروع: ${project.title}`
+              description: `المرحلة: ${milestoneTitle} — المشروع: ${projectTitle}`
             },
             unit_amount: Math.round(totalAmount * 100)
           },
@@ -138,7 +150,7 @@ Deno.serve(async (req) => {
     try {
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: clientEmail,
-        subject: `🧾 فاتورة جديدة #${invoiceNumber} — ${project.title}`,
+        subject: `🧾 فاتورة جديدة #${invoiceNumber} — ${projectTitle}`,
         body: `
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
@@ -159,8 +171,8 @@ Deno.serve(async (req) => {
       <div style="background:#f9f6f2;border-radius:8px;padding:20px;margin:20px 0;border-right:4px solid #C9A66B;">
         <table style="width:100%;border-collapse:collapse;">
           <tr><td style="padding:6px 0;color:#888;font-size:14px;">رقم الفاتورة</td><td style="font-weight:bold;color:#333;">${invoiceNumber}</td></tr>
-          <tr><td style="padding:6px 0;color:#888;font-size:14px;">المشروع</td><td style="color:#333;">${project.title}</td></tr>
-          <tr><td style="padding:6px 0;color:#888;font-size:14px;">المرحلة</td><td style="color:#333;">${milestone.title}</td></tr>
+          <tr><td style="padding:6px 0;color:#888;font-size:14px;">المشروع</td><td style="color:#333;">${projectTitle}</td></tr>
+          <tr><td style="padding:6px 0;color:#888;font-size:14px;">المرحلة</td><td style="color:#333;">${milestoneTitle}</td></tr>
           <tr><td style="padding:6px 0;color:#888;font-size:14px;">تاريخ الإصدار</td><td style="color:#333;">${issueDate}</td></tr>
           <tr><td style="padding:6px 0;color:#888;font-size:14px;">تاريخ الاستحقاق</td><td style="color:#c0392b;font-weight:bold;">${dueDate}</td></tr>
           <tr style="border-top:1px solid #e0d8ce;"><td style="padding:10px 0 6px;color:#888;font-size:14px;">المبلغ قبل الضريبة</td><td style="color:#333;">${amount.toLocaleString('ar-SA')} ر.س</td></tr>
@@ -191,7 +203,7 @@ Deno.serve(async (req) => {
     await base44.asServiceRole.entities.Notification.create({
       recipient_email: clientEmail,
       title: '🧾 فاتورة جديدة بانتظار السداد',
-      message: `تم إصدار فاتورة رقم ${invoiceNumber} بقيمة ${totalAmount} ريال (شامل VAT) للمرحلة "${milestone.title}". يرجى السداد خلال 7 أيام.`,
+      message: `تم إصدار فاتورة رقم ${invoiceNumber} بقيمة ${totalAmount} ريال (شامل VAT) للمرحلة "${milestoneTitle}". يرجى السداد خلال 7 أيام.`,
       type: 'payment',
       priority: 'high',
       related_project_id: project.id
