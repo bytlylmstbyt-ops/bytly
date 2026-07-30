@@ -9,9 +9,31 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { event, data } = body;
     const entityName = event?.entity_name;
-    const record = data;
+    const recordId = data?.id;
 
-    if (!record) return Response.json({ skipped: true, reason: 'no data' });
+    if (!entityName || !recordId) {
+      return Response.json({ skipped: true, reason: 'missing entity_name or record id' });
+    }
+
+    // Authorize: fetch the real record from the DB through the user-scoped client
+    // so RLS enforces ownership. Reject forged payloads outright.
+    const entityMap = {
+      WithdrawalRequest: 'WithdrawalRequest',
+      Invoice: 'Invoice',
+    };
+    const entityKey = entityMap[entityName];
+    if (!entityKey) {
+      return Response.json({ skipped: true, reason: 'unsupported entity: ' + entityName });
+    }
+
+    let record;
+    try {
+      const fetched = await base44.entities[entityKey].filter({ id: recordId });
+      record = fetched[0];
+    } catch (_e) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    if (!record) return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     // Determine due date, amount, and label based on entity type
     let dueDate = null;
@@ -56,8 +78,6 @@ Deno.serve(async (req) => {
       title = `🧾 فاتورة مستحقة — ${record.invoice_number || ''}`;
       description = `فاتورة رقم: ${record.invoice_number || '—'}\nالمبلغ: ${amount.toLocaleString('ar-SA')} ر.س\nالعميل: ${record.client_company || record.client_email || '—'}\nتاريخ الإصدار: ${record.issue_date || '—'}\n\nتذكير تلقائي من منصة بيتلي`;
       colorId = '11'; // red
-    } else {
-      return Response.json({ skipped: true, reason: 'unsupported entity: ' + entityName });
     }
 
     if (!dueDate) {
