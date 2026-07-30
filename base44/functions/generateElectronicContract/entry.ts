@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
     // ── Authorization: caller must be the project owner or the provider ─
     const isCallerAdmin = user.role === 'admin';
     const isProjectOwner = project.created_by === user.email;
-    const isProvider = providerEmail === user.email;
+    const isProvider = provider?.email === user.email;
     if (!isCallerAdmin && !isProjectOwner && !isProvider) {
       return Response.json({ error: 'Forbidden: you are not authorized to generate a contract for this proposal' }, { status: 403 });
     }

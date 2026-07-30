@@ -452,6 +452,7 @@ Deno.serve(async (req) => {
 
       const [milestone] = await base44.entities.ProjectMilestone.filter({ id: milestone_id });
       if (!milestone) return Response.json({ error: 'Milestone not found' }, { status: 404 });
+      if (milestone.project_id !== project.id) return Response.json({ error: 'Milestone does not belong to this project' }, { status: 403 });
       if (milestone.escrow_status !== 'held') return Response.json({ error: 'No escrow for this milestone' }, { status: 400 });
 
       const escrowAmount = milestone.escrow_amount || milestone.amount || 0;
