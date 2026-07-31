@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
-import { 
-  Search, ArrowLeft, Star, CheckCircle, Users, 
+import {
+  Search, ArrowLeft, Star, CheckCircle, Users,
   Briefcase, Award, Shield, Palette, Building2,
-  PenTool, Sparkles, ChevronLeft, Ruler
+  PenTool, Sparkles, ChevronLeft, Ruler, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,8 @@ import ProofNumbersSection from "@/components/home/ProofNumbersSection";
 import JsonLd from "@/components/seo/JsonLd";
 import { webPageSchema } from "@/components/seo/buildSchema";
 import PreLaunchSurveyModal from "@/components/survey/PreLaunchSurveyModal";
+import { useScrollDepthTracking } from "@/hooks/useScrollDepthTracking";
+import StickyStartProjectCTA from "@/components/home/StickyStartProjectCTA";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useAuth } from "@/lib/AuthContext";
 import { ClipboardList } from "lucide-react";
@@ -38,6 +40,7 @@ import { toast } from "react-hot-toast";
 export default function Home() {
   const { t } = useLanguage();
   const { user, isAuthenticated } = useAuth();
+  useScrollDepthTracking('home');
   const [engineers, setEngineers] = useState([]);
   const [portfolios, setPortfolios] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -180,7 +183,7 @@ export default function Home() {
       )}
 
       {/* Hero Section */}
-      <section className="relative min-h-[88vh] flex items-center">
+      <section data-section="hero" className="relative min-h-[88vh] flex items-center">
         {/* Background */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e]/95 via-[#1a1a2e]/82 to-[#C9A66B]/30" />
@@ -220,13 +223,11 @@ export default function Home() {
                 {t('home.hero.subtitle')}
               </p>
 
-              {/* Marketing Phrase — measurable outcome */}
-              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-10 max-w-xl leading-snug">
+              {/* Marketing Phrase — merged into a single lighter line to reduce clutter before the first CTA */}
+              <p className="text-base sm:text-lg font-semibold text-white/95 mb-8 max-w-xl leading-snug">
                 {t('marketingPhrase.prefix')}{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C9A66B] to-[#E5D4B8]">
-                  {t('marketingPhrase.highlight')}
-                </span>
-              </h2>
+                <span className="text-[#C9A66B]">{t('marketingPhrase.highlight')}</span>
+              </p>
 
               {/* Positioning — target audience + reason to choose */}
               <div className="mb-10 space-y-4 max-w-xl">
@@ -258,6 +259,12 @@ export default function Home() {
                     <Button className="h-14 px-8 bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white rounded-xl hover:opacity-90 w-full sm:w-auto">
                       {t('home.hero.searchButton')}
                       <ArrowLeft className="w-5 h-5 mr-2" />
+                    </Button>
+                  </Link>
+                  <Link to={createPageUrl("CreateProject")}>
+                    <Button variant="outline" className="h-14 px-8 bg-white/15 text-white border-white/30 hover:bg-white/25 rounded-xl w-full sm:w-auto">
+                      <Plus className="w-5 h-5 ml-1" />
+                      ابدأ مشروعك
                     </Button>
                   </Link>
                 </div>
@@ -340,26 +347,26 @@ export default function Home() {
       </section>
 
       {/* Partner / Sector Logos Strip */}
-      <PartnerLogosStrip />
+      <div data-section="partners"><PartnerLogosStrip /></div>
 
       {/* Purchasing Options — how customers start (moved above elite engineers) */}
-      <PurchasingSection />
+      <div data-section="purchasing"><PurchasingSection /></div>
 
       {/* Problem Section — under "how to start with Bytly" */}
-      <ProblemSection />
+      <div data-section="problem"><ProblemSection /></div>
 
       {/* Differentiator — unique capabilities */}
-      <DifferentiatorSection />
+      <div data-section="differentiator"><DifferentiatorSection /></div>
 
       {/* Specialties Section */}
-      <SpecialtiesSection />
+      <div data-section="specialties"><SpecialtiesSection /></div>
 
       {/* Top-Rated Engineers Leaderboard — auth only */}
       {isAuthenticated && <TopRatedEngineers />}
 
       {/* Portfolio Gallery — auth only */}
       {isAuthenticated && (
-      <section className="py-20 bg-white">
+      <section data-section="portfolio" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -428,19 +435,19 @@ export default function Home() {
       )}
 
       {/* Core Pillars */}
-      <CorePillarsSection />
+      <div data-section="pillars"><CorePillarsSection /></div>
 
       {/* Mission — about us short section */}
-      <MissionSection />
+      <div data-section="mission"><MissionSection /></div>
 
       {/* Testimonials — شهادات قصيرة بنتائج قابلة للقياس */}
-      <TestimonialsSection />
+      <div data-section="testimonials"><TestimonialsSection /></div>
 
       {/* Trust Badges — إشارات الثقة والاعتماد */}
-      <TrustBadgesSection />
+      <div data-section="trust"><TrustBadgesSection /></div>
 
       {/* Proof Numbers + Dated element — أرقام الإثبات وعنصر مؤرخ */}
-      <ProofNumbersSection />
+      <div data-section="proof"><ProofNumbersSection /></div>
 
 
 
@@ -452,7 +459,7 @@ export default function Home() {
       />
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B]">
+      <section data-section="cta" className="py-20 bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -503,6 +510,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Sticky "Start your project" CTA — appears after scrolling past the hero */}
+      <StickyStartProjectCTA />
     </div>
   );
 }
