@@ -185,15 +185,12 @@ export default function AdminMarketEntitiesPage() {
                         <span className="flex items-center gap-1"><TrendingUp className="w-3.5 h-3.5" />{entity.investment_range}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <select
+                        <MobileSelect
                           value={salesStatus}
-                          onChange={(e) => updateSalesStatus(entity, e.target.value)}
-                          className={`text-xs font-medium px-2 py-1.5 rounded-lg border-0 outline-none cursor-pointer ${statusColors[salesStatus] || "bg-slate-100 text-slate-700"}`}
-                        >
-                          {SALES_STATUSES.map(s => (
-                            <option key={s.value} value={s.value}>{s.label}</option>
-                          ))}
-                        </select>
+                          onValueChange={(v) => updateSalesStatus(entity, v)}
+                          options={SALES_STATUSES}
+                          triggerClassName={`text-xs font-medium ${statusColors[salesStatus] || "bg-slate-100 text-slate-700"}`}
+                        />
                       </td>
                       <td className="px-4 py-3">
                         {entity.phone && (

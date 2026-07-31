@@ -720,6 +720,7 @@ export default function Settings() {
                     } finally {
                       setIsDeleting(false);
                       base44.auth.logout();
+                      window.location.href = '/login';
                     }
                   }}
                 >
