@@ -177,11 +177,11 @@ export default function Home() {
       )}
 
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center">
+      <section className="relative min-h-[88vh] flex items-center">
         {/* Background */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e]/95 via-[#1a1a2e]/80 to-[#C9A66B]/30" />
-          <img 
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e]/95 via-[#1a1a2e]/82 to-[#C9A66B]/30" />
+          <img
             src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920"
             alt="Interior Design"
             loading="lazy"
@@ -191,33 +191,34 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a2e] via-transparent to-transparent" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28 w-full">
+          <div className="grid lg:grid-cols-2 gap-14 xl:gap-20 items-center">
+            {/* Text column */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <div className="flex md:justify-start mb-6">
+              <div className="flex md:justify-start mb-8">
                 <Badge className="bg-gradient-to-r from-white/15 to-white/5 text-white border-[#C9A66B]/40 px-5 py-2 text-center text-xs sm:text-sm shadow-lg shadow-[#C9A66B]/10 backdrop-blur-md">
                   <Sparkles className="w-4 h-4 ml-2 shrink-0 text-[#C9A66B]" />
                   <span className="leading-tight">{t('home.hero.badge')}</span>
                 </Badge>
               </div>
-              
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6 break-words text-balance px-1">
-                {t('home.hero.title')}
+
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[3.4rem] font-bold text-white leading-[1.25] mb-7 break-words text-balance px-1">
+                {t('home.hero.title')}{" "}
                 <span className="inline-block py-1 px-2 text-transparent bg-clip-text bg-gradient-to-r from-[#C9A66B] to-[#E5D4B8]">
                   {t('home.hero.titleHighlight')}
                 </span>
               </h1>
-              
-              <p className="text-lg text-slate-300 mb-6 max-w-lg">
+
+              <p className="text-base sm:text-lg text-slate-300 mb-10 max-w-xl leading-relaxed">
                 {t('home.hero.subtitle')}
               </p>
 
               {/* Marketing Phrase — measurable outcome */}
-              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 max-w-lg">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-10 max-w-xl leading-snug">
                 {t('marketingPhrase.prefix')}{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C9A66B] to-[#E5D4B8]">
                   {t('marketingPhrase.highlight')}
@@ -225,19 +226,19 @@ export default function Home() {
               </h2>
 
               {/* Positioning — target audience + reason to choose */}
-              <div className="mb-6 space-y-2 max-w-lg">
-                <p className="text-sm text-[#E5D4B8] font-medium flex items-start gap-2">
+              <div className="mb-10 space-y-4 max-w-xl">
+                <p className="text-sm text-[#E5D4B8] font-medium flex items-start gap-3">
                   <Users className="w-4 h-4 mt-0.5 shrink-0 text-[#C9A66B]" />
                   {t('home.hero.targetAudience')}
                 </p>
-                <p className="text-sm text-slate-300 flex items-start gap-2">
+                <p className="text-sm text-slate-300 flex items-start gap-3">
                   <Shield className="w-4 h-4 mt-0.5 shrink-0 text-[#C9A66B]" />
                   {t('home.hero.reasonToChoose')}
                 </p>
               </div>
 
               {/* Search Box */}
-              <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-2 border border-white/20">
+              <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-2.5 border border-white/20 max-w-xl">
                 <div className="flex flex-col sm:flex-row gap-2">
                   <div className="flex-1 relative">
                     <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -259,20 +260,22 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
-                {stats.map((stat, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 + index * 0.1 }}
-                    className="text-center"
-                  >
-                    <div className="text-2xl md:text-3xl font-bold text-white">{stat.value}</div>
-                    <div className="text-sm text-slate-400 mt-1">{stat.label}</div>
-                  </motion.div>
-                ))}
+              {/* Stats — separated by a soft divider for breathing room */}
+              <div className="mt-14 pt-8 border-t border-white/10 max-w-xl">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-5">
+                  {stats.map((stat, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 + index * 0.1 }}
+                      className="text-center md:text-right"
+                    >
+                      <div className="text-2xl md:text-3xl font-bold text-white">{stat.value}</div>
+                      <div className="text-xs sm:text-sm text-slate-400 mt-1.5">{stat.label}</div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
             </motion.div>
 
@@ -284,11 +287,11 @@ export default function Home() {
               className="hidden lg:block relative"
             >
               <div className="relative">
-                <div className="absolute -top-4 -right-4 w-72 h-72 bg-gradient-to-br from-[#C9A66B]/30 to-transparent rounded-full blur-3xl" />
-                <div className="relative grid grid-cols-2 gap-4">
-                  <div className="space-y-4">
-                    <div className="h-48 rounded-2xl overflow-hidden">
-                      <img 
+                <div className="absolute -top-6 -right-6 w-72 h-72 bg-gradient-to-br from-[#C9A66B]/25 to-transparent rounded-full blur-3xl" />
+                <div className="relative grid grid-cols-2 gap-5">
+                  <div className="space-y-5">
+                    <div className="h-44 rounded-2xl overflow-hidden">
+                      <img
                         src="https://images.unsplash.com/photo-1600210492493-0946911123ea?w=400"
                         alt="Design 1"
                         loading="lazy"
@@ -296,8 +299,8 @@ export default function Home() {
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <div className="h-64 rounded-2xl overflow-hidden">
-                      <img 
+                    <div className="h-60 rounded-2xl overflow-hidden">
+                      <img
                         src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=400"
                         alt="Design 2"
                         loading="lazy"
@@ -306,9 +309,9 @@ export default function Home() {
                       />
                     </div>
                   </div>
-                  <div className="space-y-4 pt-8">
-                    <div className="h-64 rounded-2xl overflow-hidden">
-                      <img 
+                  <div className="space-y-5 pt-10">
+                    <div className="h-60 rounded-2xl overflow-hidden">
+                      <img
                         src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400"
                         alt="Design 3"
                         loading="lazy"
@@ -316,8 +319,8 @@ export default function Home() {
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <div className="h-48 rounded-2xl overflow-hidden">
-                      <img 
+                    <div className="h-44 rounded-2xl overflow-hidden">
+                      <img
                         src="https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?w=400"
                         alt="Design 4"
                         loading="lazy"
