@@ -34,8 +34,8 @@ export const translations = {
     home: {
       hero: {
         badge: "خمس طبقات بيانات متزامنة + مسار عمل هندسي محكم",
-        title: "أدر مشروعك الهندسي ببيانات لحظية،",
-        titleHighlight: "وتسليم أسرع وأخطاء تنسيق أقل",
+        title: "اعثر على مهندسك، اطلب عرض سعر،",
+        titleHighlight: "أو تصفّح أعمالاً هندسية منجزة",
         subtitle: "بيتلي تربط التصميم والإنشاء والرخص والمدفوعات والمتابعة في خمس طبقات بيانات متزامنة — لتقليل التتبع اليدوي، وتقصير زمن التسليم، وتفادي أخطاء التنسيق بين الأطراف.",
         targetAudience: "مصممة لأصحاب المشاريع الهندسية والمقاولين والمطورين العقاريين في السعودية",
         reasonToChoose: "الفرق: ضمان مالي محجوز، مراجعة استشارية، وبيانات متزامنة لحظياً — في منصة واحدة بدل جداول متفرقة.",
@@ -80,13 +80,13 @@ export const translations = {
         noEngineers: "لا توجد بيانات كافية حالياً"
       },
       portfolio: {
-        title: "معرض الأعمال المميزة",
+        title: "تصفّح أعمالاً هندسية منجزة",
         subtitle: "استلهم من أفضل التصاميم والأعمال المنفذة",
         exploreMore: "استكشف المزيد",
         noPortfolios: "لا توجد أعمال حالياً"
       },
       cta: {
-        title: "انضم إلى بيتلي اليوم",
+        title: "جاهز لطلب عرض سعر لمشروعك؟",
         subtitle: "سواء كنت تبحث عن تصميم منزلك، أو مهندس تريد عرض خدماتك، أو شركة استشارية ترغب في تقديم خدماتك - بيتلي هي منصتك المثالية.",
         joinButton: "انضم لـ بيتلي",
         microcopy: "نراجع طلبك ونرد عليك خلال 24 ساعة"
@@ -932,8 +932,8 @@ export const translations = {
       footerNote: "بيانات حية من قاعدة بيانات بيتلي"
     },
     marketingPhrase: {
-      prefix: "قلل أخطاء التنسيق ووفّر وقت التتبع اليدوي بنسبة",
-      highlight: "تصل إلى 40%"
+      prefix: "مهمة واحدة تكفي للبدء — مهندس، عرض سعر، أو دراسة حالة،",
+      highlight: "ووفّر حتى 40% من المتابعة"
     },
     problemSection: {
       title: "المشكلة التي نحلها في السوق العقاري السعودي",
@@ -1054,8 +1054,8 @@ export const translations = {
     home: {
       hero: {
         badge: "Five synced data layers + a governed engineering workflow",
-        title: "Run your engineering project on live data —",
-        titleHighlight: "faster delivery, fewer coordination errors",
+        title: "Find your engineer, request a quote,",
+        titleHighlight: "or browse completed engineering works",
         subtitle: "Bytly unites design, construction, permits, payments and tracking into five real-time data layers — cutting manual tracking, shortening delivery time, and preventing cross-party coordination mistakes.",
         targetAudience: "Built for engineering project owners, contractors and real-estate developers in Saudi Arabia",
         reasonToChoose: "The difference: escrow-protected payments, consultant review, and real-time synced data — in one platform instead of scattered spreadsheets.",
@@ -1100,13 +1100,13 @@ export const translations = {
         noEngineers: "Not enough data available yet"
       },
       portfolio: {
-        title: "Featured Portfolio Gallery",
+        title: "Browse completed engineering works",
         subtitle: "Get inspired by the best designs and executed works",
         exploreMore: "Explore More",
         noPortfolios: "No portfolios currently available"
       },
       cta: {
-        title: "Join Bytly Today",
+        title: "Ready to request a quote for your project?",
         subtitle: "Whether you're looking to design your home, an engineer wanting to showcase your services, or a consulting firm wanting to provide your services - Bytly is your ideal platform.",
         joinButton: "Join Bytly",
         microcopy: "We review your request and respond within 24 hours"
@@ -1952,8 +1952,8 @@ export const translations = {
       footerNote: "Live data from Bytly's database"
     },
     marketingPhrase: {
-      prefix: "Cut coordination errors and save up to",
-      highlight: "40% of manual tracking time"
+      prefix: "Start with one task — an engineer, a quote, or a case study,",
+      highlight: "and save up to 40% of tracking time"
     },
     problemSection: {
       title: "The Problem We Solve in the Saudi Real Estate Market",
