@@ -166,10 +166,14 @@ Deno.serve(async (req) => {
 
             // 3. Optionally save indexed properties to model entity
             if (model_id && quantities.length > 0) {
-                await base44.asServiceRole.entities.BIMModel.update(model_id, {
-                    indexed_properties: quantities.slice(0, 100),
-                    last_indexed: new Date().toISOString()
-                });
+                // Authorization: verify caller owns / is assigned to this model (RLS-scoped fetch).
+                const [dbModel] = await base44.entities.BIMModel.filter({ id: model_id });
+                if (dbModel) {
+                    await base44.asServiceRole.entities.BIMModel.update(model_id, {
+                        indexed_properties: quantities.slice(0, 100),
+                        last_indexed: new Date().toISOString()
+                    });
+                }
             }
 
             return Response.json({

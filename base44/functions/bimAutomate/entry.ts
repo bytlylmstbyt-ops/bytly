@@ -184,6 +184,13 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'No model data provided' }, { status: 400 });
         }
 
+        // Authorization: verify caller owns / is assigned to this model via RLS-scoped fetch.
+        // The client-supplied `model` is untrusted — use the DB record for the update.
+        const [dbModel] = await base44.entities.BIMModel.filter({ id: model.id });
+        if (!dbModel) {
+            return Response.json({ error: 'Forbidden or model not found' }, { status: 403 });
+        }
+
         console.log(`BIM Automation triggered for model: ${model.name}, action: ${action}`);
 
         const results = {
@@ -204,9 +211,9 @@ Deno.serve(async (req) => {
                 results.drive = { folderId: folder.id, folderName, driveLink };
                 console.log(`Drive folder created: ${driveLink}`);
 
-                // Store drive link on the model entity
-                await base44.asServiceRole.entities.BIMModel.update(model.id, {
-                    description: (model.description || '') + `\n[Drive: ${driveLink}]`
+                // Store drive link on the model entity (use authorized DB record, not client payload)
+                await base44.asServiceRole.entities.BIMModel.update(dbModel.id, {
+                    description: (dbModel.description || '') + `\n[Drive: ${driveLink}]`
                 });
             } catch (e) {
                 console.error('Drive automation failed:', e.message);

@@ -19,6 +19,19 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Workflow or project not found' }, { status: 404 });
     }
 
+    // Authorization: only the project owner, assigned engineer, or an admin may transition stages.
+    let assignedEngineerEmail = null;
+    if (projectData.assigned_engineer_id) {
+      const [assignedEngineer] = await base44.asServiceRole.entities.Engineer.filter({ id: projectData.assigned_engineer_id });
+      assignedEngineerEmail = assignedEngineer?.email || null;
+    }
+    const isAuthorized = user.email === projectData.created_by ||
+      (assignedEngineerEmail && user.email === assignedEngineerEmail) ||
+      user.role === 'admin';
+    if (!isAuthorized) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const toStage = workflowData.stages.find(s => s.stage_id === to_stage_id);
 
     // Check if approval is required

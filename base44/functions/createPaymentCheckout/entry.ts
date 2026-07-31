@@ -41,6 +41,14 @@ Deno.serve(async (req) => {
       id: invoice.client_id 
     });
 
+    // Authorization: only the invoice's client or an admin may initiate checkout.
+    if (!client) {
+      return Response.json({ error: 'Client not found' }, { status: 404 });
+    }
+    if (user.email !== client.email && user.email !== invoice.client_email && user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     // Create Stripe checkout session
     const session = await stripeClient.checkout.sessions.create({
       payment_method_types: ['card'],
