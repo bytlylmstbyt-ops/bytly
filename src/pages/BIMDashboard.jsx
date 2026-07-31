@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import MobileSelect from '@/components/mobile/MobileSelect';
 import BIMViewer from '@/components/bim/BIMViewer';
 import {
     Search, Building2, Layers, CloudDownload, RefreshCw, ExternalLink,
@@ -398,38 +398,41 @@ export default function BIMDashboard() {
                                     className="pr-9 h-9 text-sm"
                                 />
                             </div>
-                            <Select value={filterSource} onValueChange={setFilterSource}>
-                                <SelectTrigger className="w-36 h-9 text-sm">
-                                    <SelectValue placeholder="المصدر" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">كل المصادر</SelectItem>
-                                    <SelectItem value="bim360">BIM 360 / ACC</SelectItem>
-                                    <SelectItem value="manual">يدوي</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <Select value={filterType} onValueChange={setFilterType}>
-                                <SelectTrigger className="w-32 h-9 text-sm">
-                                    <SelectValue placeholder="نوع الملف" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">كل الأنواع</SelectItem>
-                                    <SelectItem value="rvt">RVT - Revit</SelectItem>
-                                    <SelectItem value="dwg">DWG - AutoCAD</SelectItem>
-                                    <SelectItem value="ifc">IFC</SelectItem>
-                                    <SelectItem value="nwc">NWC - Navisworks</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <Select value={filterDrive} onValueChange={setFilterDrive}>
-                                <SelectTrigger className="w-36 h-9 text-sm">
-                                    <SelectValue placeholder="Drive" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">كل الحالات</SelectItem>
-                                    <SelectItem value="synced">مؤرشف في Drive</SelectItem>
-                                    <SelectItem value="not_synced">غير مؤرشف</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <MobileSelect
+                                value={filterSource}
+                                onValueChange={setFilterSource}
+                                placeholder="المصدر"
+                                options={[
+                                    { value: "all", label: "كل المصادر" },
+                                    { value: "bim360", label: "BIM 360 / ACC" },
+                                    { value: "manual", label: "يدوي" },
+                                ]}
+                                triggerClassName="w-36 h-9 text-sm"
+                            />
+                            <MobileSelect
+                                value={filterType}
+                                onValueChange={setFilterType}
+                                placeholder="نوع الملف"
+                                options={[
+                                    { value: "all", label: "كل الأنواع" },
+                                    { value: "rvt", label: "RVT - Revit" },
+                                    { value: "dwg", label: "DWG - AutoCAD" },
+                                    { value: "ifc", label: "IFC" },
+                                    { value: "nwc", label: "NWC - Navisworks" },
+                                ]}
+                                triggerClassName="w-32 h-9 text-sm"
+                            />
+                            <MobileSelect
+                                value={filterDrive}
+                                onValueChange={setFilterDrive}
+                                placeholder="Drive"
+                                options={[
+                                    { value: "all", label: "كل الحالات" },
+                                    { value: "synced", label: "مؤرشف في Drive" },
+                                    { value: "not_synced", label: "غير مؤرشف" },
+                                ]}
+                                triggerClassName="w-36 h-9 text-sm"
+                            />
                         </div>
                     </CardHeader>
 

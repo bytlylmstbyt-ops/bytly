@@ -66,16 +66,19 @@ export default function ProjectKanban() {
 
     if (task.status === newStatus) return;
 
+    // Optimistic UI — update local cache immediately, rollback on failure
+    const prevTasks = tasks;
+    setTasks(prev => prev.map(t =>
+      t.id === task.id ? { ...t, status: newStatus } : t
+    ));
+
     try {
       await base44.entities.ProjectTask.update(task.id, {
         status: newStatus
       });
-
-      setTasks(tasks.map(t =>
-        t.id === task.id ? { ...t, status: newStatus } : t
-      ));
     } catch (error) {
       console.error("Error updating task:", error);
+      setTasks(prevTasks); // rollback to previous state
     }
   };
 

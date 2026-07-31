@@ -13,6 +13,7 @@ import { BookingForm, AppointmentList } from '@/components/survey/AppointmentBoo
 import SurveyReviewForm from '@/components/survey/SurveyReviewForm';
 import TransactionHistory from '@/components/survey/TransactionHistory';
 import SurveyInteractiveMap from '@/components/survey/SurveyInteractiveMap';
+import MobileSelect from '@/components/mobile/MobileSelect';
 
 /* ─── Helpers ─── */
 const statusConfig = {
@@ -168,10 +169,15 @@ function CreateRequestForm({ onCreated }) {
           </div>
           <div>
             <label className="text-xs text-gray-500 mb-1 block">حالة العقار</label>
-            <select className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" value={form.property_status} onChange={e => setForm({ ...form, property_status: e.target.value })}>
-              <option value="vacant_land">أرض فضاء</option>
-              <option value="existing_building">مبنى قائم</option>
-            </select>
+            <MobileSelect
+              value={form.property_status}
+              onValueChange={(v) => setForm({ ...form, property_status: v })}
+              options={[
+                { value: "vacant_land", label: "أرض فضاء" },
+                { value: "existing_building", label: "مبنى قائم" },
+              ]}
+              triggerClassName="h-10"
+            />
           </div>
         </div>
 

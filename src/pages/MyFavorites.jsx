@@ -59,10 +59,14 @@ export default function MyFavoritesPage() {
   };
 
   const removeFavorite = async (favoriteId) => {
+    // Optimistic UI — remove from local cache immediately, rollback on failure
+    const prevFavorites = favorites;
+    setFavorites(prev => prev.filter(f => f.id !== favoriteId));
+
     try {
       await base44.entities.Favorite.delete(favoriteId);
-      await loadData();
     } catch (error) {
+      setFavorites(prevFavorites); // rollback
       alert("حدث خطأ في إزالة المفضلة");
     }
   };
