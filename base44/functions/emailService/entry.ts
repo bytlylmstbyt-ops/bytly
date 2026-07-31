@@ -1,5 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
 
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -26,21 +28,21 @@ Deno.serve(async (req) => {
 
         await base44.integrations.Core.SendEmail({
           to: clientEmail,
-          subject: `تحديث مشروعك: ${projectTitle}`,
+          subject: `تحديث مشروعك: ${escapeHtml(projectTitle)}`,
           body: `
             <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="background: linear-gradient(135deg, #6B5D4F, #C9A66B); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
                 <h1 style="color: white; margin: 0; font-size: 24px;">Bytly - لمسة بيت</h1>
               </div>
               <div style="background: #fff; padding: 30px; border: 1px solid #e5e7eb; border-radius: 0 0 12px 12px;">
-                <h2 style="color: #4A3F35;">مرحباً ${clientName}،</h2>
+                <h2 style="color: #4A3F35;">مرحباً ${escapeHtml(clientName)}،</h2>
                 <p style="color: #6B7280;">لديك تحديث جديد على مشروعك:</p>
                 <div style="background: #FFF8F0; border-right: 4px solid #C9A66B; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                  <strong style="color: #4A3F35;">المشروع:</strong> ${projectTitle}<br/>
-                  ${milestoneTitle ? `<strong style="color: #4A3F35;">المرحلة:</strong> ${milestoneTitle}<br/>` : ''}
+                  <strong style="color: #4A3F35;">المشروع:</strong> ${escapeHtml(projectTitle)}<br/>
+                  ${milestoneTitle ? `<strong style="color: #4A3F35;">المرحلة:</strong> ${escapeHtml(milestoneTitle)}<br/>` : ''}
                   <strong style="color: #4A3F35;">الحالة:</strong> <span style="color: #C9A66B;">${statusAr}</span>
                 </div>
-                <p style="color: #374151;">${updateMessage}</p>
+                <p style="color: #374151;">${escapeHtml(updateMessage)}</p>
                 <div style="text-align: center; margin-top: 30px;">
                   <a href="https://mybytly.com" style="background: linear-gradient(135deg, #6B5D4F, #C9A66B); color: white; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: bold;">عرض المشروع</a>
                 </div>
@@ -66,20 +68,20 @@ Deno.serve(async (req) => {
 
         await base44.integrations.Core.SendEmail({
           to: engineerEmail,
-          subject: `🆕 مشروع جديد يناسب تخصصك: ${projectTitle}`,
+          subject: `🆕 مشروع جديد يناسب تخصصك: ${escapeHtml(projectTitle)}`,
           body: `
             <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="background: linear-gradient(135deg, #6B5D4F, #C9A66B); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
                 <h1 style="color: white; margin: 0; font-size: 24px;">Bytly - لمسة بيت</h1>
               </div>
               <div style="background: #fff; padding: 30px; border: 1px solid #e5e7eb; border-radius: 0 0 12px 12px;">
-                <h2 style="color: #4A3F35;">مرحباً ${engineerName}،</h2>
+                <h2 style="color: #4A3F35;">مرحباً ${escapeHtml(engineerName)}،</h2>
                 <p style="color: #6B7280;">يوجد مشروع جديد قد يناسب تخصصك!</p>
                 <div style="background: #FFF8F0; border: 1px solid #E5D4B8; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                  <h3 style="color: #4A3F35; margin: 0 0 10px 0;">${projectTitle}</h3>
+                  <h3 style="color: #4A3F35; margin: 0 0 10px 0;">${escapeHtml(projectTitle)}</h3>
                   <p style="color: #6B7280; margin: 5px 0;">📂 التصنيف: ${categoryAr}</p>
                   ${projectBudget ? `<p style="color: #6B7280; margin: 5px 0;">💰 الميزانية: ${projectBudget} ريال</p>` : ''}
-                  <p style="color: #374151; margin-top: 10px;">${projectDescription}</p>
+                  <p style="color: #374151; margin-top: 10px;">${escapeHtml(projectDescription)}</p>
                 </div>
                 <div style="text-align: center; margin-top: 30px;">
                   <a href="https://mybytly.com/projects" style="background: linear-gradient(135deg, #6B5D4F, #C9A66B); color: white; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: bold;">تقديم عرض الآن</a>
@@ -111,17 +113,17 @@ Deno.serve(async (req) => {
 
         await base44.integrations.Core.SendEmail({
           to: recipientEmail,
-          subject: `متابعة: ${proposalTitle}`,
+          subject: `متابعة: ${escapeHtml(proposalTitle)}`,
           body: `
             <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="background: linear-gradient(135deg, #6B5D4F, #C9A66B); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
                 <h1 style="color: white; margin: 0; font-size: 24px;">Bytly - لمسة بيت</h1>
               </div>
               <div style="background: #fff; padding: 30px; border: 1px solid #e5e7eb; border-radius: 0 0 12px 12px;">
-                <h2 style="color: #4A3F35;">مرحباً ${recipientName}،</h2>
-                <p style="color: #374151; line-height: 1.8;">${aiDraft}</p>
+                <h2 style="color: #4A3F35;">مرحباً ${escapeHtml(recipientName)}،</h2>
+                <p style="color: #374151; line-height: 1.8;">${escapeHtml(aiDraft)}</p>
                 <div style="background: #FFF8F0; border-right: 4px solid #C9A66B; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                  <strong style="color: #4A3F35;">المقترح:</strong> ${proposalTitle}<br/>
+                  <strong style="color: #4A3F35;">المقترح:</strong> ${escapeHtml(proposalTitle)}<br/>
                   <strong style="color: #4A3F35;">القيمة:</strong> ${proposalAmount} ريال
                 </div>
                 <div style="text-align: center; margin-top: 30px;">

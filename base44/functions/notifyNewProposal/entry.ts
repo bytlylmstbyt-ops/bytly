@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 Deno.serve(async (req) => {
   try {
@@ -56,17 +58,17 @@ Deno.serve(async (req) => {
           <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right;">
             <h2 style="color: #6B5D4F;">عرض جديد على مشروعك</h2>
             <p>مرحباً،</p>
-            <p>قدم المهندس <strong>${engineer.full_name}</strong> عرضاً جديداً على مشروعك "<strong>${project.title}</strong>".</p>
+            <p>قدم المهندس <strong>${escapeHtml(engineer.full_name)}</strong> عرضاً جديداً على مشروعك "<strong>${escapeHtml(project.title)}</strong>".</p>
             <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
               <p><strong>تفاصيل العرض:</strong></p>
               <ul>
                 <li>السعر المقترح: ${proposal.price} ريال</li>
                 <li>مدة التسليم: ${proposal.delivery_days || 'غير محددة'} يوم</li>
-                <li>المهندس: ${engineer.full_name}</li>
-                <li>التخصص: ${engineer.user_type || 'غير محدد'}</li>
+                <li>المهندس: ${escapeHtml(engineer.full_name)}</li>
+                <li>التخصص: ${escapeHtml(engineer.user_type || 'غير محدد')}</li>
               </ul>
             </div>
-            ${proposal.cover_letter ? `<p style="background: #fff8e1; padding: 15px; border-radius: 8px;"><strong>رسالة المهندس:</strong><br/>${proposal.cover_letter}</p>` : ''}
+            ${proposal.cover_letter ? `<p style="background: #fff8e1; padding: 15px; border-radius: 8px;"><strong>رسالة المهندس:</strong><br/>${escapeHtml(proposal.cover_letter)}</p>` : ''}
             <p style="margin-top: 30px;">
               <a href="https://mybytly.com/ProjectDetails?id=${project.id}" 
                  style="background: #6B5D4F; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">

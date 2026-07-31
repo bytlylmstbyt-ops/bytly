@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import MobileSelect from "@/components/mobile/MobileSelect";
+import { toast } from "react-hot-toast";
 
 const PROJECT_TYPES = [
   { value: "residential", label: "سكني", icon: "🏠" },
@@ -99,11 +100,20 @@ export default function RequestQuote() {
 
   const handleFileUpload = async (files) => {
     if (!files || files.length === 0) return;
+    const ALLOWED = ['.pdf','.dwg','.dxf','.png','.jpg','.jpeg','.zip','.rar'];
+    const MAX_SIZE = 25 * 1024 * 1024; // 25MB
+    const valid = Array.from(files).filter(f => {
+      const ext = '.' + (f.name.split('.').pop() || '').toLowerCase();
+      if (!ALLOWED.includes(ext)) { toast.error(`نوع الملف غير مدعوم: ${f.name}`); return false; }
+      if (f.size > MAX_SIZE) { toast.error(`حجم الملف يتجاوز 25MB: ${f.name}`); return false; }
+      return true;
+    });
+    if (valid.length === 0) return;
     setUploadingFiles(true);
     const urls = [...form.engineering_files];
     const names = [...form.file_names];
 
-    for (const file of Array.from(files)) {
+    for (const file of valid) {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       urls.push(file_url);
       names.push(file.name);

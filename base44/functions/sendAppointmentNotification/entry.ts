@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.32';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 /**
  * sendAppointmentNotification — إرسال إشعارات عند حجز موعد أو طلب استشارة
@@ -113,11 +115,11 @@ Deno.serve(async (req) => {
               <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right;">
                 <h2 style="color: #6B5D4F;">✅ تم تأكيد موعد الاستشارة</h2>
                 <hr style="border: 1px solid #C9A66B;">
-                <p><strong>المهندس:</strong> ${appointment.target_name || 'المهندس'}</p>
+                <p><strong>المهندس:</strong> ${escapeHtml(appointment.target_name || 'المهندس')}</p>
                 <p><strong>التاريخ:</strong> ${appointment.appointment_date}</p>
                 <p><strong>الوقت:</strong> ${appointment.appointment_time}</p>
                 <p><strong>النوع:</strong> ${typeLabels[appointment.consultation_type] || 'استشارة'}</p>
-                ${appointment.topic ? `<p><strong>الموضوع:</strong> ${appointment.topic}</p>` : ''}
+                ${appointment.topic ? `<p><strong>الموضوع:</strong> ${escapeHtml(appointment.topic)}</p>` : ''}
                 ${appointment.google_calendar_link ? `<p><a href="${appointment.google_calendar_link}" style="color: #6B5D4F;">📅 فتح في Google Calendar</a></p>` : ''}
                 ${appointment.meet_link ? `<p><a href="${appointment.meet_link}" style="color: #6B5D4F;">📹 رابط لقاء الفيديو</a></p>` : ''}
                 <hr style="border: 1px solid #C9A66B;">

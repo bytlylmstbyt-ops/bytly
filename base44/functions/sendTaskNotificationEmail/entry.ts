@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 const PRIORITY_LABELS = { low: 'منخفضة', medium: 'متوسطة', high: 'مرتفعة', urgent: 'عاجلة 🚨' };
 const PRIORITY_COLORS = { low: '#94a3b8', medium: '#3b82f6', high: '#f59e0b', urgent: '#ef4444' };
@@ -53,7 +55,7 @@ function buildTaskEmailHtml({ task, projectName, assigneeName, recipientName, al
       <span style="font-size:22px;">${banner.icon}</span>
       <div>
         <div style="font-size:15px;font-weight:700;color:${banner.color};">${banner.label}</div>
-        <div style="font-size:12px;color:#64748b;margin-top:2px;">مرحباً ${recipientName}، لديك إشعار يتطلب انتباهك</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px;">مرحباً ${escapeHtml(recipientName)}، لديك إشعار يتطلب انتباهك</div>
       </div>
     </div>
   </td></tr>
@@ -64,8 +66,8 @@ function buildTaskEmailHtml({ task, projectName, assigneeName, recipientName, al
     <!-- Task Title -->
     <div style="margin-bottom:24px;">
       <div style="font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">المهمة</div>
-      <div style="font-size:22px;font-weight:800;color:#0f172a;line-height:1.3;">${task.title}</div>
-      ${task.description ? `<div style="font-size:14px;color:#64748b;margin-top:8px;line-height:1.7;border-right:3px solid #e2e8f0;padding-right:12px;">${task.description}</div>` : ''}
+      <div style="font-size:22px;font-weight:800;color:#0f172a;line-height:1.3;">${escapeHtml(task.title)}</div>
+      ${task.description ? `<div style="font-size:14px;color:#64748b;margin-top:8px;line-height:1.7;border-right:3px solid #e2e8f0;padding-right:12px;">${escapeHtml(task.description)}</div>` : ''}
     </div>
 
     <!-- Details Grid -->
@@ -74,13 +76,13 @@ function buildTaskEmailHtml({ task, projectName, assigneeName, recipientName, al
       <!-- Project -->
       <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px;">
         <div style="font-size:11px;font-weight:600;color:#94a3b8;margin-bottom:6px;">📁 المشروع</div>
-        <div style="font-size:14px;font-weight:700;color:#1e293b;">${projectName || '—'}</div>
+        <div style="font-size:14px;font-weight:700;color:#1e293b;">${escapeHtml(projectName || '—')}</div>
       </div>
 
       <!-- Assignee -->
       <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:14px;">
         <div style="font-size:11px;font-weight:600;color:#94a3b8;margin-bottom:6px;">👤 المكلَّف</div>
-        <div style="font-size:14px;font-weight:700;color:#1e293b;">${assigneeName || task.assigned_to || 'غير محدد'}</div>
+        <div style="font-size:14px;font-weight:700;color:#1e293b;">${escapeHtml(assigneeName || task.assigned_to || 'غير محدد')}</div>
       </div>
 
       <!-- Priority -->
