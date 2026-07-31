@@ -2,44 +2,48 @@ import React from "react";
 import { Link } from "react-router-dom";
 import {
   Sparkles, ArrowLeft, BookOpen, Ruler, Calculator, Layers,
-  Users, FileText, ShieldCheck, Bot, MapPin, HardHat, Boxes
+  Users, FileText, ShieldCheck, Bot, MapPin, HardHat, Boxes, FolderTree
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import LinkFolder from "@/components/content/LinkFolder";
 
-const resources = [
+const folders = [
   {
-    icon: Calculator, title: "دليل تقدير التكاليف", desc: "كيف تحدد ميزانية مشروعك الهندسي بدقة وتتجنب الفجوات.",
-    to: "/CostEstimator", tag: "مالية", read: "5 دقائق"
+    icon: Calculator,
+    title: "التخطيط والتكاليف",
+    subtitle: "ابدأ بفهم الميزانية ومراحل المشروع قبل أي التزام.",
+    items: [
+      { icon: Calculator, title: "دليل تقدير التكاليف", desc: "كيف تحدد ميزانية مشروعك الهندسي بدقة وتتجنب الفجوات.", to: "/CostEstimator", tag: "مالية", read: "5 دقائق" },
+      { icon: Layers,    title: "مراحل المشروع الهندسي", desc: "شرح كل مرحلة من الفكرة حتى التسليم وما يُنتظر منك فيها.", to: "/ProjectStages", tag: "إدارة", read: "7 دقائق" },
+    ],
   },
   {
-    icon: Layers, title: "مراحل المشروع الهندسي", desc: "شرح كل مرحلة من الفكرة حتى التسليم وما يُنتظر منك فيها.",
-    to: "/ProjectStages", tag: "إدارة", read: "7 دقائق"
+    icon: Users,
+    title: "الأدوار والفِرق",
+    subtitle: "افهم متى تحتاج كل طرف في فريقك الهندسي.",
+    items: [
+      { icon: Users, title: "تنسيق الأدوار", desc: "متى تتدخل الشركة الاستشارية، والمساح، والمقاول، والمورد.", to: "/ConsultingFirms", tag: "أدوار", read: "6 دقائق" },
+    ],
   },
   {
-    icon: Users, title: "تنسيق الأدوار", desc: "متى تتدخل الشركة الاستشارية، والمساح، والمقاول، والمورد.",
-    to: "/ConsultingFirms", tag: "أدوار", read: "6 دقائق"
+    icon: ShieldCheck,
+    title: "الحماية والقانون",
+    subtitle: "آليات حماية أموالك وضمان حقوقك التعاقدية.",
+    items: [
+      { icon: ShieldCheck, title: "نظام الضمان والمراجعة", desc: "كيف تحمي أموالك عبر الضمان والمراجعة الفنية المستقلة.", to: "/Wallet", tag: "حماية", read: "6 دقائق" },
+      { icon: FileText,    title: "العقود الإلكترونية",    desc: "ما يجب أن يتضمنه عقدك الهندسي وكيف يوقّعه الطرفان رقمياً.", to: "/MyContracts", tag: "قانوني", read: "8 دقائق" },
+    ],
   },
   {
-    icon: Ruler, title: "الموارد الفنية", desc: "مراجع فنية للمواد والأنظمة والمعايير السعودية (SBC).",
-    to: "/TechnicalResources", tag: "فني", read: "مرجع"
-  },
-  {
-    icon: Bot, title: "Bytly AI ومتابعة المخاطر", desc: "كيف يراقب المساعد الذكي مشروعك أسبوعياً وينبّهك للمخاطر.",
-    to: "/AIEngineers", tag: "ذكاء", read: "4 دقائق"
-  },
-  {
-    icon: MapPin, title: "دليل خدمات المسح", desc: "كيف تطلب مساحاً معتمداً وتحجز موعداً ميدانياً للموقع.",
-    to: "/SurveyClientDashboard", tag: "ميداني", read: "5 دقائق"
-  },
-  {
-    icon: ShieldCheck, title: "نظام الضمان والمراجعة", desc: "كيف تحمي أموالك عبر الضمان والمراجعة الفنية المستقلة.",
-    to: "/Wallet", tag: "حماية", read: "6 دقائق"
-  },
-  {
-    icon: FileText, title: "العقود الإلكترونية", desc: "ما يجب أن يتضمنه عقدك الهندسي وكيف يوقّعه الطرفان رقمياً.",
-    to: "/MyContracts", tag: "قانوني", read: "8 دقائق"
+    icon: Bot,
+    title: "الذكاء والميدان",
+    subtitle: "أدوات المتابعة الذكية والخدمات الميدانية والمراجع الفنية.",
+    items: [
+      { icon: Bot,   title: "Bytly AI ومتابعة المخاطر", desc: "كيف يراقب المساعد الذكي مشروعك أسبوعياً وينبّهك للمخاطر.", to: "/AIEngineers", tag: "ذكاء", read: "4 دقائق" },
+      { icon: MapPin, title: "دليل خدمات المسح",          desc: "كيف تطلب مساحاً معتمداً وتحجز موعداً ميدانياً للموقع.", to: "/SurveyClientDashboard", tag: "ميداني", read: "5 دقائق" },
+      { icon: Ruler,  title: "الموارد الفنية",            desc: "مراجع فنية للمواد والأنظمة والمعايير السعودية (SBC).", to: "/TechnicalResources", tag: "فني", read: "مرجع" },
+    ],
   },
 ];
 
@@ -67,31 +71,16 @@ export default function Resources() {
         </p>
       </section>
 
-      {/* Resources grid / H2 */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-        <h2 className="text-2xl font-bold text-[#4A3F35] mb-6">الأدلة المتاحة</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {resources.map((r, i) => (
-            <Link key={i} to={r.to}>
-              <Card className="h-full border-[#C9A66B]/20 hover:border-[#C9A66B] hover:shadow-lg transition-all hover-lift">
-                <CardContent className="pt-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="w-11 h-11 rounded-lg bg-[#C9A66B]/10 flex items-center justify-center">
-                      <r.icon className="w-5 h-5 text-[#6B5D4F]" />
-                    </div>
-                    <Badge variant="outline" className="text-[10px] text-[#C9A66B] border-[#C9A66B]/30">{r.tag}</Badge>
-                  </div>
-                  <h3 className="font-semibold text-[#4A3F35] mb-1.5">{r.title}</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed mb-3">{r.desc}</p>
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100 pt-2">
-                    <span className="flex items-center gap-1"><BookOpen className="w-3 h-3" /> {r.read}</span>
-                    <span className="flex items-center gap-1 text-[#6B5D4F]">قراءة <ArrowLeft className="w-3 h-3" /></span>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+      {/* Resources folders / H2 */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <FolderTree className="w-6 h-6 text-[#C9A66B]" />
+          <h2 className="text-2xl font-bold text-[#4A3F35]">الأدلة مُجمّعة في مجلدات</h2>
         </div>
+        <p className="text-slate-500 text-center mb-8">ثمانية أدلة مصنّفة في أربعة مجلدات علوية لتسهيل العثور على ما تحتاجه.</p>
+        {folders.map((f, i) => (
+          <LinkFolder key={i} {...f} />
+        ))}
       </section>
 
       {/* Process steps / H2 */}

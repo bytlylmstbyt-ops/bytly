@@ -3,21 +3,50 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import {
   Sparkles, CheckCircle, ArrowLeft, Boxes, Ruler, ShieldCheck,
-  FileSignature, Wallet, Bot, MapPin, Building2, Layers, Zap, Users
+  FileSignature, Wallet, Bot, MapPin, Building2, Layers, Zap, Users, FolderTree
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import LinkFolder from "@/components/content/LinkFolder";
 
-const modules = [
-  { icon: Ruler,        title: "حاسبة التكاليف",      desc: "تقدير فوري لقيمة المشروع بناءً على المساحة والنطاق.", to: "/CostEstimator", tag: "تخطيط" },
-  { icon: Layers,       title: "محاكي مراحل المشروع",desc: "حوكمة واضحة لمراحل التنفيذ من التصميم حتى التسليم.", to: "/ProjectStages", tag: "إدارة" },
-  { icon: ShieldCheck,  title: "الضمان والحوالات",    desc: "حماية أموالك في الضمان وإطلاقها عند اعتماد المراحل.", to: "/Wallet", tag: "مالية" },
-  { icon: FileSignature,title: "العقود الإلكترونية", desc: "عقود موثقة بآلياً بتوقيع رقمي لكل من العميل والمهندس.", to: "/MyContracts", tag: "قانوني" },
-  { icon: Bot,          title: "Bytly AI",           desc: "مساعد ذكي يحلل المخاطر ويوصي بإجراءات وقائية.", to: "/AIEngineers", tag: "ذكاء" },
-  { icon: MapPin,       title: "خدمات المسح",        desc: "طلب مساح معتمد وحجز موعد ميداني للموقع.", to: "/SurveyClientDashboard", tag: "ميداني" },
-  { icon: Building2,    title: "الكيانات السوقية",   desc: "سوق متكامل للمقاولين والموردين والاستشاريين.", to: "/MarketEntities", tag: "سوق" },
-  { icon: Wallet,       title: "المحفظة والمدفوعات",desc: "إدارة الميزانية والمدفوعات بمسار شفاف.", to: "/WalletTopup", tag: "مالية" },
+const folders = [
+  {
+    icon: Layers,
+    title: "التخطيط وإدارة المشروع",
+    subtitle: "حدّد الميزانية ووحّد مراحل التنفيذ في مسار واحد.",
+    items: [
+      { icon: Ruler,  title: "حاسبة التكاليف",       desc: "تقدير فوري لقيمة المشروع بناءً على المساحة والنطاق.", to: "/CostEstimator", tag: "تخطيط" },
+      { icon: Layers, title: "محاكي مراحل المشروع", desc: "حوكمة واضحة لمراحل التنفيذ من التصميم حتى التسليم.", to: "/ProjectStages", tag: "إدارة" },
+    ],
+  },
+  {
+    icon: Wallet,
+    title: "المالية والضمان",
+    subtitle: "احمِ أموالك وادفع بمسار شفّاف عبر الضمان.",
+    items: [
+      { icon: ShieldCheck, title: "الضمان والحوالات",     desc: "حماية أموالك في الضمان وإطلاقها عند اعتماد المراحل.", to: "/Wallet", tag: "مالية" },
+      { icon: Wallet,      title: "المحفظة والمدفوعات",   desc: "إدارة الميزانية والمدفوعات بمسار شفاف.", to: "/WalletTopup", tag: "مالية" },
+    ],
+  },
+  {
+    icon: FileSignature,
+    title: "العقود والذكاء الاصطناعي",
+    subtitle: "عقود موثّقة ومراقبة ذكية للمخاطر طوال المشروع.",
+    items: [
+      { icon: FileSignature, title: "العقود الإلكترونية", desc: "عقود موثقة بآلياً بتوقيع رقمي لكل من العميل والمهندس.", to: "/MyContracts", tag: "قانوني" },
+      { icon: Bot,            title: "Bytly AI",          desc: "مساعد ذكي يحلل المخاطر ويوصي بإجراءات وقائية.", to: "/AIEngineers", tag: "ذكاء" },
+    ],
+  },
+  {
+    icon: Building2,
+    title: "الميدان والسوق",
+    subtitle: "خدمات ميدانية وسوق متكامل للمقاولين والموردين.",
+    items: [
+      { icon: MapPin,    title: "خدمات المسح",      desc: "طلب مساح معتمد وحجز موعد ميداني للموقع.", to: "/SurveyClientDashboard", tag: "ميداني" },
+      { icon: Building2, title: "الكيانات السوقية", desc: "سوق متكامل للمقاولين والموردين والاستشاريين.", to: "/MarketEntities", tag: "سوق" },
+    ],
+  },
 ];
 
 const benefits = [
@@ -80,26 +109,16 @@ export default function Solutions() {
         </div>
       </section>
 
-      {/* Solution modules / H2 */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
-        <h2 className="text-2xl font-bold text-[#4A3F35] mb-2 text-center">وحدات المنصة في عرض واحد</h2>
-        <p className="text-slate-500 text-center mb-8">ثماني وحدات متكاملة تعمل بانسجام لتغطية دورة حياة المشروع كاملة.</p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {modules.map((m, i) => (
-            <Link key={i} to={m.to}>
-              <Card className="h-full border-[#C9A66B]/20 hover:border-[#C9A66B] hover:shadow-lg transition-all hover-lift">
-                <CardContent className="pt-5">
-                  <div className="w-10 h-10 rounded-lg bg-[#C9A66B]/10 flex items-center justify-center mb-3">
-                    <m.icon className="w-5 h-5 text-[#6B5D4F]" />
-                  </div>
-                  <Badge variant="outline" className="mb-2 text-[10px] text-[#C9A66B] border-[#C9A66B]/30">{m.tag}</Badge>
-                  <h3 className="font-semibold text-[#4A3F35] mb-1">{m.title}</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">{m.desc}</p>
-                </CardContent>
-              </Card>
-            </Link>
-          ))}
+      {/* Solution folders / H2 */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 py-10">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <FolderTree className="w-6 h-6 text-[#C9A66B]" />
+          <h2 className="text-2xl font-bold text-[#4A3F35]">وحدات المنصة مُجمّعة في مجلدات</h2>
         </div>
+        <p className="text-slate-500 text-center mb-8">ثماني وحدات متكاملة مصنّفة في أربعة مجلدات علوية لتسهيل الوصول والتصفح.</p>
+        {folders.map((f, i) => (
+          <LinkFolder key={i} {...f} />
+        ))}
       </section>
 
       {/* Benefits / H2 */}
