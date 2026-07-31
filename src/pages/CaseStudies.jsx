@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import LiveActiveBadge from "@/components/trust/LiveActiveBadge";
 
 const categoryLabels = {
   interior: "تصميم داخلي",
@@ -60,6 +61,9 @@ export default function CaseStudies() {
         <p className="text-lg text-slate-600 max-w-2xl mx-auto">
           أمثلة عملية لمشاريع هندسية نُفذت عبر المنصة — قبل وبعد التنفيذ — لتقييم قيمة العرض قبل اتخاذ قرارك.
         </p>
+        <div className="mt-6 flex justify-center">
+          <LiveActiveBadge />
+        </div>
       </section>
 
       {/* Proof stats / H2 */}

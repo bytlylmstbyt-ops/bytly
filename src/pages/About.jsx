@@ -6,6 +6,7 @@ import { Target, Eye, Sparkles, CheckCircle2 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import ComparisonSection from '@/components/home/ComparisonSection';
 import SecurityTrustSection from '@/components/home/SecurityTrustSection';
+import LiveActiveBadge from '@/components/trust/LiveActiveBadge';
 
 export default function About() {
   const { t, isRTL } = useLanguage();
@@ -36,6 +37,9 @@ export default function About() {
           <p className="text-sm font-semibold text-[#C9A66B] bg-[#C9A66B]/10 inline-block px-4 py-2 rounded-full mb-10">
             {t('home.differentiator.spotlight.title')}
           </p>
+          <div className="mb-10 flex justify-center">
+            <LiveActiveBadge />
+          </div>
           <Link to={createPageUrl('CreateProject')}>
             <Button className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white hover:opacity-90 text-lg px-8 py-6">
               {t('footer.aboutPage.cta')}

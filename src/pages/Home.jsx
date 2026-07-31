@@ -27,6 +27,8 @@ import PartnerLogosStrip from "@/components/home/PartnerLogosStrip";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
 import TrustBadgesSection from "@/components/home/TrustBadgesSection";
 import ProofNumbersSection from "@/components/home/ProofNumbersSection";
+import VideoTestimonialSection from "@/components/home/VideoTestimonialSection";
+import AwardsRecognitionSection from "@/components/home/AwardsRecognitionSection";
 import PreLaunchSurveyModal from "@/components/survey/PreLaunchSurveyModal";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useAuth } from "@/lib/AuthContext";
@@ -339,6 +341,9 @@ export default function Home() {
       {/* Partner / Sector Logos Strip */}
       <PartnerLogosStrip />
 
+      {/* Awards & Third-party Recognition */}
+      <AwardsRecognitionSection />
+
       {/* Purchasing Options — how customers start (moved above elite engineers) */}
       <PurchasingSection />
 
@@ -430,6 +435,9 @@ export default function Home() {
 
       {/* Testimonials — شهادات قصيرة بنتائج قابلة للقياس */}
       <TestimonialsSection />
+
+      {/* Video Testimonial — شهادة فيديو من عميل هندسي */}
+      <VideoTestimonialSection />
 
       {/* Trust Badges — إشارات الثقة والاعتماد */}
       <TrustBadgesSection />

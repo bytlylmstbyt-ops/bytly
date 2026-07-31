@@ -7,6 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import LinkFolder from "@/components/content/LinkFolder";
+import LiveActiveBadge from "@/components/trust/LiveActiveBadge";
 
 const folders = [
   {
@@ -61,6 +62,9 @@ export default function Resources() {
         <p className="text-lg text-slate-600 max-w-2xl mx-auto">
           أدلة عملية حول سير العمل الهندسي وتقدير التكاليف ومراحل المشروع وتنسيق الأدوار — لتقرر بثقة قبل البدء.
         </p>
+        <div className="mt-6 flex justify-center">
+          <LiveActiveBadge />
+        </div>
       </section>
 
       {/* Problem framing / H2 */}
