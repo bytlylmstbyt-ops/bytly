@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
 import Stripe from 'npm:stripe@17.5.0';
 
 Deno.serve(async (req) => {
@@ -15,6 +15,11 @@ Deno.serve(async (req) => {
 
     const { amount, projectId, proposalId, projectTitle } = await req.json();
 
+    if (!amount || typeof amount !== 'number' || amount <= 0 || amount > 100000000) {
+      return Response.json({ error: 'Invalid amount' }, { status: 400 });
+    }
+    const safeTitle = String(projectTitle || 'مشروع').slice(0, 200).replace(/[<>]/g, '');
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -22,7 +27,7 @@ Deno.serve(async (req) => {
           price_data: {
             currency: 'sar',
             product_data: {
-              name: `مشروع: ${projectTitle}`,
+              name: `مشروع: ${safeTitle}`,
               description: 'دفع مبلغ المشروع بنظام الضمان'
             },
             unit_amount: Math.round(amount * 100)

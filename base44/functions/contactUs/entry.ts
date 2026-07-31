@@ -1,4 +1,13 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.23';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 Deno.serve(async (req) => {
     try {
@@ -21,35 +30,35 @@ Deno.serve(async (req) => {
                     <table style="width: 100%; border-collapse: collapse;">
                         <tr>
                             <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-weight: bold; color: #666; width: 140px;">الاسم:</td>
-                            <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #1a1a2e;">${name}</td>
+                            <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #1a1a2e;">${escapeHtml(name)}</td>
                         </tr>
                         <tr>
                             <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-weight: bold; color: #666;">البريد الإلكتروني:</td>
-                            <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #1a1a2e;">${email}</td>
+                            <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #1a1a2e;">${escapeHtml(email)}</td>
                         </tr>
                         ${company ? `<tr>
                             <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-weight: bold; color: #666;">الشركة:</td>
-                            <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #1a1a2e;">${company}</td>
+                            <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #1a1a2e;">${escapeHtml(company)}</td>
                         </tr>` : ''}
                         ${phone ? `<tr>
                             <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-weight: bold; color: #666;">رقم الجوال:</td>
-                            <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #1a1a2e;">${phone}</td>
+                            <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #1a1a2e;">${escapeHtml(phone)}</td>
                         </tr>` : ''}
                         ${subject ? `<tr>
                             <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-weight: bold; color: #666;">الموضوع:</td>
-                            <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #1a1a2e;">${subject}</td>
+                            <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #1a1a2e;">${escapeHtml(subject)}</td>
                         </tr>` : ''}
                     </table>
 
                     ${project_needs ? `
                     <h2 style="color: #1a1a2e; margin-top: 24px;">احتياجات المشروع</h2>
                     <div style="background: #f8f5f0; border-right: 4px solid #d4a574; padding: 16px; border-radius: 8px; color: #333; line-height: 1.7;">
-                        ${project_needs.replace(/\n/g, '<br>')}
+                        ${escapeHtml(project_needs).replace(/\n/g, '<br>')}
                     </div>` : ''}
 
                     <h2 style="color: #1a1a2e; margin-top: 24px;">نص الرسالة</h2>
                     <div style="background: #f8f5f0; border-right: 4px solid #d4a574; padding: 16px; border-radius: 8px; color: #333; line-height: 1.7;">
-                        ${message.replace(/\n/g, '<br>')}
+                        ${escapeHtml(message).replace(/\n/g, '<br>')}
                     </div>
 
                     <div style="margin-top: 24px; padding: 12px; background: #f0f4ff; border-radius: 8px; font-size: 12px; color: #666; text-align: center;">
@@ -62,7 +71,7 @@ Deno.serve(async (req) => {
         // Send to admin
         await base44.asServiceRole.integrations.Core.SendEmail({
             to: 'info@mybytly.com',
-            subject: `استفسار جديد من ${name}${subject ? ' - ' + subject : ''}`,
+            subject: `استفسار جديد من ${escapeHtml(name)}${subject ? ' - ' + escapeHtml(subject) : ''}`,
             body: emailBody,
             from_name: 'منصة بيتلي - نموذج التواصل'
         });
@@ -74,11 +83,11 @@ Deno.serve(async (req) => {
                     <h1 style="color: white; margin: 0; font-size: 22px;">شكراً لتواصلك معنا</h1>
                 </div>
                 <div style="background: white; padding: 28px; border-radius: 0 0 12px 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-                    <p style="color: #1a1a2e; font-size: 16px;">مرحباً ${name}،</p>
+                    <p style="color: #1a1a2e; font-size: 16px;">مرحباً ${escapeHtml(name)}،</p>
                     <p style="color: #555; line-height: 1.7;">لقد استلمنا رسالتك بنجاح وسيقوم فريقنا بمراجعتها والرد عليك في أقرب وقت ممكن خلال أوقات العمل (الأحد - الخميس، 9 صباحاً - 5 مساءً).</p>
                     <div style="background: #f8f5f0; border-radius: 8px; padding: 16px; margin: 20px 0;">
                         <p style="margin: 0; color: #d4a574; font-weight: bold;">رسالتك:</p>
-                        <p style="margin: 8px 0 0; color: #555;">${message.substring(0, 200)}${message.length > 200 ? '...' : ''}</p>
+                        <p style="margin: 8px 0 0; color: #555;">${escapeHtml(message).substring(0, 200)}${message.length > 200 ? '...' : ''}</p>
                     </div>
                     <p style="color: #888; font-size: 13px;">فريق بيتلي - لمسة بيت</p>
                 </div>
