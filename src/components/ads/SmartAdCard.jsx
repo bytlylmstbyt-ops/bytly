@@ -114,14 +114,14 @@ export function AdInFeedCard({ ad, onDismiss }) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.96 }}
-      className="relative rounded-2xl border border-[#d4a574]/30 bg-gradient-to-br from-amber-50/40 via-white to-amber-50/20 shadow-sm overflow-hidden group"
+      className="relative rounded-2xl border border-[#C9A66B]/30 bg-gradient-to-br from-amber-50/40 via-white to-amber-50/20 shadow-sm overflow-hidden group"
       dir="rtl"
     >
       {/* Sponsored tag + dismiss */}
       <div className="flex items-center justify-between px-4 pt-3 pb-1">
         <div className="flex items-center gap-1.5">
-          <div className="w-1.5 h-1.5 rounded-full bg-[#d4a574]" />
-          <span className="text-[10px] text-[#d4a574] font-semibold tracking-wide">محتوى مدعوم</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-[#C9A66B]" />
+          <span className="text-[10px] text-[#C9A66B] font-semibold tracking-wide">محتوى مدعوم</span>
         </div>
         <button
           type="button"
@@ -158,7 +158,7 @@ export function AdInFeedCard({ ad, onDismiss }) {
           {ad.description && (
             <p className="text-xs text-slate-400 line-clamp-1 mt-0.5">{ad.description}</p>
           )}
-          <div className="flex items-center gap-1 mt-2 text-[#d4a574] text-xs font-medium">
+          <div className="flex items-center gap-1 mt-2 text-[#C9A66B] text-xs font-medium">
             <span>اعرف أكثر</span>
             <ExternalLink className="w-3 h-3" />
           </div>
@@ -226,7 +226,7 @@ export function AdSidebarCard({ ad, onDismiss }) {
             <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">
               {CATEGORY_LABELS[ad.category] || ad.category}
             </span>
-            <span className="text-[10px] text-[#d4a574] font-medium">محتوى مدعوم</span>
+            <span className="text-[10px] text-[#C9A66B] font-medium">محتوى مدعوم</span>
           </div>
         </div>
       </button>
@@ -249,8 +249,8 @@ export function AdSidebarSection({ ads }) {
   return (
     <div className="space-y-3" dir="rtl">
       <div className="flex items-center gap-1.5 mb-2">
-        <div className="w-1.5 h-1.5 rounded-full bg-[#d4a574]" />
-        <span className="text-[10px] text-[#d4a574] font-semibold tracking-wide">محتوى مدعوم</span>
+        <div className="w-1.5 h-1.5 rounded-full bg-[#C9A66B]" />
+        <span className="text-[10px] text-[#C9A66B] font-semibold tracking-wide">محتوى مدعوم</span>
       </div>
       <AnimatePresence>
         {visibleAds.map(ad => (

@@ -101,7 +101,7 @@ export default function SignaturePad({ onSave, onClear }) {
       <Button
         onClick={save}
         disabled={!hasSignature}
-        className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
+        className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white"
       >
         حفظ التوقيع
       </Button>

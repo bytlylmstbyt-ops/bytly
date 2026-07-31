@@ -113,7 +113,7 @@ export default function RegisterClient() {
                     <RadioGroupItem value="individual" id="individual" className="peer sr-only" />
                     <Label
                       htmlFor="individual"
-                      className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-[#d4a574] peer-data-[state=checked]:bg-[#d4a574]/5 cursor-pointer"
+                      className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-[#C9A66B] peer-data-[state=checked]:bg-[#C9A66B]/5 cursor-pointer"
                     >
                       <Home className="mb-3 h-8 w-8" />
                       <div className="text-center">
@@ -126,7 +126,7 @@ export default function RegisterClient() {
                     <RadioGroupItem value="investor" id="investor" className="peer sr-only" />
                     <Label
                       htmlFor="investor"
-                      className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-[#d4a574] peer-data-[state=checked]:bg-[#d4a574]/5 cursor-pointer"
+                      className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-[#C9A66B] peer-data-[state=checked]:bg-[#C9A66B]/5 cursor-pointer"
                     >
                       <Building2 className="mb-3 h-8 w-8" />
                       <div className="text-center">
@@ -224,7 +224,7 @@ export default function RegisterClient() {
 
               <div className="space-y-2">
                 <Label>صورة شخصية (اختياري)</Label>
-                <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#d4a574] transition-colors">
+                <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#C9A66B] transition-colors">
                   <input
                     type="file"
                     accept="image/*"
@@ -276,7 +276,7 @@ export default function RegisterClient() {
             لديك حساب بالفعل؟{" "}
             <button 
               onClick={() => window.location.href = '/login'}
-              className="text-[#d4a574] font-medium hover:underline"
+              className="text-[#C9A66B] font-medium hover:underline"
             >
               تسجيل الدخول
             </button>

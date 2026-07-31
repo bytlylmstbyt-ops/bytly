@@ -271,7 +271,7 @@ export default function MyPurchasedProjectsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-[#d4a574]" />
+        <Loader2 className="w-12 h-12 animate-spin text-[#C9A66B]" />
       </div>
     );
   }
@@ -284,7 +284,7 @@ export default function MyPurchasedProjectsPage() {
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="flex items-center gap-3 mb-6">
-            <ShoppingBag className="w-8 h-8 text-[#d4a574]" />
+            <ShoppingBag className="w-8 h-8 text-[#C9A66B]" />
             <div>
               <h1 className="text-3xl font-bold text-[#1a1a2e]">مشاريعي المشتراة</h1>
               <p className="text-slate-600">تابع حالة مشاريعك والدفعات</p>

@@ -359,7 +359,7 @@ export default function Gallery() {
         {!isLoading && featuredPortfolios.length > 0 && !activeTag && (
           <div className="mb-10">
             <div className="flex items-center gap-2 mb-5">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#C9A66B] to-[#6B5D4F] flex items-center justify-center">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
               <div>

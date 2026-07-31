@@ -44,7 +44,7 @@ export default function ChatMessage({
       {showAvatar ? (
         <Avatar className="w-8 h-8 flex-shrink-0">
           <AvatarImage src={senderData?.profile_image} />
-          <AvatarFallback className="text-xs bg-[#d4a574] text-white">
+          <AvatarFallback className="text-xs bg-[#C9A66B] text-white">
             {message.sender_name?.charAt(0)}
           </AvatarFallback>
         </Avatar>
@@ -64,7 +64,7 @@ export default function ChatMessage({
           className={cn(
             "rounded-lg px-4 py-2.5 max-w-xs lg:max-w-md break-words",
             isOwn
-              ? "bg-[#d4a574] text-white rounded-br-none"
+              ? "bg-[#C9A66B] text-white rounded-br-none"
               : "bg-slate-100 text-slate-900 rounded-bl-none"
           )}
         >

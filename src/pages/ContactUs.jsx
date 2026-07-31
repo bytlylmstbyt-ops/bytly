@@ -42,13 +42,13 @@ export default function ContactUs() {
                 <div className="max-w-4xl mx-auto text-center">
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                         <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                            <MessageSquare className="w-8 h-8 text-[#d4a574]" />
+                            <MessageSquare className="w-8 h-8 text-[#C9A66B]" />
                         </div>
                         <h1 className="text-3xl md:text-4xl font-bold mb-3">تواصل معنا</h1>
                         <p className="text-slate-300 text-lg max-w-xl mx-auto">
                             نحن هنا للإجابة على استفساراتك ومساعدتك في كل ما تحتاج. تواصل معنا وسنرد عليك في أقرب وقت.
                         </p>
-                        <p className="text-sm font-semibold text-[#d4a574] bg-white/10 inline-block px-4 py-2 rounded-full mt-4">
+                        <p className="text-sm font-semibold text-[#C9A66B] bg-white/10 inline-block px-4 py-2 rounded-full mt-4">
                             محرك مطابقة بيتلي — الإدارة الهندسية الذكية التي لا تُقلد
                         </p>
                     </motion.div>
@@ -67,18 +67,18 @@ export default function ContactUs() {
                     >
                         <h2 className="text-xl font-bold text-[#1a1a2e] mb-6">معلومات التواصل</h2>
 
-                        <InfoCard icon={<Mail className="w-5 h-5 text-[#d4a574]" />} title="البريد الإلكتروني">
-                            <a href="mailto:info@mybytly.com" className="text-[#d4a574] hover:underline text-sm">
+                        <InfoCard icon={<Mail className="w-5 h-5 text-[#C9A66B]" />} title="البريد الإلكتروني">
+                            <a href="mailto:info@mybytly.com" className="text-[#C9A66B] hover:underline text-sm">
                                 info@mybytly.com
                             </a>
                         </InfoCard>
 
-                        <InfoCard icon={<Clock className="w-5 h-5 text-[#d4a574]" />} title="ساعات العمل">
+                        <InfoCard icon={<Clock className="w-5 h-5 text-[#C9A66B]" />} title="ساعات العمل">
                             <p className="text-sm text-slate-600">الأحد – الخميس</p>
                             <p className="text-sm text-slate-600">9:00 صباحاً – 5:00 مساءً</p>
                         </InfoCard>
 
-                        <InfoCard icon={<MapPin className="w-5 h-5 text-[#d4a574]" />} title="الموقع">
+                        <InfoCard icon={<MapPin className="w-5 h-5 text-[#C9A66B]" />} title="الموقع">
                             <p className="text-sm text-slate-600">المملكة العربية السعودية</p>
                         </InfoCard>
 
@@ -169,7 +169,7 @@ export default function ContactUs() {
                                         )}
 
                                         <Button type="submit" disabled={loading}
-                                            className="w-full h-12 bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white hover:opacity-90 gap-2 text-base">
+                                            className="w-full h-12 bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white hover:opacity-90 gap-2 text-base">
                                             {loading ? (
                                                 <><Loader2 className="w-5 h-5 animate-spin" /> جارٍ الإرسال...</>
                                             ) : (

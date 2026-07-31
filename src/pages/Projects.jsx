@@ -162,14 +162,14 @@ export default function Projects() {
                     onClick={() => setShowAdvanced(!showAdvanced)}
                     className={`px-4 rounded-xl flex items-center gap-2 text-sm font-medium transition-all ${
                       showAdvanced || activeFiltersCount > 0
-                        ? "bg-[#d4a574] text-white"
+                        ? "bg-[#C9A66B] text-white"
                         : "bg-white text-slate-600 hover:bg-slate-100"
                     }`}
                   >
                     <SlidersHorizontal className="w-4 h-4" />
                     <span className="hidden sm:inline">فلاتر متقدمة</span>
                     {activeFiltersCount > 0 && (
-                      <span className="bg-white text-[#d4a574] rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+                      <span className="bg-white text-[#C9A66B] rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
                         {activeFiltersCount}
                       </span>
                     )}
@@ -269,7 +269,7 @@ export default function Projects() {
                   onClick={() => setStatusFilter(status.value)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     statusFilter === status.value
-                      ? "bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
+                      ? "bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white"
                       : "text-slate-600 hover:bg-slate-100"
                   }`}
                 >
@@ -293,7 +293,7 @@ export default function Projects() {
           </div>
 
           <Link to={createPageUrl("CreateProject")}>
-            <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+            <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
               <PlusCircle className="w-5 h-5 ml-2" />
               {t('projects.addProject')}
             </Button>

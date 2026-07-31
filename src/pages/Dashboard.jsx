@@ -107,7 +107,7 @@ export default function Dashboard() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C9A66B]"></div>
       </div>
     );
   }
@@ -120,7 +120,7 @@ export default function Dashboard() {
             <h2 className="text-xl font-bold text-slate-700 mb-4">{t('dashboard.noAccount.title')}</h2>
             <p className="text-slate-500 mb-6">{t('dashboard.noAccount.message')}</p>
             <Link to={createPageUrl("RegisterChoice")}>
-              <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+              <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
                 {t('dashboard.noAccount.createAccount')}
               </Button>
             </Link>
@@ -155,7 +155,7 @@ export default function Dashboard() {
             <div className="flex items-center gap-4">
               <Avatar className="w-16 h-16 border-2 border-white shadow-lg">
                 <AvatarImage src={profile.profile_image} />
-                <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] text-white text-xl">
+                <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] text-white text-xl">
                   {profile.full_name?.charAt(0)}
                 </AvatarFallback>
               </Avatar>
@@ -171,14 +171,14 @@ export default function Dashboard() {
             <div className="flex gap-3">
               {userType === "engineer" ? (
                 <Link to={createPageUrl("AddPortfolio")}>
-                  <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+                  <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
                     <Plus className="w-5 h-5 ml-2" />
                     {t('dashboard.buttons.addNewWork')}
                   </Button>
                 </Link>
               ) : (
                 <Link to={createPageUrl("CreateProject")}>
-                  <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+                  <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
                     <Plus className="w-5 h-5 ml-2" />
                     {t('dashboard.buttons.newProject')}
                   </Button>
@@ -416,13 +416,13 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
           >
             <Card className="border-0 shadow-lg mb-8 overflow-hidden">
-              <div className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] p-6 text-white">
+              <div className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] p-6 text-white">
                 <h3 className="text-xl font-bold mb-2">{t('dashboard.subscription.upgrade')}</h3>
                 <p className="text-white/80">{t('dashboard.subscription.upgradeMessage')}</p>
               </div>
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="border rounded-xl p-6 hover:border-[#d4a574] transition-colors cursor-pointer">
+                  <div className="border rounded-xl p-6 hover:border-[#C9A66B] transition-colors cursor-pointer">
                     <Badge className="bg-blue-100 text-blue-700 mb-4">{t('dashboard.subscription.monthly')}</Badge>
                     <p className="text-3xl font-bold text-[#1a1a2e]">99 <span className="text-sm font-normal">{t('dashboard.subscription.perMonth')}</span></p>
                     <ul className="mt-4 space-y-2 text-sm text-slate-600">
@@ -443,8 +443,8 @@ export default function Dashboard() {
                       <Button className="w-full mt-4" variant="outline">{t('dashboard.subscription.choosePlan')}</Button>
                     </Link>
                   </div>
-                  <div className="border-2 border-[#d4a574] rounded-xl p-6 relative">
-                    <Badge className="absolute -top-3 right-4 bg-[#d4a574] text-white">{t('dashboard.subscription.bestValue')}</Badge>
+                  <div className="border-2 border-[#C9A66B] rounded-xl p-6 relative">
+                    <Badge className="absolute -top-3 right-4 bg-[#C9A66B] text-white">{t('dashboard.subscription.bestValue')}</Badge>
                     <Badge className="bg-amber-100 text-amber-700 mb-4">{t('dashboard.subscription.yearly')}</Badge>
                     <p className="text-3xl font-bold text-[#1a1a2e]">799 <span className="text-sm font-normal">{t('dashboard.subscription.perYear')}</span></p>
                     <p className="text-sm text-green-600">{t('dashboard.subscription.save').replace('{amount}', '389')}</p>
@@ -463,7 +463,7 @@ export default function Dashboard() {
                       </li>
                     </ul>
                     <Link to={createPageUrl("Subscription") + "?plan=yearly"}>
-                      <Button className="w-full mt-4 bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+                      <Button className="w-full mt-4 bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
                         {t('dashboard.subscription.choosePlan')}
                       </Button>
                     </Link>
@@ -634,10 +634,10 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <Card className="border-0 shadow-lg border-t-4 border-t-[#d4a574]">
+            <Card className="border-0 shadow-lg border-t-4 border-t-[#C9A66B]">
               <CardHeader className="bg-gradient-to-r from-amber-50 to-green-50">
                 <CardTitle className="flex items-center gap-2">
-                  <Award className="w-6 h-6 text-[#d4a574]" />
+                  <Award className="w-6 h-6 text-[#C9A66B]" />
                   {t('dashboard.adminPanel.approvedProjects')}
                 </CardTitle>
               </CardHeader>
@@ -662,7 +662,7 @@ export default function Dashboard() {
                           </Badge>
                           <Button 
                             size="sm" 
-                            className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
+                            className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white"
                           >
                             <Award className="w-4 h-4 ml-2" />
                             {t('dashboard.adminPanel.viewCertificate')}
@@ -675,7 +675,7 @@ export default function Dashboard() {
                 {approvedProjects.length > 5 && (
                   <div className="text-center mt-4">
                     <Link to={createPageUrl("Projects") + "?status=technical_approved"}>
-                      <Button variant="outline" className="text-[#d4a574]">
+                      <Button variant="outline" className="text-[#C9A66B]">
                         {t('dashboard.adminPanel.viewAllApproved').replace('{count}', approvedProjects.length)}
                       </Button>
                     </Link>
@@ -723,7 +723,7 @@ export default function Dashboard() {
                     <FileText className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                     <p>{t('dashboard.recentActivity.noProposals')}</p>
                     <Link to={createPageUrl("Projects")}>
-                      <Button variant="link" className="text-[#d4a574]">
+                      <Button variant="link" className="text-[#C9A66B]">
                         {t('dashboard.recentActivity.browseProjects')}
                         <ArrowLeft className="w-4 h-4 mr-2" />
                       </Button>
@@ -764,7 +764,7 @@ export default function Dashboard() {
                     <Briefcase className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                     <p>{t('dashboard.recentActivity.noProjects')}</p>
                     <Link to={createPageUrl("CreateProject")}>
-                      <Button variant="link" className="text-[#d4a574]">
+                      <Button variant="link" className="text-[#C9A66B]">
                         {t('dashboard.recentActivity.addFirstProject')}
                         <ArrowLeft className="w-4 h-4 mr-2" />
                       </Button>

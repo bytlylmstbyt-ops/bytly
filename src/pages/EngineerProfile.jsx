@@ -129,7 +129,7 @@ export default function EngineerProfile() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C9A66B]"></div>
       </div>
     );
   }
@@ -152,7 +152,7 @@ export default function EngineerProfile() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30">
       {/* Cover Image */}
-      <div className="relative h-64 md:h-80 bg-gradient-to-br from-[#1a1a2e] to-[#d4a574]">
+      <div className="relative h-64 md:h-80 bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B]">
         {engineer.cover_image && (
           <img 
             src={engineer.cover_image} 
@@ -175,7 +175,7 @@ export default function EngineerProfile() {
                 {/* Avatar */}
                 <Avatar className="w-32 h-32 border-4 border-white shadow-xl mx-auto md:mx-0">
                   <AvatarImage src={engineer.profile_image} />
-                  <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] text-white text-4xl">
+                  <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] text-white text-4xl">
                     {engineer.full_name?.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
@@ -267,7 +267,7 @@ export default function EngineerProfile() {
                     </Button>
                   </Link>
                   <Link to={createPageUrl("Messages") + `?engineer=${engineer.id}`}>
-                    <Button className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+                    <Button className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
                       <MessageSquare className="w-5 h-5 ml-2" />
                       تواصل الآن
                     </Button>
@@ -335,14 +335,14 @@ export default function EngineerProfile() {
                 <Card className="border-0 shadow-lg">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Briefcase className="w-5 h-5 text-[#d4a574]" />
+                      <Briefcase className="w-5 h-5 text-[#C9A66B]" />
                       كتالوج الخدمات
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
                       {engineer.services_offered.map((service, idx) => (
-                        <div key={idx} className="p-4 border rounded-lg hover:border-[#d4a574] transition-all">
+                        <div key={idx} className="p-4 border rounded-lg hover:border-[#C9A66B] transition-all">
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
                               <h4 className="font-semibold text-[#1a1a2e] mb-1">{service.service_name}</h4>

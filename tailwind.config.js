@@ -10,6 +10,16 @@ module.exports = {
   			sm: 'calc(var(--radius) - 4px)'
   		},
   		colors: {
+  			/* Bytly brand palette — major + minor, sourced from --bytly-* tokens */
+  			brand: {
+  				primary: 'var(--bytly-primary)',
+  				'dark': 'var(--bytly-primary-dark)',
+  				accent: 'var(--bytly-accent)',
+  				'accent-light': 'var(--bytly-accent-light)',
+  				ink: 'var(--bytly-ink)',
+  				'ink-soft': 'var(--bytly-ink-soft)',
+  				cream: 'var(--bytly-cream)',
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

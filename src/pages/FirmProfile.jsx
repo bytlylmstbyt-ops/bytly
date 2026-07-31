@@ -91,7 +91,7 @@ export default function FirmProfile() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]" />
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C9A66B]" />
       </div>
     );
   }
@@ -361,7 +361,7 @@ export default function FirmProfile() {
             <Card className="mt-6">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-[#d4a574]" />
+                  <Users className="w-5 h-5 text-[#C9A66B]" />
                   فريق العمل
                 </CardTitle>
               </CardHeader>

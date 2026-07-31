@@ -61,7 +61,7 @@ function ContractCard({ contract, project, client, engineer, currentUserEmail, o
       <div className="p-5" dir="rtl">
         <div className="flex items-start justify-between gap-3 mb-4">
           <div className="flex items-start gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] flex items-center justify-center shrink-0">
               <Scale className="w-5 h-5 text-white" />
             </div>
             <div className="min-w-0">
@@ -128,7 +128,7 @@ function ContractCard({ contract, project, client, engineer, currentUserEmail, o
             </Button>
           </Link>
           {canSign && (
-            <Button size="sm" onClick={() => onSign(contract)} className="flex-1 bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white gap-1.5">
+            <Button size="sm" onClick={() => onSign(contract)} className="flex-1 bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white gap-1.5">
               <CheckCircle className="w-3.5 h-3.5" />
               توقيع
             </Button>
@@ -200,7 +200,7 @@ function NewContractDialog({ projects, engineers, clients, currentUser, onCreate
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white gap-2">
+        <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white gap-2">
           <Plus className="w-4 h-4" />
           عقد جديد
         </Button>
@@ -208,7 +208,7 @@ function NewContractDialog({ projects, engineers, clients, currentUser, onCreate
       <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto" dir="rtl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Scale className="w-5 h-5 text-[#d4a574]" />
+            <Scale className="w-5 h-5 text-[#C9A66B]" />
             إنشاء عقد جديد
           </DialogTitle>
         </DialogHeader>
@@ -226,7 +226,7 @@ function NewContractDialog({ projects, engineers, clients, currentUser, onCreate
                 const eng = engineers.find(e => e.id === p.assigned_engineer_id);
                 return (
                   <button key={p.id} onClick={() => handleSelectProject(p)}
-                    className="w-full text-right p-4 rounded-xl border border-slate-200 hover:border-[#d4a574] hover:bg-amber-50/30 transition-all">
+                    className="w-full text-right p-4 rounded-xl border border-slate-200 hover:border-[#C9A66B] hover:bg-amber-50/30 transition-all">
                     <p className="font-semibold text-[#1a1a2e]">{p.title}</p>
                     <p className="text-xs text-slate-400 mt-0.5">المهندس: {eng?.full_name || "غير محدد"}</p>
                   </button>
@@ -239,7 +239,7 @@ function NewContractDialog({ projects, engineers, clients, currentUser, onCreate
         {step === 2 && selectedProject && (
           <div className="space-y-4 mt-2">
             <div className="bg-amber-50 rounded-xl p-3 flex items-center gap-2 text-sm">
-              <Building2 className="w-4 h-4 text-[#d4a574] shrink-0" />
+              <Building2 className="w-4 h-4 text-[#C9A66B] shrink-0" />
               <span className="font-medium text-slate-700">{selectedProject.title}</span>
               <button onClick={() => setStep(1)} className="mr-auto text-slate-400 hover:text-slate-600">
                 <X className="w-4 h-4" />
@@ -294,7 +294,7 @@ function NewContractDialog({ projects, engineers, clients, currentUser, onCreate
             </div>
 
             <Button onClick={handleCreate} disabled={isCreating || !form.total_amount}
-              className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+              className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
               {isCreating ? <><Loader2 className="w-4 h-4 animate-spin ml-2" />جاري الإنشاء...</> : <><CheckCircle className="w-4 h-4 ml-2" />إنشاء العقد</>}
             </Button>
           </div>
@@ -331,7 +331,7 @@ function SignDialog({ contract, client, engineer, currentUser, onSigned }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="flex-1 bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white gap-1.5">
+        <Button size="sm" className="flex-1 bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white gap-1.5">
           <CheckCircle className="w-3.5 h-3.5" />
           توقيع
         </Button>
@@ -353,7 +353,7 @@ function SignDialog({ contract, client, engineer, currentUser, onSigned }) {
             </Label>
           </div>
           <Button onClick={handleSign} disabled={!agreed || signing}
-            className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+            className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
             {signing ? <><Loader2 className="w-4 h-4 animate-spin ml-2" />جاري التوقيع...</> : <><CheckCircle className="w-4 h-4 ml-2" />تأكيد التوقيع</>}
           </Button>
         </div>
@@ -508,7 +508,7 @@ export default function MyContracts() {
 
   if (isLoading) return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]" />
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C9A66B]" />
     </div>
   );
 
@@ -520,7 +520,7 @@ export default function MyContracts() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e] flex items-center gap-2">
-              <Scale className="w-7 h-7 text-[#d4a574]" />
+              <Scale className="w-7 h-7 text-[#C9A66B]" />
               عقودي
             </h1>
             <p className="text-slate-400 text-sm mt-1">إدارة وتوقيع عقودك الهندسية بشكل رقمي آمن</p>

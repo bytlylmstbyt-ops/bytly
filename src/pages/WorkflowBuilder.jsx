@@ -144,7 +144,7 @@ export default function WorkflowBuilder() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C9A66B]"></div>
       </div>
     );
   }
@@ -253,7 +253,7 @@ export default function WorkflowBuilder() {
                       key={stage.stage_id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="p-4 border rounded-lg hover:border-[#d4a574] transition-colors"
+                      className="p-4 border rounded-lg hover:border-[#C9A66B] transition-colors"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">

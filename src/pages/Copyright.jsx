@@ -230,7 +230,7 @@ export default function Copyright() {
           </p>
           <a 
             href="mailto:bytlylmstbyt@gmail.com" 
-            className="text-[#d4a574] font-semibold text-lg mt-2 inline-block hover:underline"
+            className="text-[#C9A66B] font-semibold text-lg mt-2 inline-block hover:underline"
           >
             bytlylmstbyt@gmail.com
           </a>

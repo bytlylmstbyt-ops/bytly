@@ -207,7 +207,7 @@ export default function ContractAmendments() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C9A66B]"></div>
       </div>
     );
   }
@@ -237,7 +237,7 @@ export default function ContractAmendments() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-[#1a1a2e] flex items-center gap-3">
-                <FileEdit className="w-8 h-8 text-[#d4a574]" />
+                <FileEdit className="w-8 h-8 text-[#C9A66B]" />
                 تعديلات العقد
               </h1>
               <p className="text-slate-600 mt-2">
@@ -254,7 +254,7 @@ export default function ContractAmendments() {
               {(contract.status === "active" || contract.status === "signed") && (
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+                    <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
                       <Plus className="w-5 h-5 ml-2" />
                       طلب تعديل
                     </Button>
@@ -371,7 +371,7 @@ export default function ContractAmendments() {
 
                       <Button
                         onClick={handleCreateAmendment}
-                        className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
+                        className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white"
                       >
                         <FileEdit className="w-4 h-4 ml-2" />
                         إرسال طلب التعديل

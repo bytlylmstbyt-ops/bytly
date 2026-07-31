@@ -132,7 +132,7 @@ export default function ContractPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C9A66B]"></div>
       </div>
     );
   }
@@ -194,7 +194,7 @@ export default function ContractPage() {
           <CardContent className="p-8 md:p-12">
             {/* Header */}
             <div className="text-center mb-8 pb-8 border-b-2 border-slate-200">
-              <div className="w-16 h-16 mx-auto rounded-xl bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] flex items-center justify-center mb-4">
+              <div className="w-16 h-16 mx-auto rounded-xl bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] flex items-center justify-center mb-4">
                 <FileText className="w-8 h-8 text-white" />
               </div>
               <h2 className="text-2xl md:text-3xl font-bold text-[#1a1a2e] mb-2">
@@ -228,7 +228,7 @@ export default function ContractPage() {
               {/* Parties */}
               <div>
                 <h3 className="text-xl font-bold text-[#1a1a2e] mb-4 flex items-center gap-2">
-                  <Scale className="w-5 h-5 text-[#d4a574]" />
+                  <Scale className="w-5 h-5 text-[#C9A66B]" />
                   أطراف العقد
                 </h3>
                 
@@ -264,7 +264,7 @@ export default function ContractPage() {
               {/* Project Details */}
               <div>
                 <h3 className="text-xl font-bold text-[#1a1a2e] mb-4 flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-[#d4a574]" />
+                  <Building2 className="w-5 h-5 text-[#C9A66B]" />
                   تفاصيل المشروع
                 </h3>
                 <div className="space-y-3 bg-slate-50 p-6 rounded-xl">
@@ -288,7 +288,7 @@ export default function ContractPage() {
               {/* Terms */}
               <div>
                 <h3 className="text-xl font-bold text-[#1a1a2e] mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-[#d4a574]" />
+                  <FileText className="w-5 h-5 text-[#C9A66B]" />
                   بنود العقد
                 </h3>
                 
@@ -590,14 +590,14 @@ export default function ContractPage() {
           return canSign ? (
             <Card className="border-0 shadow-xl print:hidden">
               <CardContent className="p-6 text-center">
-                <PenLine className="w-10 h-10 mx-auto mb-3 text-[#d4a574]" />
+                <PenLine className="w-10 h-10 mx-auto mb-3 text-[#C9A66B]" />
                 <p className="font-semibold text-[#1a1a2e] mb-1">بانتظار توقيعك</p>
                 <p className="text-slate-500 text-sm mb-5">
                   أنت {isClient ? "العميل – الطرف الأول" : "المهندس – الطرف الثاني"}
                 </p>
                 <Button
                   onClick={() => setShowSignModal(true)}
-                  className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white px-8 py-5 text-base gap-2"
+                  className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white px-8 py-5 text-base gap-2"
                 >
                   <PenLine className="w-5 h-5" />
                   وقّع الآن

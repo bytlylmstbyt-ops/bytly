@@ -34,7 +34,7 @@ export default function LandingHowItWorks() {
         {/* Horizontal Timeline */}
         <div className="relative">
           {/* Connecting line — hidden on mobile, shown on md+ */}
-          <div className="hidden md:block absolute top-[2.75rem] left-[10%] right-[10%] h-px bg-gradient-to-r from-[#C8AA82]/20 via-[#C8AA82] to-[#C8AA82]/20" />
+          <div className="hidden md:block absolute top-[2.75rem] left-[10%] right-[10%] h-px bg-gradient-to-r from-[#C9A66B]/20 via-[#C9A66B] to-[#C9A66B]/20" />
 
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8 md:gap-4">
             {stages.map(({ icon: Icon, num, label, desc }, i) => (
@@ -47,14 +47,14 @@ export default function LandingHowItWorks() {
                 className="relative flex flex-col items-center text-center"
               >
                 {/* Circular node */}
-                <div className="relative w-[5.5rem] h-[5.5rem] rounded-full border-2 border-[#C8AA82]/40 bg-[#131221] flex items-center justify-center mb-4 z-10">
-                  <div className="absolute inset-1 rounded-full border border-[#C8AA82]/15 flex items-center justify-center">
-                    <Icon className="w-7 h-7 text-[#C8AA82]" strokeWidth={1.5} />
+                <div className="relative w-[5.5rem] h-[5.5rem] rounded-full border-2 border-[#C9A66B]/40 bg-[#131221] flex items-center justify-center mb-4 z-10">
+                  <div className="absolute inset-1 rounded-full border border-[#C9A66B]/15 flex items-center justify-center">
+                    <Icon className="w-7 h-7 text-[#C9A66B]" strokeWidth={1.5} />
                   </div>
                 </div>
 
                 {/* Step number */}
-                <span className="text-[#C8AA82]/60 font-bold text-sm tracking-widest mb-1">
+                <span className="text-[#C9A66B]/60 font-bold text-sm tracking-widest mb-1">
                   {num}
                 </span>
 

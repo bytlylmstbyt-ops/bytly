@@ -178,7 +178,7 @@ export default function CommissionManager() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <RefreshCw className="w-12 h-12 animate-spin text-[#d4a574]" />
+        <RefreshCw className="w-12 h-12 animate-spin text-[#C9A66B]" />
       </div>
     );
   }

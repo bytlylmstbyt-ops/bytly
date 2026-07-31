@@ -119,7 +119,7 @@ export default function PortfolioStep({ portfolioItems, setPortfolioItems }) {
                 ))}
               </div>
             )}
-            <label className={`flex items-center justify-center gap-2 border-2 border-dashed rounded-lg py-4 cursor-pointer hover:border-[#d4a574] transition-colors ${uploadingIndex === index ? "pointer-events-none" : ""}`}>
+            <label className={`flex items-center justify-center gap-2 border-2 border-dashed rounded-lg py-4 cursor-pointer hover:border-[#C9A66B] transition-colors ${uploadingIndex === index ? "pointer-events-none" : ""}`}>
               {uploadingIndex === index ? (
                 <>
                   <Loader2 className="w-5 h-5 text-slate-400 animate-spin" />

@@ -4,12 +4,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Bytly brand tokens */
+/* Bytly brand tokens — full palette (major + minor) */
 :root {
-  --bytly-primary: #6B5D4F;
-  --bytly-primary-dark: #4A3F35;
-  --bytly-accent: #C9A66B;
-  --bytly-accent-light: #E5D4B8;
+  /* Major — core brand */
+  --bytly-primary: #6B5D4F;        /* warm brown — primary actions */
+  --bytly-primary-dark: #4A3F35;    /* deep brown — dark CTA, footer */
+  --bytly-accent: #C9A66B;          /* gold — accent, highlights, links */
+  --bytly-accent-light: #E5D4B8;    /* pale gold — tints, soft backgrounds */
+
+  /* Minor — supporting surfaces & inks */
+  --bytly-ink: #1A1A2E;             /* deep charcoal — dark hero surfaces */
+  --bytly-ink-soft: #2D2D4E;        /* muted charcoal — mid dark gradients */
+  --bytly-cream: #F5F0E8;           /* warm cream — soft section backgrounds */
+
   --bytly-glass-bg: rgba(255, 255, 255, 0.85);
   --bytly-accent-border: rgba(201, 166, 107, 0.2);
   --bytly-shadow: rgba(107, 93, 79, 0.15);

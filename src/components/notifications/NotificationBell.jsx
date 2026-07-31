@@ -195,7 +195,7 @@ export default function NotificationBell() {
             <DropdownMenuItem asChild>
               <Link
                 to={createPageUrl("NotificationCenter")}
-                className="text-center text-sm text-[#d4a574] font-medium p-2 hover:bg-amber-50"
+                className="text-center text-sm text-[#C9A66B] font-medium p-2 hover:bg-amber-50"
               >
                 عرض كل الإشعارات
               </Link>

@@ -52,7 +52,7 @@ export default function FirmDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C9A66B]"></div>
       </div>
     );
   }
@@ -114,7 +114,7 @@ export default function FirmDashboard() {
           {/* Header with Company Info */}
           <Card className="border-0 shadow-lg overflow-hidden mb-8">
             <div 
-              className="h-32 bg-gradient-to-r from-[#1a1a2e] to-[#d4a574]"
+              className="h-32 bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B]"
               style={{ 
                 backgroundImage: firm.cover_image ? `url(${firm.cover_image})` : undefined,
                 backgroundSize: 'cover',
@@ -221,7 +221,7 @@ export default function FirmDashboard() {
                   <CardTitle className="flex items-center justify-between">
                     <span>مشاريع الشركة</span>
                     <Link to={createPageUrl("CreateProject")}>
-                      <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+                      <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
                         <Plus className="w-5 h-5 ml-2" />
                         مشروع جديد
                       </Button>
@@ -235,7 +235,7 @@ export default function FirmDashboard() {
                         <Link
                           key={project.id}
                           to={createPageUrl("ProjectDetails") + `?id=${project.id}`}
-                          className="block p-4 rounded-xl border hover:border-[#d4a574] hover:shadow-md transition-all"
+                          className="block p-4 rounded-xl border hover:border-[#C9A66B] hover:shadow-md transition-all"
                         >
                           <div className="flex items-start justify-between mb-2">
                             <h4 className="font-semibold text-[#1a1a2e]">{project.title}</h4>
@@ -273,7 +273,7 @@ export default function FirmDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span>أعضاء الفريق ({teamMembers.length})</span>
-                    <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+                    <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
                       <Plus className="w-5 h-5 ml-2" />
                       إضافة عضو
                     </Button>
@@ -331,7 +331,7 @@ export default function FirmDashboard() {
                         <Link
                           key={engineer.id}
                           to={createPageUrl("EngineerProfile") + `?id=${engineer.id}`}
-                          className="block p-4 rounded-xl border hover:border-[#d4a574] hover:shadow-md transition-all"
+                          className="block p-4 rounded-xl border hover:border-[#C9A66B] hover:shadow-md transition-all"
                         >
                           <div className="flex items-center gap-3 mb-3">
                             <Avatar>

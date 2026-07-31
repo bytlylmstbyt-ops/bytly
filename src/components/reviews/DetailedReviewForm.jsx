@@ -73,10 +73,10 @@ export default function DetailedReviewForm({ engineerId, projectId, engineerName
       {/* Overall Preview */}
       <div className="bg-gradient-to-r from-[#1a1a2e] to-[#2d2d4e] rounded-xl p-4 text-center">
         <p className="text-white/70 text-sm mb-1">التقييم الإجمالي</p>
-        <p className="text-5xl font-bold text-[#d4a574]">{avg > 0 ? avg.toFixed(1) : "—"}</p>
+        <p className="text-5xl font-bold text-[#C9A66B]">{avg > 0 ? avg.toFixed(1) : "—"}</p>
         <div className="flex justify-center gap-1 mt-2">
           {[1,2,3,4,5].map(s => (
-            <Star key={s} className={`w-5 h-5 ${s <= Math.round(avg) ? "text-[#d4a574] fill-[#d4a574]" : "text-white/30"}`} />
+            <Star key={s} className={`w-5 h-5 ${s <= Math.round(avg) ? "text-[#C9A66B] fill-[#C9A66B]" : "text-white/30"}`} />
           ))}
         </div>
       </div>
@@ -115,7 +115,7 @@ export default function DetailedReviewForm({ engineerId, projectId, engineerName
       <div className="flex gap-3">
         {onCancel && <Button variant="outline" onClick={onCancel} className="flex-1">إلغاء</Button>}
         <Button onClick={handleSubmit} disabled={submitting || Object.values(ratings).some(v => v === 0)}
-          className="flex-1 bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+          className="flex-1 bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
           {submitting ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : null}
           إرسال التقييم
         </Button>

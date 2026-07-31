@@ -87,7 +87,7 @@ export default function InvoicePayment() {
   if (isLoading && !invoice) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-[#d4a574]" />
+        <Loader2 className="w-12 h-12 animate-spin text-[#C9A66B]" />
       </div>
     );
   }
@@ -114,7 +114,7 @@ export default function InvoicePayment() {
           animate={{ opacity: 1, y: 0 }}
         >
           <Card className="border-0 shadow-xl">
-            <CardHeader className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+            <CardHeader className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <FileText className="w-8 h-8" />

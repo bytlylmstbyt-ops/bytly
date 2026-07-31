@@ -115,7 +115,7 @@ export default function NotificationCenter() {
   const allTypes = [...new Set(notifications.map((n) => n.type))].filter(Boolean);
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]" /></div>;
+    return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C9A66B]" /></div>;
   }
 
   return (
@@ -125,7 +125,7 @@ export default function NotificationCenter() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-[#1a1a2e] flex items-center gap-3">
-                <Bell className="w-8 h-8 text-[#d4a574]" />
+                <Bell className="w-8 h-8 text-[#C9A66B]" />
                 مركز الإشعارات
               </h1>
               <p className="text-slate-500 mt-1">تتبع جميع تنبيهاتك ولحظاتك المهمة</p>
@@ -175,14 +175,14 @@ export default function NotificationCenter() {
           <div className="flex flex-wrap gap-2">
             <span className="text-xs text-slate-500 flex items-center gap-1 ml-1"><Bell className="w-3 h-3" /> النوع:</span>
             <button onClick={() => setTypeFilter("all")}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${typeFilter === "all" ? "bg-[#d4a574] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${typeFilter === "all" ? "bg-[#C9A66B] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
               الكل
             </button>
             {allTypes.map((t) => {
               const cfg = TYPE_CONFIG[t] || TYPE_CONFIG.default;
               return (
                 <button key={t} onClick={() => setTypeFilter(t)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${typeFilter === t ? "bg-[#d4a574] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${typeFilter === t ? "bg-[#C9A66B] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
                   {cfg.label}
                 </button>
               );

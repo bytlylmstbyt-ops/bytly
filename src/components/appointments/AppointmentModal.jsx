@@ -120,7 +120,7 @@ export default function AppointmentModal({ targetId, targetName, targetType, tar
       <DialogContent className="max-w-md" dir="rtl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-right">
-            <Calendar className="w-5 h-5 text-[#d4a574]" />
+            <Calendar className="w-5 h-5 text-[#C9A66B]" />
             حجز اجتماع مراجعة المخططات مع {targetName}
           </DialogTitle>
         </DialogHeader>
@@ -185,7 +185,7 @@ export default function AppointmentModal({ targetId, targetName, targetType, tar
               </div>
             )}
 
-            <Button onClick={handleClose} className="bg-[#d4a574] hover:bg-[#c49060] text-white">حسناً</Button>
+            <Button onClick={handleClose} className="bg-[#C9A66B] hover:bg-[#c49060] text-white">حسناً</Button>
           </div>
         ) : (
           <div className="space-y-4 mt-2">
@@ -200,8 +200,8 @@ export default function AppointmentModal({ targetId, targetName, targetType, tar
                     onClick={() => setForm(f => ({ ...f, consultation_type: value }))}
                     className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 text-xs transition-all ${
                       form.consultation_type === value
-                        ? "border-[#d4a574] bg-amber-50 text-[#d4a574]"
-                        : "border-slate-200 text-slate-600 hover:border-[#d4a574]"
+                        ? "border-[#C9A66B] bg-amber-50 text-[#C9A66B]"
+                        : "border-slate-200 text-slate-600 hover:border-[#C9A66B]"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -243,7 +243,7 @@ export default function AppointmentModal({ targetId, targetName, targetType, tar
                           isBooked
                             ? "bg-slate-100 text-slate-300 line-through cursor-not-allowed"
                             : form.appointment_time === slot
-                              ? "bg-[#d4a574] text-white"
+                              ? "bg-[#C9A66B] text-white"
                               : "bg-slate-100 text-slate-600 hover:bg-amber-100"
                         }`}
                       >
@@ -307,7 +307,7 @@ export default function AppointmentModal({ targetId, targetName, targetType, tar
             <Button
               onClick={handleSubmit}
               disabled={loading || !form.appointment_date || !form.appointment_time || !form.topic}
-              className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
+              className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Calendar className="w-4 h-4 ml-2" />}
               تأكيد الحجز وإضافة للتقويم

@@ -207,7 +207,7 @@ export default function AddPortfolio() {
           <Card className="border-0 shadow-xl">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <ImageIcon className="w-5 h-5 text-[#d4a574]" />
+                <ImageIcon className="w-5 h-5 text-[#C9A66B]" />
                 معلومات المشروع
               </CardTitle>
             </CardHeader>
@@ -216,7 +216,7 @@ export default function AddPortfolio() {
                 {/* Images Upload */}
                 <div className="space-y-2">
                   <Label>صور المشروع *</Label>
-                  <div className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center hover:border-[#d4a574] transition-colors">
+                  <div className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center hover:border-[#C9A66B] transition-colors">
                     <input
                       type="file"
                       accept="image/*"
@@ -404,7 +404,7 @@ export default function AddPortfolio() {
                 <div className="flex gap-3 pt-4">
                   <Button 
                     type="submit" 
-                    className="flex-1 bg-gradient-to-r from-[#1a1a2e] to-[#d4a574]"
+                    className="flex-1 bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B]"
                     disabled={loading || uploadingImages}
                   >
                     {loading ? (

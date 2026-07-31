@@ -308,7 +308,7 @@ export default function RegisterConsultantPage() {
                 <Button
                   type="submit"
                   disabled={loading || !termsAccepted}
-                  className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] disabled:opacity-50"
+                  className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] disabled:opacity-50"
                 >
                   {loading ? (
                     <>

@@ -180,7 +180,7 @@ export default function Home() {
       <section className="relative min-h-[90vh] flex items-center">
         {/* Background */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e]/95 via-[#1a1a2e]/80 to-[#d4a574]/30" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e]/95 via-[#1a1a2e]/80 to-[#C9A66B]/30" />
           <img 
             src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920"
             alt="Interior Design"
@@ -207,7 +207,7 @@ export default function Home() {
               
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6 break-words text-balance px-1">
                 {t('home.hero.title')}
-                <span className="inline-block py-1 px-2 text-transparent bg-clip-text bg-gradient-to-r from-[#d4a574] to-[#e8c9a8]">
+                <span className="inline-block py-1 px-2 text-transparent bg-clip-text bg-gradient-to-r from-[#C9A66B] to-[#E5D4B8]">
                   {t('home.hero.titleHighlight')}
                 </span>
               </h1>
@@ -219,14 +219,14 @@ export default function Home() {
               {/* Marketing Phrase — measurable outcome */}
               <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 max-w-lg">
                 {t('marketingPhrase.prefix')}{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4a574] to-[#e8c9a8]">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C9A66B] to-[#E5D4B8]">
                   {t('marketingPhrase.highlight')}
                 </span>
               </h2>
 
               {/* Positioning — target audience + reason to choose */}
               <div className="mb-6 space-y-2 max-w-lg">
-                <p className="text-sm text-[#e8c9a8] font-medium flex items-start gap-2">
+                <p className="text-sm text-[#E5D4B8] font-medium flex items-start gap-2">
                   <Users className="w-4 h-4 mt-0.5 shrink-0 text-[#C9A66B]" />
                   {t('home.hero.targetAudience')}
                 </p>
@@ -251,7 +251,7 @@ export default function Home() {
                     />
                   </div>
                   <Link to={createPageUrl("Engineers") + (searchQuery ? `?search=${searchQuery}` : "")}>
-                    <Button className="h-14 px-8 bg-gradient-to-r from-[#d4a574] to-[#c9a227] text-white rounded-xl hover:opacity-90 w-full sm:w-auto">
+                    <Button className="h-14 px-8 bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white rounded-xl hover:opacity-90 w-full sm:w-auto">
                       {t('home.hero.searchButton')}
                       <ArrowLeft className="w-5 h-5 mr-2" />
                     </Button>
@@ -284,7 +284,7 @@ export default function Home() {
               className="hidden lg:block relative"
             >
               <div className="relative">
-                <div className="absolute -top-4 -right-4 w-72 h-72 bg-gradient-to-br from-[#d4a574]/30 to-transparent rounded-full blur-3xl" />
+                <div className="absolute -top-4 -right-4 w-72 h-72 bg-gradient-to-br from-[#C9A66B]/30 to-transparent rounded-full blur-3xl" />
                 <div className="relative grid grid-cols-2 gap-4">
                   <div className="space-y-4">
                     <div className="h-48 rounded-2xl overflow-hidden">
@@ -410,7 +410,7 @@ export default function Home() {
 
           <div className="text-center mt-8">
             <Link to={createPageUrl("Gallery")}>
-              <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white px-8">
+              <Button className="bg-gradient-to-r from-[#1A1A2E] to-[#C9A66B] text-white px-8">
                 {t('home.portfolio.exploreMore')}
                 <ChevronLeft className="w-4 h-4 mr-2" />
               </Button>
@@ -444,7 +444,7 @@ export default function Home() {
       />
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-[#d4a574] to-[#c9a227]">
+      <section className="py-20 bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -473,10 +473,10 @@ export default function Home() {
       </section>
 
       {/* Pre-launch Survey CTA — end of page */}
-      <section className="py-16 md:py-20 bg-gradient-to-b from-slate-50 to-[#F5F0E8]/50">
+      <section className="py-16 md:py-20 bg-gradient-to-b from-slate-50 to-brand-cream/50">
         <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="rounded-3xl bg-white border border-[#C9A66B]/15 p-8 md:p-10 text-center shadow-xl">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[#C8AA82] to-[#A88555] flex items-center justify-center mb-5 shadow-lg">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[#C9A66B] to-[#6B5D4F] flex items-center justify-center mb-5 shadow-lg">
               <ClipboardList className="w-7 h-7 text-white" />
             </div>
             <h3 className="text-xl md:text-2xl font-bold text-[#2D2A42] mb-2">
@@ -487,7 +487,7 @@ export default function Home() {
             </p>
             <Button
               onClick={() => setShowSurvey(true)}
-              className="bg-gradient-to-r from-[#C8AA82] to-[#A88555] text-white px-8 py-3 h-12 hover:opacity-90"
+              className="bg-gradient-to-r from-[#C9A66B] to-[#6B5D4F] text-white px-8 py-3 h-12 hover:opacity-90"
             >
               <ClipboardList className="w-4 h-4" />
               {t('survey.ctaButton')}

@@ -66,7 +66,7 @@ export default function TopRatedEngineers() {
     <section className="py-20 bg-gradient-to-br from-[#1a1a2e] via-[#1a1a2e] to-[#2a2a3e] relative overflow-hidden">
       {/* Decorative glow */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-[#C9A66B]/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#d4a574]/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#C9A66B]/10 rounded-full blur-3xl" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -78,7 +78,7 @@ export default function TopRatedEngineers() {
         >
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#C9A66B] to-[#d4a574] flex items-center justify-center shadow-lg">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#C9A66B] to-[#C9A66B] flex items-center justify-center shadow-lg">
                 <Trophy className="w-6 h-6 text-white" />
               </div>
               <Badge className="bg-[#C9A66B]/20 text-[#C9A66B] border-[#C9A66B]/40">
@@ -193,7 +193,7 @@ export default function TopRatedEngineers() {
 
                           {/* Score badge */}
                           <div className="shrink-0 text-center">
-                            <div className="bg-gradient-to-br from-[#C9A66B] to-[#d4a574] text-white font-bold text-sm md:text-base px-3 py-1.5 rounded-lg shadow-md">
+                            <div className="bg-gradient-to-br from-[#C9A66B] to-[#C9A66B] text-white font-bold text-sm md:text-base px-3 py-1.5 rounded-lg shadow-md">
                               {engineer._score}
                             </div>
                             <div className="text-slate-500 text-[10px] md:text-xs mt-0.5 hidden md:block">

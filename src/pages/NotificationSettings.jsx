@@ -111,7 +111,7 @@ export default function NotificationSettings() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C9A66B]"></div>
       </div>
     );
   }
@@ -126,7 +126,7 @@ export default function NotificationSettings() {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold text-[#1a1a2e] flex items-center gap-3">
-            <Bell className="w-8 h-8 text-[#d4a574]" />
+            <Bell className="w-8 h-8 text-[#C9A66B]" />
             إعدادات التنبيهات
           </h1>
           <p className="text-slate-600 mt-2">تخصيص تفضيلات التنبيهات والإشعارات</p>
@@ -281,7 +281,7 @@ export default function NotificationSettings() {
           <Button
             onClick={handleSave}
             disabled={isSaving}
-            className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white h-12"
+            className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white h-12"
           >
             {saved ? (
               <>

@@ -35,7 +35,7 @@ function DemoClickModal({ ad, onClose }) {
         dir="rtl"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] p-4 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] p-4 flex items-center justify-between">
           <div className="flex items-center gap-2 text-white">
             <Megaphone className="w-5 h-5" />
             <span className="font-semibold text-sm">محاكاة وجهة الإعلان</span>
@@ -80,7 +80,7 @@ function DemoClickModal({ ad, onClose }) {
             type="button"
             onClick={onClose}
             aria-label="أغلق محاكاة الإعلان"
-            className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white rounded-xl py-2.5 font-medium text-sm hover:opacity-90 transition-opacity"
+            className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white rounded-xl py-2.5 font-medium text-sm hover:opacity-90 transition-opacity"
           >
             حسناً، فهمت آلية العمل
           </button>
@@ -112,13 +112,13 @@ export function AdHorizontalBanner({ ads }) {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="my-6 rounded-2xl overflow-hidden border border-[#d4a574]/30 bg-gradient-to-r from-amber-50/60 via-white to-[#d4a574]/5 shadow-sm"
+        className="my-6 rounded-2xl overflow-hidden border border-[#C9A66B]/30 bg-gradient-to-r from-amber-50/60 via-white to-[#C9A66B]/5 shadow-sm"
         dir="rtl"
       >
         {/* Sponsored label */}
         <div className="flex items-center gap-1.5 px-4 pt-3 pb-1">
-          <div className="w-1.5 h-1.5 rounded-full bg-[#d4a574]" />
-          <span className="text-[10px] text-[#d4a574] font-semibold tracking-wide uppercase">محتوى مدعوم</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-[#C9A66B]" />
+          <span className="text-[10px] text-[#C9A66B] font-semibold tracking-wide uppercase">محتوى مدعوم</span>
         </div>
 
         <button
@@ -150,7 +150,7 @@ export function AdHorizontalBanner({ ads }) {
             {ad.description && (
               <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{ad.description}</p>
             )}
-            <div className="flex items-center gap-1 mt-2 text-[#d4a574] text-xs font-medium">
+            <div className="flex items-center gap-1 mt-2 text-[#C9A66B] text-xs font-medium">
               <span>اعرف أكثر</span>
               <ExternalLink className="w-3 h-3" />
             </div>
@@ -176,8 +176,8 @@ export function AdSidebarCards({ ads }) {
     <>
       <div className="mt-5" dir="rtl">
         <div className="flex items-center gap-1.5 mb-3">
-          <div className="w-1.5 h-1.5 rounded-full bg-[#d4a574]" />
-          <span className="text-[10px] text-[#d4a574] font-semibold tracking-wide uppercase">محتوى مدعوم</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-[#C9A66B]" />
+          <span className="text-[10px] text-[#C9A66B] font-semibold tracking-wide uppercase">محتوى مدعوم</span>
         </div>
         <div className="space-y-3">
           {ads.map(ad => (
@@ -193,7 +193,7 @@ export function AdSidebarCards({ ads }) {
                 });
                 setClickedAd(ad);
               }}
-              className="w-full group rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-[#d4a574]/50 transition-all overflow-hidden text-right"
+              className="w-full group rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-[#C9A66B]/50 transition-all overflow-hidden text-right"
             >
               <div className="relative">
                 <img
@@ -215,7 +215,7 @@ export function AdSidebarCards({ ads }) {
                   <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">
                     {CATEGORY_LABELS[ad.category] || ad.category}
                   </span>
-                  <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-[#d4a574] transition-colors" />
+                  <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-[#C9A66B] transition-colors" />
                 </div>
               </div>
             </motion.button>

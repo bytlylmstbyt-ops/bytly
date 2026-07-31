@@ -143,7 +143,7 @@ export default function ChatWindow({
     return (
       <Card className="h-96">
         <CardContent className="flex items-center justify-center h-full">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-[#d4a574]" />
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-[#C9A66B]" />
         </CardContent>
       </Card>
     );

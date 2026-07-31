@@ -41,7 +41,7 @@ export default function RegistrationSuccess() {
 
             <div className="space-y-3">
               <Link to={createPageUrl("Home")}>
-                <Button className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white gap-2">
+                <Button className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white gap-2">
                   <Home className="w-5 h-5" />
                   العودة للرئيسية
                 </Button>

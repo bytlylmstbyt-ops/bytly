@@ -64,7 +64,7 @@ export default function MasterProgressDashboard({ projects }) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Building2 className="w-5 h-5 text-[#d4a574]" />
+          <Building2 className="w-5 h-5 text-[#C9A66B]" />
           شريط إنجاز جميع المشاريع
         </CardTitle>
       </CardHeader>
@@ -73,7 +73,7 @@ export default function MasterProgressDashboard({ projects }) {
           {projectsWithMilestones.map((project) => (
             <div
               key={project.id}
-              className="p-4 rounded-xl border hover:border-[#d4a574] transition-all"
+              className="p-4 rounded-xl border hover:border-[#C9A66B] transition-all"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-start gap-3">

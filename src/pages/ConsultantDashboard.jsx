@@ -126,7 +126,7 @@ export default function ConsultantDashboard() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-[#d4a574] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-16 h-16 border-4 border-[#C9A66B] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-600">جاري التحميل...</p>
         </div>
       </div>
@@ -298,12 +298,12 @@ export default function ConsultantDashboard() {
                       {pendingRequests.map((request) => (
                         <div
                           key={request.id}
-                          className="p-4 rounded-lg border hover:border-[#d4a574] transition-colors"
+                          className="p-4 rounded-lg border hover:border-[#C9A66B] transition-colors"
                         >
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1">
                               <div className="flex items-center gap-3 mb-3">
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] flex items-center justify-center text-white font-bold">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] flex items-center justify-center text-white font-bold">
                                   {request.engineer_id?.slice(0, 2).toUpperCase()}
                                 </div>
                                 <div>
@@ -468,7 +468,7 @@ export default function ConsultantDashboard() {
                       {projects.map((project) => (
                         <div
                           key={project.id}
-                          className="p-4 rounded-lg border hover:border-[#d4a574] transition-colors"
+                          className="p-4 rounded-lg border hover:border-[#C9A66B] transition-colors"
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex-1">

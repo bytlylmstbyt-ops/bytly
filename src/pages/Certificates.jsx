@@ -77,7 +77,7 @@ export default function Certificates() {
           ))}
         </div>
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="relative z-10">
-          <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 text-[#d4a574] text-sm mb-4">
+          <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 text-[#C9A66B] text-sm mb-4">
             <Award className="w-4 h-4" />
             وثائق رسمية معتمدة
           </div>
@@ -88,8 +88,8 @@ export default function Certificates() {
             جميع الشهادات والتراخيص الرسمية الصادرة لمنصة Bytly — لمسة بيت، موثقة من الجهات الحكومية السعودية المختصة.
           </p>
           <div className="flex items-center justify-center gap-6 mt-6 text-white/50 text-xs">
-            <span className="flex items-center gap-1"><Shield className="w-3 h-3 text-[#d4a574]" /> موثقة رسمياً</span>
-            <span className="flex items-center gap-1"><Award className="w-3 h-3 text-[#d4a574]" /> محمية بحقوق الملكية</span>
+            <span className="flex items-center gap-1"><Shield className="w-3 h-3 text-[#C9A66B]" /> موثقة رسمياً</span>
+            <span className="flex items-center gap-1"><Award className="w-3 h-3 text-[#C9A66B]" /> محمية بحقوق الملكية</span>
           </div>
 
           {/* Beta Launch Badge */}
@@ -97,7 +97,7 @@ export default function Certificates() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="mt-8 inline-flex items-center gap-2 bg-gradient-to-r from-[#d4a574] to-[#e5c995] rounded-full px-5 py-2.5 shadow-lg shadow-[#d4a574]/30"
+            className="mt-8 inline-flex items-center gap-2 bg-gradient-to-r from-[#C9A66B] to-[#e5c995] rounded-full px-5 py-2.5 shadow-lg shadow-[#C9A66B]/30"
           >
             <Rocket className="w-4 h-4 text-[#1a1a2e]" />
             <span className="text-[#1a1a2e] text-sm font-bold">المنصة في مرحلة الإطلاق التجريبي</span>

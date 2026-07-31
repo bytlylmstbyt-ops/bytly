@@ -145,7 +145,7 @@ export default function Terms() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] flex items-center justify-center mb-6">
+          <div className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] flex items-center justify-center mb-6">
             <FileText className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-[#1a1a2e] mb-4">
@@ -180,7 +180,7 @@ export default function Terms() {
                   className="mb-8"
                 >
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] flex items-center justify-center">
                       <section.icon className="w-5 h-5 text-white" />
                     </div>
                     <h2 className="text-xl font-bold text-[#1a1a2e]">{section.title}</h2>

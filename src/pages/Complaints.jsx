@@ -112,7 +112,7 @@ export default function ComplaintsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center"
         >
-          <MessageSquare className="w-16 h-16 text-[#d4a574] mx-auto mb-4" />
+          <MessageSquare className="w-16 h-16 text-[#C9A66B] mx-auto mb-4" />
           <h1 className="text-3xl font-bold gradient-text mb-2">
             الشكاوى والاقتراحات
           </h1>
@@ -201,7 +201,7 @@ export default function ComplaintsPage() {
                   <Button
                     type="submit"
                     disabled={submitting}
-                    className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574]"
+                    className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B]"
                   >
                     {submitting ? (
                       <>
@@ -232,7 +232,7 @@ export default function ComplaintsPage() {
               <CardContent>
                 {loading ? (
                   <div className="text-center py-8">
-                    <Loader2 className="w-8 h-8 animate-spin text-[#d4a574] mx-auto" />
+                    <Loader2 className="w-8 h-8 animate-spin text-[#C9A66B] mx-auto" />
                   </div>
                 ) : complaints.length === 0 ? (
                   <div className="text-center py-8">

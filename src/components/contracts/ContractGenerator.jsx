@@ -93,7 +93,7 @@ export default function ContractGenerator({ project, engineer, client }) {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+        <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
           <FileText className="w-5 h-5 ml-2" />
           إنشاء عقد
         </Button>
@@ -210,7 +210,7 @@ export default function ContractGenerator({ project, engineer, client }) {
           <Button
             onClick={handleGenerate}
             disabled={isGenerating}
-            className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white py-6"
+            className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white py-6"
           >
             {isGenerating ? (
               <>

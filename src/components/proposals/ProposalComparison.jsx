@@ -140,7 +140,7 @@ export default function ProposalComparison({ proposals, engineers, projectBudget
         className="w-full flex items-center justify-between px-5 py-3.5 rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 hover:bg-amber-100 transition-all group"
       >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] flex items-center justify-center">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] flex items-center justify-center">
             <GitCompare className="w-5 h-5 text-white" />
           </div>
           <div className="text-right">
@@ -180,7 +180,7 @@ export default function ProposalComparison({ proposals, engineers, projectBudget
                     onClick={() => setSortBy(opt.value)}
                     className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
                       sortBy === opt.value
-                        ? "bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white shadow"
+                        ? "bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white shadow"
                         : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                     }`}
                   >
@@ -206,7 +206,7 @@ export default function ProposalComparison({ proposals, engineers, projectBudget
                         onClick={() => toggleSelect(p.id)}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium transition-all ${
                           sel
-                            ? "border-[#d4a574] bg-amber-50 text-[#1a1a2e]"
+                            ? "border-[#C9A66B] bg-amber-50 text-[#1a1a2e]"
                             : "border-slate-200 bg-white text-slate-500 hover:border-amber-300"
                         }`}
                       >
@@ -237,7 +237,7 @@ export default function ProposalComparison({ proposals, engineers, projectBudget
                               <div className="relative">
                                 <Avatar className="w-14 h-14 ring-2 ring-amber-200">
                                   <AvatarImage src={eng?.profile_image} />
-                                  <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] text-white font-bold">
+                                  <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] text-white font-bold">
                                     {eng?.full_name?.charAt(0)}
                                   </AvatarFallback>
                                 </Avatar>
@@ -248,7 +248,7 @@ export default function ProposalComparison({ proposals, engineers, projectBudget
                               <div>
                                 <Link
                                   to={createPageUrl("EngineerProfile") + `?id=${proposal.engineer_id}`}
-                                  className="text-sm font-bold text-[#1a1a2e] hover:text-[#d4a574] transition-colors line-clamp-1"
+                                  className="text-sm font-bold text-[#1a1a2e] hover:text-[#C9A66B] transition-colors line-clamp-1"
                                 >
                                   {eng?.full_name}
                                 </Link>

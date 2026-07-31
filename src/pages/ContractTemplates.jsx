@@ -168,7 +168,7 @@ export default function ContractTemplates() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C9A66B]"></div>
       </div>
     );
   }
@@ -185,7 +185,7 @@ export default function ContractTemplates() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-[#1a1a2e] flex items-center gap-3">
-                <FileText className="w-8 h-8 text-[#d4a574]" />
+                <FileText className="w-8 h-8 text-[#C9A66B]" />
                 قوالب العقود
               </h1>
               <p className="text-slate-600 mt-2">إدارة وتخصيص قوالب العقود القابلة لإعادة الاستخدام</p>
@@ -193,7 +193,7 @@ export default function ContractTemplates() {
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button 
-                  className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
+                  className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white"
                   onClick={() => {
                     setEditingTemplate(null);
                     resetForm();
@@ -387,7 +387,7 @@ export default function ContractTemplates() {
 
                   <Button
                     onClick={handleSaveTemplate}
-                    className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
+                    className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white"
                   >
                     <Check className="w-4 h-4 ml-2" />
                     {editingTemplate ? "حفظ التعديلات" : "إنشاء القالب"}

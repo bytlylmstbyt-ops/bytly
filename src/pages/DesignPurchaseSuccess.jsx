@@ -49,7 +49,7 @@ export default function DesignPurchaseSuccess() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-[#d4a574]" />
+        <Loader2 className="w-12 h-12 animate-spin text-[#C9A66B]" />
       </div>
     );
   }

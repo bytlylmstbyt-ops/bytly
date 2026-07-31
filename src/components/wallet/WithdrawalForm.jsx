@@ -171,7 +171,7 @@ export default function WithdrawalForm({ engineer, onSuccess }) {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574]"
+            className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B]"
           >
             {loading ? (
               <>

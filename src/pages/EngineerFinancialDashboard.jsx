@@ -183,7 +183,7 @@ export default function EngineerFinancialDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]" />
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C9A66B]" />
       </div>
     );
   }
@@ -209,7 +209,7 @@ export default function EngineerFinancialDashboard() {
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-3xl font-bold text-[#1a1a2e] flex items-center gap-3">
-            <DollarSign className="w-8 h-8 text-[#d4a574]" />
+            <DollarSign className="w-8 h-8 text-[#C9A66B]" />
             اللوحة المالية
           </h1>
           <p className="text-slate-500 mt-1">مرحباً {engineer.full_name} — ملخص أرباحك ومعاملاتك</p>
@@ -221,7 +221,7 @@ export default function EngineerFinancialDashboard() {
             { label: "إجمالي الأرباح", value: totalEarned, icon: TrendingUp, color: "from-green-500 to-emerald-600", prefix: "ر.س" },
             { label: "الرصيد المتاح",  value: engineer.available_balance || 0, icon: Wallet, color: "from-[#1a1a2e] to-[#2d2d4e]", prefix: "ر.س" },
             { label: "قيد التحصيل",   value: engineer.pending_balance || 0, icon: Clock, color: "from-amber-500 to-amber-600", prefix: "ر.س" },
-            { label: "أرباح الشهر",   value: monthlyEarnings, icon: BarChart2, color: "from-[#d4a574] to-[#b8865a]", prefix: "ر.س" },
+            { label: "أرباح الشهر",   value: monthlyEarnings, icon: BarChart2, color: "from-[#C9A66B] to-[#b8865a]", prefix: "ر.س" },
           ].map((s, i) => (
             <motion.div key={s.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}>
               <Card className="overflow-hidden">
@@ -357,7 +357,7 @@ export default function EngineerFinancialDashboard() {
                         </div>
                         <Button
                           onClick={() => exportInvoicePDF(p)}
-                          className="bg-[#1a1a2e] hover:bg-[#d4a574] text-white gap-2 shrink-0"
+                          className="bg-[#1a1a2e] hover:bg-[#C9A66B] text-white gap-2 shrink-0"
                           size="sm"
                         >
                           <Download className="w-4 h-4" />

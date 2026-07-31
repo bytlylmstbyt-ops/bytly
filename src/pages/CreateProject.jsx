@@ -316,7 +316,7 @@ export default function CreateProject() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] flex items-center justify-center mb-4">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] flex items-center justify-center mb-4">
             <Briefcase className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e] mb-2">
@@ -389,7 +389,7 @@ export default function CreateProject() {
                     <RadioGroupItem value="full_construction" id="full_construction" className="peer sr-only" />
                     <Label
                       htmlFor="full_construction"
-                      className="flex flex-col rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-[#d4a574] peer-data-[state=checked]:bg-[#d4a574]/5 cursor-pointer transition-all"
+                      className="flex flex-col rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-[#C9A66B] peer-data-[state=checked]:bg-[#C9A66B]/5 cursor-pointer transition-all"
                     >
                       <div className="flex items-center gap-3 mb-3">
                         <Building className="h-6 w-6 text-slate-700" />
@@ -411,7 +411,7 @@ export default function CreateProject() {
                     <RadioGroupItem value="express_service" id="express_service" className="peer sr-only" />
                     <Label
                       htmlFor="express_service"
-                      className="flex flex-col rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-[#d4a574] peer-data-[state=checked]:bg-[#d4a574]/5 cursor-pointer transition-all"
+                      className="flex flex-col rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-[#C9A66B] peer-data-[state=checked]:bg-[#C9A66B]/5 cursor-pointer transition-all"
                     >
                       <div className="flex items-center gap-3 mb-3">
                         <Zap className="h-6 w-6 text-amber-600" />
@@ -533,7 +533,7 @@ export default function CreateProject() {
 
               <div className="space-y-2">
                 <Label>المرفقات (صور، مخططات، ملفات)</Label>
-                <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#d4a574] transition-colors">
+                <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#C9A66B] transition-colors">
                   <input
                     type="file"
                     multiple
@@ -616,7 +616,7 @@ export default function CreateProject() {
                 {showMilestones && formData.project_type === "express_service" && (
                   <div className="space-y-3">
                     {formData.milestones.map((milestone, index) => (
-                      <Card key={index} className="p-4 border-[#d4a574]/30">
+                      <Card key={index} className="p-4 border-[#C9A66B]/30">
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <h4 className="font-medium text-sm">المرحلة {index + 1}</h4>
@@ -692,7 +692,7 @@ export default function CreateProject() {
               <Button
                 type="submit"
                 disabled={!isFormValid || isLoading}
-                className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white py-6 text-lg"
+                className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white py-6 text-lg"
               >
                 {isLoading ? (
                   <>

@@ -191,7 +191,7 @@ export default function RegisterChoice() {
             {t('registerChoice.alreadyHaveAccount')}{" "}
             <button 
               onClick={() => window.location.href = '/login'}
-              className="text-[#d4a574] font-medium hover:underline"
+              className="text-[#C9A66B] font-medium hover:underline"
             >
               {t('registerChoice.login')}
             </button>

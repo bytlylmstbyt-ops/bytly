@@ -22,7 +22,7 @@ function ChatMessage({ msg, currentUserEmail }) {
       className={`flex gap-2 ${isMine ? "flex-row-reverse" : "flex-row"}`}
     >
       <Avatar className="w-8 h-8 shrink-0 mt-1">
-        <AvatarFallback className={`text-xs text-white ${isMine ? "bg-[#d4a574]" : "bg-[#1a1a2e]"}`}>
+        <AvatarFallback className={`text-xs text-white ${isMine ? "bg-[#C9A66B]" : "bg-[#1a1a2e]"}`}>
           {msg.sender_name?.charAt(0) || "؟"}
         </AvatarFallback>
       </Avatar>
@@ -34,7 +34,7 @@ function ChatMessage({ msg, currentUserEmail }) {
         {msg.content && (
           <div className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
             isMine
-              ? "bg-gradient-to-br from-[#d4a574] to-[#c49060] text-white rounded-tr-sm"
+              ? "bg-gradient-to-br from-[#C9A66B] to-[#c49060] text-white rounded-tr-sm"
               : "bg-white border border-slate-200 text-slate-800 rounded-tl-sm shadow-sm"
           }`}>
             {msg.content}
@@ -46,7 +46,7 @@ function ChatMessage({ msg, currentUserEmail }) {
           <div className="flex flex-wrap gap-2">
             {msg.attachments.map((att, i) => (
               <a key={i} href={att.url} target="_blank" rel="noopener noreferrer"
-                className="group flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 hover:border-[#d4a574] transition-all shadow-sm max-w-[200px]">
+                className="group flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 hover:border-[#C9A66B] transition-all shadow-sm max-w-[200px]">
                 {isImage(att.url) ? (
                   <div className="relative">
                     <img src={att.url} alt={att.name} className="w-16 h-16 object-cover rounded-lg" />
@@ -156,7 +156,7 @@ export default function ProjectChat({ projectId, project, currentUser, engineerN
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-[#1a1a2e] to-[#2d2d4e] text-white shrink-0">
         <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
-          <MessageSquare className="w-5 h-5 text-[#d4a574]" />
+          <MessageSquare className="w-5 h-5 text-[#C9A66B]" />
         </div>
         <div>
           <h3 className="font-semibold text-sm">دردشة المشروع</h3>
@@ -220,14 +220,14 @@ export default function ProjectChat({ projectId, project, currentUser, engineerN
           onKeyDown={handleKeyDown}
           placeholder="اكتب رسالتك... (Enter للإرسال)"
           rows={1}
-          className="resize-none flex-1 text-sm min-h-[38px] max-h-[120px] rounded-xl border-slate-200 focus:border-[#d4a574]"
+          className="resize-none flex-1 text-sm min-h-[38px] max-h-[120px] rounded-xl border-slate-200 focus:border-[#C9A66B]"
           style={{ overflow: text.split("\n").length > 3 ? "auto" : "hidden" }}
         />
 
         <Button
           onClick={handleSend}
           disabled={sending || (!text.trim() && pendingFiles.length === 0)}
-          className="w-9 h-9 p-0 rounded-xl bg-gradient-to-br from-[#d4a574] to-[#c49060] hover:opacity-90 shrink-0 mb-0.5">
+          className="w-9 h-9 p-0 rounded-xl bg-gradient-to-br from-[#C9A66B] to-[#c49060] hover:opacity-90 shrink-0 mb-0.5">
           {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
         </Button>
       </div>

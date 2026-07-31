@@ -46,7 +46,7 @@ export default function MyPurchasedDesigns() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-[#d4a574]" />
+        <Loader2 className="w-12 h-12 animate-spin text-[#C9A66B]" />
       </div>
     );
   }
@@ -159,7 +159,7 @@ export default function MyPurchasedDesigns() {
             <h3 className="text-xl font-semibold text-slate-700 mb-2">لا توجد مشتريات</h3>
             <p className="text-slate-500 mb-6">لم تقم بشراء أي تصاميم بعد</p>
             <Link to={createPageUrl("DesignMarketplace")}>
-              <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+              <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
                 تصفح المتجر
               </Button>
             </Link>

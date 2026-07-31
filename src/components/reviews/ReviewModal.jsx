@@ -89,7 +89,7 @@ export default function ReviewModal({ trigger, onSubmit, targetName }) {
             />
           </div>
 
-          <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white gap-2">
+          <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white gap-2">
             {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> جارٍ الإرسال...</> : <><Send className="w-4 h-4" /> إرسال التقييم</>}
           </Button>
         </form>

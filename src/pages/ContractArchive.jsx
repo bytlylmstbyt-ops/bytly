@@ -156,7 +156,7 @@ export default function ContractArchive() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C9A66B]"></div>
       </div>
     );
   }
@@ -175,7 +175,7 @@ export default function ContractArchive() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-3xl font-bold text-[#1a1a2e] flex items-center gap-3">
-                <Archive className="w-8 h-8 text-[#d4a574]" />
+                <Archive className="w-8 h-8 text-[#C9A66B]" />
                 أرشيف العقود
               </h1>
               <p className="text-slate-600 mt-2">جميع عقودك ومستنداتك القانونية</p>
@@ -271,7 +271,7 @@ export default function ContractArchive() {
           <Card className="border-0 shadow-lg">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <FileCheck className="w-6 h-6 text-[#d4a574]" />
+                <FileCheck className="w-6 h-6 text-[#C9A66B]" />
                 العقود ({filteredContracts.length})
               </CardTitle>
             </CardHeader>
@@ -295,7 +295,7 @@ export default function ContractArchive() {
                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="flex-1">
                               <div className="flex items-start gap-3 mb-3">
-                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] flex items-center justify-center flex-shrink-0">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] flex items-center justify-center flex-shrink-0">
                                   <FileText className="w-6 h-6 text-white" />
                                 </div>
                                 <div className="flex-1">

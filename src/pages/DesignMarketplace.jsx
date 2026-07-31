@@ -91,7 +91,7 @@ export default function DesignMarketplace() {
             className="text-center"
           >
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#d4a574] to-amber-600 flex items-center justify-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#C9A66B] to-amber-600 flex items-center justify-center">
                 <ShoppingCart className="w-8 h-8 text-white" />
               </div>
             </div>
@@ -130,8 +130,8 @@ export default function DesignMarketplace() {
                 onClick={() => setCategoryFilter(categoryFilter === cat.value ? "" : cat.value)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all ${
                   categoryFilter === cat.value
-                    ? "bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white shadow-lg"
-                    : "bg-white border hover:border-[#d4a574]"
+                    ? "bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white shadow-lg"
+                    : "bg-white border hover:border-[#C9A66B]"
                 }`}
               >
                 <Icon className="w-4 h-4" />

@@ -162,7 +162,7 @@ export default function PackagesPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#d4a574]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#C9A66B]" />
       </div>
     );
   }
@@ -212,7 +212,7 @@ export default function PackagesPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className={`relative overflow-hidden hover-lift ${isActive ? 'ring-2 ring-[#d4a574]' : ''}`}>
+                <Card className={`relative overflow-hidden hover-lift ${isActive ? 'ring-2 ring-[#C9A66B]' : ''}`}>
                   {/* Gradient Header */}
                   <div className={`h-32 bg-gradient-to-br ${getPackageColor(index)} relative`}>
                     <div className="absolute inset-0 bg-black/20" />
@@ -255,7 +255,7 @@ export default function PackagesPage() {
                       className={`w-full ${
                         isActive
                           ? "bg-green-600 hover:bg-green-700"
-                          : "bg-gradient-to-r from-[#1a1a2e] to-[#d4a574]"
+                          : "bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B]"
                       }`}
                     >
                       {isProcessing ? (
@@ -276,7 +276,7 @@ export default function PackagesPage() {
 
                   {isActive && (
                     <div className="absolute top-4 left-4">
-                      <Badge className="bg-[#d4a574] text-white">نشط</Badge>
+                      <Badge className="bg-[#C9A66B] text-white">نشط</Badge>
                     </div>
                   )}
                 </Card>

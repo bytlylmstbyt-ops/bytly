@@ -106,7 +106,7 @@ export default function AllCertificationsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-[#d4a574]" />
+        <Loader2 className="w-12 h-12 animate-spin text-[#C9A66B]" />
       </div>
     );
   }
@@ -185,10 +185,10 @@ export default function AllCertificationsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
               >
-                <Card className="hover:shadow-xl transition-all border-2 border-[#d4a574]/20">
+                <Card className="hover:shadow-xl transition-all border-2 border-[#C9A66B]/20">
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4 mb-4">
-                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] flex items-center justify-center flex-shrink-0">
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] flex items-center justify-center flex-shrink-0">
                         <Award className="w-7 h-7 text-white" />
                       </div>
                       <div className="flex-1">
@@ -227,7 +227,7 @@ export default function AllCertificationsPage() {
                     </div>
 
                     <Link to={createPageUrl("CertificationPage") + `?id=${project.id}`}>
-                      <Button className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+                      <Button className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
                         <Eye className="w-4 h-4 ml-2" />
                         عرض الشهادة
                       </Button>

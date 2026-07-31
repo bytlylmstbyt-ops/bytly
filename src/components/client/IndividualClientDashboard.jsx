@@ -26,7 +26,7 @@ export default function IndividualClientDashboard({ client, stats, recentProject
             <div className="flex items-center gap-4">
               <Avatar className="w-16 h-16 border-2 border-white shadow-lg">
                 <AvatarImage src={client.profile_image} />
-                <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] text-white text-xl">
+                <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] text-white text-xl">
                   {client.full_name?.charAt(0)}
                 </AvatarFallback>
               </Avatar>
@@ -39,7 +39,7 @@ export default function IndividualClientDashboard({ client, stats, recentProject
             </div>
             <div className="flex gap-3">
               <Link to={createPageUrl("CreateProject")}>
-                <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+                <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
                   <Plus className="w-5 h-5 ml-2" />
                   مشروع جديد
                 </Button>
@@ -212,7 +212,7 @@ export default function IndividualClientDashboard({ client, stats, recentProject
                   <Briefcase className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                   <p>لم تضف أي مشاريع بعد</p>
                   <Link to={createPageUrl("CreateProject")}>
-                    <Button variant="link" className="text-[#d4a574]">
+                    <Button variant="link" className="text-[#C9A66B]">
                       أضف مشروعك الأول
                       <ArrowLeft className="w-4 h-4 mr-2" />
                     </Button>

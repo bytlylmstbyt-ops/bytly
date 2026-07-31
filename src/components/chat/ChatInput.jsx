@@ -185,7 +185,7 @@ export default function ChatInput({ onMessageSend, onVideoCall, onVoiceCall, dis
           <Button
             onClick={handleSendMessage}
             disabled={disabled || uploading || sending || (!message.trim() && attachments.length === 0)}
-            className="bg-[#d4a574] hover:bg-[#c89864] text-white"
+            className="bg-[#C9A66B] hover:bg-[#c89864] text-white"
           >
             {sending ? (
               <Loader2 className="w-4 h-4 animate-spin" />

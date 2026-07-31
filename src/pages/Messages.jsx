@@ -295,7 +295,7 @@ export default function Messages() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C9A66B]"></div>
       </div>
     );
   }
@@ -336,7 +336,7 @@ export default function Messages() {
                   <Button
                     size="sm"
                     onClick={() => setShowNewChat(true)}
-                    className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white gap-1"
+                    className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white gap-1"
                   >
                     <Plus className="w-4 h-4" />
                     محادثة جديدة
@@ -389,13 +389,13 @@ export default function Messages() {
                       key={conversation.id}
                       onClick={() => { setSelectedConversation(conversation); setShowMobileChat(true); }}
                       className={`p-4 flex items-center gap-3 cursor-pointer transition-colors border-b ${
-                        isSelected ? "bg-amber-50 border-r-2 border-r-[#d4a574]" : "hover:bg-slate-50"
+                        isSelected ? "bg-amber-50 border-r-2 border-r-[#C9A66B]" : "hover:bg-slate-50"
                       }`}
                     >
                       <div className="relative">
                         <Avatar className="w-12 h-12">
                           <AvatarImage src={avatar} />
-                          <AvatarFallback className={`text-white ${isGroup ? 'bg-gradient-to-br from-purple-500 to-indigo-500' : 'bg-gradient-to-br from-[#1a1a2e] to-[#d4a574]'}`}>
+                          <AvatarFallback className={`text-white ${isGroup ? 'bg-gradient-to-br from-purple-500 to-indigo-500' : 'bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B]'}`}>
                             {isGroup ? <Users className="w-5 h-5" /> : name?.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
@@ -453,7 +453,7 @@ export default function Messages() {
                     </button>
                     <Avatar className="w-10 h-10">
                       <AvatarImage src={getConversationAvatar(selectedConversation)} />
-                      <AvatarFallback className={`text-white ${getConversationType(selectedConversation) === 'group' ? 'bg-gradient-to-br from-purple-500 to-indigo-500' : 'bg-gradient-to-br from-[#1a1a2e] to-[#d4a574]'}`}>
+                      <AvatarFallback className={`text-white ${getConversationType(selectedConversation) === 'group' ? 'bg-gradient-to-br from-purple-500 to-indigo-500' : 'bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B]'}`}>
                         {getConversationType(selectedConversation) === 'group'
                           ? <Users className="w-5 h-5" />
                           : getConversationName(selectedConversation)?.charAt(0)}
@@ -535,7 +535,7 @@ export default function Messages() {
                           {!isOwn && (
                             <Avatar className="w-8 h-8 flex-shrink-0">
                               <AvatarImage src={senderInfo?.profile_image || senderInfo?.company_logo} />
-                              <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] text-white text-xs">
+                              <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] text-white text-xs">
                                 {(message.sender_name || message.sender_email)?.charAt(0)}
                               </AvatarFallback>
                             </Avatar>
@@ -553,7 +553,7 @@ export default function Messages() {
                             )}
                             <div className={`rounded-2xl px-4 py-2 ${
                               isOwn
-                                ? "bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white rounded-br-none"
+                                ? "bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white rounded-br-none"
                                 : "bg-white shadow-sm rounded-bl-none"
                             }`}>
                               <p className="text-sm">{message.content}</p>
@@ -604,7 +604,7 @@ export default function Messages() {
                     <Button
                       onClick={handleSendMessage}
                       disabled={!newMessage.trim() || isSending}
-                      className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
+                      className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white"
                     >
                       {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                     </Button>
@@ -619,7 +619,7 @@ export default function Messages() {
                   </div>
                   <h3 className="text-lg font-semibold text-slate-700 mb-2">اختر محادثة</h3>
                   <p className="text-slate-500 text-sm">اختر محادثة أو ابدأ محادثة جديدة</p>
-                  <Button onClick={() => setShowNewChat(true)} className="mt-4 bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+                  <Button onClick={() => setShowNewChat(true)} className="mt-4 bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
                     <Plus className="w-4 h-4 ml-2" />
                     محادثة جديدة
                   </Button>
@@ -675,7 +675,7 @@ export default function Messages() {
                     >
                       <Avatar className="w-10 h-10">
                         <AvatarImage src={u.profile_image || u.company_logo} />
-                        <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] text-white">
+                        <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] text-white">
                           {(u.full_name || u.company_name)?.charAt(0)}
                         </AvatarFallback>
                       </Avatar>

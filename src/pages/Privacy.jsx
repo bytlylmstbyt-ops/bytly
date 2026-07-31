@@ -210,7 +210,7 @@ export default function Privacy() {
                       <ul className="space-y-2">
                         {block.items.map((item, i) => (
                           <li key={i} className="flex items-start gap-3 text-slate-600">
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#d4a574] mt-2 flex-shrink-0" />
+                            <div className="w-1.5 h-1.5 rounded-full bg-[#C9A66B] mt-2 flex-shrink-0" />
                             <span>{item}</span>
                           </li>
                         ))}

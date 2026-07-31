@@ -92,7 +92,7 @@ export default function AllWithdrawalRequestsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-[#d4a574]" />
+        <Loader2 className="w-12 h-12 animate-spin text-[#C9A66B]" />
       </div>
     );
   }
@@ -220,7 +220,7 @@ export default function AllWithdrawalRequestsPage() {
 
                       <div className="flex flex-col gap-2">
                         <Link to={createPageUrl("ConsultantApproval") + `?id=${request.id}`}>
-                          <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white w-full">
+                          <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white w-full">
                             <FileCheck className="w-4 h-4 ml-2" />
                             مراجعة
                           </Button>

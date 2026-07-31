@@ -362,7 +362,7 @@ export default function AddDesign() {
               {/* Preview Images */}
               <div className="space-y-2">
                 <Label>صور المعاينة * (على الأقل صورة واحدة)</Label>
-                <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#d4a574] transition-colors">
+                <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#C9A66B] transition-colors">
                   <input
                     type="file"
                     multiple

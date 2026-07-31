@@ -105,7 +105,7 @@ export default function AudioPlayer({ audioUrl, duration, isOwn }) {
           <div
             className={cn(
               "h-full rounded-full transition-all",
-              isOwn ? "bg-white" : "bg-[#d4a574]"
+              isOwn ? "bg-white" : "bg-[#C9A66B]"
             )}
             style={{ width: `${progress}%` }}
           />

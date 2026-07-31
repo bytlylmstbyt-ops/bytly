@@ -73,7 +73,7 @@ export default function MilestoneInvoicePanel({ projectId, milestoneId, isClient
     <Card className="border-0 shadow-lg">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
-          <FileText className="w-5 h-5 text-[#d4a574]" />
+          <FileText className="w-5 h-5 text-[#C9A66B]" />
           الفواتير الإلكترونية
         </CardTitle>
       </CardHeader>
@@ -82,10 +82,10 @@ export default function MilestoneInvoicePanel({ projectId, milestoneId, isClient
           const cfg = statusConfig[invoice.status] || statusConfig.draft;
           const StatusIcon = cfg.icon;
           return (
-            <div key={invoice.id} className="flex items-center justify-between p-4 border rounded-xl hover:border-[#d4a574] transition-all">
+            <div key={invoice.id} className="flex items-center justify-between p-4 border rounded-xl hover:border-[#C9A66B] transition-all">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-[#d4a574]" />
+                  <FileText className="w-5 h-5 text-[#C9A66B]" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm text-[#1a1a2e]">{invoice.invoice_number}</p>
@@ -107,7 +107,7 @@ export default function MilestoneInvoicePanel({ projectId, milestoneId, isClient
                     size="sm"
                     onClick={() => handlePay(invoice)}
                     disabled={paying === invoice.id}
-                    className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white text-xs h-8"
+                    className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white text-xs h-8"
                   >
                     {paying === invoice.id ? (
                       <Loader2 className="w-3 h-3 animate-spin ml-1" />

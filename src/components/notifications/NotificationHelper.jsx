@@ -29,13 +29,13 @@ export const sendNotification = async ({
         subject: title,
         body: `
           <div dir="rtl" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #d4a574 100%); padding: 30px; text-align: center;">
+            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #C9A66B 100%); padding: 30px; text-align: center;">
               <h1 style="color: white; margin: 0; font-size: 24px;">بيتلي - لمسة بيت</h1>
               <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 14px;">منصة ربط المصممين والعملاء</p>
             </div>
             
             <div style="padding: 30px; background: #f8f9fa;">
-              <h2 style="color: #1a1a2e; margin-top: 0; font-size: 20px; border-right: 4px solid #d4a574; padding-right: 15px;">${title}</h2>
+              <h2 style="color: #1a1a2e; margin-top: 0; font-size: 20px; border-right: 4px solid #C9A66B; padding-right: 15px;">${title}</h2>
               <p style="color: #333; line-height: 1.8; font-size: 16px;">${message}</p>
               
               ${projectId ? `
@@ -45,7 +45,7 @@ export const sendNotification = async ({
               ` : ''}
               
               <div style="text-align: center; margin-top: 30px;">
-                <a href="https://bytly.base44.com" style="display: inline-block; background: linear-gradient(135deg, #1a1a2e 0%, #d4a574 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                <a href="https://bytly.base44.com" style="display: inline-block; background: linear-gradient(135deg, #1a1a2e 0%, #C9A66B 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
                   الانتقال للمنصة
                 </a>
               </div>

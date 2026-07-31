@@ -343,7 +343,7 @@ export default function CertificationPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-[#d4a574]" />
+        <Loader2 className="w-12 h-12 animate-spin text-[#C9A66B]" />
       </div>
     );
   }
@@ -355,34 +355,34 @@ export default function CertificationPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-gradient-to-br from-[#1a1a2e] to-[#16213e] rounded-2xl p-8 text-white shadow-2xl border-4 border-[#d4a574]"
+          className="bg-gradient-to-br from-[#1a1a2e] to-[#16213e] rounded-2xl p-8 text-white shadow-2xl border-4 border-[#C9A66B]"
         >
           <div className="text-center space-y-4">
             {/* Logo */}
             <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-white/20 to-[#d4a574] flex items-center justify-center border-4 border-white/30">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-white/20 to-[#C9A66B] flex items-center justify-center border-4 border-white/30">
                 <Home className="w-10 h-10 text-white" />
               </div>
             </div>
 
             <h1 className="text-4xl font-bold">شهادة اعتماد فني</h1>
-            <p className="text-xl text-[#d4a574]">منصة بيتلي - لمسة بيت</p>
+            <p className="text-xl text-[#C9A66B]">منصة بيتلي - لمسة بيت</p>
             
-            <div className="h-px bg-gradient-to-r from-transparent via-[#d4a574] to-transparent my-6"></div>
+            <div className="h-px bg-gradient-to-r from-transparent via-[#C9A66B] to-transparent my-6"></div>
 
             <div className="grid md:grid-cols-3 gap-6 text-center">
               <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
-                <User className="w-8 h-8 mx-auto mb-2 text-[#d4a574]" />
+                <User className="w-8 h-8 mx-auto mb-2 text-[#C9A66B]" />
                 <p className="text-sm text-slate-300">العميل</p>
                 <p className="font-bold">{client?.full_name}</p>
               </div>
               <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
-                <Award className="w-8 h-8 mx-auto mb-2 text-[#d4a574]" />
+                <Award className="w-8 h-8 mx-auto mb-2 text-[#C9A66B]" />
                 <p className="text-sm text-slate-300">المصمم المعتمد</p>
                 <p className="font-bold">{engineer?.full_name}</p>
               </div>
               <div className="bg-white/10 rounded-lg p-4 backdrop-blur-sm">
-                <Shield className="w-8 h-8 mx-auto mb-2 text-[#d4a574]" />
+                <Shield className="w-8 h-8 mx-auto mb-2 text-[#C9A66B]" />
                 <p className="text-sm text-slate-300">المستشار الفني</p>
                 <p className="font-bold">{consultant?.full_name || "معتمد"}</p>
               </div>
@@ -406,10 +406,10 @@ export default function CertificationPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card className="border-2 border-[#d4a574]/30">
+          <Card className="border-2 border-[#C9A66B]/30">
             <CardHeader className="bg-gradient-to-r from-amber-50 to-green-50">
               <CardTitle className="flex items-center gap-2 text-2xl">
-                <Stamp className="w-6 h-6 text-[#d4a574]" />
+                <Stamp className="w-6 h-6 text-[#C9A66B]" />
                 تقرير المطابقة الهندسية
               </CardTitle>
             </CardHeader>
@@ -456,7 +456,7 @@ export default function CertificationPage() {
                     </div>
 
                     <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
-                      <Stamp className="w-5 h-5 text-[#d4a574]" />
+                      <Stamp className="w-5 h-5 text-[#C9A66B]" />
                       <span>تم الاعتماد بواسطة: {consultant?.full_name}</span>
                       <span className="mr-auto">{new Date(technicalReview.review_date).toLocaleDateString('ar-SA')}</span>
                     </div>

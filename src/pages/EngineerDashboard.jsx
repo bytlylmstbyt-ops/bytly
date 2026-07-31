@@ -454,11 +454,11 @@ export default function EngineerDashboard() {
         {/* Financial Dashboard Quick Link */}
         <div className="mb-6">
           <Link to="/EngineerFinancialDashboard">
-            <Card className="hover:shadow-lg transition-shadow border-[#d4a574]/40 bg-gradient-to-r from-[#1a1a2e]/5 to-[#d4a574]/10 cursor-pointer">
+            <Card className="hover:shadow-lg transition-shadow border-[#C9A66B]/40 bg-gradient-to-r from-[#1a1a2e]/5 to-[#C9A66B]/10 cursor-pointer">
               <CardContent className="py-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-[#d4a574] flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-[#C9A66B] flex items-center justify-center">
                       <TrendingUp className="w-5 h-5 text-white" />
                     </div>
                     <div>
@@ -466,7 +466,7 @@ export default function EngineerDashboard() {
                       <p className="text-xs text-slate-500">عرض الأرباح • الفواتير • المعاملات • تصدير PDF</p>
                     </div>
                   </div>
-                  <span className="text-[#d4a574] text-xl">←</span>
+                  <span className="text-[#C9A66B] text-xl">←</span>
                 </div>
               </CardContent>
             </Card>
@@ -566,7 +566,7 @@ export default function EngineerDashboard() {
         {/* Quick Actions */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Link to={createPageUrl("AddPortfolio")}>
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-[#d4a574]/40 bg-gradient-to-br from-[#6B5D4F]/5 to-[#C9A66B]/10">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer border-[#C9A66B]/40 bg-gradient-to-br from-[#6B5D4F]/5 to-[#C9A66B]/10">
               <CardContent className="py-4 flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-[#C9A66B] flex items-center justify-center">
                   <Plus className="w-6 h-6 text-white" />

@@ -142,7 +142,7 @@ export default function InvestorClientDashboard({ client, stats, recentProjects 
                     <Link
                       key={project.id}
                       to={createPageUrl("ProjectDetails") + `?id=${project.id}`}
-                      className="block p-4 rounded-xl border hover:border-[#d4a574] hover:shadow-md transition-all"
+                      className="block p-4 rounded-xl border hover:border-[#C9A66B] hover:shadow-md transition-all"
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
@@ -201,7 +201,7 @@ export default function InvestorClientDashboard({ client, stats, recentProjects 
                   {preferredFirms.map((firm) => (
                     <div
                       key={firm.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border hover:border-[#d4a574] transition-colors"
+                      className="flex items-center gap-3 p-3 rounded-lg border hover:border-[#C9A66B] transition-colors"
                     >
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={firm.company_logo} />

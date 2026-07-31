@@ -100,7 +100,7 @@ export default function ElectronicSignModal({
       >
         {/* Header */}
         <div className="bg-gradient-to-r from-[#1a1a2e] to-[#2d2d4e] px-6 py-4 flex items-center gap-3">
-          <Scale className="w-5 h-5 text-[#d4a574]" />
+          <Scale className="w-5 h-5 text-[#C9A66B]" />
           <h2 className="text-white font-bold text-lg">التوقيع الإلكتروني</h2>
         </div>
 
@@ -166,7 +166,7 @@ export default function ElectronicSignModal({
               <div className="flex gap-3">
                 <Button variant="outline" className="flex-1" onClick={onClose}>إلغاء</Button>
                 <Button
-                  className="flex-1 bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
+                  className="flex-1 bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white"
                   disabled={!agreed || signing || (signMethod === "draw" && !signatureImage)}
                   onClick={handleSign}
                 >

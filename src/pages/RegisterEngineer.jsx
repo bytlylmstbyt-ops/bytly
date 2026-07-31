@@ -413,14 +413,14 @@ export default function RegisterEngineer() {
             <div key={s} className="flex items-center">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
                 step >= s 
-                  ? "bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white" 
+                  ? "bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white" 
                   : "bg-slate-200 text-slate-500"
               }`}>
                 {step > s ? <CheckCircle className="w-5 h-5" /> : s}
               </div>
               {s < 4 && (
                 <div className={`w-16 h-1 mx-2 rounded ${
-                  step > s ? "bg-gradient-to-r from-[#1a1a2e] to-[#d4a574]" : "bg-slate-200"
+                  step > s ? "bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B]" : "bg-slate-200"
                 }`} />
               )}
             </div>
@@ -609,7 +609,7 @@ export default function RegisterEngineer() {
 
                 <div className="space-y-2">
                   <Label>صورة شخصية</Label>
-                  <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#d4a574] transition-colors">
+                  <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#C9A66B] transition-colors">
                     <input
                       type="file"
                       accept="image/*"
@@ -633,7 +633,7 @@ export default function RegisterEngineer() {
 
                 <div className="space-y-2">
                   <Label>شهادة التخرج <span className="text-red-500">*</span></Label>
-                  <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#d4a574] transition-colors">
+                  <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#C9A66B] transition-colors">
                     <input
                       type="file"
                       accept=".pdf,image/*"
@@ -660,7 +660,7 @@ export default function RegisterEngineer() {
 
                 <div className="space-y-2">
                   <Label>شهادة القيد في الهيئة السعودية للمهندسين <span className="text-red-500">*</span></Label>
-                  <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#d4a574] transition-colors">
+                  <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#C9A66B] transition-colors">
                     <input
                       type="file"
                       accept=".pdf,image/*"
@@ -719,7 +719,7 @@ export default function RegisterEngineer() {
                     (step === 1 && !isStep1Valid) ||
                     (step === 2 && !isStep2Valid)
                   }
-                  className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white gap-2"
+                  className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white gap-2"
                 >
                   التالي
                   <ArrowLeft className="w-4 h-4" />
@@ -728,7 +728,7 @@ export default function RegisterEngineer() {
                 <Button
                   onClick={handleSubmit}
                   disabled={isSubmitting || !isStep3Valid || isFileUploading}
-                  className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white gap-2"
+                  className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white gap-2"
                 >
                   {isSubmitting ? (
                     <>

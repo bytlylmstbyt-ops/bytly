@@ -37,7 +37,7 @@ export default function KanbanCard({ task, engineer, onClick }) {
       className="cursor-pointer select-none"
     >
       <Card className={`p-4 hover:shadow-lg transition-all border-l-4 ${
-        isOverdue ? 'border-l-red-500 bg-red-50' : 'border-l-[#d4a574]'
+        isOverdue ? 'border-l-red-500 bg-red-50' : 'border-l-[#C9A66B]'
       }`}>
         <div className="space-y-3">
           {/* Title */}
@@ -87,7 +87,7 @@ export default function KanbanCard({ task, engineer, onClick }) {
             {engineer && (
               <Avatar className="w-6 h-6">
                 <AvatarImage src={engineer.profile_image} />
-                <AvatarFallback className="text-xs bg-[#d4a574] text-white">
+                <AvatarFallback className="text-xs bg-[#C9A66B] text-white">
                   {engineer.full_name?.charAt(0)}
                 </AvatarFallback>
               </Avatar>
@@ -114,7 +114,7 @@ export default function KanbanCard({ task, engineer, onClick }) {
           {task.progress_percentage > 0 && (
             <div className="w-full bg-slate-200 rounded-full h-1.5">
               <div
-                className="bg-gradient-to-r from-[#d4a574] to-[#1a1a2e] h-1.5 rounded-full transition-all"
+                className="bg-gradient-to-r from-[#C9A66B] to-[#1a1a2e] h-1.5 rounded-full transition-all"
                 style={{ width: `${task.progress_percentage}%` }}
               />
             </div>

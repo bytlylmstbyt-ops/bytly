@@ -86,7 +86,7 @@ export default function AddEngineer() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] flex items-center justify-center mb-4">
+          <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] flex items-center justify-center mb-4">
             <User className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e] mb-2">
@@ -121,7 +121,7 @@ export default function AddEngineer() {
                         </button>
                       </div>
                     ) : (
-                      <label className="h-48 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#d4a574] transition-colors">
+                      <label className="h-48 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#C9A66B] transition-colors">
                         <input
                           type="file"
                           accept="image/*"
@@ -159,7 +159,7 @@ export default function AddEngineer() {
                         </button>
                       </div>
                     ) : (
-                      <label className="h-48 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#d4a574] transition-colors">
+                      <label className="h-48 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-[#C9A66B] transition-colors">
                         <input
                           type="file"
                           accept="image/*"
@@ -319,7 +319,7 @@ export default function AddEngineer() {
                     </button>
                   </div>
                 ) : (
-                  <label className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center cursor-pointer hover:border-[#d4a574] transition-colors">
+                  <label className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center cursor-pointer hover:border-[#C9A66B] transition-colors">
                     <input
                       type="file"
                       accept="image/*,.pdf"
@@ -347,7 +347,7 @@ export default function AddEngineer() {
               <Button
                 type="submit"
                 disabled={!isFormValid || isLoading}
-                className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white py-6 text-lg"
+                className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white py-6 text-lg"
               >
                 {isLoading ? (
                   <>

@@ -34,11 +34,11 @@ export default function LegalTermsSection({ onAcceptanceChange, isEditMode = fal
       animate={{ opacity: 1, y: 0 }}
       className="mb-6"
     >
-      <Card className="border-l-4 border-l-[#d4a574]">
+      <Card className="border-l-4 border-l-[#C9A66B]">
         <CardHeader>
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-              <Icon className="w-5 h-5 text-[#d4a574]" />
+              <Icon className="w-5 h-5 text-[#C9A66B]" />
             </div>
             <div className="flex-1">
               <CardTitle className="text-lg">{title}</CardTitle>
@@ -49,7 +49,7 @@ export default function LegalTermsSection({ onAcceptanceChange, isEditMode = fal
           <div className="bg-slate-50 rounded-lg p-4 text-sm text-slate-700 leading-relaxed space-y-3">
             {items.map((item, idx) => (
               <div key={idx} className="flex gap-3">
-                <span className="text-[#d4a574] font-bold flex-shrink-0">•</span>
+                <span className="text-[#C9A66B] font-bold flex-shrink-0">•</span>
                 <p>{item}</p>
               </div>
             ))}

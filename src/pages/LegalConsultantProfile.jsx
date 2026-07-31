@@ -70,7 +70,7 @@ export default function LegalConsultantProfile() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C9A66B]"></div>
       </div>
     );
   }
@@ -106,7 +106,7 @@ export default function LegalConsultantProfile() {
                   {formData.full_name?.charAt(0)}
                 </AvatarFallback>
               </Avatar>
-              <label className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#d4a574] text-white flex items-center justify-center cursor-pointer hover:bg-[#c9a227] transition-colors">
+              <label className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#C9A66B] text-white flex items-center justify-center cursor-pointer hover:bg-[#C9A66B] transition-colors">
                 <Camera className="w-4 h-4" />
                 <input
                   type="file"

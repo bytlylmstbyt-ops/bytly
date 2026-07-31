@@ -150,7 +150,7 @@ export default function AdminReportsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-[#d4a574]" />
+        <Loader2 className="w-12 h-12 animate-spin text-[#C9A66B]" />
       </div>
     );
   }
@@ -164,7 +164,7 @@ export default function AdminReportsPage() {
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="flex items-center gap-3 mb-2">
-            <BarChart3 className="w-8 h-8 text-[#d4a574]" />
+            <BarChart3 className="w-8 h-8 text-[#C9A66B]" />
             <h1 className="text-3xl font-bold text-[#1a1a2e]">التقارير والإحصائيات</h1>
           </div>
           <p className="text-slate-600">تقارير شاملة عن أداء المنصة</p>

@@ -102,7 +102,7 @@ function SingleAdCard({ ad, variant = "horizontal" }) {
           <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">
             {CATEGORY_LABELS[ad.category] || ad.category}
           </span>
-          <span className="text-[10px] text-[#d4a574] flex items-center gap-0.5">
+          <span className="text-[10px] text-[#C9A66B] flex items-center gap-0.5">
             اعرف أكثر <ExternalLink className="w-2.5 h-2.5" />
           </span>
         </div>

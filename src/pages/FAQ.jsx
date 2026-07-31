@@ -53,7 +53,7 @@ const FAQ = () => {
                     {t(`home.faq.items.${key}.q`)}
                   </span>
                   <ChevronDown
-                    className={`w-5 h-5 text-[#C8AA82] shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                    className={`w-5 h-5 text-[#C9A66B] shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
                   />
                 </button>
                 <AnimatePresence initial={false}>

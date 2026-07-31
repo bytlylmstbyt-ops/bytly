@@ -151,7 +151,7 @@ export default function AdminWalletPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#d4a574]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#C9A66B]" />
       </div>
     );
   }
@@ -178,7 +178,7 @@ export default function AdminWalletPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] text-white">
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] text-white">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium">محفظة المنصة</CardTitle>
                 <DollarSign className="w-5 h-5" />

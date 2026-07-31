@@ -86,9 +86,9 @@ export default function EngineerPerformanceCharts({ reviews }) {
         <Card className="bg-gradient-to-br from-[#1a1a2e] to-[#2d2d4e] text-white">
           <CardContent className="p-4 text-center">
             <p className="text-white/60 text-xs mb-1">التقييم العام</p>
-            <p className="text-3xl font-bold text-[#d4a574]">{overallAvg}</p>
+            <p className="text-3xl font-bold text-[#C9A66B]">{overallAvg}</p>
             <div className="flex justify-center gap-0.5 mt-1">
-              {[1,2,3,4,5].map(s => <Star key={s} className={`w-3 h-3 ${s <= Math.round(overallAvg) ? "text-[#d4a574] fill-[#d4a574]" : "text-white/20"}`} />)}
+              {[1,2,3,4,5].map(s => <Star key={s} className={`w-3 h-3 ${s <= Math.round(overallAvg) ? "text-[#C9A66B] fill-[#C9A66B]" : "text-white/20"}`} />)}
             </div>
           </CardContent>
         </Card>
@@ -109,7 +109,7 @@ export default function EngineerPerformanceCharts({ reviews }) {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-[#1a1a2e]">
-            <Award className="w-5 h-5 text-[#d4a574]" />
+            <Award className="w-5 h-5 text-[#C9A66B]" />
             مخطط الأداء المهني
           </CardTitle>
         </CardHeader>
@@ -119,7 +119,7 @@ export default function EngineerPerformanceCharts({ reviews }) {
               <PolarGrid stroke="#e2e8f0" />
               <PolarAngleAxis dataKey="subject" tick={{ fontSize: 13, fill: "#475569", fontFamily: "inherit" }} />
               <PolarRadiusAxis angle={90} domain={[0, 5]} tick={{ fontSize: 10 }} tickCount={6} />
-              <Radar name="المهندس" dataKey="value" stroke="#d4a574" fill="#d4a574" fillOpacity={0.35} strokeWidth={2} />
+              <Radar name="المهندس" dataKey="value" stroke="#C9A66B" fill="#C9A66B" fillOpacity={0.35} strokeWidth={2} />
             </RadarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -130,7 +130,7 @@ export default function EngineerPerformanceCharts({ reviews }) {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-[#1a1a2e]">
-              <TrendingUp className="w-5 h-5 text-[#d4a574]" />
+              <TrendingUp className="w-5 h-5 text-[#C9A66B]" />
               تطور الأداء عبر الزمن
             </CardTitle>
           </CardHeader>
@@ -143,7 +143,7 @@ export default function EngineerPerformanceCharts({ reviews }) {
                 <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 12, direction: "rtl" }} />
                 {["التقييم العام", "الجودة", "التواصل", "الوقت"].map((k, i) => (
-                  <Line key={k} type="monotone" dataKey={k} stroke={["#d4a574", "#10b981", "#8b5cf6", "#3b82f6"][i]}
+                  <Line key={k} type="monotone" dataKey={k} stroke={["#C9A66B", "#10b981", "#8b5cf6", "#3b82f6"][i]}
                     strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
                 ))}
               </LineChart>
@@ -156,7 +156,7 @@ export default function EngineerPerformanceCharts({ reviews }) {
       <Card>
         <CardHeader>
           <CardTitle className="text-[#1a1a2e] flex items-center gap-2">
-            <Star className="w-5 h-5 text-[#d4a574]" />
+            <Star className="w-5 h-5 text-[#C9A66B]" />
             توزيع التقييمات ({reviews.length} تقييم)
           </CardTitle>
         </CardHeader>

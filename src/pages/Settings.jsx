@@ -168,7 +168,7 @@ export default function Settings() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C9A66B]"></div>
       </div>
     );
   }
@@ -222,11 +222,11 @@ export default function Settings() {
                   <div className="relative">
                     <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
                       <AvatarImage src={formData.profile_image} />
-                      <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] text-white text-2xl">
+                      <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] text-white text-2xl">
                         {formData.full_name?.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
-                    <label className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#d4a574] text-white flex items-center justify-center cursor-pointer hover:bg-[#c9a227] transition-colors">
+                    <label className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#C9A66B] text-white flex items-center justify-center cursor-pointer hover:bg-[#C9A66B] transition-colors">
                       <Camera className="w-4 h-4" />
                       <input
                         type="file"
@@ -319,7 +319,7 @@ export default function Settings() {
                 <Button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="w-full md:w-auto bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
+                  className="w-full md:w-auto bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white"
                 >
                   {isSaving ? (
                     <>
@@ -577,7 +577,7 @@ export default function Settings() {
                 <Button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
+                  className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white"
                 >
                   {isSaving ? (
                     <>

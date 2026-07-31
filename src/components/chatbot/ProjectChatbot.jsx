@@ -107,7 +107,7 @@ export default function ProjectChatbot({ projectId, projectTitle }) {
       {/* Trigger Button */}
       <Button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 ${hasDelays ? 'bg-red-600 hover:bg-red-700' : 'bg-gradient-to-r from-[#1a1a2e] to-[#d4a574]'} text-white`}
+        className={`flex items-center gap-2 ${hasDelays ? 'bg-red-600 hover:bg-red-700' : 'bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B]'} text-white`}
       >
         <Bot className="w-4 h-4" />
         مساعد المشروع الذكي
@@ -128,7 +128,7 @@ export default function ProjectChatbot({ projectId, projectTitle }) {
             style={{ maxHeight: '540px' }}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] p-4 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] p-4 flex items-center justify-between">
               <div className="flex items-center gap-2 text-white">
                 <Bot className="w-5 h-5" />
                 <div>
@@ -170,13 +170,13 @@ export default function ProjectChatbot({ projectId, projectTitle }) {
               {messages.map((msg, i) => (
                 <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {msg.role === 'assistant' && (
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] flex items-center justify-center flex-shrink-0 mt-1">
+                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] flex items-center justify-center flex-shrink-0 mt-1">
                       <Bot className="w-3.5 h-3.5 text-white" />
                     </div>
                   )}
                   <div className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
                     msg.role === 'user'
-                      ? 'bg-[#d4a574] text-white rounded-tr-sm'
+                      ? 'bg-[#C9A66B] text-white rounded-tr-sm'
                       : 'bg-slate-100 text-slate-800 rounded-tl-sm'
                   }`}>
                     {msg.content}
@@ -196,7 +196,7 @@ export default function ProjectChatbot({ projectId, projectTitle }) {
               ))}
               {loading && (
                 <div className="flex gap-2 justify-start">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] flex items-center justify-center flex-shrink-0">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] flex items-center justify-center flex-shrink-0">
                     <Bot className="w-3.5 h-3.5 text-white" />
                   </div>
                   <div className="bg-slate-100 rounded-2xl rounded-tl-sm px-4 py-3">
@@ -214,7 +214,7 @@ export default function ProjectChatbot({ projectId, projectTitle }) {
                   key={i}
                   onClick={() => handleSend(q)}
                   disabled={loading}
-                  className="text-xs bg-slate-100 hover:bg-[#d4a574]/20 text-slate-600 hover:text-[#1a1a2e] px-2 py-1 rounded-full transition-colors disabled:opacity-50"
+                  className="text-xs bg-slate-100 hover:bg-[#C9A66B]/20 text-slate-600 hover:text-[#1a1a2e] px-2 py-1 rounded-full transition-colors disabled:opacity-50"
                 >
                   {q}
                 </button>
@@ -253,7 +253,7 @@ export default function ProjectChatbot({ projectId, projectTitle }) {
                 size="icon"
                 onClick={() => handleSend()}
                 disabled={loading || (!input.trim() && attachments.length === 0)}
-                className="bg-[#d4a574] hover:bg-[#c89864] flex-shrink-0"
+                className="bg-[#C9A66B] hover:bg-[#c89864] flex-shrink-0"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </Button>

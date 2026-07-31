@@ -63,7 +63,7 @@ export default function LegalTemplateUploader({ consultantId, onTemplateUpload }
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <FileUp className="w-5 h-5 text-[#d4a574]" />
+            <FileUp className="w-5 h-5 text-[#C9A66B]" />
             رفع قوالب العقود القانونية
           </CardTitle>
         </CardHeader>
@@ -97,7 +97,7 @@ export default function LegalTemplateUploader({ consultantId, onTemplateUpload }
               />
             </div>
 
-            <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-[#d4a574] transition-colors">
+            <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-[#C9A66B] transition-colors">
               <input
                 type="file"
                 id="file_upload"
@@ -112,7 +112,7 @@ export default function LegalTemplateUploader({ consultantId, onTemplateUpload }
               >
                 {uploading ? (
                   <>
-                    <Loader2 className="w-8 h-8 text-[#d4a574] animate-spin" />
+                    <Loader2 className="w-8 h-8 text-[#C9A66B] animate-spin" />
                     <span className="text-sm text-slate-600">جاري الرفع...</span>
                   </>
                 ) : (

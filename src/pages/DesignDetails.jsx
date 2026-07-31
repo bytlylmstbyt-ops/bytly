@@ -224,7 +224,7 @@ export default function DesignDetails() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-[#d4a574]" />
+        <Loader2 className="w-12 h-12 animate-spin text-[#C9A66B]" />
       </div>
     );
   }
@@ -288,7 +288,7 @@ export default function DesignDetails() {
                       key={idx}
                       onClick={() => setCurrentImageIndex(idx)}
                       className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden ${
-                        currentImageIndex === idx ? "ring-2 ring-[#d4a574]" : ""
+                        currentImageIndex === idx ? "ring-2 ring-[#C9A66B]" : ""
                       }`}
                     >
                       <img src={img} alt="" className="w-full h-full object-cover" />
@@ -319,7 +319,7 @@ export default function DesignDetails() {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {design.area_sqm && (
                     <div className="flex items-center gap-2">
-                      <Ruler className="w-5 h-5 text-[#d4a574]" />
+                      <Ruler className="w-5 h-5 text-[#C9A66B]" />
                       <div>
                         <p className="text-sm text-slate-500">المساحة</p>
                         <p className="font-semibold">{design.area_sqm} م²</p>
@@ -328,7 +328,7 @@ export default function DesignDetails() {
                   )}
                   {design.floors && (
                     <div className="flex items-center gap-2">
-                      <Layers className="w-5 h-5 text-[#d4a574]" />
+                      <Layers className="w-5 h-5 text-[#C9A66B]" />
                       <div>
                         <p className="text-sm text-slate-500">الطوابق</p>
                         <p className="font-semibold">{design.floors}</p>
@@ -337,7 +337,7 @@ export default function DesignDetails() {
                   )}
                   {design.bedrooms && (
                     <div className="flex items-center gap-2">
-                      <Bed className="w-5 h-5 text-[#d4a574]" />
+                      <Bed className="w-5 h-5 text-[#C9A66B]" />
                       <div>
                         <p className="text-sm text-slate-500">غرف النوم</p>
                         <p className="font-semibold">{design.bedrooms}</p>
@@ -346,7 +346,7 @@ export default function DesignDetails() {
                   )}
                   {design.bathrooms && (
                     <div className="flex items-center gap-2">
-                      <Bath className="w-5 h-5 text-[#d4a574]" />
+                      <Bath className="w-5 h-5 text-[#C9A66B]" />
                       <div>
                         <p className="text-sm text-slate-500">دورات المياه</p>
                         <p className="font-semibold">{design.bathrooms}</p>
@@ -403,7 +403,7 @@ export default function DesignDetails() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Price Card */}
-            <Card className="border-2 border-[#d4a574] shadow-xl sticky top-8">
+            <Card className="border-2 border-[#C9A66B] shadow-xl sticky top-8">
               <CardContent className="p-6">
                 <div className="text-center mb-6">
                   <p className="text-3xl font-bold text-[#1a1a2e] mb-1">
@@ -536,14 +536,14 @@ export default function DesignDetails() {
                   <div className="flex items-center gap-3 mb-4">
                     <Avatar className="w-12 h-12">
                       <AvatarImage src={seller.profile_image || seller.company_logo} />
-                      <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] text-white">
+                      <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] text-white">
                         {seller.full_name?.charAt(0) || seller.company_name?.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
                       <Link 
                         to={createPageUrl(design.seller_type === "engineer" ? "EngineerProfile" : "FirmProfile") + `?id=${design.seller_id}`}
-                        className="font-semibold text-[#1a1a2e] hover:text-[#d4a574]"
+                        className="font-semibold text-[#1a1a2e] hover:text-[#C9A66B]"
                       >
                         {seller.full_name || seller.company_name}
                       </Link>

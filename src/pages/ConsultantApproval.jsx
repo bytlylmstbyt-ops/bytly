@@ -208,7 +208,7 @@ export default function ConsultantApprovalPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#d4a574]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#C9A66B]" />
       </div>
     );
   }
@@ -253,7 +253,7 @@ export default function ConsultantApprovalPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-[#d4a574]" />
+                <FileText className="w-5 h-5 text-[#C9A66B]" />
                 معلومات الطلب
               </CardTitle>
             </CardHeader>

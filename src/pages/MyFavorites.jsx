@@ -70,7 +70,7 @@ export default function MyFavoritesPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-[#d4a574]" />
+        <Loader2 className="w-12 h-12 animate-spin text-[#C9A66B]" />
       </div>
     );
   }
@@ -109,7 +109,7 @@ export default function MyFavoritesPage() {
                       <div className="flex flex-col items-center text-center mb-4">
                         <Avatar className="w-20 h-20 mb-3">
                           <AvatarImage src={engineer.profile_image} />
-                          <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] text-white text-2xl">
+                          <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] text-white text-2xl">
                             {engineer.full_name?.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
@@ -177,7 +177,7 @@ export default function MyFavoritesPage() {
                 ابدأ بإضافة المهندسين المفضلين لديك
               </p>
               <Link to={createPageUrl("Engineers")}>
-                <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+                <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
                   تصفح المهندسين
                 </Button>
               </Link>

@@ -299,7 +299,7 @@ export default function ProjectDetails() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#d4a574]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#C9A66B]"></div>
       </div>
     );
   }
@@ -345,7 +345,7 @@ export default function ProjectDetails() {
             {userEngineer && project.status === "open" && !hasSubmittedProposal && (
               <Dialog open={showProposalForm} onOpenChange={setShowProposalForm}>
                 <DialogTrigger asChild>
-                  <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white">
+                  <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
                     <Send className="w-5 h-5 ml-2" />
                     تقديم عرض
                   </Button>
@@ -388,7 +388,7 @@ export default function ProjectDetails() {
 
                     <div className="space-y-2">
                       <Label>المرفقات (معرض أعمال، مستندات)</Label>
-                      <div className="border-2 border-dashed rounded-xl p-4 text-center hover:border-[#d4a574] transition-colors">
+                      <div className="border-2 border-dashed rounded-xl p-4 text-center hover:border-[#C9A66B] transition-colors">
                         <input
                           type="file"
                           multiple
@@ -437,7 +437,7 @@ export default function ProjectDetails() {
                     <Button
                       onClick={handleSubmitProposal}
                       disabled={isSubmitting || !proposalData.price || !proposalData.delivery_days}
-                      className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
+                      className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white"
                     >
                       {isSubmitting ? (
                         <>
@@ -656,14 +656,14 @@ export default function ProjectDetails() {
                               <div className="flex items-center gap-3">
                                 <Avatar className="w-12 h-12">
                                   <AvatarImage src={engineer?.profile_image} />
-                                  <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] text-white">
+                                  <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] text-white">
                                     {engineer?.full_name?.charAt(0)}
                                   </AvatarFallback>
                                 </Avatar>
                                 <div>
                                   <Link 
                                     to={createPageUrl("EngineerProfile") + `?id=${proposal.engineer_id}`}
-                                    className="font-semibold text-[#1a1a2e] hover:text-[#d4a574]"
+                                    className="font-semibold text-[#1a1a2e] hover:text-[#C9A66B]"
                                   >
                                     {engineer?.full_name}
                                   </Link>
@@ -703,7 +703,7 @@ export default function ProjectDetails() {
                                       href={url}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 hover:ring-2 hover:ring-[#d4a574] transition-all"
+                                      className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 hover:ring-2 hover:ring-[#C9A66B] transition-all"
                                     >
                                       {url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
                                         <img src={url} alt="" className="w-full h-full object-cover" />
@@ -978,7 +978,7 @@ export default function ProjectDetails() {
           {(project.status === "in_progress" || project.assigned_engineer_id) && user && (
             <div className="mt-8">
               <div className="flex items-center gap-2 mb-4">
-                <MessageSquare className="w-5 h-5 text-[#d4a574]" />
+                <MessageSquare className="w-5 h-5 text-[#C9A66B]" />
                 <h2 className="text-lg font-bold text-[#1a1a2e]">قناة التواصل المباشر</h2>
               </div>
               <ProjectChat

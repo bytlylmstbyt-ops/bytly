@@ -113,7 +113,7 @@ export default function SupportPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center"
         >
-          <Headphones className="w-16 h-16 text-[#d4a574] mx-auto mb-4" />
+          <Headphones className="w-16 h-16 text-[#C9A66B] mx-auto mb-4" />
           <h1 className="text-3xl font-bold gradient-text mb-2">
             الدعم الفني
           </h1>
@@ -236,7 +236,7 @@ export default function SupportPage() {
               <CardContent>
                 {loading ? (
                   <div className="text-center py-8">
-                    <Loader2 className="w-8 h-8 animate-spin text-[#d4a574] mx-auto" />
+                    <Loader2 className="w-8 h-8 animate-spin text-[#C9A66B] mx-auto" />
                   </div>
                 ) : tickets.length === 0 ? (
                   <div className="text-center py-8">

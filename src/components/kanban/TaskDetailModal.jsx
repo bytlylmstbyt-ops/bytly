@@ -138,7 +138,7 @@ export default function TaskDetailModal({ task, project, engineers, isOpen, onCl
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium">نسبة الإنجاز</label>
-              <span className="text-sm font-semibold text-[#d4a574]">{formData.progress_percentage || 0}%</span>
+              <span className="text-sm font-semibold text-[#C9A66B]">{formData.progress_percentage || 0}%</span>
             </div>
             <Slider
               value={[formData.progress_percentage || 0]}

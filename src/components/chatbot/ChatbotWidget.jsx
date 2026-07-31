@@ -424,7 +424,7 @@ export default function ChatbotWidget() {
       {/* Widget Button */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 left-6 z-[9999] bg-gradient-to-r from-[#d4a574] to-[#1a1a2e] text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all"
+        className="fixed bottom-6 left-6 z-[9999] bg-gradient-to-r from-[#C9A66B] to-[#1a1a2e] text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all"
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
       >
@@ -454,7 +454,7 @@ export default function ChatbotWidget() {
             <Card className="h-full shadow-2xl flex flex-col">
               {/* Header */}
               <CardHeader 
-                className="border-b bg-gradient-to-r from-[#d4a574] to-[#1a1a2e] text-white rounded-t-xl cursor-grab active:cursor-grabbing select-none"
+                className="border-b bg-gradient-to-r from-[#C9A66B] to-[#1a1a2e] text-white rounded-t-xl cursor-grab active:cursor-grabbing select-none"
                 onMouseDown={handleMouseDown}
                 style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
               >
@@ -482,7 +482,7 @@ export default function ChatbotWidget() {
                     <div
                       className={`max-w-xs px-4 py-2 rounded-lg ${
                         msg.role === "user"
-                          ? "bg-[#d4a574] text-white"
+                          ? "bg-[#C9A66B] text-white"
                           : "bg-slate-100 text-slate-900"
                       }`}
                     >
@@ -627,7 +627,7 @@ export default function ChatbotWidget() {
                     size="icon"
                     onClick={handleSendMessage}
                     disabled={loading || uploading || (!inputValue.trim() && attachments.length === 0)}
-                    className="bg-[#d4a574] hover:bg-[#c89864]"
+                    className="bg-[#C9A66B] hover:bg-[#c89864]"
                   >
                     {loading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />

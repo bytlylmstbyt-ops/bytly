@@ -164,7 +164,7 @@ export default function AdminEngineersPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-[#d4a574]" />
+        <Loader2 className="w-12 h-12 animate-spin text-[#C9A66B]" />
       </div>
     );
   }
@@ -178,7 +178,7 @@ export default function AdminEngineersPage() {
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="flex items-center gap-3 mb-2">
-            <Users className="w-8 h-8 text-[#d4a574]" />
+            <Users className="w-8 h-8 text-[#C9A66B]" />
             <h1 className="text-3xl font-bold text-[#1a1a2e]">إدارة المهندسين</h1>
           </div>
           <p className="text-slate-600">عرض وتعديل وإدارة حسابات المهندسين</p>
@@ -485,14 +485,14 @@ export default function AdminEngineersPage() {
             <DialogContent className="max-w-lg">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-[#d4a574]" />
+                  <ShieldCheck className="w-5 h-5 text-[#C9A66B]" />
                   مراجعة اعتماد المهندس
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-5 py-2">
                 <div className="bg-slate-50 rounded-xl p-4 space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] flex items-center justify-center text-white font-bold text-lg shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] flex items-center justify-center text-white font-bold text-lg shrink-0">
                       {reviewEngineer.full_name?.charAt(0)}
                     </div>
                     <div>

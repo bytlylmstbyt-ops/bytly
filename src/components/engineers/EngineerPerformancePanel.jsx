@@ -36,7 +36,7 @@ export default function EngineerPerformancePanel({ engineer, reviews = [] }) {
     return Math.round(ratingScore + projectScore + reviewScore);
   }, [rating, completedProjects, totalReviews]);
 
-  const radialData = [{ name: "performance", value: performanceScore, fill: "#d4a574" }];
+  const radialData = [{ name: "performance", value: performanceScore, fill: "#C9A66B" }];
 
   const metrics = [
     { icon: Briefcase, label: "مشروع مكتمل", value: completedProjects, color: "from-blue-500 to-cyan-500", bg: "bg-blue-50", text: "text-blue-600" },
@@ -52,7 +52,7 @@ export default function EngineerPerformancePanel({ engineer, reviews = [] }) {
       transition={{ delay: 0.05 }}
     >
       <Card className="border-0 shadow-lg overflow-hidden">
-        <div className="h-1.5 bg-gradient-to-r from-[#6B5D4F] via-[#C9A66B] to-[#d4a574]" />
+        <div className="h-1.5 bg-gradient-to-r from-[#6B5D4F] via-[#C9A66B] to-[#C9A66B]" />
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-[#C9A66B]" />
@@ -120,7 +120,7 @@ export default function EngineerPerformancePanel({ engineer, reviews = [] }) {
 
           {/* Trust Banner */}
           {(completedProjects > 0 || totalReviews > 0) && (
-            <div className="mt-6 flex items-center gap-3 bg-gradient-to-l from-[#C9A66B]/10 to-[#d4a574]/5 border border-[#C9A66B]/20 rounded-xl p-4">
+            <div className="mt-6 flex items-center gap-3 bg-gradient-to-l from-[#C9A66B]/10 to-[#C9A66B]/5 border border-[#C9A66B]/20 rounded-xl p-4">
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] flex items-center justify-center flex-shrink-0">
                 <Award className="w-5 h-5 text-white" />
               </div>

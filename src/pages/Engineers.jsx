@@ -219,7 +219,7 @@ export default function Engineers() {
                   onClick={() => setFilters(prev => ({ ...prev, userType: type.value }))}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     filters.userType === type.value
-                      ? "bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white"
+                      ? "bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white"
                       : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:bg-slate-800"
                   }`}
                 >
@@ -247,7 +247,7 @@ export default function Engineers() {
                   <SlidersHorizontal className="w-4 h-4 ml-2" />
                   {t('engineers.filters.sortBy')}
                   {activeFiltersCount > 0 && (
-                    <Badge className="absolute -top-2 -left-2 w-5 h-5 p-0 flex items-center justify-center bg-[#d4a574]">
+                    <Badge className="absolute -top-2 -left-2 w-5 h-5 p-0 flex items-center justify-center bg-[#C9A66B]">
                       {activeFiltersCount}
                     </Badge>
                   )}
@@ -364,9 +364,9 @@ export default function Engineers() {
         {isSelectionMode && viewMode !== "map" && (
           <div className="flex flex-wrap items-center justify-between gap-3 bg-[#1a1a2e] text-white rounded-xl px-4 py-3 mb-6 shadow-lg">
             <div className="flex items-center gap-3">
-              <button onClick={toggleSelectAll} className="flex items-center gap-2 text-sm hover:text-[#d4a574] transition-colors">
+              <button onClick={toggleSelectAll} className="flex items-center gap-2 text-sm hover:text-[#C9A66B] transition-colors">
                 {selectedIds.size === filteredEngineers.length
-                  ? <CheckSquare className="w-5 h-5 text-[#d4a574]" />
+                  ? <CheckSquare className="w-5 h-5 text-[#C9A66B]" />
                   : <Square className="w-5 h-5" />}
                 {selectedIds.size === filteredEngineers.length ? "إلغاء الكل" : "تحديد الكل"}
               </button>
@@ -440,7 +440,7 @@ export default function Engineers() {
                         className="absolute top-3 right-3 z-10 w-7 h-7 flex items-center justify-center rounded-full bg-white/90 shadow-md"
                       >
                         {selectedIds.has(engineer.id)
-                          ? <CheckSquare className="w-5 h-5 text-[#d4a574]" />
+                          ? <CheckSquare className="w-5 h-5 text-[#C9A66B]" />
                           : <Square className="w-5 h-5 text-slate-400" />}
                       </button>
                     )}
@@ -448,10 +448,10 @@ export default function Engineers() {
                     onClick={isSelectionMode ? (e) => { e.preventDefault(); toggleSelect(engineer.id); } : undefined}>
                     <Card className={`hover-lift cursor-pointer overflow-hidden border-0 shadow-lg transition-all ${
                       viewMode === "list" ? "flex" : ""
-                    } ${isSelectionMode && selectedIds.has(engineer.id) ? "ring-2 ring-[#d4a574]" : ""}`}>
+                    } ${isSelectionMode && selectedIds.has(engineer.id) ? "ring-2 ring-[#C9A66B]" : ""}`}>
                       {viewMode === "grid" ? (
                         <>
-                          <div className="relative h-32 bg-gradient-to-br from-[#1a1a2e] to-[#d4a574]">
+                          <div className="relative h-32 bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B]">
                             {engineer.cover_image && (
                               <img src={engineer.cover_image} alt="" className="w-full h-full object-cover opacity-50" />
                             )}
@@ -464,7 +464,7 @@ export default function Engineers() {
                           <CardContent className="relative p-6 pt-0">
                             <Avatar className="w-20 h-20 border-4 border-white -mt-10 shadow-lg">
                               <AvatarImage src={engineer.profile_image} />
-                              <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] text-white text-xl">
+                              <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] text-white text-xl">
                                 {engineer.full_name?.charAt(0)}
                               </AvatarFallback>
                             </Avatar>
@@ -503,7 +503,7 @@ export default function Engineers() {
                         <CardContent className="flex items-center gap-6 p-6 w-full">
                           <Avatar className="w-20 h-20 border-2 border-slate-200">
                             <AvatarImage src={engineer.profile_image} />
-                            <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] text-white text-xl">
+                            <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] text-white text-xl">
                               {engineer.full_name?.charAt(0)}
                             </AvatarFallback>
                           </Avatar>

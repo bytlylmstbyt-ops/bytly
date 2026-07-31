@@ -36,7 +36,7 @@ const ReviewCard = ({ review }) => {
           <div className="flex items-start justify-between gap-3 mb-4">
             <div className="flex items-center gap-3">
               <Avatar className="w-10 h-10">
-                <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#d4a574] text-white text-sm">
+                <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] text-white text-sm">
                   {review.client_email?.charAt(0)?.toUpperCase() || "?"}
                 </AvatarFallback>
               </Avatar>
@@ -69,7 +69,7 @@ const ReviewCard = ({ review }) => {
             <div>
               <p className={`text-sm text-slate-600 leading-relaxed ${!expanded && "line-clamp-2"}`}>{review.comment}</p>
               {review.comment.length > 100 && (
-                <button onClick={() => setExpanded(!expanded)} className="text-xs text-[#d4a574] mt-1 hover:underline">
+                <button onClick={() => setExpanded(!expanded)} className="text-xs text-[#C9A66B] mt-1 hover:underline">
                   {expanded ? "عرض أقل" : "عرض المزيد"}
                 </button>
               )}
@@ -122,7 +122,7 @@ export default function EngineerReviews() {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-[#d4a574]" />
+      <Loader2 className="w-8 h-8 animate-spin text-[#C9A66B]" />
     </div>
   );
 
@@ -144,7 +144,7 @@ export default function EngineerReviews() {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <h1 className="text-2xl font-bold text-[#1a1a2e] flex items-center gap-2">
-                <BarChart2 className="w-7 h-7 text-[#d4a574]" />
+                <BarChart2 className="w-7 h-7 text-[#C9A66B]" />
                 تقييمات {engineer.full_name}
               </h1>
               <p className="text-slate-500 text-sm mt-1">{engineer.specialization} — {reviews.length} تقييم</p>
@@ -152,15 +152,15 @@ export default function EngineerReviews() {
             <div className="flex items-center gap-3">
               {overallAvg && (
                 <div className="bg-gradient-to-br from-[#1a1a2e] to-[#2d2d4e] rounded-xl px-5 py-3 text-center">
-                  <p className="text-3xl font-bold text-[#d4a574]">{overallAvg}</p>
+                  <p className="text-3xl font-bold text-[#C9A66B]">{overallAvg}</p>
                   <div className="flex gap-0.5 justify-center mt-1">
-                    {[1,2,3,4,5].map(s => <Star key={s} className={`w-3 h-3 ${s <= Math.round(overallAvg) ? "text-[#d4a574] fill-[#d4a574]" : "text-white/20"}`} />)}
+                    {[1,2,3,4,5].map(s => <Star key={s} className={`w-3 h-3 ${s <= Math.round(overallAvg) ? "text-[#C9A66B] fill-[#C9A66B]" : "text-white/20"}`} />)}
                   </div>
                 </div>
               )}
               {canReview && (
                 <Button onClick={() => setShowReviewModal(true)}
-                  className="bg-gradient-to-r from-[#1a1a2e] to-[#d4a574] text-white gap-2">
+                  className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white gap-2">
                   <Plus className="w-4 h-4" />
                   أضف تقييم
                 </Button>

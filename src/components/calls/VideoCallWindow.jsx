@@ -266,7 +266,7 @@ export default function VideoCallWindow({
             <div className="flex items-center gap-3">
               <Avatar className="w-10 h-10 border-2 border-white/20">
                 <AvatarImage src={callData?.avatar} />
-                <AvatarFallback className="bg-[#d4a574] text-white">
+                <AvatarFallback className="bg-[#C9A66B] text-white">
                   {callData?.name?.charAt(0)}
                 </AvatarFallback>
               </Avatar>
@@ -309,7 +309,7 @@ export default function VideoCallWindow({
                 <div className="text-center">
                   <Avatar className="w-32 h-32 mx-auto mb-4 border-4 border-white/20">
                     <AvatarImage src={callData?.avatar} />
-                    <AvatarFallback className="bg-[#d4a574] text-white text-4xl">
+                    <AvatarFallback className="bg-[#C9A66B] text-white text-4xl">
                       {callData?.name?.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
