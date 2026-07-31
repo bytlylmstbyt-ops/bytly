@@ -67,6 +67,9 @@ const AdvertiseWithUs            = React.lazy(() => import('./pages/AdvertiseWit
 const AdvertiserPortal           = React.lazy(() => import('./pages/AdvertiserPortal'));
 const ServiceReviews             = React.lazy(() => import('./pages/ServiceReviews'));
 const CompareProposals           = React.lazy(() => import('./pages/CompareProposals'));
+const Solutions                  = React.lazy(() => import('./pages/Solutions'));
+const CaseStudies                = React.lazy(() => import('./pages/CaseStudies'));
+const Resources                  = React.lazy(() => import('./pages/Resources'));
 const ProviderSubscription       = React.lazy(() => import('./pages/ProviderSubscription'));
 const RevenueDashboard           = React.lazy(() => import('./pages/RevenueDashboard'));
 const ProviderWallet             = React.lazy(() => import('./pages/ProviderWallet'));
@@ -157,6 +160,9 @@ const AuthenticatedApp = () => {
       <Route path="/AdvertiserPortal"           element={lazyRoute(AdvertiserPortal, "AdvertiserPortal")} />
       <Route path="/landing"                    element={lazyRoute(React.lazy(() => import('./pages/Landing')), "Landing")} />
       <Route path="/FAQ"                         element={lazyRoute(React.lazy(() => import('./pages/FAQ')), "FAQ")} />
+      <Route path="/Solutions"                   element={lazyRoute(Solutions, "Solutions")} />
+      <Route path="/CaseStudies"                 element={lazyRoute(CaseStudies, "CaseStudies")} />
+      <Route path="/Resources"                   element={lazyRoute(Resources, "Resources")} />
 
       {/* Public registration-related pages */}
       {Object.entries(Pages)

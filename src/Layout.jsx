@@ -435,6 +435,9 @@ function LayoutContent({ children, currentPageName }) {
                   { to: createPageUrl("Projects"), label: t('nav.projects') },
                   { to: createPageUrl("Gallery"), label: t('nav.gallery') },
                   { to: createPageUrl("About"), label: t('footer.about') },
+                  { to: "/Solutions", label: "الحلول" },
+                  { to: "/CaseStudies", label: "دراسات الحالة" },
+                  { to: "/Resources", label: "مركز الموارد" },
                   { to: "/FAQ", label: t('home.faq.title') },
                 ].map(({ to, label }) => (
                   <li key={to}>
