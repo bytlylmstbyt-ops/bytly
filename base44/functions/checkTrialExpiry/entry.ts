@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 Deno.serve(async (req) => {
   try {
@@ -39,7 +41,7 @@ Deno.serve(async (req) => {
             subject: "⚠️ فترة الوصول المجاني تنتهي قريباً",
             body: `
               <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #d97706;">عزيزي ${engineer.full_name},</h2>
+                <h2 style="color: #d97706;">عزيزي ${escapeHtml(engineer.full_name)},</h2>
                 <p>نود أن نذكرك بأن فترة الوصول المبكر المجاني ستنتهي خلال ${daysUntilExpiry} يوم.</p>
                 <p><strong>تاريخ الانتهاء:</strong> ${new Date(engineer.trial_end_date).toLocaleDateString('ar-SA')}</p>
                 <p>للحفاظ على:</p>
@@ -88,7 +90,7 @@ Deno.serve(async (req) => {
             subject: "⚠️ فترة الوصول المجاني تنتهي قريباً",
             body: `
               <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #d97706;">عزيزي ${client.full_name},</h2>
+                <h2 style="color: #d97706;">عزيزي ${escapeHtml(client.full_name)},</h2>
                 <p>فترة الوصول المبكر المجاني ستنتهي خلال ${daysUntilExpiry} يوم.</p>
                 <p>اشترك الآن للاستمرار في نشر المشاريع وإدارة محفظتك.</p>
               </div>
@@ -123,7 +125,7 @@ Deno.serve(async (req) => {
             subject: "⚠️ فترة الوصول المجاني تنتهي قريباً",
             body: `
               <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #d97706;">عزيزي ${firm.company_name},</h2>
+                <h2 style="color: #d97706;">عزيزي ${escapeHtml(firm.company_name)},</h2>
                 <p>فترة الوصول المبكر المجاني ستنتهي خلال ${daysUntilExpiry} يوم.</p>
                 <p>اشترك الآن للاستمرار في مراجعة المشاريع وتقديم خدماتكم الاستشارية.</p>
               </div>

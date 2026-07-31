@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 Deno.serve(async (req) => {
   try {
@@ -54,7 +56,7 @@ Deno.serve(async (req) => {
                 </div>
                 <div style="background:#f8f9fa; padding:24px; border-radius:0 0 12px 12px;">
                   <h2 style="color:#4A3F35;">مرحباً،</h2>
-                  <p style="color:#4a5568;">وافق المهندس <strong>${engineer.full_name}</strong> على عرضك لمشروع "<strong>${project.title}</strong>" ووقّع العقد.</p>
+                  <p style="color:#4a5568;">وافق المهندس <strong>${escapeHtml(engineer.full_name)}</strong> على عرضك لمشروع "<strong>${escapeHtml(project.title)}</strong>" ووقّع العقد.</p>
                   <div style="background:white; border-right:4px solid #C9A66B; padding:16px; border-radius:8px; margin:16px 0;">
                     <p><strong>رقم العقد:</strong> ${contract.contract_number}</p>
                     <p><strong>القيمة:</strong> ${contract.total_amount?.toLocaleString() || '-'} ريال</p>
@@ -146,9 +148,9 @@ Deno.serve(async (req) => {
         subject: "تم توقيع العقد وبدء المشروع - منصة بيتلي",
         body: `
           <div dir="rtl" style="font-family: Arial, sans-serif;">
-            <h2>مرحباً ${client.full_name}</h2>
+            <h2>مرحباً ${escapeHtml(client.full_name)}</h2>
             <p>تم توقيع عقد المشروع بنجاح من قبل الطرفين.</p>
-            <p><strong>المشروع:</strong> ${project.title}</p>
+            <p><strong>المشروع:</strong> ${escapeHtml(project.title)}</p>
             <p><strong>رقم العقد:</strong> ${contract.contract_number}</p>
             <p><strong>الحالة:</strong> قيد التنفيذ</p>
             <p>يمكنك متابعة تقدم المشروع من لوحة التحكم.</p>
@@ -163,9 +165,9 @@ Deno.serve(async (req) => {
         subject: "تم توقيع العقد - ابدأ العمل - منصة بيتلي",
         body: `
           <div dir="rtl" style="font-family: Arial, sans-serif;">
-            <h2>مرحباً ${engineer.full_name}</h2>
+            <h2>مرحباً ${escapeHtml(engineer.full_name)}</h2>
             <p>تم توقيع عقد المشروع من قبل الطرفين. يمكنك البدء في العمل الآن.</p>
-            <p><strong>المشروع:</strong> ${project.title}</p>
+            <p><strong>المشروع:</strong> ${escapeHtml(project.title)}</p>
             <p><strong>رقم العقد:</strong> ${contract.contract_number}</p>
             <p><strong>تاريخ التسليم:</strong> ${new Date(contract.delivery_date).toLocaleDateString('ar-SA')}</p>
             <p>تذكر الالتزام بالمدة المحددة وبنود العقد.</p>

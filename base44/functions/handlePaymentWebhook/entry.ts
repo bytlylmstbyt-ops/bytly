@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 import Stripe from 'npm:stripe@17.5.0';
 
 Deno.serve(async (req) => {
@@ -185,10 +187,10 @@ Deno.serve(async (req) => {
                 <h2 style="color:#2e7d32;">شكراً لك على السداد</h2>
                 <div style="background:white; border-right:4px solid #2e7d32; padding:16px; border-radius:8px; margin:16px 0;">
                   <p><strong>رقم الفاتورة:</strong> ${invoice.invoice_number}</p>
-                  ${project ? `<p><strong>المشروع:</strong> ${project.title}</p>` : ''}
+                  ${project ? `<p><strong>المشروع:</strong> ${escapeHtml(project.title)}</p>` : ''}
                   <p><strong>المبلغ:</strong> ${paidAmount.toLocaleString()} ريال سعودي</p>
                   <p><strong>تاريخ الدفع:</strong> ${new Date().toLocaleDateString('ar-SA')}</p>
-                  ${engineer ? `<p><strong>المهندس:</strong> ${engineer.full_name}</p>` : ''}
+                  ${engineer ? `<p><strong>المهندس:</strong> ${escapeHtml(engineer.full_name)}</p>` : ''}
                 </div>
                 ${engineer ? `<p style="color:#4a5568;">تم إيداع المبلغ في محفظة المهندس كضمان (${engineerNetAmount.toLocaleString()} ريال بعد خصم عمولة المنصة ${commissionRate}%). سيتم تحرير المبلغ للمهندس عند اعتمادك لتسليم المرحلة.</p>` : ''}
                 <p style="color:#718096; font-size:14px;">يمكنك الاطلاع على تفاصيل المعاملة من خلال تطبيق بيتلي.</p>
@@ -219,8 +221,8 @@ Deno.serve(async (req) => {
                 <p style="color:rgba(255,255,255,0.8); margin:8px 0 0;">دفعة جديدة</p>
               </div>
               <div style="background:#f8f9fa; padding:24px; border-radius:0 0 12px 12px;">
-                <h2 style="color:#4A3F35;">مرحباً ${engineer.full_name}،</h2>
-                <p style="color:#4a5568;">تم استلام دفعة جديدة للمشروع "${project?.title || ''}".</p>
+                <h2 style="color:#4A3F35;">مرحباً ${escapeHtml(engineer.full_name)}،</h2>
+                <p style="color:#4a5568;">تم استلام دفعة جديدة للمشروع "${escapeHtml(project?.title || '')}".</p>
                 <div style="background:white; border-right:4px solid #C9A66B; padding:16px; border-radius:8px; margin:16px 0;">
                   <p><strong>المبلغ الإجمالي:</strong> ${paidAmount.toLocaleString()} ريال سعودي</p>
                   <p><strong>عمولة المنصة (${commissionRate}%):</strong> ${commissionAmount.toLocaleString()} ريال سعودي</p>

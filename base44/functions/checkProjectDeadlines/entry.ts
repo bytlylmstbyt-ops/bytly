@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 const ACTIVE_STATUSES = ['open', 'in_progress', 'awaiting_technical_review', 'technical_approved', 'pending_client_approval', 'disputed'];
 
@@ -60,8 +62,8 @@ Deno.serve(async (req) => {
           body: `
             <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <h2 style="color: #6B5D4F;">⏰ تذكير: موعد التسليم خلال 24 ساعة</h2>
-              <p>مرحباً ${engineer.full_name}،</p>
-              <p>نذكّرك بأن موعد تسليم مشروع <strong>"${project.title}"</strong> يقترب.</p>
+              <p>مرحباً ${escapeHtml(engineer.full_name)}،</p>
+              <p>نذكّرك بأن موعد تسليم مشروع <strong>"${escapeHtml(project.title)}"</strong> يقترب.</p>
               <div style="background:#fff3cd; border-radius:8px; padding:16px; margin:16px 0;">
                 <p style="margin:0; color:#856404;">الموعد النهائي: <strong>${deadlineFormatted}</strong></p>
                 <p style="margin:8px 0 0; color:#856404;">باقي أقل من 24 ساعة على الموعد النهائي</p>

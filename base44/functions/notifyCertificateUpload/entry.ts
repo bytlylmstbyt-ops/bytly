@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 Deno.serve(async (req) => {
   try {
@@ -57,15 +59,15 @@ Deno.serve(async (req) => {
             <p style="color: #666; font-size: 16px;">تم رفع شهادة جودة واعتماد لأحد المشاريع:</p>
             
             <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-right: 4px solid #C9A66B;">
-              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">المشروع:</strong> ${project?.title || 'غير معروف'}</p>
-              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">المستشار الفني:</strong> ${consultant?.full_name || 'غير معروف'}</p>
+              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">المشروع:</strong> ${escapeHtml(project?.title || 'غير معروف')}</p>
+              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">المستشار الفني:</strong> ${escapeHtml(consultant?.full_name || 'غير معروف')}</p>
               <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">تاريخ المراجعة:</strong> ${new Date(review.review_date).toLocaleDateString('ar-SA')}</p>
               <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">النتيجة:</strong> <span style="color: ${review.result === 'approved' ? '#28a745' : '#dc3545'};">${review.result === 'approved' ? 'معتمد ✓' : 'يحتاج تعديلات'}</span></p>
             </div>
 
             ${review.comments ? `<div style="background: #e8f4f8; padding: 15px; border-radius: 8px; margin: 15px 0;">
               <p style="margin: 0; color: #555;"><strong>ملاحظات المستشار:</strong></p>
-              <p style="margin: 5px 0 0 0; color: #666;">${review.comments}</p>
+              <p style="margin: 5px 0 0 0; color: #666;">${escapeHtml(review.comments)}</p>
             </div>` : ''}
 
             <div style="text-align: center; margin: 30px 0;">

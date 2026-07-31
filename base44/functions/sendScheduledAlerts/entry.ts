@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 Deno.serve(async (req) => {
   try {
@@ -67,8 +69,8 @@ Deno.serve(async (req) => {
             subject: `${alert.title} - منصة بيتلي`,
             body: `
               <div dir="rtl" style="font-family: Arial, sans-serif;">
-                <h2>${alert.title}</h2>
-                <p>${alert.message}</p>
+                <h2>${escapeHtml(alert.title)}</h2>
+                <p>${escapeHtml(alert.message)}</p>
                 <p style="margin-top: 20px;">قم بتسجيل الدخول للمنصة لمزيد من التفاصيل.</p>
                 <hr>
                 <p style="color: #666; font-size: 12px;">منصة بيتلي - لمسة بيت</p>

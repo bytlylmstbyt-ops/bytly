@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 Deno.serve(async (req) => {
   try {
@@ -61,12 +63,12 @@ Deno.serve(async (req) => {
             <p style="color: #666; font-size: 16px;">قام أحد المهندسين برفع شهادة تخرج جديدة بانتظار المراجعة ومنح شارة الاعتماد:</p>
 
             <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-right: 4px solid #C9A66B;">
-              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">الاسم:</strong> ${engineer.full_name || 'غير معروف'}</p>
-              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">البريد الإلكتروني:</strong> ${engineer.email || 'غير متوفر'}</p>
-              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">رقم القيد المهني:</strong> ${engineer.registration_number || 'غير متوفر'}</p>
-              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">التخصص:</strong> ${engineer.specialization || 'غير محدد'}</p>
-              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">نوع المستخدم:</strong> ${engineer.user_type || 'غير محدد'}</p>
-              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">المدينة:</strong> ${engineer.city || 'غير محددة'}</p>
+              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">الاسم:</strong> ${escapeHtml(engineer.full_name || 'غير معروف')}</p>
+              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">البريد الإلكتروني:</strong> ${escapeHtml(engineer.email || 'غير متوفر')}</p>
+              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">رقم القيد المهني:</strong> ${escapeHtml(engineer.registration_number || 'غير متوفر')}</p>
+              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">التخصص:</strong> ${escapeHtml(engineer.specialization || 'غير محدد')}</p>
+              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">نوع المستخدم:</strong> ${escapeHtml(engineer.user_type || 'غير محدد')}</p>
+              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">المدينة:</strong> ${escapeHtml(engineer.city || 'غير محددة')}</p>
             </div>
 
             <div style="text-align: center; margin: 30px 0;">

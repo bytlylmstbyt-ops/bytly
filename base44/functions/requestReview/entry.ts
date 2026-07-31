@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 Deno.serve(async (req) => {
   try {
@@ -78,9 +80,9 @@ Deno.serve(async (req) => {
       subject: '⭐ قيّم تجربتك مع مهندسك',
       body: `
         <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #6B5D4F;">مرحباً ${client.full_name || client.client_name}</h2>
-          <p>تم إكمال مشروعك <strong>"${project.title}"</strong> بنجاح! 🎉</p>
-          <p>نرجو منك تقييم تجربتك مع المهندس <strong>${engineer.full_name}</strong> لمساعدة الآخرين في اتخاذ قراراتهم.</p>
+          <h2 style="color: #6B5D4F;">مرحباً ${escapeHtml(client.full_name || client.client_name)}</h2>
+          <p>تم إكمال مشروعك <strong>"${escapeHtml(project.title)}"</strong> بنجاح! 🎉</p>
+          <p>نرجو منك تقييم تجربتك مع المهندس <strong>${escapeHtml(engineer.full_name)}</strong> لمساعدة الآخرين في اتخاذ قراراتهم.</p>
           <p>رأيك يهمنا ويساعدنا في تحسين خدماتنا.</p>
           <p style="margin-top: 20px;">
             <a href="${Deno.env.get('BASE44_APP_URL')}/project-details?id=${project_id}" 

@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 Deno.serve(async (req) => {
   try {
@@ -39,12 +41,12 @@ Deno.serve(async (req) => {
             <h2 style="color: #6B5D4F; margin-top: 0; font-size: 22px;">مهندس جديد في انتظار الموافقة</h2>
             
             <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-right: 4px solid #C9A66B;">
-              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">الاسم:</strong> ${engineer.full_name}</p>
-              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">البريد الإلكتروني:</strong> ${engineer.email}</p>
-              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">الهاتف:</strong> ${engineer.phone || 'غير متوفر'}</p>
-              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">التخصص:</strong> ${engineer.specialization || 'غير محدد'}</p>
-              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">المدينة:</strong> ${engineer.city || 'غير محدد'}</p>
-              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">سنوات الخبرة:</strong> ${engineer.years_experience || 'غير محدد'}</p>
+              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">الاسم:</strong> ${escapeHtml(engineer.full_name)}</p>
+              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">البريد الإلكتروني:</strong> ${escapeHtml(engineer.email)}</p>
+              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">الهاتف:</strong> ${escapeHtml(engineer.phone || 'غير متوفر')}</p>
+              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">التخصص:</strong> ${escapeHtml(engineer.specialization || 'غير محدد')}</p>
+              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">المدينة:</strong> ${escapeHtml(engineer.city || 'غير محدد')}</p>
+              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">سنوات الخبرة:</strong> ${escapeHtml(engineer.years_experience || 'غير محدد')}</p>
               <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">الحالة:</strong> <span style="color: #856404; background: #fff3cd; padding: 3px 8px; border-radius: 4px;">${engineer.status === 'pending' ? 'في انتظار المراجعة' : engineer.status}</span></p>
             </div>
 

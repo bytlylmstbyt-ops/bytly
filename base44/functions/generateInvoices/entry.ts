@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 Deno.serve(async (req) => {
   try {
@@ -105,7 +107,7 @@ Deno.serve(async (req) => {
         body: `
           <div dir="rtl" style="font-family: Arial, sans-serif;">
             <h2>فاتورة جديدة</h2>
-            <p>تم إصدار فاتورة جديدة للمرحلة: <strong>${milestone.title}</strong></p>
+            <p>تم إصدار فاتورة جديدة للمرحلة: <strong>${escapeHtml(milestone.title)}</strong></p>
             <p><strong>رقم الفاتورة:</strong> ${invoiceData.invoice_number}</p>
             <p><strong>المبلغ:</strong> ${milestone.amount} ريال</p>
             <p><strong>تاريخ الاستحقاق:</strong> ${dueDate.toLocaleDateString('ar-SA')}</p>

@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 Deno.serve(async (req) => {
   try {
@@ -55,7 +57,7 @@ Deno.serve(async (req) => {
             </div>
 
             <p style="color: #333; font-size: 17px; line-height: 1.8; margin: 25px 0;">
-              عزيزي المهندس/المصمم <strong style="color: #6B5D4F;">${engineer.full_name}</strong>،
+              عزيزي المهندس/المصمم <strong style="color: #6B5D4F;">${escapeHtml(engineer.full_name)}</strong>،
             </p>
 
             <p style="color: #555; font-size: 16px; line-height: 1.8; margin: 20px 0;">

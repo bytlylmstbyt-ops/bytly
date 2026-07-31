@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 Deno.serve(async (req) => {
   try {
@@ -126,7 +128,7 @@ Deno.serve(async (req) => {
           <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right;">
             <h2 style="color: #6B5D4F;">عقد جاهز للتوقيع</h2>
             <p>مرحباً،</p>
-            <p>تم قبول عرض السعر لمشروعك "<strong>${project.title}</strong>" من المهندس <strong>${engineer.full_name}</strong>.</p>
+            <p>تم قبول عرض السعر لمشروعك "<strong>${escapeHtml(project.title)}</strong>" من المهندس <strong>${escapeHtml(engineer.full_name)}</strong>.</p>
             <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
               <p><strong>تفاصيل العقد:</strong></p>
               <ul>
@@ -151,8 +153,8 @@ Deno.serve(async (req) => {
         body: `
           <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right;">
             <h2 style="color: #6B5D4F;">مبروك! تم قبول عرضك</h2>
-            <p>مرحباً ${engineer.full_name}،</p>
-            <p>قبل العميل عرضك لمشروع "<strong>${project.title}</strong>".</p>
+            <p>مرحباً ${escapeHtml(engineer.full_name)}،</p>
+            <p>قبل العميل عرضك لمشروع "<strong>${escapeHtml(project.title)}</strong>".</p>
             <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
               <p><strong>تفاصيل العقد:</strong></p>
               <ul>

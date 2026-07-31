@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 Deno.serve(async (req) => {
   try {
@@ -55,13 +57,13 @@ Deno.serve(async (req) => {
         body: `
           <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right;">
             <h2 style="color: #6B5D4F;">تم اعتماد المرحلة</h2>
-            <p>مرحباً ${engineer.full_name}،</p>
+            <p>مرحباً ${escapeHtml(engineer.full_name)}،</p>
             <p>نود إعلامك بأن العميل قد اعتمد المرحلة التالية من مشروعك:</p>
             <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
               <p><strong>تفاصيل المرحلة:</strong></p>
               <ul>
-                <li>اسم المرحلة: <strong>${milestone.title}</strong></li>
-                <li>المشروع: ${project.title}</li>
+                <li>اسم المرحلة: <strong>${escapeHtml(milestone.title)}</strong></li>
+                <li>المشروع: ${escapeHtml(project.title)}</li>
                 <li>القيمة: ${milestone.amount} ريال</li>
                 <li>الحالة: <span style="color: green;">✓ معتمد</span></li>
               </ul>

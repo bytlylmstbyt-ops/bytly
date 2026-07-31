@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 Deno.serve(async (req) => {
   try {
@@ -86,10 +88,10 @@ Deno.serve(async (req) => {
     <p style="color: rgba(255,255,255,0.8); margin: 8px 0 0;">منصة الهندسة والتصميم</p>
   </div>
   <div style="background: #f8f9fa; padding: 24px; border-radius: 0 0 12px 12px;">
-    <h2 style="color: #1a1a2e;">مرحباً ${name || ''}،</h2>
+    <h2 style="color: #1a1a2e;">مرحباً ${escapeHtml(name || '')}،</h2>
     <p style="color: #4a5568;">تم توقيع عقد المشروع التالي من قبل الطرفين وأصبح سارياً:</p>
     <div style="background: white; border-right: 4px solid #d4a574; padding: 16px; border-radius: 8px; margin: 16px 0;">
-      <p><strong>المشروع:</strong> ${project.title}</p>
+      <p><strong>المشروع:</strong> ${escapeHtml(project.title)}</p>
       <p><strong>رقم العقد:</strong> ${contract.contract_number}</p>
       <p><strong>القيمة:</strong> ${contract.total_amount?.toLocaleString()} ريال سعودي</p>
     </div>
