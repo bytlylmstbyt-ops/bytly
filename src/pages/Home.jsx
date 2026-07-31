@@ -473,7 +473,7 @@ export default function Home() {
       </section>
 
       {/* Pre-launch Survey CTA — end of page */}
-      <section className="py-16 md:py-20 bg-gradient-to-b from-slate-50 to-brand-cream/50">
+      <section className="py-16 md:py-20 bg-gradient-to-b from-slate-50 to-[#F5F0E8]/50">
         <div className="max-w-xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="rounded-3xl bg-white border border-[#C9A66B]/15 p-8 md:p-10 text-center shadow-xl">
             <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[#C9A66B] to-[#6B5D4F] flex items-center justify-center mb-5 shadow-lg">
