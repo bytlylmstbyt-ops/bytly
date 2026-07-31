@@ -5,7 +5,7 @@ Deno.serve(async (req) => {
         const base44 = createClientFromRequest(req);
         const isAuthenticated = await base44.auth.isAuthenticated();
         if (!isAuthenticated) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-        const { name, email, phone, subject, message } = await req.json();
+        const { name, email, phone, subject, company, project_needs, message } = await req.json();
 
         if (!name || !email || !message) {
             return Response.json({ error: 'Missing required fields' }, { status: 400 });
@@ -27,6 +27,10 @@ Deno.serve(async (req) => {
                             <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-weight: bold; color: #666;">البريد الإلكتروني:</td>
                             <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #1a1a2e;">${email}</td>
                         </tr>
+                        ${company ? `<tr>
+                            <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-weight: bold; color: #666;">الشركة:</td>
+                            <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #1a1a2e;">${company}</td>
+                        </tr>` : ''}
                         ${phone ? `<tr>
                             <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; font-weight: bold; color: #666;">رقم الجوال:</td>
                             <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #1a1a2e;">${phone}</td>
@@ -36,6 +40,12 @@ Deno.serve(async (req) => {
                             <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #1a1a2e;">${subject}</td>
                         </tr>` : ''}
                     </table>
+
+                    ${project_needs ? `
+                    <h2 style="color: #1a1a2e; margin-top: 24px;">احتياجات المشروع</h2>
+                    <div style="background: #f8f5f0; border-right: 4px solid #d4a574; padding: 16px; border-radius: 8px; color: #333; line-height: 1.7;">
+                        ${project_needs.replace(/\n/g, '<br>')}
+                    </div>` : ''}
 
                     <h2 style="color: #1a1a2e; margin-top: 24px;">نص الرسالة</h2>
                     <div style="background: #f8f5f0; border-right: 4px solid #d4a574; padding: 16px; border-radius: 8px; color: #333; line-height: 1.7;">

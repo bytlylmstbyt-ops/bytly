@@ -14,6 +14,8 @@ export default function AudienceLandingTemplate({ segment }) {
     badge,
     h1,
     subtitle,
+    mission,
+    outcome,
     offer: { title: offerTitle, points: offerPoints },
     process: { title: processTitle, steps: processSteps },
     benefits: { title: benefitsTitle, items: benefitsItems },
@@ -67,6 +69,26 @@ export default function AudienceLandingTemplate({ segment }) {
           </div>
         </div>
       </section>
+
+      {/* Mission + Outcome — مهمة واحدة ونتيجة واحدة تطابق نية الزائر */}
+      {(mission || outcome) && (
+        <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-10">
+          <div className="bg-white rounded-2xl shadow-lg border border-[#C9A66B]/20 p-5 grid sm:grid-cols-2 gap-5 text-center">
+            {mission && (
+              <div>
+                <span className="inline-block px-3 py-1 rounded-full bg-[#6B5D4F] text-white text-xs font-medium mb-2">مهمتك</span>
+                <p className="text-[#1a1a2e] font-medium leading-relaxed text-sm">{mission}</p>
+              </div>
+            )}
+            {outcome && (
+              <div>
+                <span className="inline-block px-3 py-1 rounded-full bg-[#C9A66B] text-white text-xs font-medium mb-2">النتيجة</span>
+                <p className="text-[#1a1a2e] font-medium leading-relaxed text-sm">{outcome}</p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Offer */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14">

@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 export default function ContactUs() {
-    const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
+    const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', subject: '', project_needs: '', message: '' });
     const [loading, setLoading] = useState(false);
     const [sent, setSent] = useState(false);
     const [error, setError] = useState('');
@@ -113,7 +113,7 @@ export default function ContactUs() {
                                         </div>
                                         <h3 className="text-xl font-bold text-[#1a1a2e] mb-2">تم إرسال رسالتك بنجاح!</h3>
                                         <p className="text-slate-500 mb-6">سنتواصل معك في أقرب وقت ممكن على البريد الإلكتروني المدخل.</p>
-                                        <Button onClick={() => { setSent(false); setForm({ name: '', email: '', phone: '', subject: '', message: '' }); }}
+                                        <Button onClick={() => { setSent(false); setForm({ name: '', company: '', email: '', phone: '', subject: '', project_needs: '', message: '' }); }}
                                             variant="outline">إرسال استفسار آخر</Button>
                                     </div>
                                 ) : (
@@ -139,15 +139,33 @@ export default function ContactUs() {
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
+                                                <label className="block text-sm font-medium text-slate-700 mb-1.5">الشركة</label>
+                                                <Input name="company" value={form.company} onChange={handleChange}
+                                                    placeholder="اسم الشركة (اختياري)" className="h-11" />
+                                            </div>
+                                            <div>
                                                 <label className="block text-sm font-medium text-slate-700 mb-1.5">رقم الجوال</label>
                                                 <Input name="phone" value={form.phone} onChange={handleChange}
                                                     placeholder="05xxxxxxxx" className="h-11" dir="ltr" />
                                             </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-slate-700 mb-1.5">موضوع الرسالة</label>
-                                                <Input name="subject" value={form.subject} onChange={handleChange}
-                                                    placeholder="استفسار عام" className="h-11" />
-                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1.5">موضوع الرسالة</label>
+                                            <Input name="subject" value={form.subject} onChange={handleChange}
+                                                placeholder="استفسار عام" className="h-11" />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1.5">احتياجات المشروع</label>
+                                            <textarea
+                                                name="project_needs"
+                                                value={form.project_needs}
+                                                onChange={handleChange}
+                                                placeholder="صف احتياجات مشروعك بإيجاز: النوع، الموقع، الميزانية التقريبية، الجدول الزمني..."
+                                                rows={3}
+                                                className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
+                                            />
                                         </div>
 
                                         <div>
