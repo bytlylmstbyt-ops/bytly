@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.38';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
 
 Deno.serve(async (req) => {
   try {
@@ -29,6 +29,47 @@ Deno.serve(async (req) => {
     const validTypes = ['engineer', 'contractor', 'supplier'];
     if (!validTypes.includes(targetType)) {
       return Response.json({ error: 'نوع غير صالح' }, { status: 400 });
+    }
+
+    // ── Authorization: caller must have a real, completed engagement with the target provider ──
+    // Prevents arbitrary users / competing providers from inflating or sabotaging ratings.
+    let authorized = false;
+
+    if (targetType === 'engineer') {
+      const projects = await base44.asServiceRole.entities.Project.filter({
+        client_id: user.id,
+        assigned_engineer_id: targetId
+      });
+      authorized = projects.some(p =>
+        p.status === 'completed' || p.client_final_approval === true || p.status === 'technical_approved'
+      );
+    } else if (targetType === 'contractor') {
+      const contracts = await base44.asServiceRole.entities.Contract.filter({
+        client_id: user.id,
+        contractor_id: targetId
+      });
+      authorized = contracts.some(c =>
+        ['signed', 'active', 'completed'].includes(c.status)
+      );
+    } else if (targetType === 'supplier') {
+      // Suppliers are engaged via market orders; require the caller to be a registered client.
+      const clients = await base44.asServiceRole.entities.Client.filter({ email: user.email });
+      authorized = clients.length > 0;
+    }
+
+    if (!authorized) {
+      return Response.json(
+        { error: 'غير مصرّح: يجب أن يكون لديك مشروع/عقد مكتمل مع مقدم الخدمة قبل تقييمه' },
+        { status: 403 }
+      );
+    }
+
+    // If a projectId was supplied, it must belong to the caller
+    if (projectId) {
+      const proj = await base44.asServiceRole.entities.Project.get(projectId).catch(() => null);
+      if (!proj || proj.client_id !== user.id) {
+        return Response.json({ error: 'مشروع غير صالح' }, { status: 403 });
+      }
     }
 
     // Build review data
