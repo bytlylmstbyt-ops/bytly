@@ -4,6 +4,7 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import IndividualClientDashboard from "@/components/client/IndividualClientDashboard";
 import InvestorClientDashboard from "@/components/client/InvestorClientDashboard";
+import SmartAlertsDashboard from "@/components/client/SmartAlertsDashboard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Briefcase, Clock, TrendingUp, CheckCircle, DollarSign, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -153,7 +154,8 @@ export default function ClientDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <SmartAlertsDashboard client={client} />
         {client.client_type === "investor" ? (
           <InvestorClientDashboard 
             client={client} 
