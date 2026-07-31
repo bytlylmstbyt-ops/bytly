@@ -31,7 +31,6 @@ import JsonLd from "@/components/seo/JsonLd";
 import { webPageSchema } from "@/components/seo/buildSchema";
 import PreLaunchSurveyModal from "@/components/survey/PreLaunchSurveyModal";
 import { useScrollDepthTracking } from "@/hooks/useScrollDepthTracking";
-import StickyStartProjectCTA from "@/components/home/StickyStartProjectCTA";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useAuth } from "@/lib/AuthContext";
 import { ClipboardList } from "lucide-react";
@@ -511,8 +510,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Sticky "Start your project" CTA — appears after scrolling past the hero */}
-      <StickyStartProjectCTA />
     </div>
   );
 }
