@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import LinkFolder from "@/components/content/LinkFolder";
 import LiveActiveBadge from "@/components/trust/LiveActiveBadge";
+import PageEssentialsSection from "@/components/content/PageEssentialsSection";
+import JsonLd from "@/components/seo/JsonLd";
+import { webPageSchema } from "@/components/seo/buildSchema";
 
 const folders = [
   {
@@ -51,6 +54,7 @@ const folders = [
 export default function Resources() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-white to-amber-50/40">
+      <JsonLd data={webPageSchema({ name: "مركز الموارد — بيتلي", description: "أدلة عملية حول سير العمل الهندسي وتقدير التكاليف ومراحل المشروع وتنسيق الأدوار.", path: "/Resources" })} />
       {/* Hero / H1 */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-12 pb-8 text-center">
         <Badge variant="outline" className="mb-4 border-[#C9A66B] text-[#C9A66B] bg-[#C9A66B]/5">
@@ -105,6 +109,14 @@ export default function Resources() {
           ))}
         </div>
       </section>
+
+      {/* Page essentials — features/audience/proof/next steps */}
+      <PageEssentialsSection
+        feature="أدلة عملية مركّزة حول التكلفة والمراحل والأدوار والحماية — لا نظريات."
+        audience="لمالكي المشاريع قبل البدء، وللمهندسين والاستشاريين الباحثين عن مرجع مباشر."
+        proof="محتوى مبني على سير عمل فعلي على المنصة ومنضبط بالكود السعودي للبناء."
+        nextStep="اقرأ الأدلة ثم أطلق مشروعك محمياً عبر الضمان."
+      />
 
       {/* CTA / H2 */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12">

@@ -7,6 +7,10 @@ import { createPageUrl } from '@/utils';
 import ComparisonSection from '@/components/home/ComparisonSection';
 import SecurityTrustSection from '@/components/home/SecurityTrustSection';
 import LiveActiveBadge from '@/components/trust/LiveActiveBadge';
+import AboutOverviewSection from '@/components/about/AboutOverviewSection';
+import EeatSection from '@/components/about/EeatSection';
+import JsonLd from '@/components/seo/JsonLd';
+import { webPageSchema, softwareSchema } from '@/components/seo/buildSchema';
 
 export default function About() {
   const { t, isRTL } = useLanguage();
@@ -22,6 +26,8 @@ export default function About() {
 
   return (
     <div className="min-h-screen bg-white" dir={isRTL ? 'rtl' : 'ltr'}>
+      <JsonLd data={webPageSchema({ name: "نبذة عنا — بيتلي", description: "ماذا تفعل بيتلي، من تخدم، ولماذا وُجدت في سوق الهندسة، مع بيانات اعتماد الفريق والإنجازات التشغيلية.", path: "/About" })} />
+      <JsonLd data={softwareSchema} />
       {/* Hero */}
       <section className="bg-gradient-to-b from-[#F5F0E8] to-white py-20 md:py-28">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -49,6 +55,9 @@ export default function About() {
       </section>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 space-y-20">
+
+        {/* نبذة عامة — ماذا نفعل / من نخدم / لماذا نوجد */}
+        <AboutOverviewSection />
 
         {/* رؤيتنا */}
         <section>
@@ -84,6 +93,9 @@ export default function About() {
         {/* بيتلي مقابل البدائل التقليدية */}
         <ComparisonSection />
       </div>
+
+      {/* E-E-A-T — بيانات الاعتماد والإشارات والإنجازات */}
+      <EeatSection />
 
       {/* معايير الأمان والثقة — الخصوصية وحماية البيانات وأذونات الأدوار */}
       <SecurityTrustSection />

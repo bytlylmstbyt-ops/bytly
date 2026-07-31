@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, HelpCircle } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageContext";
+import QuickAnswersSection from "@/components/home/QuickAnswersSection";
+import JsonLd from "@/components/seo/JsonLd";
+import { webPageSchema } from "@/components/seo/buildSchema";
 
 const FAQ = () => {
   const { t } = useLanguage();
@@ -19,6 +22,7 @@ const FAQ = () => {
   return (
     <section className="py-16 md:py-20 bg-gradient-to-b from-white to-amber-50/40">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <JsonLd data={webPageSchema({ name: "الأسئلة الشائعة — بيتلي", description: "إجابات سريعة ومباشرة عن منصة بيتلي الهندسية.", path: "/FAQ" })} />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -35,6 +39,8 @@ const FAQ = () => {
             {t("home.faq.subtitle")}
           </p>
         </motion.div>
+
+        <QuickAnswersSection compact />
 
         <div className="space-y-3">
           {items.map((key, i) => {

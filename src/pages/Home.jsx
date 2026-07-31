@@ -29,6 +29,9 @@ import TrustBadgesSection from "@/components/home/TrustBadgesSection";
 import ProofNumbersSection from "@/components/home/ProofNumbersSection";
 import VideoTestimonialSection from "@/components/home/VideoTestimonialSection";
 import AwardsRecognitionSection from "@/components/home/AwardsRecognitionSection";
+import QuickAnswersSection from "@/components/home/QuickAnswersSection";
+import JsonLd from "@/components/seo/JsonLd";
+import { webPageSchema } from "@/components/seo/buildSchema";
 import PreLaunchSurveyModal from "@/components/survey/PreLaunchSurveyModal";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useAuth } from "@/lib/AuthContext";
@@ -158,6 +161,7 @@ export default function Home() {
 
   return (
     <div className="overflow-hidden">
+      <JsonLd data={webPageSchema({ name: "بيتلي — المنظومة الهندسية المتكاملة", description: "منصة هندسية متكاملة تجمع المهندسين والمعماريين والمساحين مع أصحاب المشاريع في المملكة العربية السعودية.", path: "" })} />
       {/* Welcome Onboarding */}
       {showWelcome && userType === 'engineer' && (
         <ProfessionalWelcomeSlides 
@@ -453,6 +457,9 @@ export default function Home() {
         onClose={handleSurveyClose}
         sourcePage="home"
       />
+
+      {/* Quick Answers — إجابات سريعة عن المنصة */}
+      <QuickAnswersSection />
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B]">

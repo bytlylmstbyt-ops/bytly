@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import LinkFolder from "@/components/content/LinkFolder";
+import PageEssentialsSection from "@/components/content/PageEssentialsSection";
+import JsonLd from "@/components/seo/JsonLd";
+import { webPageSchema, softwareSchema } from "@/components/seo/buildSchema";
 
 const folders = [
   {
@@ -73,6 +76,8 @@ export default function Solutions() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-white to-amber-50/40">
+      <JsonLd data={webPageSchema({ name: "حلول بيتلي المتكاملة", description: "ثماني وحدات متكاملة لإدارة المشاريع الهندسية: التخطيط، المالية والضمان، العقود والذكاء الاصطناعي، والميدان والسوق.", path: "/Solutions" })} />
+      <JsonLd data={softwareSchema} />
       {/* Hero / H1 */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-12 pb-10 text-center">
         <Badge variant="outline" className="mb-4 border-[#C9A66B] text-[#C9A66B] bg-[#C9A66B]/5">
@@ -150,6 +155,16 @@ export default function Solutions() {
           ))}
         </div>
       </section>
+
+      {/* Page essentials — features/audience/proof/next steps */}
+      <PageEssentialsSection
+        feature="ثماني وحدات متكاملة لتخطيط وتمويل وعقد ومتابعة المشروع في منصة واحدة."
+        audience="أصحاب المشاريع والمهندسون والاستشاريون في المملكة العربية السعودية."
+        proof="أكثر من 1000 مهندس معتمد وآلاف المشاريع المنجزة عبر المنصة."
+        nextStep="ابدأ مشروعك مجاناً أو تصفّح الوحدات أعلاه لاختيار ما يناسبك."
+        nextTo="/CreateProject"
+        nextLabel="ابدأ مشروعك الآن"
+      />
 
       {/* CTA / H2 */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12">

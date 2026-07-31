@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import LiveActiveBadge from "@/components/trust/LiveActiveBadge";
+import PageEssentialsSection from "@/components/content/PageEssentialsSection";
+import JsonLd from "@/components/seo/JsonLd";
+import { webPageSchema } from "@/components/seo/buildSchema";
 
 const categoryLabels = {
   interior: "تصميم داخلي",
@@ -50,6 +53,7 @@ export default function CaseStudies() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-white to-amber-50/40">
+      <JsonLd data={webPageSchema({ name: "دراسات الحالة — بيتلي", description: "أمثلة عملية لمشاريع هندسية نُفذت عبر بيتلي قبل وبعد التنفيذ لتقييم قيمة العرض.", path: "/CaseStudies" })} />
       {/* Hero / H1 */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 pt-12 pb-8 text-center">
         <Badge variant="outline" className="mb-4 border-[#C9A66B] text-[#C9A66B] bg-[#C9A66B]/5">
@@ -163,6 +167,16 @@ export default function CaseStudies() {
           <p className="text-sm text-slate-500">— أحد أصحاب المشاريع على المنصة</p>
         </div>
       </section>
+
+      {/* Page essentials — features/audience/proof/next steps */}
+      <PageEssentialsSection
+        feature="مشاريع منشورة بنتائج قابلة للقياس قبل وبعد التنفيذ عبر المنصة."
+        audience="لمن يقيّم قيمة العرض قبل اتخاذ قرار بدء مشروعه."
+        proof="مئات المشاريع المكتملة بمعدل رضا 98% وأموال محمية بالضمان."
+        nextStep="اجعل مشروعك القصة القادمة — ابدأ عبر بيتلي."
+        nextTo="/CreateProject"
+        nextLabel="ابدأ مشروعك الآن"
+      />
 
       {/* CTA / H2 */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
