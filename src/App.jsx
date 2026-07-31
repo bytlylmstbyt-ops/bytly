@@ -73,6 +73,9 @@ const Resources                  = React.lazy(() => import('./pages/Resources'))
 const ProviderSubscription       = React.lazy(() => import('./pages/ProviderSubscription'));
 const RevenueDashboard           = React.lazy(() => import('./pages/RevenueDashboard'));
 const ProviderWallet             = React.lazy(() => import('./pages/ProviderWallet'));
+const EngineeringFirmsLanding    = React.lazy(() => import('./pages/audiences/EngineeringFirmsLanding'));
+const ContractorsLanding         = React.lazy(() => import('./pages/audiences/ContractorsLanding'));
+const ConsultingTeamsLanding     = React.lazy(() => import('./pages/audiences/ConsultingTeamsLanding'));
 
 // ── Page-level spinner fallback ───────────────────────────────────────────────
 function PageSpinner() {
@@ -163,6 +166,9 @@ const AuthenticatedApp = () => {
       <Route path="/Solutions"                   element={lazyRoute(Solutions, "Solutions")} />
       <Route path="/CaseStudies"                 element={lazyRoute(CaseStudies, "CaseStudies")} />
       <Route path="/Resources"                   element={lazyRoute(Resources, "Resources")} />
+      <Route path="/audiences/engineering-firms" element={lazyRoute(EngineeringFirmsLanding, "EngineeringFirmsLanding")} />
+      <Route path="/audiences/contractors"       element={lazyRoute(ContractorsLanding, "ContractorsLanding")} />
+      <Route path="/audiences/consulting-teams"  element={lazyRoute(ConsultingTeamsLanding, "ConsultingTeamsLanding")} />
 
       {/* Public registration-related pages */}
       {Object.entries(Pages)

@@ -122,7 +122,6 @@ function LayoutContent({ children, currentPageName }) {
               {[
                 { to: createPageUrl("Home"), label: t('nav.home'), name: 'Home' },
                 { to: createPageUrl("Engineers"), label: t('nav.engineers'), name: 'Engineers' },
-                { to: createPageUrl("ConsultingFirms"), label: t('nav.consultingFirms'), name: 'ConsultingFirms' },
                 { to: createPageUrl("Projects"), label: t('nav.projects'), name: 'Projects' },
                 { to: createPageUrl("Gallery"), label: t('nav.gallery'), name: 'Gallery' },
               ].map(({ to, label, name }) => (
@@ -173,6 +172,27 @@ function LayoutContent({ children, currentPageName }) {
                   <DropdownMenuItem asChild>
                     <Link to="/EngineerMatcher" className="flex items-center gap-2 cursor-pointer">
                       ✨ {t('nav.findEngineer')}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/audiences/engineering-firms" className="flex items-center gap-2 cursor-pointer">
+                      🏢 شركات الهندسة
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/audiences/contractors" className="flex items-center gap-2 cursor-pointer">
+                      🏗️ للمقاولين
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/audiences/consulting-teams" className="flex items-center gap-2 cursor-pointer">
+                      🧑‍💼 للاستشاريين
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to={createPageUrl("ConsultingFirms")} className="flex items-center gap-2 cursor-pointer">
+                      🏛️ {t('nav.consultingFirms')}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -352,7 +372,6 @@ function LayoutContent({ children, currentPageName }) {
               {[
                 { to: createPageUrl("Home"), label: t('nav.home') },
                 { to: createPageUrl("Engineers"), label: t('nav.engineers') },
-                { to: createPageUrl("ConsultingFirms"), label: t('nav.consultingFirms') },
                 { to: createPageUrl("Projects"), label: t('nav.projects') },
                 { to: createPageUrl("Gallery"), label: t('nav.gallery') },
                 { to: createPageUrl("Messages"), label: t('nav.chat') },
@@ -383,6 +402,10 @@ function LayoutContent({ children, currentPageName }) {
                                 { to: "/SupplierDashboard", label: `📦 الموردون` },
                                 { to: "/SurveyorGigs", label: `🗺️ ${t('nav.surveyorBoard')}` },
                                 { to: "/AdvertiseWithUs", label: `📢 المعلنون` },
+                                { to: createPageUrl("ConsultingFirms"), label: `🏛️ ${t('nav.consultingFirms')}` },
+                                { to: "/audiences/engineering-firms", label: `🏢 شركات الهندسة` },
+                                { to: "/audiences/contractors", label: `🏗️ للمقاولين` },
+                                { to: "/audiences/consulting-teams", label: `🧑‍💼 للاستشاريين` },
                                 ].map(({ to, label }) => (
                                 <Link
                                   key={to}
@@ -492,6 +515,7 @@ function LayoutContent({ children, currentPageName }) {
                 {[
                   { to: createPageUrl("About"), label: t('footer.about') },
                   { to: createPageUrl("ContactUs"), label: t('footer.contactUs') },
+                  { to: "/RequestQuote", label: "طلب عرض سعر" },
                   { to: createPageUrl("Support"), label: t('footer.technicalSupport') },
                   { to: createPageUrl("Complaints"), label: t('footer.complaints') },
                   { to: "/Certificates", label: t('nav.certificates') },
