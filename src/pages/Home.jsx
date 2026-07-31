@@ -27,9 +27,6 @@ import PartnerLogosStrip from "@/components/home/PartnerLogosStrip";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
 import TrustBadgesSection from "@/components/home/TrustBadgesSection";
 import ProofNumbersSection from "@/components/home/ProofNumbersSection";
-import VideoTestimonialSection from "@/components/home/VideoTestimonialSection";
-import AwardsRecognitionSection from "@/components/home/AwardsRecognitionSection";
-import QuickAnswersSection from "@/components/home/QuickAnswersSection";
 import JsonLd from "@/components/seo/JsonLd";
 import { webPageSchema } from "@/components/seo/buildSchema";
 import PreLaunchSurveyModal from "@/components/survey/PreLaunchSurveyModal";
@@ -345,9 +342,6 @@ export default function Home() {
       {/* Partner / Sector Logos Strip */}
       <PartnerLogosStrip />
 
-      {/* Awards & Third-party Recognition */}
-      <AwardsRecognitionSection />
-
       {/* Purchasing Options — how customers start (moved above elite engineers) */}
       <PurchasingSection />
 
@@ -440,9 +434,6 @@ export default function Home() {
       {/* Testimonials — شهادات قصيرة بنتائج قابلة للقياس */}
       <TestimonialsSection />
 
-      {/* Video Testimonial — شهادة فيديو من عميل هندسي */}
-      <VideoTestimonialSection />
-
       {/* Trust Badges — إشارات الثقة والاعتماد */}
       <TrustBadgesSection />
 
@@ -457,9 +448,6 @@ export default function Home() {
         onClose={handleSurveyClose}
         sourcePage="home"
       />
-
-      {/* Quick Answers — إجابات سريعة عن المنصة */}
-      <QuickAnswersSection />
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B]">
