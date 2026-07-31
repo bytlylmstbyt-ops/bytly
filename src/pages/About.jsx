@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Target, Eye, Sparkles, CheckCircle2 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import ComparisonSection from '@/components/home/ComparisonSection';
+import SecurityTrustSection from '@/components/home/SecurityTrustSection';
 
 export default function About() {
   const { t, isRTL } = useLanguage();
@@ -79,6 +80,9 @@ export default function About() {
         {/* بيتلي مقابل البدائل التقليدية */}
         <ComparisonSection />
       </div>
+
+      {/* معايير الأمان والثقة — الخصوصية وحماية البيانات وأذونات الأدوار */}
+      <SecurityTrustSection />
     </div>
   );
 }

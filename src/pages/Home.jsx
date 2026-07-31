@@ -23,6 +23,10 @@ import SpecialtiesSection from "@/components/home/SpecialtiesSection";
 import PurchasingSection from "@/components/home/PurchasingSection";
 import DifferentiatorSection from "@/components/home/DifferentiatorSection";
 import MissionSection from "@/components/home/MissionSection";
+import PartnerLogosStrip from "@/components/home/PartnerLogosStrip";
+import TestimonialsSection from "@/components/home/TestimonialsSection";
+import TrustBadgesSection from "@/components/home/TrustBadgesSection";
+import ProofNumbersSection from "@/components/home/ProofNumbersSection";
 import PreLaunchSurveyModal from "@/components/survey/PreLaunchSurveyModal";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useAuth } from "@/lib/AuthContext";
@@ -329,6 +333,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Partner / Sector Logos Strip */}
+      <PartnerLogosStrip />
+
       {/* Purchasing Options — how customers start (moved above elite engineers) */}
       <PurchasingSection />
 
@@ -417,6 +424,15 @@ export default function Home() {
 
       {/* Mission — about us short section */}
       <MissionSection />
+
+      {/* Testimonials — شهادات قصيرة بنتائج قابلة للقياس */}
+      <TestimonialsSection />
+
+      {/* Trust Badges — إشارات الثقة والاعتماد */}
+      <TrustBadgesSection />
+
+      {/* Proof Numbers + Dated element — أرقام الإثبات وعنصر مؤرخ */}
+      <ProofNumbersSection />
 
 
 
