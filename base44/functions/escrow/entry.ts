@@ -448,10 +448,12 @@ Deno.serve(async (req) => {
     if (action === 'release_milestone') {
       const [project] = await base44.entities.Project.filter({ id: project_id });
       if (!project) return Response.json({ error: 'Project not found' }, { status: 404 });
-      if (project.created_by !== user.email) return Response.json({ error: 'Forbidden' }, { status: 403 });
+      // Authorization: only the project owner (client) or an admin may release milestone escrow.
+      if (project.created_by !== user.email && user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
       const [milestone] = await base44.entities.ProjectMilestone.filter({ id: milestone_id });
       if (!milestone) return Response.json({ error: 'Milestone not found' }, { status: 404 });
+      // Ensure the milestone belongs to the supplied project (prevents cross-project release).
       if (milestone.project_id !== project.id) return Response.json({ error: 'Milestone does not belong to this project' }, { status: 403 });
       if (milestone.escrow_status !== 'held') return Response.json({ error: 'No escrow for this milestone' }, { status: 400 });
 
