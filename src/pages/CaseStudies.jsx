@@ -137,7 +137,7 @@ export default function CaseStudies() {
             {filtered.slice(0, 12).map((s, i) => (
               <Card key={i} className="overflow-hidden border-[#C9A66B]/20 hover:shadow-lg transition-all group">
                 <div className="aspect-[4/3] overflow-hidden bg-slate-100">
-                  <img src={s.images[0]} alt={s.title} loading="lazy" decoding="async"
+                  <img src={s.images[0]} alt={`${s.title} — ${categoryLabels[s.category] || s.category} | دراسة حالة على بيتلي`} loading="lazy" decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                 </div>
                 <CardContent className="pt-4">

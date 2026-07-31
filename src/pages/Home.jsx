@@ -189,7 +189,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e]/95 via-[#1a1a2e]/82 to-[#C9A66B]/30" />
           <img
             src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920"
-            alt="Interior Design"
+            alt="مساحة تصميم داخلي حديثة كخلفية لصفحة بيتلي الرئيسية للمنظومة الهندسية المتكاملة"
             loading="lazy"
             decoding="async"
             className="w-full h-full object-cover"
@@ -303,7 +303,7 @@ export default function Home() {
                     <div className="h-44 rounded-2xl overflow-hidden">
                       <img
                         src="https://images.unsplash.com/photo-1600210492493-0946911123ea?w=400"
-                        alt="Design 1"
+                        alt="نموذج تصميم داخلي سكني من أعمال منصة بيتلي الهندسية"
                         loading="lazy"
                         decoding="async"
                         className="w-full h-full object-cover"
@@ -312,7 +312,7 @@ export default function Home() {
                     <div className="h-60 rounded-2xl overflow-hidden">
                       <img
                         src="https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?w=400"
-                        alt="Design 2"
+                        alt="نموذج تصميم معماري وتشطيب من مشاريع بيتلي المنجزة"
                         loading="lazy"
                         decoding="async"
                         className="w-full h-full object-cover"
@@ -323,7 +323,7 @@ export default function Home() {
                     <div className="h-60 rounded-2xl overflow-hidden">
                       <img
                         src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400"
-                        alt="Design 3"
+                        alt="نموذج واجهة معمارية خارجية لمشروع هندسي على بيتلي"
                         loading="lazy"
                         decoding="async"
                         className="w-full h-full object-cover"
@@ -332,7 +332,7 @@ export default function Home() {
                     <div className="h-44 rounded-2xl overflow-hidden">
                       <img
                         src="https://images.unsplash.com/photo-1618219908412-a29a1bb7b86e?w=400"
-                        alt="Design 4"
+                        alt="نموذج تشطيب وديكور داخلي لمشروع هندسي على منصة بيتلي"
                         loading="lazy"
                         decoding="async"
                         className="w-full h-full object-cover"
