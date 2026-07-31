@@ -106,21 +106,28 @@ export default function EngineerProfile() {
       return;
     }
 
-    if (isFavorited) {
-      const favorites = await base44.entities.Favorite.filter({
-        client_id: currentClient.id,
-        engineer_id: engineerId
-      });
-      if (favorites.length > 0) {
-        await base44.entities.Favorite.delete(favorites[0].id);
+    // Optimistic UI — flip the heart instantly, rollback on failure
+    const prevFavorited = isFavorited;
+    setIsFavorited(!isFavorited);
+
+    try {
+      if (prevFavorited) {
+        const favorites = await base44.entities.Favorite.filter({
+          client_id: currentClient.id,
+          engineer_id: engineerId
+        });
+        if (favorites.length > 0) {
+          await base44.entities.Favorite.delete(favorites[0].id);
+        }
+      } else {
+        await base44.entities.Favorite.create({
+          client_id: currentClient.id,
+          engineer_id: engineerId
+        });
       }
-      setIsFavorited(false);
-    } else {
-      await base44.entities.Favorite.create({
-        client_id: currentClient.id,
-        engineer_id: engineerId
-      });
-      setIsFavorited(true);
+    } catch (e) {
+      console.error('toggleFavorite error:', e);
+      setIsFavorited(prevFavorited); // rollback
     }
   };
 

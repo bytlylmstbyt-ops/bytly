@@ -131,23 +131,48 @@ export default function Messages() {
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation) return;
-    setIsSending(true);
+    const text = newMessage.trim();
     const senderInfo = usersMap[user.email] || {};
-    const message = await base44.entities.Message.create({
+    const tempId = `optimistic-${Date.now()}`;
+
+    // Optimistic UI — show the bubble instantly and clear the input
+    const optimisticMsg = {
+      id: tempId,
       conversation_id: selectedConversation.id,
       project_id: selectedConversation.project_id || "direct",
       sender_email: user.email,
       sender_name: user.full_name || senderInfo.full_name,
       sender_role: senderInfo._type || "client",
-      content: newMessage.trim(),
-    });
-    await base44.entities.Conversation.update(selectedConversation.id, {
-      last_message: newMessage.trim(),
-      last_message_date: new Date().toISOString(),
-    });
-    setMessages(prev => [...prev, message]);
+      content: text,
+      created_date: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, optimisticMsg]);
     setNewMessage("");
-    setIsSending(false);
+    setIsSending(true);
+
+    try {
+      const message = await base44.entities.Message.create({
+        conversation_id: selectedConversation.id,
+        project_id: selectedConversation.project_id || "direct",
+        sender_email: user.email,
+        sender_name: user.full_name || senderInfo.full_name,
+        sender_role: senderInfo._type || "client",
+        content: text,
+      });
+      await base44.entities.Conversation.update(selectedConversation.id, {
+        last_message: text,
+        last_message_date: new Date().toISOString(),
+      });
+      // Replace the optimistic bubble with the persisted message
+      setMessages(prev => prev.map(m => (m.id === tempId ? message : m)));
+    } catch (e) {
+      console.error('handleSendMessage error:', e);
+      // Rollback — drop the optimistic bubble and restore the text for retry
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      setNewMessage(text);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleFileUpload = async (e) => {
