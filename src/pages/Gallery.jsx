@@ -19,6 +19,14 @@ const DESIGN_CATEGORIES = [
   { value: "executive_drawing", label: "رسم تنفيذي", icon: Grid3X3 },
 ];
 
+// Smart design-type grouping — high-level browse by design discipline
+const DESIGN_TYPES = [
+  { value: "all", label: "جميع الأنواع", icon: Grid3X3 },
+  { value: "architecture", label: "معماري", icon: Building2, categories: ["architecture", "structural_design", "civil_engineering", "executive_drawing", "landscape"] },
+  { value: "interior", label: "تصميم داخلي", icon: Paintbrush, categories: ["interior", "furniture", "lighting"] },
+  { value: "artwork", label: "رسومات فنية", icon: Sparkles, categories: ["painting"] },
+];
+
 const DESIGN_STYLES = [
   { value: "all", label: "جميع الأنماط" },
   { value: "modern", label: "مودرن", keywords: ["مودرن", "حديث", "عصري", "معاصر", "modern", "contemporary"] },
@@ -55,6 +63,7 @@ export default function Gallery() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedDesignType, setSelectedDesignType] = useState("all");
   const [selectedProjectType, setSelectedProjectType] = useState("all");
   const [selectedStyle, setSelectedStyle] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
@@ -97,6 +106,10 @@ export default function Gallery() {
     .filter(p => {
       if (!p.images || p.images.length === 0) return false;
       if (selectedCategory !== "all" && p.category !== selectedCategory) return false;
+      if (selectedDesignType !== "all") {
+        const dt = DESIGN_TYPES.find(d => d.value === selectedDesignType);
+        if (dt && !dt.categories.includes(p.category)) return false;
+      }
       if (selectedProjectType !== "all" && p.project_type !== selectedProjectType) return false;
 
       // Tag filter
@@ -140,10 +153,11 @@ export default function Gallery() {
     ? filteredPortfolios.slice(3)
     : filteredPortfolios.filter(p => !p.is_featured || !featuredPortfolios.includes(p));
 
-  const activeFiltersCount = (selectedCategory !== "all" ? 1 : 0) + (selectedProjectType !== "all" ? 1 : 0) + (selectedStyle !== "all" ? 1 : 0) + (activeTag ? 1 : 0);
+  const activeFiltersCount = (selectedCategory !== "all" ? 1 : 0) + (selectedDesignType !== "all" ? 1 : 0) + (selectedProjectType !== "all" ? 1 : 0) + (selectedStyle !== "all" ? 1 : 0) + (activeTag ? 1 : 0);
 
   const clearFilters = () => {
     setSelectedCategory("all");
+    setSelectedDesignType("all");
     setSelectedProjectType("all");
     setSelectedStyle("all");
     setSearchQuery("");
@@ -218,6 +232,31 @@ export default function Gallery() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        {/* Smart Design Type Filter */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <SlidersHorizontal className="w-4 h-4 text-[#C9A66B]" />
+            <span className="text-sm font-semibold text-slate-700">نوع التصميم</span>
+            <span className="text-xs text-slate-400">— استعرض حسب التخصص الإبداعي</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {DESIGN_TYPES.map(dt => (
+              <button
+                key={dt.value}
+                onClick={() => setSelectedDesignType(dt.value)}
+                className={`flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${
+                  selectedDesignType === dt.value
+                    ? "bg-gradient-to-r from-[#1a1a2e] to-[#6B5D4F] text-white shadow-lg scale-[1.02]"
+                    : "bg-white text-slate-600 hover:bg-slate-50 shadow-sm border border-slate-100"
+                }`}
+              >
+                <dt.icon className="w-4 h-4" />
+                {dt.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Design Category Tabs */}
         <div className="flex flex-wrap justify-center gap-2 mb-6">
@@ -350,6 +389,7 @@ export default function Gallery() {
         <div className="mb-6 flex items-center justify-between">
           <p className="text-slate-500 text-sm">
             عرض <span className="font-semibold text-[#1a1a2e]">{filteredPortfolios.length}</span> مشروع
+            {selectedDesignType !== "all" && <span> من نوع <span className="text-[#C9A66B]">{DESIGN_TYPES.find(d => d.value === selectedDesignType)?.label}</span></span>}
             {searchQuery && <span> لـ "<span className="text-[#C9A66B]">{searchQuery}</span>"</span>}
             {activeTag && <span> بوسم <span className="text-[#C9A66B]">«{activeTag}»</span></span>}
           </p>
