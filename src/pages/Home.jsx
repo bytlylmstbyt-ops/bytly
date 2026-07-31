@@ -29,7 +29,6 @@ import TrustBadgesSection from "@/components/home/TrustBadgesSection";
 import ProofNumbersSection from "@/components/home/ProofNumbersSection";
 import VideoTestimonialSection from "@/components/home/VideoTestimonialSection";
 import AwardsRecognitionSection from "@/components/home/AwardsRecognitionSection";
-import QuoteRequestFormSection from "@/components/home/QuoteRequestFormSection";
 import PreLaunchSurveyModal from "@/components/survey/PreLaunchSurveyModal";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useAuth } from "@/lib/AuthContext";
@@ -445,9 +444,6 @@ export default function Home() {
 
       {/* Proof Numbers + Dated element — أرقام الإثبات وعنصر مؤرخ */}
       <ProofNumbersSection />
-
-      {/* Quote Request Form — نموذج عرض سعر مرئي */}
-      <QuoteRequestFormSection />
 
 
 
