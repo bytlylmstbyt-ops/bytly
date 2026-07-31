@@ -438,7 +438,7 @@ function LayoutContent({ children, currentPageName }) {
                   { to: "/Solutions", label: "الحلول" },
                   { to: "/CaseStudies", label: "دراسات الحالة" },
                   { to: "/Resources", label: "مركز الموارد" },
-                  { to: "/Support", label: t('home.faq.title') },
+                  { to: "/FAQ", label: t('home.faq.title') },
                 ].map(({ to, label }) => (
                   <li key={to}>
                     <Link to={to} className="flex items-center hover:text-[#C9A66B] transition-colors" style={{ minHeight: 44 }}>{label}</Link>

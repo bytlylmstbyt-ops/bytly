@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Headphones, Send, Loader2, Upload, AlertCircle, CheckCircle, Clock } from "lucide-react";
 import { motion } from "framer-motion";
-import FAQ from "@/pages/FAQ";
 
 export default function SupportPage() {
   const [user, setUser] = useState(null);
@@ -293,9 +292,6 @@ export default function SupportPage() {
             </Card>
           </motion.div>
         </div>
-
-        {/* الأسئلة الشائعة */}
-        <FAQ />
       </div>
     </div>
   );
