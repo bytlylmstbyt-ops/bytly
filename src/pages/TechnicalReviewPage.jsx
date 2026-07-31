@@ -7,9 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import MobileSelect from "@/components/mobile/MobileSelect";
+import ConsultantNotesPanel from "@/components/technical/ConsultantNotesPanel";
+import CorrectedFilesUploader from "@/components/technical/CorrectedFilesUploader";
+import { downloadTechnicalReport } from "@/components/technical/downloadTechnicalReport";
 import { 
   FileCheck, Loader2, CheckCircle, AlertCircle, 
-  Upload, Download, FileText, Award 
+  Upload, Download, FileText, Award, FileDown 
 } from "lucide-react";
 import QualityCertificate from "@/components/certificates/QualityCertificate";
 
@@ -31,7 +34,9 @@ export default function TechnicalReviewPage() {
     approval_status: "pending"
   });
   const [reportFile, setReportFile] = useState(null);
+  const [correctedFiles, setCorrectedFiles] = useState([]);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [downloadingReport, setDownloadingReport] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -80,6 +85,8 @@ export default function TechnicalReviewPage() {
           technical_notes: review.technical_notes || "",
           approval_status: review.approval_status || "pending"
         });
+        if (review.report_file) setReportFile(review.report_file);
+        if (review.corrected_files) setCorrectedFiles(review.corrected_files);
       }
 
     } catch (error) {
@@ -119,6 +126,7 @@ export default function TechnicalReviewPage() {
         consultant_id: consultant.id,
         ...reviewData,
         report_file: reportFile,
+        corrected_files: correctedFiles,
         review_date: new Date().toISOString(),
         consultant_fee: 500 // Fixed fee or calculate based on project
       };
@@ -159,7 +167,8 @@ export default function TechnicalReviewPage() {
       const reviewPayload = {
         ...reviewData,
         approval_status: "approved",
-        report_file: reportFile
+        report_file: reportFile,
+        corrected_files: correctedFiles
       };
 
       if (existingReview) {
@@ -191,6 +200,19 @@ export default function TechnicalReviewPage() {
       alert("حدث خطأ أثناء الاعتماد");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDownloadReport = async () => {
+    if (!project || !consultant) return;
+    setDownloadingReport(true);
+    try {
+      await downloadTechnicalReport({ project, consultant, review: existingReview || reviewData });
+    } catch (err) {
+      console.error("Download failed:", err);
+      alert("فشل تحميل التقرير");
+    } finally {
+      setDownloadingReport(false);
     }
   };
 
@@ -251,6 +273,30 @@ export default function TechnicalReviewPage() {
             technicalReview={existingReview}
             consultant={consultant}
           />
+        )}
+
+        {/* Download Final Report Button — available once review exists */}
+        {existingReview && (
+          <div className="flex justify-end">
+            <Button
+              onClick={handleDownloadReport}
+              disabled={downloadingReport}
+              variant="outline"
+              className="border-[#C9A66B] text-[#6B5D4F] hover:bg-[#C9A66B]/10"
+            >
+              {downloadingReport ? (
+                <Loader2 className="w-4 h-4 animate-spin ml-2" />
+              ) : (
+                <FileDown className="w-4 h-4 ml-2" />
+              )}
+              تحميل التقرير النهائي
+            </Button>
+          </div>
+        )}
+
+        {/* Consultant Notes Panel — structured readable display of saved notes */}
+        {existingReview && (
+          <ConsultantNotesPanel review={existingReview} />
         )}
 
         {/* Review Form */}
@@ -348,6 +394,13 @@ export default function TechnicalReviewPage() {
                 </a>
               )}
             </div>
+
+            {/* Corrected Files Attachments */}
+            <CorrectedFilesUploader
+              correctedFiles={correctedFiles}
+              onChange={setCorrectedFiles}
+              disabled={existingReview?.approval_status === "approved"}
+            />
 
             {/* Action Buttons */}
             {existingReview?.approval_status !== "approved" && (
