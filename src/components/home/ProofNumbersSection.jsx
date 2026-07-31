@@ -34,7 +34,7 @@ export default function ProofNumbersSection() {
           <h2 className="text-2xl sm:text-3xl font-bold text-[#4A3F35] mb-2">
             أرقام تعكس الثقة
           </h2>
-          <p className="text-slate-500 text-sm">رؤية مستقبلية لأهداف النمو المتوقعة — وليست أرقاماً حقيقية حالية.</p>
+          <p className="text-slate-500 text-sm">تعكس هذه الأرقام رؤيتنا المستقبلية للنمو والتوسع.</p>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
