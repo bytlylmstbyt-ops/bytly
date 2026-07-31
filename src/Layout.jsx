@@ -3,13 +3,14 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "./utils";
 import { base44 } from "@/api/base44Client";
 import BytlyAdvisorChat from "@/components/chatbot/BytlyAdvisorChat";
+import DeleteAccountDialog from "@/components/user/DeleteAccountDialog";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { LanguageProvider, useLanguage } from "@/components/i18n/LanguageContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { 
   Search, MessageSquare, User, Menu, X, 
   LogOut, Briefcase, Settings, Wallet, Bell, 
-  PlusCircle, ChevronDown, Instagram, Facebook, Mail, Phone, MessagesSquare, Scale, Linkedin, Twitter, Bot, Building2, Megaphone, Star, ShieldCheck
+  PlusCircle, ChevronDown, Instagram, Facebook, Mail, Phone, MessagesSquare, Scale, Linkedin, Twitter, Bot, Building2, Megaphone, Star, ShieldCheck, Trash2
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import BottomNav from "@/components/mobile/BottomNav";
@@ -29,6 +30,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 function LayoutContent({ children, currentPageName }) {
   const [user, setUser] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { t, isRTL } = useLanguage();
 
@@ -302,6 +304,10 @@ function LayoutContent({ children, currentPageName }) {
                           {t('nav.settings')}
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem className="text-red-600" onClick={() => setShowDeleteDialog(true)}>
+                        <Trash2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+                        حذف الحساب
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                         <LogOut className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
@@ -410,6 +416,9 @@ function LayoutContent({ children, currentPageName }) {
 
       {/* Bytly AI Advisor */}
       <BytlyAdvisorChat />
+
+      {/* Account Deletion Dialog */}
+      <DeleteAccountDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog} />
 
       {/* Footer */}
       <footer className="bg-[#4A3F35] text-white hidden md:block">
