@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Users, Briefcase, Clock, TrendingUp, Calendar } from "lucide-react";
+import { Users, Briefcase, Lock, Headset, Calendar } from "lucide-react";
 
 export default function ProofNumbersSection() {
   const [counts, setCounts] = useState({ engineers: 0, portfolios: 0 });
@@ -18,11 +18,12 @@ export default function ProofNumbersSection() {
     })();
   }, []);
 
-  // ثلاثة أرقام إثبات على الأقل + عنصر مؤرخ واحد
+  // أرقام الإثبات وإشارات الثقة مدموجة في موضع واحد لتقليل التكرار
   const numbers = [
     { icon: Users, value: "1,000+", label: "مهندس واستشاري معتمد" },
-    { icon: Briefcase, value: "5,000+", label: "مشروع تمت إدارته عبر المنصة" },
-    { icon: Clock, value: "40%", label: "متوسط توفير الوقت في التنسيق" },
+    { icon: Briefcase, value: "5,000+", label: "مشروع مكتمل عبر المنصة" },
+    { icon: Lock, value: "100%", label: "دفع آمن ومشفّر بالضمان" },
+    { icon: Headset, value: "24/7", label: "دعم فني متواصل" },
   ];
 
   return (
@@ -36,7 +37,7 @@ export default function ProofNumbersSection() {
           <p className="text-slate-500 text-sm">مؤشرات حقيقية عن حجم النشاط على المنصة.</p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
           {numbers.map((n, i) => (
             <div
               key={i}

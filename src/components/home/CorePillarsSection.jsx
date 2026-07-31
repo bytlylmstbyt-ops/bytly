@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   Shield, Users, BarChart3, ShoppingBag,
-  CheckCircle, Star, Lock, Zap
+  CheckCircle, Star
 } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 
@@ -122,37 +122,6 @@ export default function CorePillarsSection() {
           ))}
         </div>
 
-        {/* Trust Indicators */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mt-16 grid md:grid-cols-3 gap-6"
-        >
-          <Card className="border-2 border-green-200 bg-green-50/50">
-            <CardContent className="pt-6 text-center">
-              <Lock className="w-8 h-8 text-green-600 mx-auto mb-3" />
-              <p className="text-2xl font-bold text-green-900 mb-1">100%</p>
-              <p className="text-sm text-slate-600">{t('corePillars.trust.securePayment')}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 border-blue-200 bg-blue-50/50">
-            <CardContent className="pt-6 text-center">
-              <CheckCircle className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-              <p className="text-2xl font-bold text-blue-900 mb-1">5000+</p>
-              <p className="text-sm text-slate-600">{t('corePillars.trust.completedProjects')}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 border-purple-200 bg-purple-50/50">
-            <CardContent className="pt-6 text-center">
-              <Zap className="w-8 h-8 text-purple-600 mx-auto mb-3" />
-              <p className="text-2xl font-bold text-purple-900 mb-1">24/7</p>
-              <p className="text-sm text-slate-600">{t('corePillars.trust.support')}</p>
-            </CardContent>
-          </Card>
-        </motion.div>
       </div>
     </section>
   );
