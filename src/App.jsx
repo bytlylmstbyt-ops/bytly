@@ -14,6 +14,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import PublicLanding from './pages/PublicLanding';
 
 // ── Lazy-loaded explicit routes ──────────────────────────────────────────────
 const TechnicalResources       = React.lazy(() => import('./pages/TechnicalResources'));
@@ -86,9 +87,16 @@ function PageSpinner() {
   );
 }
 
-const { Pages, Layout, mainPage } = pagesConfig;
-const mainPageKey = mainPage ?? Object.keys(Pages)[0];
-const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
+// Public landing ("/"): visitors see the marketing landing;
+// signed-in users are redirected to the main Home page.
+function PublicHomeRoute() {
+  const { isAuthenticated, isLoadingPublicSettings } = useAuth();
+  if (isLoadingPublicSettings) return <PageSpinner />;
+  if (isAuthenticated) return <Navigate to="/Home" replace />;
+  return <PublicLanding />;
+}
+
+const { Pages, Layout } = pagesConfig;
 
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
@@ -112,7 +120,6 @@ const AuthenticatedApp = () => {
   }
 
   const publicPages = [
-    'Home',
     'ContactUs',
     'Terms',
     'Privacy',
@@ -137,12 +144,8 @@ const AuthenticatedApp = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
 
-      {/* Main landing page — public, no auth required */}
-      <Route path="/" element={
-        <LayoutWrapper currentPageName={mainPageKey}>
-          <MainPage />
-        </LayoutWrapper>
-      } />
+      {/* Public landing page — visitors see the marketing landing; signed-in users go to Home */}
+      <Route path="/" element={<PublicHomeRoute />} />
 
       {/* ── Public explicit lazy routes (marketing / legal / registration only) ── */}
       <Route path="/About"                      element={lazyRoute(About, "About")} />
