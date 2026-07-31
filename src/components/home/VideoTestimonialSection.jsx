@@ -1,12 +1,31 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Play, Quote } from "lucide-react";
+import { Play, Pause, Quote } from "lucide-react";
 
 /**
  * VideoTestimonialSection — hosts a short client video testimonial.
- * The poster/play UI is ready to be wired to a real recorded video URL.
+ * The player is functional: clicking the poster/play button starts the video.
+ * Replace VIDEO_SRC / POSTER with the real recorded testimonial when ready.
  */
+const VIDEO_SRC =
+  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
+const POSTER =
+  "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=900";
+
 export default function VideoTestimonialSection() {
+  const videoRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const togglePlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (isPlaying) {
+      v.pause();
+    } else {
+      v.play().catch(() => {});
+    }
+  };
+
   return (
     <section className="py-20 bg-gradient-to-br from-slate-50 via-white to-amber-50/30">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -29,20 +48,53 @@ export default function VideoTestimonialSection() {
           viewport={{ once: true }}
           className="grid md:grid-cols-5 gap-0 items-stretch bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden"
         >
-          {/* Video frame */}
-          <div className="md:col-span-3 relative aspect-video bg-[#1a1a2e] group cursor-pointer">
-            <img
-              src="https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=900"
-              alt="شهادة عميل بالفيديو"
-              loading="lazy"
-              className="w-full h-full object-cover opacity-80"
+          {/* Video player */}
+          <div className="md:col-span-3 relative aspect-video bg-black group">
+            <video
+              ref={videoRef}
+              src={VIDEO_SRC}
+              poster={POSTER}
+              playsInline
+              preload="none"
+              className="w-full h-full object-cover"
+              onClick={togglePlay}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onEnded={() => setIsPlaying(false)}
             />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                <Play className="w-7 h-7 text-[#6B5D4F]" style={{ marginRight: -2 }} fill="currentColor" />
-              </div>
-            </div>
-            <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/60 text-white text-xs flex items-center gap-1.5">
+
+            {/* Play overlay (poster state) */}
+            {!isPlaying && (
+              <button
+                type="button"
+                onClick={togglePlay}
+                aria-label="تشغيل شهادة الفيديو"
+                className="absolute inset-0 flex items-center justify-center bg-black/20"
+              >
+                <span className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                  <Play
+                    className="w-7 h-7 text-[#6B5D4F]"
+                    style={{ marginRight: -2 }}
+                    fill="currentColor"
+                  />
+                </span>
+              </button>
+            )}
+
+            {/* Pause control (playing state) */}
+            {isPlaying && (
+              <button
+                type="button"
+                onClick={togglePlay}
+                aria-label="إيقاف الفيديو"
+                className="absolute bottom-3 right-3 w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors"
+              >
+                <Pause className="w-4 h-4" fill="currentColor" />
+              </button>
+            )}
+
+            {/* Tag */}
+            <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded-full bg-black/60 text-white text-xs flex items-center gap-1.5 pointer-events-none">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
               فيديو • 1:24
             </div>
@@ -64,7 +116,7 @@ export default function VideoTestimonialSection() {
               </div>
             </div>
             <p className="text-[11px] text-slate-400 mt-4">
-              * استبدل هذا الفيديو بشهادة مسجّلة فعلية من أحد عملائك.
+              * استبدل مصدر الفيديو بشهادة مسجّلة فعلية من أحد عملائك.
             </p>
           </div>
         </motion.div>
