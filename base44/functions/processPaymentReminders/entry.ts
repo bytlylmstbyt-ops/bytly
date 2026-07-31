@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 Deno.serve(async (req) => {
   try {
@@ -110,8 +112,8 @@ Deno.serve(async (req) => {
             <div style="background:#f8f9fa; padding:24px; border-radius:0 0 12px 12px;">
               <h2 style="color: ${stageColor};">${messageType}</h2>
               <div style="background:white; border-right:4px solid ${stageColor}; padding:16px; border-radius:8px; margin:16px 0;">
-                <p><strong>رقم الفاتورة:</strong> ${invoice.invoice_number}</p>
-                ${project ? `<p><strong>المشروع:</strong> ${project.title}</p>` : ''}
+                <p><strong>رقم الفاتورة:</strong> ${escapeHtml(invoice.invoice_number)}</p>
+                ${project ? `<p><strong>المشروع:</strong> ${escapeHtml(project.title)}</p>` : ''}
                 <p><strong>المبلغ المستحق:</strong> ${invoice.total_amount?.toLocaleString() || invoice.amount?.toLocaleString()} ريال سعودي</p>
                 <p><strong>تاريخ الاستحقاق:</strong> ${new Date(invoice.due_date).toLocaleDateString('ar-SA')}</p>
               </div>

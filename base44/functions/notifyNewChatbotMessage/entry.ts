@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 Deno.serve(async (req) => {
   try {
@@ -45,15 +47,15 @@ Deno.serve(async (req) => {
             <h2 style="color: #6B5D4F; margin-top: 0; font-size: 22px;">استفسار جديد عبر الشات بوت</h2>
             
             <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-right: 4px solid #C9A66B;">
-              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">نوع المستخدم:</strong> ${conversation.user_type || 'زائر'}</p>
-              ${conversation.user_email ? `<p style="margin: 5px 0;"><strong style="color: #6B5D4F;">البريد:</strong> ${conversation.user_email}</p>` : ''}
-              ${conversation.project_id ? `<p style="margin: 5px 0;"><strong style="color: #6B5D4F;">المشروع:</strong> ${conversation.project_id}</p>` : ''}
+              <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">نوع المستخدم:</strong> ${escapeHtml(conversation.user_type || 'زائر')}</p>
+              ${conversation.user_email ? `<p style="margin: 5px 0;"><strong style="color: #6B5D4F;">البريد:</strong> ${escapeHtml(conversation.user_email)}</p>` : ''}
+              ${conversation.project_id ? `<p style="margin: 5px 0;"><strong style="color: #6B5D4F;">المشروع:</strong> ${escapeHtml(conversation.project_id)}</p>` : ''}
               <p style="margin: 5px 0;"><strong style="color: #6B5D4F;">الحالة:</strong> <span style="background: ${conversation.status === 'escalated' ? '#ffc107' : '#17a2b8'}; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px;">${conversation.status === 'active' ? 'نشط' : conversation.status === 'escalated' ? 'يحتاج متابعة' : 'مغلق'}</span></p>
             </div>
 
             <div style="background: #e8f4f8; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <p style="margin: 0 0 10px 0; color: #6B5D4F; font-weight: bold;">محتوى الرسالة:</p>
-              <p style="margin: 0; color: #555; font-style: italic;">"${messagePreview}${messagePreview.length >= 200 ? '...' : ''}"</p>
+              <p style="margin: 0; color: #555; font-style: italic;">"${escapeHtml(messagePreview)}${messagePreview.length >= 200 ? '...' : ''}"</p>
             </div>
 
             ${conversation.suggested_engineers?.length > 0 ? `

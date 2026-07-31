@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 Deno.serve(async (req) => {
   try {
@@ -46,11 +48,11 @@ Deno.serve(async (req) => {
         <div dir="rtl" style="font-family: Arial; padding: 20px; background: #f9f9f9;">
           <h2 style="color: #4A3F35;">تحديث تقدم البناء</h2>
           <p>مرحباً،</p>
-          <p>تم تحديث حالة مشروعك <strong>${progress.project_title || ''}</strong></p>
+          <p>تم تحديث حالة مشروعك <strong>${escapeHtml(progress.project_title || '')}</strong></p>
           <div style="background: #fff; border-right: 4px solid #C9A66B; padding: 15px; margin: 15px 0; border-radius: 8px;">
-            <p><strong>المرحلة الحالية:</strong> ${stageLabel}</p>
+            <p><strong>المرحلة الحالية:</strong> ${escapeHtml(stageLabel)}</p>
             <p><strong>نسبة الإنجاز:</strong> ${progress.overall_progress || 0}%</p>
-            ${progress.last_update_note ? `<p><strong>ملاحظات المهندس:</strong> ${progress.last_update_note}</p>` : ''}
+            ${progress.last_update_note ? `<p><strong>ملاحظات المهندس:</strong> ${escapeHtml(progress.last_update_note)}</p>` : ''}
           </div>
           <p>يمكنك متابعة التفاصيل عبر لوحة التحكم.</p>
         </div>

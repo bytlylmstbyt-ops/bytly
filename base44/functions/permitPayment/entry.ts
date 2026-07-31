@@ -5,7 +5,9 @@
  *   distribute       → يوزع الأموال بعد نجاح الدفع (webhook أو manual)
  *   status           → يجلب حالة الدفع
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 import Stripe from 'npm:stripe@14.21.0';
 
 Deno.serve(async (req) => {
@@ -205,8 +207,8 @@ Deno.serve(async (req) => {
         body: `
           <div dir="rtl" style="font-family: Arial; max-width: 600px; margin: auto;">
             <h2 style="color: #6B5D4F;">تأكيد استلام الدفعة</h2>
-            <p>عزيزي ${permit.client_name}،</p>
-            <p>تم استلام دفعتك بنجاح لطلب رخصة البناء في <strong>${permit.city}</strong>.</p>
+            <p>عزيزي ${escapeHtml(permit.client_name)}،</p>
+            <p>تم استلام دفعتك بنجاح لطلب رخصة البناء في <strong>${escapeHtml(permit.city)}</strong>.</p>
             <table style="width:100%; border-collapse:collapse; margin: 16px 0;">
               <tr style="background:#f8f4ef;">
                 <td style="padding:8px; border:1px solid #e0d5c5;">رسوم البلدية</td>
@@ -226,7 +228,7 @@ Deno.serve(async (req) => {
               </tr>
             </table>
             <p>سنرسل طلبك الآن إلى نظام بلدي وسنُعلمك بأي تحديث فور صدوره.</p>
-            <p style="color:#888; font-size:12px;">رقم المرجع: ${session.payment_intent}</p>
+            <p style="color:#888; font-size:12px;">رقم المرجع: ${escapeHtml(session.payment_intent)}</p>
           </div>
         `,
       });

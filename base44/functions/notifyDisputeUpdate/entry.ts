@@ -1,4 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.41';
+
+function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 Deno.serve(async (req) => {
   try {
@@ -105,9 +107,9 @@ Deno.serve(async (req) => {
               </div>
               
               <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                <h2 style="color: #6B5D4F; margin-top: 0; font-size: 22px;">${notificationTitle}</h2>
+                <h2 style="color: #6B5D4F; margin-top: 0; font-size: 22px;">${escapeHtml(notificationTitle)}</h2>
                 
-                <p style="color: #555; font-size: 16px; line-height: 1.8;">${notificationMessage}</p>
+                <p style="color: #555; font-size: 16px; line-height: 1.8;">${escapeHtml(notificationMessage)}</p>
 
                 <div style="text-align: center; margin: 30px 0;">
                   <a href="${Deno.env.get('BASE44_APP_URL')}/dispute-details?id=${dispute.id}" 
