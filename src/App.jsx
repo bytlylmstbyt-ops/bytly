@@ -113,11 +113,6 @@ const AuthenticatedApp = () => {
 
   const publicPages = [
     'Home',
-    'Engineers',
-    'EngineerProfile',
-    'Gallery',
-    'Projects',
-    'ConsultingFirms',
     'ContactUs',
     'Terms',
     'Privacy',
@@ -142,25 +137,18 @@ const AuthenticatedApp = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
 
-      {/* ── Public explicit lazy routes ─────────────────────────────── */}
-      <Route path="/CostEstimator"              element={lazyRoute(CostEstimator, "CostEstimator")} />
-      <Route path="/ProjectStages"             element={lazyRoute(ProjectStages, "ProjectStages")} />
-      <Route path="/ConstructionTracker"        element={lazyRoute(ConstructionTracker, "ConstructionTracker")} />
-      <Route path="/TechnicalResources"         element={lazyRoute(TechnicalResources, "TechnicalResources")} />
-      <Route path="/EngineerMatcher"            element={lazyRoute(EngineerMatcher, "EngineerMatcher")} />
-      <Route path="/MarketEntities"             element={lazyRoute(MarketEntities, "MarketEntities")} />
-      <Route path="/AIEngineers"                element={lazyRoute(AIEngineers, "AIEngineers")} />
-      <Route path="/AIInteriorDesigner"         element={lazyRoute(AIInteriorDesigner, "AIInteriorDesigner")} />
-      <Route path="/AIArchitect"                element={lazyRoute(AIArchitect, "AIArchitect")} />
-      <Route path="/AIBudgetEstimator"          element={lazyRoute(AIBudgetEstimator, "AIBudgetEstimator")} />
-      <Route path="/AIRenovation"               element={lazyRoute(AIRenovation, "AIRenovation")} />
-      <Route path="/AIMaterialAdvisor"          element={lazyRoute(AIMaterialAdvisor, "AIMaterialAdvisor")} />
-      <Route path="/AIRecommender"              element={lazyRoute(AIRecommender, "AIRecommender")} />
+      {/* Main landing page — public, no auth required */}
+      <Route path="/" element={
+        <LayoutWrapper currentPageName={mainPageKey}>
+          <MainPage />
+        </LayoutWrapper>
+      } />
+
+      {/* ── Public explicit lazy routes (marketing / legal / registration only) ── */}
       <Route path="/About"                      element={lazyRoute(About, "About")} />
       <Route path="/RegisterContractor"         element={lazyRoute(RegisterContractor, "RegisterContractor")} />
       <Route path="/RegisterSupplier"           element={lazyRoute(RegisterSupplier, "RegisterSupplier")} />
       <Route path="/AdvertiseWithUs"            element={lazyRoute(AdvertiseWithUs, "AdvertiseWithUs")} />
-      <Route path="/AdvertiserPortal"           element={lazyRoute(AdvertiserPortal, "AdvertiserPortal")} />
       <Route path="/landing"                    element={lazyRoute(React.lazy(() => import('./pages/Landing')), "Landing")} />
       <Route path="/FAQ"                         element={lazyRoute(React.lazy(() => import('./pages/FAQ')), "FAQ")} />
       <Route path="/Solutions"                   element={lazyRoute(Solutions, "Solutions")} />
@@ -187,13 +175,6 @@ const AuthenticatedApp = () => {
 
       {/* ── All other routes — protected by auth middleware ─────────── */}
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-        {/* Main page (from pagesConfig) */}
-        <Route path="/" element={
-          <LayoutWrapper currentPageName={mainPageKey}>
-            <MainPage />
-          </LayoutWrapper>
-        } />
-
         {/* pagesConfig dynamic routes */}
         {Object.entries(Pages)
           .filter(([path]) => !publicPages.includes(path))
@@ -254,6 +235,21 @@ const AuthenticatedApp = () => {
       <Route path="/RevenueDashboard"           element={lazyRoute(RevenueDashboard, "RevenueDashboard")} />
         <Route path="/ProviderWallet"             element={lazyRoute(ProviderWallet, "ProviderWallet")} />
         <Route path="/SentEmailsLog"               element={lazyRoute(React.lazy(() => import('./pages/SentEmailsLog')), "SentEmailsLog")} />
+        {/* Bytly sections & AI tools — auth required */}
+        <Route path="/CostEstimator"              element={lazyRoute(CostEstimator, "CostEstimator")} />
+        <Route path="/ProjectStages"              element={lazyRoute(ProjectStages, "ProjectStages")} />
+        <Route path="/ConstructionTracker"        element={lazyRoute(ConstructionTracker, "ConstructionTracker")} />
+        <Route path="/TechnicalResources"         element={lazyRoute(TechnicalResources, "TechnicalResources")} />
+        <Route path="/EngineerMatcher"            element={lazyRoute(EngineerMatcher, "EngineerMatcher")} />
+        <Route path="/MarketEntities"             element={lazyRoute(MarketEntities, "MarketEntities")} />
+        <Route path="/AIEngineers"                element={lazyRoute(AIEngineers, "AIEngineers")} />
+        <Route path="/AIInteriorDesigner"         element={lazyRoute(AIInteriorDesigner, "AIInteriorDesigner")} />
+        <Route path="/AIArchitect"                element={lazyRoute(AIArchitect, "AIArchitect")} />
+        <Route path="/AIBudgetEstimator"          element={lazyRoute(AIBudgetEstimator, "AIBudgetEstimator")} />
+        <Route path="/AIRenovation"               element={lazyRoute(AIRenovation, "AIRenovation")} />
+        <Route path="/AIMaterialAdvisor"          element={lazyRoute(AIMaterialAdvisor, "AIMaterialAdvisor")} />
+        <Route path="/AIRecommender"              element={lazyRoute(AIRecommender, "AIRecommender")} />
+        <Route path="/AdvertiserPortal"           element={lazyRoute(AdvertiserPortal, "AdvertiserPortal")} />
         <Route path="*" element={<NotFoundError />} />
       </Route>
     </Routes>

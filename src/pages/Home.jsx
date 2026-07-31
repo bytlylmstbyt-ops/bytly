@@ -47,9 +47,9 @@ export default function Home() {
   const [showSurvey, setShowSurvey] = useState(false);
 
   useEffect(() => {
-    loadData();
+    if (isAuthenticated) loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isAuthenticated]);
 
   // Decouple welcome-check from auth state — runs once when auth resolves.
   useEffect(() => {
@@ -354,10 +354,11 @@ export default function Home() {
       {/* Specialties Section */}
       <SpecialtiesSection />
 
-      {/* Top-Rated Engineers Leaderboard */}
-      <TopRatedEngineers />
+      {/* Top-Rated Engineers Leaderboard — auth only */}
+      {isAuthenticated && <TopRatedEngineers />}
 
-      {/* Portfolio Gallery */}
+      {/* Portfolio Gallery — auth only */}
+      {isAuthenticated && (
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -424,6 +425,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Core Pillars */}
       <CorePillarsSection />
