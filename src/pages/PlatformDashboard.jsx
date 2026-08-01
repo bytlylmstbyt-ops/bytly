@@ -9,10 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import {
   TrendingUp, TrendingDown, Users, Briefcase, DollarSign,
   Activity, Star, AlertCircle, CheckCircle, Clock, RefreshCw,
-  BarChart2, Target, Layers, ArrowUpRight, ArrowDownRight, Cpu, ShieldCheck, Wrench, Scale
+  BarChart2, Target, Layers, ArrowUpRight, ArrowDownRight, Cpu, ShieldCheck, Wrench, Scale,
+  ArrowUp, Download
 } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import moment from "moment";
+import { useScrollDepthTracking } from "@/hooks/useScrollDepthTracking";
+import DashboardSectionNav from "@/components/dashboard/DashboardSectionNav";
 
 const formatSAR = (n) => new Intl.NumberFormat("ar-SA", { style: "currency", currency: "SAR", maximumFractionDigits: 0 }).format(n || 0);
 const fmt = (n, suffix = "") => `${(n || 0).toLocaleString("ar-SA")}${suffix ? " " + suffix : ""}`;
@@ -66,6 +69,15 @@ const STATUS_COLORS = {
   pending_client_approval: "#8B5CF6",
 };
 
+const DASHBOARD_SECTIONS = [
+  { id: "live", label: "مباشر" },
+  { id: "kpis", label: "المؤشرات" },
+  { id: "charts", label: "الرسوم" },
+  { id: "recent", label: "المشاريع" },
+  { id: "activity", label: "النشاط" },
+  { id: "tools", label: "الأدوات" },
+];
+
 export default function PlatformDashboard() {
   const [projects, setProjects] = useState([]);
   const [engineers, setEngineers] = useState([]);
@@ -74,6 +86,15 @@ export default function PlatformDashboard() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
+  const [showTop, setShowTop] = useState(false);
+
+  useScrollDepthTracking('platform_dashboard');
+
+  useEffect(() => {
+    const onScroll = () => setShowTop(window.scrollY > 600);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   const loadData = async () => {
     setLoading(true);
@@ -203,6 +224,14 @@ export default function PlatformDashboard() {
               آخر تحديث: {moment(lastRefresh).format("HH:mm:ss")}
             </span>
             <button
+              onClick={() => window.print()}
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 text-slate-600 text-xs rounded-lg hover:bg-slate-50 transition-colors"
+              title="تصدير / طباعة التقرير"
+            >
+              <Download className="w-3.5 h-3.5" />
+              تصدير
+            </button>
+            <button
               onClick={loadData}
               disabled={loading}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-[#C9A66B] text-white text-xs rounded-lg hover:bg-[#b8955a] disabled:opacity-50 transition-colors"
@@ -213,9 +242,14 @@ export default function PlatformDashboard() {
           </div>
         </div>
 
-        {/* ── الزوار المباشرون الآن ── */}
-        <LiveVisitorsPanel />
+        <DashboardSectionNav sections={DASHBOARD_SECTIONS} />
 
+        {/* ── الزوار المباشرون الآن ── */}
+        <div id="live" data-section="live">
+          <LiveVisitorsPanel />
+        </div>
+
+        <section id="kpis" data-section="kpis" className="space-y-6">
         {/* KPIs Row 1 – المشاريع والإيرادات */}
         <div>
           <SectionTitle>المشاريع والإيرادات</SectionTitle>
@@ -247,9 +281,10 @@ export default function PlatformDashboard() {
             <KpiCard title="مشاريع بنزاعات" value={fmt(kpis.statusCounts?.disputed || 0)} sub="تحتاج تدخل" icon={AlertCircle} color="border-red-400" loading={loading} />
           </div>
         </div>
+        </section>
 
         {/* Charts Row */}
-        <div className="grid md:grid-cols-3 gap-5">
+        <div id="charts" data-section="charts" className="grid md:grid-cols-3 gap-5">
           {/* Area Chart – الإيرادات والمشاريع */}
           <Card className="md:col-span-2">
             <CardHeader className="pb-2">
@@ -319,6 +354,7 @@ export default function PlatformDashboard() {
         </div>
 
         {/* آخر المشاريع */}
+        <div id="recent" data-section="recent">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold text-[#4A3F35]">آخر المشاريع المضافة</CardTitle>
@@ -349,15 +385,30 @@ export default function PlatformDashboard() {
             }
           </CardContent>
         </Card>
+        </div>
 
         {/* ── المستخدمون النشطون يومياً من Google Analytics ── */}
+        <div id="activity" data-section="activity">
         <DailyActiveUsersPanel />
+        </div>
 
         {/* ── قسم الربح الصافي المتوقع لكل مشروع ── */}
+        <section id="tools" data-section="tools" className="space-y-6">
         <ProjectProfitPanel projects={projects} loading={loading} />
 
         {/* ── حاسبة أتعاب بيتلي والاستشاري ── */}
         <PlatformFeeCalculator />
+        </section>
+
+        {showTop && (
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="fixed bottom-6 left-6 z-40 w-11 h-11 rounded-full bg-[#4A3F35] text-white shadow-lg flex items-center justify-center hover:bg-[#C9A66B] transition-colors"
+            aria-label="العودة للأعلى"
+          >
+            <ArrowUp className="w-5 h-5" />
+          </button>
+        )}
 
         <p className="text-center text-xs text-slate-300 pb-4">بيانات حية من قاعدة بيانات بيتلي — {moment(lastRefresh).format("DD/MM/YYYY HH:mm")}</p>
       </div>
