@@ -136,7 +136,7 @@ export default function CertificationPage() {
 
             <!-- العنوان -->
             <h1 style="text-align:center;font-size:31px;color:#4A3F35;margin:0 0 4px;font-weight:bold;">شهادة اعتماد ومطابقة الجودة</h1>
-            <p style="text-align:center;font-size:14px;color:#C9A66B;margin:0 0 12px;letter-spacing:0.5px;">منصة بيتلي للخدمات والاستشارات الهندسية</p>
+            <p style="text-align:center;font-size:15px;color:#8C7256;margin:0 0 14px;font-weight:500;word-spacing:1px;">منصة بيتلي للخدمات والاستشارات الهندسية</p>
 
             <!-- فاصل ذهبي بماسة -->
             <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 16px;">
