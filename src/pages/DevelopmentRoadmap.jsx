@@ -1,10 +1,10 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  CheckCircle, Clock, AlertCircle, Sparkles, 
-  Users, ShoppingBag, Wallet, DollarSign, 
-  Bell, BarChart3, Zap
+import {
+  CheckCircle, Clock, Sparkles,
+  Users, ShoppingBag, DollarSign,
+  Bell, BarChart3, FileSignature, Boxes, Bot, Megaphone, ShieldCheck
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -15,117 +15,139 @@ export default function DevelopmentRoadmap() {
       feature: "زر انضمام موحد",
       details: 'تحويل "انضم كمهندس" إلى "انضم لـ بيتلي" بفتح قائمة الخيارات.',
       status: "completed",
-      icon: Users,
-      color: "green"
+      icon: Users
     },
     {
       section: "أنواع الحسابات",
       feature: "تعدد الأدوار",
-      details: "(مستثمر/مطور، صاحب منزل، مهندس مستقل، شركة استشارية، مستشار قانوني).",
+      details: "(عميل، مهندس مستقل، شركة استشارية، مقاول، مورد، مسّاح، مستشار قانوني، مستثمر).",
       status: "completed",
-      icon: Users,
-      color: "green"
+      icon: Users
     },
     {
       section: "سوق المشاريع",
-      feature: "المشاريع العامة والمباشرة",
-      details: "نظام عطاءات (Bidding) + نظام توظيف مباشر من الـ Portfolio.",
-      status: "in_progress",
-      icon: ShoppingBag,
-      color: "yellow"
+      feature: "العطاءات والتوظيف المباشر",
+      details: "نظام عطاءات (Bidding) + نظام توظيف مباشر من الـ Portfolio مع مقارنة العروض.",
+      status: "completed",
+      icon: ShoppingBag
     },
     {
       section: "المتجر الرقمي",
       feature: "التصاميم الجاهزة",
-      details: 'ميزة "شراء وتحميل فوراً" للمخططات الجاهزة مع دفع آلي.',
-      status: "new",
-      icon: Sparkles,
-      color: "blue"
+      details: 'ميزة "شراء وتحميل فوراً" للمخططات الجاهزة مع دفع آلي وعمولة 25%.',
+      status: "completed",
+      icon: ShoppingBag
     },
     {
-      section: "المسارات",
-      feature: "مسار (A) الإنشائي",
-      details: "ربط إلزامي مع الشركة الاستشارية للتعميد قبل تحويل المال.",
-      status: "in_progress",
-      icon: AlertCircle,
-      color: "yellow"
+      section: "المسارات الإنشائية",
+      feature: "المراجعة الفنية المعتمدة",
+      details: "ربط إلزامي مع المستشار الفني وكيان TechnicalReview للتعميد قبل تحرير الدفعات.",
+      status: "completed",
+      icon: ShieldCheck
     },
     {
       section: "النظام المالي",
-      feature: "التقسيم الآلي (Split)",
-      details: "خصم نسبة المنصة (15-25%) آلياً عند اعتماد كل مرحلة.",
-      status: "needs_programming",
-      icon: DollarSign,
-      color: "orange"
+      feature: "الضمان والعمولة الآلية",
+      details: "نظام Escrow مع خصم عمولة المنصة (15%) آلياً عند اعتماد كل مرحلة.",
+      status: "completed",
+      icon: DollarSign
     },
     {
-      section: "التنبيهات",
-      feature: "إشعارات Push",
-      details: "تنبيهات لحظية للجوال عند (التعميد، طلب تعديل، رسالة جديدة).",
-      status: "in_progress",
-      icon: Bell,
-      color: "yellow"
+      section: "العقود الإلكترونية",
+      feature: "التوقيع والأرشفة",
+      details: "عقود إلكترونية موقعة مع أرشفة في Google Drive وربط بتقويم جوجل.",
+      status: "completed",
+      icon: FileSignature
     },
     {
       section: "لوحة المستثمر",
       feature: "إدارة المحفظة",
-      details: "شاشة واحدة لمتابعة جميع المشاريع ونسب إنجازها (Portfolio Tracker).",
+      details: "شاشة واحدة لمتابعة جميع المشاريع بنظام الإشارات الضوئية وإدارة الدفعات.",
+      status: "completed",
+      icon: BarChart3
+    },
+    {
+      section: "تكامل BIM",
+      feature: "نماذج Autodesk",
+      details: "تكامل مع Autodesk Platform Services لاستيراد ومزامنة نماذج BIM360.",
+      status: "in_progress",
+      icon: Boxes
+    },
+    {
+      section: "الذكاء الاصطناعي",
+      feature: "مساعد بيتلي الذكي",
+      details: "وكيل ذكي لتحليل المخاطر، اقتراح المهندسين، وتلخيص المشاريع.",
+      status: "in_progress",
+      icon: Bot
+    },
+    {
+      section: "التنبيهات",
+      feature: "الإشعارات اللحظية",
+      details: "تنبيهات داخل التطبيق وبريدية عند (التعميد، طلب تعديل، رسالة جديدة).",
+      status: "in_progress",
+      icon: Bell
+    },
+    {
+      section: "نظام الإعلانات",
+      feature: "الإعلانات الذكية",
+      details: "بوابة للمعلنين مع إعلانات سياقية وتتبع النقرات وتقارير الأداء.",
       status: "new",
-      icon: BarChart3,
-      color: "blue"
+      icon: Megaphone
     }
   ];
 
   const statusConfig = {
     completed: {
-      label: "تم التأسيس",
+      label: "مكتمل",
       icon: CheckCircle,
-      badge: "bg-green-100 text-green-700 border-green-300",
-      emoji: "✅"
+      badge: "bg-green-100 text-green-700 border-green-300"
     },
     in_progress: {
-      label: "قيد التنفيذ",
+      label: "قيد التطوير",
       icon: Clock,
-      badge: "bg-yellow-100 text-yellow-700 border-yellow-300",
-      emoji: "🔄"
-    },
-    needs_programming: {
-      label: "يتطلب برمجة",
-      icon: Zap,
-      badge: "bg-orange-100 text-orange-700 border-orange-300",
-      emoji: "🔔"
+      badge: "bg-amber-100 text-amber-700 border-amber-300"
     },
     new: {
       label: "إضافة جديدة",
       icon: Sparkles,
-      badge: "bg-blue-100 text-blue-700 border-blue-300",
-      emoji: "🆕"
+      badge: "bg-blue-100 text-blue-700 border-blue-300"
     }
   };
 
+  // ألوان أيقونات الأقسام ضمن لوحة العلامة (ذهبي/بني/كريمي)
   const getSectionColor = (section) => {
     const colors = {
-      "واجهة المستخدم": "from-purple-500 to-indigo-500",
-      "أنواع الحسابات": "from-blue-500 to-cyan-500",
-      "سوق المشاريع": "from-amber-500 to-orange-500",
-      "المتجر الرقمي": "from-green-500 to-emerald-500",
-      "المسارات": "from-rose-500 to-pink-500",
-      "النظام المالي": "from-yellow-500 to-amber-500",
-      "التنبيهات": "from-red-500 to-orange-500",
-      "لوحة المستثمر": "from-indigo-600 to-purple-600"
+      "واجهة المستخدم": "from-[#6B5D4F] to-[#A89178]",
+      "أنواع الحسابات": "from-[#4A3F35] to-[#6B5D4F]",
+      "سوق المشاريع": "from-[#A89178] to-[#C9A66B]",
+      "المتجر الرقمي": "from-[#C9A66B] to-[#E5D4B8]",
+      "المسارات الإنشائية": "from-[#8C7256] to-[#A89178]",
+      "النظام المالي": "from-[#4A3F35] to-[#8C7256]",
+      "العقود الإلكترونية": "from-[#6B5D4F] to-[#C9A66B]",
+      "لوحة المستثمر": "from-[#1a1a2e] to-[#4A3F35]",
+      "تكامل BIM": "from-[#A89178] to-[#6B5D4F]",
+      "الذكاء الاصطناعي": "from-[#8C7256] to-[#C9A66B]",
+      "التنبيهات": "from-[#C9A66B] to-[#A89178]",
+      "نظام الإعلانات": "from-[#6B5D4F] to-[#4A3F35]"
     };
-    return colors[section] || "from-slate-500 to-gray-500";
+    return colors[section] || "from-[#6B5D4F] to-[#A89178]";
   };
 
+  const completedCount = roadmapItems.filter(i => i.status === "completed").length;
+  const inProgressCount = roadmapItems.filter(i => i.status === "in_progress").length;
+  const newCount = roadmapItems.filter(i => i.status === "new").length;
+
   const stats = [
-    { label: "ميزات مكتملة", value: roadmapItems.filter(i => i.status === "completed").length, color: "text-green-600" },
-    { label: "قيد التطوير", value: roadmapItems.filter(i => i.status === "in_progress").length, color: "text-yellow-600" },
-    { label: "ميزات جديدة", value: roadmapItems.filter(i => i.status === "new").length, color: "text-blue-600" },
-    { label: "إجمالي المراحل", value: roadmapItems.length, color: "text-slate-700" }
+    { label: "إجمالي المراحل", value: roadmapItems.length, color: "text-[#4A3F35]" },
+    { label: "ميزات مكتملة", value: completedCount, color: "text-green-600" },
+    { label: "قيد التطوير", value: inProgressCount, color: "text-[#C9A66B]" },
+    { label: "إضافات جديدة", value: newCount, color: "text-blue-600" }
   ];
 
+  const completionPercent = Math.round((completedCount / roadmapItems.length) * 100);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 py-8" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-[#F5F0E8] via-white to-[#FBF8F3] py-8" dir="rtl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
@@ -134,16 +156,32 @@ export default function DevelopmentRoadmap() {
           className="mb-8"
         >
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] flex items-center justify-center shadow-md">
               <BarChart3 className="w-7 h-7 text-white" />
             </div>
             <div>
               <h1 className="text-3xl md:text-4xl font-bold gradient-text">
                 خارطة الطريق التطويرية
               </h1>
-              <p className="text-slate-600">
-                تحديثات هيكلية ونظام الربحية - منصة بيتلي
+              <p className="text-[#8C7256]">
+                تحديثات هيكلية ونظام الربحية — منصة بيتلي
               </p>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mt-4 p-4 rounded-xl bg-white border border-[#E5D4B8]">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-[#4A3F35]">نسبة الإنجاز الكلية</span>
+              <span className="text-sm font-bold text-[#6B5D4F]">{completionPercent}%</span>
+            </div>
+            <div className="h-2.5 rounded-full bg-[#F5F0E8] overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${completionPercent}%` }}
+                transition={{ delay: 0.4, duration: 0.8 }}
+                className="h-full rounded-full bg-gradient-to-l from-[#C9A66B] to-[#6B5D4F]"
+              />
             </div>
           </div>
 
@@ -156,10 +194,10 @@ export default function DevelopmentRoadmap() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + idx * 0.05 }}
               >
-                <Card className="border-0 shadow-md">
+                <Card className="border border-[#E5D4B8] shadow-sm hover:shadow-md transition-shadow">
                   <CardContent className="pt-6 text-center">
                     <p className={`text-3xl font-bold ${stat.color}`}>{stat.value}</p>
-                    <p className="text-sm text-slate-600 mt-1">{stat.label}</p>
+                    <p className="text-sm text-[#8C7256] mt-1">{stat.label}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -173,33 +211,34 @@ export default function DevelopmentRoadmap() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card className="border-0 shadow-xl">
-            <CardHeader className="bg-gradient-to-r from-slate-50 to-indigo-50 border-b">
-              <CardTitle className="text-xl">جدول التنفيذ</CardTitle>
+          <Card className="border border-[#E5D4B8] shadow-lg overflow-hidden">
+            <CardHeader className="bg-gradient-to-l from-[#FBF8F3] to-[#F5F0E8] border-b border-[#E5D4B8]">
+              <CardTitle className="text-xl text-[#4A3F35]">جدول التنفيذ</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-slate-100 border-b-2">
+                  <thead className="bg-[#FBF8F3] border-b-2 border-[#E5D4B8]">
                     <tr>
-                      <th className="px-6 py-4 text-right text-sm font-semibold text-slate-700">القسم</th>
-                      <th className="px-6 py-4 text-right text-sm font-semibold text-slate-700">الميزة / الوظيفة</th>
-                      <th className="px-6 py-4 text-right text-sm font-semibold text-slate-700">التفاصيل التقنية (للتطبيق)</th>
-                      <th className="px-6 py-4 text-center text-sm font-semibold text-slate-700">الحالة</th>
+                      <th className="px-6 py-4 text-right text-sm font-semibold text-[#4A3F35]">القسم</th>
+                      <th className="px-6 py-4 text-right text-sm font-semibold text-[#4A3F35]">الميزة / الوظيفة</th>
+                      <th className="px-6 py-4 text-right text-sm font-semibold text-[#4A3F35]">التفاصيل التقنية (للتطبيق)</th>
+                      <th className="px-6 py-4 text-center text-sm font-semibold text-[#4A3F35]">الحالة</th>
                     </tr>
                   </thead>
                   <tbody>
                     {roadmapItems.map((item, idx) => {
                       const config = statusConfig[item.status];
                       const Icon = item.icon;
+                      const StatusIcon = config.icon;
 
                       return (
                         <motion.tr
                           key={idx}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.3 + idx * 0.05 }}
-                          className="border-b hover:bg-slate-50/50 transition-colors"
+                          transition={{ delay: 0.3 + idx * 0.04 }}
+                          className="border-b border-[#F0E8D8] hover:bg-[#FBF8F3] transition-colors"
                         >
                           {/* Section */}
                           <td className="px-6 py-5">
@@ -207,18 +246,18 @@ export default function DevelopmentRoadmap() {
                               <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${getSectionColor(item.section)} flex items-center justify-center flex-shrink-0`}>
                                 <Icon className="w-5 h-5 text-white" />
                               </div>
-                              <span className="font-semibold text-slate-800">{item.section}</span>
+                              <span className="font-semibold text-[#4A3F35]">{item.section}</span>
                             </div>
                           </td>
 
                           {/* Feature */}
                           <td className="px-6 py-5">
-                            <p className="font-medium text-slate-900">{item.feature}</p>
+                            <p className="font-medium text-[#1a1a2e]">{item.feature}</p>
                           </td>
 
                           {/* Details */}
                           <td className="px-6 py-5">
-                            <p className="text-sm text-slate-600 leading-relaxed max-w-md">
+                            <p className="text-sm text-[#6B5D4F] leading-relaxed max-w-md">
                               {item.details}
                             </p>
                           </td>
@@ -227,7 +266,7 @@ export default function DevelopmentRoadmap() {
                           <td className="px-6 py-5">
                             <div className="flex justify-center">
                               <Badge className={`${config.badge} px-4 py-2 text-sm border flex items-center gap-2`}>
-                                <span className="text-lg">{config.emoji}</span>
+                                <StatusIcon className="w-4 h-4" />
                                 <span>{config.label}</span>
                               </Badge>
                             </div>
@@ -249,22 +288,27 @@ export default function DevelopmentRoadmap() {
           transition={{ delay: 0.8 }}
           className="mt-8"
         >
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-slate-50 to-amber-50">
+          <Card className="border border-[#E5D4B8] shadow-sm bg-gradient-to-l from-[#FBF8F3] to-[#F5F0E8]">
             <CardContent className="pt-6">
-              <h3 className="font-semibold text-slate-900 mb-4">دليل الحالات:</h3>
-              <div className="grid md:grid-cols-4 gap-4">
-                {Object.entries(statusConfig).map(([key, config]) => (
-                  <div key={key} className="flex items-center gap-2">
-                    <span className="text-2xl">{config.emoji}</span>
-                    <span className="text-sm text-slate-600">{config.label}</span>
-                  </div>
-                ))}
+              <h3 className="font-semibold text-[#4A3F35] mb-4">دليل الحالات:</h3>
+              <div className="grid md:grid-cols-3 gap-4">
+                {Object.entries(statusConfig).map(([key, config]) => {
+                  const Icon = config.icon;
+                  return (
+                    <div key={key} className="flex items-center gap-2">
+                      <Badge className={`${config.badge} px-3 py-1.5 border flex items-center gap-2`}>
+                        <Icon className="w-4 h-4" />
+                        <span>{config.label}</span>
+                      </Badge>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Implementation Notes */}
+        {/* Summary Notes */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -275,71 +319,37 @@ export default function DevelopmentRoadmap() {
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2 text-green-800">
                 <CheckCircle className="w-5 h-5" />
-                تم تنفيذه بنجاح
+                مكتمل وجاهز للاستخدام
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-sm text-slate-700">
-                <li>✓ زر "انضم لـ بيتلي" في الصفحة الرئيسية والـ Layout</li>
-                <li>✓ صفحة اختيار نوع الحساب محدثة مع 5 خيارات</li>
-                <li>✓ لوحة تحكم المستثمر بنظام الإشارات الضوئية</li>
-                <li>✓ نظام عمولات آلي (15% مشاريع، 25% تصاميم)</li>
-                <li>✓ متجر التصاميم الجاهزة مع تحميل فوري</li>
+                <li>✓ زر "انضم لـ بيتلي" الموحد في الواجهة الرئيسية</li>
+                <li>✓ 8 أنواع حسابات مع صفحات تسجيل مخصصة لكل نوع</li>
+                <li>✓ سوق المشاريع بنظام العطاءات والتوظيف المباشر</li>
+                <li>✓ متجر التصاميم الجاهزة مع تحميل فوري وعمولة آلية</li>
+                <li>✓ نظام المراجعة الفنية والمستشار المعتمد</li>
+                <li>✓ نظام الضمان (Escrow) وخصم العمولة الآلي</li>
+                <li>✓ العقود الإلكترونية الموقعة مع الأرشفة السحابية</li>
+                <li>✓ لوحة المستثمر بنظام الإشارات الضوئية</li>
               </ul>
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-blue-200 bg-blue-50/50">
+          <Card className="border-2 border-amber-200 bg-amber-50/50">
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2 text-blue-800">
-                <Zap className="w-5 h-5" />
-                قيد التطوير
+              <CardTitle className="text-lg flex items-center gap-2 text-amber-800">
+                <Clock className="w-5 h-5" />
+                قيد التطوير حالياً
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-sm text-slate-700">
-                <li>🔄 نظام التنبيهات الذكية (Push Notifications)</li>
-                <li>🔄 ربط إلزامي مع الشركات الاستشارية للمسار الإنشائي</li>
-                <li>🔄 تحسين نظام العطاءات (Bidding)</li>
-                <li>🔔 تفعيل خصم العمولة تلقائياً في كل معاملة</li>
+                <li>🔄 تكامل BIM مع Autodesk Platform Services</li>
+                <li>🔄 مساعد بيتلي الذكي (تحليل المخاطر، اقتراح المهندسين)</li>
+                <li>🔄 نظام الإشعارات اللحظية (Push) للجوال</li>
+                <li>🆕 بوابة الإعلانات الذكية للمعلنين</li>
               </ul>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Technical Notes */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.2 }}
-          className="mt-8"
-        >
-          <Card className="border-2 border-purple-200 bg-purple-50/30">
-            <CardHeader>
-              <CardTitle className="text-lg">ملاحظات تقنية للفريق:</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 text-sm text-slate-700">
-                <div className="p-4 bg-white rounded-lg border border-purple-200">
-                  <p className="font-semibold text-purple-900 mb-2">🔐 نظام الدفع الآمن:</p>
-                  <p>جميع المدفوعات تمر عبر Stripe مع دعم مدى، Visa، Apple Pay، و Google Pay. العمولة تُخصم آلياً من كل معاملة قبل تحويل المبالغ للمهندسين.</p>
-                </div>
-                
-                <div className="p-4 bg-white rounded-lg border border-purple-200">
-                  <p className="font-semibold text-purple-900 mb-2">💰 نظام المحافظ الإلكترونية:</p>
-                  <p>كل مستخدم (عميل/مهندس/شركة) لديه محفظة تعرض: الرصيد الكلي، الرصيد المعلق (في الضمان)، والرصيد المتاح للسحب.</p>
-                </div>
-
-                <div className="p-4 bg-white rounded-lg border border-purple-200">
-                  <p className="font-semibold text-purple-900 mb-2">📊 لوحة المستثمر:</p>
-                  <p>تم تطوير واجهة خاصة للمستثمرين تعرض جميع المشاريع في شاشة واحدة مع نظام الإشارات الضوئية (🟢 يسير بخطة، 🟡 يحتاج انتباه، 🔴 تأخير) + إدارة مركزية للدفعات والمستندات.</p>
-                </div>
-
-                <div className="p-4 bg-white rounded-lg border border-purple-200">
-                  <p className="font-semibold text-purple-900 mb-2">🛒 متجر التصاميم الجاهزة:</p>
-                  <p>نظام شراء فوري مع تحميل مباشر للملفات بعد الدفع. عمولة المنصة 25% تُخصم تلقائياً، والبائع يستلم 75% في محفظته فوراً.</p>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </motion.div>
@@ -348,14 +358,14 @@ export default function DevelopmentRoadmap() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
+          transition={{ delay: 1.2 }}
           className="mt-8 text-center"
         >
-          <Card className="border-0 bg-gradient-to-r from-amber-100 to-orange-100">
+          <Card className="border border-[#E5D4B8] bg-gradient-to-l from-[#FBF8F3] to-[#F5F0E8]">
             <CardContent className="py-6">
-              <p className="text-sm text-slate-700">
-                📋 <strong>للمستثمرين ومنشآت:</strong> هذا الجدول يوضح التقدم التقني الفعلي للمنصة. 
-                جميع الميزات المكتملة (✅) جاهزة للاستخدام الفوري، والميزات قيد التطوير (🔄) سيتم إطلاقها تدريجياً.
+              <p className="text-sm text-[#6B5D4F]">
+                📋 <strong className="text-[#4A3F35]">للمستثمرين ومنشآت:</strong> هذا الجدول يوضح التقدم التقني الفعلي للمنصة.
+                جميع الميزات المكتملة جاهزة للاستخدام الفوري، والميزات قيد التطوير سيتم إطلاقها تدريجياً.
               </p>
             </CardContent>
           </Card>
