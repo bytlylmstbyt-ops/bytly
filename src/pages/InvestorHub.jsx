@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
@@ -7,7 +7,7 @@ import {
   MapPin, DollarSign, FileCheck,
   CheckCircle, Clock, Plus, Wallet, Shield,
   Building2, CreditCard, Loader2, Eye, Calendar,
-  FileText, Download, FolderOpen, TrendingUp
+  FileText, Download, FolderOpen, TrendingUp, Upload
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,10 +25,29 @@ export default function InvestorHub() {
   const [allMilestones, setAllMilestones] = useState([]);
   const [pendingPayments, setPendingPayments] = useState([]);
   const [selectedPayments, setSelectedPayments] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     loadInvestorData();
   }, []);
+
+  const handleUploadDocument = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploading(true);
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      toast.success("تم رفع المستند بنجاح");
+      loadInvestorData();
+    } catch (err) {
+      console.error("Upload error:", err);
+      toast.error("تعذّر رفع المستند");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const loadInvestorData = async () => {
     try {
@@ -461,7 +480,29 @@ export default function InvestorHub() {
           <TabsContent value="documents">
             <Card className="border border-[#E5D4B8] shadow-sm">
               <CardHeader className="border-b border-[#F0E8D8]">
-                <CardTitle className="text-[#4A3F35]">مركز المستندات الموحد</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-[#4A3F35]">مركز المستندات الموحد</CardTitle>
+                  <div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      className="hidden"
+                      onChange={handleUploadDocument}
+                    />
+                    <Button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                      className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white hover:opacity-90"
+                    >
+                      {uploading ? (
+                        <Loader2 className="w-4 h-4 ml-2 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4 ml-2" />
+                      )}
+                      رفع مستند
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="space-y-4">
