@@ -12,6 +12,7 @@ import {
 import { motion } from "framer-motion";
 import { sendNotification } from "@/components/notifications/NotificationHelper";
 import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 export default function CertificationPage() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export default function CertificationPage() {
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [project, setProject] = useState(null);
   const [engineer, setEngineer] = useState(null);
   const [client, setClient] = useState(null);
@@ -101,113 +103,91 @@ export default function CertificationPage() {
     setRatings({ ...ratings, [type]: value });
   };
 
-  const generateCertificatePDF = () => {
-    const doc = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: 'a4'
-    });
+  const generateCertificatePDF = async () => {
+    setDownloading(true);
+    try {
+      const arMonths = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+      const d = new Date();
+      const dateStr = `${d.getDate()} ${arMonths[d.getMonth()]} ${d.getFullYear()}`;
+      const safeId = (projectId || project?.id || 'BYTLY').toString();
+      const certNumber = `CERT-${safeId.slice(0, 8).toUpperCase()}`;
 
-    // Set RTL for Arabic
-    doc.setR2L(true);
+      // نبني الشهادة كعنصر HTML (المتصفح يشكّل العربية بشكل صحيح) ثم نلتقطها صورة
+      const cert = document.createElement('div');
+      cert.dir = 'rtl';
+      cert.lang = 'ar';
+      cert.style.cssText = 'width:800px;background:#ffffff;padding:0;font-family:Tahoma,"Segoe UI",Arial,sans-serif;box-sizing:border-box;position:fixed;left:-10000px;top:0;';
+      cert.innerHTML = `
+        <div style="border:3px solid #C9A66B;padding:12px;border-radius:6px;background:#fff;">
+          <div style="border:1px solid #C9A66B;padding:34px;border-radius:4px;">
+            <div style="width:76px;height:76px;border:3px solid #C9A66B;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;color:#4A3F35;font-weight:bold;font-size:18px;letter-spacing:1px;">بيتلي</div>
+            <h1 style="text-align:center;font-size:30px;color:#4A3F35;margin:0 0 6px;font-weight:bold;">شهادة اعتماد ومطابقة الجودة</h1>
+            <p style="text-align:center;font-size:15px;color:#C9A66B;margin:0 0 16px;">منصة بيتلي للخدمات والاستشارات الهندسية</p>
+            <div style="height:1px;background:#C9A66B;margin:0 0 16px;"></div>
+            <p style="text-align:center;font-size:13px;color:#6B5D4F;margin:0 0 18px;">رقم الشهادة: ${certNumber}</p>
+            <p style="font-size:15px;line-height:2;text-align:justify;margin:0 0 16px;color:#1a1a2e;">
+              تشهد منصة بيتلي، وبناءً على الصلاحيات الممنوحة لها كمكتب استشاري معتمد، بأن المخططات النهائية والرسومات التنفيذية للمشروع الموضّح أدناه قد تمت مراجعتها وفحصها فنياً، وثبت مطابقتها للمعايير الهندسية والإنشائية المعتمدة.
+            </p>
+            <div style="background:#F5F0E8;border:1px solid #C9A66B;border-radius:6px;padding:14px 20px;margin:0 0 18px;">
+              <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;border-bottom:1px dashed #e0d6c0;"><span style="color:#6B5D4F;font-weight:bold;">اسم المشروع</span><span style="color:#1a1a2e;">${project?.title || '—'}</span></div>
+              <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;border-bottom:1px dashed #e0d6c0;"><span style="color:#6B5D4F;font-weight:bold;">العميل</span><span style="color:#1a1a2e;">${client?.full_name || '—'}</span></div>
+              <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;border-bottom:1px dashed #e0d6c0;"><span style="color:#6B5D4F;font-weight:bold;">المصمم / المهندس</span><span style="color:#1a1a2e;">${engineer?.full_name || '—'}</span></div>
+              <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;"><span style="color:#6B5D4F;font-weight:bold;">المستشار الفني</span><span style="color:#1a1a2e;">${consultant?.full_name || '—'}</span></div>
+            </div>
+            <p style="font-size:15px;font-weight:bold;color:#4A3F35;margin:0 0 8px;">ونؤكد بموجب هذه الشهادة ما يلي:</p>
+            <div style="font-size:14px;line-height:1.9;margin:0 0 18px;color:#1a1a2e;">
+              <div style="padding:4px 0;"><span style="font-weight:bold;color:#6B5D4F;">• المطابقة الفنية: </span>المخططات مطابقة بالكامل للمعايير الهندسية والإنشائية المعتمدة.</div>
+              <div style="padding:4px 0;"><span style="font-weight:bold;color:#6B5D4F;">• دقة التنفيذ: </span>تم فحص جميع الرسومات التنفيذية والتأكد من خلوها من الأخطاء الفنية.</div>
+              <div style="padding:4px 0;"><span style="font-weight:bold;color:#6B5D4F;">• الجاهزية للتسليم: </span>المشروع جاهز للتسليم النهائي ويحقق متطلبات العميل المسجلة على المنصة.</div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:26px;">
+              <div>
+                <p style="font-size:13px;color:#6B5D4F;margin:0;">المستشار المعتمد</p>
+                <p style="font-size:15px;font-weight:bold;margin:3px 0 0;color:#1a1a2e;">${consultant?.full_name || 'المستشار الفني'}</p>
+                <p style="font-size:12px;color:#777;margin:2px 0 0;">رقم التسجيل المهني: ${consultant?.engineers_society_membership_number || '—'}</p>
+              </div>
+              <div style="text-align:left;">
+                <p style="font-size:13px;color:#6B5D4F;margin:0;">تاريخ الاعتماد</p>
+                <p style="font-size:15px;font-weight:bold;margin:3px 0 0;color:#1a1a2e;">${dateStr}</p>
+              </div>
+            </div>
+            <div style="text-align:center;margin-top:18px;">
+              <div style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:92px;height:92px;border:2px solid #C9A66B;border-radius:50%;color:#4A3F35;">
+                <span style="font-weight:bold;font-size:15px;">بيتلي</span>
+                <span style="font-size:9px;margin-top:2px;">ختم إلكتروني معتمد</span>
+              </div>
+            </div>
+            <div style="border-top:1px solid #C9A66B;margin-top:18px;padding-top:10px;">
+              <p style="font-size:10px;color:#777;line-height:1.6;text-align:justify;margin:0;">
+                تصدر هذه الشهادة إلكترونياً عبر منصة بيتلي وتتمتع بكامل الصفة القانونية. تعمل المنصة كوسيط لضمان حقوق الطرفين ولا تتحمل مسؤولية تنفيذ بنود العقد. للاستفسار: bytlylmstbyt@gmail.com
+              </p>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(cert);
+      const canvas = await html2canvas(cert, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false });
+      document.body.removeChild(cert);
 
-    // Header - Gold Border
-    doc.setDrawColor(201, 166, 107);
-    doc.setLineWidth(3);
-    doc.rect(10, 10, 190, 277);
-    
-    doc.setLineWidth(1);
-    doc.rect(15, 15, 180, 267);
-
-    // Logo placeholder circle
-    doc.setFillColor(201, 166, 107);
-    doc.circle(105, 40, 15, 'F');
-    doc.setFillColor(255, 255, 255);
-    doc.circle(105, 40, 12, 'F');
-
-    // Title
-    doc.setFontSize(24);
-    doc.setFont('helvetica', 'bold');
-    doc.text('شهادة مطابقة واعتماد جودة', 105, 70, { align: 'center' });
-
-    doc.setFontSize(16);
-    doc.setTextColor(107, 93, 79);
-    doc.text('منصة بيتلي للاستشارات والتصاميم الهندسية', 105, 80, { align: 'center' });
-
-    // Divider
-    doc.setDrawColor(201, 166, 107);
-    doc.setLineWidth(0.5);
-    doc.line(30, 90, 180, 90);
-
-    // Certificate Body
-    doc.setFontSize(12);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'normal');
-
-    const bodyText = `تشهد منصة (بيتلي) وبناءً على المراجعة الفنية الدقيقة والمستقلة التي قام بها المستشار الفني المختص،`;
-    const bodyText2 = `بأن المشروع رقم (${projectId}) والمقدم من المصمم (${engineer?.full_name || 'غير محدد'})`;
-    const bodyText3 = `لصالح العميل (${client?.full_name || 'غير محدد'})، قد اجتاز كافة معايير الجودة المعتمدة في المنصة.`;
-
-    doc.text(bodyText, 105, 105, { align: 'center', maxWidth: 160 });
-    doc.text(bodyText2, 105, 115, { align: 'center', maxWidth: 160 });
-    doc.text(bodyText3, 105, 125, { align: 'center', maxWidth: 160 });
-
-    // Technical Section
-    doc.setFillColor(245, 245, 245);
-    doc.rect(25, 140, 160, 80, 'F');
-
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(107, 93, 79);
-    doc.text('البنود الفنية والقانونية', 105, 150, { align: 'center' });
-
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 0, 0);
-    
-    doc.text('• المطابقة الفنية:', 175, 160, { align: 'right' });
-    doc.setFont('helvetica', 'normal');
-    doc.text('تم التأكد من سلامة المخططات وموافقتها للمعايير الهندسية المطلوبة.', 170, 167, { align: 'right', maxWidth: 135 });
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('• حقوق الملكية:', 175, 180, { align: 'right' });
-    doc.setFont('helvetica', 'normal');
-    doc.text('تنتقل ملكية كافة التصاميم والمخططات المرفقة للعميل فور صدور هذه الشهادة.', 170, 187, { align: 'right', maxWidth: 135 });
-
-    doc.setFont('helvetica', 'bold');
-    doc.text('• التوثيق:', 175, 200, { align: 'right' });
-    doc.setFont('helvetica', 'normal');
-    doc.text('تعتبر هذه الشهادة وثيقة رسمية صادرة عن النظام الإلكتروني لبيتلي ومسجلة في قاعدة البيانات.', 170, 207, { align: 'right', maxWidth: 135 });
-
-    // Footer Section
-    doc.setDrawColor(201, 166, 107);
-    doc.line(30, 235, 180, 235);
-
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(107, 93, 79);
-    doc.text(`يُعتمد من قبل: ${consultant?.full_name || 'المستشار الفني'}`, 105, 245, { align: 'center' });
-    doc.text('تحت إشراف: إدارة منصة بيتلي', 105, 252, { align: 'center' });
-
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`التاريخ: ${new Date().toLocaleDateString('ar-SA', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    })}`, 105, 260, { align: 'center' });
-
-    // Electronic Stamp
-    doc.setDrawColor(201, 166, 107);
-    doc.setLineWidth(2);
-    doc.circle(105, 275, 8);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'bold');
-    doc.text('ختم إلكتروني', 105, 275, { align: 'center' });
-    doc.text('بيتلي', 105, 280, { align: 'center' });
-
-    // Save PDF
-    doc.save(`شهادة_جودة_${projectId}.pdf`);
+      // ندرج الصورة في PDF بحجم A4 مع الحفاظ على نسبة الأبعاد
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const imgRatio = canvas.width / canvas.height;
+      const a4Ratio = 210 / 297;
+      let renderW, renderH;
+      if (imgRatio > a4Ratio) {
+        renderW = 210; renderH = 210 / imgRatio;
+      } else {
+        renderH = 297; renderW = 297 * imgRatio;
+      }
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      doc.addImage(imgData, 'JPEG', (210 - renderW) / 2, (297 - renderH) / 2, renderW, renderH);
+      doc.save(`شهادة_جودة_${safeId.slice(0, 8)}.pdf`);
+    } catch (error) {
+      console.error("Error generating certificate:", error);
+      alert("حدث خطأ أثناء إنشاء الشهادة");
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const handleSubmitRating = async () => {
@@ -502,16 +482,25 @@ export default function CertificationPage() {
 
           <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-green-200 hover:border-green-400">
             <CardContent className="pt-6">
-              <div onClick={generateCertificatePDF} className="block cursor-pointer">
+              <div onClick={downloading ? undefined : generateCertificatePDF} className={`block ${downloading ? 'cursor-wait' : 'cursor-pointer'}`}>
                 <div className="text-center space-y-4">
                   <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center">
-                    <Award className="w-8 h-8 text-green-600" />
+                    {downloading ? <Loader2 className="w-8 h-8 text-green-600 animate-spin" /> : <Award className="w-8 h-8 text-green-600" />}
                   </div>
                   <h3 className="font-bold text-lg">تحميل شهادة الجودة</h3>
                   <p className="text-sm text-slate-600">وثيقة رسمية من منصة بيتلي</p>
-                  <Button className="bg-green-600 hover:bg-green-700 w-full">
-                    <Download className="w-5 h-5 ml-2" />
-                    تحميل الآن
+                  <Button className="bg-green-600 hover:bg-green-700 w-full" disabled={downloading}>
+                    {downloading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 ml-2 animate-spin" />
+                        جاري تجهيز الشهادة...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-5 h-5 ml-2" />
+                        تحميل الآن
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
