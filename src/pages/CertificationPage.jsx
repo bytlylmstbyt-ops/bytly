@@ -118,46 +118,85 @@ export default function CertificationPage() {
       cert.lang = 'ar';
       cert.style.cssText = 'width:800px;background:#ffffff;padding:0;font-family:Tahoma,"Segoe UI",Arial,sans-serif;box-sizing:border-box;position:fixed;left:-10000px;top:0;';
       cert.innerHTML = `
-        <div style="border:3px solid #C9A66B;padding:12px;border-radius:6px;background:#fff;">
-          <div style="border:1px solid #C9A66B;padding:34px;border-radius:4px;">
-            <div style="width:76px;height:76px;border:3px solid #C9A66B;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;color:#4A3F35;font-weight:bold;font-size:18px;letter-spacing:1px;">بيتلي</div>
-            <h1 style="text-align:center;font-size:30px;color:#4A3F35;margin:0 0 6px;font-weight:bold;">شهادة اعتماد ومطابقة الجودة</h1>
-            <p style="text-align:center;font-size:15px;color:#C9A66B;margin:0 0 16px;">منصة بيتلي للخدمات والاستشارات الهندسية</p>
-            <div style="height:1px;background:#C9A66B;margin:0 0 16px;"></div>
-            <p style="text-align:center;font-size:13px;color:#6B5D4F;margin:0 0 18px;">رقم الشهادة: ${certNumber}</p>
-            <p style="font-size:15px;line-height:2;text-align:justify;margin:0 0 16px;color:#1a1a2e;">
+        <div style="border:4px solid #C9A66B;padding:14px;border-radius:10px;background:#fff;">
+          <div style="border:1px solid #C9A66B;padding:40px 44px;border-radius:6px;position:relative;background:#FBF8F3;">
+            <!-- زخارف الزوايا الذهبية -->
+            <div style="position:absolute;top:14px;right:14px;width:34px;height:34px;border-top:2px solid #C9A66B;border-right:2px solid #C9A66B;border-top-right-radius:8px;"></div>
+            <div style="position:absolute;top:14px;left:14px;width:34px;height:34px;border-top:2px solid #C9A66B;border-left:2px solid #C9A66B;border-top-left-radius:8px;"></div>
+            <div style="position:absolute;bottom:14px;right:14px;width:34px;height:34px;border-bottom:2px solid #C9A66B;border-right:2px solid #C9A66B;border-bottom-right-radius:8px;"></div>
+            <div style="position:absolute;bottom:14px;left:14px;width:34px;height:34px;border-bottom:2px solid #C9A66B;border-left:2px solid #C9A66B;border-bottom-left-radius:8px;"></div>
+
+            <!-- شعار المنصة -->
+            <div style="display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:16px;">
+              <div style="width:68px;height:68px;border-radius:16px;background:linear-gradient(to top,#A89178,#6B5D4F);display:flex;align-items:center;justify-content:center;box-shadow:0 5px 14px rgba(107,93,79,0.28);">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5"/><path d="M5 10v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V10"/><path d="M9 21V12h6v9"/></svg>
+              </div>
+              <span style="font-weight:600;font-size:13px;color:#4A3F35;letter-spacing:2px;font-family:system-ui,sans-serif;">BYTLY</span>
+            </div>
+
+            <!-- العنوان -->
+            <h1 style="text-align:center;font-size:31px;color:#4A3F35;margin:0 0 4px;font-weight:bold;">شهادة اعتماد ومطابقة الجودة</h1>
+            <p style="text-align:center;font-size:14px;color:#C9A66B;margin:0 0 12px;letter-spacing:0.5px;">منصة بيتلي للخدمات والاستشارات الهندسية</p>
+
+            <!-- فاصل ذهبي بماسة -->
+            <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin:0 0 16px;">
+              <div style="height:1px;width:120px;background:#C9A66B;"></div>
+              <div style="width:8px;height:8px;background:#C9A66B;transform:rotate(45deg);"></div>
+              <div style="height:1px;width:120px;background:#C9A66B;"></div>
+            </div>
+
+            <!-- شارة رقم الشهادة -->
+            <div style="text-align:center;margin:0 0 18px;">
+              <span style="display:inline-block;border:1px solid #C9A66B;border-radius:20px;padding:5px 16px;font-size:12px;color:#6B5D4F;background:#fff;">رقم الشهادة: ${certNumber}</span>
+            </div>
+
+            <!-- نص الإشهاد -->
+            <p style="font-size:15px;line-height:2;text-align:justify;margin:0 0 18px;color:#1a1a2e;">
               تشهد منصة بيتلي، وبناءً على الصلاحيات الممنوحة لها كمكتب استشاري معتمد، بأن المخططات النهائية والرسومات التنفيذية للمشروع الموضّح أدناه قد تمت مراجعتها وفحصها فنياً، وثبت مطابقتها للمعايير الهندسية والإنشائية المعتمدة.
             </p>
-            <div style="background:#F5F0E8;border:1px solid #C9A66B;border-radius:6px;padding:14px 20px;margin:0 0 18px;">
-              <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;border-bottom:1px dashed #e0d6c0;"><span style="color:#6B5D4F;font-weight:bold;">اسم المشروع</span><span style="color:#1a1a2e;">${project?.title || '—'}</span></div>
-              <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;border-bottom:1px dashed #e0d6c0;"><span style="color:#6B5D4F;font-weight:bold;">العميل</span><span style="color:#1a1a2e;">${client?.full_name || '—'}</span></div>
-              <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;border-bottom:1px dashed #e0d6c0;"><span style="color:#6B5D4F;font-weight:bold;">المصمم / المهندس</span><span style="color:#1a1a2e;">${engineer?.full_name || '—'}</span></div>
-              <div style="display:flex;justify-content:space-between;padding:5px 0;font-size:14px;"><span style="color:#6B5D4F;font-weight:bold;">المستشار الفني</span><span style="color:#1a1a2e;">${consultant?.full_name || '—'}</span></div>
-            </div>
-            <p style="font-size:15px;font-weight:bold;color:#4A3F35;margin:0 0 8px;">ونؤكد بموجب هذه الشهادة ما يلي:</p>
-            <div style="font-size:14px;line-height:1.9;margin:0 0 18px;color:#1a1a2e;">
-              <div style="padding:4px 0;"><span style="font-weight:bold;color:#6B5D4F;">• المطابقة الفنية: </span>المخططات مطابقة بالكامل للمعايير الهندسية والإنشائية المعتمدة.</div>
-              <div style="padding:4px 0;"><span style="font-weight:bold;color:#6B5D4F;">• دقة التنفيذ: </span>تم فحص جميع الرسومات التنفيذية والتأكد من خلوها من الأخطاء الفنية.</div>
-              <div style="padding:4px 0;"><span style="font-weight:bold;color:#6B5D4F;">• الجاهزية للتسليم: </span>المشروع جاهز للتسليم النهائي ويحقق متطلبات العميل المسجلة على المنصة.</div>
-            </div>
-            <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:26px;">
-              <div>
-                <p style="font-size:13px;color:#6B5D4F;margin:0;">المستشار المعتمد</p>
-                <p style="font-size:15px;font-weight:bold;margin:3px 0 0;color:#1a1a2e;">${consultant?.full_name || 'المستشار الفني'}</p>
-                <p style="font-size:12px;color:#777;margin:2px 0 0;">رقم التسجيل المهني: ${consultant?.engineers_society_membership_number || '—'}</p>
-              </div>
-              <div style="text-align:left;">
-                <p style="font-size:13px;color:#6B5D4F;margin:0;">تاريخ الاعتماد</p>
-                <p style="font-size:15px;font-weight:bold;margin:3px 0 0;color:#1a1a2e;">${dateStr}</p>
+
+            <!-- لوغة تفاصيل المشروع -->
+            <div style="background:#fff;border:1px solid #C9A66B;border-radius:8px;overflow:hidden;margin:0 0 18px;">
+              <div style="background:linear-gradient(to left,#6B5D4F,#4A3F35);color:#fff;padding:8px 18px;font-size:13px;font-weight:bold;letter-spacing:0.5px;">تفاصيل المشروع</div>
+              <div style="padding:6px 18px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;font-size:14px;border-bottom:1px solid #E8DDC9;"><span style="color:#6B5D4F;font-weight:bold;">اسم المشروع</span><span style="color:#1a1a2e;">${project?.title || '—'}</span></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;font-size:14px;border-bottom:1px solid #E8DDC9;"><span style="color:#6B5D4F;font-weight:bold;">العميل</span><span style="color:#1a1a2e;">${client?.full_name || '—'}</span></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;font-size:14px;border-bottom:1px solid #E8DDC9;"><span style="color:#6B5D4F;font-weight:bold;">المصمم / المهندس</span><span style="color:#1a1a2e;">${engineer?.full_name || '—'}</span></div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;font-size:14px;"><span style="color:#6B5D4F;font-weight:bold;">المستشار الفني</span><span style="color:#1a1a2e;">${consultant?.full_name || '—'}</span></div>
               </div>
             </div>
-            <div style="text-align:center;margin-top:18px;">
-              <div style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;width:92px;height:92px;border:2px solid #C9A66B;border-radius:50%;color:#4A3F35;">
-                <span style="font-weight:bold;font-size:15px;">بيتلي</span>
-                <span style="font-size:9px;margin-top:2px;">ختم إلكتروني معتمد</span>
+
+            <!-- بنود التأكيد -->
+            <p style="font-size:15px;font-weight:bold;color:#4A3F35;margin:0 0 10px;">ونؤكد بموجب هذه الشهادة ما يلي:</p>
+            <div style="font-size:14px;line-height:1.9;margin:0 0 22px;color:#1a1a2e;">
+              <div style="display:flex;gap:8px;padding:5px 0;"><span style="color:#C9A66B;font-weight:bold;flex-shrink:0;">◆</span><span><span style="font-weight:bold;color:#6B5D4F;">المطابقة الفنية: </span>المخططات مطابقة بالكامل للمعايير الهندسية والإنشائية المعتمدة.</span></div>
+              <div style="display:flex;gap:8px;padding:5px 0;"><span style="color:#C9A66B;font-weight:bold;flex-shrink:0;">◆</span><span><span style="font-weight:bold;color:#6B5D4F;">دقة التنفيذ: </span>تم فحص جميع الرسومات التنفيذية والتأكد من خلوها من الأخطاء الفنية.</span></div>
+              <div style="display:flex;gap:8px;padding:5px 0;"><span style="color:#C9A66B;font-weight:bold;flex-shrink:0;">◆</span><span><span style="font-weight:bold;color:#6B5D4F;">الجاهزية للتسليم: </span>المشروع جاهز للتسليم النهائي ويحقق متطلبات العميل المسجلة على المنصة.</span></div>
+            </div>
+
+            <!-- التوقيعات والختم -->
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-top:20px;">
+              <div style="flex:1;text-align:center;">
+                <div style="border-top:1px solid #6B5D4F;margin:0 10px 6px;"></div>
+                <p style="font-size:12px;font-weight:bold;color:#4A3F35;margin:0;">${consultant?.full_name || 'المستشار الفني'}</p>
+                <p style="font-size:11px;color:#999;margin:2px 0 0;">المستشار المعتمد — رقم التسجيل: ${consultant?.engineers_society_membership_number || '—'}</p>
+              </div>
+              <div style="width:96px;text-align:center;flex-shrink:0;">
+                <div style="width:90px;height:90px;border:2px solid #C9A66B;border-radius:50%;margin:0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#4A3F35;position:relative;">
+                  <div style="position:absolute;inset:6px;border:1px solid #C9A66B;border-radius:50%;"></div>
+                  <span style="font-weight:bold;font-size:14px;">بيتلي</span>
+                  <span style="font-size:8px;margin-top:1px;">ختم إلكتروني</span>
+                </div>
+              </div>
+              <div style="flex:1;text-align:center;">
+                <div style="border-top:1px solid #6B5D4F;margin:0 10px 6px;"></div>
+                <p style="font-size:12px;font-weight:bold;color:#4A3F35;margin:0;">${dateStr}</p>
+                <p style="font-size:11px;color:#999;margin:2px 0 0;">تاريخ الاعتماد</p>
               </div>
             </div>
-            <div style="border-top:1px solid #C9A66B;margin-top:18px;padding-top:10px;">
+
+            <!-- إشعار قانوني -->
+            <div style="border-top:1px solid #C9A66B;margin-top:20px;padding-top:10px;">
               <p style="font-size:10px;color:#777;line-height:1.6;text-align:justify;margin:0;">
                 تصدر هذه الشهادة إلكترونياً عبر منصة بيتلي وتتمتع بكامل الصفة القانونية. تعمل المنصة كوسيط لضمان حقوق الطرفين ولا تتحمل مسؤولية تنفيذ بنود العقد. للاستفسار: bytlylmstbyt@gmail.com
               </p>
