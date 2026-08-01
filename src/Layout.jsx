@@ -6,6 +6,7 @@ import BytlyAdvisorChat from "@/components/chatbot/BytlyAdvisorChat";
 import DeleteAccountDialog from "@/components/user/DeleteAccountDialog";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { LanguageProvider, useLanguage } from "@/components/i18n/LanguageContext";
+import { useAuth } from "@/lib/AuthContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { 
   Search, MessageSquare, User, Menu, X, 
@@ -28,27 +29,10 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 function LayoutContent({ children, currentPageName }) {
-  const [user, setUser] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { t, isRTL } = useLanguage();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const authenticated = await base44.auth.isAuthenticated();
-        setIsAuthenticated(authenticated);
-        if (authenticated) {
-          const userData = await base44.auth.me();
-          setUser(userData);
-        }
-      } catch (error) {
-        console.log("Not authenticated");
-      }
-    };
-    checkAuth();
-  }, []);
+  const { user, isAuthenticated, logout } = useAuth();
 
   // Heartbeat — تتبع المستخدمين المسجلين النشطين الآن (كل 60 ثانية)
   useEffect(() => {
@@ -67,8 +51,7 @@ function LayoutContent({ children, currentPageName }) {
   const isPublicPage = publicPages.includes(currentPageName);
 
   const handleLogout = () => {
-    base44.auth.logout();
-    window.location.href = '/login';
+    logout(true);
   };
 
   // Stable callback so PullToRefreshWrapper doesn't re-subscribe its touch listeners.
