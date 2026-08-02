@@ -43,6 +43,7 @@ export default function FinancialReports() {
   const [commissionsByMonth, setCommissionsByMonth] = useState([]);
   const [revenueBySource, setRevenueBySource] = useState([]);
   const [monthlyVolume, setMonthlyVolume] = useState([]);
+  const [escrowPerProject, setEscrowPerProject] = useState([]);
 
   // Tables data
   const [engineers, setEngineers] = useState([]);
@@ -129,6 +130,21 @@ export default function FinancialReports() {
       .slice(-12)
       .map(([month, amount]) => ({ month, amount }));
     setMonthlyVolume(volOrdered);
+
+    // ── Escrow per project (held + released + refunded) ───────────────
+    const escrowData = projectsList
+      .filter(p => (p.escrow_amount || 0) > 0)
+      .sort((a, b) => (b.escrow_amount || 0) - (a.escrow_amount || 0))
+      .slice(0, 15)
+      .map(p => ({
+        title: (p.title || "بدون عنوان").length > 18 ? (p.title.slice(0, 16) + "…") : (p.title || "بدون عنوان"),
+        held: p.escrow_status === "held" ? (p.escrow_amount || 0) : 0,
+        released: p.escrow_status === "released" ? (p.escrow_amount || 0) : 0,
+        refunded: p.escrow_status === "refunded" ? (p.escrow_amount || 0) : 0,
+        status: p.escrow_status,
+        amount: p.escrow_amount || 0,
+      }));
+    setEscrowPerProject(escrowData);
 
     // ── Tables ────────────────────────────────────────────────────────
     setEngineers(engineersList.sort((a, b) => ((b.wallet_balance || 0) + (b.available_balance || 0)) - ((a.wallet_balance || 0) + (a.available_balance || 0))));
@@ -318,6 +334,73 @@ export default function FinancialReports() {
                     <Line type="monotone" dataKey="amount" name="حجم التعاملات" stroke="#6B5D4F" strokeWidth={2} dot={{ fill: "#C9A66B", r: 4 }} />
                   </LineChart>
                 </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* ── Escrow per Project ─────────────────────────────────────── */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}>
+          <Card className="border-0 shadow-lg">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <HandCoins className="w-5 h-5 text-amber-600" />
+                مبالغ الضمان المحجوزة لكل مشروع
+                <Badge className="bg-amber-50 text-amber-700">{escrowPerProject.length} مشروع</Badge>
+              </CardTitle>
+              <p className="text-xs text-slate-500 mt-1">متابعة الالتزامات المالية: المبالغ المحجوزة (برتقالي)، المُحرّرة (أخضر)، والمستردة (رمادي) لكل مشروع</p>
+            </CardHeader>
+            <CardContent>
+              {escrowPerProject.length === 0 ? (
+                <p className="text-center py-12 text-slate-400">لا توجد مبالغ ضمان مسجلة بعد</p>
+              ) : (
+                <>
+                  <ResponsiveContainer width="100%" height={320}>
+                    <BarChart data={escrowPerProject} layout="vertical" margin={{ left: 20, right: 30 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+                      <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={(v) => formatSAR(v)} />
+                      <YAxis type="category" dataKey="title" tick={{ fontSize: 11 }} width={130} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend />
+                      <Bar dataKey="held" name="محجوز" stackId="e" fill="#f59e0b" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="released" name="مُحرّر" stackId="e" fill="#16a34a" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="refunded" name="مسترد" stackId="e" fill="#94a3b8" radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <div className="overflow-x-auto mt-3">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b text-slate-500">
+                          <th className="text-right py-2 px-2">المشروع</th>
+                          <th className="text-right py-2 px-2">حالة الضمان</th>
+                          <th className="text-right py-2 px-2">المبلغ</th>
+                          <th className="text-right py-2 px-2">نسبة من الإجمالي</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {escrowPerProject.map((p, i) => {
+                          const pct = summary.totalEscrowHeld > 0 && p.status === "held"
+                            ? (p.amount / summary.totalEscrowHeld) * 100 : 0;
+                          const statusLabel = p.status === "held" ? "محجوز" : p.status === "released" ? "مُحرّر" : p.status === "refunded" ? "مسترد" : "لا يوجد";
+                          const statusColor = p.status === "held" ? "bg-amber-100 text-amber-700" : p.status === "released" ? "bg-green-100 text-green-700" : p.status === "refunded" ? "bg-gray-100 text-gray-700" : "bg-slate-100 text-slate-500";
+                          return (
+                            <tr key={i} className="border-b hover:bg-slate-50 transition-colors">
+                              <td className="py-2 px-2 font-medium text-[#1a1a2e]">{p.title}</td>
+                              <td className="py-2 px-2"><Badge className={statusColor}>{statusLabel}</Badge></td>
+                              <td className="py-2 px-2 font-bold text-amber-700">{formatSAR(p.amount)} ر.س</td>
+                              <td className="py-2 px-2">
+                                <div className="flex items-center gap-2">
+                                  <Progress value={pct} className="h-2 w-20" />
+                                  <span className="text-slate-500">{fmtPct(pct)}%</span>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
