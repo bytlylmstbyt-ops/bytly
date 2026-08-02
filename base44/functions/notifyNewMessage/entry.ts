@@ -56,20 +56,16 @@ Deno.serve(async (req) => {
 
         const notificationPromises = recipientEmails.map(recipientEmail => 
             base44.asServiceRole.entities.Notification.create({
-                user_email: recipientEmail,
+                recipient_email: recipientEmail,
                 title: `رسالة جديدة من ${message.sender_name}`,
                 message: `${message.content?.substring(0, 100)}${message.content?.length > 100 ? '...' : ''}`,
                 type: 'new_message',
-                link: `/project-chat?id=${projectId}`,
-                metadata: {
-                    project_id: projectId,
-                    project_title: project?.title,
-                    conversation_id: conversationId,
-                    message_id: messageId,
-                    sender_name: message.sender_name,
-                    sender_role: message.sender_role
-                },
-                is_read: false
+                related_project_id: projectId,
+                related_entity_id: conversationId,
+                action_url: projectId ? `/ProjectChat?id=${projectId}` : `/Messages`,
+                priority: 'high',
+                is_read: false,
+                description: project?.title ? `مشروع: ${project.title}` : undefined
             })
         );
 

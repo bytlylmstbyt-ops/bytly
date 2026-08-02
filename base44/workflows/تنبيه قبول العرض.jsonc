@@ -24,7 +24,13 @@
           "call": "invoke_backend_function",
           "with": {
             "function_name": "eventDrivenNotifier",
-            "args": {}
+            "args": {
+              "event_type": "proposal_accepted",
+              "data": {
+                "proposal_id": "${ .trigger.entity_id }",
+                "proposal": "${ .trigger.data }"
+              }
+            }
           },
           "then": "end"
         }

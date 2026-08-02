@@ -2,7 +2,7 @@
   "name": "Notify New Messages",
   "description": "Send notifications when new messages are created in project chats",
   "trigger": {
-    "condition": null,
+    "condition": "${ .trigger.data.is_system_message != true }",
     "config": {
       "trigger_type": "entity",
       "events": [
@@ -24,7 +24,10 @@
           "call": "invoke_backend_function",
           "with": {
             "function_name": "notifyNewMessage",
-            "args": {}
+            "args": {
+              "messageId": "${ .trigger.entity_id }",
+              "data": "${ .trigger.data }"
+            }
           },
           "then": "end"
         }
