@@ -1,7 +1,8 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Star, Pause } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Star, Pause } from "lucide-react";
 import ProviderActionsMenu from "./ProviderActionsMenu";
 
 const STATUS_BADGE = {
@@ -19,14 +20,27 @@ const renderSub = (item, subField) => {
 
 export default function ProvidersTable({
   items, provider, providerKey, isAdmin, onUpdate, onDelete,
+  selectable = false, selectedIds = [], onToggle, onToggleAll,
 }) {
   const Icon = provider.icon;
+  const selectedSet = new Set(selectedIds);
+  const allSelected = items.length > 0 && items.every((it) => selectedSet.has(it.id));
+  const someSelected = items.some((it) => selectedSet.has(it.id));
+
   return (
     <Card className="border-0 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-[#F5F0E8] text-[#4A3F35] text-right">
+              {selectable && (
+                <th className="px-3 py-3 w-10 text-center">
+                  <Checkbox
+                    checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                    onCheckedChange={() => onToggleAll?.(items.map((i) => i.id))}
+                  />
+                </th>
+              )}
               <th className="px-3 py-3 font-semibold whitespace-nowrap">الاسم / الشركة</th>
               <th className="px-3 py-3 font-semibold whitespace-nowrap">البريد الإلكتروني</th>
               <th className="px-3 py-3 font-semibold whitespace-nowrap">المدينة</th>
@@ -39,7 +53,7 @@ export default function ProvidersTable({
           <tbody>
             {items.length === 0 ? (
               <tr>
-                <td colSpan={7} className="py-12 text-center text-slate-400">
+                <td colSpan={selectable ? 8 : 7} className="py-12 text-center text-slate-400">
                   <Icon className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                   لا يوجد سجلات مطابقة
                 </td>
@@ -47,8 +61,14 @@ export default function ProvidersTable({
             ) : (
               items.map((item, idx) => {
                 const suspended = item.is_available === false;
+                const checked = selectedSet.has(item.id);
                 return (
-                  <tr key={item.id} className={`border-t border-slate-100 hover:bg-slate-50/60 ${idx % 2 ? "bg-white" : "bg-slate-50/30"}`}>
+                  <tr key={item.id} className={`border-t border-slate-100 hover:bg-slate-50/60 ${idx % 2 ? "bg-white" : "bg-slate-50/30"} ${checked ? "ring-1 ring-inset ring-[#C9A66B]/40" : ""}`}>
+                    {selectable && (
+                      <td className="px-3 py-3 text-center">
+                        <Checkbox checked={checked} onCheckedChange={() => onToggle?.(item.id)} />
+                      </td>
+                    )}
                     <td className="px-3 py-3">
                       <div className="flex items-center gap-2">
                         {item.profile_image || item.company_logo ? (

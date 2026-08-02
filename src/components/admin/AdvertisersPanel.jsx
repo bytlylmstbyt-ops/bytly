@@ -7,6 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Search, Megaphone, Users, PlayCircle, StopCircle, Clock, DollarSign, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 import ProviderActionsMenu from "./ProviderActionsMenu";
+import BulkActionBar from "./BulkActionBar";
+import { useBulkSelection } from "./useBulkSelection";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const ACCOUNT_BADGE = {
   approved: "bg-green-100 text-green-700 border-green-200",
@@ -25,6 +28,8 @@ export default function AdvertisersPanel({ isAdmin }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const bulk = useBulkSelection();
 
   const load = useCallback(async () => {
     setRefreshing(true);
@@ -93,6 +98,29 @@ export default function AdvertisersPanel({ isAdmin }) {
   const onUpdate = (updated) =>
     setAdvertisers((p) => p.map((x) => (x.id === updated.id ? updated : x)));
   const onDelete = (id) => setAdvertisers((p) => p.filter((x) => x.id !== id));
+
+  const runBulk = async (action) => {
+    if (!isAdmin || bulk.selectedCount === 0) return;
+    setBulkBusy(true);
+    try {
+      const ids = bulk.selectedIds;
+      const Entity = base44.entities.Advertiser;
+      if (action === "delete") {
+        await Promise.all(ids.map((id) => Entity.delete(id)));
+      } else {
+        const patch = action === "activate" ? { status: "approved", is_available: true }
+          : action === "suspend" ? { status: "rejected" }
+          : action === "pause" ? { is_available: false } : null;
+        if (patch) await Promise.all(ids.map((id) => Entity.update(id, patch)));
+      }
+      await load();
+      bulk.clear();
+    } catch (e) {
+      console.error("bulk action failed", e);
+    } finally {
+      setBulkBusy(false);
+    }
+  };
 
   const statCards = [
     { label: "إجمالي المعلنين", value: stats.total, icon: Users, color: "text-[#4A3F35]", bg: "bg-[#F5F0E8]" },
@@ -163,12 +191,27 @@ export default function AdvertisersPanel({ isAdmin }) {
         </CardContent>
       </Card>
 
+      <BulkActionBar
+        selectedCount={bulk.selectedCount}
+        entityLabel="معلن"
+        onAction={runBulk}
+        onClear={bulk.clear}
+        isAdmin={isAdmin}
+        busy={bulkBusy}
+      />
+
       {/* Table */}
       <Card className="border-0 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-[#F5F0E8] text-[#4A3F35] text-right">
+                <th className="px-3 py-3 w-10 text-center">
+                  <Checkbox
+                    checked={filtered.length > 0 && filtered.every((a) => bulk.isSelected(a.id)) ? true : filtered.some((a) => bulk.isSelected(a.id)) ? "indeterminate" : false}
+                    onCheckedChange={() => bulk.toggleAll(filtered.map((a) => a.id))}
+                  />
+                </th>
                 <th className="px-3 py-3 font-semibold whitespace-nowrap">اسم المعلن</th>
                 <th className="px-3 py-3 font-semibold whitespace-nowrap">الشركة</th>
                 <th className="px-3 py-3 font-semibold whitespace-nowrap">نوع الإعلان</th>
@@ -183,7 +226,7 @@ export default function AdvertisersPanel({ isAdmin }) {
             <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-slate-400">
+                  <td colSpan={10} className="py-12 text-center text-slate-400">
                     <Megaphone className="w-10 h-10 mx-auto mb-2 text-slate-300" />
                     لا يوجد معلنون مطابقون
                   </td>
@@ -197,8 +240,12 @@ export default function AdvertisersPanel({ isAdmin }) {
                   const myAds = adsByName[a.company_name] || [];
                   const refAd = myAds.find((x) => x.is_active) || myAds[0] || {};
                   const value = a.campaign_value || a.subscription_value || 0;
+                  const checked = bulk.isSelected(a.id);
                   return (
-                    <tr key={a.id} className={`border-t border-slate-100 hover:bg-slate-50/60 ${idx % 2 ? "bg-white" : "bg-slate-50/30"}`}>
+                    <tr key={a.id} className={`border-t border-slate-100 hover:bg-slate-50/60 ${idx % 2 ? "bg-white" : "bg-slate-50/30"} ${checked ? "ring-1 ring-inset ring-[#C9A66B]/40" : ""}`}>
+                      <td className="px-3 py-3 text-center">
+                        <Checkbox checked={checked} onCheckedChange={() => bulk.toggle(a.id)} />
+                      </td>
                       <td className="px-3 py-3">
                         <div className="flex items-center gap-2">
                           {a.logo_url && <img src={a.logo_url} alt="" className="w-8 h-8 rounded object-cover" />}

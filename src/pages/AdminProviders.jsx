@@ -12,6 +12,8 @@ import { motion } from "framer-motion";
 import ProviderActionsMenu from "@/components/admin/ProviderActionsMenu";
 import AdvertisersPanel from "@/components/admin/AdvertisersPanel";
 import ProvidersTable from "@/components/admin/ProvidersTable";
+import BulkActionBar from "@/components/admin/BulkActionBar";
+import { useBulkSelection } from "@/components/admin/useBulkSelection";
 import { Megaphone } from "lucide-react";
 
 const PROVIDERS = [
@@ -37,6 +39,8 @@ export default function AdminProviders() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const bulk = useBulkSelection();
 
   useEffect(() => {
     base44.auth.me().then((u) => setIsAdmin(u?.role === "admin")).catch(() => {});
@@ -70,6 +74,29 @@ export default function AdminProviders() {
     ...p,
     [activeKey]: (p[activeKey] || []).filter((x) => x.id !== id),
   }));
+
+  const runBulk = async (action) => {
+    if (!isAdmin || bulk.selectedCount === 0) return;
+    setBulkBusy(true);
+    try {
+      const ids = bulk.selectedIds;
+      const Entity = base44.entities[activeKey];
+      if (action === "delete") {
+        await Promise.all(ids.map((id) => Entity.delete(id)));
+      } else {
+        const patch = action === "activate" ? { status: "approved", is_available: true }
+          : action === "suspend" ? { status: "rejected" }
+          : action === "pause" ? { is_available: false } : null;
+        if (patch) await Promise.all(ids.map((id) => Entity.update(id, patch)));
+      }
+      await loadAll();
+      bulk.clear();
+    } catch (e) {
+      console.error("bulk action failed", e);
+    } finally {
+      setBulkBusy(false);
+    }
+  };
 
   const filtered = useMemo(() => {
     return activeList.filter(item => {
@@ -138,7 +165,7 @@ export default function AdminProviders() {
           return (
             <button
               key={p.key}
-              onClick={() => { setActiveKey(p.key); setSearch(""); setStatusFilter("all"); }}
+              onClick={() => { setActiveKey(p.key); setSearch(""); setStatusFilter("all"); bulk.clear(); }}
               className={`flex items-center gap-2 shrink-0 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 isActive
                   ? "bg-[#4A3F35] text-white shadow-sm"
@@ -152,7 +179,7 @@ export default function AdminProviders() {
           );
         })}
         <button
-          onClick={() => { setActiveKey("Advertiser"); setSearch(""); setStatusFilter("all"); }}
+          onClick={() => { setActiveKey("Advertiser"); setSearch(""); setStatusFilter("all"); bulk.clear(); }}
           className={`flex items-center gap-2 shrink-0 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
             activeKey === "Advertiser"
               ? "bg-[#4A3F35] text-white shadow-sm"
@@ -217,6 +244,15 @@ export default function AdminProviders() {
       {activeKey === "Advertiser" ? (
         <AdvertisersPanel isAdmin={isAdmin} />
       ) : (
+      <>
+      <BulkActionBar
+        selectedCount={bulk.selectedCount}
+        entityLabel="مقدم خدمة"
+        onAction={runBulk}
+        onClear={bulk.clear}
+        isAdmin={isAdmin}
+        busy={bulkBusy}
+      />
       <ProvidersTable
         items={filtered}
         provider={activeProvider}
@@ -224,7 +260,12 @@ export default function AdminProviders() {
         isAdmin={isAdmin}
         onUpdate={onUpdate}
         onDelete={onDelete}
+        selectable={isAdmin}
+        selectedIds={bulk.selectedIds}
+        onToggle={bulk.toggle}
+        onToggleAll={bulk.toggleAll}
       />
+      </>
       )}
 
       <p className="text-center text-xs text-slate-400 mt-6">

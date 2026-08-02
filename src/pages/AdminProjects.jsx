@@ -14,6 +14,9 @@ import ProjectDetailModal from "@/components/admin/ProjectDetailModal";
 import ProjectActionsMenu from "@/components/admin/ProjectActionsMenu";
 import exportProjectsToExcel from "@/components/admin/exportProjects";
 import ProjectActivityFeed from "@/components/admin/ProjectActivityFeed";
+import BulkActionBar from "@/components/admin/BulkActionBar";
+import { useBulkSelection } from "@/components/admin/useBulkSelection";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const STATUS_LABELS = {
   open: "مفتوح", in_progress: "قيد التنفيذ", awaiting_technical_review: "بانتظار المراجعة الفنية",
@@ -60,6 +63,9 @@ export default function AdminProjects() {
   const [showDetail, setShowDetail] = useState(false);
   const [page, setPage] = useState(1);
   const [exporting, setExporting] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const bulk = useBulkSelection();
   const PAGE_SIZE = 10;
 
   const handleExport = async () => {
@@ -94,6 +100,9 @@ export default function AdminProjects() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    base44.auth.me().then((u) => setIsAdmin(u?.role === "admin")).catch(() => {});
+  }, []);
 
   // After any admin action, re-fetch only projects to update table + stats instantly (no full page reload)
   const [activityTick, setActivityTick] = useState(0);
@@ -104,6 +113,27 @@ export default function AdminProjects() {
     } catch (err) { console.error(err); }
     setActivityTick((t) => t + 1);
   }, []);
+
+  const runBulk = async (action) => {
+    setBulkBusy(true);
+    try {
+      const ids = bulk.selectedIds;
+      if (action === "delete") {
+        await Promise.all(ids.map((id) => base44.entities.Project.delete(id)));
+      } else {
+        const patch = action === "activate" ? { status: "in_progress" }
+          : action === "suspend" ? { status: "cancelled" }
+          : action === "pause" ? { status: "awaiting_technical_review" } : null;
+        if (patch) await Promise.all(ids.map((id) => base44.entities.Project.update(id, patch)));
+      }
+      await handleProjectUpdated();
+      bulk.clear();
+    } catch (e) {
+      console.error("bulk action failed", e);
+    } finally {
+      setBulkBusy(false);
+    }
+  };
 
   const lookup = useMemo(() => {
     const c = {}, e = {};
@@ -289,12 +319,27 @@ export default function AdminProjects() {
         </CardContent>
       </Card>
 
+      <BulkActionBar
+        selectedCount={bulk.selectedCount}
+        entityLabel="مشروع"
+        onAction={runBulk}
+        onClear={bulk.clear}
+        isAdmin={isAdmin}
+        busy={bulkBusy}
+      />
+
       {/* Table (desktop) */}
       <Card className="border-0 shadow-sm hidden md:block overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-slate-50 text-slate-500 text-xs">
+                <th className="text-center py-3 px-3 w-10">
+                  <Checkbox
+                    checked={paged.length > 0 && paged.every((p) => bulk.isSelected(p.id)) ? true : paged.some((p) => bulk.isSelected(p.id)) ? "indeterminate" : false}
+                    onCheckedChange={() => bulk.toggleAll(paged.map((p) => p.id))}
+                  />
+                </th>
                 <th className="text-right py-3 px-3 font-medium">رقم المشروع</th>
                 <th className="text-right py-3 px-3 font-medium">اسم المشروع</th>
                 <th className="text-right py-3 px-3 font-medium">العميل</th>
@@ -310,11 +355,15 @@ export default function AdminProjects() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {paged.length === 0 ? (
-                <tr><td colSpan={11} className="text-center py-12 text-slate-400">لا توجد مشاريع مطابقة</td></tr>
+                <tr><td colSpan={12} className="text-center py-12 text-slate-400">لا توجد مشاريع مطابقة</td></tr>
               ) : paged.map(p => {
                 const comp = computeCompletion(p.status);
+                const checked = bulk.isSelected(p.id);
                 return (
-                  <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={p.id} className={`hover:bg-slate-50 transition-colors ${checked ? "bg-[#C9A66B]/5" : ""}`}>
+                    <td className="py-2.5 px-3 text-center">
+                      <Checkbox checked={checked} onCheckedChange={() => bulk.toggle(p.id)} />
+                    </td>
                     <td className="py-2.5 px-3 text-slate-400 text-xs font-mono">#{p.id.slice(-6)}</td>
                     <td className="py-2.5 px-3 font-medium text-[#4A3F35] max-w-[200px] truncate">{p.title || "—"}</td>
                     <td className="py-2.5 px-3 text-slate-600">{lookup.clients[p.client_id] || "—"}</td>
