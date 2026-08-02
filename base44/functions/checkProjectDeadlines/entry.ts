@@ -30,55 +30,77 @@ Deno.serve(async (req) => {
     let notified = 0;
 
     for (const project of dueSoon) {
-      // Look up the assigned engineer's email
-      const engineers = await base44.asServiceRole.entities.Engineer.filter({ id: project.assigned_engineer_id });
-      if (!engineers.length || !engineers[0].email) continue;
-
-      const engineer = engineers[0];
       const deadlineFormatted = new Date(project.deadline).toLocaleDateString('ar-SA', {
         year: 'numeric', month: 'long', day: 'numeric'
       });
 
-      const notifTitle = '⏰ تذكير: موعد تسليم المشروع خلال 24 ساعة';
-      const notifBody = `اقترب موعد تسليم مشروع "${project.title}" — الموعد النهائي ${deadlineFormatted}. يرجى الالتزام بالموعد وإكمال التسليم في الوقت المحدد.`;
+      const actionUrl = `/ProjectDetails?id=${project.id}`;
+      const recipients = [];
 
-      // Create in-app notification
-      await base44.asServiceRole.entities.Notification.create({
-        recipient_email: engineer.email,
-        title: notifTitle,
-        message: notifBody,
-        type: 'project_update',
-        related_project_id: project.id,
-        action_url: `/ProjectDetails?id=${project.id}`,
-        is_read: false,
-        priority: 'high'
-      });
+      // Engineer
+      if (project.assigned_engineer_id) {
+        const engineers = await base44.asServiceRole.entities.Engineer.filter({ id: project.assigned_engineer_id });
+        if (engineers.length && engineers[0].email) {
+          recipients.push({ email: engineers[0].email, name: engineers[0].full_name, role: 'engineer' });
+        }
+      }
 
-      // Send email (best-effort)
-      try {
-        await base44.asServiceRole.integrations.Core.SendEmail({
-          to: engineer.email,
-          subject: `${notifTitle} - بايتلي`,
-          body: `
-            <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h2 style="color: #6B5D4F;">⏰ تذكير: موعد التسليم خلال 24 ساعة</h2>
-              <p>مرحباً ${escapeHtml(engineer.full_name)}،</p>
-              <p>نذكّرك بأن موعد تسليم مشروع <strong>"${escapeHtml(project.title)}"</strong> يقترب.</p>
-              <div style="background:#fff3cd; border-radius:8px; padding:16px; margin:16px 0;">
-                <p style="margin:0; color:#856404;">الموعد النهائي: <strong>${deadlineFormatted}</strong></p>
-                <p style="margin:8px 0 0; color:#856404;">باقي أقل من 24 ساعة على الموعد النهائي</p>
-              </div>
-              <a href="https://app.mybytly.com/ProjectDetails?id=${project.id}"
-                 style="display:inline-block; background: linear-gradient(135deg,#6B5D4F,#C9A66B); color:white; padding:12px 24px; border-radius:8px; text-decoration:none; margin-top:16px;">
-                عرض المشروع
-              </a>
-              <hr style="margin-top:24px; border:none; border-top:1px solid #eee;">
-              <p style="color:#aaa; font-size:12px;">بايتلي - منصة الهندسة والاستشارات</p>
-            </div>
-          `
+      // Project owner (client)
+      if (project.client_id) {
+        const clients = await base44.asServiceRole.entities.Client.filter({ id: project.client_id });
+        if (clients.length && clients[0].email) {
+          recipients.push({ email: clients[0].email, name: clients[0].full_name, role: 'client' });
+        }
+      }
+
+      if (!recipients.length) continue;
+
+      for (const recipient of recipients) {
+        const isEngineer = recipient.role === 'engineer';
+        const notifTitle = '⏰ تذكير: موعد تسليم المشروع خلال 24 ساعة';
+        const notifBody = isEngineer
+          ? `اقترب موعد تسليم مشروع "${project.title}" — الموعد النهائي ${deadlineFormatted}. يرجى الالتزام بالموعد وإكمال التسليم في الوقت المحدد.`
+          : `اقترب موعد تسليم مشروعك "${project.title}" — الموعد النهائي ${deadlineFormatted}. سنعمل مع المهندس المسؤول على إتمام التسليم في الوقت المحدد.`;
+
+        // In-app notification
+        await base44.asServiceRole.entities.Notification.create({
+          recipient_email: recipient.email,
+          title: notifTitle,
+          message: notifBody,
+          type: 'project_update',
+          related_project_id: project.id,
+          action_url: actionUrl,
+          is_read: false,
+          priority: 'high'
         });
-      } catch (emailErr) {
-        console.error('Email send failed for', engineer.email, ':', emailErr.message);
+
+        // Email (best-effort)
+        try {
+          await base44.asServiceRole.integrations.Core.SendEmail({
+            to: recipient.email,
+            subject: `${notifTitle} - بايتلي`,
+            body: `
+              <div dir="rtl" style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #6B5D4F;">⏰ تذكير: موعد التسليم خلال 24 ساعة</h2>
+                <p>مرحباً ${escapeHtml(recipient.name || '')}،</p>
+                <p>نذكّرك بأن موعد تسليم مشروع <strong>"${escapeHtml(project.title)}"</strong> يقترب.</p>
+                <div style="background:#fff3cd; border-radius:8px; padding:16px; margin:16px 0;">
+                  <p style="margin:0; color:#856404;">الموعد النهائي: <strong>${deadlineFormatted}</strong></p>
+                  <p style="margin:8px 0 0; color:#856404;">باقي أقل من 24 ساعة على الموعد النهائي</p>
+                </div>
+                ${isEngineer ? '<p style="color:#856404;">يرجى إكمال التسليم في الوقت المحدد وفقًا للاتفاقية.</p>' : '<p style="color:#856404;">سنعمل مع المهندس المسؤول على إتمام التسليم في الوقت المحدد.</p>'}
+                <a href="https://app.mybytly.com/ProjectDetails?id=${project.id}"
+                   style="display:inline-block; background: linear-gradient(135deg,#6B5D4F,#C9A66B); color:white; padding:12px 24px; border-radius:8px; text-decoration:none; margin-top:16px;">
+                  عرض المشروع
+                </a>
+                <hr style="margin-top:24px; border:none; border-top:1px solid #eee;">
+                <p style="color:#aaa; font-size:12px;">بايتلي - منصة الهندسة والاستشارات</p>
+              </div>
+            `
+          });
+        } catch (emailErr) {
+          console.error('Email send failed for', recipient.email, ':', emailErr.message);
+        }
       }
 
       // Mark reminder as sent
