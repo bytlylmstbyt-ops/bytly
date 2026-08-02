@@ -7,6 +7,7 @@ import {
   LayoutDashboard, Users, FileText, Wallet, Scale, Bell, BarChart3, Settings as SettingsIcon,
   FolderKanban, Building2, Loader2, ShieldAlert, ArrowUpRight
 } from "lucide-react";
+import MonthlyRevenueSummaryPanel from "@/components/admin/MonthlyRevenueSummaryPanel";
 
 // ── Category → page map ────────────────────────────────────────────────────
 // Every entry here points at a page that already exists in the app.
@@ -187,6 +188,8 @@ export default function AdminControlCenter() {
           كل أدوات إدارة بيتلي في مكان واحد — اختر قسمًا من القائمة، ثم افتح الصفحة المناسبة.
         </p>
       </div>
+
+      <MonthlyRevenueSummaryPanel />
 
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6">
         {/* Category nav */}
