@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import ProjectDetailModal from "@/components/admin/ProjectDetailModal";
+import ProjectActionsMenu from "@/components/admin/ProjectActionsMenu";
 
 const STATUS_LABELS = {
   open: "مفتوح", in_progress: "قيد التنفيذ", awaiting_technical_review: "بانتظار المراجعة الفنية",
@@ -78,6 +79,14 @@ export default function AdminProjects() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // After any admin action, re-fetch only projects to update table + stats instantly (no full page reload)
+  const handleProjectUpdated = useCallback(async () => {
+    try {
+      const projectsData = await base44.entities.Project.list("-created_date", 500);
+      setProjects(projectsData);
+    } catch (err) { console.error(err); }
+  }, []);
 
   const lookup = useMemo(() => {
     const c = {}, e = {};
@@ -300,14 +309,13 @@ export default function AdminProjects() {
                     <td className="py-2.5 px-3 text-xs text-slate-400">{p.created_date ? new Date(p.created_date).toLocaleDateString("ar-SA") : "—"}</td>
                     <td className="py-2.5 px-3 text-xs text-slate-400">{p.updated_date ? new Date(p.updated_date).toLocaleDateString("ar-SA") : "—"}</td>
                     <td className="py-2.5 px-3 text-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => { setSelectedProject(p); setShowDetail(true); }}
-                        className="hover:bg-[#C9A66B]/10 hover:text-[#C9A66B]"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
+                      <ProjectActionsMenu
+                        project={p}
+                        engineers={engineers}
+                        onView={() => { setSelectedProject(p); setShowDetail(true); }}
+                        onUpdated={handleProjectUpdated}
+                        onDeleted={handleProjectUpdated}
+                      />
                     </td>
                   </tr>
                 );
@@ -331,9 +339,16 @@ export default function AdminProjects() {
           return (
             <Card key={p.id} className="border-0 shadow-sm" onClick={() => { setSelectedProject(p); setShowDetail(true); }}>
               <CardContent className="p-3">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-2" onClick={(e) => e.stopPropagation()}>
                   <span className="text-xs text-slate-400 font-mono">#{p.id.slice(-6)}</span>
                   <Badge className={`${STATUS_COLORS[p.status] || ""} border`} variant="outline">{STATUS_LABELS[p.status]}</Badge>
+                  <ProjectActionsMenu
+                    project={p}
+                    engineers={engineers}
+                    onView={() => { setSelectedProject(p); setShowDetail(true); }}
+                    onUpdated={handleProjectUpdated}
+                    onDeleted={handleProjectUpdated}
+                  />
                 </div>
                 <p className="font-bold text-[#4A3F35] text-sm mb-1">{p.title || "—"}</p>
                 <div className="text-xs text-slate-500 space-y-0.5">
