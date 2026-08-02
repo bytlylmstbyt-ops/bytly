@@ -113,6 +113,12 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(false);
         
         if (error.status === 401 || error.status === 403) {
+          // Token is stale/invalid — clear it so subsequent loads skip the me() call
+          // instead of re-issuing a 401 on every page mount.
+          try {
+            localStorage.removeItem('base44_access_token');
+            localStorage.removeItem('token');
+          } catch (_) {}
           setAuthError({
             type: 'auth_required',
             message: 'Authentication required'
