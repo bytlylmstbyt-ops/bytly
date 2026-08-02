@@ -9,6 +9,7 @@ import {
   CheckCircle2, XCircle, Clock, RefreshCw, Users, MapPin, Star
 } from "lucide-react";
 import { motion } from "framer-motion";
+import ProviderActionsMenu from "@/components/admin/ProviderActionsMenu";
 
 const PROVIDERS = [
   { key: "EngineeringFirm", label: "الشركات الهندسية", icon: Building2, nameField: "company_name", subField: "specializations" },
@@ -32,7 +33,11 @@ export default function AdminProviders() {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [actionLoading, setActionLoading] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    base44.auth.me().then((u) => setIsAdmin(u?.role === "admin")).catch(() => {});
+  }, []);
 
   const loadAll = useCallback(async () => {
     setRefreshing(true);
@@ -74,21 +79,6 @@ export default function AdminProviders() {
       verified: list.filter(x => x.is_verified).length,
     };
   }, [data, activeKey]);
-
-  const handleStatus = async (id, status) => {
-    setActionLoading(`${id}-${status}`);
-    try {
-      await base44.entities[activeKey].update(id, { status, verification_date: status === "approved" ? new Date().toISOString() : null });
-      setData(prev => ({
-        ...prev,
-        [activeKey]: prev[activeKey].map(x => x.id === id ? { ...x, status } : x)
-      }));
-    } catch (err) {
-      console.error("Update failed", err);
-    } finally {
-      setActionLoading(null);
-    }
-  };
 
   const statCards = [
     { label: "الإجمالي", value: stats.total, icon: Users, color: "text-[#4A3F35]", bg: "bg-[#F5F0E8]" },
@@ -241,29 +231,24 @@ export default function AdminProviders() {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        {item.status !== "approved" && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleStatus(item.id, "approved")}
-                            disabled={actionLoading === `${item.id}-approved`}
-                            className="bg-green-600 hover:bg-green-700 text-white"
-                          >
-                            <CheckCircle2 className="w-4 h-4 ml-1" />
-                            اعتماد
-                          </Button>
-                        )}
-                        {item.status !== "rejected" && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleStatus(item.id, "rejected")}
-                            disabled={actionLoading === `${item.id}-rejected`}
-                            className="text-red-600 border-red-200 hover:bg-red-50"
-                          >
-                            <XCircle className="w-4 h-4 ml-1" />
-                            رفض
-                          </Button>
-                        )}
+                        <ProviderActionsMenu
+                          provider={item}
+                          providerKey={activeKey}
+                          nameField={activeProvider.nameField}
+                          isAdmin={isAdmin}
+                          onUpdate={(updated) =>
+                            setData((prev) => ({
+                              ...prev,
+                              [activeKey]: prev[activeKey].map((x) => (x.id === updated.id ? updated : x)),
+                            }))
+                          }
+                          onDelete={(id) =>
+                            setData((prev) => ({
+                              ...prev,
+                              [activeKey]: prev[activeKey].filter((x) => x.id !== id),
+                            }))
+                          }
+                        />
                       </div>
                     </div>
                   </CardContent>
