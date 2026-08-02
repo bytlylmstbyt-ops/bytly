@@ -157,6 +157,12 @@
     -webkit-user-select: none;
   }
 
+  /* Remove the 300ms tap delay on mobile/in-app browsers (e.g. Facebook) so
+     form controls and buttons feel instantly responsive. */
+  button, a, input, label, [role="button"], [role="tab"], [role="menuitem"], select, textarea {
+    touch-action: manipulation;
+  }
+
   /* Touch active feedback — scale down + opacity on tap for all tappable elements */
   @media (pointer: coarse) {
     button:active, a:active, [role="button"]:active, [role="tab"]:active {
