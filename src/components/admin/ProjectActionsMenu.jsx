@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
+import { logProjectChange, logProjectDeletion } from "@/components/admin/logProjectChange";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -39,6 +41,7 @@ function allowedActions(status) {
 
 export default function ProjectActionsMenu({ project, engineers, onView, onUpdated, onDeleted, isAdmin = true }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [confirmAction, setConfirmAction] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
@@ -59,6 +62,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
     setLoading(true);
     try {
       await base44.entities.Project.update(project.id, data);
+      await logProjectChange(project, data, user);
       await onUpdated();
       setConfirmAction(null);
       setReason("");
@@ -84,6 +88,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
     setLoading(true);
     try {
       await base44.entities.Project.delete(project.id);
+      await logProjectDeletion(project, user);
       await onDeleted();
       setConfirmAction(null);
     } catch (err) {
@@ -102,6 +107,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
     setLoading(true);
     try {
       await base44.entities.Project.update(project.id, editForm);
+      await logProjectChange(project, editForm, user);
       await onUpdated();
       setShowEdit(false);
     } catch (err) {
@@ -115,6 +121,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
     setLoading(true);
     try {
       await base44.entities.Project.update(project.id, { status });
+      await logProjectChange(project, { status }, user);
       await onUpdated();
       setShowStatus(false);
     } catch (err) {
@@ -128,6 +135,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
     setLoading(true);
     try {
       await base44.entities.Project.update(project.id, { assigned_engineer_id: engId || null });
+      await logProjectChange(project, { assigned_engineer_id: engId || null }, user);
       await onUpdated();
       setShowAssign(false);
     } catch (err) {

@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 import ProjectDetailModal from "@/components/admin/ProjectDetailModal";
 import ProjectActionsMenu from "@/components/admin/ProjectActionsMenu";
 import exportProjectsToExcel from "@/components/admin/exportProjects";
+import ProjectActivityFeed from "@/components/admin/ProjectActivityFeed";
 
 const STATUS_LABELS = {
   open: "مفتوح", in_progress: "قيد التنفيذ", awaiting_technical_review: "بانتظار المراجعة الفنية",
@@ -95,11 +96,13 @@ export default function AdminProjects() {
   useEffect(() => { loadData(); }, [loadData]);
 
   // After any admin action, re-fetch only projects to update table + stats instantly (no full page reload)
+  const [activityTick, setActivityTick] = useState(0);
   const handleProjectUpdated = useCallback(async () => {
     try {
       const projectsData = await base44.entities.Project.list("-created_date", 500);
       setProjects(projectsData);
     } catch (err) { console.error(err); }
+    setActivityTick((t) => t + 1);
   }, []);
 
   const lookup = useMemo(() => {
@@ -406,6 +409,11 @@ export default function AdminProjects() {
           </Button>
         </div>
       )}
+
+      {/* Live activity feed — transparent audit of status & financial changes */}
+      <div className="mt-6">
+        <ProjectActivityFeed refreshKey={activityTick} />
+      </div>
 
       {/* Detail modal */}
       <ProjectDetailModal
