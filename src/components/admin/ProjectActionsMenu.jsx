@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -9,9 +10,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import ActivityLogDialog from "@/components/admin/ActivityLogDialog";
+import ContractViewDialog from "@/components/admin/ContractViewDialog";
+import PaymentsViewDialog from "@/components/admin/PaymentsViewDialog";
 import {
   MoreVertical, Eye, Edit, RefreshCw, CheckCircle2, XCircle,
   Pause, Play, Lock, Trash2, UserCog, Loader2, AlertTriangle,
+  Scale, Wallet, MessagesSquare, History,
 } from "lucide-react";
 
 const STATUS_LABELS = {
@@ -20,14 +25,35 @@ const STATUS_LABELS = {
   completed: "مكتمل", cancelled: "ملغي", disputed: "نزاع",
 };
 
-export default function ProjectActionsMenu({ project, engineers, onView, onUpdated, onDeleted }) {
-  const [confirmAction, setConfirmAction] = useState(null); // {type, title, desc}
+// Which actions are allowed for a given status
+function allowedActions(status) {
+  const active = ["open", "in_progress", "awaiting_technical_review", "pending_client_approval", "technical_approved"];
+  return {
+    approve: ["awaiting_technical_review", "pending_client_approval"].includes(status),
+    reject: !["completed", "cancelled"].includes(status),
+    pause: ["open", "in_progress"].includes(status),
+    reactivate: status === "cancelled",
+    close: ["in_progress", "technical_approved", "pending_client_approval"].includes(status),
+  };
+}
+
+export default function ProjectActionsMenu({ project, engineers, onView, onUpdated, onDeleted, isAdmin = true }) {
+  const navigate = useNavigate();
+  const [confirmAction, setConfirmAction] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
   const [showAssign, setShowAssign] = useState(false);
+  const [showActivity, setShowActivity] = useState(false);
+  const [showContract, setShowContract] = useState(false);
+  const [showPayments, setShowPayments] = useState(false);
   const [editForm, setEditForm] = useState({ title: "", description: "" });
   const [reason, setReason] = useState("");
+
+  const can = allowedActions(project?.status);
+  const hasEngineer = !!project?.assigned_engineer_id;
+  const hasClient = !!project?.client_id;
+  const hasEscrow = (project?.escrow_amount || 0) > 0 || (project?.budget_max || 0) > 0;
 
   const execUpdate = async (data, actionLabel) => {
     setLoading(true);
@@ -111,6 +137,10 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
     }
   };
 
+  const openMessages = () => {
+    navigate(`/Messages?project_id=${project.id}`);
+  };
+
   const confirmConfig = {
     approve: { title: "الموافقة على المشروع", desc: "سيتم اعتماد المشروع فنيًا والمتابعة للعميل.", btn: "موافقة", color: "bg-green-600 hover:bg-green-700" },
     reject: { title: "رفض المشروع", desc: "سيتم إلغاء المشروع. لا يمكن التراجع بسهولة.", btn: "رفض", color: "bg-red-600 hover:bg-red-700" },
@@ -120,6 +150,16 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
     delete: { title: "حذف المشروع", desc: "سيتم حذف المشروع نهائيًا. لا يمكن التراجع!", btn: "حذف نهائي", color: "bg-red-700 hover:bg-red-800" },
   };
 
+  const Item = ({ icon: Icon, label, onClick, disabled, danger }) => (
+    <DropdownMenuItem
+      onClick={onClick}
+      disabled={disabled}
+      className={`cursor-pointer ${danger ? "text-red-700 focus:text-red-700 focus:bg-red-50" : ""}`}
+    >
+      <Icon className="w-4 h-4 ml-2" /> {label}
+    </DropdownMenuItem>
+  );
+
   return (
     <>
       <DropdownMenu>
@@ -128,39 +168,24 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
             <MoreVertical className="w-4 h-4 text-slate-500" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52">
-          <DropdownMenuItem onClick={onView} className="cursor-pointer">
-            <Eye className="w-4 h-4 ml-2" /> عرض التفاصيل
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={openEdit} className="cursor-pointer">
-            <Edit className="w-4 h-4 ml-2" /> تعديل المشروع
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setShowStatus(true)} className="cursor-pointer">
-            <RefreshCw className="w-4 h-4 ml-2" /> تغيير الحالة
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setShowAssign(true)} className="cursor-pointer">
-            <UserCog className="w-4 h-4 ml-2" /> تعيين المهندس
-          </DropdownMenuItem>
+        <DropdownMenuContent align="start" className="w-56">
+          <Item icon={Eye} label="عرض التفاصيل" onClick={onView} />
+          <Item icon={Edit} label="تعديل المشروع" onClick={openEdit} />
+          <Item icon={RefreshCw} label="تغيير الحالة" onClick={() => setShowStatus(true)} />
+          <Item icon={UserCog} label="تعيين المهندس" onClick={() => setShowAssign(true)} />
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setConfirmAction({ type: "approve" })} className="cursor-pointer text-green-700 focus:text-green-700 focus:bg-green-50">
-            <CheckCircle2 className="w-4 h-4 ml-2" /> الموافقة
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setConfirmAction({ type: "reject" })} className="cursor-pointer text-red-700 focus:text-red-700 focus:bg-red-50">
-            <XCircle className="w-4 h-4 ml-2" /> الرفض
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setConfirmAction({ type: "pause" })} className="cursor-pointer text-amber-700 focus:text-amber-700 focus:bg-amber-50">
-            <Pause className="w-4 h-4 ml-2" /> إيقاف المشروع
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setConfirmAction({ type: "reactivate" })} className="cursor-pointer text-blue-700 focus:text-blue-700 focus:bg-blue-50">
-            <Play className="w-4 h-4 ml-2" /> إعادة تفعيل
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setConfirmAction({ type: "close" })} className="cursor-pointer">
-            <Lock className="w-4 h-4 ml-2" /> إغلاق المشروع
-          </DropdownMenuItem>
+          <Item icon={Scale} label="عرض العقد" onClick={() => setShowContract(true)} disabled={!hasEngineer && !hasClient} />
+          <Item icon={Wallet} label="المدفوعات والمحفظة" onClick={() => setShowPayments(true)} disabled={!hasEscrow} />
+          <Item icon={MessagesSquare} label="فتح المحادثات" onClick={openMessages} disabled={!hasClient && !hasEngineer} />
+          <Item icon={History} label="سجل النشاط" onClick={() => setShowActivity(true)} />
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setConfirmAction({ type: "delete" })} className="cursor-pointer text-red-700 focus:text-red-700 focus:bg-red-50">
-            <Trash2 className="w-4 h-4 ml-2" /> حذف
-          </DropdownMenuItem>
+          <Item icon={CheckCircle2} label="الموافقة" onClick={() => setConfirmAction({ type: "approve" })} disabled={!can.approve} />
+          <Item icon={XCircle} label="رفض المشروع" onClick={() => setConfirmAction({ type: "reject" })} disabled={!can.reject} danger />
+          <Item icon={Pause} label="إيقاف المشروع" onClick={() => setConfirmAction({ type: "pause" })} disabled={!can.pause} />
+          <Item icon={Play} label="إعادة تفعيل" onClick={() => setConfirmAction({ type: "reactivate" })} disabled={!can.reactivate} />
+          <Item icon={Lock} label="إغلاق المشروع" onClick={() => setConfirmAction({ type: "close" })} disabled={!can.close} />
+          <DropdownMenuSeparator />
+          <Item icon={Trash2} label="حذف المشروع" onClick={() => setConfirmAction({ type: "delete" })} disabled={!isAdmin} danger />
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -233,6 +258,11 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Side dialogs */}
+      <ActivityLogDialog project={project} open={showActivity} onOpenChange={setShowActivity} />
+      <ContractViewDialog project={project} open={showContract} onOpenChange={setShowContract} />
+      <PaymentsViewDialog project={project} open={showPayments} onOpenChange={setShowPayments} />
 
       {/* Confirmation dialog */}
       <Dialog open={!!confirmAction} onOpenChange={(o) => !o && setConfirmAction(null)}>

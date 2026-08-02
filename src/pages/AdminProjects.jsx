@@ -277,7 +277,7 @@ export default function AdminProjects() {
                 <th className="text-right py-3 px-3 font-medium">الحالة</th>
                 <th className="text-right py-3 px-3 font-medium">تاريخ الإنشاء</th>
                 <th className="text-right py-3 px-3 font-medium">آخر تحديث</th>
-                <th className="text-center py-3 px-3 font-medium"></th>
+                <th className="text-center py-3 px-3 font-medium">الإجراءات</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
