@@ -189,7 +189,7 @@ export default function Home() {
           <img
             src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=1920"
             alt="مساحة تصميم داخلي حديثة كخلفية لصفحة بيتلي الرئيسية للمنظومة الهندسية المتكاملة"
-            loading="lazy"
+            loading="eager"
             decoding="async"
             className="w-full h-full object-cover"
           />
