@@ -5,7 +5,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   LayoutDashboard, Users, FileText, Wallet, Scale, Bell, BarChart3, Settings as SettingsIcon,
-  FolderKanban, Loader2, ShieldAlert, ArrowUpRight
+  FolderKanban, Building2, Loader2, ShieldAlert, ArrowUpRight
 } from "lucide-react";
 
 // ── Category → page map ────────────────────────────────────────────────────
@@ -45,6 +45,17 @@ const CATEGORIES = [
       { page: "RoleManagement", label: "إدارة الأدوار", desc: "تعريف أدوار المستخدمين وصلاحياتها" },
       { page: "UserRoleAssignment", label: "تعيين الأدوار للمستخدمين", desc: "ربط المستخدمين بالأدوار" },
       { page: "PendingApprovals", label: "الموافقات المعلقة", desc: "طلبات بانتظار المراجعة" },
+    ],
+  },
+  {
+    key: "providers",
+    label: "مقدمو الخدمة",
+    icon: Building2,
+    description: "الشركات الهندسية والاستشارية والاستشاريون والمقاولون والموردون.",
+    items: [
+      { page: "AdminProviders", label: "لوحة مقدمي الخدمة", desc: "إدارة الشركات الهندسية والاستشارية والاستشاريين والمقاولين والموردين" },
+      { page: "ConsultingFirms", label: "الشركات الاستشارية", desc: "تصفح الشركات الاستشارية المعتمدة" },
+      { page: "AdminMarketEntities", label: "كيانات السوق", desc: "الشركات والموردون في السوق" },
     ],
   },
   {
