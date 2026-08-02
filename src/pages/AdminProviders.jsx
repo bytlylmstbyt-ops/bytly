@@ -13,8 +13,9 @@ import ProviderActionsMenu from "@/components/admin/ProviderActionsMenu";
 import AdvertisersPanel from "@/components/admin/AdvertisersPanel";
 import ProvidersTable from "@/components/admin/ProvidersTable";
 import BulkActionBar from "@/components/admin/BulkActionBar";
+import AddProviderDialog from "@/components/admin/AddProviderDialog";
 import { useBulkSelection } from "@/components/admin/useBulkSelection";
-import { Megaphone } from "lucide-react";
+import { Megaphone, Plus } from "lucide-react";
 
 const PROVIDERS = [
   { key: "EngineeringFirm", label: "الشركات الهندسية", icon: Building2, nameField: "company_name", subField: "specializations" },
@@ -40,6 +41,8 @@ export default function AdminProviders() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [isAdmin, setIsAdmin] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const bulk = useBulkSelection();
 
   useEffect(() => {
@@ -149,10 +152,21 @@ export default function AdminProviders() {
               <p className="text-sm text-slate-500">إدارة الشركات الهندسية والاستشارية والاستشاريين والمقاولين والموردين</p>
             </div>
           </div>
-          <Button variant="outline" onClick={loadAll} disabled={refreshing}>
-            <RefreshCw className={`w-4 h-4 ml-2 ${refreshing ? "animate-spin" : ""}`} />
-            تحديث
-          </Button>
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Button
+                onClick={() => setShowAddDialog(true)}
+                className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white hover:opacity-90"
+              >
+                <Plus className="w-4 h-4 ml-2" />
+                إضافة مقدم خدمة
+              </Button>
+            )}
+            <Button variant="outline" onClick={loadAll} disabled={refreshing}>
+              <RefreshCw className={`w-4 h-4 ml-2 ${refreshing ? "animate-spin" : ""}`} />
+              تحديث
+            </Button>
+          </div>
         </div>
       </motion.div>
 
@@ -242,7 +256,7 @@ export default function AdminProviders() {
       )}
 
       {activeKey === "Advertiser" ? (
-        <AdvertisersPanel isAdmin={isAdmin} />
+        <AdvertisersPanel key={refreshKey} isAdmin={isAdmin} />
       ) : (
       <>
       <BulkActionBar
@@ -271,6 +285,18 @@ export default function AdminProviders() {
       <p className="text-center text-xs text-slate-400 mt-6">
         عرض {filtered.length} من {activeList.length} سجل
       </p>
+
+      {isAdmin && (
+        <AddProviderDialog
+          open={showAddDialog}
+          onOpenChange={setShowAddDialog}
+          defaultType={activeKey === "Advertiser" ? "Advertiser" : activeKey}
+          onCreated={() => {
+            loadAll();
+            setRefreshKey((k) => k + 1);
+          }}
+        />
+      )}
     </div>
   );
 }
