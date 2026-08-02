@@ -11,6 +11,7 @@ import {
 import { motion } from "framer-motion";
 import ProviderActionsMenu from "@/components/admin/ProviderActionsMenu";
 import AdvertisersPanel from "@/components/admin/AdvertisersPanel";
+import ProvidersTable from "@/components/admin/ProvidersTable";
 import { Megaphone } from "lucide-react";
 
 const PROVIDERS = [
@@ -60,6 +61,15 @@ export default function AdminProviders() {
 
   const activeProvider = PROVIDERS.find(p => p.key === activeKey);
   const activeList = data[activeKey] || [];
+
+  const onUpdate = (updated) => setData((p) => ({
+    ...p,
+    [activeKey]: (p[activeKey] || []).map((x) => (x.id === updated.id ? updated : x)),
+  }));
+  const onDelete = (id) => setData((p) => ({
+    ...p,
+    [activeKey]: (p[activeKey] || []).filter((x) => x.id !== id),
+  }));
 
   const filtered = useMemo(() => {
     return activeList.filter(item => {
@@ -207,9 +217,14 @@ export default function AdminProviders() {
       {activeKey === "Advertiser" ? (
         <AdvertisersPanel isAdmin={isAdmin} />
       ) : (
-      <div className="space-y-3">
-...
-      </div>
+      <ProvidersTable
+        items={filtered}
+        provider={activeProvider}
+        providerKey={activeKey}
+        isAdmin={isAdmin}
+        onUpdate={onUpdate}
+        onDelete={onDelete}
+      />
       )}
 
       <p className="text-center text-xs text-slate-400 mt-6">
