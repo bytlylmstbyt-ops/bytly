@@ -176,7 +176,11 @@ export default function AdminProjects() {
         (p.title || "").toLowerCase().includes(q) ||
         (p.id || "").toLowerCase().includes(q) ||
         (p.id || "").slice(-6).toLowerCase().includes(q);
-      const matchStatus = statusFilter === "all" || p.status === statusFilter;
+      const matchStatus = statusFilter === "all" ? true :
+        statusFilter === "active" ? ["open", "in_progress"].includes(p.status) :
+        statusFilter === "pending" ? ["awaiting_technical_review", "technical_approved", "pending_client_approval"].includes(p.status) :
+        statusFilter === "suspended" ? ["cancelled", "disputed"].includes(p.status) :
+        statusFilter === "completed" ? p.status === "completed" : true;
       const matchCity = cityFilter === "all" || p.location === cityFilter;
       const matchType = typeFilter === "all" || p.project_type === typeFilter;
       const matchEngineer = engineerFilter === "all" || p.assigned_engineer_id === engineerFilter;
@@ -288,7 +292,10 @@ export default function AdminProjects() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
               <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white cursor-pointer">
                 <option value="all">كل الحالات</option>
-                {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                <option value="active">نشط</option>
+                <option value="pending">معلق</option>
+                <option value="suspended">موقوف</option>
+                <option value="completed">مكتمل</option>
               </select>
               <select value={cityFilter} onChange={(e) => { setCityFilter(e.target.value); setPage(1); }} className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white cursor-pointer">
                 <option value="all">كل المدن</option>

@@ -106,7 +106,10 @@ export default function AdminProviders() {
       const name = item[activeProvider.nameField] || "";
       const matchSearch = !search || name.toLowerCase().includes(search.toLowerCase()) ||
         (item.email || "").toLowerCase().includes(search.toLowerCase());
-      const matchStatus = statusFilter === "all" || item.status === statusFilter;
+      const matchStatus = statusFilter === "all" ? true :
+        statusFilter === "active" ? (item.status === "approved" && item.is_available !== false) :
+        statusFilter === "pending" ? item.status === "pending" :
+        statusFilter === "suspended" ? (item.is_available === false || item.status === "rejected") : true;
       return matchSearch && matchStatus;
     });
   }, [activeList, search, statusFilter, activeProvider]);
@@ -246,9 +249,9 @@ export default function AdminProviders() {
               className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-[#C9A66B] cursor-pointer"
             >
               <option value="all">كل الحالات</option>
-              <option value="approved">معتمد</option>
+              <option value="active">نشط</option>
               <option value="pending">معلق</option>
-              <option value="rejected">مرفوض</option>
+              <option value="suspended">موقوف</option>
             </select>
           </div>
         </CardContent>
