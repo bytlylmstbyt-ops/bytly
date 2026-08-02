@@ -27,10 +27,11 @@ export default async function(req) {
     if (user.role !== 'admin') return Response.json({ error: 'Forbidden — admin only' }, { status: 403 });
 
     // ── Gather data ──────────────────────────────────────────────
-    const [projects, recentLogs, adminUsers] = await Promise.all([
+    const [projects, recentLogs, adminUsers, invoices] = await Promise.all([
       base44.asServiceRole.entities.Project.list("-created_date", 500),
       base44.asServiceRole.entities.TaskActivityLog.list("-created_date", 50),
       base44.asServiceRole.entities.User.list(),
+      base44.asServiceRole.entities.Invoice.list("-created_date", 200),
     ]);
 
     const admins = adminUsers.filter((u) => u.role === "admin" && u.email);
@@ -55,9 +56,35 @@ export default async function(req) {
     const statusChanges = weekLogs.filter((l) => l.action_type === "status_changed");
     const financialChanges = weekLogs.filter((l) => l.action_type === "updated" && l.field_name !== "title/description");
 
+    // ── Outstanding debts (unpaid / overdue invoices + unpaid projects) ──
+    const outstandingInvoices = invoices.filter((inv) => ["sent", "overdue"].includes(inv.status));
+    const totalOutstanding = outstandingInvoices.reduce((s, inv) => s + Number(inv.total_amount || 0) - Number(inv.paid_amount || 0), 0);
+    const overdueInvoices = outstandingInvoices.filter((inv) => inv.due_date && new Date(inv.due_date) < new Date());
+    const totalOverdue = overdueInvoices.reduce((s, inv) => s + Number(inv.total_amount || 0) - Number(inv.paid_amount || 0), 0);
+    const unpaidProjects = projects.filter((p) => ["unpaid", "escrowed"].includes(p.payment_status));
+    const unpaidProjectsEscrow = unpaidProjects.reduce((s, p) => s + Number(p.escrow_amount || 0), 0);
+
     // ── Build HTML email ─────────────────────────────────────────
     const periodStart = weekAgo.toLocaleDateString("ar-SA");
     const periodEnd = new Date().toLocaleDateString("ar-SA");
+
+    const debtRows = outstandingInvoices
+      .sort((a, b) => (b.total_amount - b.paid_amount) - (a.total_amount - a.paid_amount))
+      .slice(0, 12)
+      .map((inv) => {
+        const due = Number(inv.total_amount || 0) - Number(inv.paid_amount || 0);
+        const isOverdue = inv.due_date && new Date(inv.due_date) < new Date();
+        const statusColor = isOverdue ? "#dc2626" : "#b45309";
+        const statusLabel = isOverdue ? "متأخر" : "مستحق";
+        return `
+        <tr>
+          <td style="padding:6px 10px;border:1px solid #eee;font-size:12px;font-weight:bold">${esc(inv.invoice_number || "—")}</td>
+          <td style="padding:6px 10px;border:1px solid #eee;font-size:12px">${esc(inv.client_company || inv.client_email || "—")}</td>
+          <td style="padding:6px 10px;border:1px solid #eee;font-size:12px;font-weight:bold;text-align:center">${money(due)} ر.س</td>
+          <td style="padding:6px 10px;border:1px solid #eee;font-size:12px;text-align:center;color:${statusColor};font-weight:bold">${statusLabel}</td>
+          <td style="padding:6px 10px;border:1px solid #eee;font-size:12px;color:#666;text-align:center">${inv.due_date ? new Date(inv.due_date).toLocaleDateString("ar-SA") : "—"}</td>
+        </tr>`;
+      }).join("");
 
     const statsRows = Object.entries(STATUS_LABELS).map(([k, label]) => `
       <tr>
@@ -130,6 +157,30 @@ export default async function(req) {
                 <th style="padding:6px 10px;border:1px solid #eee;text-align:right">التاريخ</th>
               </tr></thead>
               <tbody>${activityRows}</tbody>
+            </table>
+          `}
+
+          <h2 style="font-size:15px;color:#4A3F35;margin:20px 0 12px">💰 الديون المستحقة</h2>
+          <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px">
+            <tr><td style="padding:8px 12px;background:#fef2f2;border:1px solid #fee2e2">إجمالي الفواتير المستحقة</td>
+                <td style="padding:8px 12px;background:#fef2f2;border:1px solid #fee2e2;font-weight:bold;text-align:center;color:#dc2626">${money(totalOutstanding)} ر.س</td></tr>
+            <tr><td style="padding:8px 12px;border:1px solid #eee">منها متأخرة السداد</td>
+                <td style="padding:8px 12px;border:1px solid #eee;font-weight:bold;text-align:center;color:#b91c1c">${money(totalOverdue)} ر.س (${overdueInvoices.length} فاتورة)</td></tr>
+            <tr><td style="padding:8px 12px;border:1px solid #eee">ضمان محجوز لمشاريع غير مدفوعة</td>
+                <td style="padding:8px 12px;border:1px solid #eee;font-weight:bold;text-align:center">${money(unpaidProjectsEscrow)} ر.س (${unpaidProjects.length} مشروع)</td></tr>
+          </table>
+          ${outstandingInvoices.length === 0 ? `
+            <p style="padding:14px;text-align:center;color:#16a34a;background:#f0fdf4;border-radius:8px;font-size:13px">✅ لا توجد ديون مستحقة حاليًا</p>
+          ` : `
+            <table style="width:100%;border-collapse:collapse;font-size:12px">
+              <thead><tr style="background:#fef2f2">
+                <th style="padding:6px 10px;border:1px solid #fee2e2;text-align:right">رقم الفاتورة</th>
+                <th style="padding:6px 10px;border:1px solid #fee2e2;text-align:right">العميل</th>
+                <th style="padding:6px 10px;border:1px solid #fee2e2">المبلغ المستحق</th>
+                <th style="padding:6px 10px;border:1px solid #fee2e2">الحالة</th>
+                <th style="padding:6px 10px;border:1px solid #fee2e2">تاريخ الاستحقاق</th>
+              </tr></thead>
+              <tbody>${debtRows}</tbody>
             </table>
           `}
 
