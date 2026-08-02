@@ -54,6 +54,10 @@
     {
       "connector_id": "69f27849b9dd687a1a69c88b",
       "enabled": true
+    },
+    {
+      "connector_id": "6a43fb8c45f2e8f7a5d30b8b",
+      "enabled": true
     }
   ],
   "selected_skill_names": [
@@ -77,5 +81,6 @@
   "voice_config": {
     "voice_id": null
   },
+  "allow_anonymous_access": false,
   "name": "bytly_advisor"
 }
