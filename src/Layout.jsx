@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "./utils";
 import { base44 } from "@/api/base44Client";
 import BytlyAdvisorChat from "@/components/chatbot/BytlyAdvisorChat";
+import AdminBreadcrumb from "@/components/admin/AdminBreadcrumb";
 import DeleteAccountDialog from "@/components/user/DeleteAccountDialog";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { LanguageProvider, useLanguage } from "@/components/i18n/LanguageContext";
@@ -410,6 +411,9 @@ function LayoutContent({ children, currentPageName }) {
         className="min-h-screen pb-16 md:pb-0"
         style={{ paddingTop: "calc(4rem + env(safe-area-inset-top))" }}
       >
+        {isAuthenticated && user?.role === "admin" && (
+          <AdminBreadcrumb currentPageName={currentPageName} />
+        )}
         <PullToRefreshWrapper onRefresh={handlePullRefresh} className="min-h-screen">
           <PageTransition>
             {children}
