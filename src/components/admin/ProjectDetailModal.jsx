@@ -10,6 +10,7 @@ import {
   Loader2, FileText, Scale, Wallet, MessagesSquare, History,
   Briefcase, MapPin, Calendar, User, CheckCircle2, Clock, DollarSign, Paperclip
 } from "lucide-react";
+import ProjectDetailActivityLog from "@/components/admin/ProjectDetailActivityLog";
 
 const STATUS_LABELS = {
   open: "مفتوح", in_progress: "قيد التنفيذ", awaiting_technical_review: "بانتظار المراجعة الفنية",
@@ -197,21 +198,7 @@ export default function ProjectDetailModal({ open, onOpenChange, project, lookup
           </div>
         );
       case "history":
-        return data.logs.length === 0 ? <Empty icon={History} text="لا يوجد سجل إجراءات" /> : (
-          <div className="space-y-2">
-            {data.logs.map(log => (
-              <div key={log.id} className="flex gap-3 p-3 rounded-lg border border-slate-100">
-                <div className="w-8 h-8 rounded-full bg-[#F5F0E8] flex items-center justify-center shrink-0">
-                  <History className="w-4 h-4 text-[#4A3F35]" />
-                </div>
-                <div className="flex-1 text-sm">
-                  <p className="text-[#4A3F35] font-medium">{log.summary || log.action_type || "إجراء"}</p>
-                  <p className="text-xs text-slate-400">{log.actor_name || log.actor_email} • {log.created_date && new Date(log.created_date).toLocaleString("ar-SA")}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        );
+        return <ProjectDetailActivityLog projectId={project.id} projectTitle={project.title} />;
       default: return null;
     }
   };

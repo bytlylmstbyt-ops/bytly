@@ -18,7 +18,7 @@ import PaymentsViewDialog from "@/components/admin/PaymentsViewDialog";
 import {
   MoreVertical, Eye, Edit, RefreshCw, CheckCircle2, XCircle,
   Pause, Play, Lock, Trash2, UserCog, Loader2, AlertTriangle,
-  Scale, Wallet, MessagesSquare, History,
+  Scale, Wallet, MessagesSquare, History, DollarSign,
 } from "lucide-react";
 
 const STATUS_LABELS = {
@@ -50,7 +50,9 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
   const [showActivity, setShowActivity] = useState(false);
   const [showContract, setShowContract] = useState(false);
   const [showPayments, setShowPayments] = useState(false);
+  const [showFinance, setShowFinance] = useState(false);
   const [editForm, setEditForm] = useState({ title: "", description: "" });
+  const [financeForm, setFinanceForm] = useState({});
   const [reason, setReason] = useState("");
 
   const can = allowedActions(project?.status);
@@ -145,6 +147,36 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
     }
   };
 
+  const openFinance = () => {
+    setFinanceForm({
+      escrow_amount: project.escrow_amount || 0,
+      budget_min: project.budget_min || 0,
+      budget_max: project.budget_max || 0,
+      platform_commission: project.platform_commission ?? 15,
+      engineer_payment: project.engineer_payment || 0,
+      technical_consultant_fee: project.technical_consultant_fee || 0,
+      legal_consultant_fee: project.legal_consultant_fee || 0,
+    });
+    setShowFinance(true);
+  };
+
+  const saveFinance = async () => {
+    setLoading(true);
+    try {
+      const numericForm = Object.fromEntries(
+        Object.entries(financeForm).map(([k, v]) => [k, Number(v) || 0])
+      );
+      await base44.entities.Project.update(project.id, numericForm);
+      await logProjectChange(project, numericForm, user);
+      await onUpdated();
+      setShowFinance(false);
+    } catch (err) {
+      alert("فشل حفظ المبالغ المالية");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const openMessages = () => {
     navigate(`/Messages?project_id=${project.id}`);
   };
@@ -183,6 +215,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
           <Item icon={UserCog} label="تعيين المهندس" onClick={() => setShowAssign(true)} />
           <DropdownMenuSeparator />
           <Item icon={Scale} label="عرض العقد" onClick={() => setShowContract(true)} disabled={!hasEngineer && !hasClient} />
+          <Item icon={DollarSign} label="تعديل المبالغ المالية" onClick={openFinance} />
           <Item icon={Wallet} label="المدفوعات والمحفظة" onClick={() => setShowPayments(true)} disabled={!hasEscrow} />
           <Item icon={MessagesSquare} label="فتح المحادثات" onClick={openMessages} disabled={!hasClient && !hasEngineer} />
           <Item icon={History} label="سجل النشاط" onClick={() => setShowActivity(true)} />
@@ -264,6 +297,52 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
               </button>
             ))}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Financial edit dialog */}
+      <Dialog open={showFinance} onOpenChange={setShowFinance}>
+        <DialogContent>
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><DollarSign className="w-5 h-5 text-[#C9A66B]" /> تعديل المبالغ المالية</DialogTitle></DialogHeader>
+          <div className="space-y-3 py-2 max-h-[60vh] overflow-y-auto">
+            <p className="text-xs text-slate-400">سيتم توثيق كل تغيير في سجل النشاط التفصيلي مع التاريخ والوقت واسم المستخدم.</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>مبلغ الضمان (ر.س)</Label>
+                <Input type="number" value={financeForm.escrow_amount ?? 0} onChange={(e) => setFinanceForm({ ...financeForm, escrow_amount: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>عمولة المنصة (%)</Label>
+                <Input type="number" value={financeForm.platform_commission ?? 15} onChange={(e) => setFinanceForm({ ...financeForm, platform_commission: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>الحد الأدنى للميزانية (ر.س)</Label>
+                <Input type="number" value={financeForm.budget_min ?? 0} onChange={(e) => setFinanceForm({ ...financeForm, budget_min: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>الحد الأعلى للميزانية (ر.س)</Label>
+                <Input type="number" value={financeForm.budget_max ?? 0} onChange={(e) => setFinanceForm({ ...financeForm, budget_max: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>صافي دفع المهندس (ر.س)</Label>
+                <Input type="number" value={financeForm.engineer_payment ?? 0} onChange={(e) => setFinanceForm({ ...financeForm, engineer_payment: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>أتعاب المستشار الفني (ر.س)</Label>
+                <Input type="number" value={financeForm.technical_consultant_fee ?? 0} onChange={(e) => setFinanceForm({ ...financeForm, technical_consultant_fee: e.target.value })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>أتعاب المستشار القانوني (ر.س)</Label>
+                <Input type="number" value={financeForm.legal_consultant_fee ?? 0} onChange={(e) => setFinanceForm({ ...financeForm, legal_consultant_fee: e.target.value })} />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowFinance(false)}>إلغاء</Button>
+            <Button onClick={saveFinance} disabled={loading} className="bg-[#4A3F35] hover:bg-[#3a322a]">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "حفظ وتوثيق"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
