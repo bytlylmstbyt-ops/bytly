@@ -1,28 +1,22 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   FolderKanban, Loader2, Search, Filter, Eye, RefreshCw,
-  TrendingUp, Clock, CheckCircle2, AlertTriangle, Wallet, FileText, Users
+  TrendingUp, Clock, CheckCircle2, AlertTriangle, Wallet, XCircle,
+  FileText, MapPin, ChevronRight, ChevronLeft, DollarSign, Users, Scale
 } from "lucide-react";
 import { motion } from "framer-motion";
+import ProjectDetailModal from "@/components/admin/ProjectDetailModal";
 
 const STATUS_LABELS = {
-  open: "مفتوح",
-  in_progress: "قيد التنفيذ",
-  awaiting_technical_review: "بانتظار المراجعة الفنية",
-  technical_approved: "معتمد فنيًا",
-  pending_client_approval: "بانتظار موافقة العميل",
-  completed: "مكتمل",
-  cancelled: "ملغي",
-  disputed: "نزاع",
+  open: "مفتوح", in_progress: "قيد التنفيذ", awaiting_technical_review: "بانتظار المراجعة الفنية",
+  technical_approved: "معتمد فنيًا", pending_client_approval: "بانتظار موافقة العميل",
+  completed: "مكتمل", cancelled: "ملغي", disputed: "نزاع",
 };
-
 const STATUS_COLORS = {
   open: "bg-blue-100 text-blue-700 border-blue-200",
   in_progress: "bg-amber-100 text-amber-700 border-amber-200",
@@ -34,60 +28,128 @@ const STATUS_COLORS = {
   disputed: "bg-red-100 text-red-700 border-red-200",
 };
 
+function computeCompletion(status) {
+  if (status === "completed") return 100;
+  if (status === "cancelled") return 0;
+  if (status === "in_progress") return 50;
+  if (status === "technical_approved") return 90;
+  if (status === "pending_client_approval") return 80;
+  if (status === "awaiting_technical_review") return 70;
+  if (status === "open") return 10;
+  return 0;
+}
+
 export default function AdminProjects() {
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [projects, setProjects] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [engineers, setEngineers] = useState([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [refreshing, setRefreshing] = useState(false);
+  const [cityFilter, setCityFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [engineerFilter, setEngineerFilter] = useState("all");
+  const [clientFilter, setClientFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [showDetail, setShowDetail] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
 
-  const loadProjects = async () => {
+  const loadData = useCallback(async () => {
     setRefreshing(true);
     try {
-      const list = await base44.entities.Project.list("-created_date", 500);
-      setProjects(list);
+      const [projectsData, clientsData, engineersData] = await Promise.all([
+        base44.entities.Project.list("-created_date", 500).catch(() => []),
+        base44.entities.Client.list().catch(() => []),
+        base44.entities.Engineer.list().catch(() => []),
+      ]);
+      setProjects(projectsData);
+      setClients(clientsData);
+      setEngineers(engineersData);
     } catch (err) {
-      console.error("Failed to load projects", err);
+      console.error("Failed to load", err);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { loadProjects(); }, []);
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const lookup = useMemo(() => {
+    const c = {}, e = {};
+    clients.forEach(cl => { c[cl.id] = cl.full_name; });
+    engineers.forEach(en => { e[en.id] = en.full_name; });
+    return { clients: c, engineers: e };
+  }, [clients, engineers]);
+
+  const cities = useMemo(() => {
+    const set = new Set();
+    projects.forEach(p => { if (p.location) set.add(p.location); });
+    return [...set].sort();
+  }, [projects]);
 
   const stats = useMemo(() => {
+    const now = new Date();
     const total = projects.length;
     const open = projects.filter(p => p.status === "open").length;
     const inProgress = projects.filter(p => p.status === "in_progress").length;
+    const awaiting = projects.filter(p => ["awaiting_technical_review", "pending_client_approval"].includes(p.status)).length;
     const completed = projects.filter(p => p.status === "completed").length;
+    const cancelled = projects.filter(p => p.status === "cancelled").length;
     const disputed = projects.filter(p => p.status === "disputed").length;
-    const awaiting = projects.filter(p =>
-      ["awaiting_technical_review", "pending_client_approval"].includes(p.status)
-    ).length;
-    const escrowTotal = projects.reduce((sum, p) => sum + (p.escrow_amount || 0), 0);
-    return { total, open, inProgress, completed, disputed, awaiting, escrowTotal };
+    const overdue = projects.filter(p => {
+      if (!p.deadline || p.status === "completed" || p.status === "cancelled") return false;
+      return new Date(p.deadline) < now;
+    }).length;
+    const totalValue = projects.reduce((s, p) => s + (p.budget_max || p.escrow_amount || 0), 0);
+    const escrowTotal = projects.reduce((s, p) => s + (p.escrow_amount || 0), 0);
+    return { total, open, inProgress, awaiting, completed, cancelled, disputed, overdue, totalValue, escrowTotal };
   }, [projects]);
 
   const filtered = useMemo(() => {
     return projects.filter(p => {
-      const matchSearch = !search ||
-        p.title?.toLowerCase().includes(search.toLowerCase()) ||
-        p.location?.toLowerCase().includes(search.toLowerCase());
+      const q = search.toLowerCase();
+      const matchSearch = !q ||
+        (p.title || "").toLowerCase().includes(q) ||
+        (p.id || "").toLowerCase().includes(q) ||
+        (p.id || "").slice(-6).toLowerCase().includes(q);
       const matchStatus = statusFilter === "all" || p.status === statusFilter;
-      return matchSearch && matchStatus;
+      const matchCity = cityFilter === "all" || p.location === cityFilter;
+      const matchType = typeFilter === "all" || p.project_type === typeFilter;
+      const matchEngineer = engineerFilter === "all" || p.assigned_engineer_id === engineerFilter;
+      const matchClient = clientFilter === "all" || p.client_id === clientFilter;
+      let matchDate = true;
+      const cd = p.created_date ? new Date(p.created_date) : null;
+      if (cd && dateFrom) matchDate = cd >= new Date(dateFrom);
+      if (cd && dateTo) matchDate = matchDate && cd <= new Date(dateTo + "T23:59:59");
+      return matchSearch && matchStatus && matchCity && matchType && matchEngineer && matchClient && matchDate;
     });
-  }, [projects, search, statusFilter]);
+  }, [projects, search, statusFilter, cityFilter, typeFilter, engineerFilter, clientFilter, dateFrom, dateTo]);
+
+  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
 
   const statCards = [
     { label: "إجمالي المشاريع", value: stats.total, icon: FolderKanban, color: "text-[#4A3F35]", bg: "bg-[#F5F0E8]" },
-    { label: "مفتوحة", value: stats.open, icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "قيد التنفيذ", value: stats.inProgress, icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
-    { label: "بانتظار موافقة", value: stats.awaiting, icon: AlertTriangle, color: "text-cyan-600", bg: "bg-cyan-50" },
+    { label: "مشاريع جديدة", value: stats.open, icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "بانتظار الموافقة", value: stats.awaiting, icon: Clock, color: "text-cyan-600", bg: "bg-cyan-50" },
+    { label: "قيد التنفيذ", value: stats.inProgress, icon: AlertTriangle, color: "text-amber-600", bg: "bg-amber-50" },
     { label: "مكتملة", value: stats.completed, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
-    { label: "نزاعات", value: stats.disputed, icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50" },
-    { label: "إجمالي الضمان", value: `${stats.escrowTotal.toLocaleString()} ر.س`, icon: Wallet, color: "text-[#C9A66B]", bg: "bg-[#FEF9EE]" },
+    { label: "متأخرة", value: stats.overdue, icon: AlertTriangle, color: "text-orange-600", bg: "bg-orange-50" },
+    { label: "ملغاة", value: stats.cancelled, icon: XCircle, color: "text-slate-500", bg: "bg-slate-100" },
+    { label: "نزاعات", value: stats.disputed, icon: Scale, color: "text-red-600", bg: "bg-red-50" },
+    { label: "إجمالي القيمة", value: `${stats.totalValue.toLocaleString("ar-SA")}`, sub: "ر.س", icon: DollarSign, color: "text-[#C9A66B]", bg: "bg-[#FEF9EE]" },
+    { label: "إجمالي الضمان", value: `${stats.escrowTotal.toLocaleString("ar-SA")}`, sub: "ر.س", icon: Wallet, color: "text-[#4A3F35]", bg: "bg-[#F5F0E8]" },
   ];
+
+  const resetFilters = () => {
+    setSearch(""); setStatusFilter("all"); setCityFilter("all"); setTypeFilter("all");
+    setEngineerFilter("all"); setClientFilter("all"); setDateFrom(""); setDateTo(""); setPage(1);
+  };
 
   if (loading) {
     return (
@@ -98,7 +160,7 @@ export default function AdminProjects() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10" dir="rtl">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8" dir="rtl">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
@@ -108,10 +170,10 @@ export default function AdminProjects() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-[#4A3F35]">لوحة إدارة المشاريع</h1>
-              <p className="text-sm text-slate-500">إدارة شاملة لجميع مشاريع المنصة في مكان واحد</p>
+              <p className="text-sm text-slate-500">إدارة شاملة لجميع مشاريع المنصة من البداية حتى الاكتمال</p>
             </div>
           </div>
-          <Button variant="outline" onClick={loadProjects} disabled={refreshing}>
+          <Button variant="outline" onClick={loadData} disabled={refreshing}>
             <RefreshCw className={`w-4 h-4 ml-2 ${refreshing ? "animate-spin" : ""}`} />
             تحديث
           </Button>
@@ -119,17 +181,19 @@ export default function AdminProjects() {
       </motion.div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
         {statCards.map((s, i) => {
           const Icon = s.icon;
           return (
-            <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+            <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
               <Card className="border-0 shadow-sm">
-                <CardContent className="p-4">
+                <CardContent className="p-3">
                   <div className={`w-9 h-9 rounded-lg ${s.bg} flex items-center justify-center mb-2`}>
                     <Icon className={`w-5 h-5 ${s.color}`} />
                   </div>
-                  <p className="text-xl font-bold text-[#4A3F35] truncate">{s.value}</p>
+                  <p className="text-lg font-bold text-[#4A3F35] truncate">
+                    {s.value}{s.sub && <span className="text-xs font-normal text-slate-400 mr-1">{s.sub}</span>}
+                  </p>
                   <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
                 </CardContent>
               </Card>
@@ -141,96 +205,175 @@ export default function AdminProjects() {
       {/* Filters */}
       <Card className="mb-4 border-0 shadow-sm">
         <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-3">
-            <div className="relative flex-1">
+          <div className="space-y-3">
+            <div className="relative">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
-                placeholder="ابحث بعنوان المشروع أو الموقع..."
+                placeholder="ابحث باسم المشروع أو رقمه..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 className="pr-10"
               />
             </div>
-            <div className="flex items-center gap-2 overflow-x-auto">
-              <Filter className="w-4 h-4 text-slate-400 shrink-0" />
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:border-[#C9A66B] cursor-pointer"
-              >
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+              <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }} className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white cursor-pointer">
                 <option value="all">كل الحالات</option>
-                {Object.entries(STATUS_LABELS).map(([k, v]) => (
-                  <option key={k} value={k}>{v}</option>
-                ))}
+                {Object.entries(STATUS_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select>
+              <select value={cityFilter} onChange={(e) => { setCityFilter(e.target.value); setPage(1); }} className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white cursor-pointer">
+                <option value="all">كل المدن</option>
+                {cities.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <select value={typeFilter} onChange={(e) => { setTypeFilter(e.target.value); setPage(1); }} className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white cursor-pointer">
+                <option value="all">كل الأنواع</option>
+                <option value="full_construction">بناء كامل</option>
+                <option value="express_service">خدمة سريعة</option>
+              </select>
+              <select value={engineerFilter} onChange={(e) => { setEngineerFilter(e.target.value); setPage(1); }} className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white cursor-pointer">
+                <option value="all">كل المهندسين</option>
+                {engineers.map(e => <option key={e.id} value={e.id}>{e.full_name}</option>)}
+              </select>
+              <select value={clientFilter} onChange={(e) => { setClientFilter(e.target.value); setPage(1); }} className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white cursor-pointer">
+                <option value="all">كل العملاء</option>
+                {clients.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}
+              </select>
+              <div className="flex items-center gap-1">
+                <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(1); }} className="text-xs" />
+                <Input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(1); }} className="text-xs" />
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" size="sm" onClick={resetFilters} className="text-slate-500">
+                <XCircle className="w-4 h-4 ml-1" /> مسح الفلاتر
+              </Button>
+              <p className="text-xs text-slate-400">عرض {paged.length} من {filtered.length} مشروع</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Projects List */}
-      <div className="space-y-3">
-        {filtered.length === 0 ? (
+      {/* Table (desktop) */}
+      <Card className="border-0 shadow-sm hidden md:block overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-slate-50 text-slate-500 text-xs">
+                <th className="text-right py-3 px-3 font-medium">رقم المشروع</th>
+                <th className="text-right py-3 px-3 font-medium">اسم المشروع</th>
+                <th className="text-right py-3 px-3 font-medium">العميل</th>
+                <th className="text-right py-3 px-3 font-medium">المهندس</th>
+                <th className="text-right py-3 px-3 font-medium">المدينة</th>
+                <th className="text-right py-3 px-3 font-medium">قيمة العقد</th>
+                <th className="text-right py-3 px-3 font-medium">الإنجاز</th>
+                <th className="text-right py-3 px-3 font-medium">الحالة</th>
+                <th className="text-right py-3 px-3 font-medium">تاريخ الإنشاء</th>
+                <th className="text-right py-3 px-3 font-medium">آخر تحديث</th>
+                <th className="text-center py-3 px-3 font-medium"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {paged.length === 0 ? (
+                <tr><td colSpan={11} className="text-center py-12 text-slate-400">لا توجد مشاريع مطابقة</td></tr>
+              ) : paged.map(p => {
+                const comp = computeCompletion(p.status);
+                return (
+                  <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-2.5 px-3 text-slate-400 text-xs font-mono">#{p.id.slice(-6)}</td>
+                    <td className="py-2.5 px-3 font-medium text-[#4A3F35] max-w-[200px] truncate">{p.title || "—"}</td>
+                    <td className="py-2.5 px-3 text-slate-600">{lookup.clients[p.client_id] || "—"}</td>
+                    <td className="py-2.5 px-3 text-slate-600">{lookup.engineers[p.assigned_engineer_id] || "—"}</td>
+                    <td className="py-2.5 px-3 text-slate-500 text-xs">{p.location || "—"}</td>
+                    <td className="py-2.5 px-3 text-slate-600 text-xs">{(p.escrow_amount || p.budget_max || 0).toLocaleString()} ر.س</td>
+                    <td className="py-2.5 px-3">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-[#C9A66B] rounded-full" style={{ width: `${comp}%` }} />
+                        </div>
+                        <span className="text-xs text-slate-500">{comp}%</span>
+                      </div>
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <Badge className={`${STATUS_COLORS[p.status] || "bg-slate-100 text-slate-500"} border`} variant="outline">
+                        {STATUS_LABELS[p.status] || p.status}
+                      </Badge>
+                    </td>
+                    <td className="py-2.5 px-3 text-xs text-slate-400">{p.created_date ? new Date(p.created_date).toLocaleDateString("ar-SA") : "—"}</td>
+                    <td className="py-2.5 px-3 text-xs text-slate-400">{p.updated_date ? new Date(p.updated_date).toLocaleDateString("ar-SA") : "—"}</td>
+                    <td className="py-2.5 px-3 text-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => { setSelectedProject(p); setShowDetail(true); }}
+                        className="hover:bg-[#C9A66B]/10 hover:text-[#C9A66B]"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* Cards (mobile) */}
+      <div className="md:hidden space-y-2">
+        {paged.length === 0 ? (
           <Card className="border-0 shadow-sm">
             <CardContent className="p-12 text-center">
-              <FolderKanban className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <FolderKanban className="w-12 h-12 text-slate-300 mx-auto mb-2" />
               <p className="text-slate-500">لا توجد مشاريع مطابقة</p>
             </CardContent>
           </Card>
-        ) : (
-          filtered.map((project, idx) => (
-            <motion.div
-              key={project.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: Math.min(idx * 0.02, 0.3) }}
-            >
-              <Card className="border-0 shadow-sm hover:shadow-md transition-shadow group">
-                <CardContent className="p-4">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                        <h3 className="font-bold text-[#4A3F35] truncate">{project.title || "بدون عنوان"}</h3>
-                        <Badge className={`${STATUS_COLORS[project.status] || "bg-slate-100 text-slate-500"} border`} variant="outline">
-                          {STATUS_LABELS[project.status] || project.status}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-slate-500 line-clamp-1 mb-2">
-                        {project.description || "لا يوجد وصف"}
-                      </p>
-                      <div className="flex items-center gap-4 text-xs text-slate-400 flex-wrap">
-                        {project.location && <span className="flex items-center gap-1">📍 {project.location}</span>}
-                        {project.category && <span className="flex items-center gap-1">🏷️ {project.category}</span>}
-                        {project.total_proposals > 0 && <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {project.total_proposals} عرض</span>}
-                        {project.escrow_amount > 0 && <span className="flex items-center gap-1"><Wallet className="w-3 h-3 text-[#C9A66B]" /> {project.escrow_amount.toLocaleString()} ر.س</span>}
-                        <span className="flex items-center gap-1"><FileText className="w-3 h-3" /> {new Date(project.created_date).toLocaleDateString("ar-SA")}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Link to={createPageUrl("ProjectDetails") + `?id=${project.id}`}>
-                        <Button variant="outline" size="sm" className="hover:border-[#C9A66B] hover:text-[#C9A66B]">
-                          <Eye className="w-4 h-4 ml-1" />
-                          عرض
-                        </Button>
-                      </Link>
-                      <Link to={createPageUrl("ProjectMilestones") + `?project_id=${project.id}`}>
-                        <Button variant="ghost" size="sm">
-                          المراحل
-                        </Button>
-                      </Link>
-                    </div>
+        ) : paged.map(p => {
+          const comp = computeCompletion(p.status);
+          return (
+            <Card key={p.id} className="border-0 shadow-sm" onClick={() => { setSelectedProject(p); setShowDetail(true); }}>
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-slate-400 font-mono">#{p.id.slice(-6)}</span>
+                  <Badge className={`${STATUS_COLORS[p.status] || ""} border`} variant="outline">{STATUS_LABELS[p.status]}</Badge>
+                </div>
+                <p className="font-bold text-[#4A3F35] text-sm mb-1">{p.title || "—"}</p>
+                <div className="text-xs text-slate-500 space-y-0.5">
+                  <p>العميل: {lookup.clients[p.client_id] || "—"}</p>
+                  <p>المهندس: {lookup.engineers[p.assigned_engineer_id] || "—"}</p>
+                  <p>المدينة: {p.location || "—"}</p>
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex-1 h-1.5 bg-slate-100 rounded-full">
+                    <div className="h-full bg-[#C9A66B] rounded-full" style={{ width: `${comp}%` }} />
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))
-        )}
+                  <span className="text-xs text-slate-500">{comp}%</span>
+                  <ChevronLeft className="w-4 h-4 text-slate-300" />
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      {/* Footer count */}
-      <p className="text-center text-xs text-slate-400 mt-6">
-        عرض {filtered.length} من {projects.length} مشروع
-      </p>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-4">
+          <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+          <span className="text-sm text-slate-500">صفحة {page} من {totalPages}</span>
+          <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
+
+      {/* Detail modal */}
+      <ProjectDetailModal
+        open={showDetail}
+        onOpenChange={setShowDetail}
+        project={selectedProject}
+        lookup={lookup}
+      />
     </div>
   );
 }
