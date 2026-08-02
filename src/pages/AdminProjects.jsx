@@ -7,11 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import {
   FolderKanban, Loader2, Search, Filter, Eye, RefreshCw,
   TrendingUp, Clock, CheckCircle2, AlertTriangle, Wallet, XCircle,
-  FileText, MapPin, ChevronRight, ChevronLeft, DollarSign, Users, Scale
+  FileText, MapPin, ChevronRight, ChevronLeft, DollarSign, Users, Scale, Download, Loader2 as DownloadSpin
 } from "lucide-react";
 import { motion } from "framer-motion";
 import ProjectDetailModal from "@/components/admin/ProjectDetailModal";
 import ProjectActionsMenu from "@/components/admin/ProjectActionsMenu";
+import exportProjectsToExcel from "@/components/admin/exportProjects";
 
 const STATUS_LABELS = {
   open: "مفتوح", in_progress: "قيد التنفيذ", awaiting_technical_review: "بانتظار المراجعة الفنية",
@@ -57,7 +58,20 @@ export default function AdminProjects() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
   const [page, setPage] = useState(1);
+  const [exporting, setExporting] = useState(false);
   const PAGE_SIZE = 10;
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      // Export the filtered set; if list is incomplete, fetch full filtered set first
+      await exportProjectsToExcel({ projects: filtered, clients, engineers });
+    } catch (err) {
+      alert("فشل التصدير");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const loadData = useCallback(async () => {
     setRefreshing(true);
@@ -255,7 +269,18 @@ export default function AdminProjects() {
               <Button variant="ghost" size="sm" onClick={resetFilters} className="text-slate-500">
                 <XCircle className="w-4 h-4 ml-1" /> مسح الفلاتر
               </Button>
-              <p className="text-xs text-slate-400">عرض {paged.length} من {filtered.length} مشروع</p>
+              <div className="flex items-center gap-2">
+                <p className="text-xs text-slate-400 hidden sm:block">عرض {paged.length} من {filtered.length} مشروع</p>
+                <Button
+                  size="sm"
+                  onClick={handleExport}
+                  disabled={exporting || filtered.length === 0}
+                  className="bg-[#4A3F35] hover:bg-[#3a322a] text-white"
+                >
+                  {exporting ? <DownloadSpin className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4 ml-1" />}
+                  تصدير إكسل
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>
