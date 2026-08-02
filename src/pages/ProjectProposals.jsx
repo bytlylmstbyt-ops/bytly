@@ -26,15 +26,28 @@ export default function ProjectProposals() {
   const [sortBy, setSortBy] = useState("price_asc");
 
   useEffect(() => {
-    if (projectId) loadData();
+    loadData();
   }, [projectId]);
 
   const loadData = async () => {
     setIsLoading(true);
-    const [projectData, proposalsData] = await Promise.all([
-      base44.entities.Project.filter({ id: projectId }),
-      base44.entities.Proposal.filter({ project_id: projectId })
-    ]);
+    let projectData = [];
+    let proposalsData = [];
+
+    if (projectId) {
+      [projectData, proposalsData] = await Promise.all([
+        base44.entities.Project.filter({ id: projectId }),
+        base44.entities.Proposal.filter({ project_id: projectId })
+      ]);
+    } else {
+      // Admin overview — load all proposals and related projects
+      proposalsData = await base44.entities.Proposal.list("-created_date", 200);
+      const projectIds = [...new Set(proposalsData.map(p => p.project_id).filter(Boolean))];
+      if (projectIds.length) {
+        const projectsMap = await base44.entities.Project.list("-created_date", 200);
+        projectData = projectsMap.filter(pr => projectIds.includes(pr.id));
+      }
+    }
 
     setProject(projectData[0] || null);
     setProposals(proposalsData);
@@ -48,6 +61,7 @@ export default function ProjectProposals() {
         if (data[0]) engineerMap[id] = data[0];
       })
     );
+
     setEngineers(engineerMap);
     setIsLoading(false);
   };
@@ -102,7 +116,7 @@ export default function ProjectProposals() {
     );
   }
 
-  if (!project) {
+  if (!project && projectId) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="max-w-md w-full mx-4 text-center p-8">
@@ -126,8 +140,8 @@ export default function ProjectProposals() {
 
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-[#1a1a2e]">عروض المشروع</h1>
-              <p className="text-slate-500 mt-1">{project.title}</p>
+              <h1 className="text-2xl font-bold text-[#1a1a2e]">{project ? "عروض المشروع" : "إدارة العروض"}</h1>
+              <p className="text-slate-500 mt-1">{project ? project.title : "جميع عروض المشاريع على المنصة"}</p>
             </div>
             <div className="flex items-center gap-3 flex-wrap">
               <Badge className="bg-amber-100 text-amber-700 text-sm px-3 py-1">
