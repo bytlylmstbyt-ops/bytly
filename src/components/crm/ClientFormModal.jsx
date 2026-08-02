@@ -1,102 +1,115 @@
-import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import MobileSelect from "@/components/mobile/MobileSelect";
-import { Loader2, Save } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
-const COLORS = ["#6B5D4F","#3B82F6","#10B981","#F59E0B","#EF4444","#8B5CF6","#EC4899","#06B6D4"];
-
-export default function ClientFormModal({ open, onClose, onSave, initial, loading }) {
+export default function ClientFormModal({ open, onOpenChange, onSaved, editingClient }) {
   const [form, setForm] = useState({
-    full_name: "", email: "", phone: "", company: "", job_title: "",
-    crm_status: "lead", notes: "", color: COLORS[0],
+    full_name: editingClient?.full_name || "",
+    email: editingClient?.email || "",
+    phone: editingClient?.phone || "",
+    city: editingClient?.city || "",
+    country: editingClient?.country || "السعودية",
+    client_type: editingClient?.client_type || "individual",
+    company_name: editingClient?.company_name || "",
+    description: editingClient?.description || "",
   });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (initial) {
-      setForm({
-        full_name: initial.full_name || initial.name || "",
-        email: initial.email || "",
-        phone: initial.phone || "",
-        company: initial.company || "",
-        job_title: initial.job_title || "",
-        crm_status: initial.crm_status || "lead",
-        notes: initial.notes || "",
-        color: initial.color || COLORS[0],
-      });
-    } else {
-      setForm({ full_name: "", email: "", phone: "", company: "", job_title: "", crm_status: "lead", notes: "", color: COLORS[0] });
+  React.useEffect(() => {
+    setForm({
+      full_name: editingClient?.full_name || "",
+      email: editingClient?.email || "",
+      phone: editingClient?.phone || "",
+      city: editingClient?.city || "",
+      country: editingClient?.country || "السعودية",
+      client_type: editingClient?.client_type || "individual",
+      company_name: editingClient?.company_name || "",
+      description: editingClient?.description || "",
+    });
+  }, [editingClient, open]);
+
+  const handleSubmit = async () => {
+    if (!form.full_name || !form.email) {
+      setError("الاسم والبريد الإلكتروني مطلوبان");
+      return;
     }
-  }, [initial, open]);
-
-  const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
+    setSaving(true);
+    setError("");
+    try {
+      if (editingClient) {
+        await base44.entities.Client.update(editingClient.id, form);
+      } else {
+        await base44.entities.Client.create(form);
+      }
+      onSaved();
+      onOpenChange(false);
+    } catch (err) {
+      setError(err.message || "حدث خطأ");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg" dir="rtl">
-        <DialogHeader><DialogTitle>{initial ? "تعديل العميل" : "عميل جديد"}</DialogTitle></DialogHeader>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{editingClient ? "تعديل بيانات العميل" : "عميل جديد"}</DialogTitle>
+        </DialogHeader>
         <div className="space-y-3 py-2">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">الاسم الكامل *</label>
-              <Input value={form.full_name} onChange={e => set("full_name", e.target.value)} placeholder="الاسم الكامل" />
-            </div>
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">البريد الإلكتروني *</label>
-              <Input type="email" value={form.email} onChange={e => set("email", e.target.value)} placeholder="email@company.com" />
-            </div>
+          {error && <p className="text-sm text-red-600 bg-red-50 rounded p-2">{error}</p>}
+          <div className="space-y-1.5">
+            <Label>الاسم الكامل *</Label>
+            <Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>البريد الإلكتروني *</Label>
+            <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">الهاتف</label>
-              <Input value={form.phone} onChange={e => set("phone", e.target.value)} placeholder="+966 5X XXX XXXX" />
+            <div className="space-y-1.5">
+              <Label>الهاتف</Label>
+              <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
             </div>
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">الشركة</label>
-              <Input value={form.company} onChange={e => set("company", e.target.value)} placeholder="اسم الشركة" />
+            <div className="space-y-1.5">
+              <Label>المدينة</Label>
+              <Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">المسمى الوظيفي</label>
-              <Input value={form.job_title} onChange={e => set("job_title", e.target.value)} placeholder="مدير مشاريع..." />
+            <div className="space-y-1.5">
+              <Label>نوع العميل</Label>
+              <select
+                value={form.client_type}
+                onChange={(e) => setForm({ ...form, client_type: e.target.value })}
+                className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm bg-white cursor-pointer"
+              >
+                <option value="individual">فرد (صاحب منزل)</option>
+                <option value="investor">مستثمر / مطور</option>
+              </select>
             </div>
-            <div>
-              <label className="text-xs text-slate-500 mb-1 block">الحالة</label>
-              <MobileSelect
-                value={form.crm_status}
-                onValueChange={v => set("crm_status", v)}
-                label="الحالة"
-                options={[
-                  { value: "lead", label: "عميل محتمل" },
-                  { value: "active", label: "نشط" },
-                  { value: "inactive", label: "غير نشط" },
-                  { value: "churned", label: "منسحب" },
-                ]}
-              />
+            <div className="space-y-1.5">
+              <Label>الشركة (للمستثمرين)</Label>
+              <Input value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} />
             </div>
           </div>
-          <div>
-            <label className="text-xs text-slate-500 mb-1 block">اللون</label>
-            <div className="flex gap-2">
-              {COLORS.map(c => (
-                <button key={c} onClick={() => set("color", c)}
-                  className={`w-7 h-7 rounded-full transition-transform ${form.color === c ? 'ring-2 ring-offset-2 ring-slate-400 scale-110' : ''}`}
-                  style={{ backgroundColor: c }} />
-              ))}
-            </div>
-          </div>
-          <div>
-            <label className="text-xs text-slate-500 mb-1 block">ملاحظات</label>
-            <Textarea rows={2} value={form.notes} onChange={e => set("notes", e.target.value)} placeholder="ملاحظات عن العميل..." />
+          <div className="space-y-1.5">
+            <Label>ملاحظات</Label>
+            <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>إلغاء</Button>
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => onSave(form)} disabled={loading || !form.full_name || !form.email}>
-            {loading ? <Loader2 className="w-4 h-4 animate-spin ml-1" /> : <Save className="w-4 h-4 ml-1" />}حفظ
+          <Button variant="outline" onClick={() => onOpenChange(false)}>إلغاء</Button>
+          <Button onClick={handleSubmit} disabled={saving} className="bg-[#4A3F35] hover:bg-[#3a322a]">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "حفظ"}
           </Button>
         </DialogFooter>
       </DialogContent>
