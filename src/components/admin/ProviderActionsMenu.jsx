@@ -15,20 +15,23 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/use-toast";
 import {
   MoreVertical, Eye, Pencil, CheckCircle2, XCircle, Pause, Play, Trash2,
-  FileCheck, FileX, FolderGit2, ScrollText, Wallet, Send, History,
+  FileCheck, FileX, FolderGit2, ScrollText, Wallet, Send, History, Megaphone,
 } from "lucide-react";
 import ProviderDetailsDialog from "./ProviderDetailsDialog";
 import ProviderRelatedDialog from "./ProviderRelatedDialog";
+import AdvertiserCampaignsDialog from "./AdvertiserCampaignsDialog";
 
 const STATUS_LABEL = { approved: "معتمد", pending: "معلق", rejected: "موقوف/مرفوض" };
 
 export default function ProviderActionsMenu({
-  provider, providerKey, nameField, isAdmin, onUpdate, onDelete,
+  provider, providerKey, nameField, isAdmin, onUpdate, onDelete, mode = "provider",
 }) {
+  const isAdvertiser = mode === "advertiser";
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [relatedTab, setRelatedTab] = useState(null);
   const [relatedOpen, setRelatedOpen] = useState(false);
+  const [campaignsOpen, setCampaignsOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [notifyOpen, setNotifyOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -131,12 +134,20 @@ export default function ProviderActionsMenu({
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => openRelated("projects")}>
-            <FolderGit2 className="w-4 h-4 ml-2" /> المشاريع المرتبطة
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => openRelated("contracts")}>
-            <ScrollText className="w-4 h-4 ml-2" /> العقود
-          </DropdownMenuItem>
+          {isAdvertiser ? (
+            <DropdownMenuItem onClick={() => setCampaignsOpen(true)}>
+              <Megaphone className="w-4 h-4 ml-2" /> إدارة الحملات الإعلانية
+            </DropdownMenuItem>
+          ) : (
+            <>
+              <DropdownMenuItem onClick={() => openRelated("projects")}>
+                <FolderGit2 className="w-4 h-4 ml-2" /> المشاريع المرتبطة
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => openRelated("contracts")}>
+                <ScrollText className="w-4 h-4 ml-2" /> العقود
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuItem onClick={() => openRelated("payments")}>
             <Wallet className="w-4 h-4 ml-2" /> المدفوعات والمحفظة
           </DropdownMenuItem>
@@ -170,6 +181,12 @@ export default function ProviderActionsMenu({
         provider={provider} providerKey={providerKey} nameField={nameField}
         open={relatedOpen} onOpenChange={setRelatedOpen} initialTab={relatedTab}
       />
+
+      {isAdvertiser && (
+        <AdvertiserCampaignsDialog
+          advertiser={provider} open={campaignsOpen} onOpenChange={setCampaignsOpen}
+        />
+      )}
 
       <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <DialogContent>

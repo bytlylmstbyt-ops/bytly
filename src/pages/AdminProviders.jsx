@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import ProviderActionsMenu from "@/components/admin/ProviderActionsMenu";
+import AdvertisersPanel from "@/components/admin/AdvertisersPanel";
+import { Megaphone } from "lucide-react";
 
 const PROVIDERS = [
   { key: "EngineeringFirm", label: "الشركات الهندسية", icon: Building2, nameField: "company_name", subField: "specializations" },
@@ -139,9 +141,20 @@ export default function AdminProviders() {
             </button>
           );
         })}
+        <button
+          onClick={() => { setActiveKey("Advertiser"); setSearch(""); setStatusFilter("all"); }}
+          className={`flex items-center gap-2 shrink-0 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            activeKey === "Advertiser"
+              ? "bg-[#4A3F35] text-white shadow-sm"
+              : "bg-white text-[#4A3F35] border border-slate-200 hover:border-[#C9A66B]/40"
+          }`}
+        >
+          <Megaphone className="w-4 h-4 text-[#C9A66B]" />
+          المعلنون
+        </button>
       </div>
 
-      {/* Stats */}
+      {activeKey !== "Advertiser" && (
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
         {statCards.map((s, i) => {
           const Icon = s.icon;
@@ -160,8 +173,10 @@ export default function AdminProviders() {
           );
         })}
       </div>
+      )}
 
       {/* Filters */}
+      {activeKey !== "Advertiser" && (
       <Card className="mb-4 border-0 shadow-sm">
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-3">
@@ -187,77 +202,15 @@ export default function AdminProviders() {
           </div>
         </CardContent>
       </Card>
+      )}
 
-      {/* List */}
+      {activeKey === "Advertiser" ? (
+        <AdvertisersPanel isAdmin={isAdmin} />
+      ) : (
       <div className="space-y-3">
-        {filtered.length === 0 ? (
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-12 text-center">
-              <activeProvider.icon className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-500">لا توجد سجلات مطابقة</p>
-            </CardContent>
-          </Card>
-        ) : (
-          filtered.map((item, idx) => {
-            const name = item[activeProvider.nameField] || "بدون اسم";
-            const sub = item[activeProvider.subField];
-            const subText = Array.isArray(sub) ? sub.join("، ") : (sub || "");
-            return (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(idx * 0.02, 0.3) }}
-              >
-                <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <h3 className="font-bold text-[#4A3F35]">{name}</h3>
-                          <Badge className={`${STATUS_BADGE[item.status] || "bg-slate-100 text-slate-500"} border`} variant="outline">
-                            {STATUS_LABEL[item.status] || item.status}
-                          </Badge>
-                          {item.is_verified && (
-                            <Badge className="bg-[#C9A66B]/10 text-[#C9A66B] border border-[#C9A66B]/20" variant="outline">
-                              <Star className="w-3 h-3 ml-1" /> موثّق
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-4 text-xs text-slate-400 flex-wrap">
-                          {item.email && <span>✉️ {item.email}</span>}
-                          {item.city && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {item.city}</span>}
-                          {subText && <span>🏷️ {subText}</span>}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <ProviderActionsMenu
-                          provider={item}
-                          providerKey={activeKey}
-                          nameField={activeProvider.nameField}
-                          isAdmin={isAdmin}
-                          onUpdate={(updated) =>
-                            setData((prev) => ({
-                              ...prev,
-                              [activeKey]: prev[activeKey].map((x) => (x.id === updated.id ? updated : x)),
-                            }))
-                          }
-                          onDelete={(id) =>
-                            setData((prev) => ({
-                              ...prev,
-                              [activeKey]: prev[activeKey].filter((x) => x.id !== id),
-                            }))
-                          }
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })
-        )}
+...
       </div>
+      )}
 
       <p className="text-center text-xs text-slate-400 mt-6">
         عرض {filtered.length} من {activeList.length} سجل

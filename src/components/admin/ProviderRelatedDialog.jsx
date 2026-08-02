@@ -86,9 +86,13 @@ export default function ProviderRelatedDialog({
         </DialogHeader>
 
         <Tabs value={tab} onValueChange={setTab}>
-          <TabsList className="grid grid-cols-4 w-full">
-            <TabsTrigger value="projects" className="gap-1.5"><FolderGit2 className="w-3.5 h-3.5" /> المشاريع</TabsTrigger>
-            <TabsTrigger value="contracts" className="gap-1.5"><ScrollText className="w-3.5 h-3.5" /> العقود</TabsTrigger>
+          <TabsList className={`w-full ${providerKey === "Advertiser" ? "grid grid-cols-2" : "grid grid-cols-4"}`}>
+            {providerKey !== "Advertiser" && (
+              <TabsTrigger value="projects" className="gap-1.5"><FolderGit2 className="w-3.5 h-3.5" /> المشاريع</TabsTrigger>
+            )}
+            {providerKey !== "Advertiser" && (
+              <TabsTrigger value="contracts" className="gap-1.5"><ScrollText className="w-3.5 h-3.5" /> العقود</TabsTrigger>
+            )}
             <TabsTrigger value="payments" className="gap-1.5"><Wallet className="w-3.5 h-3.5" /> المدفوعات</TabsTrigger>
             <TabsTrigger value="activity" className="gap-1.5"><History className="w-3.5 h-3.5" /> النشاط</TabsTrigger>
           </TabsList>
