@@ -15,8 +15,10 @@ import ProjectActionsMenu from "@/components/admin/ProjectActionsMenu";
 import exportProjectsToExcel from "@/components/admin/exportProjects";
 import ProjectActivityFeed from "@/components/admin/ProjectActivityFeed";
 import BulkActionBar from "@/components/admin/BulkActionBar";
+import AddProjectDialog from "@/components/admin/AddProjectDialog";
 import { useBulkSelection } from "@/components/admin/useBulkSelection";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Plus } from "lucide-react";
 
 const STATUS_LABELS = {
   open: "مفتوح", in_progress: "قيد التنفيذ", awaiting_technical_review: "بانتظار المراجعة الفنية",
@@ -65,6 +67,7 @@ export default function AdminProjects() {
   const [exporting, setExporting] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const bulk = useBulkSelection();
   const PAGE_SIZE = 10;
 
@@ -229,10 +232,21 @@ export default function AdminProjects() {
               <p className="text-sm text-slate-500">إدارة شاملة لجميع مشاريع المنصة من البداية حتى الاكتمال</p>
             </div>
           </div>
-          <Button variant="outline" onClick={loadData} disabled={refreshing}>
-            <RefreshCw className={`w-4 h-4 ml-2 ${refreshing ? "animate-spin" : ""}`} />
-            تحديث
-          </Button>
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Button
+                onClick={() => setShowAddDialog(true)}
+                className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white hover:opacity-90"
+              >
+                <Plus className="w-4 h-4 ml-2" />
+                إضافة مشروع
+              </Button>
+            )}
+            <Button variant="outline" onClick={loadData} disabled={refreshing}>
+              <RefreshCw className={`w-4 h-4 ml-2 ${refreshing ? "animate-spin" : ""}`} />
+              تحديث البيانات
+            </Button>
+          </div>
         </div>
       </motion.div>
 
@@ -471,6 +485,17 @@ export default function AdminProjects() {
         project={selectedProject}
         lookup={lookup}
       />
+
+      {isAdmin && (
+        <AddProjectDialog
+          open={showAddDialog}
+          onOpenChange={setShowAddDialog}
+          onCreated={() => {
+            handleProjectUpdated();
+            loadData();
+          }}
+        />
+      )}
     </div>
   );
 }
