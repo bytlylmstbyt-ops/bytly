@@ -110,9 +110,9 @@ export default function AdminCategoriesPage() {
                 {categories.map((category) => (
                   <div
                     key={category.id}
-                    className={`p-4 rounded-xl border-2 transition-all ${
+                    className={`p-4 rounded-xl border transition-all ${
                       category.active 
-                        ? "border-green-200 bg-green-50" 
+                        ? "border-[#D4EDDA] bg-[#F0FAF2]" 
                         : "border-slate-200 bg-slate-50 opacity-60"
                     }`}
                   >
@@ -141,20 +141,22 @@ export default function AdminCategoriesPage() {
                       ) : (
                         <>
                           <div className="flex-1">
-                            <p className="font-bold text-[#1a1a2e]">{category.label}</p>
-                            <p className="text-xs text-slate-500">{category.id}</p>
+                            <p className="font-bold text-[#2D2D2D] text-base">{category.label}</p>
+                            <p className="text-xs text-slate-400 font-light">{category.id}</p>
                           </div>
                           <div className="flex items-center gap-2">
                             <Button
                               size="sm"
                               variant="ghost"
+                              className="hover:bg-slate-100"
                               onClick={() => setEditingCategory(category.id)}
                             >
-                              <Edit className="w-4 h-4" />
+                              <Edit className="w-4 h-4 text-slate-600" />
                             </Button>
                             <Button
                               size="sm"
                               variant={category.active ? "destructive" : "default"}
+                              className={category.active ? "bg-[#FF4D4D] hover:bg-[#e63939]" : "bg-[#6B5D4F] hover:bg-[#5a4d40]"}
                               onClick={() => toggleCategoryStatus(category.id)}
                             >
                               {category.active ? "تعطيل" : "تفعيل"}
@@ -192,7 +194,7 @@ export default function AdminCategoriesPage() {
                       if (e.key === 'Enter') addProjectType();
                     }}
                   />
-                  <Button onClick={addProjectType}>
+                  <Button onClick={addProjectType} className="bg-[#2D2D2D] hover:bg-[#1a1a1a]">
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
@@ -202,7 +204,7 @@ export default function AdminCategoriesPage() {
                   {projectTypes.map((type, index) => (
                     <Badge
                       key={index}
-                      className="bg-blue-100 text-blue-800 px-3 py-2 text-sm flex items-center gap-2 hover:bg-blue-200 cursor-pointer group"
+                      className="bg-[#E8F0FE] text-[#1a73e8] px-4 py-2 text-sm rounded-lg flex items-center gap-2 hover:bg-[#d3e3fd] cursor-pointer group transition-colors"
                     >
                       {type}
                       <button
