@@ -8,6 +8,7 @@ import {
   FolderKanban, Building2, Loader2, ShieldAlert, ArrowUpRight
 } from "lucide-react";
 import MonthlyRevenueSummaryPanel from "@/components/admin/MonthlyRevenueSummaryPanel";
+import FinancialChartsPanel from "@/components/admin/FinancialChartsPanel";
 
 // ── Category → page map ────────────────────────────────────────────────────
 // Every entry here points at a page that already exists in the app.
@@ -190,6 +191,7 @@ export default function AdminControlCenter() {
       </div>
 
       <MonthlyRevenueSummaryPanel />
+      <FinancialChartsPanel />
 
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6">
         {/* Category nav */}
