@@ -5,7 +5,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   LayoutDashboard, Users, FileText, Wallet, Scale, Bell, BarChart3, Settings as SettingsIcon,
-  Loader2, ShieldAlert, ArrowUpRight
+  FolderKanban, Loader2, ShieldAlert, ArrowUpRight
 } from "lucide-react";
 
 // ── Category → page map ────────────────────────────────────────────────────
@@ -19,6 +19,19 @@ const CATEGORIES = [
     description: "المؤشرات الرئيسية لأداء المنصة.",
     items: [
       { page: "PlatformDashboard", label: "لوحة أداء المنصة", desc: "مؤشرات المشاريع، الإيرادات، والمهندسين" },
+    ],
+  },
+  {
+    key: "projects",
+    label: "إدارة المشاريع",
+    icon: FolderKanban,
+    description: "كل ما يخص المشاريع وإدارتها من لوحة واحدة.",
+    items: [
+      { page: "AdminProjects", label: "لوحة إدارة المشاريع", desc: "نظرة شاملة وإدارة كل مشاريع المنصة" },
+      { page: "Projects", label: "سوق المشاريع", desc: "تصفح جميع المشاريع المنشورة" },
+      { page: "ProjectProposals", label: "إدارة العروض", desc: "متابعة عروض المشاريع" },
+      { page: "CompareProposals", label: "مقارنة العروض", desc: "مقارنة عروض مشروع معين" },
+      { page: "DataClassification", label: "تصنيف بيانات المشاريع", desc: "تنظيم وتصنيف بيانات المشاريع" },
     ],
   },
   {
