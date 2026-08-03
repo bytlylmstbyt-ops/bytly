@@ -29,6 +29,20 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Contract or project not found' }, { status: 404 });
     }
 
+    // Authorization: only the project owner, assigned engineer/contractor, or an admin
+    // may generate contract documents and trigger notifications for this contract.
+    const caller = await base44.auth.me();
+    const isOwner = project.created_by === caller.email || project.client_id === caller.id;
+    const isAssigned =
+      contract.engineer_id === caller.id ||
+      contract.contractor_id === caller.id ||
+      contract.client_id === caller.id ||
+      project.assigned_engineer_id === caller.id;
+    const isAdmin = caller.role === 'admin';
+    if (!isOwner && !isAssigned && !isAdmin) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const client   = clients.find(c => c.id === contract.client_id);
     const engineer = engineers.find(e => e.id === contract.engineer_id);
 

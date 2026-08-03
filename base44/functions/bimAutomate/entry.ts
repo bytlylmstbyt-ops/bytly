@@ -226,20 +226,21 @@ Deno.serve(async (req) => {
         // ── 2. Gmail: Notify responsible engineer ─────────────────
         if (action === 'full_automation' || action === 'notify_engineer') {
             try {
-                // Find the owner engineer email
+                // Find the owner engineer email — use the verified DB record (dbModel),
+                // NOT the untrusted client payload, to prevent open email relay.
                 let engineerEmail = null;
-                if (model.owner_engineer_id) {
-                    const engineers = await base44.asServiceRole.entities.Engineer.filter({ id: model.owner_engineer_id });
+                if (dbModel.owner_engineer_id) {
+                    const engineers = await base44.asServiceRole.entities.Engineer.filter({ id: dbModel.owner_engineer_id });
                     engineerEmail = engineers[0]?.email;
                 }
-                // Fallback: notify the creator
+                // Fallback: notify the creator (from DB record)
                 if (!engineerEmail) {
-                    engineerEmail = model.created_by;
+                    engineerEmail = dbModel.created_by;
                 }
 
                 if (engineerEmail) {
                     const gmailToken = await getGmailToken(base44);
-                    const sent = await sendGmailNotification(gmailToken, engineerEmail, model, driveLink);
+                    const sent = await sendGmailNotification(gmailToken, engineerEmail, dbModel, driveLink);
                     results.email = { sent, to: engineerEmail };
                     console.log(`Email notification sent to: ${engineerEmail}`);
                 } else {
