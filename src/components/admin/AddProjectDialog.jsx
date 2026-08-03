@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Plus, Upload, X, FileText, Paperclip, ShieldCheck } from "lucide-react";
+import { logProjectChange } from "@/components/admin/logProjectChange";
 
 const STATUS_OPTIONS = [
   { value: "open", label: "مفتوح" },
@@ -46,8 +47,9 @@ const EMPTY = {
   attachments: [],
 };
 
-export default function AddProjectDialog({ open, onOpenChange, onCreated }) {
+export default function AddProjectDialog({ open, onOpenChange, onCreated, onUpdated, project }) {
   const { toast } = useToast();
+  const editing = !!project;
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -58,7 +60,19 @@ export default function AddProjectDialog({ open, onOpenChange, onCreated }) {
   // تحميل قوائم العملاء والمهندسين والمكاتب الاستشارية عند الفتح
   useEffect(() => {
     if (!open) return;
-    setForm(EMPTY);
+    if (project) {
+      setForm({
+        ...EMPTY,
+        ...project,
+        budget_min: project.budget_min ?? "",
+        budget_max: project.budget_max ?? "",
+        start_date: project.start_date || "",
+        deadline: project.deadline || "",
+        attachments: project.attachments || [],
+      });
+    } else {
+      setForm(EMPTY);
+    }
     Promise.all([
       base44.entities.Client.list().catch(() => []),
       base44.entities.Engineer.filter({ status: "approved" }).catch(() => []),
@@ -103,7 +117,6 @@ export default function AddProjectDialog({ open, onOpenChange, onCreated }) {
 
     setSaving(true);
     try {
-      // جلب بيانات الأدمن لتسجيل سجل النشاط باسمه
       let actor = null;
       try { actor = await base44.auth.me(); } catch {}
 
@@ -111,30 +124,36 @@ export default function AddProjectDialog({ open, onOpenChange, onCreated }) {
         ...form,
         budget_min: form.budget_min === "" ? undefined : Number(form.budget_min),
         budget_max: form.budget_max === "" ? undefined : Number(form.budget_max),
-        is_direct_hire: false,
+        is_direct_hire: form.is_direct_hire ?? false,
       };
 
-      const created = await base44.entities.Project.create(payload);
-
-      // تسجيل سجل نشاط "إنشاء" باسم الأدمن
-      if (created?.id) {
-        await base44.entities.TaskActivityLog.create({
-          project_id: created.id,
-          task_id: created.id,
-          task_title: created.title || "",
-          actor_email: actor?.email || "",
-          actor_name: actor?.full_name || actor?.email || "",
-          action_type: "created",
-          field_name: "project",
-          old_value: "",
-          new_value: created.status || "open",
-          summary: `تم إنشاء المشروع «${created.title || ""}» بواسطة ${actor?.full_name || "الأدمن"}`,
-        }).catch(() => {});
+      if (editing) {
+        const updated = await base44.entities.Project.update(project.id, payload);
+        await logProjectChange(project, payload, actor);
+        toast({ title: "تم تحديث المشروع", description: "حُدّثت بيانات المشروع وحدّثت الإحصائيات تلقائياً." });
+        onUpdated?.(updated);
+        onCreated?.(updated);
+        onOpenChange?.(false);
+      } else {
+        const created = await base44.entities.Project.create(payload);
+        if (created?.id) {
+          await base44.entities.TaskActivityLog.create({
+            project_id: created.id,
+            task_id: created.id,
+            task_title: created.title || "",
+            actor_email: actor?.email || "",
+            actor_name: actor?.full_name || actor?.email || "",
+            action_type: "created",
+            field_name: "project",
+            old_value: "",
+            new_value: created.status || "open",
+            summary: `تم إنشاء المشروع «${created.title || ""}» بواسطة ${actor?.full_name || "الأدمن"}`,
+          }).catch(() => {});
+        }
+        toast({ title: "تم إنشاء المشروع", description: "أُضيف المشروع وحدّثت الإحصائيات تلقائياً." });
+        onCreated?.(created);
+        onOpenChange?.(false);
       }
-
-      toast({ title: "تم إنشاء المشروع", description: "أُضيف المشروع وحدّثت الإحصائيات تلقائياً." });
-      onCreated?.(created);
-      onOpenChange?.(false);
     } catch (err) {
       console.error("create project failed", err);
       toast({ variant: "destructive", title: "فشل إنشاء المشروع", description: String(err?.message || err).slice(0, 180) });
@@ -149,7 +168,7 @@ export default function AddProjectDialog({ open, onOpenChange, onCreated }) {
         <DialogHeader>
           <DialogTitle className="text-right flex items-center gap-2">
             <Plus className="w-5 h-5 text-[#C9A66B]" />
-            إضافة مشروع جديد
+            {editing ? "تعديل المشروع" : "إضافة مشروع جديد"}
           </DialogTitle>
           <DialogDescription className="text-right flex items-center gap-1.5 justify-end">
             <ShieldCheck className="w-3.5 h-3.5 text-[#C9A66B]" />

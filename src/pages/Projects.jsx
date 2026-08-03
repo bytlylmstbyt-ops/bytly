@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { 
   Search, Filter, MapPin, Clock, DollarSign, 
   Briefcase, PlusCircle, Calendar, Tag, Eye,
-  ChevronLeft, Users, X, SlidersHorizontal
+  ChevronLeft, Users, X, SlidersHorizontal, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ import { AdInFeedSection } from "@/components/ads/SmartAdCard";
 import { useAds } from "@/hooks/useAds";
 import PullToRefreshWrapper from "@/components/mobile/PullToRefreshWrapper";
 import MobileSelect from "@/components/mobile/MobileSelect";
+import AdminProjectsManager from "@/components/projects/AdminProjectsManager";
 
 export default function Projects() {
   const { t } = useLanguage();
@@ -34,6 +35,7 @@ export default function Projects() {
 
   const [currentUser, setCurrentUser] = useState(null);
   const [currentEngineer, setCurrentEngineer] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(null);
 
   useEffect(() => {
     loadProjects();
@@ -45,15 +47,21 @@ export default function Projects() {
     // Get current user and engineer profile
     const user = await base44.auth.me();
     setCurrentUser(user);
+    const admin = user?.role === "admin";
+    setIsAdmin(admin);
+    if (admin) { setIsLoading(false); return; }
     
-    const engineerData = await base44.entities.Engineer.filter({ email: user.email });
+    const engineerData = await base44.entities.Engineer.filter({ email: user.email }).catch(() => []);
     if (engineerData && engineerData.length > 0) {
       setCurrentEngineer(engineerData[0]);
     }
     
     const filter = statusFilter ? { status: statusFilter } : {};
     const data = await base44.entities.Project.filter(filter, "-created_date", 50);
-    setProjects(data);
+    // Hide hidden projects from the public market; pinned ones float to top
+    const visible = data.filter((p) => !p.is_hidden);
+    visible.sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0));
+    setProjects(visible);
     setIsLoading(false);
   };
 
@@ -103,7 +111,7 @@ export default function Projects() {
     }
     
     return matchesSearch && matchesCategory;
-  });
+  }).sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0));
 
   const categories = [
     { value: "interior", label: t('projects.categories.interior') },
@@ -127,6 +135,15 @@ export default function Projects() {
     completed: t('projects.status.completed'),
     cancelled: t('projects.status.cancelled')
   };
+
+  if (isAdmin === null) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-[#C9A66B] animate-spin" />
+      </div>
+    );
+  }
+  if (isAdmin) return <AdminProjectsManager />;
 
   return (
     <PullToRefreshWrapper onRefresh={loadProjects} className="min-h-screen">

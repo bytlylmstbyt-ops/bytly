@@ -4,15 +4,15 @@
   "properties": {
     "client_id": {
       "type": "string",
-      "description": "\u0645\u0639\u0631\u0641 \u0635\u0627\u062d\u0628 \u0627\u0644\u0645\u0634\u0631\u0648\u0639"
+      "description": "\u0645\u0639\u0631\u0641 \u0635\u0627\u062d\u0628 \u0625\u0644\u0645\u0634\u0631\u0648\u0639"
     },
     "title": {
       "type": "string",
-      "description": "\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0645\u0634\u0631\u0648\u0639"
+      "description": "\u0639\u0646\u0648\u0627\u0646 \u0645\u0644\u0645\u0634\u0631\u0648\u0639"
     },
     "description": {
       "type": "string",
-      "description": "\u0648\u0635\u0641 \u0627\u0644\u0645\u0634\u0631\u0648\u0639"
+      "description": "\u0648\u0635\u0641 \u0645\u0644\u0645\u0634\u0631\u0648\u0639"
     },
     "category": {
       "type": "string",
@@ -24,7 +24,7 @@
         "furniture",
         "lighting"
       ],
-      "description": "\u062a\u0635\u0646\u064a\u0641 \u0627\u0644\u0645\u0634\u0631\u0648\u0639"
+      "description": "\u062a\u0635\u0646\u064a\u0641 \u0645\u0644\u0645\u0634\u0631\u0648\u0639"
     },
     "project_type": {
       "type": "string",
@@ -33,33 +33,43 @@
         "express_service"
       ],
       "default": "express_service",
-      "description": "\u0646\u0648\u0639 \u0627\u0644\u0645\u0634\u0631\u0648\u0639: \u0645\u0634\u0631\u0648\u0639 \u0628\u0646\u0627\u0621 \u0643\u0627\u0645\u0644 \u0623\u0648 \u062e\u062f\u0645\u0629 \u0633\u0631\u064a\u0639\u0629"
+      "description": "\u0646\u0648\u0639 \u0645\u0644\u0645\u0634\u0631\u0648\u0639: \u0645\u0634\u0631\u0648\u0639 \u0628\u0646\u0627\u0621 \u0643\u0627\u0645\u0644 \u0623\u0648 \u062e\u062f\u0645\u0629 \u0633\u0631\u064a\u0639\u0629"
     },
     "is_direct_hire": {
       "type": "boolean",
       "default": false,
-      "description": "\u0647\u0644 \u0647\u0630\u0627 \u0637\u0644\u0628 \u062e\u062f\u0645\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 (\u0644\u0627 \u064a\u0638\u0647\u0631 \u0641\u064a \u0627\u0644\u0633\u0648\u0642 \u0627\u0644\u0639\u0627\u0645\u0629)"
+      "description": "\u0647\u0644 \u0647\u0630\u0627 \u0637\u0644\u0628 \u062e\u062f\u0645\u0629 \u0645\u0628\u0627\u0634\u0631\u0629 (\u0644\u0627 \u064a\u0638\u0647\u0631 \u0641\u062a\u064a \u0627\u0644\u0633\u0648\u0642 \u0627\u0644\u0639\u0627\u0645\u0629)"
+    },
+    "is_pinned": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u0645\u0634\u0631\u0648\u0639 \u0645\u062b\u0628\u0651\u062a \u064a\u0638\u0647\u0631 \u0641\u064a \u0623\u0639\u0644\u0649 \u0633\u0648\u0642 \u0645\u0644\u0645\u0634\u0627\u0631\u064a\u0639"
+    },
+    "is_hidden": {
+      "type": "boolean",
+      "default": false,
+      "description": "\u0645\u0634\u0631\u0648\u0639 \u0645\u062e\u0641\u064a \u0644\u0627 \u064a\u0638\u0647\u0631 \u0641\u064a \u0627\u0644\u0633\u0648\u0642 \u0627\u0644\u0639\u0627\u0645\u0629"
     },
     "budget_min": {
       "type": "number",
-      "description": "\u0627\u0644\u0645\u064a\u0632\u0627\u0646\u064a\u0629 \u0627\u0644\u0623\u062f\u0646\u0649"
+      "description": "\u0627\u0644\u0645\u062a\u0632\u0627\u0646\u064a\u0629 \u0627\u0644\u0623\u062f\u0646\u0649"
     },
     "budget_max": {
       "type": "number",
-      "description": "\u0627\u0644\u0645\u064a\u0632\u0627\u0646\u064a\u0629 \u0627\u0644\u0623\u0642\u0635\u0649"
+      "description": "\u0627\u0644\u0645\u062a\u0632\u0627\u0646\u064a\u0629 \u0627\u0644\u0623\u0642\u0635\u0649"
     },
     "location": {
       "type": "string",
-      "description": "\u0645\u0648\u0642\u0639 \u0627\u0644\u0645\u0634\u0631\u0648\u0639"
+      "description": "\u0645\u0648\u0642\u0639 \u0645\u0644\u0645\u0634\u0631\u0648\u0639"
     },
     "address": {
       "type": "string",
-      "description": "\u0639\u0646\u0648\u0627\u0646 \u0627\u0644\u0645\u0634\u0631\u0648\u0639 \u0627\u0644\u062a\u0641\u0635\u064a\u0644\u064a"
+      "description": "\u0639\u0646\u0648\u0627\u0646 \u0645\u0644\u0645\u0634\u0631\u0648\u0639 \u0627\u0644\u062a\u0641\u0635\u064a\u0644\u064a"
     },
     "start_date": {
       "type": "string",
       "format": "date",
-      "description": "\u062a\u0627\u0631\u064a\u062e \u0628\u062f\u0627\u064a\u0629 \u0627\u0644\u0645\u0634\u0631\u0648\u0639"
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0628\u062f\u0627\u064a\u0629 \u0645\u0644\u0645\u0634\u0631\u0648\u0639"
     },
     "deadline": {
       "type": "string",
@@ -86,7 +96,7 @@
         "disputed"
       ],
       "default": "open",
-      "description": "\u062d\u0627\u0644\u0629 \u0627\u0644\u0645\u0634\u0631\u0648\u0639"
+      "description": "\u062d\u0627\u0644\u0629 \u0645\u0644\u0645\u0634\u0631\u0648\u0639"
     },
     "assigned_engineer_id": {
       "type": "string",
@@ -165,7 +175,7 @@
     "platform_commission": {
       "type": "number",
       "default": 15,
-      "description": "\u0646\u0633\u0628\u0629 \u0639\u0645\u0648\u0644\u0629 \u0627\u0644\u0645\u0646\u0635\u0629 \u0628\u0627\u0644\u0645\u0626\u0629"
+      "description": "\u0646\u0633\u0628\u0629 \u0639\u0645\u0648\u0644\u0629 \u0645\u0644\u0645\u0646\u0635\u0629 \u0628\u0627\u0644\u0645\u0626\u0629"
     },
     "technical_consultant_fee": {
       "type": "number",

@@ -92,6 +92,22 @@ export async function logProjectChange(projectBefore, newData, actor) {
   await Promise.all(entries.map((e) => base44.entities.TaskActivityLog.create(e).catch(() => {})));
 }
 
+export async function logProjectFlagChange(project, actor, field, oldV, newV, summary) {
+  if (!project?.id || !actor) return;
+  await base44.entities.TaskActivityLog.create({
+    project_id: project.id,
+    task_id: project.id,
+    task_title: project.title || "",
+    actor_email: actor.email || "",
+    actor_name: actor.full_name || actor.email || "",
+    action_type: "updated",
+    field_name: field,
+    old_value: oldV == null ? "" : String(oldV),
+    new_value: newV == null ? "" : String(newV),
+    summary,
+  }).catch(() => {});
+}
+
 export async function logProjectDeletion(projectBefore, actor) {
   if (!projectBefore?.id || !actor) return;
   await base44.entities.TaskActivityLog.create({
