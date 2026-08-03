@@ -5,6 +5,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, ShieldAlert, ArrowUpRight } from "lucide-react";
 import { ADMIN_CATEGORIES as CATEGORIES } from "@/components/admin/adminSections";
+import { readAdminFilters, writeAdminFilters } from "@/components/admin/adminFilterPersistence";
 import MonthlyRevenueSummaryPanel from "@/components/admin/MonthlyRevenueSummaryPanel";
 import FinancialChartsPanel from "@/components/admin/FinancialChartsPanel";
 import ProjectCompletionTrendPanel from "@/components/admin/ProjectCompletionTrendPanel";
@@ -32,8 +33,12 @@ export default function AdminControlCenter() {
   const [activeKey, setActiveKey] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const cat = params.get("cat");
-    return CATEGORIES.find((c) => c.key === cat)?.key || CATEGORIES[0].key;
+    if (cat && CATEGORIES.find((c) => c.key === cat)) return cat;
+    const saved = readAdminFilters("AdminControlCenter");
+    if (saved.activeKey && CATEGORIES.find((c) => c.key === saved.activeKey)) return saved.activeKey;
+    return CATEGORIES[0].key;
   });
+  useEffect(() => { writeAdminFilters("AdminControlCenter", { activeKey }); }, [activeKey]);
 
   useEffect(() => {
     (async () => {

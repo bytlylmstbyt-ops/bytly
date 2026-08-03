@@ -16,6 +16,7 @@ import BulkActionBar from "@/components/admin/BulkActionBar";
 import AddProviderDialog from "@/components/admin/AddProviderDialog";
 import { useBulkSelection } from "@/components/admin/useBulkSelection";
 import { Megaphone, Plus } from "lucide-react";
+import { readAdminFilters, writeAdminFilters, useAdminScrollRestore } from "@/components/admin/adminFilterPersistence";
 
 const PROVIDERS = [
   { key: "EngineeringFirm", label: "الشركات الهندسية", icon: Building2, nameField: "company_name", subField: "specializations" },
@@ -33,12 +34,19 @@ const STATUS_BADGE = {
 const STATUS_LABEL = { approved: "معتمد", pending: "معلق", rejected: "مرفوض" };
 
 export default function AdminProviders() {
-  const [activeKey, setActiveKey] = useState(PROVIDERS[0].key);
+  const _f = useMemo(() => readAdminFilters("AdminProviders"), []);
+  const [activeKey, setActiveKey] = useState(_f.activeKey || PROVIDERS[0].key);
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearch] = useState(_f.search || "");
+  const [statusFilter, setStatusFilter] = useState(_f.statusFilter || "all");
+
+  // Persist active tab + filters so back navigation restores the exact view
+  useEffect(() => {
+    writeAdminFilters("AdminProviders", { activeKey, search, statusFilter });
+  }, [activeKey, search, statusFilter]);
+  useAdminScrollRestore("AdminProviders", loading);
   const [isAdmin, setIsAdmin] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);

@@ -19,6 +19,7 @@ import AddProjectDialog from "@/components/admin/AddProjectDialog";
 import { useBulkSelection } from "@/components/admin/useBulkSelection";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus } from "lucide-react";
+import { readAdminFilters, writeAdminFilters, useAdminScrollRestore } from "@/components/admin/adminFilterPersistence";
 
 const STATUS_LABELS = {
   open: "مفتوح", in_progress: "قيد التنفيذ", awaiting_technical_review: "بانتظار المراجعة الفنية",
@@ -53,17 +54,24 @@ export default function AdminProjects() {
   const [projects, setProjects] = useState([]);
   const [clients, setClients] = useState([]);
   const [engineers, setEngineers] = useState([]);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [cityFilter, setCityFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [engineerFilter, setEngineerFilter] = useState("all");
-  const [clientFilter, setClientFilter] = useState("all");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const _f = useMemo(() => readAdminFilters("AdminProjects"), []);
+  const [search, setSearch] = useState(_f.search || "");
+  const [statusFilter, setStatusFilter] = useState(_f.statusFilter || "all");
+  const [cityFilter, setCityFilter] = useState(_f.cityFilter || "all");
+  const [typeFilter, setTypeFilter] = useState(_f.typeFilter || "all");
+  const [engineerFilter, setEngineerFilter] = useState(_f.engineerFilter || "all");
+  const [clientFilter, setClientFilter] = useState(_f.clientFilter || "all");
+  const [dateFrom, setDateFrom] = useState(_f.dateFrom || "");
+  const [dateTo, setDateTo] = useState(_f.dateTo || "");
   const [selectedProject, setSelectedProject] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(_f.page || 1);
+
+  // Persist filters + page so back navigation restores the exact view
+  useEffect(() => {
+    writeAdminFilters("AdminProjects", { search, statusFilter, cityFilter, typeFilter, engineerFilter, clientFilter, dateFrom, dateTo, page });
+  }, [search, statusFilter, cityFilter, typeFilter, engineerFilter, clientFilter, dateFrom, dateTo, page]);
+  useAdminScrollRestore("AdminProjects", loading);
   const [exporting, setExporting] = useState(false);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
