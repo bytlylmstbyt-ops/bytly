@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useBulkSelection } from "@/components/admin/useBulkSelection";
 import AddProposalDialog from "@/components/proposals/AddProposalDialog";
+import ProposalsCompareModal from "@/components/proposals/ProposalsCompareModal";
 
 export default function ProjectProposals() {
   const navigate = useNavigate();
@@ -37,6 +38,7 @@ export default function ProjectProposals() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showAdd, setShowAdd] = useState(false);
+  const [showCompare, setShowCompare] = useState(false);
   const [busy, setBusy] = useState(false);
   const [pendingBulk, setPendingBulk] = useState(null);
   const bulk = useBulkSelection();
@@ -200,11 +202,11 @@ export default function ProjectProposals() {
               </Badge>
               {compareList.length > 1 && (
                 <Button
-                  onClick={() => navigate(`/CompareProposals?ids=${compareList.join(",")}&project_id=${projectId}`)}
+                  onClick={() => setShowCompare(true)}
                   className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white"
                 >
                   <BarChart3 className="w-4 h-4 ml-2" />
-                  مقارنة جانبية ({compareList.length})
+                  مقارنة العروض ({compareList.length})
                 </Button>
               )}
             </div>
@@ -498,6 +500,15 @@ export default function ProjectProposals() {
         {isAdmin && (
           <AddProposalDialog open={showAdd} onOpenChange={setShowAdd} preselectedProjectId={projectId} onCreated={() => loadData(true)} />
         )}
+
+        <ProposalsCompareModal
+          open={showCompare}
+          onOpenChange={setShowCompare}
+          proposals={compareList.map((id) => proposals.find((p) => p.id === id)).filter(Boolean)}
+          engineers={engineers}
+          onAccept={handleAccept}
+          acceptingId={acceptingId}
+        />
 
         <AlertDialog open={!!pendingBulk} onOpenChange={(o) => !o && setPendingBulk(null)}>
           <AlertDialogContent>
