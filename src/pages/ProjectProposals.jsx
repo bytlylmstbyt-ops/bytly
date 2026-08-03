@@ -4,13 +4,22 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
   ArrowRight, Star, Clock, DollarSign, User, CheckCircle,
-  BarChart3, TrendingDown, Award, MessageSquare, ChevronDown, ChevronUp, Loader2
+  BarChart3, TrendingDown, Award, MessageSquare, ChevronDown, ChevronUp, Loader2,
+  Search, Plus, RefreshCw, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useBulkSelection } from "@/components/admin/useBulkSelection";
+import AddProposalDialog from "@/components/proposals/AddProposalDialog";
 
 export default function ProjectProposals() {
   const navigate = useNavigate();
@@ -24,13 +33,23 @@ export default function ProjectProposals() {
   const [compareList, setCompareList] = useState([]);
   const [expandedProposal, setExpandedProposal] = useState(null);
   const [sortBy, setSortBy] = useState("price_asc");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [showAdd, setShowAdd] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [pendingBulk, setPendingBulk] = useState(null);
+  const bulk = useBulkSelection();
 
   useEffect(() => {
     loadData();
   }, [projectId]);
 
-  const loadData = async () => {
-    setIsLoading(true);
+  const loadData = async (silent = false) => {
+    if (!silent) setIsLoading(true);
+    let me = null;
+    try { me = await base44.auth.me(); } catch {}
+    setIsAdmin(me?.role === "admin");
     let projectData = [];
     let proposalsData = [];
 
@@ -66,7 +85,14 @@ export default function ProjectProposals() {
     setIsLoading(false);
   };
 
-  const sortedProposals = [...proposals].sort((a, b) => {
+  const filteredProposals = proposals.filter(p => {
+    const q = search.toLowerCase();
+    const ms = !q || (engineers[p.engineer_id]?.full_name || "").toLowerCase().includes(q) || (p.id || "").slice(-6).toLowerCase().includes(q);
+    const mst = statusFilter === "all" ? true : p.status === statusFilter;
+    return ms && mst;
+  });
+
+  const sortedProposals = [...filteredProposals].sort((a, b) => {
     if (sortBy === "price_asc") return (a.price || 0) - (b.price || 0);
     if (sortBy === "price_desc") return (b.price || 0) - (a.price || 0);
     if (sortBy === "delivery_asc") return (a.delivery_days || 0) - (b.delivery_days || 0);
@@ -108,6 +134,21 @@ export default function ProjectProposals() {
     }
   };
 
+  const runBulk = async (action) => {
+    setBusy(true);
+    try {
+      const ids = bulk.selectedIds;
+      if (action === "delete") {
+        await Promise.all(ids.map(id => base44.entities.Proposal.delete(id)));
+      } else {
+        await Promise.all(ids.map(id => base44.entities.Proposal.update(id, { status: action })));
+      }
+      bulk.clear();
+      await loadData(true);
+    } catch (err) { console.error("bulk failed", err); }
+    finally { setBusy(false); setPendingBulk(null); }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -144,6 +185,16 @@ export default function ProjectProposals() {
               <p className="text-slate-500 mt-1">{project ? project.title : "جميع عروض المشاريع على المنصة"}</p>
             </div>
             <div className="flex items-center gap-3 flex-wrap">
+              {isAdmin && (
+                <>
+                  <Button onClick={() => setShowAdd(true)} className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white">
+                    <Plus className="w-4 h-4 ml-2" /> إضافة عرض
+                  </Button>
+                  <Button variant="outline" onClick={() => loadData(true)} disabled={isLoading}>
+                    <RefreshCw className={`w-4 h-4 ml-2 ${isLoading ? "animate-spin" : ""}`} /> تحديث البيانات
+                  </Button>
+                </>
+              )}
               <Badge className="bg-amber-100 text-amber-700 text-sm px-3 py-1">
                 {proposals.length} عرض مستلم
               </Badge>
@@ -186,6 +237,39 @@ export default function ProjectProposals() {
           </motion.div>
         )}
 
+        {/* Search & filters */}
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Input placeholder="ابحث باسم المهندس أو رقم العرض..." value={search} onChange={(e) => setSearch(e.target.value)} className="pr-10" />
+          </div>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white cursor-pointer">
+            <option value="all">كل الحالات</option>
+            <option value="pending">معلق</option>
+            <option value="accepted">مقبول</option>
+            <option value="rejected">مرفوض</option>
+          </select>
+        </div>
+
+        {/* Bulk actions */}
+        {isAdmin && bulk.selectedCount > 0 && (
+          <div className="sticky top-2 z-30 mb-4 rounded-xl border border-[#C9A66B]/30 bg-[#4A3F35] text-white shadow-lg px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className="bg-[#C9A66B] text-[#4A3F35] rounded-full w-7 h-7 flex items-center justify-center font-bold text-sm">{bulk.selectedCount}</span>
+              <span className="text-sm">تم تحديد {bulk.selectedCount} عرض</span>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button size="sm" className="bg-amber-600 hover:bg-amber-700 text-white" disabled={busy} onClick={() => runBulk("pending")}>تعليق</Button>
+              <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" disabled={busy} onClick={() => runBulk("accepted")}>قبول</Button>
+              <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" disabled={busy} onClick={() => runBulk("rejected")}>رفض</Button>
+              <Button size="sm" className="bg-red-700 hover:bg-red-800 text-white" disabled={busy} onClick={() => setPendingBulk("delete")}>حذف</Button>
+              <Button size="sm" variant="ghost" className="text-white hover:bg-white/10" onClick={bulk.clear} disabled={busy}>
+                <X className="w-4 h-4 ml-1" /> إلغاء التحديد
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Sort & Compare hint */}
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
           <div className="flex items-center gap-2">
@@ -215,12 +299,12 @@ export default function ProjectProposals() {
         </div>
 
         {/* Proposals List */}
-        {proposals.length === 0 ? (
+        {sortedProposals.length === 0 ? (
           <Card className="text-center py-16">
             <CardContent>
               <MessageSquare className="w-16 h-16 mx-auto text-slate-300 mb-4" />
-              <p className="text-lg font-medium text-slate-500">لا توجد عروض بعد</p>
-              <p className="text-sm text-slate-400 mt-2">سيظهر هنا عروض الأسعار من المهندسين</p>
+              <p className="text-lg font-medium text-slate-500">لا توجد عروض مطابقة</p>
+              <p className="text-sm text-slate-400 mt-2">جرّب تعديل البحث أو الفلاتر</p>
             </CardContent>
           </Card>
         ) : (
@@ -245,6 +329,12 @@ export default function ProjectProposals() {
                   }`}>
                     <CardContent className="p-5">
                       <div className="flex flex-col md:flex-row md:items-start gap-4">
+
+                        {isAdmin && (
+                          <div className="pt-1">
+                            <Checkbox checked={bulk.isSelected(proposal.id)} onCheckedChange={() => bulk.toggle(proposal.id)} />
+                          </div>
+                        )}
 
                         {/* Engineer Info */}
                         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -404,6 +494,27 @@ export default function ProjectProposals() {
             })}
           </div>
         )}
+
+        {isAdmin && (
+          <AddProposalDialog open={showAdd} onOpenChange={setShowAdd} preselectedProjectId={projectId} onCreated={() => loadData(true)} />
+        )}
+
+        <AlertDialog open={!!pendingBulk} onOpenChange={(o) => !o && setPendingBulk(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>تأكيد الحذف الجماعي</AlertDialogTitle>
+              <AlertDialogDescription>
+                سيتم حذف {bulk.selectedCount} عرض نهائيًا. لا يمكن التراجع. هل أنت متأكد؟
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={busy}>إلغاء</AlertDialogCancel>
+              <AlertDialogAction onClick={() => runBulk(pendingBulk)} disabled={busy} className="bg-red-600 hover:bg-red-700">
+                {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "تأكيد الحذف"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
     </div>
