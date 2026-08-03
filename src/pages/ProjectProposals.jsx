@@ -21,6 +21,7 @@ import {
 import { useBulkSelection } from "@/components/admin/useBulkSelection";
 import AddProposalDialog from "@/components/proposals/AddProposalDialog";
 import ProposalsCompareModal from "@/components/proposals/ProposalsCompareModal";
+import ProposalsCompareTable from "@/components/proposals/ProposalsCompareTable";
 
 export default function ProjectProposals() {
   const navigate = useNavigate();
@@ -236,6 +237,12 @@ export default function ProjectProposals() {
                 </Card>
               ))}
             </div>
+          </motion.div>
+        )}
+
+        {proposals.length >= 2 && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="mb-6">
+            <ProposalsCompareTable proposals={proposals} engineers={engineers} onAccept={handleAccept} acceptingId={acceptingId} />
           </motion.div>
         )}
 
