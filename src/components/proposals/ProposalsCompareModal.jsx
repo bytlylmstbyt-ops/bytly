@@ -88,6 +88,32 @@ export default function ProposalsCompareModal({ open, onOpenChange, proposals, e
           </select>
         </div>
 
+        {/* Quick sort */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-slate-400">ترتيب سريع:</span>
+          {[
+            { key: "price", dir: "asc", label: "أقل سعر", icon: TrendingDown },
+            { key: "price", dir: "desc", label: "أعلى سعر", icon: DollarSign },
+            { key: "delivery", dir: "asc", label: "أسرع مدة", icon: Zap },
+            { key: "rating", dir: "desc", label: "أعلى تقييم", icon: Star },
+          ].map((opt) => {
+            const active = sortKey === opt.key && sortDir === opt.dir;
+            const Ic = opt.icon;
+            return (
+              <button
+                key={opt.label}
+                onClick={() => { setSortKey(opt.key); setSortDir(opt.dir); }}
+                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                  active ? "bg-[#C9A66B] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                <Ic className="w-3.5 h-3.5" />
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Table */}
         <div className="overflow-x-auto rounded-xl border border-slate-200">
           <table className="w-full text-sm">
