@@ -123,10 +123,32 @@ export default function ProjectProposals() {
   const handleAccept = async (proposalId) => {
     setAcceptingId(proposalId);
     try {
+      const proposal = proposals.find(p => p.id === proposalId);
       await base44.entities.Proposal.update(proposalId, { status: "accepted" });
       // Reject others
       const others = proposals.filter(p => p.id !== proposalId);
       await Promise.all(others.map(p => base44.entities.Proposal.update(p.id, { status: "rejected" })));
+      // Move project into execution and assign the winning engineer
+      if (projectId) {
+        await base44.entities.Project.update(projectId, {
+          status: "in_progress",
+          assigned_engineer_id: proposal?.engineer_id,
+        }).catch((e) => console.error("Project status update failed:", e));
+      }
+      // Notify the accepted engineer immediately
+      const eng = proposal ? engineers[proposal.engineer_id] : null;
+      if (eng?.email) {
+        await base44.entities.Notification.create({
+          recipient_email: eng.email,
+          title: "تم اعتماد عرضك! 🎉",
+          message: `تم قبول عرضك للمشروع "${project?.title || ""}" وتمت إضافة المشروع لقائمة مشاريعك تحت التنفيذ. سيتم توليد عقد العمل تلقائياً.`,
+          type: "proposal",
+          related_project_id: projectId,
+          related_entity_id: proposalId,
+          priority: "high",
+          action_url: projectId ? `/ProjectDetails?id=${projectId}` : null,
+        }).catch((e) => console.error("Notification create failed:", e));
+      }
       // Generate digital work contract automatically
       await base44.functions.invoke("autoGenerateContract", { proposalId });
       await loadData();
