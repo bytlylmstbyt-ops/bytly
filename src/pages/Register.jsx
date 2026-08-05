@@ -50,7 +50,9 @@ export default function Register() {
       if (result?.access_token) {
         base44.auth.setToken(result.access_token);
       }
-      window.location.href = "/";
+      // After account creation, send the user to profile-completion (role selection)
+      // — they are not considered an active member until basic profile data is filled.
+      window.location.href = "/RegisterChoice";
     } catch (err) {
       setError(err.message || "Invalid verification code");
     } finally {
@@ -237,7 +239,7 @@ export default function Register() {
       <Button
         variant="outline"
         className="w-full h-12"
-        onClick={() => base44.auth.loginWithProvider('google', window.location.origin + '/')}
+        onClick={() => base44.auth.loginWithProvider('google', window.location.origin + '/RegisterChoice')}
       >
         <GoogleIcon />
         Continue with Google

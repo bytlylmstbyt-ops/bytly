@@ -72,16 +72,10 @@ function Hero() {
 
         <div className="flex flex-wrap gap-3 mt-2">
           <Link
-            to="/RegisterChoice"
+            to="/register"
             className="inline-flex items-center gap-2 bg-[#A68966] hover:bg-[#8f7355] text-white font-semibold px-6 py-3 rounded-xl shadow-md transition-colors"
           >
             أنشئ حسابك الآن →
-          </Link>
-          <Link
-            to="/login"
-            className="inline-flex items-center gap-2 bg-white border border-[#D1D1D1] hover:border-[#A68966] text-[#1A1A2E] font-semibold px-6 py-3 rounded-xl transition-colors"
-          >
-            تسجيل الدخول ←
           </Link>
         </div>
 

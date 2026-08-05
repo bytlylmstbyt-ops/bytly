@@ -321,20 +321,11 @@ function LayoutContent({ children, currentPageName }) {
                   </DropdownMenu>
                 </>
               ) : (
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    onClick={() => window.location.href = '/login'}
-                    className="text-[#6B5D4F] dark:text-slate-300 hover:text-[#C9A66B]"
-                  >
-                    {t('nav.login')}
+                <Link to="/register">
+                  <Button className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white hover:opacity-90">
+                    أنشئ حسابك الآن
                   </Button>
-                  <Link to={createPageUrl("RegisterChoice")}>
-                    <Button className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white hover:opacity-90">
-                      {t('nav.joinBytly')}
-                    </Button>
-                  </Link>
-                </div>
+                </Link>
               )}
 
               {/* Mobile Menu Button — 44px tap target */}
