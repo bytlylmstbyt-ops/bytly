@@ -263,7 +263,7 @@ export default function Home() {
                   <Link to={createPageUrl("CreateProject")}>
                     <Button variant="outline" className="h-14 px-8 bg-white/15 text-white border-white/30 hover:bg-white/25 rounded-xl w-full sm:w-auto">
                       <Plus className="w-5 h-5 ml-1" />
-                      ابدأ مشروعك
+                      {t('home.hero.startProject')}
                     </Button>
                   </Link>
                 </div>

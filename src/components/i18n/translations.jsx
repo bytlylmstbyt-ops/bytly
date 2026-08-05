@@ -41,6 +41,7 @@ export const translations = {
         reasonToChoose: "الفرق: ضمان مالي محجوز، مراجعة استشارية، وبيانات متزامنة لحظياً — في منصة واحدة بدل جداول متفرقة.",
         searchPlaceholder: "ابحث عن مصمم أو تخصص...",
         searchButton: "ابحث الآن",
+        startProject: "ابدأ مشروعك",
         stats: {
           engineers: "مهندس ومصمم",
           projects: "مشروع مكتمل",
@@ -1017,6 +1018,63 @@ export const translations = {
           price: "مقطوعية (حسب الفراغ)"
         }
       }
+    },
+    testimonials: {
+      title: "ماذا يقول أصحاب المشاريع؟",
+      subtitle: "شهادات حقيقية تذكر نتائج ملموسة — من سرعة العروض إلى تقليل التأخيرات.",
+      fallbackClient: "عميل بيتلي",
+      fallbackRole: "صاحب مشروع",
+      fallbackMetric: "نتيجة محققة",
+      defaults: [
+        {
+          name: "أبو عبدالله",
+          role: "صاحب مشروع سكني — الرياض",
+          text: "حصلت على عروض أسعار أسرع بمرتين مقارنة بالطريقة التقليدية، والضمان المالي أراحني تماماً من قلق الدفع المباشر.",
+          metric: "عروض أسرع 2×"
+        },
+        {
+          name: "م. سارة العتيبي",
+          role: "مهندسة معمارية",
+          text: "المراجعة الفنية المستقلة لكل تسليم قلّلت التعديلات المطلوبة وأرضت العملاء. أصبحت أنهي مشاريعي في زمن أقصر.",
+          metric: "تعديلات أقل 40%"
+        },
+        {
+          name: "شركة الإعمار الصغيرة",
+          role: "مقاول — جدة",
+          text: "تنبيهات المخاطر الأسبوعية كشفت تأخراً محتملاً قبل وقوعه، فنسّقنا البناء بسلاسة وسلّمنا في الموعد.",
+          metric: "تأخيرات أقل"
+        }
+      ]
+    },
+    trustBadges: {
+      badge: "إشارات الثقة والاعتماد",
+      title: "ثقة مبنية على معايير واحترافية",
+      subtitle: "نلتزم بالمعايير الوطنية ونوفّر مراجعة فنية مستقلة لحماية مشاريعك وأموالك.",
+      badges: [
+        { title: "التزام الكود السعودي SBC", desc: "مراجعة فنية مستقلة تتحقق من مطابقة التصاميم للكود السعودي للبناء." },
+        { title: "ضمان مالي محمي", desc: "أموال العملاء محفوظة في الضمان ولا تُحرَّر إلا عند اعتماد المراحل." },
+        { title: "مهندسون معتمدون", desc: "تحقق من عضوية الهيئة السعودية للمهندسين قبل تفعيل الحسابات." },
+        { title: "إشارات استشارية", desc: "مكاتب استشارية وشركات هندسية تعتمد بيتلي في مراجعة مشاريعها." }
+      ],
+      signals: ["مراجعة فنية مستقلة لكل تسليم", "توقيع إلكتروني موثّق للعقود", "عضوية الهيئة السعودية للمهندسين"]
+    },
+    proofNumbers: {
+      title: "أرقام تعكس الثقة",
+      subtitle: "تعكس هذه الأرقام رؤيتنا المستقبلية للنمو والتوسع.",
+      numbers: [
+        { value: "1,000+", label: "مهندس واستشاري معتمد" },
+        { value: "5,000+", label: "مشروع مكتمل عبر المنصة" },
+        { value: "100%", label: "دفع آمن ومشفّر بالضمان" },
+        { value: "24/7", label: "دعم فني متواصل" }
+      ],
+      updateTag: "تحديث إطلاق حديث",
+      updateTitle: "إطلاق لوحة التنبيهات الذكية لمتابعة المخاطر أسبوعياً",
+      updateDesc: "نظام جديد يحلل المشاريع النشطة أسبوعياً ويستشير مساعد بيتلي الذكي لتقديم توصيات وقائية تقلل التأخيرات.",
+      caseStudiesLink: "اطّلع على دراسات الحالة ←"
+    },
+    partnerLogos: {
+      intro: "جهات وممارسون يستخدمون منصة بيتلي في إدارة مشاريعهم الهندسية",
+      labels: ["مكاتب استشارية", "مقاولون معتمدون", "موردو مواد", "مهندسون معماريون", "مساحون مرخصون", "القطاع السكني"]
     }
   },
   en: {
@@ -1061,6 +1119,7 @@ export const translations = {
         reasonToChoose: "The difference: escrow-protected payments, consultant review, and real-time synced data — in one platform instead of scattered spreadsheets.",
         searchPlaceholder: "Search for designer or specialization...",
         searchButton: "Search Now",
+        startProject: "Start Your Project",
         stats: {
           engineers: "Engineers & Designers",
           projects: "Completed Projects",
@@ -2037,6 +2096,63 @@ export const translations = {
           price: "Lump sum (per space)"
         }
       }
+    },
+    testimonials: {
+      title: "What Project Owners Say",
+      subtitle: "Real testimonials with measurable outcomes — from faster proposals to fewer delays.",
+      fallbackClient: "Bytly Client",
+      fallbackRole: "Project Owner",
+      fallbackMetric: "Achieved result",
+      defaults: [
+        {
+          name: "Abu Abdullah",
+          role: "Residential Project Owner — Riyadh",
+          text: "I received price offers twice as fast as the traditional way, and the escrow protection completely removed my worry about upfront payment.",
+          metric: "2× faster offers"
+        },
+        {
+          name: "Eng. Sarah Al-Otaibi",
+          role: "Architectural Engineer",
+          text: "Independent technical review of each delivery cut the requested revisions and pleased clients. I now finish projects in less time.",
+          metric: "40% fewer revisions"
+        },
+        {
+          name: "Small Emaar Co.",
+          role: "Contractor — Jeddah",
+          text: "Weekly risk alerts flagged a potential delay before it happened, so we coordinated smoothly and delivered on time.",
+          metric: "Fewer delays"
+        }
+      ]
+    },
+    trustBadges: {
+      badge: "Trust & Accreditation Signals",
+      title: "Trust Built on Standards and Professionalism",
+      subtitle: "We commit to national standards and provide independent technical review to protect your projects and money.",
+      badges: [
+        { title: "Saudi Code (SBC) Compliance", desc: "Independent technical review verifying designs comply with the Saudi Building Code." },
+        { title: "Protected Escrow", desc: "Client funds are held in escrow and only released upon milestone approval." },
+        { title: "Certified Engineers", desc: "Saudi Council of Engineers membership verified before activating accounts." },
+        { title: "Consultancy Signals", desc: "Consulting offices and engineering firms rely on Bytly to review their projects." }
+      ],
+      signals: ["Independent technical review for every delivery", "Verified electronic contract signing", "Saudi Council of Engineers membership"]
+    },
+    proofNumbers: {
+      title: "Numbers That Reflect Trust",
+      subtitle: "These numbers reflect our future vision for growth and expansion.",
+      numbers: [
+        { value: "1,000+", label: "Certified engineers & consultants" },
+        { value: "5,000+", label: "Projects completed via the platform" },
+        { value: "100%", label: "Secure encrypted escrow payment" },
+        { value: "24/7", label: "Continuous technical support" }
+      ],
+      updateTag: "Recent launch update",
+      updateTitle: "Launched the Smart Alerts Dashboard for weekly risk tracking",
+      updateDesc: "A new system analyzes active projects weekly and consults the Bytly AI assistant to provide preventive recommendations that reduce delays.",
+      caseStudiesLink: "View case studies →"
+    },
+    partnerLogos: {
+      intro: "Entities and practitioners using Bytly to manage their engineering projects",
+      labels: ["Consulting Offices", "Certified Contractors", "Material Suppliers", "Architectural Engineers", "Licensed Surveyors", "Residential Sector"]
     }
   }
 };

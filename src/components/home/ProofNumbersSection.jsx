@@ -2,8 +2,12 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Users, Briefcase, Lock, Headset, Calendar } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageContext";
+
+const NUMBER_ICONS = [Users, Briefcase, Lock, Headset];
 
 export default function ProofNumbersSection() {
+  const { t } = useLanguage();
   const [counts, setCounts] = useState({ engineers: 0, portfolios: 0 });
 
   useEffect(() => {
@@ -18,13 +22,7 @@ export default function ProofNumbersSection() {
     })();
   }, []);
 
-  // أرقام الإثبات وإشارات الثقة مدموجة في موضع واحد لتقليل التكرار
-  const numbers = [
-    { icon: Users, value: "1,000+", label: "مهندس واستشاري معتمد" },
-    { icon: Briefcase, value: "5,000+", label: "مشروع مكتمل عبر المنصة" },
-    { icon: Lock, value: "100%", label: "دفع آمن ومشفّر بالضمان" },
-    { icon: Headset, value: "24/7", label: "دعم فني متواصل" },
-  ];
+  const numbers = t('proofNumbers.numbers') || [];
 
   return (
     <section className="py-14 sm:py-16 bg-white">
@@ -32,22 +30,25 @@ export default function ProofNumbersSection() {
         {/* أرقام الإثبات */}
         <div className="text-center mb-10">
           <h2 className="text-2xl sm:text-3xl font-bold text-[#4A3F35] mb-2">
-            أرقام تعكس الثقة
+            {t('proofNumbers.title')}
           </h2>
-          <p className="text-slate-500 text-sm">تعكس هذه الأرقام رؤيتنا المستقبلية للنمو والتوسع.</p>
+          <p className="text-slate-500 text-sm">{t('proofNumbers.subtitle')}</p>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
-          {numbers.map((n, i) => (
-            <div
-              key={i}
-              className="text-center bg-gradient-to-br from-amber-50/50 to-white border border-[#C9A66B]/20 rounded-xl p-6"
-            >
-              <n.icon className="w-7 h-7 text-[#C9A66B] mx-auto mb-2" />
-              <p className="text-3xl sm:text-4xl font-bold text-[#4A3F35]">{n.value}</p>
-              <p className="text-sm text-slate-500 mt-1">{n.label}</p>
-            </div>
-          ))}
+          {numbers.map((n, i) => {
+            const Icon = NUMBER_ICONS[i] || Users;
+            return (
+              <div
+                key={i}
+                className="text-center bg-gradient-to-br from-amber-50/50 to-white border border-[#C9A66B]/20 rounded-xl p-6"
+              >
+                <Icon className="w-7 h-7 text-[#C9A66B] mx-auto mb-2" />
+                <p className="text-3xl sm:text-4xl font-bold text-[#4A3F35]">{n.value}</p>
+                <p className="text-sm text-slate-500 mt-1">{n.label}</p>
+              </div>
+            );
+          })}
         </div>
 
         {/* عنصر إثبات مؤرخ — تحديث إطلاق حديث */}
@@ -60,20 +61,20 @@ export default function ProofNumbersSection() {
               <span className="text-xs font-bold text-white bg-[#6B5D4F] rounded-full px-2.5 py-0.5">
                 {new Date().getFullYear()}
               </span>
-              <span className="text-xs text-slate-500">تحديث إطلاق حديث</span>
+              <span className="text-xs text-slate-500">{t('proofNumbers.updateTag')}</span>
             </div>
             <h3 className="font-semibold text-[#4A3F35] mb-1">
-              إطلاق لوحة التنبيهات الذكية لمتابعة المخاطر أسبوعياً
+              {t('proofNumbers.updateTitle')}
             </h3>
             <p className="text-sm text-slate-600">
-              نظام جديد يحلل المشاريع النشطة أسبوعياً ويستشير مساعد بيتلي الذكي لتقديم توصيات وقائية تقلل التأخيرات.
+              {t('proofNumbers.updateDesc')}
             </p>
           </div>
           <Link
             to="/CaseStudies"
             className="text-sm font-medium text-[#6B5D4F] hover:text-[#C9A66B] transition-colors whitespace-nowrap shrink-0"
           >
-            اطّلع على دراسات الحالة ←
+            {t('proofNumbers.caseStudiesLink')}
           </Link>
         </div>
       </div>
