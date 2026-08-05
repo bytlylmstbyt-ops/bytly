@@ -77,12 +77,6 @@ function Hero() {
           >
             أنشئ حسابك الآن →
           </Link>
-          <Link
-            to="/login"
-            className="inline-flex items-center gap-2 bg-white border border-[#D1D1D1] hover:border-[#A68966] text-[#1A1A2E] font-semibold px-6 py-3 rounded-xl transition-colors"
-          >
-            تسجيل الدخول ←
-          </Link>
         </div>
 
         <div className="flex flex-wrap gap-x-6 gap-y-3 mt-6 pt-6 border-t border-[#E5D4B8]/60">
