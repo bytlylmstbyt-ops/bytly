@@ -181,22 +181,7 @@ export default function RegisterChoice() {
           ))}
         </div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="text-center mt-8"
-        >
-          <p className="text-slate-500">
-            {t('registerChoice.alreadyHaveAccount')}{" "}
-            <button 
-              onClick={() => window.location.href = '/login'}
-              className="text-[#C9A66B] font-medium hover:underline"
-            >
-              {t('registerChoice.login')}
-            </button>
-          </p>
-        </motion.div>
+
       </div>
     </div>
   );
