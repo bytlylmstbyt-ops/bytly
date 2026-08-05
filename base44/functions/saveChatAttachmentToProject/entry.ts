@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.32';
+import { getDriveAccessToken, findOrCreateProjectFolder, uploadFileToDrive } from "../../shared/driveFolders.ts";
 
 /**
  * saveChatAttachmentToProject — حفظ نسخة تلقائية من الملفات المرفقة في الدردشة
@@ -104,10 +105,44 @@ Deno.serve(async (req) => {
     // إشعار بسيط للطرف الآخر بوجود ملفات جديدة في سجل المشروع (اختياري، غير حاجز)
     // تم تجنبه لتجنب الإزعاج - الإشعارات تُرسل بالفعل من ChatWindow
 
+    // مزامنة الملفات الهندسية المتبادلة إلى Google Drive في مجلد منظّم لكل مشروع
+    let drive_folder_url = null;
+    let drive_synced = 0;
+    try {
+      const driveFiles = attachments.filter(f => !f.isVoice && !f.isCallRecording);
+      if (driveFiles.length > 0) {
+        const accessToken = await getDriveAccessToken(base44);
+        let projectTitle = `مشروع-${project_id.slice(0, 8)}`;
+        try {
+          const p = await base44.asServiceRole.entities.Project.get(project_id);
+          if (p?.title) projectTitle = p.title;
+        } catch (e) {
+          // استخدام العنوان الافتراضي
+        }
+        const folder = await findOrCreateProjectFolder(base44, accessToken, projectTitle, project_id);
+        for (const f of driveFiles) {
+          try {
+            const safeName = `${Date.now()}_${f.name || "ملف"}`;
+            await uploadFileToDrive(accessToken, f.url, safeName, folder.id);
+            drive_synced++;
+          } catch (e) {
+            console.error(`Drive upload failed for ${f.name}:`, e.message);
+          }
+        }
+        drive_folder_url = folder.url;
+        console.log(`Synced ${drive_synced} file(s) to Drive folder: ${folder.url}`);
+      }
+    } catch (driveErr) {
+      // المزامنة اختيارية — لا توقف حفظ سجل المشروع
+      console.error("Google Drive sync failed:", driveErr.message);
+    }
+
     return Response.json({
       success: true,
       saved: savedDocs.length,
       documents: savedDocs,
+      drive_synced,
+      drive_folder_url,
       errors: errors.length > 0 ? errors : undefined
     });
 
