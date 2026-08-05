@@ -27,10 +27,16 @@ export default function LandingFinalCTA() {
             لآلاف العملاء في السعودية والخليج.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link to="/register">
+            <Link to="/RegisterChoice">
               <Button className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white hover:opacity-90 text-base px-8 h-12 w-full sm:w-auto">
-                أنشئ حسابك الآن
+                أنشئ حسابك مجاناً
                 <ArrowLeft className={`w-5 h-5 ${isRTL ? "" : "rotate-180"}`} />
+              </Button>
+            </Link>
+            <Link to="/login">
+              <Button variant="outline" className="border-[#C9A66B]/40 text-[#6B5D4F] hover:bg-[#C9A66B]/10 text-base px-8 h-12 w-full sm:w-auto">
+                <LogIn className="w-5 h-5" />
+                تسجيل الدخول
               </Button>
             </Link>
           </div>
