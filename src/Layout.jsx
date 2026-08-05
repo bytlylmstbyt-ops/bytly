@@ -51,6 +51,13 @@ function LayoutContent({ children, currentPageName }) {
   const publicPages = ["Home", "Engineers", "EngineerProfile", "Login", "RegisterEngineer", "RegisterClient"];
   const isPublicPage = publicPages.includes(currentPageName);
 
+  // صفحات رحلة إنشاء الحساب — تخفي شريط التنقل والتنقل السفلي والمحادثة لإبقاء المستخدم مركزاً
+  const registrationFlowPages = [
+    "RegisterChoice", "RegisterEngineer", "RegisterClient", "RegisterConsultant",
+    "RegisterFirm", "RegisterLegalConsultant", "RegistrationSuccess"
+  ];
+  const isRegistrationFlow = registrationFlowPages.includes(currentPageName);
+
   const handleLogout = () => {
     logout(true);
   };
@@ -61,6 +68,14 @@ function LayoutContent({ children, currentPageName }) {
   const handlePullRefresh = useCallback(() => {
     window.dispatchEvent(new CustomEvent('app:pull-refresh'));
   }, []);
+
+  if (isRegistrationFlow) {
+    return (
+      <div className="min-h-screen bg-background text-foreground" dir={isRTL ? "rtl" : "ltr"}>
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground" dir={isRTL ? "rtl" : "ltr"}>
