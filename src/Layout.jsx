@@ -469,7 +469,7 @@ function LayoutContent({ children, currentPageName }) {
 
             {/* Platform */}
             <div>
-              <h3 className="font-semibold mb-4 text-[#C9A66B]">المنصة</h3>
+              <h3 className="font-semibold mb-4 text-[#C9A66B]">{t('footer.platform')}</h3>
               <ul className="text-sm text-slate-300">
                 {[
                   { to: createPageUrl("Home"), label: t('nav.home') },
@@ -487,14 +487,14 @@ function LayoutContent({ children, currentPageName }) {
 
             {/* Solutions & Resources */}
             <div>
-              <h3 className="font-semibold mb-4 text-[#C9A66B]">الحلول والموارد</h3>
+              <h3 className="font-semibold mb-4 text-[#C9A66B]">{t('footer.solutionsAndResources')}</h3>
               <ul className="text-sm text-slate-300">
                 {[
-                  { to: "/Solutions", label: "الحلول" },
-                  { to: "/CaseStudies", label: "دراسات الحالة" },
-                  { to: "/Resources", label: "مركز الموارد" },
+                  { to: "/Solutions", label: t('footer.solutions') },
+                  { to: "/CaseStudies", label: t('footer.caseStudies') },
+                  { to: "/Resources", label: t('footer.resources') },
                   { to: "/FAQ", label: t('home.faq.title') },
-                  { to: "/CostEstimator", label: "حاسبة التكلفة" },
+                  { to: "/CostEstimator", label: t('footer.costCalculator') },
                 ].map(({ to, label }) => (
                   <li key={to}>
                     <Link to={to} className="flex items-center hover:text-[#C9A66B] transition-colors py-1" style={{ minHeight: 36 }}>{label}</Link>
@@ -505,12 +505,12 @@ function LayoutContent({ children, currentPageName }) {
 
             {/* Company */}
             <div>
-              <h3 className="font-semibold mb-4 text-[#C9A66B]">الشركة</h3>
+              <h3 className="font-semibold mb-4 text-[#C9A66B]">{t('footer.company')}</h3>
               <ul className="text-sm text-slate-300">
                 {[
                   { to: createPageUrl("About"), label: t('footer.about') },
                   { to: createPageUrl("ContactUs"), label: t('footer.contactUs') },
-                  { to: "/RequestQuote", label: "طلب عرض سعر" },
+                  { to: "/RequestQuote", label: t('footer.requestQuote') },
                   { to: createPageUrl("Support"), label: t('footer.technicalSupport') },
                   { to: createPageUrl("Complaints"), label: t('footer.complaints') },
                   { to: "/Certificates", label: t('nav.certificates') },

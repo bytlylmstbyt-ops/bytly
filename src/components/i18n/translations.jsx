@@ -241,6 +241,14 @@ export const translations = {
       technicalSupport: "الدعم الفني",
       contactUs: "تواصل معنا",
       rightsReserved: "بيتلي - المنظومة الهندسية المتكاملة. جميع الحقوق محفوظة.",
+      platform: "المنصة",
+      solutionsAndResources: "الحلول والموارد",
+      solutions: "الحلول",
+      caseStudies: "دراسات الحالة",
+      resources: "مركز الموارد",
+      costCalculator: "حاسبة التكلفة",
+      company: "الشركة",
+      requestQuote: "طلب عرض سعر",
       about: "من نحن",
       aboutPage: {
         title: "صفحة 'من نحن'",
@@ -1075,6 +1083,12 @@ export const translations = {
     partnerLogos: {
       intro: "جهات وممارسون يستخدمون منصة بيتلي في إدارة مشاريعهم الهندسية",
       labels: ["مكاتب استشارية", "مقاولون معتمدون", "موردو مواد", "مهندسون معماريون", "مساحون مرخصون", "القطاع السكني"]
+    },
+    solutions: {
+      ctaTitle: "جاهز لبدء مشروعك بثقة؟",
+      ctaDesc: "انضم لبيتلي واحصل على نظام متكامل يحمي أموالك ويضمن جودة التنفيذ من أول خطوة.",
+      ctaRegister: "سجّل الآن مجاناً",
+      ctaContact: "تواصل معنا"
     }
   },
   en: {
@@ -1319,6 +1333,14 @@ export const translations = {
       technicalSupport: "Technical Support",
       contactUs: "Contact Us",
       rightsReserved: "Bytly - Integrated Engineering Ecosystem. All Rights Reserved.",
+      platform: "Platform",
+      solutionsAndResources: "Solutions & Resources",
+      solutions: "Solutions",
+      caseStudies: "Case Studies",
+      resources: "Resources",
+      costCalculator: "Cost Calculator",
+      company: "Company",
+      requestQuote: "Request a Quote",
       about: "About Us",
       aboutPage: {
         title: "About Us",
@@ -2153,6 +2175,12 @@ export const translations = {
     partnerLogos: {
       intro: "Entities and practitioners using Bytly to manage their engineering projects",
       labels: ["Consulting Offices", "Certified Contractors", "Material Suppliers", "Architectural Engineers", "Licensed Surveyors", "Residential Sector"]
+    },
+    solutions: {
+      ctaTitle: "Ready to start your project with confidence?",
+      ctaDesc: "Join Bytly and get an integrated system that protects your money and guarantees execution quality from the first step.",
+      ctaRegister: "Register now for free",
+      ctaContact: "Contact us"
     }
   }
 };

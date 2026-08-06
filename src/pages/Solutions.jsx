@@ -12,6 +12,7 @@ import LinkFolder from "@/components/content/LinkFolder";
 import PageEssentialsSection from "@/components/content/PageEssentialsSection";
 import JsonLd from "@/components/seo/JsonLd";
 import { webPageSchema, softwareSchema } from "@/components/seo/buildSchema";
+import { useLanguage } from "@/components/i18n/LanguageContext";
 
 const folders = [
   {
@@ -60,6 +61,7 @@ const benefits = [
 ];
 
 export default function Solutions() {
+  const { t } = useLanguage();
   const [stats, setStats] = useState({ engineers: 0, projects: 0, firms: 0 });
 
   useEffect(() => {
@@ -170,11 +172,11 @@ export default function Solutions() {
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
         <div className="rounded-2xl bg-gradient-to-br from-[#4A3F35] to-[#6B5D4F] p-8 sm:p-10 text-center text-white">
           <Zap className="w-10 h-10 mx-auto mb-3 text-[#C9A66B]" />
-          <h2 className="text-2xl font-bold mb-3">جاهز لبدء مشروعك بثقة؟</h2>
-          <p className="text-slate-200 mb-6 max-w-xl mx-auto">انضم لبيتلي واحصل على نظام متكامل يحمي أموالك ويضمن جودة التنفيذ من أول خطوة.</p>
+          <h2 className="text-2xl font-bold mb-3">{t('solutions.ctaTitle')}</h2>
+          <p className="text-slate-200 mb-6 max-w-xl mx-auto">{t('solutions.ctaDesc')}</p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link to="/RegisterChoice"><Button className="bg-[#C9A66B] text-[#4A3F35] hover:bg-[#E5D4B8]">سجّل الآن مجاناً</Button></Link>
-            <Link to="/ContactUs"><Button variant="outline" className="border-white/40 text-white hover:bg-white/10">تواصل معنا</Button></Link>
+            <Link to="/RegisterChoice"><Button className="bg-[#C9A66B] text-[#4A3F35] hover:bg-[#E5D4B8]">{t('solutions.ctaRegister')}</Button></Link>
+            <Link to="/ContactUs"><Button variant="outline" className="border-white/40 text-white hover:bg-white/10">{t('solutions.ctaContact')}</Button></Link>
           </div>
         </div>
       </section>
