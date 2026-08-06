@@ -7,6 +7,10 @@ Deno.serve(async (req) => {
     if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+    // Authorization: posting to the official platform LinkedIn account is admin-only.
+    if (user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: admin only' }, { status: 403 });
+    }
 
     const accessToken = await base44.asServiceRole.connectors.getAccessToken('linkedin');
     const body = await req.json();

@@ -10,6 +10,13 @@ Deno.serve(async (req) => {
 
     const { eventType, data } = await req.json();
 
+    // Authorization: admins may notify about any registration; regular users may only
+    // trigger registration notifications for their own account (data.email must match caller).
+    const targetEmail = data && data.email ? String(data.email) : '';
+    if (user.role !== 'admin' && targetEmail !== user.email) {
+      return Response.json({ error: 'Forbidden: can only notify for your own registration' }, { status: 403 });
+    }
+
     // Helper function to send email
     const sendEmail = async (to: string, subject: string, body: string) => {
       await base44.asServiceRole.integrations.Core.SendEmail({
