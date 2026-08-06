@@ -33,6 +33,7 @@ export default function RegisterEngineer() {
     registeredCount: 0
   });
   const [portfolioItems, setPortfolioItems] = useState([]);
+  const [skippedUploads, setSkippedUploads] = useState(new Set());
 
   // Load Google user info if available
   useEffect(() => {
@@ -79,7 +80,6 @@ export default function RegisterEngineer() {
     user_type: userType === "painter" ? "painter" : "engineer",
     // إذا كان النوع "surveyor"، التخصص الافتراضي "هندسة المساحة" ويُحفظ كمهندس
     specialization: userType === "surveyor" ? "هندسة المساحة" : "",
-    specialization: "",
     registration_number: "",
     bio: "",
     city: "",
@@ -185,6 +185,11 @@ export default function RegisterEngineer() {
     try {
       const { file_url } = await withTimeout(base44.integrations.Core.UploadFile({ file }), 120000);
       handleInputChange(field, file_url);
+      setSkippedUploads(prev => {
+        const next = new Set(prev);
+        next.delete(field);
+        return next;
+      });
       setNotice({
         type: "success",
         title: "تم رفع الملف بنجاح",
@@ -197,6 +202,7 @@ export default function RegisterEngineer() {
 
       if (isPlanLimit) {
         // السماح بالتسجيل دون الملف عند الوصول لحد الخطة (الشهادة غير إلزامية تقنياً للحفظ)
+        setSkippedUploads(prev => new Set(prev).add(field));
         const fieldLabel = field === "graduation_certificate_url" ? "شهادة التخرج" : field === "saudi_engineers_council_certificate_url" ? "شهادة القيد بالهيئة السعودية للمهندسين" : "الصورة الشخصية";
         const skipMessage = `تعذر رفع ${fieldLabel} بسبب حد التكامل في الخطة. يمكنك إكمال التسجيل الآن وإضافة ${fieldLabel} لاحقًا من إعدادات الملف الشخصي، أو ترقية الخطة.`;
         setNotice({
@@ -321,7 +327,9 @@ export default function RegisterEngineer() {
   const isStep1Valid = formData.full_name && formData.email && formData.phone;
   const isStep2Valid = formData.specialization && formData.city && formData.country;
   // شهادة التخرج وشهادة القيد بالهيئة السعودية للمهندسين مطلوبتان للاعتماد
-  const isStep3Valid = formData.registration_number && formData.graduation_certificate_url && formData.saudi_engineers_council_certificate_url;
+  const isStep3Valid = formData.registration_number &&
+    (formData.graduation_certificate_url || skippedUploads.has("graduation_certificate_url")) &&
+    (formData.saudi_engineers_council_certificate_url || skippedUploads.has("saudi_engineers_council_certificate_url"));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-12">
