@@ -14,6 +14,7 @@ import {
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { ar } from "date-fns/locale";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 function EmailRow({ email, onSelect, onMarkRead, onTrash, isSent }) {
   return (
@@ -339,7 +340,7 @@ export default function GmailManager() {
                   ) : emailDetail?.body ? (
                     <div
                       className="text-sm text-slate-700 leading-relaxed prose prose-sm max-w-none"
-                      dangerouslySetInnerHTML={{ __html: emailDetail.body }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeHtml(emailDetail.body) }}
                     />
                   ) : (
                     <p className="text-slate-500 text-sm">{selectedEmail.snippet}</p>

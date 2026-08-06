@@ -11,6 +11,7 @@ import {
 import { Mail, Search, RefreshCw, Loader2, Calendar, User, Send, Filter } from "lucide-react";
 import moment from "moment";
 import MobileSelect from "@/components/mobile/MobileSelect";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 export default function SentEmailsLog() {
   const { toast } = useToast();
@@ -299,7 +300,7 @@ export default function SentEmailsLog() {
                 <p className="text-xs text-slate-500 mb-1">المحتوى</p>
                 <div
                   className="text-sm text-slate-700 leading-relaxed prose prose-sm max-w-none border rounded-md p-3 bg-slate-50 max-h-[300px] overflow-y-auto"
-                  dangerouslySetInnerHTML={{ __html: selectedEmail.body }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedEmail.body) }}
                 />
               </div>
             </div>
