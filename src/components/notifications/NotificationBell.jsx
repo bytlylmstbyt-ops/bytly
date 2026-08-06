@@ -126,7 +126,7 @@ export default function NotificationBell() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative hover:bg-slate-100"
+          className="relative h-11 w-11 md:h-9 md:w-9 hover:bg-slate-100"
           aria-label="الإشعارات"
         >
           <Bell className="w-5 h-5 text-slate-600" />

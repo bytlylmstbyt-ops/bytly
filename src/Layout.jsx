@@ -256,7 +256,7 @@ function LayoutContent({ children, currentPageName }) {
               <LanguageSwitcher variant="ghost" />
               {isAuthenticated && user ? (
                   <>
-                    <Link to={createPageUrl("Messages")} className="relative p-2 hover:bg-slate-100 rounded-full transition-colors" title={t('nav.messages')}>
+                    <Link to={createPageUrl("Messages")} className="relative flex items-center justify-center h-11 w-11 md:h-9 md:w-9 rounded-full hover:bg-slate-100 transition-colors" title={t('nav.messages')}>
                       <MessageSquare className="w-5 h-5 text-slate-600" />
                     </Link>
                   <NotificationBell />
@@ -359,7 +359,7 @@ function LayoutContent({ children, currentPageName }) {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden glass-effect border-t">
+          <div className="md:hidden glass-effect border-t max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain">
             <div className="px-4 py-2 space-y-0.5">
               {[
                 { to: createPageUrl("Home"), label: t('nav.home') },
