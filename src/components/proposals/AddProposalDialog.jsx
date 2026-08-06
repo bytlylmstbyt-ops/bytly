@@ -87,7 +87,14 @@ export default function AddProposalDialog({ open, onOpenChange, onCreated, prese
         summary: `تم إنشاء عرض جديد بقيمة ${form.price} ر.س لمشروع «${projectTitle}»`,
       }).catch(() => {});
 
-      toast({ title: "تم إنشاء العرض", description: "أُضيف العرض وحدّثت الإحصائيات تلقائياً." });
+      // Notify the project owner (client) about the new proposal
+      try {
+        await base44.functions.invoke('notifyNewProposal', { proposalId: created.id });
+      } catch (e) {
+        console.error('notifyNewProposal failed:', e);
+      }
+
+      toast({ title: "تم إنشاء العرض", description: "أُضيف العرض وأُرسل إشعار لصاحب المشروع." });
       onCreated?.(created);
       onOpenChange?.(false);
     } catch (err) {

@@ -261,34 +261,11 @@ export default function CreateProject() {
         priority: "high"
       });
     } else {
-      // Send notifications to matching engineers
-      const matchingEngineers = await base44.entities.Engineer.filter({
-        status: "approved"
-      });
-
-    const notificationsToSend = matchingEngineers
-      .filter(eng => {
-        // Match by category or user_type
-        if (formData.category === "interior" && eng.user_type === "engineer") return true;
-        if (formData.category === "architecture" && eng.user_type === "architect") return true;
-        if (formData.category === "painting" && eng.user_type === "painter") return true;
-        if (formData.category === "civil_engineering" && eng.user_type === "civil") return true;
-        return false;
-      })
-      .map(eng => ({
-        recipient_email: eng.email,
-        title: "مشروع جديد مطابق لتخصصك",
-        message: `تم نشر مشروع جديد: ${formData.title}. الميزانية: ${formData.budget_min}-${formData.budget_max} ريال.`,
-        type: "project_update",
-        related_project_id: newProject.id,
-        priority: "high"
-      }));
-
-    // Create notifications in bulk
-    if (notificationsToSend.length > 0) {
-      await Promise.all(
-        notificationsToSend.map(notif => base44.entities.Notification.create(notif))
-      );
+      // Notify approved engineers whose specialization matches the project category
+      try {
+        await base44.functions.invoke('notifyMatchingEngineers', { projectId: newProject.id });
+      } catch (e) {
+        console.error('notifyMatchingEngineers failed:', e);
       }
     }
 

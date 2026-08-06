@@ -36,9 +36,24 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Engineer not found' }, { status: 404 });
     }
 
+    // Resolve client contact (project.client_id stores the Client record id, not an email)
+    let clientEmail = project.created_by;
+    let clientPhone = null;
+    try {
+      if (project.client_id) {
+        const client = await base44.asServiceRole.entities.Client.get(project.client_id);
+        if (client) {
+          clientEmail = client.email || clientEmail;
+          clientPhone = client.phone || clientPhone;
+        }
+      }
+    } catch (clientErr) {
+      console.error('Failed to resolve client:', clientErr);
+    }
+
     // Create notification for client
     const notification = await base44.asServiceRole.entities.Notification.create({
-      recipient_email: project.client_id,
+      recipient_email: clientEmail,
       title: 'عرض جديد على مشروعك',
       message: `قدم المهندس ${engineer.full_name} عرضاً جديداً على مشروع "${project.title}" بسعر ${proposal.price} ريال`,
       type: 'proposal',
@@ -52,7 +67,7 @@ Deno.serve(async (req) => {
     // Send email notification
     try {
       await base44.asServiceRole.integrations.Core.SendEmail({
-        to: project.client_id,
+        to: clientEmail,
         subject: 'عرض جديد على مشروعك - بتلي',
         body: `
           <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right;">
@@ -92,7 +107,7 @@ Deno.serve(async (req) => {
     // Send WhatsApp notification for instant alert
     try {
       await base44.asServiceRole.functions.invoke('sendWhatsappNotification', {
-        recipient_phone: project.client_phone,
+        recipient_phone: clientPhone,
         message: `🏗️ عرض جديد على مشروعك!\n\nقدم المهندس ${engineer.full_name} عرضاً على مشروع "${project.title}"\n\n💰 السعر: ${proposal.price} ريال\n⏱️ المدة: ${proposal.delivery_days || '-'} يوم\n\nراجع العرض الآن: https://mybytly.com/ProjectDetails?id=${project.id}`
       });
     } catch (whatsappError) {
