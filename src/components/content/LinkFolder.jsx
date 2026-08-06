@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { FolderOpen, ArrowLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/components/i18n/LanguageContext";
 
 /**
  * LinkFolder — يعرض مجموعة روابط داخل "مجلد علوي" واضح
@@ -13,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
  *  - items: [{ icon, title, desc, to, tag, read? }]
  */
 export default function LinkFolder({ icon: Icon, title, subtitle, items }) {
+  const { t } = useLanguage();
   return (
     <div className="mb-10">
       {/* Folder header */}
@@ -24,7 +26,7 @@ export default function LinkFolder({ icon: Icon, title, subtitle, items }) {
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-bold text-[#4A3F35]">{title}</h3>
             <Badge variant="outline" className="text-[10px] text-[#C9A66B] border-[#C9A66B]/30">
-              {items.length} أدلة
+              {items.length} {t('common.items')}
             </Badge>
           </div>
           {subtitle && <p className="text-sm text-slate-500 truncate">{subtitle}</p>}
@@ -52,7 +54,7 @@ export default function LinkFolder({ icon: Icon, title, subtitle, items }) {
                     <p className="text-xs text-slate-600 leading-relaxed mb-2">{m.desc}</p>
                     <div className="flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-100 pt-2">
                       {m.read ? <span>{m.read}</span> : <span />}
-                      <span className="flex items-center gap-1 text-[#6B5D4F]">فتح <ArrowLeft className="w-3 h-3" /></span>
+                      <span className="flex items-center gap-1 text-[#6B5D4F]">{t('common.open')} <ArrowLeft className="w-3 h-3" /></span>
                     </div>
                   </div>
                 </div>

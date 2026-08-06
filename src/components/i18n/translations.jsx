@@ -283,7 +283,9 @@ export const translations = {
       previous: "السابق",
       submit: "إرسال",
       confirm: "تأكيد",
-      sar: "ر.س"
+      sar: "ر.س",
+      items: "أدلة",
+      open: "فتح"
     },
     registerChoice: {
       title: "انضم لـ بيتلي",
@@ -1085,6 +1087,73 @@ export const translations = {
       labels: ["مكاتب استشارية", "مقاولون معتمدون", "موردو مواد", "مهندسون معماريون", "مساحون مرخصون", "القطاع السكني"]
     },
     solutions: {
+      badge: "الحلول",
+      heroTitle: "حلول بيتلي المتكاملة لإدارة المشاريع الهندسية",
+      heroSubtitle: "منصة واحدة تجمع التصميم والتنفيذ والمالية والذكاء الاصطناعي — ليتمكن صاحب المشروع من إطلاق عمله بثقة وإتمامه بأمان.",
+      startProjectNow: "ابدأ مشروعك الآن",
+      viewCaseStudies: "شاهد دراسات الحالة",
+      problemTitle: "المشكلة التي نحلها",
+      problems: [
+        { title: "تشتت الأدوات", desc: "تصميم في مكان، مالية في آخر، متابعة على واتساب — فتضيع المسؤولية." },
+        { title: "ضعف الحماية", desc: "دفع مباشر بدون ضمان ولا مراجعة فنية يعرض أموالك للخطر." },
+        { title: "غياب المتابعة", desc: "لا أحد ينبهك لتأخر مرحلة أو تجاوز ميزانية قبل فوات الأوان." }
+      ],
+      foldersTitle: "وحدات المنصة مُجمّعة في مجلدات",
+      foldersSubtitle: "ثماني وحدات متكاملة مصنّفة في أربعة مجلدات علوية لتسهيل الوصول والتصفح.",
+      folders: [
+        {
+          title: "التخطيط وإدارة المشروع",
+          subtitle: "حدّد الميزانية ووحّد مراحل التنفيذ في مسار واحد.",
+          items: [
+            { title: "حاسبة التكاليف", desc: "تقدير فوري لقيمة المشروع بناءً على المساحة والنطاق.", tag: "تخطيط" },
+            { title: "محاكي مراحل المشروع", desc: "حوكمة واضحة لمراحل التنفيذ من التصميم حتى التسليم.", tag: "إدارة" }
+          ]
+        },
+        {
+          title: "المالية والضمان",
+          subtitle: "احمِ أموالك وادفع بمسار شفّاف عبر الضمان.",
+          items: [
+            { title: "الضمان والحوالات", desc: "حماية أموالك في الضمان وإطلاقها عند اعتماد المراحل.", tag: "مالية" },
+            { title: "المحفظة والمدفوعات", desc: "إدارة الميزانية والمدفوعات بمسار شفاف.", tag: "مالية" }
+          ]
+        },
+        {
+          title: "العقود والذكاء الاصطناعي",
+          subtitle: "عقود موثّقة ومراقبة ذكية للمخاطر طوال المشروع.",
+          items: [
+            { title: "العقود الإلكترونية", desc: "عقود موثقة بآلياً بتوقيع رقمي لكل من العميل والمهندس.", tag: "قانوني" },
+            { title: "Bytly AI", desc: "مساعد ذكي يحلل المخاطر ويوصي بإجراءات وقائية.", tag: "ذكاء" }
+          ]
+        },
+        {
+          title: "الميدان والسوق",
+          subtitle: "خدمات ميدانية وسوق متكامل للمقاولين والموردين.",
+          items: [
+            { title: "خدمات المسح", desc: "طلب مساح معتمد وحجز موعد ميداني للموقع.", tag: "ميداني" },
+            { title: "الكيانات السوقية", desc: "سوق متكامل للمقاولين والموردين والاستشاريين.", tag: "سوق" }
+          ]
+        }
+      ],
+      benefitsTitle: "الفوائد الرئيسية",
+      benefits: [
+        "كل أدوات المشروع في مكان واحد بدل التشتت بين التطبيقات",
+        "حماية مالية كاملة عبر نظام الضمان والمراجعة الفنية",
+        "متابعة ذكية أسبوعية تكشف المخاطر قبل وقوعها",
+        "عقود موثقة ومراجعة فنية مستقلة لكل تسليم"
+      ],
+      proofTitle: "الدليل والأرقام",
+      proof: [
+        { label: "مهندس معتمد" },
+        { label: "شركة استشارية" },
+        { label: "متوسط زمن المعالجة" }
+      ],
+      essentials: {
+        feature: "ثماني وحدات متكاملة لتخطيط وتمويل وعقد ومتابعة المشروع في منصة واحدة.",
+        audience: "أصحاب المشاريع والمهندسون والاستشاريون في المملكة العربية السعودية.",
+        proof: "أكثر من 1000 مهندس معتمد وآلاف المشاريع المنجزة عبر المنصة.",
+        nextStep: "ابدأ مشروعك مجاناً أو تصفّح الوحدات أعلاه لاختيار ما يناسبك.",
+        nextLabel: "ابدأ مشروعك الآن"
+      },
       ctaTitle: "جاهز لبدء مشروعك بثقة؟",
       ctaDesc: "انضم لبيتلي واحصل على نظام متكامل يحمي أموالك ويضمن جودة التنفيذ من أول خطوة.",
       ctaRegister: "سجّل الآن مجاناً",
@@ -1375,7 +1444,9 @@ export const translations = {
       previous: "Previous",
       submit: "Submit",
       confirm: "Confirm",
-      sar: "SAR"
+      sar: "SAR",
+      items: "items",
+      open: "Open"
     },
     registerChoice: {
       title: "Join Bytly",
@@ -2177,6 +2248,73 @@ export const translations = {
       labels: ["Consulting Offices", "Certified Contractors", "Material Suppliers", "Architectural Engineers", "Licensed Surveyors", "Residential Sector"]
     },
     solutions: {
+      badge: "Solutions",
+      heroTitle: "Bytly's Integrated Solutions for Engineering Project Management",
+      heroSubtitle: "One platform combining design, execution, finance, and AI — so project owners can launch with confidence and complete with security.",
+      startProjectNow: "Start your project now",
+      viewCaseStudies: "View case studies",
+      problemTitle: "The Problem We Solve",
+      problems: [
+        { title: "Tool Fragmentation", desc: "Design in one place, finance in another, tracking on WhatsApp — accountability gets lost." },
+        { title: "Weak Protection", desc: "Direct payment without escrow or technical review puts your money at risk." },
+        { title: "No Follow-up", desc: "No one alerts you to a delayed stage or budget overrun before it's too late." }
+      ],
+      foldersTitle: "Platform Units Grouped into Folders",
+      foldersSubtitle: "Eight integrated units organized into four top-level folders for easy access and browsing.",
+      folders: [
+        {
+          title: "Planning & Project Management",
+          subtitle: "Set the budget and unify execution phases in one track.",
+          items: [
+            { title: "Cost Calculator", desc: "Instant project value estimate based on area and scope.", tag: "Planning" },
+            { title: "Project Stages Simulator", desc: "Clear governance of execution phases from design to delivery.", tag: "Management" }
+          ]
+        },
+        {
+          title: "Finance & Escrow",
+          subtitle: "Protect your money and pay transparently via escrow.",
+          items: [
+            { title: "Escrow & Transfers", desc: "Protecting your funds in escrow and releasing them on milestone approval.", tag: "Finance" },
+            { title: "Wallet & Payments", desc: "Manage budget and payments with a transparent track.", tag: "Finance" }
+          ]
+        },
+        {
+          title: "Contracts & AI",
+          subtitle: "Verified contracts and smart risk monitoring throughout the project.",
+          items: [
+            { title: "Electronic Contracts", desc: "Automatically verified contracts with digital signatures for both client and engineer.", tag: "Legal" },
+            { title: "Bytly AI", desc: "A smart assistant that analyzes risks and recommends preventive actions.", tag: "AI" }
+          ]
+        },
+        {
+          title: "Field & Market",
+          subtitle: "Field services and an integrated market for contractors and suppliers.",
+          items: [
+            { title: "Surveying Services", desc: "Request a certified surveyor and book a field appointment for the site.", tag: "Field" },
+            { title: "Market Entities", desc: "An integrated market for contractors, suppliers, and consultants.", tag: "Market" }
+          ]
+        }
+      ],
+      benefitsTitle: "Key Benefits",
+      benefits: [
+        "All project tools in one place instead of scattered across apps",
+        "Full financial protection via escrow and technical review",
+        "Smart weekly tracking that surfaces risks before they happen",
+        "Verified contracts and independent technical review for every delivery"
+      ],
+      proofTitle: "Evidence & Numbers",
+      proof: [
+        { label: "Certified engineers" },
+        { label: "Consulting firms" },
+        { label: "Avg. processing time" }
+      ],
+      essentials: {
+        feature: "Eight integrated units for planning, financing, contracting, and tracking a project in one platform.",
+        audience: "Project owners, engineers, and consultants in Saudi Arabia.",
+        proof: "More than 1,000 certified engineers and thousands of projects completed via the platform.",
+        nextStep: "Start your project for free or browse the units above to choose what suits you.",
+        nextLabel: "Start your project now"
+      },
       ctaTitle: "Ready to start your project with confidence?",
       ctaDesc: "Join Bytly and get an integrated system that protects your money and guarantees execution quality from the first step.",
       ctaRegister: "Register now for free",
