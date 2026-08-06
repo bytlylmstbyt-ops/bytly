@@ -5,11 +5,13 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import {
-    Mail, Phone, MapPin, Send, CheckCircle2, Loader2,
-    MessageSquare, Clock, Instagram, Facebook
+    Mail, Clock, MapPin, Send, CheckCircle2, Loader2,
+    MessageSquare, Instagram, Facebook
 } from 'lucide-react';
+import { useLanguage } from '@/components/i18n/LanguageContext';
 
 export default function ContactUs() {
+    const { t, isRTL } = useLanguage();
     const [form, setForm] = useState({ name: '', company: '', email: '', phone: '', subject: '', project_needs: '', message: '' });
     const [loading, setLoading] = useState(false);
     const [sent, setSent] = useState(false);
@@ -20,7 +22,7 @@ export default function ContactUs() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!form.name || !form.email || !form.message) {
-            setError('يرجى ملء جميع الحقول المطلوبة');
+            setError(t('contactUs.requiredError'));
             return;
         }
         setError('');
@@ -29,14 +31,14 @@ export default function ContactUs() {
             await base44.functions.invoke('contactUs', form);
             setSent(true);
         } catch (err) {
-            setError('حدث خطأ أثناء الإرسال، يرجى المحاولة مرة أخرى');
+            setError(t('contactUs.sendError'));
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30" dir="rtl">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30" dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Hero */}
             <div className="bg-gradient-to-l from-[#1a1a2e] to-[#4a3f35] text-white py-16 px-4">
                 <div className="max-w-4xl mx-auto text-center">
@@ -44,12 +46,12 @@ export default function ContactUs() {
                         <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
                             <MessageSquare className="w-8 h-8 text-[#C9A66B]" />
                         </div>
-                        <h1 className="text-3xl md:text-4xl font-bold mb-3">تواصل معنا</h1>
+                        <h1 className="text-3xl md:text-4xl font-bold mb-3">{t('contactUs.title')}</h1>
                         <p className="text-slate-300 text-lg max-w-xl mx-auto">
-                            نحن هنا للإجابة على استفساراتك ومساعدتك في كل ما تحتاج. تواصل معنا وسنرد عليك في أقرب وقت.
+                            {t('contactUs.subtitle')}
                         </p>
                         <p className="text-sm font-semibold text-[#C9A66B] bg-white/10 inline-block px-4 py-2 rounded-full mt-4">
-                            محرك مطابقة بيتلي — الإدارة الهندسية الذكية التي لا تُقلد
+                            {t('contactUs.tagline')}
                         </p>
                     </motion.div>
                 </div>
@@ -65,25 +67,25 @@ export default function ContactUs() {
                         transition={{ delay: 0.1 }}
                         className="space-y-4"
                     >
-                        <h2 className="text-xl font-bold text-[#1a1a2e] mb-6">معلومات التواصل</h2>
+                        <h2 className="text-xl font-bold text-[#1a1a2e] mb-6">{t('contactUs.infoTitle')}</h2>
 
-                        <InfoCard icon={<Mail className="w-5 h-5 text-[#C9A66B]" />} title="البريد الإلكتروني">
-                            <a href="mailto:info@mybytly.com" className="text-[#C9A66B] hover:underline text-sm">
+                        <InfoCard icon={<Mail className="w-5 h-5 text-[#C9A66B]" />} title={t('contactUs.email')}>
+                            <a href="mailto:info@mybytly.com" className="text-[#C9A66B] hover:underline text-sm" dir="ltr">
                                 info@mybytly.com
                             </a>
                         </InfoCard>
 
-                        <InfoCard icon={<Clock className="w-5 h-5 text-[#C9A66B]" />} title="ساعات العمل">
-                            <p className="text-sm text-slate-600">الأحد – الخميس</p>
-                            <p className="text-sm text-slate-600">9:00 صباحاً – 5:00 مساءً</p>
+                        <InfoCard icon={<Clock className="w-5 h-5 text-[#C9A66B]" />} title={t('contactUs.workingHours')}>
+                            <p className="text-sm text-slate-600">{t('contactUs.workingDays')}</p>
+                            <p className="text-sm text-slate-600">{t('contactUs.workingTime')}</p>
                         </InfoCard>
 
-                        <InfoCard icon={<MapPin className="w-5 h-5 text-[#C9A66B]" />} title="الموقع">
-                            <p className="text-sm text-slate-600">المملكة العربية السعودية</p>
+                        <InfoCard icon={<MapPin className="w-5 h-5 text-[#C9A66B]" />} title={t('contactUs.location')}>
+                            <p className="text-sm text-slate-600">{t('contactUs.locationValue')}</p>
                         </InfoCard>
 
                         <div className="pt-2">
-                            <p className="text-sm font-medium text-slate-700 mb-3">تابعنا على</p>
+                            <p className="text-sm font-medium text-slate-700 mb-3">{t('contactUs.followUs')}</p>
                             <div className="flex gap-3">
                                 <a href="https://www.instagram.com/bytlylmstbyt" target="_blank" rel="noopener noreferrer"
                                     className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center text-white hover:opacity-90 transition-opacity">
@@ -111,26 +113,26 @@ export default function ContactUs() {
                                         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                             <CheckCircle2 className="w-10 h-10 text-green-600" />
                                         </div>
-                                        <h3 className="text-xl font-bold text-[#1a1a2e] mb-2">تم إرسال رسالتك بنجاح!</h3>
-                                        <p className="text-slate-500 mb-6">سنتواصل معك في أقرب وقت ممكن على البريد الإلكتروني المدخل.</p>
+                                        <h3 className="text-xl font-bold text-[#1a1a2e] mb-2">{t('contactUs.successTitle')}</h3>
+                                        <p className="text-slate-500 mb-6">{t('contactUs.successBody')}</p>
                                         <Button onClick={() => { setSent(false); setForm({ name: '', company: '', email: '', phone: '', subject: '', project_needs: '', message: '' }); }}
-                                            variant="outline">إرسال استفسار آخر</Button>
+                                            variant="outline">{t('contactUs.sendAnother')}</Button>
                                     </div>
                                 ) : (
                                     <form onSubmit={handleSubmit} className="space-y-5">
-                                        <h2 className="text-xl font-bold text-[#1a1a2e] mb-6">أرسل لنا رسالة</h2>
+                                        <h2 className="text-xl font-bold text-[#1a1a2e] mb-6">{t('contactUs.formTitle')}</h2>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                                                    الاسم الكامل <span className="text-red-500">*</span>
+                                                    {t('contactUs.fullName')} <span className="text-red-500">*</span>
                                                 </label>
                                                 <Input name="name" value={form.name} onChange={handleChange}
-                                                    placeholder="محمد أحمد" className="h-11" />
+                                                    placeholder={t('contactUs.fullNamePlaceholder')} className="h-11" />
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                                                    البريد الإلكتروني <span className="text-red-500">*</span>
+                                                    {t('contactUs.emailLabel')} <span className="text-red-500">*</span>
                                                 </label>
                                                 <Input name="email" type="email" value={form.email} onChange={handleChange}
                                                     placeholder="example@email.com" className="h-11" dir="ltr" />
@@ -139,30 +141,30 @@ export default function ContactUs() {
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-sm font-medium text-slate-700 mb-1.5">الشركة</label>
+                                                <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('contactUs.company')}</label>
                                                 <Input name="company" value={form.company} onChange={handleChange}
-                                                    placeholder="اسم الشركة (اختياري)" className="h-11" />
+                                                    placeholder={t('contactUs.companyPlaceholder')} className="h-11" />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-slate-700 mb-1.5">رقم الجوال</label>
+                                                <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('contactUs.phone')}</label>
                                                 <Input name="phone" value={form.phone} onChange={handleChange}
                                                     placeholder="05xxxxxxxx" className="h-11" dir="ltr" />
                                             </div>
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1.5">موضوع الرسالة</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('contactUs.subject')}</label>
                                             <Input name="subject" value={form.subject} onChange={handleChange}
-                                                placeholder="استفسار عام" className="h-11" />
+                                                placeholder={t('contactUs.subjectPlaceholder')} className="h-11" />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1.5">احتياجات المشروع</label>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('contactUs.projectNeeds')}</label>
                                             <textarea
                                                 name="project_needs"
                                                 value={form.project_needs}
                                                 onChange={handleChange}
-                                                placeholder="صف احتياجات مشروعك بإيجاز: النوع، الموقع، الميزانية التقريبية، الجدول الزمني..."
+                                                placeholder={t('contactUs.projectNeedsPlaceholder')}
                                                 rows={3}
                                                 className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
                                             />
@@ -170,13 +172,13 @@ export default function ContactUs() {
 
                                         <div>
                                             <label className="block text-sm font-medium text-slate-700 mb-1.5">
-                                                الرسالة <span className="text-red-500">*</span>
+                                                {t('contactUs.message')} <span className="text-red-500">*</span>
                                             </label>
                                             <textarea
                                                 name="message"
                                                 value={form.message}
                                                 onChange={handleChange}
-                                                placeholder="اكتب رسالتك أو استفسارك هنا..."
+                                                placeholder={t('contactUs.messagePlaceholder')}
                                                 rows={5}
                                                 className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
                                             />
@@ -189,9 +191,9 @@ export default function ContactUs() {
                                         <Button type="submit" disabled={loading}
                                             className="w-full h-12 bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white hover:opacity-90 gap-2 text-base">
                                             {loading ? (
-                                                <><Loader2 className="w-5 h-5 animate-spin" /> جارٍ الإرسال...</>
+                                                <><Loader2 className="w-5 h-5 animate-spin" /> {t('contactUs.sending')}</>
                                             ) : (
-                                                <><Send className="w-5 h-5" /> إرسال الرسالة</>
+                                                <><Send className="w-5 h-5" /> {t('contactUs.send')}</>
                                             )}
                                         </Button>
                                     </form>

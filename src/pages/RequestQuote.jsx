@@ -5,42 +5,24 @@ import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload, X, FileText, CheckCircle, ArrowRight, ArrowLeft,
-  Building2, MapPin, DollarSign, Calendar, Users, Paperclip,
-  Send, Star, AlertCircle, Image, File
+  Building2, MapPin, Users, Paperclip,
+  Send, AlertCircle, Image, File
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import MobileSelect from "@/components/mobile/MobileSelect";
 import { toast } from "react-hot-toast";
+import { useLanguage } from "@/components/i18n/LanguageContext";
 
-const PROJECT_TYPES = [
-  { value: "residential", label: "سكني", icon: "🏠" },
-  { value: "commercial", label: "تجاري", icon: "🏢" },
-  { value: "industrial", label: "صناعي", icon: "🏭" },
-  { value: "renovation", label: "تجديد وترميم", icon: "🔧" },
-  { value: "interior", label: "تصميم داخلي", icon: "🛋️" },
-  { value: "landscape", label: "تنسيق الحدائق", icon: "🌿" },
-  { value: "other", label: "أخرى", icon: "📋" }
-];
-
-const BUDGET_RANGES = [
-  { value: "under_100k", label: "أقل من 100,000 ريال" },
-  { value: "100k_300k", label: "100,000 - 300,000 ريال" },
-  { value: "300k_500k", label: "300,000 - 500,000 ريال" },
-  { value: "500k_1m", label: "500,000 - 1,000,000 ريال" },
-  { value: "over_1m", label: "أكثر من 1,000,000 ريال" }
-];
-
-const STEPS = [
-  { id: 1, title: "نوع المشروع", icon: Building2 },
-  { id: 2, title: "تفاصيل المشروع", icon: FileText },
-  { id: 3, title: "رفع المخططات", icon: Upload },
-  { id: 4, title: "معلومات التواصل", icon: Users }
-];
+const PROJECT_TYPE_ICONS = {
+  residential: "🏠", commercial: "🏢", industrial: "🏭", renovation: "🔧", interior: "🛋️", landscape: "🌿", other: "📋"
+};
+const PROJECT_TYPE_VALUES = ["residential", "commercial", "industrial", "renovation", "interior", "landscape", "other"];
+const STEP_ICONS = [Building2, FileText, Upload, Users];
 
 export default function RequestQuote() {
+  const { t, isRTL } = useLanguage();
   const urlParams = new URLSearchParams(window.location.search);
   const engineerId = urlParams.get("engineer");
   const engineerName = urlParams.get("name");
@@ -70,6 +52,10 @@ export default function RequestQuote() {
     target_engineer_id: engineerId || "",
     target_engineer_name: engineerName || ""
   });
+
+  const stepsLabels = t('requestQuote.steps') || [];
+  const projectTypes = PROJECT_TYPE_VALUES.map(v => ({ value: v, icon: PROJECT_TYPE_ICONS[v], label: t('requestQuote.projectTypes.' + v) }));
+  const budgetRanges = t('requestQuote.budgetRanges') || [];
 
   useEffect(() => {
     const loadClient = async () => {
@@ -104,8 +90,8 @@ export default function RequestQuote() {
     const MAX_SIZE = 25 * 1024 * 1024; // 25MB
     const valid = Array.from(files).filter(f => {
       const ext = '.' + (f.name.split('.').pop() || '').toLowerCase();
-      if (!ALLOWED.includes(ext)) { toast.error(`نوع الملف غير مدعوم: ${f.name}`); return false; }
-      if (f.size > MAX_SIZE) { toast.error(`حجم الملف يتجاوز 25MB: ${f.name}`); return false; }
+      if (!ALLOWED.includes(ext)) { toast.error(t('requestQuote.fileErrors.unsupported').replace('{name}', f.name)); return false; }
+      if (f.size > MAX_SIZE) { toast.error(t('requestQuote.fileErrors.tooLarge').replace('{name}', f.name)); return false; }
       return true;
     });
     if (valid.length === 0) return;
@@ -147,7 +133,6 @@ export default function RequestQuote() {
       status: "pending"
     });
 
-    // Notify engineer if targeted
     if (form.target_engineer_id) {
       const engineers = await base44.entities.Engineer.filter({ id: form.target_engineer_id });
       if (engineers.length > 0 && engineers[0].email) {
@@ -162,7 +147,7 @@ export default function RequestQuote() {
               <table style="width:100%; border-collapse:collapse;">
                 <tr><td style="padding:8px; border:1px solid #ddd;"><strong>المشروع</strong></td><td style="padding:8px; border:1px solid #ddd;">${form.project_title}</td></tr>
                 <tr><td style="padding:8px; border:1px solid #ddd;"><strong>الموقع</strong></td><td style="padding:8px; border:1px solid #ddd;">${form.location || "غير محدد"}</td></tr>
-                <tr><td style="padding:8px; border:1px solid #ddd;"><strong>الميزانية</strong></td><td style="padding:8px; border:1px solid #ddd;">${BUDGET_RANGES.find(b => b.value === form.budget_range)?.label || "غير محدد"}</td></tr>
+                <tr><td style="padding:8px; border:1px solid #ddd;"><strong>الميزانية</strong></td><td style="padding:8px; border:1px solid #ddd;">${budgetRanges.find(b => b.value === form.budget_range)?.label || "غير محدد"}</td></tr>
                 <tr><td style="padding:8px; border:1px solid #ddd;"><strong>التواصل</strong></td><td style="padding:8px; border:1px solid #ddd;">${form.client_email} | ${form.client_phone}</td></tr>
               </table>
               <p style="margin-top:16px;">يرجى مراجعة لوحة التحكم للاطلاع على المخططات والتفاصيل الكاملة.</p>
@@ -186,26 +171,20 @@ export default function RequestQuote() {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center max-w-md"
-        >
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center max-w-md">
           <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle className="w-12 h-12 text-green-600" />
           </div>
-          <h2 className="text-3xl font-bold text-[#1a1a2e] dark:text-slate-100 mb-3">تم إرسال طلبك بنجاح!</h2>
-          <p className="text-slate-600 dark:text-slate-300 mb-2">سيتواصل معك المهندس قريباً بعرض السعر المناسب.</p>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mb-8">يمكنك متابعة طلبك من لوحة التحكم الخاصة بك.</p>
+          <h2 className="text-3xl font-bold text-[#1a1a2e] dark:text-slate-100 mb-3">{t('requestQuote.success.title')}</h2>
+          <p className="text-slate-600 dark:text-slate-300 mb-2">{t('requestQuote.success.body')}</p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mb-8">{t('requestQuote.success.trackNote')}</p>
           <div className="flex gap-3 justify-center">
             <Link to={createPageUrl("Dashboard")}>
-              <Button className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white">
-                لوحة التحكم
-              </Button>
+              <Button className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white">{t('requestQuote.success.dashboard')}</Button>
             </Link>
             <Link to={createPageUrl("Engineers")}>
-              <Button variant="outline">تصفح المهندسين</Button>
+              <Button variant="outline">{t('requestQuote.success.browse')}</Button>
             </Link>
           </div>
         </motion.div>
@@ -214,42 +193,46 @@ export default function RequestQuote() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="max-w-3xl mx-auto px-4 py-10">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[#1a1a2e] dark:text-slate-100 mb-2">طلب عرض سعر</h1>
+          <h1 className="text-3xl font-bold text-[#1a1a2e] dark:text-slate-100 mb-2">{t('requestQuote.title')}</h1>
           <p className="text-slate-500 dark:text-slate-400">
             {form.target_engineer_name
-              ? `إرسال طلب إلى: ${form.target_engineer_name}`
-              : "أرسل تفاصيل مشروعك واحصل على تقدير دقيق من المهندسين"}
+              ? t('requestQuote.sendTo').replace('{name}', form.target_engineer_name)
+              : t('requestQuote.subtitle')}
           </p>
         </motion.div>
 
         {/* Progress */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-3">
-            {STEPS.map((step, i) => (
-              <div key={step.id} className="flex items-center">
-                <div className={`flex flex-col items-center gap-1 ${i < STEPS.length - 1 ? "flex-1" : ""}`}>
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                    currentStep > step.id ? "bg-green-500 text-white" :
-                    currentStep === step.id ? "bg-[#C9A66B] text-white" :
-                    "bg-slate-200 text-slate-500 dark:text-slate-400"
-                  }`}>
-                    {currentStep > step.id ? <CheckCircle className="w-5 h-5" /> : step.id}
+            {stepsLabels.map((stepTitle, i) => {
+              const StepIcon = STEP_ICONS[i] || Building2;
+              const stepId = i + 1;
+              return (
+                <div key={stepId} className="flex items-center">
+                  <div className={`flex flex-col items-center gap-1 ${i < stepsLabels.length - 1 ? "flex-1" : ""}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                      currentStep > stepId ? "bg-green-500 text-white" :
+                      currentStep === stepId ? "bg-[#C9A66B] text-white" :
+                      "bg-slate-200 text-slate-500 dark:text-slate-400"
+                    }`}>
+                      {currentStep > stepId ? <CheckCircle className="w-5 h-5" /> : stepId}
+                    </div>
+                    <span className={`text-xs hidden sm:block ${currentStep === stepId ? "text-[#C9A66B] font-medium" : "text-slate-400"}`}>
+                      {stepTitle}
+                    </span>
                   </div>
-                  <span className={`text-xs hidden sm:block ${currentStep === step.id ? "text-[#C9A66B] font-medium" : "text-slate-400"}`}>
-                    {step.title}
-                  </span>
+                  {i < stepsLabels.length - 1 && (
+                    <div className={`h-0.5 flex-1 mx-2 transition-all ${currentStep > stepId ? "bg-green-400" : "bg-slate-200"}`} />
+                  )}
                 </div>
-                {i < STEPS.length - 1 && (
-                  <div className={`h-0.5 flex-1 mx-2 transition-all ${currentStep > step.id ? "bg-green-400" : "bg-slate-200"}`} />
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
-          <Progress value={(currentStep / STEPS.length) * 100} className="h-1.5" />
+          <Progress value={(currentStep / stepsLabels.length) * 100} className="h-1.5" />
         </div>
 
         {/* Step Content */}
@@ -267,10 +250,10 @@ export default function RequestQuote() {
                 {/* Step 1: Project Type */}
                 {currentStep === 1 && (
                   <div>
-                    <h2 className="text-xl font-bold mb-2">ما نوع مشروعك؟</h2>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">اختر التصنيف الأنسب لمشروعك</p>
+                    <h2 className="text-xl font-bold mb-2">{t('requestQuote.step1.title')}</h2>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">{t('requestQuote.step1.subtitle')}</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                      {PROJECT_TYPES.map(pt => (
+                      {projectTypes.map(pt => (
                         <button
                           key={pt.value}
                           onClick={() => update("project_type", pt.value)}
@@ -291,99 +274,71 @@ export default function RequestQuote() {
                 {/* Step 2: Project Details */}
                 {currentStep === 2 && (
                   <div className="space-y-5">
-                    <h2 className="text-xl font-bold mb-2">تفاصيل المشروع</h2>
+                    <h2 className="text-xl font-bold mb-2">{t('requestQuote.step2.title')}</h2>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1.5">عنوان المشروع *</label>
-                      <input
-                        type="text"
-                        value={form.project_title}
-                        onChange={e => update("project_title", e.target.value)}
-                        placeholder="مثال: فيلا سكنية في الرياض"
-                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right"
-                      />
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('requestQuote.step2.projectTitle')}</label>
+                      <input type="text" value={form.project_title} onChange={e => update("project_title", e.target.value)}
+                        placeholder={t('requestQuote.step2.projectTitlePlaceholder')}
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B]" />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1.5">وصف المشروع</label>
-                      <textarea
-                        value={form.project_description}
-                        onChange={e => update("project_description", e.target.value)}
-                        placeholder="اشرح تفاصيل مشروعك، متطلباتك، وأي معلومات إضافية مفيدة..."
-                        rows={4}
-                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right resize-none"
-                      />
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('requestQuote.step2.projectDesc')}</label>
+                      <textarea value={form.project_description} onChange={e => update("project_description", e.target.value)}
+                        placeholder={t('requestQuote.step2.projectDescPlaceholder')} rows={4}
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] resize-none" />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1.5">موقع المشروع *</label>
-                      <input
-                        type="text"
-                        value={form.location}
-                        onChange={e => update("location", e.target.value)}
-                        placeholder="المدينة، الحي"
-                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right"
-                      />
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('requestQuote.step2.location')}</label>
+                      <input type="text" value={form.location} onChange={e => update("location", e.target.value)}
+                        placeholder={t('requestQuote.step2.locationPlaceholder')}
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B]" />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1.5">مساحة الأرض (م²)</label>
-                        <input
-                          type="number"
-                          value={form.land_area}
-                          onChange={e => update("land_area", e.target.value)}
+                        <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('requestQuote.step2.landArea')}</label>
+                        <input type="number" value={form.land_area} onChange={e => update("land_area", e.target.value)}
                           placeholder="500"
-                          className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right"
-                        />
+                          className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B]" />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1.5">عدد الطوابق</label>
-                        <input
-                          type="number"
-                          value={form.floors_count}
-                          onChange={e => update("floors_count", e.target.value)}
+                        <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('requestQuote.step2.floors')}</label>
+                        <input type="number" value={form.floors_count} onChange={e => update("floors_count", e.target.value)}
                           placeholder="2"
-                          className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right"
-                        />
+                          className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B]" />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1.5">نطاق الميزانية</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('requestQuote.step2.budget')}</label>
                       <MobileSelect
                         value={form.budget_range}
                         onValueChange={v => update("budget_range", v)}
-                        placeholder="اختر نطاق الميزانية"
-                        label="نطاق الميزانية"
+                        placeholder={t('requestQuote.step2.budgetPlaceholder')}
+                        label={t('requestQuote.step2.budget')}
                         options={[
-                          { value: "", label: "اختر نطاق الميزانية" },
-                          ...BUDGET_RANGES.map(b => ({ value: b.value, label: b.label }))
+                          { value: "", label: t('requestQuote.step2.budgetPlaceholder') },
+                          ...budgetRanges.map(b => ({ value: b.value, label: b.label }))
                         ]}
                         triggerClassName="border-slate-200 dark:border-slate-700 rounded-lg focus:ring-[#C9A66B] text-right bg-white"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1.5">الجدول الزمني المطلوب</label>
-                      <input
-                        type="text"
-                        value={form.timeline}
-                        onChange={e => update("timeline", e.target.value)}
-                        placeholder="مثال: 6 أشهر، سنة كاملة"
-                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right"
-                      />
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('requestQuote.step2.timeline')}</label>
+                      <input type="text" value={form.timeline} onChange={e => update("timeline", e.target.value)}
+                        placeholder={t('requestQuote.step2.timelinePlaceholder')}
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B]" />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1.5">متطلبات خاصة</label>
-                      <textarea
-                        value={form.special_requirements}
-                        onChange={e => update("special_requirements", e.target.value)}
-                        placeholder="أي اشتراطات أو رغبات خاصة..."
-                        rows={3}
-                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right resize-none"
-                      />
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('requestQuote.step2.specialReq')}</label>
+                      <textarea value={form.special_requirements} onChange={e => update("special_requirements", e.target.value)}
+                        placeholder={t('requestQuote.step2.specialReqPlaceholder')} rows={3}
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] resize-none" />
                     </div>
                   </div>
                 )}
@@ -391,10 +346,9 @@ export default function RequestQuote() {
                 {/* Step 3: File Upload */}
                 {currentStep === 3 && (
                   <div>
-                    <h2 className="text-xl font-bold mb-2">رفع الملفات الهندسية</h2>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">ارفع المخططات والوثائق الهندسية لتساعد المهندس في تقدير التكلفة بدقة أكبر (اختياري)</p>
+                    <h2 className="text-xl font-bold mb-2">{t('requestQuote.step3.title')}</h2>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">{t('requestQuote.step3.subtitle')}</p>
 
-                    {/* Drop Zone */}
                     <div
                       onDrop={handleDrop}
                       onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -405,38 +359,28 @@ export default function RequestQuote() {
                       onClick={() => document.getElementById("file-input").click()}
                     >
                       <Upload className={`w-12 h-12 mx-auto mb-4 ${dragOver ? "text-[#C9A66B]" : "text-slate-400"}`} />
-                      <p className="text-slate-600 dark:text-slate-300 font-medium mb-1">اسحب وأفلت الملفات هنا</p>
-                      <p className="text-slate-400 text-sm">أو انقر للاختيار من جهازك</p>
-                      <p className="text-slate-400 text-xs mt-2">PDF, DWG, DXF, PNG, JPG, ZIP مدعومة</p>
-                      <input
-                        id="file-input"
-                        type="file"
-                        multiple
-                        className="hidden"
+                      <p className="text-slate-600 dark:text-slate-300 font-medium mb-1">{t('requestQuote.step3.dragHere')}</p>
+                      <p className="text-slate-400 text-sm">{t('requestQuote.step3.clickToChoose')}</p>
+                      <p className="text-slate-400 text-xs mt-2">{t('requestQuote.step3.formats')}</p>
+                      <input id="file-input" type="file" multiple className="hidden"
                         accept=".pdf,.dwg,.dxf,.png,.jpg,.jpeg,.zip,.rar"
-                        onChange={e => handleFileUpload(e.target.files)}
-                      />
+                        onChange={e => handleFileUpload(e.target.files)} />
                     </div>
 
                     {uploadingFiles && (
                       <div className="mt-4 flex items-center gap-3 text-[#C9A66B] bg-amber-50 p-3 rounded-lg">
                         <div className="animate-spin w-5 h-5 border-2 border-[#C9A66B] border-t-transparent rounded-full" />
-                        <span className="text-sm">جاري رفع الملفات...</span>
+                        <span className="text-sm">{t('requestQuote.step3.uploading')}</span>
                       </div>
                     )}
 
-                    {/* Uploaded Files */}
                     {form.file_names.length > 0 && (
                       <div className="mt-5 space-y-2">
-                        <h3 className="font-medium text-slate-700 mb-3">الملفات المرفوعة ({form.file_names.length})</h3>
+                        <h3 className="font-medium text-slate-700 mb-3">{t('requestQuote.step3.uploadedFiles').replace('{count}', form.file_names.length)}</h3>
                         {form.file_names.map((name, idx) => (
                           <div key={idx} className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
                             <div className="w-9 h-9 bg-green-100 rounded-lg flex items-center justify-center">
-                              {name.match(/\.(png|jpg|jpeg)$/i) ? (
-                                <Image className="w-5 h-5 text-green-600" />
-                              ) : (
-                                <FileText className="w-5 h-5 text-green-600" />
-                              )}
+                              {name.match(/\.(png|jpg|jpeg)$/i) ? <Image className="w-5 h-5 text-green-600" /> : <FileText className="w-5 h-5 text-green-600" />}
                             </div>
                             <span className="flex-1 text-sm text-slate-700 truncate">{name}</span>
                             <CheckCircle className="w-4 h-4 text-green-500 ml-1" />
@@ -451,7 +395,7 @@ export default function RequestQuote() {
                     {form.file_names.length === 0 && (
                       <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3">
                         <AlertCircle className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-                        <p className="text-sm text-blue-700">يمكنك المتابعة بدون رفع ملفات، لكن توفير المخططات يساعد المهندس في تقديم تقدير أدق.</p>
+                        <p className="text-sm text-blue-700">{t('requestQuote.step3.noFilesNote')}</p>
                       </div>
                     )}
                   </div>
@@ -460,73 +404,59 @@ export default function RequestQuote() {
                 {/* Step 4: Contact Info */}
                 {currentStep === 4 && (
                   <div className="space-y-5">
-                    <h2 className="text-xl font-bold mb-2">معلومات التواصل</h2>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">سيتواصل معك المهندس على هذه البيانات</p>
+                    <h2 className="text-xl font-bold mb-2">{t('requestQuote.step4.title')}</h2>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">{t('requestQuote.step4.subtitle')}</p>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1.5">الاسم الكامل *</label>
-                      <input
-                        type="text"
-                        value={form.client_name}
-                        onChange={e => update("client_name", e.target.value)}
-                        placeholder="اسمك الكامل"
-                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-right"
-                      />
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('requestQuote.step4.fullName')}</label>
+                      <input type="text" value={form.client_name} onChange={e => update("client_name", e.target.value)}
+                        placeholder={t('requestQuote.step4.fullNamePlaceholder')}
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B]" />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1.5">البريد الإلكتروني *</label>
-                      <input
-                        type="email"
-                        value={form.client_email}
-                        onChange={e => update("client_email", e.target.value)}
-                        placeholder="example@email.com"
-                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-left"
-                        dir="ltr"
-                      />
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('requestQuote.step4.email')}</label>
+                      <input type="email" value={form.client_email} onChange={e => update("client_email", e.target.value)}
+                        placeholder="example@email.com" dir="ltr"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-left" />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1.5">رقم الهاتف</label>
-                      <input
-                        type="tel"
-                        value={form.client_phone}
-                        onChange={e => update("client_phone", e.target.value)}
-                        placeholder="+966 5X XXX XXXX"
-                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-left"
-                        dir="ltr"
-                      />
+                      <label className="block text-sm font-medium text-slate-700 mb-1.5">{t('requestQuote.step4.phone')}</label>
+                      <input type="tel" value={form.client_phone} onChange={e => update("client_phone", e.target.value)}
+                        placeholder="+966 5X XXX XXXX" dir="ltr"
+                        className="w-full border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] text-left" />
                     </div>
 
                     {/* Summary */}
                     <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                      <h3 className="font-semibold text-[#1a1a2e] dark:text-slate-100 mb-3">ملخص طلبك</h3>
+                      <h3 className="font-semibold text-[#1a1a2e] dark:text-slate-100 mb-3">{t('requestQuote.step4.summary')}</h3>
                       <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
                         <div className="flex justify-between">
-                          <span>نوع المشروع:</span>
-                          <span className="font-medium">{PROJECT_TYPES.find(p => p.value === form.project_type)?.label}</span>
+                          <span>{t('requestQuote.step4.projectType')}</span>
+                          <span className="font-medium">{projectTypes.find(p => p.value === form.project_type)?.label}</span>
                         </div>
                         {form.project_title && (
                           <div className="flex justify-between">
-                            <span>عنوان المشروع:</span>
+                            <span>{t('requestQuote.step4.projectTitle')}</span>
                             <span className="font-medium">{form.project_title}</span>
                           </div>
                         )}
                         {form.location && (
                           <div className="flex justify-between">
-                            <span>الموقع:</span>
+                            <span>{t('requestQuote.step4.location')}</span>
                             <span className="font-medium">{form.location}</span>
                           </div>
                         )}
                         {form.budget_range && (
                           <div className="flex justify-between">
-                            <span>الميزانية:</span>
-                            <span className="font-medium">{BUDGET_RANGES.find(b => b.value === form.budget_range)?.label}</span>
+                            <span>{t('requestQuote.step4.budget')}</span>
+                            <span className="font-medium">{budgetRanges.find(b => b.value === form.budget_range)?.label}</span>
                           </div>
                         )}
                         <div className="flex justify-between">
-                          <span>الملفات المرفقة:</span>
-                          <span className="font-medium">{form.file_names.length} ملف</span>
+                          <span>{t('requestQuote.step4.files')}</span>
+                          <span className="font-medium">{t('requestQuote.step4.filesCount').replace('{count}', form.file_names.length)}</span>
                         </div>
                       </div>
                     </div>
@@ -539,40 +469,29 @@ export default function RequestQuote() {
 
         {/* Navigation */}
         <div className="flex justify-between mt-6">
-          <Button
-            variant="outline"
-            onClick={() => setCurrentStep(s => s - 1)}
-            disabled={currentStep === 1}
-            className="flex items-center gap-2"
-          >
+          <Button variant="outline" onClick={() => setCurrentStep(s => s - 1)} disabled={currentStep === 1} className="flex items-center gap-2">
             <ArrowRight className="w-4 h-4" />
-            السابق
+            {t('requestQuote.prev')}
           </Button>
 
           {currentStep < 4 ? (
-            <Button
-              onClick={() => setCurrentStep(s => s + 1)}
-              disabled={!canProceed()}
-              className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white flex items-center gap-2"
-            >
-              التالي
+            <Button onClick={() => setCurrentStep(s => s + 1)} disabled={!canProceed()}
+              className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white flex items-center gap-2">
+              {t('requestQuote.next')}
               <ArrowLeft className="w-4 h-4" />
             </Button>
           ) : (
-            <Button
-              onClick={handleSubmit}
-              disabled={!canProceed() || isSubmitting}
-              className="bg-gradient-to-r from-green-600 to-emerald-600 text-white flex items-center gap-2"
-            >
+            <Button onClick={handleSubmit} disabled={!canProceed() || isSubmitting}
+              className="bg-gradient-to-r from-green-600 to-emerald-600 text-white flex items-center gap-2">
               {isSubmitting ? (
                 <>
                   <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                  جاري الإرسال...
+                  {t('requestQuote.submitting')}
                 </>
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  إرسال الطلب
+                  {t('requestQuote.submit')}
                 </>
               )}
             </Button>

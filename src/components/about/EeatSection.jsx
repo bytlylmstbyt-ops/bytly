@@ -1,35 +1,14 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { GraduationCap, Newspaper, BadgeCheck, BarChart3 } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageContext";
 
-const pillars = [
-  {
-    icon: GraduationCap,
-    title: "الخبرة (Experience)",
-    body:
-      "فريق هندسي ومالي متخصص — مهندسون معتمدون لدى الهيئة السعودية للمهندسين، ومستشارون فنيون مستقلون يراجعون التسليمات.",
-  },
-  {
-    icon: BadgeCheck,
-    title: "الكفاءة (Expertise)",
-    body:
-      "منصة مبنية على سير عمل هندسي فعلي: تقدير تكلفة، حوكمة مراحل، ضمان مالي، ومراجعة فنية وفق الكود السعودي للبناء (SBC).",
-  },
-  {
-    icon: Newspaper,
-    title: "السلطة (Authoritativeness)",
-    body:
-      "إشارات إعلامية وصِناعية: ذُكرنا في الاقتصادية وArab News وConstruction Week، وشراكات مع جهات هندسية معتمدة.",
-  },
-  {
-    icon: BarChart3,
-    title: "الثقة (Trustworthiness)",
-    body:
-      "إنجازات تشغيلية موثّقة: أكثر من 1000 مهندس، آلاف المشاريع، 98% رضا، ومتوسط استجابة 24 ساعة.",
-  },
-];
+const ICONS = [GraduationCap, BadgeCheck, Newspaper, BarChart3];
 
 export default function EeatSection() {
+  const { t } = useLanguage();
+  const pillars = (t('about.eeat.pillars') || []).map((p, i) => ({ ...p, icon: ICONS[i] || BadgeCheck }));
+
   return (
     <section className="py-16 bg-[#F5F0E8]/40">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -38,12 +17,8 @@ export default function EeatSection() {
             <BadgeCheck className="w-4 h-4 text-[#C9A66B]" />
             <span className="text-[#6B5D4F] text-sm font-medium">E-E-A-T</span>
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold text-[#4A3F35] mb-2">
-            لماذا يُوثق بنا القطاع الهندسي
-          </h2>
-          <p className="text-slate-500 max-w-xl mx-auto">
-            بيانات اعتماد الفريق، الإشارات الإعلامية، الشهادات، والإنجازات التشغيلية.
-          </p>
+          <h2 className="text-2xl md:text-3xl font-bold text-[#4A3F35] mb-2">{t('about.eeat.title')}</h2>
+          <p className="text-slate-500 max-w-xl mx-auto">{t('about.eeat.subtitle')}</p>
         </div>
         <div className="grid sm:grid-cols-2 gap-5">
           {pillars.map((p, i) => (
@@ -64,9 +39,7 @@ export default function EeatSection() {
             </motion.div>
           ))}
         </div>
-        <p className="text-[11px] text-slate-400 text-center mt-6">
-          * استبدل الإشارات والإنجازات بالأرقام والشهادات الفعلية عند توفّرها.
-        </p>
+        <p className="text-[11px] text-slate-400 text-center mt-6">{t('about.eeat.footnote')}</p>
       </div>
     </section>
   );

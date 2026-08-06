@@ -1,36 +1,19 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Briefcase, Users, Compass } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageContext";
 
-const blocks = [
-  {
-    icon: Briefcase,
-    title: "ماذا نفعل",
-    body:
-      "نوفر منصة واحدة لإدارة دورة حياة المشروع الهندسي — من تقدير التكلفة واختيار المهندس، إلى توقيع العقد رقمياً، متابعة التنفيذ، وإطلاق الدفعات عبر الضمان مع مراجعة فنية مستقلة لكل تسليم.",
-  },
-  {
-    icon: Users,
-    title: "من نخدم",
-    body:
-      "أصحاب المشاريع الإسكانية والتجارية، المهندسون والمعماريون، الشركات الاستشارية، المساحون، المقاولون، والموردون في المملكة العربية السعودية.",
-  },
-  {
-    icon: Compass,
-    title: "لماذا نوجد",
-    body:
-      "لأن سوق الهندسة اعتمد على دفع مباشر بلا حماية ومتابعة يدوية بلا إنذار مبكر — فأنشأنا بيتلي ليوحّد الأدوات، يحمي الأموال، ويكشف المخاطر قبل أن تتحوّل إلى خسارة.",
-  },
-];
+const ICONS = [Briefcase, Users, Compass];
 
 export default function AboutOverviewSection() {
+  const { t } = useLanguage();
+  const blocks = (t('about.overview.blocks') || []).map((b, i) => ({ ...b, icon: ICONS[i] || Briefcase }));
+
   return (
     <section>
       <div className="text-center mb-8">
-        <h2 className="text-2xl md:text-3xl font-bold text-[#4A3F35] mb-2">نبذة عن بيتلي</h2>
-        <p className="text-slate-500 max-w-xl mx-auto">
-          ماذا نفعل، من نخدم، ولماذا وُجدت المنصة في سوق الهندسة.
-        </p>
+        <h2 className="text-2xl md:text-3xl font-bold text-[#4A3F35] mb-2">{t('about.overview.title')}</h2>
+        <p className="text-slate-500 max-w-xl mx-auto">{t('about.overview.subtitle')}</p>
       </div>
       <div className="grid sm:grid-cols-3 gap-5">
         {blocks.map((b, i) => (
