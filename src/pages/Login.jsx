@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { appParams } from "@/lib/app-params";
+import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -50,6 +51,7 @@ const AppleIcon = () => (
 
 export default function Login() {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -59,16 +61,15 @@ export default function Login() {
 
   const returnUrl = getReturnUrl();
 
-  // Redirect already-authenticated users away from the login page
+  // Redirect already-authenticated users away from the login page.
+  // Use AuthContext's validated isAuthenticated (post me() check) instead of
+  // base44.auth.isAuthenticated(), which can report true on a stale token and
+  // race the 401 handler — causing a spurious reload on the login page.
   useEffect(() => {
-    let cancelled = false;
-    base44.auth.isAuthenticated().then((authed) => {
-      if (authed && !cancelled) {
-        window.location.href = returnUrl;
-      }
-    });
-    return () => { cancelled = true; };
-  }, [returnUrl]);
+    if (isAuthenticated) {
+      window.location.href = returnUrl;
+    }
+  }, [isAuthenticated, returnUrl]);
 
   const handleGoogleLogin = () => {
     // Save return URL and redirect to Google OAuth
