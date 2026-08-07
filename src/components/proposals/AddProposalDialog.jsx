@@ -11,9 +11,74 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Plus, Upload, X, FileText, Paperclip, ShieldCheck, Calendar } from "lucide-react";
+import { Loader2, Plus, Upload, X, FileText, Paperclip, ShieldCheck, Calendar, Zap, Wallet, Sparkles } from "lucide-react";
 
 const EMPTY = { project_id: "", engineer_id: "", price: "", delivery_days: "", cover_letter: "", attachments: [] };
+
+// قوالب عروض جاهزة — يطبّق المهندس أحدها فيعبّئ نص العرض تلقائياً، ويبقى تعديل السعر والمدة فقط
+const PROPOSAL_TEMPLATES = [
+  {
+    id: "standard",
+    name: "عرض قياسي",
+    icon: FileText,
+    suggested_days: 14,
+    cover_letter: `مرحباً،
+
+يسعدني تقديم عرضي لتنفيذ هذا المشروع. أملك الخبرة اللازمة لتقديم عمل احترافي بجودة عالية وفق المعايير الهندسية المعتمدة.
+
+يشمل العرض:
+• دراسة المتطلبات والتحليل الفني
+• التنفيذ وفق الجدول الزمني المتفق عليه
+• مراجعات وتعديلات حتى الوصول للنتيجة المطلوبة
+• تسليم الملفات النهائية بالصيغ المعتمدة
+
+جاهز للبدء فور اعتماد العرض. للتواصل المباشر عبر رسائل المنصة.
+
+شكراً لثقتكم.`,
+  },
+  {
+    id: "express",
+    name: "عرض سريع",
+    icon: Zap,
+    suggested_days: 5,
+    cover_letter: `عرض تنفيذ سريع ضمن مدة قصيرة مع الالتزام الكامل بالجودة.
+
+• تسليم أولي خلال المدة المتفق عليها
+• تواصل مباشر ومتابعة يومية للتقدم
+• تسليم المخرجات بصيغ متعددة
+
+مناسب للمشاريع ذات الأولوية العالية والوقت المحدود. البدء فوري بعد الموافقة.`,
+  },
+  {
+    id: "economic",
+    name: "عرض اقتصادي",
+    icon: Wallet,
+    suggested_days: 21,
+    cover_letter: `عرض تنفيذ بسعر تنافسي دون المساس بالجودة الأساسية.
+
+• تنفيذ وفق المواصفات المطلوبة
+• استخدام حلول عملية موفّرة للتكلفة
+• تسليم ضمن الإطار الزمني المتفق عليه
+
+خيار مثالي لمن يبحث عن توازن بين الجودة والميزانية.`,
+  },
+  {
+    id: "premium",
+    name: "عرض احترافي متكامل",
+    icon: Sparkles,
+    suggested_days: 30,
+    cover_letter: `عرض احترافي متكامل يشمل خدمة شاملة من البداية حتى التسليم النهائي.
+
+• دراسة فنية تفصيلية وتحليل شامل
+• تنفيذ عالي الجودة وفق المعايير المعتمدة
+• تعديلات متعددة خلال فترة التنفيذ
+• متابعة ما بعد التسليم لمدة 14 يوم
+• تسليم جميع الملفات المصدرية والنهائية
+• ضمان الجودة وفق الكود السعودي
+
+مناسب للمشاريع التي تتطلب أعلى مستويات الإتقان والمتابعة.`,
+  },
+];
 
 export default function AddProposalDialog({ open, onOpenChange, onCreated, preselectedProjectId }) {
   const { toast } = useToast();
@@ -22,10 +87,12 @@ export default function AddProposalDialog({ open, onOpenChange, onCreated, prese
   const [uploading, setUploading] = useState(false);
   const [projects, setProjects] = useState([]);
   const [engineers, setEngineers] = useState([]);
+  const [activeTemplate, setActiveTemplate] = useState(null);
 
   useEffect(() => {
     if (!open) return;
     setForm({ ...EMPTY, project_id: preselectedProjectId || "" });
+    setActiveTemplate(null);
     Promise.all([
       base44.entities.Project.list("-created_date", 200).catch(() => []),
       base44.entities.Engineer.filter({ status: "approved" }).catch(() => []),
@@ -33,6 +100,16 @@ export default function AddProposalDialog({ open, onOpenChange, onCreated, prese
   }, [open]);
 
   const setField = (n, v) => setForm((p) => ({ ...p, [n]: v }));
+
+  const applyTemplate = (tpl) => {
+    setActiveTemplate(tpl.id);
+    setForm((p) => ({
+      ...p,
+      cover_letter: tpl.cover_letter,
+      delivery_days: p.delivery_days || String(tpl.suggested_days),
+    }));
+    toast({ title: `تم تطبيق قالب: ${tpl.name}`, description: "عدّل السعر والمدة حسب حاجتك." });
+  };
 
   const handleFiles = async (files) => {
     if (!files || files.length === 0) return;
@@ -153,9 +230,37 @@ export default function AddProposalDialog({ open, onOpenChange, onCreated, prese
                 {today}
               </div>
             </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label className="flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#C9A66B]" />
+                قوالب جاهزة (اختياري)
+              </Label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {PROPOSAL_TEMPLATES.map((tpl) => (
+                  <button
+                    key={tpl.id}
+                    type="button"
+                    onClick={() => applyTemplate(tpl)}
+                    className={`flex flex-col items-center gap-1 px-2 py-3 rounded-lg text-xs font-medium transition-all border ${
+                      activeTemplate === tpl.id
+                        ? "bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white border-transparent shadow-md"
+                        : "bg-white text-slate-600 border-slate-200 hover:border-[#C9A66B] hover:text-[#6B5D4F]"
+                    }`}
+                    style={{ minHeight: 64 }}
+                  >
+                    <tpl.icon className="w-4 h-4" />
+                    {tpl.name}
+                    <span className={`text-[10px] ${activeTemplate === tpl.id ? "text-white/80" : "text-slate-400"}`}>
+                      ~{tpl.suggested_days} يوم
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <p className="text-[11px] text-slate-400">اختر قالباً لتعبئة النص تلقائياً، ثم عدّل السعر والمدة فقط.</p>
+            </div>
             <div className="space-y-1.5 sm:col-span-2">
               <Label>وصف العرض / رسالة العرض</Label>
-              <Textarea rows={3} value={form.cover_letter} onChange={(e) => setField("cover_letter", e.target.value)} placeholder="تفاصيل العرض ومزاياه" className="resize-none" />
+              <Textarea rows={5} value={form.cover_letter} onChange={(e) => setField("cover_letter", e.target.value)} placeholder="تفاصيل العرض ومزاياه" className="resize-none" />
             </div>
             <div className="space-y-1.5 sm:col-span-2">
               <Label>إرفاق ملفات</Label>
