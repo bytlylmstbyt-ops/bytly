@@ -154,10 +154,28 @@ export default function EngineerProfile() {
     );
   }
 
-
+  // ترتيب المعرض: أحدث المشاريع المكتملة أولاً (حسب تاريخ الإكمال)، ثم الباقي حسب تاريخ الإضافة
+  const sortedPortfolios = [...portfolios].sort((a, b) => {
+    const aDone = a.completion_date ? new Date(a.completion_date).getTime() : 0;
+    const bDone = b.completion_date ? new Date(b.completion_date).getTime() : 0;
+    if (aDone && bDone) return bDone - aDone;
+    if (aDone && !bDone) return -1;
+    if (!aDone && bDone) return 1;
+    return new Date(b.created_date || 0) - new Date(a.created_date || 0);
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30">
+      {/* زر وصول سريع للدردشة مع المهندس */}
+      <Link
+        to={createPageUrl("Messages") + `?engineer=${engineer.id}`}
+        className="fixed bottom-20 md:bottom-6 left-4 z-40 flex items-center gap-2 bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white px-5 py-3 rounded-full shadow-xl hover:scale-105 transition-transform"
+        style={{ minHeight: 44 }}
+      >
+        <MessageSquare className="w-5 h-5" />
+        <span className="text-sm font-medium">دردشة سريعة</span>
+      </Link>
+
       {/* Cover Image */}
       <div className="relative h-64 md:h-80 bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B]">
         {engineer.cover_image && (
@@ -467,10 +485,18 @@ export default function EngineerProfile() {
                 <CardContent>
                   {portfolios.length > 0 ? (
                     <div className="space-y-6">
-                      {portfolios.map((portfolio) => (
+                      {sortedPortfolios.map((portfolio) => (
                         <div key={portfolio.id} className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <h4 className="font-semibold text-slate-800">{portfolio.title}</h4>
+                          <div className="flex items-center justify-between flex-wrap gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-semibold text-slate-800">{portfolio.title}</h4>
+                              {portfolio.completion_date && (
+                                <Badge className="bg-green-100 text-green-700 text-xs gap-1 whitespace-nowrap">
+                                  <CheckCircle className="w-3 h-3" />
+                                  مكتمل {new Date(portfolio.completion_date).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short' })}
+                                </Badge>
+                              )}
+                            </div>
                             <Badge variant="secondary">{portfolio.images?.length || 0} صور</Badge>
                           </div>
                           {portfolio.images && portfolio.images.length > 0 && (
