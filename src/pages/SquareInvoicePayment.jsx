@@ -180,10 +180,10 @@ export default function SquareInvoicePayment() {
                     {/* Amount */}
                     <div className="text-left">
                       <p className="text-lg font-bold text-[#4A3F35]">
-                        ${(inv.total_amount || inv.amount || 0).toFixed(2)}
+                        {(inv.total_amount || inv.amount || 0).toFixed(2)} ر.س
                       </p>
                       {inv.tax_amount > 0 && (
-                        <p className="text-xs text-slate-400">شامل ضريبة ${inv.tax_amount.toFixed(2)}</p>
+                        <p className="text-xs text-slate-400">شامل ضريبة {inv.tax_amount.toFixed(2)} ر.س</p>
                       )}
                     </div>
 
