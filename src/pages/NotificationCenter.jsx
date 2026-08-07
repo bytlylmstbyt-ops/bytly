@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,33 @@ const TYPE_CONFIG = {
 const PRIORITY_LABELS = { high: "عالية", medium: "متوسطة", low: "منخفضة", urgent: "عاجلة" };
 const PRIORITY_COLORS = { high: "bg-red-100 text-red-700", medium: "bg-amber-100 text-amber-700", low: "bg-slate-100 text-slate-500", urgent: "bg-red-200 text-red-800" };
 
+// يحوّل الإشعار إلى مسار داخل التطبيق — يُستخدم عند النقر على الإشعار
+const getNotificationRoute = (n) => {
+  if (n.action_url) return n.action_url;
+  switch (n.type) {
+    case "new_message":
+      return "/Messages";
+    case "project_update":
+    case "project_status":
+    case "milestone":
+    case "approval":
+      return n.related_project_id ? `/ProjectDetails?id=${n.related_project_id}` : null;
+    case "proposal":
+      return n.related_project_id ? `/ProjectProposals?id=${n.related_project_id}` : "/ProjectProposals";
+    case "contract":
+      return n.related_project_id ? `/MyContracts?project_id=${n.related_project_id}` : "/MyContracts";
+    case "payment":
+      return n.related_project_id ? `/ProjectDetails?id=${n.related_project_id}` : "/Wallet";
+    case "review":
+      return n.related_entity_id ? `/EngineerReviews?engineer_id=${n.related_entity_id}` : "/ServiceReviews";
+    case "complaint":
+      return n.related_project_id ? `/ProjectDetails?id=${n.related_project_id}` : "/Complaints";
+    case "system":
+    default:
+      return null;
+  }
+};
+
 export default function NotificationCenter() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -36,6 +64,7 @@ export default function NotificationCenter() {
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [responseModalOpen, setResponseModalOpen] = useState(false);
   const [detailAppointment, setDetailAppointment] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadData();
@@ -62,6 +91,13 @@ export default function NotificationCenter() {
   const markAsRead = async (id) => {
     await base44.entities.Notification.update(id, { is_read: true });
     setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, is_read: true } : n));
+  };
+
+  const handleNotificationClick = (n) => {
+    const route = getNotificationRoute(n);
+    if (!route) return;
+    if (!n.is_read) markAsRead(n.id);
+    navigate(route);
   };
 
   const markAllRead = async () => {
@@ -213,7 +249,10 @@ export default function NotificationCenter() {
               const Icon = cfg.icon;
               return (
                 <motion.div key={n.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.03 }}>
-                  <Card className={`transition-all hover:shadow-md ${!n.is_read ? "border-r-4 border-r-blue-500" : ""}`}>
+                  <Card
+                    onClick={() => handleNotificationClick(n)}
+                    className={`transition-all hover:shadow-md cursor-pointer ${!n.is_read ? "border-r-4 border-r-blue-500" : ""}`}
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
                         <div className={`w-10 h-10 rounded-xl ${cfg.bg} flex items-center justify-center shrink-0`}>
@@ -231,13 +270,13 @@ export default function NotificationCenter() {
                           <p className="text-sm text-slate-500">{n.message}</p>
                           {n.type === 'approval' && n.related_entity_id && (
                             <div className="flex gap-2 mt-3">
-                              <Button size="sm" onClick={() => handleAppointmentResponse(n)} className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white">
+                              <Button size="sm" onClick={(e) => { e.stopPropagation(); handleAppointmentResponse(n); }} className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white">
                                 <CheckCircle className="w-4 h-4 ml-1" /> موافق
                               </Button>
-                              <Button size="sm" variant="outline" onClick={() => handleAppointmentResponse(n)} className="border-amber-500 text-amber-700 hover:bg-amber-50">
+                              <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleAppointmentResponse(n); }} className="border-amber-500 text-amber-700 hover:bg-amber-50">
                                 <Clock className="w-4 h-4 ml-1" /> تأجيل
                               </Button>
-                              <Button size="sm" variant="ghost" onClick={() => handleViewAppointment(n)}>
+                              <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); handleViewAppointment(n); }}>
                                 <Calendar className="w-4 h-4 ml-1" /> عرض التفاصيل
                               </Button>
                             </div>
@@ -248,11 +287,11 @@ export default function NotificationCenter() {
                         </div>
                         <div className="flex gap-1 shrink-0">
                           {!n.is_read && (
-                            <Button size="icon" variant="ghost" className="w-8 h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={() => markAsRead(n.id)}>
+                            <Button size="icon" variant="ghost" className="w-8 h-8 text-blue-500 hover:text-blue-700 hover:bg-blue-50" onClick={(e) => { e.stopPropagation(); markAsRead(n.id); }}>
                               <CheckCircle className="w-4 h-4" />
                             </Button>
                           )}
-                          <Button size="icon" variant="ghost" className="w-8 h-8 text-red-400 hover:text-red-600 hover:bg-red-50" onClick={() => deleteNotification(n.id)}>
+                          <Button size="icon" variant="ghost" className="w-8 h-8 text-red-400 hover:text-red-600 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); deleteNotification(n.id); }}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
