@@ -89,15 +89,15 @@ export default function ProjectMilestones() {
         submitted_date: new Date().toISOString()
       });
 
-      // Notify client
-      await sendNotification({
-        recipientEmail: client.email,
-        title: "تم تقديم مرحلة جديدة",
-        message: `قام المهندس بتقديم: ${milestone.title}. يرجى المراجعة والموافقة`,
-        type: "milestone",
-        projectId: projectId,
-        priority: "high"
-      });
+      // Request payment approval from client — generates invoice + sends notification
+      try {
+        await base44.functions.invoke('requestMilestonePayment', {
+          milestone_id: milestone.id,
+          project_id: projectId
+        });
+      } catch (paymentErr) {
+        console.error("Error requesting milestone payment:", paymentErr);
+      }
 
       setSubmittingMilestone(null);
       await loadData();
