@@ -6,7 +6,8 @@ import { motion } from "framer-motion";
 import { 
   MapPin, Calendar, DollarSign, Clock, Users, 
   FileText, MessageSquare, Send, Loader2, CheckCircle,
-  Star, Download, Eye, ArrowLeft, Scale, Upload, X, Paperclip, Kanban
+  Star, Download, Eye, ArrowLeft, Scale, Upload, X, Paperclip, Kanban,
+  Cloud, ExternalLink
 } from "lucide-react";
 import ContractGenerator from "@/components/contracts/ContractGenerator";
 import SignedContractsPanel from "@/components/contracts/SignedContractsPanel";
@@ -66,6 +67,8 @@ export default function ProjectDetails() {
     comment: ""
   });
   const [existingReview, setExistingReview] = useState(null);
+  const [isExportingToDrive, setIsExportingToDrive] = useState(false);
+  const [driveExportResult, setDriveExportResult] = useState(null);
 
   useEffect(() => {
     if (projectId) {
@@ -184,6 +187,20 @@ export default function ProjectDetails() {
     setShowProposalForm(false);
     setProposalData({ price: "", delivery_days: "", cover_letter: "", attachments: [], portfolio_items: [] });
     loadData();
+  };
+
+  const handleExportToDrive = async () => {
+    setIsExportingToDrive(true);
+    setDriveExportResult(null);
+    try {
+      const response = await base44.functions.invoke("exportProjectFilesToDrive", { project_id: projectId });
+      setDriveExportResult(response.data);
+    } catch (error) {
+      console.error("Error exporting to Drive:", error);
+      setDriveExportResult({ error: error.message || "حدث خطأ أثناء التصدير" });
+    } finally {
+      setIsExportingToDrive(false);
+    }
   };
 
   const handleUploadAttachment = async (e) => {
@@ -609,6 +626,73 @@ export default function ProjectDetails() {
                         </a>
                       ))}
                     </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Export to Google Drive — archive all project files for both parties */}
+              {user && (project.created_by === user.email || (userEngineer && project.assigned_engineer_id === userEngineer.id) || user.role === 'admin') && (
+                <Card className="border-0 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Cloud className="w-5 h-5 text-[#C9A66B]" />
+                      أرشفة الملفات والمخططات على Google Drive
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-slate-600 leading-relaxed">
+                      صدّر جميع مرفقات المشروع والمخططات الهندسية ومخرجات المراحل إلى مجلد مشترك على Google Drive، ليتمكن الطرفان (المهندس والعميل) من الوصول إليها لاحقاً بأمان.
+                    </p>
+                    <Button
+                      onClick={handleExportToDrive}
+                      disabled={isExportingToDrive}
+                      className="w-full bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white gap-2"
+                    >
+                      {isExportingToDrive ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          جاري التصدير والأرشفة...
+                        </>
+                      ) : (
+                        <>
+                          <Cloud className="w-5 h-5" />
+                          تصدير إلى Google Drive
+                        </>
+                      )}
+                    </Button>
+
+                    {driveExportResult?.error && (
+                      <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+                        {driveExportResult.error}
+                      </div>
+                    )}
+
+                    {driveExportResult?.success === false && (
+                      <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-700">
+                        {driveExportResult.message}
+                      </div>
+                    )}
+
+                    {driveExportResult?.success === true && (
+                      <div className="rounded-lg bg-green-50 border border-green-200 p-4 space-y-2">
+                        <div className="flex items-center gap-2 text-green-700 font-medium">
+                          <CheckCircle className="w-5 h-5" />
+                          تم تصدير {driveExportResult.uploaded_count} ملف بنجاح
+                          {driveExportResult.failed_count > 0 && (
+                            <span className="text-amber-600 text-xs">(فشل {driveExportResult.failed_count} ملف)</span>
+                          )}
+                        </div>
+                        <a
+                          href={driveExportResult.folder_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-[#C9A66B] hover:underline text-sm font-medium"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          فتح مجلد المشروع على Google Drive
+                        </a>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
