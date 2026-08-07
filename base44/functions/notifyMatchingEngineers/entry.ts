@@ -13,6 +13,13 @@ const CATEGORY_TO_USER_TYPE = {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+
+    // ── Authentication: reject unauthenticated requests ────────────────
+    const user = await base44.auth.me();
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { projectId } = await req.json().catch(() => ({}));
     if (!projectId) {
       return Response.json({ error: 'projectId required' }, { status: 400 });
@@ -23,6 +30,13 @@ Deno.serve(async (req) => {
       project = await base44.asServiceRole.entities.Project.get(projectId);
     } catch {
       return Response.json({ error: 'Project not found' }, { status: 404 });
+    }
+
+    // ── Authorization: only the project owner or an admin can trigger matching ──
+    const isOwner = project.created_by === user.email;
+    const isAdmin = user.role === 'admin';
+    if (!isOwner && !isAdmin) {
+      return Response.json({ error: 'Forbidden: only the project owner can trigger matching' }, { status: 403 });
     }
 
     // Direct-hire projects only notify the assigned engineer (handled by the caller)

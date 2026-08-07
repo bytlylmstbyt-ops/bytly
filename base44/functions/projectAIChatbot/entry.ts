@@ -33,6 +33,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Project not found' }, { status: 404 });
     }
 
+    // ── Authorization: verify the caller is a member of this project ─────
+    const isOwner = project.created_by === user.email;
+    const isAdmin = user.role === 'admin';
+    let isAssignedEngineer = false;
+    if (project.assigned_engineer_id) {
+      const [eng] = await base44.asServiceRole.entities.Engineer.filter({ id: project.assigned_engineer_id });
+      isAssignedEngineer = eng?.email === user.email;
+    }
+    if (!isOwner && !isAdmin && !isAssignedEngineer) {
+      return Response.json({ error: 'Forbidden: no access to this project' }, { status: 403 });
+    }
+
     // Build timeline delay analysis
     const now = new Date();
     const delayAlerts = [];

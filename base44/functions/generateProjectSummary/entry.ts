@@ -21,6 +21,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Project not found' }, { status: 404 });
     }
 
+    // ── Authorization: verify the caller has access to this project ──────
+    const isOwner = project.created_by === user.email;
+    const isAdmin = user.role === 'admin';
+    let isAssignedEngineer = false;
+    if (project.assigned_engineer_id) {
+      const [eng] = await base44.asServiceRole.entities.Engineer.filter({ id: project.assigned_engineer_id });
+      isAssignedEngineer = eng?.email === user.email;
+    }
+    if (!isOwner && !isAdmin && !isAssignedEngineer) {
+      return Response.json({ error: 'Forbidden: no access to this project' }, { status: 403 });
+    }
+
     const tasks = await base44.asServiceRole.entities.ProjectTask.filter({ project_id });
     const messages = await base44.asServiceRole.entities.Message.filter({ project_id });
     const milestones = await base44.asServiceRole.entities.ProjectMilestone.filter({ project_id });

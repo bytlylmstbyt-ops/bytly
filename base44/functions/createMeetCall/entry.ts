@@ -8,6 +8,27 @@ Deno.serve(async (req) => {
 
     const { project_id, project_title, attendee_emails = [], scheduled_time } = await req.json();
 
+    if (!project_id) {
+      return Response.json({ error: 'project_id required' }, { status: 400 });
+    }
+
+    // ── Authorization: verify the caller is a participant of the project ──
+    const [project] = await base44.asServiceRole.entities.Project.filter({ id: project_id });
+    if (!project) {
+      return Response.json({ error: 'Project not found' }, { status: 404 });
+    }
+
+    const isOwner = project.created_by === user.email;
+    const isAdmin = user.role === 'admin';
+    let isAssignedEngineer = false;
+    if (project.assigned_engineer_id) {
+      const [eng] = await base44.asServiceRole.entities.Engineer.filter({ id: project.assigned_engineer_id });
+      isAssignedEngineer = eng?.email === user.email;
+    }
+    if (!isOwner && !isAdmin && !isAssignedEngineer) {
+      return Response.json({ error: 'Forbidden: you are not a participant of this project' }, { status: 403 });
+    }
+
     const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlecalendar');
 
     // Schedule 30 min from now if no time provided

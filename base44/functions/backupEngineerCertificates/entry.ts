@@ -35,8 +35,8 @@ function isSafeFileUrl(urlStr) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const isAuthenticated = await base44.auth.isAuthenticated();
-    if (!isAuthenticated) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     // Get Google Drive access token (shared connector — builder's account)
     const { accessToken } = await base44.asServiceRole.connectors.getConnection("googledrive");
@@ -54,6 +54,13 @@ Deno.serve(async (req) => {
     const engineersFromDb = await base44.asServiceRole.entities.Engineer.filter({ id: engineerPayload.id });
     const engineer = engineersFromDb[0];
     if (!engineer) return Response.json({ error: 'Engineer not found' }, { status: 404 });
+
+    // ── Authorization: only the engineer owner or an admin can back up certificates ──
+    const isOwner = engineer.email === user.email;
+    const isAdmin = user.role === 'admin';
+    if (!isOwner && !isAdmin) {
+      return Response.json({ error: 'Forbidden: cannot back up certificates for another engineer' }, { status: 403 });
+    }
 
     // Collect certificates to back up
     const certificates = [];

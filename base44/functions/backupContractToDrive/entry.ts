@@ -41,6 +41,28 @@ Deno.serve(async (req) => {
 
     if (!contractId) return Response.json({ error: 'contractId required' }, { status: 400 });
 
+    // ── Authorization: verify the caller is a party to the contract or project ──
+    const [contract] = await base44.asServiceRole.entities.Contract.filter({ id: contractId });
+    if (!contract) return Response.json({ error: 'Contract not found' }, { status: 404 });
+
+    let project = null;
+    if (contract.project_id) {
+      const [proj] = await base44.asServiceRole.entities.Project.filter({ id: contract.project_id });
+      project = proj;
+    }
+
+    const isAdmin = user.role === 'admin';
+    const isContractCreator = contract.created_by === user.email;
+    const isProjectOwner = project?.created_by === user.email;
+    let isAssignedEngineer = false;
+    if (project?.assigned_engineer_id) {
+      const [eng] = await base44.asServiceRole.entities.Engineer.filter({ id: project.assigned_engineer_id });
+      isAssignedEngineer = eng?.email === user.email;
+    }
+    if (!isAdmin && !isContractCreator && !isProjectOwner && !isAssignedEngineer) {
+      return Response.json({ error: 'Forbidden: not a party to this contract' }, { status: 403 });
+    }
+
     const { accessToken } = await base44.asServiceRole.connectors.getConnection('googledrive');
 
     // ── 1. مجلد الجذر "Bytly Contracts" ──────────────────────────────────
