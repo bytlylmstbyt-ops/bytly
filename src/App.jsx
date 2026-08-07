@@ -260,6 +260,7 @@ const AuthenticatedApp = () => {
         <Route path="/AIMaterialAdvisor"          element={lazyRoute(AIMaterialAdvisor, "AIMaterialAdvisor")} />
         <Route path="/AIRecommender"              element={lazyRoute(AIRecommender, "AIRecommender")} />
         <Route path="/AdvertiserPortal"           element={lazyRoute(AdvertiserPortal, "AdvertiserPortal")} />
+        <Route path="/AdminIntegrations"           element={lazyRoute(React.lazy(() => import('./pages/AdminIntegrations')), "AdminIntegrations")} />
         <Route path="*" element={<NotFoundError />} />
       </Route>
     </Routes>

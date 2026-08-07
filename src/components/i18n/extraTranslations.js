@@ -354,6 +354,50 @@ export const extraTranslations = {
       emailLabel: "البريد الإلكتروني",
       location: "المملكة العربية السعودية",
       cards: [{ title: "تشفير قوي", desc: "جميع بياناتك محمية بأحدث تقنيات التشفير" },{ title: "حماية متقدمة", desc: "أنظمة أمنية متطورة لحماية معلوماتك" },{ title: "الامتثال القانوني", desc: "نلتزم بجميع قوانين حماية البيانات" }]
+    },
+    integrations: {
+      title: "التكاملات",
+      description: "إدارة جميع التكاملات والخدمات الخارجية المتصلة بالمنصة من لوحة واحدة.",
+      addIntegration: "إضافة تكامل",
+      summary: {
+        total: "إجمالي التكاملات",
+        connected: "متصل",
+        needsAction: "بحاجة لإجراء",
+        lastSync: "آخر مزامنة",
+        never: "لم تتم المزامنة بعد"
+      },
+      status: {
+        connected: "متصل",
+        disconnected: "غير متصل",
+        needsReauth: "يحتاج إعادة مصادقة"
+      },
+      actions: {
+        test: "اختبار الاتصال",
+        reconnect: "إعادة الاتصال",
+        disconnect: "فصل التكامل",
+        testing: "جارٍ الاختبار...",
+        viewDetails: "التفاصيل"
+      },
+      messages: {
+        testSuccess: "تم اختبار الاتصال بنجاح",
+        testFailed: "فشل اختبار الاتصال",
+        reconnectHint: "لإعادة المصادقة، انتقل إلى لوحة التحكم ← التكاملات",
+        disconnectHint: "لفصل التكامل، انتقل إلى لوحة التحكم ← التكاملات",
+        noError: "لا توجد أخطاء",
+        loadFailed: "تعذّر تحميل حالة التكاملات"
+      },
+      services: {
+        stripe: "Stripe",
+        google_analytics: "Google Analytics",
+        instagram: "Instagram Business",
+        tiktok: "TikTok",
+        googlecalendar: "Google Calendar",
+        gmail: "Gmail",
+        linkedin: "LinkedIn",
+        googledrive: "Google Drive",
+        googlesheets: "Google Sheets",
+        googlemeet: "Google Meet"
+      }
     }
   },
   en: {
@@ -711,6 +755,50 @@ export const extraTranslations = {
       emailLabel: "Email",
       location: "Kingdom of Saudi Arabia",
       cards: [{ title: "Strong Encryption", desc: "All your data is protected with the latest encryption technologies" },{ title: "Advanced Protection", desc: "Advanced security systems to protect your information" },{ title: "Legal Compliance", desc: "We comply with all data protection laws" }]
+    },
+    integrations: {
+      title: "Integrations",
+      description: "Manage all external integrations and services connected to the platform from one panel.",
+      addIntegration: "Add Integration",
+      summary: {
+        total: "Total Integrations",
+        connected: "Connected",
+        needsAction: "Needs Action",
+        lastSync: "Last Sync",
+        never: "Never synced"
+      },
+      status: {
+        connected: "Connected",
+        disconnected: "Disconnected",
+        needsReauth: "Needs Re-authentication"
+      },
+      actions: {
+        test: "Test Connection",
+        reconnect: "Reconnect",
+        disconnect: "Disconnect",
+        testing: "Testing...",
+        viewDetails: "Details"
+      },
+      messages: {
+        testSuccess: "Connection test succeeded",
+        testFailed: "Connection test failed",
+        reconnectHint: "To re-authenticate, go to Dashboard → Integrations",
+        disconnectHint: "To disconnect, go to Dashboard → Integrations",
+        noError: "No errors",
+        loadFailed: "Failed to load integration statuses"
+      },
+      services: {
+        stripe: "Stripe",
+        google_analytics: "Google Analytics",
+        instagram: "Instagram Business",
+        tiktok: "TikTok",
+        googlecalendar: "Google Calendar",
+        gmail: "Gmail",
+        linkedin: "LinkedIn",
+        googledrive: "Google Drive",
+        googlesheets: "Google Sheets",
+        googlemeet: "Google Meet"
+      }
     }
   }
 };

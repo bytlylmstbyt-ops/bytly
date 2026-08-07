@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, FileText, Wallet, Scale, Bell, BarChart3, Settings as SettingsIcon,
-  FolderKanban, Building2,
+  FolderKanban, Building2, Link2,
 } from "lucide-react";
 
 // ── Category → page map ────────────────────────────────────────────────────
@@ -124,6 +124,15 @@ export const ADMIN_CATEGORIES = [
       { page: "AdminSubscriptionControl", label: "إدارة الاشتراكات", desc: "باقات واشتراكات مزودي الخدمة" },
       { page: "AdminMarketEntities", label: "إدارة كيانات السوق", desc: "الشركات والموردون في السوق" },
       { page: "Settings", label: "الإعدادات العامة", desc: "إعدادات الحساب والمنصة" },
+    ],
+  },
+  {
+    key: "integrations",
+    label: "التكاملات",
+    icon: Link2,
+    description: "إدارة جميع التكاملات والخدمات الخارجية المتصلة بالمنصة.",
+    items: [
+      { page: "AdminIntegrations", label: "لوحة التكاملات", desc: "عرض وإدارة جميع التكاملات وحالة الاتصال" },
     ],
   },
 ];
