@@ -19,6 +19,7 @@ import { sendNotification } from "@/components/notifications/NotificationHelper"
 import CommissionExplainer from "@/components/payment/CommissionExplainer";
 import MilestoneReviewModal from "@/components/reviews/MilestoneReviewModal";
 import MeetCallButton from "@/components/project/MeetCallButton";
+import MilestoneProgressTracker from "@/components/project/MilestoneProgressTracker";
 
 export default function ProjectMilestones() {
   const navigate = useNavigate();
@@ -436,63 +437,10 @@ export default function ProjectMilestones() {
             </div>
           </div>
 
-          {/* Commission Explainer */}
-          {milestones.length > 0 && !isEngineer && (
-            <div className="mb-6">
-              <CommissionExplainer 
-                totalProjectValue={milestones.reduce((sum, m) => sum + m.amount, 0)}
-                milestones={milestones}
-              />
-            </div>
-          )}
-
-          {/* Progress Overview */}
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">التقدم الكلي</span>
-                    <span className="text-sm text-slate-600">
-                      {completedMilestones} من {milestones.length} مراحل مكتملة
-                    </span>
-                  </div>
-                  <Progress value={progress} className="h-3" />
-                </div>
-
-                {/* Total Project Financial Summary */}
-                <div className="pt-4 border-t">
-                  <p className="text-xs font-semibold text-slate-700 mb-3">الملخص المالي للمشروع:</p>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="p-3 bg-blue-50 rounded-lg text-center">
-                      <p className="text-xs text-slate-600 mb-1">قيمة العمل</p>
-                      <p className="text-lg font-bold text-blue-900">
-                        {milestones.reduce((sum, m) => sum + m.amount, 0).toLocaleString('ar-SA')}
-                      </p>
-                      <p className="text-xs text-slate-500">ر.س</p>
-                    </div>
-                    <div className="p-3 bg-orange-50 rounded-lg text-center">
-                      <p className="text-xs text-slate-600 mb-1">العمولة (15%)</p>
-                      <p className="text-lg font-bold text-orange-700">
-                        {(milestones.reduce((sum, m) => sum + m.amount, 0) * 0.15).toLocaleString('ar-SA')}
-                      </p>
-                      <p className="text-xs text-slate-500">ر.س</p>
-                    </div>
-                    <div className="p-3 bg-green-50 rounded-lg text-center">
-                      <p className="text-xs text-slate-600 mb-1">صافي المهندس</p>
-                      <p className="text-lg font-bold text-green-700">
-                        {(milestones.reduce((sum, m) => sum + m.amount, 0) * 0.85).toLocaleString('ar-SA')}
-                      </p>
-                      <p className="text-xs text-slate-500">ر.س</p>
-                    </div>
-                  </div>
-                  <p className="text-xs text-center text-slate-500 mt-3">
-                    💡 العمولة نسبة ثابتة 15% من قيمة المشروع، تُجمع بشكل متناسب مع كل مرحلة
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Interactive Progress Tracker */}
+          <div className="mb-6">
+            <MilestoneProgressTracker project={project} milestones={milestones} />
+          </div>
 
           {/* Milestones List */}
           <div className="space-y-4">
