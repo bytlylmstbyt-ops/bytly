@@ -448,6 +448,12 @@ export default function EngineerProfile() {
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary">{portfolios.length} عمل</Badge>
+                    <Link to="/Gallery">
+                      <Button size="sm" variant="outline" className="gap-1 border-[#C9A66B] text-[#6B5D4F] hover:bg-amber-50">
+                        <Grid3X3 className="w-4 h-4" />
+                        المعرض الكامل
+                      </Button>
+                    </Link>
                     {isOwner && (
                       <Link to="/AddPortfolio">
                         <Button size="sm" className="gap-1">

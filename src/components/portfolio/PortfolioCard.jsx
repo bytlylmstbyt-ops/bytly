@@ -122,10 +122,21 @@ export default function PortfolioCard({ portfolio, engineerName, onTagClick, act
           <div className="absolute bottom-0 right-0 left-0 p-4 translate-y-2 group-hover:translate-y-0 opacity-80 group-hover:opacity-100 transition-all duration-300">
             <h3 className="font-bold text-lg text-white mb-1 drop-shadow-lg">{portfolio.title}</h3>
             {engineerName && (
-              <div className="flex items-center gap-1.5 text-white/80 text-xs">
-                <User className="w-3 h-3" />
-                {engineerName}
-              </div>
+              portfolio.engineer_id ? (
+                <Link
+                  to={`/EngineerProfile?id=${portfolio.engineer_id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1.5 text-white/80 text-xs hover:text-white transition-colors"
+                >
+                  <User className="w-3 h-3" />
+                  {engineerName}
+                </Link>
+              ) : (
+                <div className="flex items-center gap-1.5 text-white/80 text-xs">
+                  <User className="w-3 h-3" />
+                  {engineerName}
+                </div>
+              )
             )}
           </div>
 
