@@ -270,8 +270,8 @@ function App() {
           <NavigationTracker />
           <RouteTitleManager />
           <AuthenticatedApp />
+          <Toaster />
         </Router>
-        <Toaster />
       </QueryClientProvider>
     </AuthProvider>
   );
