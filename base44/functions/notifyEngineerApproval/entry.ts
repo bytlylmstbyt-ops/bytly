@@ -19,6 +19,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'engineer_id and data are required' }, { status: 400 });
     }
 
+    // التحقق من صلاحية الأدمن: إشعارات الاعتماد يجب أن يطلقها أدمن فقط.
+    // الاستدعاءات عبر سير العمل (سياق service-role) تتجاوز هذا الفحص لأن البيانات موثوقة.
+    let actor = null;
+    try { actor = await base44.auth.me(); } catch {}
+    if (actor && actor.email && actor.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: admin only' }, { status: 403 });
+    }
+
     // Check if status changed from pending to approved
     const statusChanged = old_data?.status === 'pending' && new_data.status === 'approved';
     

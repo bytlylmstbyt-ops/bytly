@@ -9,13 +9,36 @@ Deno.serve(async (req) => {
     if (!isAuthenticated) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
     const body = await req.json();
     const { event, data } = body;
 
     if (event?.type !== 'update') return Response.json({ ok: true });
 
-    const progress = data;
-    if (!progress?.client_email || !progress?.current_stage) return Response.json({ ok: true });
+    // جلب السجل الموثوق من قاعدة البيانات بدلاً من الثقة بالحقول المرسلة في الطلب
+    const progressId = data?.id;
+    if (!progressId) return Response.json({ ok: true });
+
+    let progress;
+    try {
+      progress = await base44.asServiceRole.entities.BuildingProgress.get(progressId);
+    } catch {
+      return Response.json({ error: 'Building progress not found' }, { status: 404 });
+    }
+    if (!progress) return Response.json({ ok: true });
+    if (!progress.client_email || !progress.current_stage) return Response.json({ ok: true });
+
+    // التحقق من الملكية: عند الاستدعاء المباشر من مستخدم حقيقي، يجب أن يكون
+    // المهندس أو المالك المعيّن لهذا المشروع (أو أدمن). الاستدعاءات عبر سير العمل
+    // (سياق service-role) تتجاوز هذا الفحص لأن البيانات موثوقة من قاعدة البيانات.
+    let actor = null;
+    try { actor = await base44.auth.me(); } catch {}
+    if (actor && actor.email) {
+      const isAssigned = progress.engineer_email === actor.email || progress.client_email === actor.email;
+      if (!isAssigned && actor.role !== 'admin') {
+        return Response.json({ error: 'Forbidden: not assigned to this project' }, { status: 403 });
+      }
+    }
 
     const stageLabels = {
       design: 'التصميم المعماري',
@@ -28,19 +51,19 @@ Deno.serve(async (req) => {
 
     const stageLabel = stageLabels[progress.current_stage] || progress.current_stage;
 
-    // Send notification to client
+    // إرسال الإشعار للعميل (البريد المستلم موثوق من السجل)
     await base44.asServiceRole.entities.Notification.create({
-      user_email: progress.client_email,
+      recipient_email: progress.client_email,
       title: `تحديث مشروعك: ${progress.project_title || 'مشروعك'}`,
       message: `تم تحديث مرحلة البناء إلى: ${stageLabel} (${progress.overall_progress || 0}% إنجاز)${progress.last_update_note ? '\n' + progress.last_update_note : ''}`,
       type: 'project_update',
       priority: 'high',
       is_read: false,
-      related_id: progress.project_id,
-      related_type: 'building_progress'
+      related_project_id: progress.project_id || undefined,
+      action_url: `/ConstructionTracker?id=${progressId}`,
     });
 
-    // Send email notification
+    // إرسال بريد الإشعار
     await base44.asServiceRole.integrations.Core.SendEmail({
       to: progress.client_email,
       subject: `تحديث مشروعك - ${stageLabel}`,

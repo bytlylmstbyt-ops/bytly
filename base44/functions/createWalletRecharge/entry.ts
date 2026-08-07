@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { amount, user_email } = await req.json();
+    const { amount } = await req.json();
 
     if (!amount || amount < 50) {
       return Response.json({ error: 'Minimum recharge is 50 SAR' }, { status: 400 });
@@ -41,19 +41,19 @@ Deno.serve(async (req) => {
       metadata: {
         base44_app_id: Deno.env.get('BASE44_APP_ID'),
         type: 'wallet_recharge',
-        user_email: user_email,
+        user_email: user.email,
         amount: amount.toString()
       },
-      customer_email: user_email,
+      customer_email: user.email,
       payment_intent_data: {
         metadata: {
           type: 'wallet_recharge',
-          user_email: user_email
+          user_email: user.email
         }
       }
     });
 
-    console.log(`Wallet recharge checkout created for ${user_email}: ${amount} SAR`);
+    console.log(`Wallet recharge checkout created for ${user.email}: ${amount} SAR`);
 
     return Response.json({ url: session.url });
   } catch (error) {
