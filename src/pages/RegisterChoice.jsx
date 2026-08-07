@@ -171,7 +171,7 @@ export default function RegisterChoice() {
 
                   <Link to={option.link}>
                     <Button className={`w-full bg-gradient-to-r ${option.color} text-white hover:opacity-90`}>
-                      {t('registerChoice.chooseAccount')}
+                      اختر هذا الحساب
                       <ArrowLeft className="w-4 h-4 mr-2" />
                     </Button>
                   </Link>
