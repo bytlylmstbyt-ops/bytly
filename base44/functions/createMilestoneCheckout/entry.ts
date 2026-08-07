@@ -24,6 +24,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Milestone or project not found' }, { status: 404 });
     }
 
+    // Ensure the milestone belongs to the requested project (prevent ID swapping)
+    if (milestone.project_id !== project.id) {
+      return Response.json({ error: 'Milestone does not belong to this project' }, { status: 400 });
+    }
+
+    // Verify a client record exists for the project
+    if (!client) {
+      return Response.json({ error: 'Project client not found' }, { status: 404 });
+    }
+
     // Verify user is the client
     if (client.email !== user.email) {
       return Response.json({ error: 'Unauthorized: Not project owner' }, { status: 403 });
