@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { translations as baseTranslations } from './translations';
 import { extraTranslations } from './extraTranslations';
+import { landingTranslations } from '@/components/landing/landingTranslations';
 
 function deepMerge(target, source) {
   const out = { ...(target || {}) };
@@ -15,8 +16,8 @@ function deepMerge(target, source) {
 }
 
 const translations = {
-  ar: deepMerge(baseTranslations.ar, extraTranslations.ar),
-  en: deepMerge(baseTranslations.en, extraTranslations.en)
+  ar: deepMerge(deepMerge(baseTranslations.ar, extraTranslations.ar), landingTranslations.ar),
+  en: deepMerge(deepMerge(baseTranslations.en, extraTranslations.en), landingTranslations.en)
 };
 
 const LanguageContext = createContext();

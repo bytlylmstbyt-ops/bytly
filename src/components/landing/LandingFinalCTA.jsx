@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 
 export default function LandingFinalCTA() {
-  const { isRTL } = useLanguage();
+  const { isRTL, t } = useLanguage();
 
   return (
     <section className="py-16 md:py-24 bg-gradient-to-br from-[#F5F0E8] to-amber-50/40">
@@ -19,17 +19,12 @@ export default function LandingFinalCTA() {
           <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] flex items-center justify-center mb-5">
             <Sparkles className="w-7 h-7 text-white" />
           </div>
-          <h2 className="text-2xl md:text-4xl font-bold text-[#1a1a2e] mb-4">
-            جاهز لتبدأ مشروعك القادم بثقة؟
-          </h2>
-          <p className="text-slate-600 text-base md:text-lg leading-relaxed max-w-2xl mx-auto mb-8">
-            انضم إلى بيتلي اليوم — أنشئ حسابك في دقائق، وانشر مشروعك أو اعرض خدماتك
-            لآلاف العملاء في السعودية والخليج.
-          </p>
+          <h2 className="text-2xl md:text-4xl font-bold text-[#1a1a2e] mb-4">{t("landing.finalCTA.title")}</h2>
+          <p className="text-slate-600 text-base md:text-lg leading-relaxed max-w-2xl mx-auto mb-8">{t("landing.finalCTA.desc")}</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link to="/RegisterChoice">
               <Button className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white hover:opacity-90 text-base px-8 h-12 w-full sm:w-auto">
-                أنشئ حسابك مجاناً
+                {t("landing.finalCTA.cta")}
                 <ArrowLeft className={`w-5 h-5 ${isRTL ? "" : "rotate-180"}`} />
               </Button>
             </Link>
