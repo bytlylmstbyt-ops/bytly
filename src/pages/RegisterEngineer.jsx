@@ -322,6 +322,27 @@ export default function RegisterEngineer() {
         }
       }
 
+      // إرسال إشعارات التسجيل: بريد ترحيب للمهندس + بريد وتنبيه للمدير
+      // (غير معتمِد على workflows المتعطلة — يُستدعى من سياق المستخدم المُصادَق عليه)
+      try {
+        await base44.functions.invoke("notifyNewEngineer", { engineer_id: engineer.id });
+      } catch (notifyErr) {
+        console.error("notifyNewEngineer failed (non-blocking):", notifyErr);
+      }
+      try {
+        await base44.functions.invoke("notifyNewRegistration", {
+          eventType: "engineer_registered",
+          data: {
+            full_name: formData.full_name,
+            email: formData.email,
+            user_type: formData.user_type,
+            specialization: formData.specialization
+          }
+        });
+      } catch (notifyErr) {
+        console.error("notifyNewRegistration failed (non-blocking):", notifyErr);
+      }
+
       base44.analytics.track({
         eventName: "engineer_profile_created",
         properties: {

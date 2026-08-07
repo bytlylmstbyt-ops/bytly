@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
             <p style="color: #666; margin: 20px 0;">تاريخ التسجيل: ${new Date(engineer.created_date).toLocaleDateString('ar-SA')}</p>
 
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${Deno.env.get('BASE44_APP_URL')}/admin-engineers" 
+              <a href="https://mybytly.com/admin-engineers" 
                  style="background: linear-gradient(135deg, #6B5D4F 0%, #C9A66B 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">
                 مراجعة الحساب الآن
               </a>
