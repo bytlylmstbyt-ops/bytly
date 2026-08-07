@@ -6,27 +6,28 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { project_id, project_title, attendee_emails = [], scheduled_time } = await req.json();
+    const { project_id, project_title, attendee_emails = [], scheduled_time, topic } = await req.json();
 
-    if (!project_id) {
-      return Response.json({ error: 'project_id required' }, { status: 400 });
-    }
+    let project = null;
 
-    // ── Authorization: verify the caller is a participant of the project ──
-    const [project] = await base44.asServiceRole.entities.Project.filter({ id: project_id });
-    if (!project) {
-      return Response.json({ error: 'Project not found' }, { status: 404 });
-    }
+    // ── Authorization: if a project_id is provided, verify the caller is a participant ──
+    if (project_id) {
+      const [proj] = await base44.asServiceRole.entities.Project.filter({ id: project_id });
+      if (!proj) {
+        return Response.json({ error: 'Project not found' }, { status: 404 });
+      }
+      project = proj;
 
-    const isOwner = project.created_by === user.email;
-    const isAdmin = user.role === 'admin';
-    let isAssignedEngineer = false;
-    if (project.assigned_engineer_id) {
-      const [eng] = await base44.asServiceRole.entities.Engineer.filter({ id: project.assigned_engineer_id });
-      isAssignedEngineer = eng?.email === user.email;
-    }
-    if (!isOwner && !isAdmin && !isAssignedEngineer) {
-      return Response.json({ error: 'Forbidden: you are not a participant of this project' }, { status: 403 });
+      const isOwner = project.created_by === user.email;
+      const isAdmin = user.role === 'admin';
+      let isAssignedEngineer = false;
+      if (project.assigned_engineer_id) {
+        const [eng] = await base44.asServiceRole.entities.Engineer.filter({ id: project.assigned_engineer_id });
+        isAssignedEngineer = eng?.email === user.email;
+      }
+      if (!isOwner && !isAdmin && !isAssignedEngineer) {
+        return Response.json({ error: 'Forbidden: you are not a participant of this project' }, { status: 403 });
+      }
     }
 
     const { accessToken } = await base44.asServiceRole.connectors.getConnection('googlecalendar');
@@ -35,15 +36,21 @@ Deno.serve(async (req) => {
     const startTime = scheduled_time ? new Date(scheduled_time) : new Date(Date.now() + 30 * 60 * 1000);
     const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // 1 hour duration
 
+    const meetingRef = project_id || `adhoc-${Date.now()}`;
+    const summary = topic || (project ? `تحديث مشروع: ${project.title || project_title || 'مشروع بيتلي'}` : 'مناقشة عميل — بيتلي');
+    const description = project
+      ? `اجتماع تحديث دوري لمشروع Bytly رقم: ${project_id}\n\nينشأ تلقائياً عبر منصة بيتلي`
+      : `مناقشة مع العميل عبر منصة بيتلي\n\nأُنشئ بواسطة: ${user.email}`;
+
     const eventBody = {
-      summary: `تحديث مشروع: ${project_title || 'مشروع بيتلي'}`,
-      description: `اجتماع تحديث دوري لمشروع Bytly رقم: ${project_id}\n\nينشئ تلقائياً عبر منصة بيتلي`,
+      summary,
+      description,
       start: { dateTime: startTime.toISOString(), timeZone: 'Asia/Riyadh' },
       end:   { dateTime: endTime.toISOString(),   timeZone: 'Asia/Riyadh' },
       attendees: attendee_emails.map(email => ({ email })),
       conferenceData: {
         createRequest: {
-          requestId: `bytly-${project_id}-${Date.now()}`,
+          requestId: `bytly-${meetingRef}-${Date.now()}`,
           conferenceSolutionKey: { type: 'hangoutsMeet' }
         }
       }
