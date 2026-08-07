@@ -72,7 +72,7 @@ export default function ProjectCalendar({ project, user, userEngineer, engineers
   const [viewMonth, setViewMonth] = useState(new Date());
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [createDate, setCreateDate] = useState(toDateString(new Date()));
-  const [newEvent, setNewEvent] = useState({ title: "", description: "", priority: "medium" });
+  const [newEvent, setNewEvent] = useState({ title: "", description: "", priority: "medium", event_type: "meeting", event_time: "10:00" });
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
@@ -129,11 +129,13 @@ export default function ProjectCalendar({ project, user, userEngineer, engineers
     // Tasks
     tasks.forEach((task) => {
       if (task.due_date) {
+        const isMeeting = task.event_type === "meeting";
         list.push({
-          id: `task-${task.id}`, date: toDateString(task.due_date), type: "task",
+          id: `task-${task.id}`, date: toDateString(task.due_date), type: isMeeting ? "meeting" : "task",
           title: task.title, meta: task.assigned_to ? `مسند إلى: ${task.assigned_to.split("@")[0]}` : "",
           status: task.status, priority: task.priority, linkTab: "tasks",
           entityId: task.id,
+          meetLink: task.meet_link,
         });
       }
     });
@@ -230,7 +232,7 @@ export default function ProjectCalendar({ project, user, userEngineer, engineers
 
   const canManage = isClient || isEngineer || user?.role === "admin";
 
-  // Create a new task event
+  // Create a new task event — automatically generates a Google Meet link for meetings
   const handleCreateEvent = async () => {
     if (!newEvent.title.trim() || !createDate) return;
     setCreating(true);
@@ -244,8 +246,37 @@ export default function ProjectCalendar({ project, user, userEngineer, engineers
         status: "todo",
         priority: newEvent.priority,
         due_date: createDate,
+        event_type: newEvent.event_type,
+        event_time: newEvent.event_type === "meeting" ? newEvent.event_time : undefined,
       };
-      await base44.entities.ProjectTask.create(taskData);
+      const createdTask = await base44.entities.ProjectTask.create(taskData);
+
+      // Auto-generate Google Meet link for meeting-type events
+      if (newEvent.event_type === "meeting" && createdTask?.id) {
+        try {
+          const scheduledDateTime = new Date(`${createDate}T${newEvent.event_time || "10:00"}:00`);
+          const attendeeEmails = [
+            user?.email,
+            isClient ? assignedEngineer?.email : project.created_by,
+          ].filter(Boolean);
+
+          const meetRes = await base44.functions.invoke("createMeetCall", {
+            project_id: project.id,
+            project_title: project.title,
+            attendee_emails: attendeeEmails,
+            scheduled_time: scheduledDateTime.toISOString(),
+          });
+
+          if (meetRes?.meet_link) {
+            await base44.entities.ProjectTask.update(createdTask.id, {
+              meet_link: meetRes.meet_link,
+              meet_event_id: meetRes.event_id,
+            });
+          }
+        } catch (meetErr) {
+          console.error("Meet link creation failed (non-blocking):", meetErr);
+        }
+      }
 
       // Notify the other party
       const notifyEmail = isClient ? assignedEngineer?.email : project.created_by;
@@ -253,7 +284,7 @@ export default function ProjectCalendar({ project, user, userEngineer, engineers
         await sendNotification({
           recipientEmail: notifyEmail,
           title: "موعد جديد في تقويم المشروع",
-          message: `تمت إضافة "${newEvent.title}" بتاريخ ${new Date(createDate).toLocaleDateString("ar-SA")} في مشروع ${project.title}`,
+          message: `تمت إضافة "${newEvent.title}" بتاريخ ${new Date(createDate).toLocaleDateString("ar-SA")}${newEvent.event_type === "meeting" ? " — اجتماع Google Meet" : ""} في مشروع ${project.title}`,
           type: "project_update",
           projectId: project.id,
           priority: "medium",
@@ -261,7 +292,7 @@ export default function ProjectCalendar({ project, user, userEngineer, engineers
       }
 
       setShowCreateDialog(false);
-      setNewEvent({ title: "", description: "", priority: "medium" });
+      setNewEvent({ title: "", description: "", priority: "medium", event_type: "meeting", event_time: "10:00" });
       await loadEvents();
     } catch (err) {
       console.error("Error creating event:", err);
@@ -509,9 +540,31 @@ export default function ProjectCalendar({ project, user, userEngineer, engineers
               <Label>العنوان *</Label>
               <Input value={newEvent.title} onChange={(e) => setNewEvent(prev => ({ ...prev, title: e.target.value }))} placeholder="مثال: اجتماع مراجعة المخططات" />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>التاريخ</Label>
+                <Input type="date" value={createDate} onChange={(e) => setCreateDate(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>الوقت</Label>
+                <Input type="time" value={newEvent.event_time} onChange={(e) => setNewEvent(prev => ({ ...prev, event_time: e.target.value }))} disabled={newEvent.event_type !== "meeting"} />
+              </div>
+            </div>
             <div className="space-y-2">
-              <Label>التاريخ</Label>
-              <Input type="date" value={createDate} onChange={(e) => setCreateDate(e.target.value)} />
+              <Label>النوع</Label>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setNewEvent(prev => ({ ...prev, event_type: "meeting" }))} className={`flex-1 px-3 py-2 rounded-md text-sm font-medium border transition-all ${newEvent.event_type === "meeting" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-slate-200 text-slate-500"}`}>
+                  📹 اجتماع (مع رابط Meet)
+                </button>
+                <button type="button" onClick={() => setNewEvent(prev => ({ ...prev, event_type: "task" }))} className={`flex-1 px-3 py-2 rounded-md text-sm font-medium border transition-all ${newEvent.event_type === "task" ? "border-amber-500 bg-amber-50 text-amber-700" : "border-slate-200 text-slate-500"}`}>
+                  ✓ مهمة
+                </button>
+              </div>
+              {newEvent.event_type === "meeting" && (
+                <p className="text-[11px] text-blue-600 flex items-center gap-1">
+                  <Video className="w-3 h-3" /> سيتم إنشاء رابط Google Meet تلقائياً وإضافته للتقويم
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label>الأولوية</Label>
