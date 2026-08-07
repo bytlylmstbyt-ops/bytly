@@ -869,7 +869,7 @@ export default function ProjectDetails() {
             {/* Contract Tab */}
             {activeTab === "contract" && (
               <div id="tab-contract" className="space-y-6">
-                <ProjectContractSection project={project} contracts={contracts} user={user} userEngineer={userEngineer} userClient={userClient} onUpdated={loadData} />
+                <ProjectContractSection project={project} contracts={contracts} user={user} userEngineer={userEngineer} userClient={userClient} proposals={proposals} assignedEngineer={project?.assigned_engineer_id ? engineers[project.assigned_engineer_id] : null} onUpdated={loadData} />
               </div>
             )}
 

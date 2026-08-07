@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import ElectronicSignModal from "@/components/contracts/ElectronicSignModal";
+import ContractTemplateModal from "@/components/contracts/ContractTemplateModal";
 import { logWorkspaceActivity } from "@/components/project/logWorkspaceActivity";
 
 const CONTRACT_STATUS = {
@@ -23,9 +24,9 @@ const CONTRACT_STATUS = {
 };
 
 export default function ProjectContractSection({
-  project, contracts, user, userEngineer, userClient, onUpdated
+  project, contracts, user, userEngineer, userClient, proposals, assignedEngineer, onUpdated
 }) {
-  const [creating, setCreating] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showSignModal, setShowSignModal] = useState(false);
 
   if (!user) return null;
@@ -37,22 +38,6 @@ export default function ProjectContractSection({
   const hasContracts = contracts && contracts.length > 0;
   const activeContract = hasContracts ? contracts[0] : null;
   const status = activeContract ? CONTRACT_STATUS[activeContract.status] : null;
-
-  const handleCreateContract = async () => {
-    setCreating(true);
-    try {
-      const response = await base44.functions.invoke("autoGenerateContract", {
-        project_id: project.id,
-      });
-      if (response.data?.success || response.data?.contract_id) {
-        onUpdated?.();
-      }
-    } catch (err) {
-      console.error("Contract creation failed:", err);
-    } finally {
-      setCreating(false);
-    }
-  };
 
   return (
     <Card className="border-0 shadow-lg" id="project-contract">
@@ -80,16 +65,11 @@ export default function ProjectContractSection({
             </p>
             {canManage && (
               <Button
-                onClick={handleCreateContract}
-                disabled={creating}
+                onClick={() => setShowTemplateModal(true)}
                 className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white gap-2"
               >
-                {creating ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Plus className="w-4 h-4" />
-                )}
-                إنشاء عقد
+                <Plus className="w-4 h-4" />
+                إنشاء عقد +
               </Button>
             )}
           </div>
@@ -157,6 +137,22 @@ export default function ProjectContractSection({
           </div>
         )}
       </CardContent>
+
+      {/* Contract Template Modal */}
+      {showTemplateModal && (
+        <ContractTemplateModal
+          project={project}
+          engineer={assignedEngineer || userEngineer}
+          client={userClient}
+          proposals={proposals}
+          currentUser={user}
+          onClose={() => setShowTemplateModal(false)}
+          onCreated={() => {
+            setShowTemplateModal(false);
+            onUpdated?.();
+          }}
+        />
+      )}
 
       {/* Electronic Sign Modal */}
       {showSignModal && activeContract && (
