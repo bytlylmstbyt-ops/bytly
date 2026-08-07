@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -393,8 +394,17 @@ export default function AdminProjects() {
                     <td className="py-2.5 px-3 text-center">
                       <Checkbox checked={checked} onCheckedChange={() => bulk.toggle(p.id)} />
                     </td>
-                    <td className="py-2.5 px-3 font-medium text-[#4A3F35] max-w-[200px] truncate">{p.title || "—"}</td>
-                    <td className="py-2.5 px-3 text-slate-400 text-xs font-mono">#{p.id.slice(-6)}</td>
+                    <td className="py-2.5 px-3 max-w-[200px] truncate">
+                      <Link to={`/ProjectDetails?id=${p.id}`} className="font-medium text-[#4A3F35] hover:text-[#C9A66B] transition-colors flex items-center gap-1">
+                        {p.title || "—"}
+                        <ChevronLeft className="w-3.5 h-3.5 text-[#C9A66B] opacity-50 shrink-0" />
+                      </Link>
+                    </td>
+                    <td className="py-2.5 px-3">
+                      <Link to={`/ProjectDetails?id=${p.id}`} className="text-slate-400 text-xs font-mono hover:text-[#C9A66B] transition-colors">
+                        #{p.id.slice(-6)}
+                      </Link>
+                    </td>
                     <td className="py-2.5 px-3 text-slate-600">{lookup.clients[p.client_id] || "—"}</td>
                     <td className="py-2.5 px-3 text-slate-600">{lookup.engineers[p.assigned_engineer_id] || "—"}</td>
                     <td className="py-2.5 px-3 text-slate-500 text-xs">{p.location || "—"}</td>
@@ -441,22 +451,25 @@ export default function AdminProjects() {
             </CardContent>
           </Card>
         ) : paged.map(p => {
-          const comp = computeCompletion(p.status);
-          return (
-            <Card key={p.id} className="border-0 shadow-sm" onClick={() => { setSelectedProject(p); setShowDetail(true); }}>
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between mb-2" onClick={(e) => e.stopPropagation()}>
-                  <span className="text-xs text-slate-400 font-mono">#{p.id.slice(-6)}</span>
-                  <Badge className={`${STATUS_COLORS[p.status] || ""} border`} variant="outline">{STATUS_LABELS[p.status]}</Badge>
-                  <ProjectActionsMenu
-                    project={p}
-                    engineers={engineers}
-                    onView={() => { setSelectedProject(p); setShowDetail(true); }}
-                    onUpdated={handleProjectUpdated}
-                    onDeleted={handleProjectUpdated}
-                  />
-                </div>
-                <p className="font-bold text-[#4A3F35] text-sm mb-1">{p.title || "—"}</p>
+         const comp = computeCompletion(p.status);
+         return (
+           <Link key={p.id} to={`/ProjectDetails?id=${p.id}`}>
+           <Card key={p.id} className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+             <CardContent className="p-3">
+               <div className="flex items-center justify-between mb-2">
+                 <span className="text-xs text-slate-400 font-mono">#{p.id.slice(-6)}</span>
+                 <Badge className={`${STATUS_COLORS[p.status] || ""} border`} variant="outline">{STATUS_LABELS[p.status]}</Badge>
+                 <div onClick={(e) => e.preventDefault()} onClickCapture={(e) => e.stopPropagation()}>
+                   <ProjectActionsMenu
+                     project={p}
+                     engineers={engineers}
+                     onView={() => {}}
+                     onUpdated={handleProjectUpdated}
+                     onDeleted={handleProjectUpdated}
+                   />
+                 </div>
+               </div>
+               <p className="font-bold text-[#4A3F35] text-sm mb-1 hover:text-[#C9A66B] transition-colors">{p.title || "—"}</p>
                 <div className="text-xs text-slate-500 space-y-0.5">
                   <p>العميل: {lookup.clients[p.client_id] || "—"}</p>
                   <p>المهندس: {lookup.engineers[p.assigned_engineer_id] || "—"}</p>
@@ -469,10 +482,11 @@ export default function AdminProjects() {
                   <span className="text-xs text-slate-500">{comp}%</span>
                   <ChevronLeft className="w-4 h-4 text-slate-300" />
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+                </CardContent>
+                </Card>
+                </Link>
+                );
+                })}
       </div>
 
       {/* Pagination */}

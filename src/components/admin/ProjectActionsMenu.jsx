@@ -209,7 +209,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-56">
-          <Item icon={Eye} label="عرض التفاصيل" onClick={onView} />
+          <Item icon={Eye} label="فتح مساحة العمل" onClick={() => navigate(`/ProjectDetails?id=${project.id}`)} />
           <Item icon={Edit} label="تعديل المشروع" onClick={openEdit} />
           <Item icon={RefreshCw} label="تغيير الحالة" onClick={() => setShowStatus(true)} />
           <Item icon={UserCog} label="تعيين المهندس" onClick={() => setShowAssign(true)} />
