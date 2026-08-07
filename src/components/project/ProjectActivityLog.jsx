@@ -37,14 +37,16 @@ export default function ProjectActivityLog({ project, proposals, contracts, tran
       });
     }
 
-    // 2. نشر طلب المشروع (status = open)
-    if (project?.status === "open" || project?.status !== "open") {
+    // 2. نشر طلب المشروع
+    if (project?.created_date) {
       events.push({
         time: project?.created_date,
         icon: Users,
         color: "text-[#C9A66B] bg-amber-50",
         title: "تم نشر طلب المشروع",
-        desc: "المشروع متاح الآن لاستقبال العروض من المهندسين",
+        desc: project?.status === "open"
+          ? "المشروع متاح الآن لاستقبال العروض من المهندسين"
+          : "تم نشر المشروع لاستقبال العروض",
       });
     }
 

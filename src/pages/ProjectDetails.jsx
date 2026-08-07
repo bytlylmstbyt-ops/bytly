@@ -273,6 +273,30 @@ export default function ProjectDetails() {
     window.location.href = createPageUrl("Payment") + `?project=${projectId}&proposal=${proposal.id}`;
   };
 
+  const handleRejectProposal = async (proposal) => {
+    if (!window.confirm("هل أنت متأكد من رفض هذا العرض؟")) return;
+    try {
+      await base44.entities.Proposal.update(proposal.id, { status: "rejected" });
+      setProposals(prev => prev.map(p =>
+        p.id === proposal.id ? { ...p, status: "rejected" } : p
+      ));
+      const engineer = engineers[proposal.engineer_id];
+      if (engineer) {
+        await base44.entities.Notification.create({
+          recipient_email: engineer.email,
+          title: "تم رفض عرضك",
+          message: `تم رفض عرضك على مشروع "${project.title}". لا تيأس، فرص أخرى بانتظارك.`,
+          type: "proposal",
+          related_project_id: projectId,
+          priority: "medium"
+        });
+      }
+    } catch (error) {
+      console.error("Error rejecting proposal:", error);
+      alert("حدث خطأ أثناء رفض العرض");
+    }
+  };
+
   const handleCreateContractFromProposal = async (proposal) => {
     if (!window.confirm("هل أنت متأكد من قبول هذا العرض وإنشاء العقد؟")) return;
 
@@ -864,6 +888,15 @@ export default function ProjectDetails() {
                                       <CheckCircle className="w-4 h-4 ml-1" />
                                       قبول
                                     </Button>
+                                    <Button 
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleRejectProposal(proposal)}
+                                      className="border-red-200 text-red-600 hover:bg-red-50"
+                                    >
+                                      <X className="w-4 h-4 ml-1" />
+                                      رفض
+                                    </Button>
                                   </>
                                 )}
                               </div>
@@ -875,7 +908,12 @@ export default function ProjectDetails() {
                   ) : (
                     <div className="text-center py-8">
                       <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                      <p className="text-slate-500">لا توجد عروض حتى الآن</p>
+                      <p className="text-slate-500 font-medium">لا توجد عروض حتى الآن</p>
+                      <p className="text-slate-400 text-sm mt-1">
+                        {user && project.created_by === user.email
+                          ? "سيصلك إشعار فور وصول أول عرض من المهندسين"
+                          : "كن أول من يقدم عرضاً على هذا المشروع"}
+                      </p>
                     </div>
                   )}
                 </CardContent>
@@ -960,13 +998,23 @@ export default function ProjectDetails() {
                             </Button>
                           </Link>
                           {project.status === "open" && selectedProposal.status === "pending" && user && project.created_by === user.email && (
-                            <Button
-                              onClick={() => { handleCreateContractFromProposal(selectedProposal); setSelectedProposal(null); }}
-                              className="flex-1 bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white gap-2"
-                            >
-                              <Scale className="w-4 h-4" />
-                              قبول وإنشاء عقد
-                            </Button>
+                            <>
+                              <Button
+                                onClick={() => { handleCreateContractFromProposal(selectedProposal); setSelectedProposal(null); }}
+                                className="flex-1 bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white gap-2"
+                              >
+                                <Scale className="w-4 h-4" />
+                                قبول وإنشاء عقد
+                              </Button>
+                              <Button
+                                onClick={() => { handleRejectProposal(selectedProposal); setSelectedProposal(null); }}
+                                variant="outline"
+                                className="flex-1 border-red-200 text-red-600 hover:bg-red-50 gap-2"
+                              >
+                                <X className="w-4 h-4" />
+                                رفض العرض
+                              </Button>
+                            </>
                           )}
                         </div>
                       </div>
