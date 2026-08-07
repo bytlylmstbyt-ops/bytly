@@ -1,0 +1,45 @@
+# تحكّم في زحف محركات البحث — منصة بيتلي
+# السماح بزحف الصفحات التسويقية والقانونية العامة، ومنع زحف صفحات التسجيل
+# والمصادقة ولوحة المستخدم (قمع التحويل، بلا قيمة فهرسة، وتستهلك خدمات خلفية عند التحميل).
+
+User-agent: *
+
+# مسارات قمع التسجيل — نماذج بلا محتوى مفهرَس
+Disallow: /RegisterChoice
+Disallow: /RegisterEngineer
+Disallow: /RegisterClient
+Disallow: /RegisterConsultant
+Disallow: /RegisterFirm
+Disallow: /RegisterLegalConsultant
+Disallow: /RegisterContractor
+Disallow: /RegisterSupplier
+Disallow: /RegistrationSuccess
+
+# مسارات المصادقة — وصول مخصص، لا قيمة فهرسية
+Disallow: /Login
+Disallow: /Register
+Disallow: /forgot-password
+Disallow: /reset-password
+
+# لوحة المستخدم والصفحات المحمية — تُعيد توجيه غير المسجّل
+Disallow: /Dashboard
+Disallow: /Wallet
+Disallow: /Messages
+Disallow: /Settings
+Disallow: /AdminControlCenter
+
+# السماح بالجذر والصفحات التسويقية
+Allow: /
+Allow: /Engineers
+Allow: /Projects
+Allow: /Gallery
+Allow: /About
+Allow: /Solutions
+Allow: /CaseStudies
+Allow: /Resources
+Allow: /FAQ
+
+# تخفيف معدل الزحف لتفادي استهلاك الموارد
+Crawl-delay: 1
+
+Sitemap: https://mybytly.com/sitemap.xml
