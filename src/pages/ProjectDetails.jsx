@@ -28,6 +28,7 @@ import ProjectPaymentsSection from "@/components/project/ProjectPaymentsSection"
 import ProjectOverviewTab from "@/components/project/ProjectOverviewTab";
 import ProjectTasksTab from "@/components/project/ProjectTasksTab";
 import ProjectCalendar from "@/components/project/ProjectCalendar";
+import { notifyWorkspaceUpdate } from "@/components/project/notifyWorkspaceUpdate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -225,6 +226,20 @@ export default function ProjectDetails() {
       related_entity_id: proposal.id,
       action_url: `/ProjectDetails?id=${projectId}`,
       priority: "high"
+    });
+    // تسجيل النشاط في مساحة العمل + إشعار الطرف الآخر بتغيير حالة المشروع
+    await notifyWorkspaceUpdate({
+      project,
+      assignedEngineer: engineer,
+      user,
+      activityType: "proposal_accepted",
+      summary: `تم قبول عرض ${engineer?.full_name || "المهندس"} على المشروع — سيتغير للمشروع إلى قيد التنفيذ`,
+      notifyTitle: "🎉 تم قبول العرض",
+      notifyMessage: `تم قبول عرض ${engineer?.full_name || "المهندس"} على مشروع "${project.title}" بقيمة ${proposal.price?.toLocaleString()} ر.س. سيبدأ المشروع قريباً.`,
+      entityType: "proposal",
+      entityId: proposal.id,
+      entityTitle: `عرض ${engineer?.full_name || ""}`,
+      priority: "high",
     });
     window.location.href = createPageUrl("Payment") + `?project=${projectId}&proposal=${proposal.id}`;
   };
@@ -577,7 +592,7 @@ export default function ProjectDetails() {
             {/* Files Tab */}
             {activeTab === "files" && (
               <div id="tab-files" className="space-y-6">
-                <ProjectFilesSection project={project} user={user} userEngineer={userEngineer} onUpdated={loadData} />
+                <ProjectFilesSection project={project} user={user} userEngineer={userEngineer} assignedEngineer={assignedEngineer} onUpdated={loadData} />
                 {canExportDrive && (
                   <Card className="border-0 shadow-lg">
                     <CardHeader>

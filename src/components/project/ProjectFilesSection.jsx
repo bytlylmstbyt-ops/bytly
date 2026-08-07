@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle
 } from "@/components/ui/dialog";
+import { notifyWorkspaceUpdate } from "./notifyWorkspaceUpdate";
 
-export default function ProjectFilesSection({ project, user, userEngineer, onUpdated }) {
+export default function ProjectFilesSection({ project, user, userEngineer, assignedEngineer, onUpdated }) {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const fileInputRef = useRef(null);
@@ -36,6 +37,22 @@ export default function ProjectFilesSection({ project, user, userEngineer, onUpd
       await base44.entities.Project.update(project.id, {
         attachments: [...attachments, ...uploadedUrls],
       });
+
+      // إشعار لحظي للمهندس والعميل برفع ملفات جديدة
+      const fileCount = uploadedUrls.length;
+      await notifyWorkspaceUpdate({
+        project,
+        assignedEngineer,
+        user,
+        activityType: "file_uploaded",
+        summary: `رفع ${user?.full_name || user?.email || "مستخدم"} ${fileCount} ملف جديد في مساحة العمل`,
+        notifyTitle: "📁 ملفات جديدة في مساحة العمل",
+        notifyMessage: `قام ${user?.full_name || "أحد المشاركين"} برفع ${fileCount} ملف جديد في مشروع "${project.title}". افتح مساحة العمل للاطلاع عليها.`,
+        entityType: "file",
+        entityTitle: `${fileCount} ملف جديد`,
+        priority: "medium",
+      });
+
       onUpdated?.();
     } catch (err) {
       console.error("Upload failed:", err);
@@ -48,6 +65,20 @@ export default function ProjectFilesSection({ project, user, userEngineer, onUpd
   const handleRemove = async (index) => {
     const newAttachments = attachments.filter((_, i) => i !== index);
     await base44.entities.Project.update(project.id, { attachments: newAttachments });
+
+    // إشعار لحظي بحذف ملف
+    await notifyWorkspaceUpdate({
+      project,
+      assignedEngineer,
+      user,
+      activityType: "file_deleted",
+      summary: `حذف ${user?.full_name || user?.email || "مستخدم"} ملفاً من مساحة العمل`,
+      notifyTitle: "🗑️ تم حذف ملف من مساحة العمل",
+      notifyMessage: `قام ${user?.full_name || "أحد المشاركين"} بحذف ملف من مشروع "${project.title}".`,
+      entityType: "file",
+      priority: "low",
+    });
+
     onUpdated?.();
   };
 
