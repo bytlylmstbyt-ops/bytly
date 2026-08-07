@@ -21,6 +21,7 @@ export default function RegisterEngineer() {
   const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
   const userType = urlParams.get("type") || "engineer";
+  const STORAGE_KEY = `bytly_reg_engineer_${userType}`;
 
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,6 +91,31 @@ export default function RegisterEngineer() {
     profile_image: "",
     completed_projects: ""
   });
+
+  // استرجاع مسودة النموذج بعد إعادة التحميل لمنع فقدان البيانات المُدخلة
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) return;
+      const parsed = JSON.parse(saved);
+      if (parsed.formData) setFormData(prev => ({ ...prev, ...parsed.formData }));
+      if (typeof parsed.step === "number") setStep(parsed.step);
+      if (Array.isArray(parsed.portfolioItems)) setPortfolioItems(parsed.portfolioItems);
+      if (Array.isArray(parsed.skippedUploads)) setSkippedUploads(new Set(parsed.skippedUploads));
+    } catch (e) { /* تجاهل أخطاء القراءة */ }
+  }, []);
+
+  // حفظ تلقائي للبيانات عند كل تعديل
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        formData,
+        step,
+        portfolioItems,
+        skippedUploads: [...skippedUploads]
+      }));
+    } catch (e) { /* تجاهل أخطاء التخزين */ }
+  }, [formData, step, portfolioItems, skippedUploads]);
 
   const specializations = userType === "painter"
     ? ["رسم معماري", "رسم داخلي", "رسم هندسي 3D", "رسم مخططات", "رسم تنفيذي", "رسم مناظير طبيعية", "رسم تفاصيل إنشائية"]
@@ -307,6 +333,7 @@ export default function RegisterEngineer() {
       });
 
       setNotice({ type: "success", title: "تم إرسال الطلب", message: "تم حفظ طلب التسجيل بنجاح. ستتم مراجعة بياناتك قريبًا." });
+      try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* تجاهل */ }
       navigate(createPageUrl("RegistrationSuccess"));
     } catch (error) {
       const base44Error = error;
