@@ -568,6 +568,7 @@ export default function ProjectDetails() {
                   engineers={engineers}
                   isClient={isClient}
                   isEngineer={isEngineer}
+                  onNavigate={switchTab}
                 />
               </div>
             )}
