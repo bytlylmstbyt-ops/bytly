@@ -62,9 +62,9 @@ export default function RegisterChoice() {
     {
       id: "surveyor",
       icon: MapPin,
-      title: "مهندس مساحة",
-      description: "سجّل كمساح معتمد لاستقبال طلبات المساحة والخرائط",
-      features: ["استقبال طلبات مساحة قريبة منك", "رفع مخرجات مساحية (CAD)", "نظام دفع وضمان آمن"],
+      title: t('registerChoice.roles.surveyor.title'),
+      description: t('registerChoice.roles.surveyor.description'),
+      features: t('registerChoice.roles.surveyor.features'),
       color: "from-green-500 to-emerald-600",
       link: createPageUrl("RegisterEngineer") + "?type=surveyor"
     },
@@ -89,27 +89,27 @@ export default function RegisterChoice() {
     {
       id: "consultant",
       icon: Compass,
-      title: "مستشار فني",
-      description: "سجّل كمستشار فني معتمد لمراجعة وتدقيق المشاريع الهندسية",
-      features: ["مراجعة المخرجات الفنية للمشاريع", "اعتماد تقارير الإنجاز والجودة", "دخل إضافي عبر استشاراتك"],
+      title: t('registerChoice.roles.consultant.title'),
+      description: t('registerChoice.roles.consultant.description'),
+      features: t('registerChoice.roles.consultant.features'),
       color: "from-amber-600 to-yellow-600",
       link: createPageUrl("RegisterConsultant")
     },
     {
       id: "contractor",
       icon: HardHat,
-      title: "مقاول",
-      description: "سجّل كمقاول معتمد لاستقبال مشاريع التنفيذ والتشطيبات",
-      features: ["استعراض المشاريع المتاحة", "تقديم العروض على المشاريع", "إدارة مشاريعك من لوحة واحدة"],
+      title: t('registerChoice.roles.contractor.title'),
+      description: t('registerChoice.roles.contractor.description'),
+      features: t('registerChoice.roles.contractor.features'),
       color: "from-orange-600 to-amber-600",
       link: createPageUrl("RegisterContractor")
     },
     {
       id: "supplier",
       icon: Package,
-      title: "مورد",
-      description: "سجّل كمورد معتمد لتوريد المواد والمنتجات للمشاريع",
-      features: ["استعراض الطلبات المتاحة", "عرض فئات منتجاتك", "إدارة طلباتك من لوحة واحدة"],
+      title: t('registerChoice.roles.supplier.title'),
+      description: t('registerChoice.roles.supplier.description'),
+      features: t('registerChoice.roles.supplier.features'),
       color: "from-indigo-600 to-blue-600",
       link: createPageUrl("RegisterSupplier")
     }
@@ -171,7 +171,7 @@ export default function RegisterChoice() {
 
                   <Link to={option.link}>
                     <Button className={`w-full bg-gradient-to-r ${option.color} text-white hover:opacity-90`}>
-                      اختر هذا الحساب
+                      {t('registerChoice.chooseAccount')}
                       <ArrowLeft className="w-4 h-4 mr-2" />
                     </Button>
                   </Link>

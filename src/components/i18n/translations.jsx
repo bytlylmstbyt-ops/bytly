@@ -318,6 +318,26 @@ export const translations = {
           title: "مستشار قانوني",
           description: "انضم لحماية حقوق المصممين والعملاء",
           features: ["صياغة العقود", "حل النزاعات", "حماية الملكية"]
+        },
+        surveyor: {
+          title: "مهندس مساحة",
+          description: "سجّل كمساح معتمد لاستقبال طلبات المساحة والخرائط",
+          features: ["استقبال طلبات مساحة قريبة منك", "رفع مخرجات مساحية (CAD)", "نظام دفع وضمان آمن"]
+        },
+        consultant: {
+          title: "مستشار فني",
+          description: "سجّل كمستشار فني معتمد لمراجعة وتدقيق المشاريع الهندسية",
+          features: ["مراجعة المخرجات الفنية للمشاريع", "اعتماد تقارير الإنجاز والجودة", "دخل إضافي عبر استشاراتك"]
+        },
+        contractor: {
+          title: "مقاول",
+          description: "سجّل كمقاول معتمد لاستقبال مشاريع التنفيذ والتشطيبات",
+          features: ["استعراض المشاريع المتاحة", "تقديم العروض على المشاريع", "إدارة مشاريعك من لوحة واحدة"]
+        },
+        supplier: {
+          title: "مورد",
+          description: "سجّل كمورد معتمد لتوريد المواد والمنتجات للمشاريع",
+          features: ["استعراض الطلبات المتاحة", "عرض فئات منتجاتك", "إدارة طلباتك من لوحة واحدة"]
         }
       }
     },
@@ -1479,6 +1499,26 @@ export const translations = {
           title: "Legal Consultant",
           description: "Join to protect designers' and clients' rights",
           features: ["Contract drafting", "Dispute resolution", "Intellectual property protection"]
+        },
+        surveyor: {
+          title: "Surveyor",
+          description: "Register as a certified surveyor to receive surveying and mapping requests",
+          features: ["Receive nearby surveying requests", "Upload survey deliverables (CAD)", "Secure payment and escrow system"]
+        },
+        consultant: {
+          title: "Technical Consultant",
+          description: "Register as a certified technical consultant to review and audit engineering projects",
+          features: ["Review technical project deliverables", "Approve completion and quality reports", "Extra income through your consultations"]
+        },
+        contractor: {
+          title: "Contractor",
+          description: "Register as a certified contractor to receive execution and finishing projects",
+          features: ["Browse available projects", "Submit proposals on projects", "Manage your projects from one dashboard"]
+        },
+        supplier: {
+          title: "Supplier",
+          description: "Register as a certified supplier to provide materials and products for projects",
+          features: ["Browse available requests", "Showcase your product categories", "Manage your orders from one dashboard"]
         }
       }
     },
