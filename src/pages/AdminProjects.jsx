@@ -369,8 +369,8 @@ export default function AdminProjects() {
                     onCheckedChange={() => bulk.toggleAll(paged.map((p) => p.id))}
                   />
                 </th>
-                <th className="text-right py-3 px-3 font-medium">رقم المشروع</th>
                 <th className="text-right py-3 px-3 font-medium">اسم المشروع</th>
+                <th className="text-right py-3 px-3 font-medium">رقم المشروع</th>
                 <th className="text-right py-3 px-3 font-medium">العميل</th>
                 <th className="text-right py-3 px-3 font-medium">المهندس</th>
                 <th className="text-right py-3 px-3 font-medium">المدينة</th>
@@ -393,8 +393,8 @@ export default function AdminProjects() {
                     <td className="py-2.5 px-3 text-center">
                       <Checkbox checked={checked} onCheckedChange={() => bulk.toggle(p.id)} />
                     </td>
-                    <td className="py-2.5 px-3 text-slate-400 text-xs font-mono">#{p.id.slice(-6)}</td>
                     <td className="py-2.5 px-3 font-medium text-[#4A3F35] max-w-[200px] truncate">{p.title || "—"}</td>
+                    <td className="py-2.5 px-3 text-slate-400 text-xs font-mono">#{p.id.slice(-6)}</td>
                     <td className="py-2.5 px-3 text-slate-600">{lookup.clients[p.client_id] || "—"}</td>
                     <td className="py-2.5 px-3 text-slate-600">{lookup.engineers[p.assigned_engineer_id] || "—"}</td>
                     <td className="py-2.5 px-3 text-slate-500 text-xs">{p.location || "—"}</td>
