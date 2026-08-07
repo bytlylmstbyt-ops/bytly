@@ -9,6 +9,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import ElectronicSignModal from "@/components/contracts/ElectronicSignModal";
+import { logWorkspaceActivity } from "@/components/project/logWorkspaceActivity";
 
 const CONTRACT_STATUS = {
   draft: { label: "مسودة", color: "bg-slate-100 text-slate-600" },
@@ -24,6 +26,7 @@ export default function ProjectContractSection({
   project, contracts, user, userEngineer, userClient, onUpdated
 }) {
   const [creating, setCreating] = useState(false);
+  const [showSignModal, setShowSignModal] = useState(false);
 
   if (!user) return null;
 
@@ -130,12 +133,13 @@ export default function ProjectContractSection({
               </Link>
 
               {activeContract.status === "pending_signature" && canManage && (
-                <Link to={createPageUrl("MyContracts")} className="flex-1">
-                  <Button className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 text-white gap-2">
-                    <FileSignature className="w-4 h-4" />
-                    توقيع إلكتروني
-                  </Button>
-                </Link>
+                <Button
+                  onClick={() => setShowSignModal(true)}
+                  className="flex-1 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white gap-2"
+                >
+                  <FileSignature className="w-4 h-4" />
+                  توقيع إلكتروني
+                </Button>
               )}
 
               {activeContract.status === "signed" || activeContract.status === "active" ? (
@@ -153,6 +157,37 @@ export default function ProjectContractSection({
           </div>
         )}
       </CardContent>
+
+      {/* Electronic Sign Modal */}
+      {showSignModal && activeContract && (
+        <ElectronicSignModal
+          contract={activeContract}
+          project={project}
+          client={userClient}
+          engineer={userEngineer}
+          currentUser={user}
+          onClose={() => setShowSignModal(false)}
+          onDone={async () => {
+            setShowSignModal(false);
+            const isClientUser = project.created_by === user.email;
+            const bothSigned = isClientUser
+              ? activeContract.engineer_signature
+              : activeContract.client_signature;
+            await logWorkspaceActivity({
+              projectId: project.id,
+              user,
+              activityType: bothSigned ? "contract_signed" : "contract_updated",
+              summary: bothSigned
+                ? `تم توقيع عقد المشروع من الطرفين وأصبح سارياً`
+                : `وقّع ${isClientUser ? "العميل" : "المهندس"} على عقد المشروع — بانتظار الطرف الآخر`,
+              entityType: "contract",
+              entityId: activeContract.id,
+              entityTitle: `عقد #${(activeContract.id || "").slice(-6)}`,
+            });
+            onUpdated?.();
+          }}
+        />
+      )}
     </Card>
   );
 }
