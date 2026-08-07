@@ -237,6 +237,7 @@ export default function ProjectCalendar({ project, user, userEngineer, engineers
     if (!newEvent.title.trim() || !createDate) return;
     setCreating(true);
     try {
+      const eventTime = newEvent.event_time || "10:00";
       const taskData = {
         project_id: project.id,
         title: newEvent.title.trim(),
@@ -247,14 +248,14 @@ export default function ProjectCalendar({ project, user, userEngineer, engineers
         priority: newEvent.priority,
         due_date: createDate,
         event_type: newEvent.event_type,
-        event_time: newEvent.event_type === "meeting" ? newEvent.event_time : undefined,
+        event_time: eventTime,
       };
       const createdTask = await base44.entities.ProjectTask.create(taskData);
 
-      // Auto-generate Google Meet link for meeting-type events
-      if (newEvent.event_type === "meeting" && createdTask?.id) {
+      // Auto-generate Google Meet link for ALL calendar events (appointments + tasks)
+      if (createdTask?.id) {
         try {
-          const scheduledDateTime = new Date(`${createDate}T${newEvent.event_time || "10:00"}:00`);
+          const scheduledDateTime = new Date(`${createDate}T${eventTime}:00`);
           const attendeeEmails = [
             user?.email,
             isClient ? assignedEngineer?.email : project.created_by,
@@ -284,7 +285,7 @@ export default function ProjectCalendar({ project, user, userEngineer, engineers
         await sendNotification({
           recipientEmail: notifyEmail,
           title: "موعد جديد في تقويم المشروع",
-          message: `تمت إضافة "${newEvent.title}" بتاريخ ${new Date(createDate).toLocaleDateString("ar-SA")}${newEvent.event_type === "meeting" ? " — اجتماع Google Meet" : ""} في مشروع ${project.title}`,
+          message: `تمت إضافة "${newEvent.title}" بتاريخ ${new Date(createDate).toLocaleDateString("ar-SA")} — مع رابط Google Meet للدخول المباشر في مشروع ${project.title}`,
           type: "project_update",
           projectId: project.id,
           priority: "medium",
@@ -547,7 +548,7 @@ export default function ProjectCalendar({ project, user, userEngineer, engineers
               </div>
               <div className="space-y-2">
                 <Label>الوقت</Label>
-                <Input type="time" value={newEvent.event_time} onChange={(e) => setNewEvent(prev => ({ ...prev, event_time: e.target.value }))} disabled={newEvent.event_type !== "meeting"} />
+                <Input type="time" value={newEvent.event_time} onChange={(e) => setNewEvent(prev => ({ ...prev, event_time: e.target.value }))} />
               </div>
             </div>
             <div className="space-y-2">
@@ -560,11 +561,9 @@ export default function ProjectCalendar({ project, user, userEngineer, engineers
                   ✓ مهمة
                 </button>
               </div>
-              {newEvent.event_type === "meeting" && (
-                <p className="text-[11px] text-blue-600 flex items-center gap-1">
-                  <Video className="w-3 h-3" /> سيتم إنشاء رابط Google Meet تلقائياً وإضافته للتقويم
-                </p>
-              )}
+              <p className="text-[11px] text-blue-600 flex items-center gap-1">
+                <Video className="w-3 h-3" /> سيتم إنشاء رابط Google Meet تلقائياً لكل حدث وإضافته للتقويم ليتمكن الطرفان من الدخول مباشرة
+              </p>
             </div>
             <div className="space-y-2">
               <Label>الأولوية</Label>
