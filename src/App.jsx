@@ -74,6 +74,7 @@ const CaseStudies                = React.lazy(() => import('./pages/CaseStudies'
 const Resources                  = React.lazy(() => import('./pages/Resources'));
 const ProviderSubscription       = React.lazy(() => import('./pages/ProviderSubscription'));
 const CreateMeetLink             = React.lazy(() => import('./pages/CreateMeetLink'));
+const SquareInvoicePayment       = React.lazy(() => import('./pages/SquareInvoicePayment'));
 const RevenueDashboard           = React.lazy(() => import('./pages/RevenueDashboard'));
 const ProviderWallet             = React.lazy(() => import('./pages/ProviderWallet'));
 const EngineeringFirmsLanding    = React.lazy(() => import('./pages/audiences/EngineeringFirmsLanding'));
@@ -240,6 +241,7 @@ const AuthenticatedApp = () => {
         <Route path="/CompareProposals"            element={lazyRoute(CompareProposals, "CompareProposals")} />
       <Route path="/ProviderSubscription"        element={lazyRoute(ProviderSubscription, "ProviderSubscription")} />
       <Route path="/CreateMeetLink"              element={lazyRoute(CreateMeetLink, "CreateMeetLink")} />
+      <Route path="/SquareInvoicePayment"        element={lazyRoute(SquareInvoicePayment, "SquareInvoicePayment")} />
       <Route path="/RevenueDashboard"           element={lazyRoute(RevenueDashboard, "RevenueDashboard")} />
         <Route path="/ProviderWallet"             element={lazyRoute(ProviderWallet, "ProviderWallet")} />
         <Route path="/SentEmailsLog"               element={lazyRoute(React.lazy(() => import('./pages/SentEmailsLog')), "SentEmailsLog")} />
