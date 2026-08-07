@@ -25,6 +25,7 @@ import ProjectActivityLog from "@/components/project/ProjectActivityLog";
 import ProjectContractSection from "@/components/project/ProjectContractSection";
 import ProjectPaymentsSection from "@/components/project/ProjectPaymentsSection";
 import ProjectOverviewTab from "@/components/project/ProjectOverviewTab";
+import ProjectTasksTab from "@/components/project/ProjectTasksTab";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -597,36 +598,43 @@ export default function ProjectDetails() {
             {/* Tasks & Milestones Tab */}
             {activeTab === "tasks" && (
               <div id="tab-tasks" className="space-y-6">
-                {project.status === "in_progress" && (
-                  <Link to={createPageUrl("ProjectKanban") + `?id=${project.id}`}>
-                    <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
-                      <CardContent className="p-5 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center">
-                          <Kanban className="w-6 h-6 text-purple-600" />
+                {/* Inline interactive task management */}
+                <ProjectTasksTab project={project} user={user} userEngineer={userEngineer} engineers={engineers} />
+
+                {/* Quick links to external tools */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {project.status === "in_progress" && (
+                    <Link to={createPageUrl("ProjectKanban") + `?id=${project.id}`}>
+                      <Card className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer h-full">
+                        <CardContent className="p-4 flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
+                            <Kanban className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-[#1a1a2e] text-sm">لوحة Kanban</h3>
+                            <p className="text-xs text-slate-500">عرض جميع المهام بشكل بصري</p>
+                          </div>
+                          <ArrowLeft className="w-4 h-4 text-slate-300" />
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  )}
+                  <Link to={createPageUrl("ProjectMilestones") + `?id=${project.id}`}>
+                    <Card className="border-0 shadow-md hover:shadow-lg transition-shadow cursor-pointer h-full">
+                      <CardContent className="p-4 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
+                          <Calendar className="w-5 h-5 text-green-600" />
                         </div>
-                        <div className="flex-1">
-                          <h3 className="font-bold text-[#1a1a2e]">لوحة المهام (Kanban)</h3>
-                          <p className="text-sm text-slate-500">إدارة مهام المشروع وتتبع التقدم</p>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-[#1a1a2e] text-sm">مراحل المشروع</h3>
+                          <p className="text-xs text-slate-500">إدارة مراحل التنفيذ والدفعات</p>
                         </div>
-                        <ArrowLeft className="w-5 h-5 text-slate-300" />
+                        <ArrowLeft className="w-4 h-4 text-slate-300" />
                       </CardContent>
                     </Card>
                   </Link>
-                )}
-                <Link to={createPageUrl("ProjectMilestones") + `?id=${project.id}`}>
-                  <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
-                    <CardContent className="p-5 flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center">
-                        <Calendar className="w-6 h-6 text-green-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-[#1a1a2e]">مراحل المشروع</h3>
-                        <p className="text-sm text-slate-500">إدارة مراحل التنفيذ والدفعات المرتبطة بها</p>
-                      </div>
-                      <ArrowLeft className="w-5 h-5 text-slate-300" />
-                    </CardContent>
-                  </Card>
-                </Link>
+                </div>
+
                 {(project.status === "in_progress" || project.status === "completed") && (
                   <MilestoneInvoicePanel projectId={projectId} isClient={isClient} />
                 )}
