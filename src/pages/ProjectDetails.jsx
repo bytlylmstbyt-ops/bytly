@@ -9,8 +9,6 @@ import {
   Star, Download, Eye, ArrowLeft, Scale, Upload, X, Paperclip, Kanban,
   Cloud, ExternalLink
 } from "lucide-react";
-import ContractGenerator from "@/components/contracts/ContractGenerator";
-import SignedContractsPanel from "@/components/contracts/SignedContractsPanel";
 import ProposalComparison from "@/components/proposals/ProposalComparison";
 import ProjectChatbot from "@/components/chatbot/ProjectChatbot";
 import { AdSidebarSection } from "@/components/ads/SmartAdCard";
@@ -20,6 +18,11 @@ import MilestoneInvoicePanel from "@/components/invoices/MilestoneInvoicePanel";
 import MeetCallButton from "@/components/project/MeetCallButton";
 import AppointmentModal from "@/components/appointments/AppointmentModal";
 import EscrowTracker from "@/components/escrow/EscrowTracker";
+import NextStepCard from "@/components/project/NextStepCard";
+import ProjectFilesSection from "@/components/project/ProjectFilesSection";
+import ProjectActivityLog from "@/components/project/ProjectActivityLog";
+import ProjectContractSection from "@/components/project/ProjectContractSection";
+import ProjectPaymentsSection from "@/components/project/ProjectPaymentsSection";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -69,6 +72,9 @@ export default function ProjectDetails() {
   const [existingReview, setExistingReview] = useState(null);
   const [isExportingToDrive, setIsExportingToDrive] = useState(false);
   const [driveExportResult, setDriveExportResult] = useState(null);
+  const [contracts, setContracts] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [selectedProposal, setSelectedProposal] = useState(null);
 
   useEffect(() => {
     if (projectId) {
@@ -88,16 +94,20 @@ export default function ProjectDetails() {
     const currentUser = await base44.auth.me();
     setUser(currentUser);
 
-    const [projectData, proposalsData, engineersData, userEngData, userClientData] = await Promise.all([
+    const [projectData, proposalsData, engineersData, userEngData, userClientData, contractsData, transactionsData] = await Promise.all([
       base44.entities.Project.filter({ id: projectId }),
       base44.entities.Proposal.filter({ project_id: projectId }),
       base44.entities.Engineer.filter({ status: "approved" }),
       base44.entities.Engineer.filter({ email: currentUser.email }),
-      base44.entities.Client.filter({ email: currentUser.email })
+      base44.entities.Client.filter({ email: currentUser.email }),
+      base44.entities.Contract.filter({ project_id: projectId }),
+      base44.entities.Transaction.filter({ project_id: projectId }),
     ]);
 
     setProject(projectData[0]);
     setProposals(proposalsData);
+    setContracts(contractsData);
+    setTransactions(transactionsData);
     
     const engMap = {};
     engineersData.forEach(eng => {
@@ -335,6 +345,14 @@ export default function ProjectDetails() {
   }
 
   const hasSubmittedProposal = userEngineer && proposals.some(p => p.engineer_id === userEngineer.id);
+
+  const scrollToSection = (id) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+  const handleScrollToProposals = () => scrollToSection("project-proposals");
+  const handleScrollToContract = () => scrollToSection("project-contract");
+  const handleScrollToPayments = () => scrollToSection("project-payments");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8">
@@ -582,6 +600,21 @@ export default function ProjectDetails() {
             )}
           </div>
 
+          {/* Next Step Card — guides the user on what to do now */}
+          <div className="mb-6">
+            <NextStepCard
+              project={project}
+              proposals={proposals}
+              contracts={contracts}
+              transactions={transactions}
+              user={user}
+              userEngineer={userEngineer}
+              onScrollToProposals={handleScrollToProposals}
+              onScrollToContract={handleScrollToContract}
+              onScrollToPayments={handleScrollToPayments}
+            />
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
@@ -597,38 +630,13 @@ export default function ProjectDetails() {
                 </CardContent>
               </Card>
 
-              {/* Attachments */}
-              {project.attachments?.length > 0 && (
-                <Card className="border-0 shadow-lg">
-                  <CardHeader>
-                    <CardTitle>المرفقات</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {project.attachments.map((url, index) => (
-                        <a
-                          key={index}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group relative aspect-square rounded-xl overflow-hidden bg-slate-100"
-                        >
-                          {url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                            <img src={url} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <FileText className="w-12 h-12 text-slate-400" />
-                            </div>
-                          )}
-                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <Download className="w-6 h-6 text-white" />
-                          </div>
-                        </a>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+              {/* Files — interactive upload/preview/download */}
+              <ProjectFilesSection
+                project={project}
+                user={user}
+                userEngineer={userEngineer}
+                onUpdated={loadData}
+              />
 
               {/* Export to Google Drive — archive all project files for both parties */}
               {user && (project.created_by === user.email || (userEngineer && project.assigned_engineer_id === userEngineer.id) || user.role === 'admin') && (
@@ -697,12 +705,19 @@ export default function ProjectDetails() {
                 </Card>
               )}
 
-              {/* Proposals */}
-              <Card className="border-0 shadow-lg">
+              {/* Proposals — interactive: compare, accept, reject, message, view details */}
+              <Card className="border-0 shadow-lg" id="project-proposals">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span>العروض المقدمة</span>
-                    <Badge variant="secondary">{proposals.length} عرض</Badge>
+                    <div className="flex items-center gap-2">
+                      {proposals.length >= 2 && user && project.created_by === user.email && (
+                        <Badge className="bg-[#C9A66B]/10 text-[#C9A66B]">
+                          مقارنة متاحة
+                        </Badge>
+                      )}
+                      <Badge variant="secondary">{proposals.length} عرض</Badge>
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -812,34 +827,46 @@ export default function ProjectDetails() {
                                  proposal.status === "rejected" ? "مرفوض" : "قيد المراجعة"}
                               </Badge>
 
-                              {project.status === "open" && proposal.status === "pending" && (
-                                <div className="flex gap-2 flex-wrap">
-                                  <Link to={createPageUrl("Messages") + `?engineer=${proposal.engineer_id}`}>
-                                    <Button variant="outline" size="sm">
-                                      <MessageSquare className="w-4 h-4 ml-1" />
-                                      تواصل
+                              <div className="flex gap-2 flex-wrap">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setSelectedProposal(proposal)}
+                                >
+                                  <Eye className="w-4 h-4 ml-1" />
+                                  تفاصيل
+                                </Button>
+
+                                <Link to={createPageUrl("Messages") + `?engineer=${proposal.engineer_id}`}>
+                                  <Button variant="outline" size="sm">
+                                    <MessageSquare className="w-4 h-4 ml-1" />
+                                    مراسلة
+                                  </Button>
+                                </Link>
+
+                                {project.status === "open" && proposal.status === "pending" && user && project.created_by === user.email && (
+                                  <>
+                                    <Button 
+                                      size="sm"
+                                      onClick={() => handleCreateContractFromProposal(proposal)}
+                                      disabled={isSubmitting}
+                                      className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white"
+                                    >
+                                      <Scale className="w-4 h-4 ml-1" />
+                                      قبول وإنشاء عقد
                                     </Button>
-                                  </Link>
-                                  <Button 
-                                    size="sm"
-                                    onClick={() => handleCreateContractFromProposal(proposal)}
-                                    disabled={isSubmitting}
-                                    className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white"
-                                  >
-                                    <Scale className="w-4 h-4 ml-1" />
-                                    قبول وإنشاء عقد
-                                  </Button>
-                                  <Button 
-                                    size="sm"
-                                    onClick={() => handleAcceptProposal(proposal)}
-                                    disabled={isSubmitting}
-                                    className="bg-green-600 hover:bg-green-700"
-                                  >
-                                    <CheckCircle className="w-4 h-4 ml-1" />
-                                    قبول فقط
-                                  </Button>
-                                </div>
-                              )}
+                                    <Button 
+                                      size="sm"
+                                      onClick={() => handleAcceptProposal(proposal)}
+                                      disabled={isSubmitting}
+                                      className="bg-green-600 hover:bg-green-700"
+                                    >
+                                      <CheckCircle className="w-4 h-4 ml-1" />
+                                      قبول
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
                             </div>
                           </div>
                         );
@@ -853,6 +880,100 @@ export default function ProjectDetails() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Proposal Details Dialog */}
+              <Dialog open={!!selectedProposal} onOpenChange={() => setSelectedProposal(null)}>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>تفاصيل العرض</DialogTitle>
+                  </DialogHeader>
+                  {selectedProposal && (() => {
+                    const eng = engineers[selectedProposal.engineer_id];
+                    return (
+                      <div className="space-y-4 mt-2">
+                        <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                          <Avatar className="w-14 h-14">
+                            <AvatarImage src={eng?.profile_image} />
+                            <AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] text-white text-lg">
+                              {eng?.full_name?.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <Link to={createPageUrl("EngineerProfile") + `?id=${selectedProposal.engineer_id}`}
+                              className="font-bold text-[#1a1a2e] hover:text-[#C9A66B] text-lg">
+                              {eng?.full_name}
+                            </Link>
+                            <p className="text-sm text-slate-500">{eng?.specialization}</p>
+                            <div className="flex items-center gap-1 mt-1">
+                              <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                              <span className="text-sm">{eng?.rating?.toFixed(1) || "0.0"}</span>
+                              <span className="text-xs text-slate-400">({eng?.total_reviews || 0} تقييم)</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="p-3 rounded-lg bg-slate-50">
+                            <p className="text-xs text-slate-500">السعر المقترح</p>
+                            <p className="text-lg font-bold text-[#1a1a2e]">{selectedProposal.price?.toLocaleString()} ر.س</p>
+                          </div>
+                          <div className="p-3 rounded-lg bg-slate-50">
+                            <p className="text-xs text-slate-500">مدة التسليم</p>
+                            <p className="text-lg font-bold text-[#1a1a2e]">{selectedProposal.delivery_days} يوم</p>
+                          </div>
+                        </div>
+
+                        {selectedProposal.cover_letter && (
+                          <div>
+                            <p className="text-sm font-medium text-slate-700 mb-1">رسالة العرض</p>
+                            <p className="text-sm text-slate-600 whitespace-pre-wrap p-3 rounded-lg bg-slate-50 leading-relaxed">
+                              {selectedProposal.cover_letter}
+                            </p>
+                          </div>
+                        )}
+
+                        {selectedProposal.attachments?.length > 0 && (
+                          <div>
+                            <p className="text-sm font-medium text-slate-700 mb-2">المرفقات ({selectedProposal.attachments.length})</p>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedProposal.attachments.map((url, idx) => (
+                                <a key={idx} href={url} target="_blank" rel="noopener noreferrer"
+                                  className="w-14 h-14 rounded-lg overflow-hidden bg-slate-100 hover:ring-2 hover:ring-[#C9A66B]">
+                                  {url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                    <img src={url} alt="" className="w-full h-full object-cover" />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      <FileText className="w-5 h-5 text-slate-400" />
+                                    </div>
+                                  )}
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex gap-2 pt-2">
+                          <Link to={createPageUrl("Messages") + `?engineer=${selectedProposal.engineer_id}`} className="flex-1">
+                            <Button variant="outline" className="w-full gap-2">
+                              <MessageSquare className="w-4 h-4" />
+                              مراسلة المهندس
+                            </Button>
+                          </Link>
+                          {project.status === "open" && selectedProposal.status === "pending" && user && project.created_by === user.email && (
+                            <Button
+                              onClick={() => { handleCreateContractFromProposal(selectedProposal); setSelectedProposal(null); }}
+                              className="flex-1 bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white gap-2"
+                            >
+                              <Scale className="w-4 h-4" />
+                              قبول وإنشاء عقد
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </DialogContent>
+              </Dialog>
             </div>
 
             {/* Sidebar */}
@@ -998,35 +1119,24 @@ export default function ProjectDetails() {
                  </Link>
                )}
 
-              {/* Signed Contracts Upload & Archive */}
-              {(project?.status === "in_progress" || project?.status === "completed" || project?.assigned_engineer_id) && user && (
-                <SignedContractsPanel
-                  project={project}
-                  user={user}
-                  userEngineer={userEngineer}
-                  userClient={userClient}
-                />
-              )}
+              {/* Contract — unified create/view/sign/download */}
+              <ProjectContractSection
+                project={project}
+                contracts={contracts}
+                user={user}
+                userEngineer={userEngineer}
+                userClient={userClient}
+                onUpdated={loadData}
+              />
 
-              {/* Contract Generator - Only for assigned engineer or client */}
-               {project?.status === "in_progress" && userEngineer && userClient && (
-                  <Card className="border-0 shadow-lg mb-6">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <Scale className="w-5 h-5 text-purple-500" />
-                        <div>
-                          <h4 className="font-semibold text-[#1a1a2e]">العقد القانوني</h4>
-                          <p className="text-sm text-slate-500">أنشئ عقداً رسمياً للمشروع</p>
-                        </div>
-                      </div>
-                      <ContractGenerator 
-                        project={project} 
-                        engineer={userEngineer} 
-                        client={userClient} 
-                      />
-                    </CardContent>
-                  </Card>
-                )}
+              {/* Payments — create first payment or view transactions */}
+              <ProjectPaymentsSection
+                project={project}
+                transactions={transactions}
+                user={user}
+                userEngineer={userEngineer}
+                onUpdated={loadData}
+              />
 
               {/* Milestone Invoices */}
               {project.status === "in_progress" || project.status === "completed" ? (
@@ -1061,9 +1171,17 @@ export default function ProjectDetails() {
           {/* Project Chat - visible when project is in_progress or has assigned engineer */}
           {(project.status === "in_progress" || project.assigned_engineer_id) && user && (
             <div className="mt-8">
-              <div className="flex items-center gap-2 mb-4">
-                <MessageSquare className="w-5 h-5 text-[#C9A66B]" />
-                <h2 className="text-lg font-bold text-[#1a1a2e]">قناة التواصل المباشر</h2>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-[#C9A66B]" />
+                  <h2 className="text-lg font-bold text-[#1a1a2e]">قناة التواصل المباشر</h2>
+                </div>
+                <Link to={createPageUrl("Messages") + `?project=${project.id}`}>
+                  <Button className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white gap-2">
+                    <MessageSquare className="w-4 h-4" />
+                    ابدأ محادثة
+                  </Button>
+                </Link>
               </div>
               <ProjectChat
                 projectId={projectId}
@@ -1073,6 +1191,36 @@ export default function ProjectDetails() {
               />
             </div>
           )}
+
+          {/* Start conversation button — for open projects without assigned engineer */}
+          {(project.status === "open" || !project.assigned_engineer_id) && user && (
+            <div className="mt-8">
+              <Card className="border-0 shadow-lg">
+                <CardContent className="p-6 text-center">
+                  <MessageSquare className="w-10 h-10 text-[#C9A66B] mx-auto mb-3" />
+                  <h3 className="font-semibold text-[#1a1a2e] mb-1">قناة التواصل المباشر</h3>
+                  <p className="text-sm text-slate-500 mb-4">ابدأ محادثة مع المهندسين لتوضيح تفاصيل المشروع</p>
+                  <Link to={createPageUrl("Messages") + `?project=${project.id}`}>
+                    <Button className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white gap-2">
+                      <MessageSquare className="w-4 h-4" />
+                      ابدأ محادثة
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Activity Log — always visible, even for new projects */}
+          <div className="mt-8">
+            <ProjectActivityLog
+              project={project}
+              proposals={proposals}
+              contracts={contracts}
+              transactions={transactions}
+              engineers={engineers}
+            />
+          </div>
           
             </motion.div>
       </div>
