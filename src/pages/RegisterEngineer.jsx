@@ -259,6 +259,8 @@ export default function RegisterEngineer() {
       const today = new Date();
       const trialEnd = new Date();
       trialEnd.setMonth(trialEnd.getMonth() + 3);
+      // تاريخ محلي بدلاً من UTC لتفادي انزياح اليوم عند التسجيل ليلاً (toISOString يُرجع UTC)
+      const localDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
       const engineer = await withTimeout(base44.entities.Engineer.create({
         ...formData,
@@ -271,22 +273,27 @@ export default function RegisterEngineer() {
         wallet_balance: 0,
         subscription_type: isFreeEligible ? "free_trial" : "none",
         is_subscription_active: isFreeEligible,
-        subscription_start_date: isFreeEligible ? today.toISOString().split("T")[0] : undefined,
-        trial_end_date: isFreeEligible ? trialEnd.toISOString().split("T")[0] : undefined
+        subscription_start_date: isFreeEligible ? localDate(today) : undefined,
+        trial_end_date: isFreeEligible ? localDate(trialEnd) : undefined
       }), 30000);
 
-      // إنشاء عناصر البرتفوليو (الأعمال السابقة)
+      // إنشاء عناصر البرتفوليو (الأعمال السابقة) — فشلها لا يلغي التسجيل المكتمل
       if (portfolioItems.length > 0) {
-        await Promise.all(
-          portfolioItems
-            .filter(item => item.title || item.images.length > 0)
-            .map(item => base44.entities.Portfolio.create({
-              engineer_id: engineer.id,
-              title: item.title || "عمل سابق",
-              description: item.description || "",
-              images: item.images
-            }))
-        );
+        try {
+          await Promise.all(
+            portfolioItems
+              .filter(item => item.title || item.images.length > 0)
+              .map(item => base44.entities.Portfolio.create({
+                engineer_id: engineer.id,
+                title: item.title || "عمل سابق",
+                description: item.description || "",
+                images: item.images
+              }))
+          );
+        } catch (portfolioErr) {
+          // المهندس أُنشئ بنجاح؛ نُسجّل الخطأ دون إفشال التحويل
+          console.error("Portfolio creation error (non-blocking):", portfolioErr);
+        }
       }
 
       base44.analytics.track({
@@ -611,13 +618,13 @@ export default function RegisterEngineer() {
                     value={formData.bio}
                     onChange={(e) => handleInputChange("bio", e.target.value)}
                     placeholder="اكتب نبذة مختصرة عن خبراتك ومهاراتك..."
-                    rows={4}
+                    rows={3}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label>صورة شخصية</Label>
-                  <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#C9A66B] transition-colors">
+                  <div className="border-2 border-dashed rounded-xl p-3 flex items-center gap-3 hover:border-[#C9A66B] transition-colors">
                     <input
                       type="file"
                       accept="image/*"
@@ -626,22 +633,26 @@ export default function RegisterEngineer() {
                       id="profile_image"
                       disabled={isFileUploading || isSubmitting}
                     />
-                    <label htmlFor="profile_image" className="cursor-pointer">
+                    <label htmlFor="profile_image" className="cursor-pointer flex items-center gap-3 flex-1 min-w-0">
                       {formData.profile_image ? (
-                        <img src={formData.profile_image} alt="Profile" className="w-24 h-24 rounded-full mx-auto object-cover" />
+                        <img src={formData.profile_image} alt="Profile" className="w-10 h-10 rounded-full object-cover shrink-0" />
                       ) : (
-                        <>
-                          <Upload className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                          <p className="text-sm text-slate-500">اضغط لرفع صورة</p>
-                        </>
+                        <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
+                          <Upload className="w-5 h-5 text-slate-400" />
+                        </div>
                       )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-slate-700 truncate">{formData.profile_image ? "تم رفع الصورة" : "صورة شخصية"}</p>
+                        <p className="text-xs text-slate-400 truncate">{formData.profile_image ? "اضغط للتغيير" : "اختيارية"}</p>
+                      </div>
+                      <span className="text-xs text-[#C9A66B] font-medium shrink-0">{formData.profile_image ? "تغيير" : "رفع"}</span>
                     </label>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label>شهادة التخرج <span className="text-red-500">*</span></Label>
-                  <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#C9A66B] transition-colors">
+                  <div className="border-2 border-dashed rounded-xl p-3 flex items-center gap-3 hover:border-[#C9A66B] transition-colors">
                     <input
                       type="file"
                       accept=".pdf,image/*"
@@ -650,25 +661,22 @@ export default function RegisterEngineer() {
                       id="graduation_certificate"
                       disabled={isFileUploading || isSubmitting}
                     />
-                    <label htmlFor="graduation_certificate" className="cursor-pointer">
-                      {formData.graduation_certificate_url ? (
-                        <div className="flex items-center justify-center gap-2 text-green-600">
-                          <CheckCircle className="w-6 h-6" />
-                          <span>تم رفع الشهادة</span>
-                        </div>
-                      ) : (
-                        <>
-                          <FileText className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                          <p className="text-sm text-slate-500">اضغط لرفع الشهادة (مطلوبة للاعتماد)</p>
-                        </>
-                      )}
+                    <label htmlFor="graduation_certificate" className="cursor-pointer flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
+                        {formData.graduation_certificate_url ? <CheckCircle className="w-5 h-5 text-green-600" /> : <FileText className="w-5 h-5 text-slate-400" />}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-slate-700 truncate">{formData.graduation_certificate_url ? "تم رفع الشهادة" : "شهادة التخرج"}</p>
+                        <p className="text-xs text-slate-400 truncate">مطلوبة للاعتماد — PDF أو صورة</p>
+                      </div>
+                      <span className="text-xs text-[#C9A66B] font-medium shrink-0">{formData.graduation_certificate_url ? "تغيير" : "رفع"}</span>
                     </label>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label>شهادة القيد في الهيئة السعودية للمهندسين <span className="text-red-500">*</span></Label>
-                  <div className="border-2 border-dashed rounded-xl p-6 text-center hover:border-[#C9A66B] transition-colors">
+                  <div className="border-2 border-dashed rounded-xl p-3 flex items-center gap-3 hover:border-[#C9A66B] transition-colors">
                     <input
                       type="file"
                       accept=".pdf,image/*"
@@ -677,18 +685,15 @@ export default function RegisterEngineer() {
                       id="saudi_engineers_council_certificate"
                       disabled={isFileUploading || isSubmitting}
                     />
-                    <label htmlFor="saudi_engineers_council_certificate" className="cursor-pointer">
-                      {formData.saudi_engineers_council_certificate_url ? (
-                        <div className="flex items-center justify-center gap-2 text-green-600">
-                          <CheckCircle className="w-6 h-6" />
-                          <span>تم رفع الشهادة</span>
-                        </div>
-                      ) : (
-                        <>
-                          <FileText className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                          <p className="text-sm text-slate-500">اضغط لرفع شهادة القيد (مطلوبة للاعتماد)</p>
-                        </>
-                      )}
+                    <label htmlFor="saudi_engineers_council_certificate" className="cursor-pointer flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-10 h-10 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
+                        {formData.saudi_engineers_council_certificate_url ? <CheckCircle className="w-5 h-5 text-green-600" /> : <FileText className="w-5 h-5 text-slate-400" />}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-slate-700 truncate">{formData.saudi_engineers_council_certificate_url ? "تم رفع الشهادة" : "شهادة القيد بالمهندسين"}</p>
+                        <p className="text-xs text-slate-400 truncate">مطلوبة للاعتماد — PDF أو صورة</p>
+                      </div>
+                      <span className="text-xs text-[#C9A66B] font-medium shrink-0">{formData.saudi_engineers_council_certificate_url ? "تغيير" : "رفع"}</span>
                     </label>
                   </div>
                 </div>
