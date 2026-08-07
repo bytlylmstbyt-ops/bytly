@@ -26,6 +26,7 @@ import ProjectContractSection from "@/components/project/ProjectContractSection"
 import ProjectPaymentsSection from "@/components/project/ProjectPaymentsSection";
 import ProjectOverviewTab from "@/components/project/ProjectOverviewTab";
 import ProjectTasksTab from "@/components/project/ProjectTasksTab";
+import ProjectCalendar from "@/components/project/ProjectCalendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,6 +44,7 @@ import {
 
 const TABS = [
   { id: "overview", label: "نظرة عامة", icon: LayoutDashboard },
+  { id: "calendar", label: "التقويم", icon: Calendar },
   { id: "files", label: "الملفات", icon: FilesIcon },
   { id: "tasks", label: "المهام والمراحل", icon: Kanban },
   { id: "proposals", label: "العروض", icon: Users },
@@ -556,6 +558,20 @@ export default function ProjectDetails() {
               </div>
             )}
 
+            {/* Calendar Tab */}
+            {activeTab === "calendar" && (
+              <div id="tab-calendar">
+                <ProjectCalendar
+                  project={project}
+                  user={user}
+                  userEngineer={userEngineer}
+                  engineers={engineers}
+                  isClient={isClient}
+                  isEngineer={isEngineer}
+                />
+              </div>
+            )}
+
             {/* Files Tab */}
             {activeTab === "files" && (
               <div id="tab-files" className="space-y-6">
@@ -718,9 +734,20 @@ export default function ProjectDetails() {
                                   <Button variant="outline" size="sm" onClick={() => setSelectedProposal(proposal)}>
                                     <Eye className="w-4 h-4 ml-1" /> تفاصيل
                                   </Button>
-                                  <Link to={createPageUrl("Messages") + `?engineer=${proposal.engineer_id}`}>
+                                  <Link to={createPageUrl("Messages") + `?engineer=${proposal.engineer_id}&project=${project.id}`}>
                                     <Button variant="outline" size="sm"><MessageSquare className="w-4 h-4 ml-1" /> مراسلة</Button>
                                   </Link>
+                                  {isClient && engineer?.email && (
+                                    <AppointmentModal
+                                      targetId={engineer.id}
+                                      targetName={engineer.full_name}
+                                      targetType="engineer"
+                                      targetEmail={engineer.email}
+                                      trigger={
+                                        <Button variant="outline" size="sm"><Video className="w-4 h-4 ml-1" /> اجتماع</Button>
+                                      }
+                                    />
+                                  )}
                                   {project.status === "open" && proposal.status === "pending" && isClient && (
                                     <>
                                       <Button size="sm" onClick={() => handleCreateContractFromProposal(proposal)} disabled={isSubmitting} className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white">
@@ -804,9 +831,20 @@ export default function ProjectDetails() {
                             </div>
                           )}
                           <div className="flex gap-2 pt-2 flex-wrap">
-                            <Link to={createPageUrl("Messages") + `?engineer=${selectedProposal.engineer_id}`} className="flex-1">
+                            <Link to={createPageUrl("Messages") + `?engineer=${selectedProposal.engineer_id}&project=${project.id}`} className="flex-1">
                               <Button variant="outline" className="w-full gap-2"><MessageSquare className="w-4 h-4" /> مراسلة المهندس</Button>
                             </Link>
+                            {isClient && eng?.email && (
+                              <AppointmentModal
+                                targetId={eng.id}
+                                targetName={eng.full_name}
+                                targetType="engineer"
+                                targetEmail={eng.email}
+                                trigger={
+                                  <Button variant="outline" className="flex-1 gap-2"><Video className="w-4 h-4" /> اجتماع</Button>
+                                }
+                              />
+                            )}
                             {project.status === "open" && selectedProposal.status === "pending" && isClient && (
                               <>
                                 <Button onClick={() => { handleCreateContractFromProposal(selectedProposal); setSelectedProposal(null); }} className="flex-1 bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white gap-2">
