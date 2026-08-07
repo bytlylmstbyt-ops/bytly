@@ -22,6 +22,7 @@ import EscrowTracker from "@/components/escrow/EscrowTracker";
 import NextStepCard from "@/components/project/NextStepCard";
 import ProjectFilesSection from "@/components/project/ProjectFilesSection";
 import ProjectActivityLog from "@/components/project/ProjectActivityLog";
+import WorkspaceActivityFeed from "@/components/project/WorkspaceActivityFeed";
 import ProjectContractSection from "@/components/project/ProjectContractSection";
 import ProjectPaymentsSection from "@/components/project/ProjectPaymentsSection";
 import ProjectOverviewTab from "@/components/project/ProjectOverviewTab";
@@ -961,13 +962,16 @@ export default function ProjectDetails() {
 
             {/* Activity Tab */}
             {activeTab === "activity" && (
-              <div id="tab-activity">
-                <ProjectActivityLog
+              <div id="tab-activity" className="space-y-6">
+                <WorkspaceActivityFeed
                   project={project}
                   proposals={proposals}
                   contracts={contracts}
                   transactions={transactions}
                   engineers={engineers}
+                  user={user}
+                  isClient={isClient}
+                  isEngineer={isEngineer}
                 />
               </div>
             )}
