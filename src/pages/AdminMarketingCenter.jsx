@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MarketingPlatformCard from "@/components/admin/marketing/MarketingPlatformCard";
 import MarketingPostComposer from "@/components/admin/marketing/MarketingPostComposer";
 import MarketingPostsList from "@/components/admin/marketing/MarketingPostsList";
+import MarketingCharts from "@/components/admin/marketing/MarketingCharts";
 import AddPlatformDialog from "@/components/admin/marketing/AddPlatformDialog";
 
 const PLATFORMS = [
@@ -192,7 +193,7 @@ export default function AdminMarketingCenter() {
 
         <TabsContent value="posts"><MarketingPostsList posts={posts} onRefresh={handleRefresh} /></TabsContent>
         <TabsContent value="compose"><MarketingPostComposer onPublished={handleRefresh} /></TabsContent>
-        <TabsContent value="analytics"><MarketingAnalyticsTab /></TabsContent>
+        <TabsContent value="analytics"><MarketingAnalyticsTab posts={posts} /></TabsContent>
         <TabsContent value="errors"><MarketingErrorsTab posts={posts} /></TabsContent>
       </Tabs>
 
@@ -202,7 +203,7 @@ export default function AdminMarketingCenter() {
 }
 
 // Inline analytics and errors tabs (small enough to keep here)
-function MarketingAnalyticsTab() {
+function MarketingAnalyticsTab({ posts }) {
   const { t, isRTL } = useLanguage();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -218,10 +219,16 @@ function MarketingAnalyticsTab() {
   }, []);
 
   if (loading) return <div className="flex items-center justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>;
-  if (!data) return <Card className="border-slate-200"><CardContent className="text-center py-16 text-slate-400"><TrendingUp className="w-10 h-10 mx-auto mb-2 opacity-40" /><p className="text-sm">{t("integrations.adminMarketing.empty")}</p></CardContent></Card>;
+
+  const publishedWithMetrics = (posts || []).filter(p => p.status === "published" && p.metrics);
+  if (!data && publishedWithMetrics.length === 0) {
+    return <Card className="border-slate-200"><CardContent className="text-center py-16 text-slate-400"><TrendingUp className="w-10 h-10 mx-auto mb-2 opacity-40" /><p className="text-sm">{t("integrations.adminMarketing.empty")}</p></CardContent></Card>;
+  }
 
   return (
     <div className="space-y-4">
+      {/* Interactive charts from SocialPost metrics */}
+      <MarketingCharts posts={posts} />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card className="border-[#C9A66B]/20"><CardContent className="flex items-center gap-2 p-3"><div className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#FEF9EE]"><TrendingUp className="w-4 h-4 text-[#C9A66B]" /></div><div><p className="font-bold text-[#4A3F35] text-xl">{data.summary?.totalEngagement ?? 0}</p><p className="text-xs text-slate-500">{t("integrations.adminMarketing.analytics.totalEngagement")}</p></div></CardContent></Card>
         <Card className="border-[#C9A66B]/20"><CardContent className="flex items-center gap-2 p-3"><div className="flex items-center justify-center w-9 h-9 rounded-lg bg-pink-50"><Instagram className="w-4 h-4 text-[#E1306C]" /></div><div><p className="font-bold text-[#4A3F35] text-xl">{data.summary?.totalLikes ?? 0}</p><p className="text-xs text-slate-500">{t("integrations.adminMarketing.analytics.totalLikes")}</p></div></CardContent></Card>
