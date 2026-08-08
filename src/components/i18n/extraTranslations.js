@@ -398,6 +398,185 @@ export const extraTranslations = {
         googlesheets: "Google Sheets",
         googlemeet: "Google Meet",
         square: "Square للمدفوعات"
+      },
+      adminEmail: {
+        title: "إدارة البريد الإلكتروني",
+        description: "إدارة شاملة لبريد المنصة والقوالب والحملات",
+        tabs: {
+          overview: "نظرة عامة",
+          sent: "الوارد والصادر",
+          templates: "القوالب",
+          compose: "إنشاء رسالة",
+          campaigns: "مجدولة ومسودات",
+          analytics: "الإحصائيات",
+          settings: "الإعدادات"
+        },
+        stats: {
+          totalSent: "إجمالي المرسل",
+          delivered: "تم التسليم",
+          failed: "فشل الإرسال",
+          openRate: "معدل الفتح",
+          clickRate: "معدل النقر",
+          scheduled: "مجدولة",
+          drafts: "مسودات",
+          templates: "القوالب"
+        },
+        compose: {
+          title: "إنشاء رسالة جديدة",
+          subject: "الموضوع",
+          body: "المحتوى",
+          recipients: "المستلمون",
+          recipientType: "نوع المستلمين",
+          individual: "فردي",
+          bulk: "قائمة بريدية",
+          roleBased: "حسب الدور",
+          allUsers: "جميع المستخدمين",
+          fromName: "اسم المرسل",
+          sendNow: "إرسال الآن",
+          schedule: "جدولة",
+          saveDraft: "حفظ كمسودة",
+          selectTemplate: "اختيار قالب",
+          noTemplate: "بدون قالب",
+          sendSuccess: "تم إرسال الرسالة بنجاح",
+          sendFailed: "فشل إرسال الرسالة",
+          scheduleSuccess: "تمت جدولة الرسالة بنجاح",
+          draftSaved: "تم حفظ المسودة"
+        },
+        templates: {
+          title: "قوالب البريد الإلكتروني",
+          addNew: "إضافة قالب",
+          editTemplate: "تعديل القالب",
+          name: "اسم القالب",
+          subject: "الموضوع",
+          body: "المحتوى",
+          category: "التصنيف",
+          variables: "المتغيرات",
+          usageCount: "مرات الاستخدام",
+          active: "نشط",
+          inactive: "غير نشط",
+          deleteConfirm: "هل تريد حذف هذا القالب؟",
+          saveSuccess: "تم حفظ القالب بنجاح",
+          deleteSuccess: "تم حذف القالب"
+        },
+        campaigns: {
+          title: "الحملات المجدولة والمسودات",
+          status: "الحالة",
+          scheduledAt: "وقت الجدولة",
+          sentAt: "وقت الإرسال",
+          recipients: "المستلمون",
+          sent: "مرسل",
+          failed: "فاشل",
+          draft: "مسودة",
+          scheduled: "مجدول",
+          cancelled: "ملغي",
+          sending: "جارٍ الإرسال",
+          cancel: "إلغاء",
+          resend: "إعادة إرسال"
+        },
+        analytics: {
+          title: "إحصائيات البريد",
+          deliveryRate: "معدل التسليم",
+          failureRate: "معدل الفشل",
+          openRate: "معدل الفتح",
+          clickRate: "معدل النقر",
+          byCategory: "حسب التصنيف",
+          bySource: "حسب المصدر",
+          last30Days: "آخر 30 يوم"
+        },
+        settings: {
+          title: "إعدادات البريد",
+          provider: "مزود البريد",
+          connectionStatus: "حالة الاتصال",
+          connected: "متصل",
+          notConnected: "غير متصل",
+          senderName: "اسم المرسل الافتراضي",
+          senderEmail: "بريد المرسل",
+          testEmail: "بريد اختبار",
+          sendTest: "إرسال رسالة اختبار",
+          testSent: "تم إرسال رسالة الاختبار"
+        },
+        sent: {
+          title: "سجل الرسائل المرسلة",
+          recipient: "المستلم",
+          subject: "الموضوع",
+          source: "المصدر",
+          date: "التاريخ",
+          status: "الحالة",
+          search: "بحث بالبريد أو الموضوع..."
+        },
+        empty: "لا توجد بيانات لعرضها"
+      },
+      adminMarketing: {
+        title: "مركز التسويق",
+        description: "إدارة حسابات التواصل الاجتماعي والمنشورات من مكان واحد",
+        tabs: {
+          posts: "المنشورات",
+          compose: "إنشاء منشور",
+          analytics: "التحليلات",
+          errors: "الأخطاء"
+        },
+        platform: {
+          connected: "متصل",
+          notConnected: "غير متصل",
+          reconnect: "إعادة ربط",
+          connect: "ربط",
+          disconnect: "فصل",
+          lastSync: "آخر مزامنة",
+          accountName: "اسم الحساب",
+          addPlatform: "إضافة منصة",
+          testConnection: "اختبار الاتصال"
+        },
+        compose: {
+          title: "إنشاء منشور جديد",
+          platform: "المنصة",
+          content: "المحتوى",
+          mediaUrls: "روابط الوسائط",
+          postType: "نوع المنشور",
+          publishNow: "نشر الآن",
+          schedule: "جدولة",
+          saveDraft: "حفظ كمسودة",
+          publishSuccess: "تم النشر بنجاح",
+          publishFailed: "فشل النشر",
+          scheduleSuccess: "تمت جدولة المنشور",
+          draftSaved: "تم حفظ المسودة",
+          selectAction: "نوع المحتوى"
+        },
+        posts: {
+          title: "إدارة المنشورات",
+          status: "الحالة",
+          platform: "المنصة",
+          scheduledAt: "وقت الجدولة",
+          publishedAt: "وقت النشر",
+          draft: "مسودة",
+          scheduled: "مجدول",
+          published: "منشور",
+          failed: "فاشل",
+          publishing: "جارٍ النشر",
+          cancelled: "ملغي",
+          viewPost: "عرض المنشور",
+          metrics: "الأداء"
+        },
+        analytics: {
+          title: "تحليلات التواصل الاجتماعي",
+          totalEngagement: "إجمالي التفاعل",
+          totalLikes: "إجمالي الإعجابات",
+          totalComments: "إجمالي التعليقات",
+          activePlatforms: "المنصات النشطة",
+          refresh: "تحديث البيانات"
+        },
+        errors: {
+          title: "أخطاء التكامل",
+          noErrors: "لا توجد أخطاء",
+          platform: "المنصة",
+          error: "الخطأ",
+          time: "الوقت"
+        },
+        addPlatform: {
+          title: "إضافة منصة تسويقية",
+          subtitle: "اختر المنصة التي تريد ربطها",
+          comingSoon: "قريباً"
+        },
+        empty: "لا توجد منشورات لعرضها"
       }
     }
   },
@@ -800,6 +979,185 @@ export const extraTranslations = {
         googlesheets: "Google Sheets",
         googlemeet: "Google Meet",
         square: "Square Payments"
+      },
+      adminEmail: {
+        title: "Email Management",
+        description: "Comprehensive management of platform email, templates, and campaigns",
+        tabs: {
+          overview: "Overview",
+          sent: "Inbox & Sent",
+          templates: "Templates",
+          compose: "Compose",
+          campaigns: "Scheduled & Drafts",
+          analytics: "Analytics",
+          settings: "Settings"
+        },
+        stats: {
+          totalSent: "Total Sent",
+          delivered: "Delivered",
+          failed: "Failed",
+          openRate: "Open Rate",
+          clickRate: "Click Rate",
+          scheduled: "Scheduled",
+          drafts: "Drafts",
+          templates: "Templates"
+        },
+        compose: {
+          title: "Create New Email",
+          subject: "Subject",
+          body: "Body",
+          recipients: "Recipients",
+          recipientType: "Recipient Type",
+          individual: "Individual",
+          bulk: "Email List",
+          roleBased: "Role-based",
+          allUsers: "All Users",
+          fromName: "From Name",
+          sendNow: "Send Now",
+          schedule: "Schedule",
+          saveDraft: "Save Draft",
+          selectTemplate: "Select Template",
+          noTemplate: "No Template",
+          sendSuccess: "Email sent successfully",
+          sendFailed: "Failed to send email",
+          scheduleSuccess: "Email scheduled successfully",
+          draftSaved: "Draft saved"
+        },
+        templates: {
+          title: "Email Templates",
+          addNew: "Add Template",
+          editTemplate: "Edit Template",
+          name: "Template Name",
+          subject: "Subject",
+          body: "Body",
+          category: "Category",
+          variables: "Variables",
+          usageCount: "Usage Count",
+          active: "Active",
+          inactive: "Inactive",
+          deleteConfirm: "Delete this template?",
+          saveSuccess: "Template saved successfully",
+          deleteSuccess: "Template deleted"
+        },
+        campaigns: {
+          title: "Scheduled Campaigns & Drafts",
+          status: "Status",
+          scheduledAt: "Scheduled At",
+          sentAt: "Sent At",
+          recipients: "Recipients",
+          sent: "Sent",
+          failed: "Failed",
+          draft: "Draft",
+          scheduled: "Scheduled",
+          cancelled: "Cancelled",
+          sending: "Sending",
+          cancel: "Cancel",
+          resend: "Resend"
+        },
+        analytics: {
+          title: "Email Analytics",
+          deliveryRate: "Delivery Rate",
+          failureRate: "Failure Rate",
+          openRate: "Open Rate",
+          clickRate: "Click Rate",
+          byCategory: "By Category",
+          bySource: "By Source",
+          last30Days: "Last 30 Days"
+        },
+        settings: {
+          title: "Email Settings",
+          provider: "Email Provider",
+          connectionStatus: "Connection Status",
+          connected: "Connected",
+          notConnected: "Not Connected",
+          senderName: "Default Sender Name",
+          senderEmail: "Sender Email",
+          testEmail: "Test Email",
+          sendTest: "Send Test Email",
+          testSent: "Test email sent"
+        },
+        sent: {
+          title: "Sent Emails Log",
+          recipient: "Recipient",
+          subject: "Subject",
+          source: "Source",
+          date: "Date",
+          status: "Status",
+          search: "Search by email or subject..."
+        },
+        empty: "No data to display"
+      },
+      adminMarketing: {
+        title: "Marketing Center",
+        description: "Manage social media accounts and posts from one place",
+        tabs: {
+          posts: "Posts",
+          compose: "Compose",
+          analytics: "Analytics",
+          errors: "Errors"
+        },
+        platform: {
+          connected: "Connected",
+          notConnected: "Not Connected",
+          reconnect: "Reconnect",
+          connect: "Connect",
+          disconnect: "Disconnect",
+          lastSync: "Last Sync",
+          accountName: "Account Name",
+          addPlatform: "Add Platform",
+          testConnection: "Test Connection"
+        },
+        compose: {
+          title: "Create New Post",
+          platform: "Platform",
+          content: "Content",
+          mediaUrls: "Media URLs",
+          postType: "Post Type",
+          publishNow: "Publish Now",
+          schedule: "Schedule",
+          saveDraft: "Save Draft",
+          publishSuccess: "Published successfully",
+          publishFailed: "Failed to publish",
+          scheduleSuccess: "Post scheduled",
+          draftSaved: "Draft saved",
+          selectAction: "Content Type"
+        },
+        posts: {
+          title: "Posts Management",
+          status: "Status",
+          platform: "Platform",
+          scheduledAt: "Scheduled At",
+          publishedAt: "Published At",
+          draft: "Draft",
+          scheduled: "Scheduled",
+          published: "Published",
+          failed: "Failed",
+          publishing: "Publishing",
+          cancelled: "Cancelled",
+          viewPost: "View Post",
+          metrics: "Metrics"
+        },
+        analytics: {
+          title: "Social Media Analytics",
+          totalEngagement: "Total Engagement",
+          totalLikes: "Total Likes",
+          totalComments: "Total Comments",
+          activePlatforms: "Active Platforms",
+          refresh: "Refresh Data"
+        },
+        errors: {
+          title: "Integration Errors",
+          noErrors: "No errors",
+          platform: "Platform",
+          error: "Error",
+          time: "Time"
+        },
+        addPlatform: {
+          title: "Add Marketing Platform",
+          subtitle: "Choose the platform you want to connect",
+          comingSoon: "Coming Soon"
+        },
+        empty: "No posts to display"
       }
     }
   }

@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, FileText, Wallet, Scale, Bell, BarChart3, Settings as SettingsIcon,
-  FolderKanban, Building2, Link2,
+  FolderKanban, Building2, Link2, Mail, Megaphone,
 } from "lucide-react";
 
 // ── Category → page map ────────────────────────────────────────────────────
@@ -133,6 +133,26 @@ export const ADMIN_CATEGORIES = [
     description: "إدارة جميع التكاملات والخدمات الخارجية المتصلة بالمنصة.",
     items: [
       { page: "AdminIntegrations", label: "لوحة التكاملات", desc: "عرض وإدارة جميع التكاملات وحالة الاتصال" },
+    ],
+  },
+  {
+    key: "email",
+    label: "إدارة البريد الإلكتروني",
+    icon: Mail,
+    description: "إدارة بريد المنصة والقوالب والحملات والإحصائيات.",
+    items: [
+      { page: "AdminEmailCenter", label: "مركز البريد الإلكتروني", desc: "إدارة شاملة للبريد والقوالب والحملات المجدولة" },
+    ],
+  },
+  {
+    key: "marketing",
+    label: "مركز التسويق",
+    icon: Megaphone,
+    description: "إدارة حسابات التواصل الاجتماعي والمنشورات والتحليلات.",
+    items: [
+      { page: "AdminMarketingCenter", label: "مركز التسويق", desc: "إدارة منصات التواصل والمنشورات والمسودات" },
+      { page: "MarketingHub", label: "مولد المحتوى", desc: "توليد ونشر المحتوى التسويقي بالذكاء الاصطناعي" },
+      { page: "SocialAnalytics", label: "تحليلات التواصل الاجتماعي", desc: "تقارير التفاعل عبر المنصات" },
     ],
   },
 ];

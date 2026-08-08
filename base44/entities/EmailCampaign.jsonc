@@ -1,0 +1,129 @@
+{
+  "name": "EmailCampaign",
+  "type": "object",
+  "properties": {
+    "template_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0642\u0627\u0644\u0628 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645 (\u0627\u062e\u062a\u064a\u0627\u0631\u064a)"
+    },
+    "subject": {
+      "type": "string",
+      "description": "\u0645\u0648\u0636\u0648\u0639 \u0627\u0644\u0631\u0633\u0627\u0644\u0629"
+    },
+    "body": {
+      "type": "string",
+      "description": "\u0645\u062d\u062a\u0648\u0649 \u0627\u0644\u0631\u0633\u0627\u0644\u0629 (HTML)"
+    },
+    "recipient_type": {
+      "type": "string",
+      "enum": [
+        "individual",
+        "bulk",
+        "role_based",
+        "all_users"
+      ],
+      "default": "individual",
+      "description": "\u0646\u0648\u0639 \u0627\u0644\u0645\u0633\u062a\u0644\u0645\u064a\u0646: \u0641\u0631\u062f\u064a\u060c \u062c\u0645\u0627\u0639\u064a\u060c \u062d\u0633\u0628 \u0627\u0644\u062f\u0648\u0631\u060c \u062c\u0645\u064a\u0639 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u064a\u0646"
+    },
+    "recipients": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "\u0642\u0627\u0626\u0645\u0629 \u0627\u0644\u0628\u0631\u064a\u062f \u0627\u0644\u0625\u0644\u0643\u062a\u0631\u0648\u0646\u064a \u0644\u0644\u0645\u0633\u062a\u0644\u0645\u064a\u0646"
+    },
+    "role_filter": {
+      "type": "string",
+      "description": "\u062a\u0635\u0641\u064a\u0629 \u0627\u0644\u0645\u0633\u062a\u0644\u0645\u064a\u0646 \u062d\u0633\u0628 \u0627\u0644\u062f\u0648\u0631 (\u0644\u0640 role_based)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "scheduled",
+        "sending",
+        "sent",
+        "failed",
+        "cancelled"
+      ],
+      "default": "draft",
+      "description": "\u062d\u0627\u0644\u0629 \u0627\u0644\u062d\u0645\u0644\u0629"
+    },
+    "scheduled_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u0648\u0642\u062a \u0627\u0644\u062c\u062f\u0648\u0644\u0629 \u0627\u0644\u0645\u062d\u062f\u062f"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u0648\u0642\u062a \u0627\u0644\u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0641\u0639\u0644\u064a"
+    },
+    "from_name": {
+      "type": "string",
+      "description": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0631\u0633\u0644"
+    },
+    "sent_count": {
+      "type": "number",
+      "default": 0,
+      "description": "\u0639\u062f\u062f \u0627\u0644\u0631\u0633\u0627\u0626\u0644 \u0627\u0644\u0645\u0631\u0633\u0644\u0629 \u0628\u0646\u062c\u0627\u062d"
+    },
+    "failed_count": {
+      "type": "number",
+      "default": 0,
+      "description": "\u0639\u062f\u062f \u0627\u0644\u0631\u0633\u0627\u0626\u0644 \u0627\u0644\u0641\u0627\u0634\u0644\u0629"
+    },
+    "total_recipients": {
+      "type": "number",
+      "default": 0,
+      "description": "\u0625\u062c\u0645\u0627\u0644\u064a \u0639\u062f\u062f \u0627\u0644\u0645\u0633\u062a\u0644\u0645\u064a\u0646"
+    },
+    "open_count": {
+      "type": "number",
+      "default": 0,
+      "description": "\u0639\u062f\u062f \u0645\u0631\u0627\u062a \u0627\u0644\u0641\u062a\u062d"
+    },
+    "click_count": {
+      "type": "number",
+      "default": 0,
+      "description": "\u0639\u062f\u062f \u0627\u0644\u0646\u0642\u0631\u0627\u062a"
+    },
+    "error_log": {
+      "type": "string",
+      "description": "\u0633\u062c\u0644 \u0627\u0644\u0623\u062e\u0637\u0627\u0621"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "description": "\u0648\u0635\u0641 \u0627\u0644\u062d\u0645\u0644\u0629"
+    }
+  },
+  "required": [
+    "subject",
+    "body",
+    "recipient_type"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

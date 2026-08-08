@@ -261,6 +261,9 @@ const AuthenticatedApp = () => {
         <Route path="/AIRecommender"              element={lazyRoute(AIRecommender, "AIRecommender")} />
         <Route path="/AdvertiserPortal"           element={lazyRoute(AdvertiserPortal, "AdvertiserPortal")} />
         <Route path="/AdminIntegrations"           element={lazyRoute(React.lazy(() => import('./pages/AdminIntegrations')), "AdminIntegrations")} />
+        <Route path="/AdminEmailCenter"            element={lazyRoute(React.lazy(() => import('./pages/AdminEmailCenter')), "AdminEmailCenter")} />
+        <Route path="/AdminMarketingCenter"        element={lazyRoute(React.lazy(() => import('./pages/AdminMarketingCenter')), "AdminMarketingCenter")} />
+        <Route path="/MarketingHub"                element={lazyRoute(MarketingHub, "MarketingHub")} />
         <Route path="*" element={<NotFoundError />} />
       </Route>
     </Routes>
