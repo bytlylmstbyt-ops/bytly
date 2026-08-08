@@ -26,7 +26,7 @@ export default function AdminIntegrations() {
     const load = async () => {
       try {
         const res = await base44.functions.invoke("getIntegrationStatuses", {});
-        if (!cancelled) setData(res);
+        if (!cancelled) setData(res.data || res);
       } catch (err) {
         if (!cancelled) {
           toast({
@@ -51,7 +51,7 @@ export default function AdminIntegrations() {
     setRefreshing(true);
     try {
       const res = await base44.functions.invoke("getIntegrationStatuses", {});
-      setData(res);
+      setData(res.data || res);
     } catch (err) {
       toast({
         title: t("integrations.messages.loadFailed"),

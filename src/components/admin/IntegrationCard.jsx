@@ -87,14 +87,15 @@ export default function IntegrationCard({ integration, onTested }) {
       const res = await base44.functions.invoke("testIntegration", {
         integration_type: integration.type,
       });
-      if (res.ok) {
+      const result = res.data || res;
+      if (result.ok) {
         setTestResult({ ok: true, message: t("integrations.messages.testSuccess") });
         toast({ title: `✅ ${t("integrations.messages.testSuccess")}` });
       } else {
-        setTestResult({ ok: false, message: res.error || t("integrations.messages.testFailed") });
-        toast({ title: `⚠️ ${t("integrations.messages.testFailed")}`, description: res.error, variant: "destructive" });
+        setTestResult({ ok: false, message: result.error || t("integrations.messages.testFailed") });
+        toast({ title: `⚠️ ${t("integrations.messages.testFailed")}`, description: result.error, variant: "destructive" });
       }
-      onTested?.(integration.type, res);
+      onTested?.(integration.type, result);
     } catch (err) {
       setTestResult({ ok: false, message: err.message });
       toast({ title: t("integrations.messages.testFailed"), description: err.message, variant: "destructive" });
