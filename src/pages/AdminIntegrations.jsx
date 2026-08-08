@@ -6,12 +6,14 @@ import { Loader2, Plus, Plug, CheckCircle2, AlertTriangle, Link2, RefreshCw } fr
 import { toast } from "@/components/ui/use-toast";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import IntegrationCard from "@/components/admin/IntegrationCard";
+import AddIntegrationDialog from "@/components/admin/AddIntegrationDialog";
 
 export default function AdminIntegrations() {
   const { t, isRTL } = useLanguage();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
 
   // Keep a ref to `t` so fetch callbacks always see the latest translation fn
   // without causing useEffect to re-run (t is not memoized by the context).
@@ -221,7 +223,7 @@ export default function AdminIntegrations() {
             {refreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
             {isRTL ? "تحديث" : "Refresh"}
           </Button>
-          <Button size="sm" className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white hover:opacity-90 h-9">
+          <Button size="sm" className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white hover:opacity-90 h-9" onClick={() => setShowAddDialog(true)}>
             <Plus className="w-4 h-4" />
             {t("integrations.addIntegration")}
           </Button>
@@ -256,6 +258,13 @@ export default function AdminIntegrations() {
           <IntegrationCard key={integ.type} integration={integ} onTested={handleTested} />
         ))}
       </div>
+
+      {/* Add Integration Dialog */}
+      <AddIntegrationDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+        existingTypes={integrations.map((i) => i.type)}
+      />
     </div>
   );
 }
