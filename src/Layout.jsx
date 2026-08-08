@@ -12,7 +12,7 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { 
   Search, MessageSquare, User, Menu, X, 
   LogOut, Briefcase, Settings, Wallet, Bell, 
-  PlusCircle, ChevronDown, Instagram, Facebook, Mail, Phone, MessagesSquare, Scale, Linkedin, Twitter, Bot, Building2, Megaphone, Star, ShieldCheck, Trash2
+  PlusCircle, ChevronDown, Instagram, Facebook, Mail, Phone, MessagesSquare, Scale, Linkedin, Twitter, Bot, Building2, Megaphone, Star, ShieldCheck, Trash2, LayoutGrid
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import BottomNav from "@/components/mobile/BottomNav";
@@ -289,6 +289,12 @@ function LayoutContent({ children, currentPageName }) {
                         <Link to="/ServiceReviews" className="flex items-center gap-2">
                           <Star className="w-4 h-4" />
                           تقييم الخدمات
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/QuoteTemplates" className="flex items-center gap-2">
+                          <LayoutGrid className="w-4 h-4" />
+                          قوالب العروض
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>

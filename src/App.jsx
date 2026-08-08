@@ -245,6 +245,7 @@ const AuthenticatedApp = () => {
       <Route path="/RevenueDashboard"           element={lazyRoute(RevenueDashboard, "RevenueDashboard")} />
         <Route path="/ProviderWallet"             element={lazyRoute(ProviderWallet, "ProviderWallet")} />
         <Route path="/SentEmailsLog"               element={lazyRoute(React.lazy(() => import('./pages/SentEmailsLog')), "SentEmailsLog")} />
+        <Route path="/QuoteTemplates"               element={lazyRoute(React.lazy(() => import('./pages/QuoteTemplates')), "QuoteTemplates")} />
         {/* Bytly sections & AI tools — auth required */}
         <Route path="/CostEstimator"              element={lazyRoute(CostEstimator, "CostEstimator")} />
         <Route path="/ProjectStages"              element={lazyRoute(ProjectStages, "ProjectStages")} />

@@ -19,7 +19,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import CloudWorkspace from "@/components/chat/CloudWorkspace";
-import { Cloud } from "lucide-react";
+import SendQuoteDialog from "@/components/quotes/SendQuoteDialog";
+import { Cloud, FileText } from "lucide-react";
 
 const CATEGORY_FILTERS = [
   { key: "all", label: "الكل", icon: Filter },
@@ -50,6 +51,7 @@ export default function Messages() {
   const [showNewChat, setShowNewChat] = useState(false);
   const [userSearch, setUserSearch] = useState("");
   const [showCloudWorkspace, setShowCloudWorkspace] = useState(false);
+  const [showQuoteDialog, setShowQuoteDialog] = useState(false);
   const messagesEndRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -510,6 +512,13 @@ export default function Messages() {
                     >
                       <Video className="w-5 h-5" />
                     </button>
+                    <button
+                      onClick={() => setShowQuoteDialog(true)}
+                      className="p-2 rounded-full bg-amber-100 hover:bg-amber-200 text-[#C9A66B] transition-colors"
+                      title="إرسال عرض سعر / مشروع"
+                    >
+                      <FileText className="w-5 h-5" />
+                    </button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon">
@@ -736,6 +745,15 @@ export default function Messages() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Send Quote from Template */}
+      <SendQuoteDialog
+        open={showQuoteDialog}
+        onOpenChange={setShowQuoteDialog}
+        conversation={selectedConversation}
+        user={user}
+        onSent={(msg) => { setMessages(prev => [...prev, msg]); }}
+      />
     </div>
   );
 }
