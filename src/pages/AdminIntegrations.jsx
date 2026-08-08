@@ -24,6 +24,7 @@ export default function AdminIntegrations() {
   // kind: 'connector' = OAuth connector, 'secret' = API-key based
   const INTEGRATIONS = [
     { type: 'stripe', kind: 'secret' },
+    { type: 'square', kind: 'connector' },
     { type: 'google_analytics', kind: 'connector' },
     { type: 'instagram', kind: 'connector' },
     { type: 'tiktok', kind: 'connector' },
@@ -38,6 +39,7 @@ export default function AdminIntegrations() {
   // Known authorized connector types (from platform connector status)
   const AUTHORIZED_CONNECTORS = [
     'square', 'google_analytics', 'instagram', 'tiktok',
+    // square is listed above too; keeping for clarity
     'googlecalendar', 'gmail', 'linkedin', 'googledrive', 'googlesheets',
   ];
 
