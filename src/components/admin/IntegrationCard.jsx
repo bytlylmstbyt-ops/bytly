@@ -4,11 +4,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Loader2, Plug, ZapOff, RefreshCw, CheckCircle2, XCircle, AlertTriangle,
-  Unplug, Zap,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Loader2, RefreshCw, CheckCircle2, XCircle, AlertTriangle,
+  Unplug, Zap, ExternalLink,
 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { useLanguage } from "@/components/i18n/LanguageContext";
+
+// Connectors that use OAuth (vs secret-based like Stripe)
+const OAUTH_CONNECTORS = [
+  "google_analytics", "instagram", "tiktok", "googlecalendar",
+  "gmail", "linkedin", "googledrive", "googlesheets", "googlemeet",
+];
 
 // Brand logo / icon per service
 const SERVICE_ICONS = {
@@ -44,6 +53,8 @@ export default function IntegrationCard({ integration, onTested }) {
   const { t, isRTL } = useLanguage();
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
+  const [showReconnectDialog, setShowReconnectDialog] = useState(false);
+  const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
 
   const serviceName = t(`integrations.services.${integration.type}`) || integration.type;
   const icon = SERVICE_ICONS[integration.type] || "🔌";
@@ -105,17 +116,11 @@ export default function IntegrationCard({ integration, onTested }) {
   };
 
   const handleReconnect = () => {
-    toast({
-      title: t("integrations.actions.reconnect"),
-      description: t("integrations.messages.reconnectHint"),
-    });
+    setShowReconnectDialog(true);
   };
 
   const handleDisconnect = () => {
-    toast({
-      title: t("integrations.actions.disconnect"),
-      description: t("integrations.messages.disconnectHint"),
-    });
+    setShowDisconnectDialog(true);
   };
 
   return (
@@ -200,6 +205,96 @@ export default function IntegrationCard({ integration, onTested }) {
           )}
         </div>
       </CardContent>
+
+      {/* Reconnect Dialog */}
+      <Dialog open={showReconnectDialog} onOpenChange={setShowReconnectDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <RefreshCw className="w-5 h-5 text-blue-600" />
+              {t("integrations.actions.reconnect")} — {serviceName}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-slate-600 leading-relaxed pt-2">
+              {OAUTH_CONNECTORS.includes(integration.type) ? (
+                <>
+                  <p className="mb-2">
+                    تتم إعادة المصادقة لهذه الخدمة عبر منصة Base44. لا يمكن إعادة الربط مباشرةً من هذه اللوحة.
+                  </p>
+                  <p className="mb-2 font-medium text-slate-700">الخطوات المطلوبة:</p>
+                  <ol className="list-decimal list-inside space-y-1 text-xs">
+                    <li>انتقل إلى لوحة تحكم Base44</li>
+                    <li>افتح تبويب Integrations</li>
+                    <li>اختر الخدمة المطلوبة وأعد المصادقة</li>
+                  </ol>
+                </>
+              ) : (
+                <>
+                  <p className="mb-2">
+                    تعتمد هذه الخدمة على مفتاح API (Secret). لإعادة تفعيلها:
+                  </p>
+                  <ol className="list-decimal list-inside space-y-1 text-xs">
+                    <li>انتقل إلى إعدادات التطبيق ثم Secrets</li>
+                    <li>حدّث قيمة المفتاح (مثل STRIPE_SECRET_KEY)</li>
+                    <li>اضغط "اختبار الاتصال" للتأكد</li>
+                  </ol>
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowReconnectDialog(false)}>
+              {t("integrations.actions.cancel") || "إغلاق"}
+            </Button>
+            {OAUTH_CONNECTORS.includes(integration.type) && (
+              <Button
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => {
+                  window.open("https://app.base44.com", "_blank", "noopener,noreferrer");
+                }}
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                فتح لوحة Base44
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Disconnect Dialog */}
+      <Dialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Unplug className="w-5 h-5" />
+              {t("integrations.actions.disconnect")} — {serviceName}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-slate-600 leading-relaxed pt-2">
+              سيؤدي هذا إلى إيقاف استخدام الخدمة في التطبيق. يمكن إعادة الربط لاحقاً من خلال إعادة المصادقة.
+              قد تتوقف بعض الميزات (مثل إنشاء الاجتماعات أو إرسال البريد) عن العمل فوراً.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowDisconnectDialog(false)}>
+              {t("integrations.actions.cancel") || "إلغاء"}
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                toast({
+                  title: t("integrations.actions.disconnect"),
+                  description: "تم تسجيل طلب الفصل. تتم إدارة الفصل من لوحة Base44.",
+                });
+                setShowDisconnectDialog(false);
+              }}
+            >
+              <Unplug className="w-3.5 h-3.5" />
+              تأكيد الفصل
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
