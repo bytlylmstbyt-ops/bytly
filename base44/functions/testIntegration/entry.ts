@@ -45,6 +45,11 @@ const TEST_ENDPOINTS = {
     url: 'https://www.googleapis.com/calendar/v3/users/me/calendarList/primary',
     headers: { Authorization: `Bearer ${token}` },
   }),
+  square: (token) => ({
+    // Square Merchants API — lightweight read endpoint
+    url: 'https://connect.squareup.com/v2/merchants/me',
+    headers: { Authorization: `Bearer ${token}`, 'Square-Version': '2024-08-21' },
+  }),
 };
 
 const SECRET_KEYS = {

@@ -396,7 +396,8 @@ export const extraTranslations = {
         linkedin: "LinkedIn",
         googledrive: "Google Drive",
         googlesheets: "Google Sheets",
-        googlemeet: "Google Meet"
+        googlemeet: "Google Meet",
+        square: "Square للمدفوعات"
       }
     }
   },
@@ -797,7 +798,8 @@ export const extraTranslations = {
         linkedin: "LinkedIn",
         googledrive: "Google Drive",
         googlesheets: "Google Sheets",
-        googlemeet: "Google Meet"
+        googlemeet: "Google Meet",
+        square: "Square Payments"
       }
     }
   }

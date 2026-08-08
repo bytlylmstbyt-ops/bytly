@@ -16,7 +16,7 @@ import { useLanguage } from "@/components/i18n/LanguageContext";
 // Connectors that use OAuth (vs secret-based like Stripe)
 const OAUTH_CONNECTORS = [
   "google_analytics", "instagram", "tiktok", "googlecalendar",
-  "gmail", "linkedin", "googledrive", "googlesheets", "googlemeet",
+  "gmail", "linkedin", "googledrive", "googlesheets", "googlemeet", "square",
 ];
 
 // Brand logo / icon per service
@@ -31,6 +31,7 @@ const SERVICE_ICONS = {
   googledrive: "📁",
   googlesheets: "📈",
   googlemeet: "🎥",
+  square: "🔷",
 };
 
 function formatRelative(isoString, t) {
