@@ -264,8 +264,12 @@ export default function AdminIntegrations() {
       {/* Add Integration Dialog */}
       <AddIntegrationDialog
         open={showAddDialog}
-        onOpenChange={setShowAddDialog}
-        existingTypes={integrations.map((i) => i.type)}
+        onOpenChange={(val) => {
+          setShowAddDialog(val);
+          if (!val && data) handleRefresh();
+        }}
+        connectedTypes={integrations.filter((i) => i.connected && !i.needs_reauth).map((i) => i.type)}
+        onRefresh={handleRefresh}
       />
     </div>
   );
