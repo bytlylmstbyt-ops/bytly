@@ -413,10 +413,10 @@ Deno.serve(async (req) => {
     }
     const payload = await req.json();
 
-    // Allow system/automation calls (payload.event present) or admin-only direct calls
-    const isSystemCall = !!payload.event;
-    if (!isSystemCall && user.role !== 'admin') {
-      return Response.json({ error: 'Admin or system access required' }, { status: 403 });
+    // Require admin role for all HTTP invocations — never trust client-supplied
+    // payload fields (like payload.event) to authorize system-level actions.
+    if (user.role !== 'admin') {
+      return Response.json({ error: 'Admin access required' }, { status: 403 });
     }
 
     // Support both direct calls and automation entity events
