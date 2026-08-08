@@ -221,6 +221,7 @@ const AuthenticatedApp = () => {
         <Route path="/BudgetCalculator"           element={lazyRoute(React.lazy(() => import('./pages/BudgetCalculator')), "BudgetCalculator")} />
         <Route path="/PlatformDashboard"          element={lazyRoute(React.lazy(() => import('./pages/PlatformDashboard')), "PlatformDashboard")} />
         <Route path="/AdminControlCenter"        element={lazyRoute(React.lazy(() => import('./pages/AdminControlCenter')), "AdminControlCenter")} />
+        <Route path="/AdminAIAssistant"          element={lazyRoute(React.lazy(() => import('./pages/AdminAIAssistant')), "AdminAIAssistant")} />
         <Route path="/AdminProjects"              element={lazyRoute(React.lazy(() => import('./pages/AdminProjects')), "AdminProjects")} />
         <Route path="/AdminProviders"             element={lazyRoute(React.lazy(() => import('./pages/AdminProviders')), "AdminProviders")} />
         <Route path="/ContractManager"           element={lazyRoute(React.lazy(() => import('./pages/ContractManager')), "ContractManager")} />
