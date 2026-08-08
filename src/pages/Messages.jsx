@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -19,8 +19,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import CloudWorkspace from "@/components/chat/CloudWorkspace";
-import SendQuoteDialog from "@/components/quotes/SendQuoteDialog";
 import { Cloud, FileText } from "lucide-react";
+
+const SendQuoteDialog = React.lazy(() => import("@/components/quotes/SendQuoteDialog"));
 
 const CATEGORY_FILTERS = [
   { key: "all", label: "الكل", icon: Filter },
@@ -746,14 +747,18 @@ export default function Messages() {
         )}
       </AnimatePresence>
 
-      {/* Send Quote from Template */}
-      <SendQuoteDialog
-        open={showQuoteDialog}
-        onOpenChange={setShowQuoteDialog}
-        conversation={selectedConversation}
-        user={user}
-        onSent={(msg) => { setMessages(prev => [...prev, msg]); }}
-      />
+      {/* Send Quote from Template — lazy-loaded to keep it out of the main module graph */}
+      {showQuoteDialog && (
+        <Suspense fallback={null}>
+          <SendQuoteDialog
+            open={showQuoteDialog}
+            onOpenChange={setShowQuoteDialog}
+            conversation={selectedConversation}
+            user={user}
+            onSent={(msg) => { setMessages(prev => [...prev, msg]); }}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }
