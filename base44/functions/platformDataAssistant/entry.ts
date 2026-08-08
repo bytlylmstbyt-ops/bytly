@@ -237,7 +237,7 @@ const CAPABILITIES = [
     admin_page: 'ContractManager',
     data_sources: ['Contract'],
     async run(base44) {
-      const contracts = await base44.asServiceRole.entities.Contract.filter({ status: { $in: ['active', 'signed', 'in_progress'] } });
+      const contracts = await base44.asServiceRole.entities.Contract.filter({ status: { $in: ['active', 'signed'] } });
       return {
         columns: [
           { key: 'id', label_ar: 'رقم العقد', label_en: 'Contract' },
