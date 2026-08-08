@@ -6,15 +6,35 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Sparkles, Send, Loader2, ShieldAlert, ArrowUpRight, ShieldCheck, Eye,
+  Sparkles, Send, Loader2, ShieldAlert, ArrowUpRight, ShieldCheck, Eye, HelpCircle,
 } from "lucide-react";
 
 const EXAMPLE_QUESTIONS = [
-  { ar: "أرني المشاريع المتأخرة", en: "Show me overdue projects" },
-  { ar: "كم الإيرادات هذا الشهر؟", en: "What's this month's revenue?" },
-  { ar: "أعطني أعلى المهندسين تقييمًا", en: "Give me the top-rated engineers" },
-  { ar: "ما هي النزاعات المفتوحة؟", en: "What are the open disputes?" },
+  { ar: "إيش المشاريع اللي تحتاج متابعة؟", en: "Which projects need follow-up?" },
+  { ar: "مين عنده أعلى تقييم؟", en: "Who has the highest rating?" },
+  { ar: "كم دخلنا هذا الشهر مقارنة بالشهر الماضي؟", en: "How does this month's revenue compare to last month?" },
+  { ar: "إيش العقود النشطة؟", en: "What are the active contracts?" },
+  { ar: "هل فيه طلبات سحب معلقة؟", en: "Are there pending withdrawal requests?" },
+  { ar: "مين المهندسين اللي عندهم مشاريع متأخرة؟", en: "Which engineers have overdue projects?" },
+  { ar: "أعطني ملخص عن حالة المنصة اليوم", en: "Give me a summary of the platform's status today" },
+  { ar: "ما هي أهم الأشياء التي تحتاج انتباهي؟", en: "What are the most important things needing my attention?" },
 ];
+
+const COVERAGE_LABELS = {
+  supported: { ar: "مدعوم بالكامل", en: "Supported", className: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  partial: { ar: "مدعوم جزئيًا", en: "Partially supported", className: "bg-amber-50 text-amber-700 border-amber-200" },
+  unsupported: { ar: "غير مدعوم حاليًا", en: "Not supported", className: "bg-slate-100 text-slate-600 border-slate-200" },
+};
+
+function CoverageBadge({ coverage }) {
+  const info = COVERAGE_LABELS[coverage];
+  if (!info) return null;
+  return (
+    <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border ${info.className}`}>
+      {info.ar} / {info.en}
+    </span>
+  );
+}
 
 function DataTable({ table }) {
   if (!table?.rows?.length) return null;
@@ -65,11 +85,21 @@ function AssistantMessage({ msg }) {
       </div>
     );
   }
+  const isUnsupported = msg.coverage === "unsupported";
   return (
     <div className="flex justify-start">
-      <Card className="max-w-[90%] border-[#EFE6D3]">
+      <Card className={`max-w-[90%] ${isUnsupported ? "border-slate-200 bg-slate-50" : "border-[#EFE6D3]"}`}>
         <CardContent className="p-4">
-          <p className="text-sm text-[#4A3F35] leading-relaxed">{msg.answer}</p>
+          <div className="flex items-center gap-2 flex-wrap mb-2">
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full border bg-[#FEF9EE] text-[#4A3F35] border-[#C9A66B]/30">
+              <Eye className="w-3 h-3" /> قراءة فقط / Read-only
+            </span>
+            {msg.coverage && <CoverageBadge coverage={msg.coverage} />}
+          </div>
+          <p className={`text-sm leading-relaxed ${isUnsupported ? "text-slate-500" : "text-[#4A3F35]"}`}>
+            {isUnsupported && <HelpCircle className="inline w-4 h-4 ml-1 mb-0.5 text-slate-400" />}
+            {msg.answer}
+          </p>
           <DataTable table={msg.table} />
           {msg.admin_page && (
             <Link
@@ -80,9 +110,10 @@ function AssistantMessage({ msg }) {
               <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
           )}
-          {msg.dataSources?.length > 0 && (
+          {typeof msg.rowCount === "number" && (
             <p className="mt-2 text-[11px] text-slate-400">
-              مصدر البيانات: {msg.dataSources.join("، ")} · {msg.rowCount ?? 0} سجل
+              {msg.dataSources?.length ? `مصدر البيانات: ${msg.dataSources.join("، ")} · ` : ""}
+              {msg.rowCount} سجل تمت قراءته
             </p>
           )}
         </CardContent>
@@ -149,8 +180,9 @@ export default function AdminAIAssistant() {
             answer: data.answer,
             table: data.table,
             admin_page: data.admin_page,
-            dataSources: data.table?.rows?.length ? undefined : undefined,
-            rowCount: data.table?.rows?.length,
+            coverage: data.coverage,
+            dataSources: data.table?.columns ? undefined : undefined,
+            rowCount: data.table?.rows?.length ?? 0,
           },
         ]);
       }
@@ -181,22 +213,25 @@ export default function AdminAIAssistant() {
           <h1 className="text-2xl font-bold text-[#4A3F35]">مساعد بيانات المنصة</h1>
         </div>
         <p className="text-sm text-slate-500 mt-1">
-          اسأل بلغتك الطبيعية (عربي أو إنجليزي) عن بيانات بيتلي. هذا المساعد للقراءة فقط — لا يعدّل أي كود أو بيانات.
+          اسأل بلغتك الطبيعية (عربي أو إنجليزي، حتى بالعامية) عن بيانات بيتلي. هذا المساعد للقراءة فقط — لا يعدّل أي كود أو بيانات.
         </p>
       </div>
 
-      <div className="flex items-center gap-4 mb-4 text-xs text-slate-500">
+      <div className="flex items-center gap-4 mb-4 text-xs text-slate-500 flex-wrap">
         <span className="inline-flex items-center gap-1.5">
           <Eye className="w-3.5 h-3.5 text-[#C9A66B]" /> قراءة فقط
         </span>
         <span className="inline-flex items-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5 text-[#C9A66B]" /> كل سؤال يُسجَّل في سجل التدقيق
         </span>
+        <span className="inline-flex items-center gap-1.5">
+          <HelpCircle className="w-3.5 h-3.5 text-[#C9A66B]" /> يخبرك إن لم يستطع الإجابة بدل التخمين
+        </span>
       </div>
 
       <Card className="border-[#EFE6D3]">
         <CardContent className="p-4">
-          <div ref={scrollRef} className="h-[50vh] overflow-y-auto space-y-3 pr-1">
+          <div ref={scrollRef} className="h-[55vh] overflow-y-auto space-y-3 pr-1">
             {messages.length === 0 && (
               <div className="h-full flex flex-col items-center justify-center text-center gap-4 px-4">
                 <Sparkles className="w-8 h-8 text-[#C9A66B]/50" />
