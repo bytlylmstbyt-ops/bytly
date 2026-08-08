@@ -5,8 +5,8 @@ function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const isAuthenticated = await base44.auth.isAuthenticated();
-    if (!isAuthenticated) {
+    const user = await base44.auth.me();
+    if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const payload = await req.json();
@@ -25,6 +25,14 @@ Deno.serve(async (req) => {
 
     if (!contract) {
       return Response.json({ error: 'Contract not found' }, { status: 404 });
+    }
+
+    // Verify the caller owns the contract or is an admin
+    const isOwner = contract.created_by === user.email ||
+                    contract.engineer_id === user.id ||
+                    contract.client_id === user.id;
+    if (!isOwner && user.role !== 'admin') {
+      return Response.json({ error: 'Access denied: you do not own this contract' }, { status: 403 });
     }
 
     // Check if contract is active and not yet invoiced

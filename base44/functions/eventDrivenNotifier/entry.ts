@@ -407,11 +407,17 @@ async function handleMilestoneApproved(base44, { milestone, project, engineer, c
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const isAuthenticated = await base44.auth.isAuthenticated();
-    if (!isAuthenticated) {
+    const user = await base44.auth.me();
+    if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const payload = await req.json();
+
+    // Allow system/automation calls (payload.event present) or admin-only direct calls
+    const isSystemCall = !!payload.event;
+    if (!isSystemCall && user.role !== 'admin') {
+      return Response.json({ error: 'Admin or system access required' }, { status: 403 });
+    }
 
     // Support both direct calls and automation entity events
     let event_type = payload.event_type;
