@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, FileText, Wallet, Scale, Bell, BarChart3, Settings as SettingsIcon,
-  FolderKanban, Building2, Link2, Mail, Megaphone,
+  FolderKanban, Building2, Link2, Mail, Megaphone, Sparkles,
 } from "lucide-react";
 
 // ── Category → page map ────────────────────────────────────────────────────
@@ -14,6 +14,15 @@ export const ADMIN_CATEGORIES = [
     description: "المؤشرات الرئيسية لأداء المنصة.",
     items: [
       { page: "PlatformDashboard", label: "لوحة أداء المنصة", desc: "مؤشرات المشاريع، الإيرادات، والمهندسين" },
+    ],
+  },
+  {
+    key: "assistant",
+    label: "مساعد الذكاء الاصطناعي",
+    icon: Sparkles,
+    description: "اسأل عن بيانات المنصة بلغة طبيعية — قراءة فقط.",
+    items: [
+      { page: "AdminAIAssistant", label: "مساعد بيانات المنصة", desc: "اسأل بالعربية أو الإنجليزية عن المشاريع، الإيرادات، والمزيد (قراءة فقط — لا تعديل كود أو بيانات)" },
     ],
   },
   {
