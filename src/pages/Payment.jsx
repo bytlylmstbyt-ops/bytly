@@ -32,10 +32,8 @@ function StripePaymentForm({ amount, onSuccess, processing, setProcessing, proje
 
     try {
       const response = await base44.functions.invoke('createStripeCheckout', {
-        amount,
         projectId,
-        proposalId,
-        projectTitle
+        proposalId
       });
 
       if (response.data.url) {
