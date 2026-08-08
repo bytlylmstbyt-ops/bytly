@@ -29,56 +29,60 @@ export default async function(req) {
     const syncMap = {};
     syncStates.forEach((s) => { syncMap[s.service] = s; });
 
-    const results = [];
     const now = new Date().toISOString();
 
-    for (const integ of INTEGRATIONS) {
-      let connected = false;
-      let needsReauth = false;
-      let errorMsg = null;
-      const existing = syncMap[integ.type];
-      let lastSync = existing?.last_sync || null;
+    // Run all checks in parallel for speed
+    const checks = await Promise.allSettled(
+      INTEGRATIONS.map(async (integ) => {
+        const existing = syncMap[integ.type];
+        let lastSync = existing?.last_sync || null;
 
-      try {
-        if (integ.kind === 'connector') {
-          // getConnection throws if no token / revoked
-          const conn = await base44.asServiceRole.connectors.getConnection(integ.type);
-          if (conn?.accessToken) {
-            connected = true;
-          }
-        } else if (integ.kind === 'secret') {
-          const key = secrets.get(integ.secretKey);
-          if (key) connected = true;
-        }
-      } catch (e) {
-        errorMsg = e.message || String(e);
-        // If the error suggests expired/revoked token, mark as needs re-auth
-        if (errorMsg.includes('expired') || errorMsg.includes('revoked') || errorMsg.includes('invalid_grant') || errorMsg.includes('refresh')) {
-          needsReauth = true;
-        }
-      }
+        let connected = false;
+        let needsReauth = false;
+        let errorMsg = null;
 
-      // Update SyncState timestamp when connected
-      if (connected) {
         try {
-          if (existing) {
-            await base44.asServiceRole.entities.SyncState.update(existing.id, { last_sync: now });
-          } else {
-            await base44.asServiceRole.entities.SyncState.create({ service: integ.type, last_sync: now });
+          if (integ.kind === 'connector') {
+            const conn = await base44.asServiceRole.connectors.getConnection(integ.type);
+            if (conn?.accessToken) connected = true;
+          } else if (integ.kind === 'secret') {
+            const key = secrets.get(integ.secretKey);
+            if (key) connected = true;
           }
-          lastSync = now;
-        } catch (_) { /* non-critical */ }
-      }
+        } catch (e) {
+          errorMsg = e.message || String(e);
+          if (errorMsg.includes('expired') || errorMsg.includes('revoked') || errorMsg.includes('invalid_grant') || errorMsg.includes('refresh')) {
+            needsReauth = true;
+          }
+        }
 
-      results.push({
-        type: integ.type,
-        kind: integ.kind,
-        connected,
-        needs_reauth: needsReauth,
-        error: errorMsg,
-        last_sync: lastSync,
-      });
-    }
+        if (connected) {
+          try {
+            if (existing) {
+              await base44.asServiceRole.entities.SyncState.update(existing.id, { last_sync: now });
+            } else {
+              await base44.asServiceRole.entities.SyncState.create({ service: integ.type, last_sync: now });
+            }
+            lastSync = now;
+          } catch (_) { /* non-critical */ }
+        }
+
+        return {
+          type: integ.type,
+          kind: integ.kind,
+          connected,
+          needs_reauth: needsReauth,
+          error: errorMsg,
+          last_sync: lastSync,
+        };
+      })
+    );
+
+    const results = checks.map((c) =>
+      c.status === 'fulfilled'
+        ? c.value
+        : { type: 'unknown', kind: 'unknown', connected: false, needs_reauth: false, error: c.reason?.message || String(c.reason), last_sync: null }
+    );
 
     return Response.json({
       integrations: results,

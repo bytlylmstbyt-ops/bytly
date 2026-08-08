@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,23 +13,55 @@ export default function AdminIntegrations() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchStatuses = useCallback(async (silent = false) => {
-    if (!silent) setLoading(true);
+  // Keep a ref to `t` so fetch callbacks always see the latest translation fn
+  // without causing useEffect to re-run (t is not memoized by the context).
+  const tRef = useRef(t);
+  tRef.current = t;
+
+  // Initial load — runs once on mount. Empty deps prevent infinite loop
+  // because `t` changes identity every render.
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const res = await base44.functions.invoke("getIntegrationStatuses", {});
+        if (!cancelled) setData(res);
+      } catch (err) {
+        if (!cancelled) {
+          toast({
+            title: tRef.current("integrations.messages.loadFailed"),
+            description: err.message,
+            variant: "destructive",
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+          setRefreshing(false);
+        }
+      }
+    };
+
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleRefresh = async () => {
     setRefreshing(true);
     try {
       const res = await base44.functions.invoke("getIntegrationStatuses", {});
       setData(res);
     } catch (err) {
-      toast({ title: t("integrations.messages.loadFailed"), description: err.message, variant: "destructive" });
+      toast({
+        title: t("integrations.messages.loadFailed"),
+        description: err.message,
+        variant: "destructive",
+      });
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
-  }, [t]);
-
-  useEffect(() => {
-    fetchStatuses();
-  }, [fetchStatuses]);
+  };
 
   const handleTested = (type, result) => {
     // Update local state with test result
@@ -132,7 +164,7 @@ export default function AdminIntegrations() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => fetchStatuses()} disabled={refreshing} className="h-9">
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing} className="h-9">
             {refreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
             {isRTL ? "تحديث" : "Refresh"}
           </Button>
