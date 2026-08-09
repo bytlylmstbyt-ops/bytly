@@ -10,6 +10,20 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import React, { Suspense } from 'react';
 
+// Wrap React.lazy with an automatic retry — recovers from stale Vite dev-server
+// module cache ("Failed to fetch dynamically imported module") without a manual
+// hard-refresh.
+function lazyWithRetry(factory, retries = 2) {
+  return React.lazy(() =>
+    factory().catch((err) => {
+      if (retries <= 0) throw err;
+      return new Promise((resolve) =>
+        setTimeout(() => resolve(lazyWithRetry(factory, retries - 1)()), 1200)
+      );
+    })
+  );
+}
+
 // Auth pages
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -220,7 +234,7 @@ const AuthenticatedApp = () => {
         <Route path="/ComplianceDashboard"        element={lazyRoute(React.lazy(() => import('./pages/ComplianceDashboard')), "ComplianceDashboard")} />
         <Route path="/BudgetCalculator"           element={lazyRoute(React.lazy(() => import('./pages/BudgetCalculator')), "BudgetCalculator")} />
         <Route path="/PlatformDashboard"          element={lazyRoute(React.lazy(() => import('./pages/PlatformDashboard')), "PlatformDashboard")} />
-        <Route path="/AdminControlCenter"        element={lazyRoute(React.lazy(() => import('./pages/AdminControlCenter')), "AdminControlCenter")} />
+        <Route path="/AdminControlCenter"        element={lazyRoute(lazyWithRetry(() => import('./pages/AdminControlCenter')), "AdminControlCenter")} />
         <Route path="/AdminAIAssistant"          element={lazyRoute(React.lazy(() => import('./pages/AdminAIAssistant')), "AdminAIAssistant")} />
         <Route path="/AdminProjects"              element={lazyRoute(React.lazy(() => import('./pages/AdminProjects')), "AdminProjects")} />
         <Route path="/AdminProviders"             element={lazyRoute(React.lazy(() => import('./pages/AdminProviders')), "AdminProviders")} />
