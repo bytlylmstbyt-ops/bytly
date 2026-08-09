@@ -36,6 +36,7 @@ export const ADMIN_CATEGORIES = [
       { page: "ProjectProposals", label: "إدارة العروض", desc: "متابعة عروض المشاريع" },
       { page: "CompareProposals", label: "مقارنة العروض", desc: "مقارنة عروض مشروع معين" },
       { page: "DataClassification", label: "تصنيف بيانات المشاريع", desc: "تنظيم وتصنيف بيانات المشاريع" },
+      { page: "PermitApplication", label: "طلب رخصة البناء", desc: "تقديم ومتابعة طلبات رخص البناء عبر بلدي" },
     ],
   },
   {
