@@ -189,7 +189,11 @@ export default function AdminProjects() {
         statusFilter === "active" ? ["open", "in_progress"].includes(p.status) :
         statusFilter === "pending" ? ["awaiting_technical_review", "technical_approved", "pending_client_approval"].includes(p.status) :
         statusFilter === "suspended" ? ["cancelled", "disputed"].includes(p.status) :
-        statusFilter === "completed" ? p.status === "completed" : true;
+        statusFilter === "completed" ? p.status === "completed" :
+        statusFilter === "overdue" ? (
+          ["open", "in_progress", "awaiting_technical_review", "technical_approved", "pending_client_approval"].includes(p.status) &&
+          !!p.deadline && new Date(p.deadline) < new Date()
+        ) : true;
       const matchCity = cityFilter === "all" || p.location === cityFilter;
       const matchType = typeFilter === "all" || p.project_type === typeFilter;
       const matchEngineer = engineerFilter === "all" || p.assigned_engineer_id === engineerFilter;
