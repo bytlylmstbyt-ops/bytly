@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, FileText, Wallet, Scale, Bell, BarChart3, Settings as SettingsIcon,
-  FolderKanban, Building2, Link2, Mail, Megaphone, Sparkles,
+  FolderKanban, Building2, Link2, Mail, Megaphone, Sparkles, Layers,
 } from "lucide-react";
 
 // ── Category → page map ────────────────────────────────────────────────────
@@ -134,6 +134,17 @@ export const ADMIN_CATEGORIES = [
       { page: "AdminSubscriptionControl", label: "إدارة الاشتراكات", desc: "باقات واشتراكات مزودي الخدمة" },
       { page: "AdminMarketEntities", label: "إدارة كيانات السوق", desc: "الشركات والموردون في السوق" },
       { page: "Settings", label: "الإعدادات العامة", desc: "إعدادات الحساب والمنصة" },
+    ],
+  },
+  {
+    key: "bim",
+    label: "إدارة BIM",
+    icon: Layers,
+    description: "النماذج الهندسية ثلاثية الأبعاد، استخراج الكميات، والبحث الذكي.",
+    items: [
+      { page: "BIMDashboard", label: "لوحة تحكم BIM المركزية", desc: "إدارة نماذج BIM، مزامنة Google Drive، وحالة التكاملات" },
+      { page: "BIMQuantitiesReport", label: "تقرير كميات BIM", desc: "استخراج وتحليل كميات المواد التفصيلية من النماذج" },
+      { page: "BIMSearch", label: "محرك البحث الذكي BIM", desc: "البحث في المخططات الهندسية والعناصر بالكلمات المفتاحية" },
     ],
   },
   {
