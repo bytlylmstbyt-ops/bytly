@@ -6,21 +6,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Video, Loader2, Copy, ExternalLink, CheckCircle } from "lucide-react";
 
-export default function MeetCallButton({ project, currentUser }) {
+export default function MeetCallButton({ project, currentUser, assignedEngineerEmail, isEngineer }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [meetResult, setMeetResult] = useState(null);
   const [copied, setCopied] = useState(false);
   const [scheduledTime, setScheduledTime] = useState("");
 
-  // Only show for project owner or assigned engineer
-  const isOwner = currentUser?.email === project?.created_by;
-  if (!isOwner) return null;
-
   const handleCreate = async () => {
     setLoading(true);
     try {
-      const attendees = [project.created_by, project.engineer_email].filter(Boolean);
+      const attendees = [project.created_by, assignedEngineerEmail].filter(Boolean);
       const res = await base44.functions.invoke("createMeetCall", {
         project_id: project.id,
         project_title: project.title,
@@ -51,10 +47,11 @@ export default function MeetCallButton({ project, currentUser }) {
     <>
       <Button
         onClick={() => setOpen(true)}
-        className="bg-gradient-to-r from-[#1a73e8] to-[#34a853] text-white gap-2 w-full"
+        className="bg-gradient-to-r from-[#1a73e8] to-[#34a853] text-white gap-2 w-full h-auto py-3 flex-col"
       >
-        <Video className="w-4 h-4" />
-        إنشاء مكالمة تحديث
+        <Video className="w-5 h-5" />
+        <span>إنشاء اجتماع فوري</span>
+        <span className="text-xs opacity-80">عبر Google Meet</span>
       </Button>
 
       <Dialog open={open} onOpenChange={handleClose}>
@@ -83,7 +80,7 @@ export default function MeetCallButton({ project, currentUser }) {
 
               <div className="bg-slate-50 rounded-xl p-3 text-sm text-slate-600 space-y-1">
                 <p className="font-medium text-[#1a1a2e]">المشاركون:</p>
-                {[project.created_by, project.engineer_email].filter(Boolean).map(email => (
+                {[project.created_by, assignedEngineerEmail].filter(Boolean).map(email => (
                   <p key={email} className="text-xs">• {email}</p>
                 ))}
               </div>

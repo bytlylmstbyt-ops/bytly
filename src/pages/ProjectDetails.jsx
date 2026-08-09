@@ -8,7 +8,7 @@ import {
   FileText, MessageSquare, Send, Loader2, CheckCircle,
   Star, Download, Eye, ArrowLeft, Scale, Upload, X, Paperclip,
   Kanban, Cloud, ExternalLink, LayoutDashboard, Files as FilesIcon,
-  CreditCard, Activity, Video, CalendarPlus
+  CreditCard, Activity, Video
 } from "lucide-react";
 import ProposalComparison from "@/components/proposals/ProposalComparison";
 import ProjectChatbot from "@/components/chatbot/ProjectChatbot";
@@ -21,6 +21,7 @@ import AppointmentModal from "@/components/appointments/AppointmentModal";
 import EscrowTracker from "@/components/escrow/EscrowTracker";
 import NextStepCard from "@/components/project/NextStepCard";
 import ProjectFilesSection from "@/components/project/ProjectFilesSection";
+import ProjectMeetingScheduler from "@/components/project/ProjectMeetingScheduler";
 import ProjectActivityLog from "@/components/project/ProjectActivityLog";
 import WorkspaceActivityFeed from "@/components/project/WorkspaceActivityFeed";
 import ProjectContractSection from "@/components/project/ProjectContractSection";
@@ -520,7 +521,7 @@ export default function ProjectDetails() {
                   onScrollToChat={() => switchTab("chat")}
                 />
 
-                {/* Escrow + Meet + Appointments in overview */}
+                {/* Escrow + Meeting Scheduler in overview */}
                 <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {(project.escrow_status && project.escrow_status !== 'none') || project.status === 'in_progress' ? (
                     <EscrowTracker
@@ -532,44 +533,16 @@ export default function ProjectDetails() {
                     />
                   ) : null}
 
-                  {project?.status === "in_progress" && isClient && (
-                    <MeetCallButton project={project} currentUser={user} />
-                  )}
-
-                  {project?.status === "in_progress" && project.assigned_engineer_id && (() => {
-                    const target = isClient
-                      ? { id: assignedEngineer?.id, name: assignedEngineer?.full_name, email: assignedEngineer?.email, type: "engineer" }
-                      : isEngineer
-                        ? { id: userClient?.id || project.client_id, name: userClient?.full_name || project.created_by, email: project.created_by, type: "engineer" }
-                        : null;
-                    if (!target || !target.email) return null;
-                    return (
-                      <Card className="border-0 shadow-lg">
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                              <CalendarPlus className="w-5 h-5 text-blue-600" />
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-[#1a1a2e] text-sm">اجتماع مراجعة المخططات</h4>
-                              <p className="text-xs text-slate-500">احجز موعداً مع {target.name}</p>
-                            </div>
-                          </div>
-                          <AppointmentModal
-                            targetId={target.id}
-                            targetName={target.name}
-                            targetType={target.type}
-                            targetEmail={target.email}
-                            trigger={
-                              <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white gap-2">
-                                <Calendar className="w-4 h-4" /> حجز موعد مراجعة
-                              </Button>
-                            }
-                          />
-                        </CardContent>
-                      </Card>
-                    );
-                  })()}
+                  <ProjectMeetingScheduler
+                    project={project}
+                    user={user}
+                    userEngineer={userEngineer}
+                    userClient={userClient}
+                    assignedEngineer={assignedEngineer}
+                    isClient={isClient}
+                    isEngineer={isEngineer}
+                    onUpdated={loadData}
+                  />
                 </div>
               </div>
             )}
@@ -933,45 +906,17 @@ export default function ProjectDetails() {
                   </Card>
                 )}
 
-                {/* Google Meet + Appointments */}
-                {project?.status === "in_progress" && isClient && (
-                  <MeetCallButton project={project} currentUser={user} />
-                )}
-
-                {project?.status === "in_progress" && project.assigned_engineer_id && (() => {
-                  const target = isClient
-                    ? { id: assignedEngineer?.id, name: assignedEngineer?.full_name, email: assignedEngineer?.email, type: "engineer" }
-                    : isEngineer
-                      ? { id: userClient?.id || project.client_id, name: userClient?.full_name || project.created_by, email: project.created_by, type: "engineer" }
-                      : null;
-                  if (!target || !target.email) return null;
-                  return (
-                    <Card className="border-0 shadow-lg">
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                            <Video className="w-5 h-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-[#1a1a2e] text-sm">اجتماع مراجعة المخططات</h4>
-                            <p className="text-xs text-slate-500">احجز موعداً مع {target.name} — يُحفظ في تقويم جوجل</p>
-                          </div>
-                        </div>
-                        <AppointmentModal
-                          targetId={target.id}
-                          targetName={target.name}
-                          targetType={target.type}
-                          targetEmail={target.email}
-                          trigger={
-                            <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white gap-2">
-                              <CalendarPlus className="w-4 h-4" /> حجز موعد مراجعة
-                            </Button>
-                          }
-                        />
-                      </CardContent>
-                    </Card>
-                  );
-                })()}
+                {/* Unified Meeting Scheduler */}
+                <ProjectMeetingScheduler
+                  project={project}
+                  user={user}
+                  userEngineer={userEngineer}
+                  userClient={userClient}
+                  assignedEngineer={assignedEngineer}
+                  isClient={isClient}
+                  isEngineer={isEngineer}
+                  onUpdated={loadData}
+                />
               </div>
             )}
 
