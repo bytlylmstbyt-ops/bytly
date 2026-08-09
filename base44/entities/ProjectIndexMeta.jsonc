@@ -1,0 +1,60 @@
+{
+  "name": "ProjectIndexMeta",
+  "type": "object",
+  "properties": {
+    "last_indexed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u062a\u0627\u0631\u064a\u062e \u0648\u0648\u0642\u062a \u0622\u062e\u0631 \u0639\u0645\u0644\u064a\u0629 \u0641\u0647\u0631\u0633\u0629 \u0641\u0639\u0644\u064a\u0629 \u0644\u0644\u0645\u0634\u0631\u0648\u0639"
+    },
+    "pages_count": {
+      "type": "number",
+      "description": "\u0639\u062f\u062f \u0635\u0641\u062d\u0627\u062a \u0627\u0644\u0648\u0627\u062c\u0647\u0629 \u0627\u0644\u0645\u0641\u0647\u0631\u0633\u0629"
+    },
+    "entities_count": {
+      "type": "number",
+      "description": "\u0639\u062f\u062f \u0627\u0644\u0643\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0645\u0641\u0647\u0631\u0633\u0629"
+    },
+    "functions_count": {
+      "type": "number",
+      "description": "\u0639\u062f\u062f \u062f\u0648\u0627\u0644 Backend \u0627\u0644\u0645\u0641\u0647\u0631\u0633\u0629"
+    },
+    "total_count": {
+      "type": "number",
+      "description": "\u0625\u062c\u0645\u0627\u0644\u064a \u0639\u062f\u062f \u0627\u0644\u0645\u0644\u0641\u0627\u062a \u0627\u0644\u0645\u0641\u0647\u0631\u0633\u0629"
+    },
+    "routes_resolved": {
+      "type": "number",
+      "description": "\u0639\u062f\u062f \u0627\u0644\u0635\u0641\u062d\u0627\u062a \u0627\u0644\u062a\u064a \u062a\u0645 \u0631\u0628\u0637\u0647\u0627 \u0628\u0640 route \u0641\u0639\u0644\u064a \u0628\u0646\u062c\u0627\u062d"
+    },
+    "indexed_by": {
+      "type": "string",
+      "description": "\u0645\u0646 \u0642\u0627\u0645 \u0628\u0639\u0645\u0644\u064a\u0629 \u0627\u0644\u0641\u0647\u0631\u0633\u0629 (\u0627\u0644\u0645\u0633\u0627\u0639\u062f \u0641\u064a \u062c\u0644\u0633\u0629 \u0627\u0644\u0645\u062d\u0631\u0631)"
+    }
+  },
+  "required": [
+    "last_indexed_at"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
