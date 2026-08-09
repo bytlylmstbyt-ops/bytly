@@ -309,6 +309,7 @@ export default function AdminProjects() {
                 <option value="pending">معلق</option>
                 <option value="suspended">موقوف</option>
                 <option value="completed">مكتمل</option>
+                <option value="overdue">متأخرة</option>
               </select>
               <select value={cityFilter} onChange={(e) => { setCityFilter(e.target.value); setPage(1); }} className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white cursor-pointer">
                 <option value="all">كل المدن</option>
