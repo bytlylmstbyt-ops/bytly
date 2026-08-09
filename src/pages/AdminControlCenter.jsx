@@ -10,6 +10,7 @@ import MonthlyRevenueSummaryPanel from "@/components/admin/MonthlyRevenueSummary
 import FinancialChartsPanel from "@/components/admin/FinancialChartsPanel";
 import ProjectCompletionTrendPanel from "@/components/admin/ProjectCompletionTrendPanel";
 import EngineerPerformancePanel from "@/components/admin/EngineerPerformancePanel";
+import BIMProjectFilesPanel from "@/components/admin/BIMProjectFilesPanel";
 
 // Category map imported from @/components/admin/adminSections
 
@@ -80,6 +81,8 @@ export default function AdminControlCenter() {
       <FinancialChartsPanel />
       <ProjectCompletionTrendPanel />
       <EngineerPerformancePanel />
+
+      {activeKey === "bim" && <BIMProjectFilesPanel />}
 
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6">
         {/* Category nav */}
