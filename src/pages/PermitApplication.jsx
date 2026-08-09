@@ -171,7 +171,7 @@ export default function PermitApplication() {
 
   if (loading) return (
     <div className="min-h-[60vh] flex items-center justify-center">
-      <Loader2 className="w-8 h-8 animate-spin text-[#C9A66B]" />
+      <Loader2 className="w-8 h-8 animate-spin text-[#C6A775]" />
     </div>
   );
 
@@ -180,7 +180,7 @@ export default function PermitApplication() {
       <div className="text-center space-y-4">
         <Building2 className="w-12 h-12 text-slate-300 mx-auto" />
         <p className="text-slate-600">يرجى تسجيل الدخول لتقديم طلب رخصة</p>
-        <Button onClick={() => { sessionStorage.setItem('loginReturnUrl', window.location.pathname); window.location.href = '/login'; }} className="bg-[#C9A66B] hover:bg-[#B8936D] text-white">
+        <Button onClick={() => { sessionStorage.setItem('loginReturnUrl', window.location.pathname); window.location.href = '/login'; }} className="bg-[#C6A775] hover:bg-[#B8936D] text-white">
           تسجيل الدخول
         </Button>
       </div>
@@ -193,12 +193,12 @@ export default function PermitApplication() {
 
         {/* ── Header ─────────────────────────────────────────────── */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 bg-[#FEF9EE] text-[#b79357] rounded-full px-4 py-1.5 text-sm font-medium mb-4 border border-[#C9A66B]/20">
+          <div className="inline-flex items-center gap-2 bg-[#FDF6ED] text-[#C6A775] rounded-full px-4 py-1.5 text-sm font-medium mb-4 border border-[#C6A775]/20">
             <Building2 className="w-4 h-4" />
             مدعوم بربط Balady API
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[#1a202c]">طلب رخصة البناء</h1>
-          <p className="text-[#64748b] mt-2 text-sm sm:text-base">من الطلب إلى الرخصة الرقمية — كل شيء في بيتلي</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#1A1D2B]">طلب رخصة البناء</h1>
+          <p className="text-[#6B7280] mt-2 text-sm sm:text-base">من الطلب إلى الرخصة الرقمية — كل شيء في بيتلي</p>
         </div>
 
         {/* ── High-Level Progress Tracker ─────────────────────────── */}
@@ -206,12 +206,12 @@ export default function PermitApplication() {
 
         {/* ── Top Bar: طلب جديد + طلباتي ─────────────────────────── */}
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-[#1a202c] text-sm sm:text-base">
+          <h3 className="font-bold text-[#1A1D2B] text-sm sm:text-base">
             طلباتي ({myApplications.length})
           </h3>
           <Button
             size="sm"
-            className="bg-[#1a202c] hover:bg-[#2d3748] text-white gap-1.5 rounded-xl"
+            className="bg-[#1A1D2B] hover:bg-[#2d3142] text-white gap-1.5 rounded-xl"
             onClick={() => { setShowNew(true); setSelectedApp(null); resetForm(); }}
           >
             <Plus className="w-4 h-4" /> طلب جديد
@@ -230,18 +230,18 @@ export default function PermitApplication() {
                   onClick={() => { setSelectedApp(app); setShowNew(false); }}
                   className={`shrink-0 w-64 text-right p-3.5 rounded-2xl border transition-all ${
                     isSelected
-                      ? 'border-[#C9A66B] bg-[#FEF9EE] shadow-md'
-                      : 'border-[#e2e8f0] bg-white hover:border-[#C9A66B]/40'
+                      ? 'border-[#C6A775] bg-[#FDF6ED] shadow-md'
+                      : 'border-[#E5E7EB] bg-white hover:border-[#C6A775]/40'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-sm font-semibold text-[#1a202c]">
+                    <span className="text-sm font-semibold text-[#1A1D2B]">
                       {PERMIT_TYPES.find(t => t.value === app.permit_type)?.icon} {PERMIT_TYPES.find(t => t.value === app.permit_type)?.label}
                     </span>
                     <Badge className={`text-[10px] ${sc.color}`}>{sc.label}</Badge>
                   </div>
-                  <p className="text-xs text-[#64748b]">{app.city} — {app.land_area} م²</p>
-                  <p className="text-xs text-[#94a3b8] mt-1">{new Date(app.created_date).toLocaleDateString('ar-SA')}</p>
+                  <p className="text-xs text-[#6B7280]">{app.city} — {app.land_area} م²</p>
+                  <p className="text-xs text-[#9CA3AF] mt-1">{new Date(app.created_date).toLocaleDateString('ar-SA')}</p>
                 </button>
               );
             })}
@@ -249,7 +249,7 @@ export default function PermitApplication() {
         )}
 
         {myApplications.length === 0 && !showNew && (
-          <div className="text-center py-8 text-[#94a3b8] bg-white rounded-2xl border border-[#e2e8f0] mb-4">
+          <div className="text-center py-8 text-[#9CA3AF] bg-white rounded-2xl border border-[#E5E7EB] mb-4">
             <Building2 className="w-10 h-10 mx-auto mb-2 text-slate-200" />
             <p className="text-sm">لا توجد طلبات بعد — اضغط "طلب جديد" للبدء</p>
           </div>
@@ -265,10 +265,10 @@ export default function PermitApplication() {
               exit={{ opacity: 0, y: -10 }}
               className="space-y-4"
             >
-              <Card className="border-[#e2e8f0] shadow-lg overflow-hidden">
-                <div className="bg-[#1a202c] px-5 py-3.5 flex items-center justify-between">
+              <Card className="border-[#E5E7EB] shadow-lg overflow-hidden">
+                <div className="bg-[#1A1D2B] px-5 py-3.5 flex items-center justify-between">
                   <h3 className="text-white font-bold text-sm flex items-center gap-2">
-                    <FileCheck className="w-4 h-4 text-[#C9A66B]" />
+                    <FileCheck className="w-4 h-4 text-[#C6A775]" />
                     تفاصيل الطلب
                   </h3>
                   <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10" onClick={async () => {
@@ -284,26 +284,26 @@ export default function PermitApplication() {
                 <CardContent className="p-5 space-y-4">
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="bg-[#f9fafb] rounded-xl p-3">
-                      <p className="text-[#94a3b8] text-xs mb-0.5">نوع الرخصة</p>
-                      <p className="font-semibold text-[#1a202c]">{PERMIT_TYPES.find(t => t.value === selectedApp.permit_type)?.label}</p>
+                      <p className="text-[#9CA3AF] text-xs mb-0.5">نوع الرخصة</p>
+                      <p className="font-semibold text-[#1A1D2B]">{PERMIT_TYPES.find(t => t.value === selectedApp.permit_type)?.label}</p>
                     </div>
                     <div className="bg-[#f9fafb] rounded-xl p-3">
-                      <p className="text-[#94a3b8] text-xs mb-0.5">نوع المبنى</p>
-                      <p className="font-semibold text-[#1a202c]">{BUILDING_TYPES.find(t => t.value === selectedApp.building_type)?.label}</p>
+                      <p className="text-[#9CA3AF] text-xs mb-0.5">نوع المبنى</p>
+                      <p className="font-semibold text-[#1A1D2B]">{BUILDING_TYPES.find(t => t.value === selectedApp.building_type)?.label}</p>
                     </div>
                     <div className="bg-[#f9fafb] rounded-xl p-3">
-                      <p className="text-[#94a3b8] text-xs mb-0.5">الموقع</p>
-                      <p className="font-semibold text-[#1a202c]">{selectedApp.city} - {selectedApp.district}</p>
+                      <p className="text-[#9CA3AF] text-xs mb-0.5">الموقع</p>
+                      <p className="font-semibold text-[#1A1D2B]">{selectedApp.city} - {selectedApp.district}</p>
                     </div>
                     <div className="bg-[#f9fafb] rounded-xl p-3">
-                      <p className="text-[#94a3b8] text-xs mb-0.5">مساحة الأرض</p>
-                      <p className="font-semibold text-[#1a202c]">{selectedApp.land_area} م²</p>
+                      <p className="text-[#9CA3AF] text-xs mb-0.5">مساحة الأرض</p>
+                      <p className="font-semibold text-[#1A1D2B]">{selectedApp.land_area} م²</p>
                     </div>
                   </div>
 
                   {selectedApp.payment_status !== 'paid' && selectedApp.total_amount > 0 && (
                     <Button
-                      className="w-full bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white gap-2 py-5 text-base font-bold rounded-xl"
+                      className="w-full bg-gradient-to-r from-[#6B5D4F] to-[#C6A775] text-white gap-2 py-5 text-base font-bold rounded-xl"
                       onClick={() => handlePay(selectedApp)}
                       disabled={payLoading}
                     >
@@ -327,12 +327,12 @@ export default function PermitApplication() {
                   )}
 
                   {selectedApp.total_amount > 0 && (
-                    <div className="bg-[#FEF9EE] rounded-xl p-4 text-sm space-y-1.5 border border-[#C9A66B]/20">
-                      <p className="font-bold text-[#b79357] text-xs mb-2">الفاتورة الموحدة</p>
-                      <div className="flex justify-between"><span className="text-[#64748b]">🏛️ رسوم بلدي</span><span className="font-medium">{(selectedApp.balady_fee||0).toLocaleString('ar-SA')} ر.س</span></div>
-                      <div className="flex justify-between"><span className="text-[#64748b]">👷 أتعاب مهندس</span><span className="font-medium">{(selectedApp.engineer_fee||0).toLocaleString('ar-SA')} ر.س</span></div>
-                      <div className="flex justify-between"><span className="text-[#64748b]">⚡ خدمات بيتلي</span><span className="font-medium">{(selectedApp.bytly_commission||0).toLocaleString('ar-SA')} ر.س</span></div>
-                      <div className="flex justify-between border-t border-[#C9A66B]/20 pt-2 font-bold"><span className="text-[#1a202c]">الإجمالي</span><span className="text-[#b79357]">{(selectedApp.total_amount||0).toLocaleString('ar-SA')} ر.س</span></div>
+                    <div className="bg-[#FDF6ED] rounded-xl p-4 text-sm space-y-1.5 border border-[#C6A775]/20">
+                      <p className="font-bold text-[#C6A775] text-xs mb-2">الفاتورة الموحدة</p>
+                      <div className="flex justify-between"><span className="text-[#6B7280]">🏛️ رسوم بلدي</span><span className="font-medium">{(selectedApp.balady_fee||0).toLocaleString('ar-SA')} ر.س</span></div>
+                      <div className="flex justify-between"><span className="text-[#6B7280]">👷 أتعاب مهندس</span><span className="font-medium">{(selectedApp.engineer_fee||0).toLocaleString('ar-SA')} ر.س</span></div>
+                      <div className="flex justify-between"><span className="text-[#6B7280]">⚡ خدمات بيتلي</span><span className="font-medium">{(selectedApp.bytly_commission||0).toLocaleString('ar-SA')} ر.س</span></div>
+                      <div className="flex justify-between border-t border-[#C6A775]/20 pt-2 font-bold"><span className="text-[#1A1D2B]">الإجمالي</span><span className="text-[#C6A775]">{(selectedApp.total_amount||0).toLocaleString('ar-SA')} ر.س</span></div>
                     </div>
                   )}
                 </CardContent>
@@ -356,7 +356,7 @@ export default function PermitApplication() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
             >
-              <Card className="border-[#e2e8f0] shadow-lg overflow-hidden">
+              <Card className="border-[#E5E7EB] shadow-lg overflow-hidden">
                 <PermitWizardHeader currentStep={step} />
 
                 <CardContent className="p-5 sm:p-6 space-y-5">
@@ -365,7 +365,7 @@ export default function PermitApplication() {
                   {step === 0 && (
                     <div className="space-y-5">
                       <div>
-                        <label className="block text-sm font-bold text-[#1a202c] mb-3">نوع الرخصة</label>
+                        <label className="block text-sm font-bold text-[#1A1D2B] mb-3">نوع الرخصة</label>
                         <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
                           {PERMIT_TYPES.map(t => (
                             <PermitTypeCard
@@ -379,7 +379,7 @@ export default function PermitApplication() {
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-bold text-[#1a202c] mb-3">نوع المبنى</label>
+                        <label className="block text-sm font-bold text-[#1A1D2B] mb-3">نوع المبنى</label>
                         <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
                           {BUILDING_TYPES.map(t => (
                             <PermitTypeCard
@@ -400,41 +400,41 @@ export default function PermitApplication() {
                     <div className="space-y-3">
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-xs font-medium text-[#64748b] mb-1.5">المدينة *</label>
-                          <select className="w-full border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-sm bg-white focus:border-[#C9A66B] focus:ring-1 focus:ring-[#C9A66B]/20 outline-none" value={form.city} onChange={e => set('city', e.target.value)}>
+                          <label className="block text-xs font-medium text-[#6B7280] mb-1.5">المدينة *</label>
+                          <select className="w-full border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm bg-white focus:border-[#C6A775] focus:ring-1 focus:ring-[#C6A775]/20 outline-none" value={form.city} onChange={e => set('city', e.target.value)}>
                             <option value="">اختر المدينة</option>
                             {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
                           </select>
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-[#64748b] mb-1.5">الحي</label>
-                          <input className="w-full border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-sm focus:border-[#C9A66B] focus:ring-1 focus:ring-[#C9A66B]/20 outline-none" placeholder="اسم الحي" value={form.district} onChange={e => set('district', e.target.value)} />
+                          <label className="block text-xs font-medium text-[#6B7280] mb-1.5">الحي</label>
+                          <input className="w-full border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:border-[#C6A775] focus:ring-1 focus:ring-[#C6A775]/20 outline-none" placeholder="اسم الحي" value={form.district} onChange={e => set('district', e.target.value)} />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-[#64748b] mb-1.5">رقم القطعة *</label>
-                          <input className="w-full border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-sm focus:border-[#C9A66B] focus:ring-1 focus:ring-[#C9A66B]/20 outline-none" placeholder="مثال: 123" value={form.land_number} onChange={e => set('land_number', e.target.value)} />
+                          <label className="block text-xs font-medium text-[#6B7280] mb-1.5">رقم القطعة *</label>
+                          <input className="w-full border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:border-[#C6A775] focus:ring-1 focus:ring-[#C6A775]/20 outline-none" placeholder="مثال: 123" value={form.land_number} onChange={e => set('land_number', e.target.value)} />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-[#64748b] mb-1.5">رقم المخطط</label>
-                          <input className="w-full border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-sm focus:border-[#C9A66B] focus:ring-1 focus:ring-[#C9A66B]/20 outline-none" placeholder="مثال: 456" value={form.plan_number} onChange={e => set('plan_number', e.target.value)} />
+                          <label className="block text-xs font-medium text-[#6B7280] mb-1.5">رقم المخطط</label>
+                          <input className="w-full border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:border-[#C6A775] focus:ring-1 focus:ring-[#C6A775]/20 outline-none" placeholder="مثال: 456" value={form.plan_number} onChange={e => set('plan_number', e.target.value)} />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-[#64748b] mb-1.5">مساحة الأرض (م²) *</label>
-                          <input type="number" className="w-full border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-sm focus:border-[#C9A66B] focus:ring-1 focus:ring-[#C9A66B]/20 outline-none" placeholder="مثال: 500" value={form.land_area} onChange={e => set('land_area', e.target.value)} />
+                          <label className="block text-xs font-medium text-[#6B7280] mb-1.5">مساحة الأرض (م²) *</label>
+                          <input type="number" className="w-full border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:border-[#C6A775] focus:ring-1 focus:ring-[#C6A775]/20 outline-none" placeholder="مثال: 500" value={form.land_area} onChange={e => set('land_area', e.target.value)} />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-[#64748b] mb-1.5">مساحة البناء (م²)</label>
-                          <input type="number" className="w-full border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-sm focus:border-[#C9A66B] focus:ring-1 focus:ring-[#C9A66B]/20 outline-none" placeholder="اتركه فارغاً = نفس الأرض" value={form.building_area} onChange={e => set('building_area', e.target.value)} />
+                          <label className="block text-xs font-medium text-[#6B7280] mb-1.5">مساحة البناء (م²)</label>
+                          <input type="number" className="w-full border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:border-[#C6A775] focus:ring-1 focus:ring-[#C6A775]/20 outline-none" placeholder="اتركه فارغاً = نفس الأرض" value={form.building_area} onChange={e => set('building_area', e.target.value)} />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-[#64748b] mb-1.5">عدد الطوابق</label>
-                          <select className="w-full border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-sm bg-white focus:border-[#C9A66B] focus:ring-1 focus:ring-[#C9A66B]/20 outline-none" value={form.floors_count} onChange={e => set('floors_count', e.target.value)}>
+                          <label className="block text-xs font-medium text-[#6B7280] mb-1.5">عدد الطوابق</label>
+                          <select className="w-full border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm bg-white focus:border-[#C6A775] focus:ring-1 focus:ring-[#C6A775]/20 outline-none" value={form.floors_count} onChange={e => set('floors_count', e.target.value)}>
                             {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n} {n === 1 ? 'طابق' : 'طوابق'}</option>)}
                           </select>
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-[#64748b] mb-1.5">رقم الجوال</label>
-                          <input className="w-full border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-sm focus:border-[#C9A66B] focus:ring-1 focus:ring-[#C9A66B]/20 outline-none" placeholder="05xxxxxxxx" value={form.client_phone} onChange={e => set('client_phone', e.target.value)} />
+                          <label className="block text-xs font-medium text-[#6B7280] mb-1.5">رقم الجوال</label>
+                          <input className="w-full border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:border-[#C6A775] focus:ring-1 focus:ring-[#C6A775]/20 outline-none" placeholder="05xxxxxxxx" value={form.client_phone} onChange={e => set('client_phone', e.target.value)} />
                         </div>
                       </div>
                     </div>
@@ -449,11 +449,11 @@ export default function PermitApplication() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-bold text-[#1a202c] mb-1.5">
-                          المخططات الهندسية المعتمدة * <span className="text-xs font-normal text-[#94a3b8]">(PDF أو DWG)</span>
+                        <label className="block text-sm font-bold text-[#1A1D2B] mb-1.5">
+                          المخططات الهندسية المعتمدة * <span className="text-xs font-normal text-[#9CA3AF]">(PDF أو DWG)</span>
                         </label>
-                        <label className="flex flex-col items-center gap-2 border-2 border-dashed border-[#e2e8f0] rounded-xl p-5 cursor-pointer hover:border-[#C9A66B] hover:bg-[#FEF9EE]/30 transition-all">
-                          {uploadingFiles.drawings_files ? <Loader2 className="w-6 h-6 animate-spin text-[#C9A66B]" /> : <Upload className="w-6 h-6 text-[#94a3b8]" />}
+                        <label className="flex flex-col items-center gap-2 border-2 border-dashed border-[#E5E7EB] rounded-xl p-5 cursor-pointer hover:border-[#C6A775] hover:bg-[#FDF6ED]/30 transition-all">
+                          {uploadingFiles.drawings_files ? <Loader2 className="w-6 h-6 animate-spin text-[#C6A775]" /> : <Upload className="w-6 h-6 text-[#9CA3AF]" />}
                           <span className="text-sm text-[#64748b]">اضغط لرفع مخطط</span>
                           <input type="file" className="hidden" accept=".pdf,.dwg,.dxf" onChange={e => uploadFile(e, 'drawings_files')} />
                         </label>
@@ -470,28 +470,28 @@ export default function PermitApplication() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-bold text-[#1a202c] mb-1.5">وثيقة ملكية الأرض *</label>
-                        <label className="flex items-center gap-2 border border-[#e2e8f0] rounded-xl p-3.5 cursor-pointer hover:border-[#C9A66B] hover:bg-[#FEF9EE]/30 transition-all">
-                          {uploadingFiles.ownership_deed_file ? <Loader2 className="w-4 h-4 animate-spin text-[#C9A66B]" /> : form.ownership_deed_file ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <FileText className="w-4 h-4 text-[#94a3b8]" />}
-                          <span className="text-sm text-[#64748b]">{form.ownership_deed_file ? 'تم الرفع ✓' : 'رفع وثيقة الملكية PDF'}</span>
+                        <label className="block text-sm font-bold text-[#1A1D2B] mb-1.5">وثيقة ملكية الأرض *</label>
+                        <label className="flex items-center gap-2 border border-[#E5E7EB] rounded-xl p-3.5 cursor-pointer hover:border-[#C6A775] hover:bg-[#FDF6ED]/30 transition-all">
+                          {uploadingFiles.ownership_deed_file ? <Loader2 className="w-4 h-4 animate-spin text-[#C6A775]" /> : form.ownership_deed_file ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <FileText className="w-4 h-4 text-[#9CA3AF]" />}
+                          <span className="text-sm text-[#6B7280]">{form.ownership_deed_file ? 'تم الرفع ✓' : 'رفع وثيقة الملكية PDF'}</span>
                           <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={e => uploadFile(e, 'ownership_deed_file')} />
                         </label>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-bold text-[#1a202c] mb-1.5">
-                          تقرير التربة <span className="text-xs font-normal text-[#94a3b8]">(اختياري)</span>
+                        <label className="block text-sm font-bold text-[#1A1D2B] mb-1.5">
+                          تقرير التربة <span className="text-xs font-normal text-[#9CA3AF]">(اختياري)</span>
                         </label>
-                        <label className="flex items-center gap-2 border border-[#e2e8f0] rounded-xl p-3.5 cursor-pointer hover:border-[#C9A66B] hover:bg-[#FEF9EE]/30 transition-all">
-                          {uploadingFiles.soil_report_file ? <Loader2 className="w-4 h-4 animate-spin text-[#C9A66B]" /> : form.soil_report_file ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <FileText className="w-4 h-4 text-[#94a3b8]" />}
-                          <span className="text-sm text-[#64748b]">{form.soil_report_file ? 'تم الرفع ✓' : 'رفع تقرير التربة'}</span>
+                        <label className="flex items-center gap-2 border border-[#E5E7EB] rounded-xl p-3.5 cursor-pointer hover:border-[#C6A775] hover:bg-[#FDF6ED]/30 transition-all">
+                          {uploadingFiles.soil_report_file ? <Loader2 className="w-4 h-4 animate-spin text-[#C6A775]" /> : form.soil_report_file ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <FileText className="w-4 h-4 text-[#9CA3AF]" />}
+                          <span className="text-sm text-[#6B7280]">{form.soil_report_file ? 'تم الرفع ✓' : 'رفع تقرير التربة'}</span>
                           <input type="file" className="hidden" accept=".pdf" onChange={e => uploadFile(e, 'soil_report_file')} />
                         </label>
                       </div>
 
                       <div>
-                        <label className="block text-xs font-medium text-[#64748b] mb-1.5">ملاحظات إضافية</label>
-                        <textarea className="w-full border border-[#e2e8f0] rounded-xl px-3 py-2.5 text-sm focus:border-[#C9A66B] focus:ring-1 focus:ring-[#C9A66B]/20 outline-none resize-none" rows={3} placeholder="أي متطلبات خاصة..." value={form.notes} onChange={e => set('notes', e.target.value)} />
+                        <label className="block text-xs font-medium text-[#6B7280] mb-1.5">ملاحظات إضافية</label>
+                        <textarea className="w-full border border-[#E5E7EB] rounded-xl px-3 py-2.5 text-sm focus:border-[#C6A775] focus:ring-1 focus:ring-[#C6A775]/20 outline-none resize-none" rows={3} placeholder="أي متطلبات خاصة..." value={form.notes} onChange={e => set('notes', e.target.value)} />
                       </div>
                     </div>
                   )}
@@ -501,15 +501,15 @@ export default function PermitApplication() {
                     <div className="space-y-4">
                       {fees && <PermitFeeBreakdown fees={fees} />}
 
-                      <div className="bg-[#f9fafb] rounded-xl p-4 space-y-2 text-sm border border-[#e2e8f0]">
-                        <p className="font-bold text-[#1a202c] mb-2">ملخص الطلب</p>
+                      <div className="bg-[#f9fafb] rounded-xl p-4 space-y-2 text-sm border border-[#E5E7EB]">
+                        <p className="font-bold text-[#1A1D2B] mb-2">ملخص الطلب</p>
                         <div className="grid grid-cols-2 gap-y-1.5 text-xs">
-                          <span className="text-[#64748b]">النوع:</span><span className="font-medium text-[#1a202c]">{PERMIT_TYPES.find(t=>t.value===form.permit_type)?.label}</span>
-                          <span className="text-[#64748b]">المبنى:</span><span className="font-medium text-[#1a202c]">{BUILDING_TYPES.find(t=>t.value===form.building_type)?.label}</span>
-                          <span className="text-[#64748b]">الموقع:</span><span className="font-medium text-[#1a202c]">{form.city} - {form.district}</span>
-                          <span className="text-[#64748b]">المساحة:</span><span className="font-medium text-[#1a202c]">{form.land_area} م²</span>
-                          <span className="text-[#64748b]">الطوابق:</span><span className="font-medium text-[#1a202c]">{form.floors_count}</span>
-                          <span className="text-[#64748b]">المخططات:</span><span className="font-medium text-green-600">{form.drawings_files.length} ملف ✓</span>
+                          <span className="text-[#6B7280]">النوع:</span><span className="font-medium text-[#1A1D2B]">{PERMIT_TYPES.find(t=>t.value===form.permit_type)?.label}</span>
+                          <span className="text-[#6B7280]">المبنى:</span><span className="font-medium text-[#1A1D2B]">{BUILDING_TYPES.find(t=>t.value===form.building_type)?.label}</span>
+                          <span className="text-[#6B7280]">الموقع:</span><span className="font-medium text-[#1A1D2B]">{form.city} - {form.district}</span>
+                          <span className="text-[#6B7280]">المساحة:</span><span className="font-medium text-[#1A1D2B]">{form.land_area} م²</span>
+                          <span className="text-[#6B7280]">الطوابق:</span><span className="font-medium text-[#1A1D2B]">{form.floors_count}</span>
+                          <span className="text-[#6B7280]">المخططات:</span><span className="font-medium text-green-600">{form.drawings_files.length} ملف ✓</span>
                         </div>
                       </div>
 
@@ -524,7 +524,7 @@ export default function PermitApplication() {
                       </div>
 
                       <Button
-                        className="w-full bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white py-4 text-base font-bold gap-2 rounded-xl"
+                        className="w-full bg-gradient-to-r from-[#6B5D4F] to-[#C6A775] text-white py-4 text-base font-bold gap-2 rounded-xl"
                         onClick={handleSubmit}
                         disabled={submitting}
                       >
@@ -537,14 +537,14 @@ export default function PermitApplication() {
                   {step < 3 && (
                     <div className="flex justify-between pt-1">
                       {step > 0 ? (
-                        <Button variant="outline" onClick={() => setStep(s => s - 1)} className="gap-1 rounded-xl border-[#e2e8f0]">
+                        <Button variant="outline" onClick={() => setStep(s => s - 1)} className="gap-1 rounded-xl border-[#E5E7EB]">
                           <ArrowRight className="w-4 h-4" /> السابق
                         </Button>
                       ) : <div />}
                       <Button
                         onClick={() => setStep(s => s + 1)}
                         disabled={!canNext()}
-                        className="bg-[#C9A66B] hover:bg-[#B8936D] text-white gap-1 rounded-xl"
+                        className="bg-[#C6A775] hover:bg-[#B8936D] text-white gap-1 rounded-xl"
                       >
                         التالي <ArrowLeft className="w-4 h-4" />
                       </Button>

@@ -3,49 +3,47 @@ import { Check } from "lucide-react";
 
 /**
  * شريط التقدم العُلوي لطلب رخصة البناء
- * 5 خطوات بتدفق RTL (الخطوة 1 على اليمين)
+ * 5 دوائر متصلة بخط أفقي، بتدفق RTL (الخطوة 1 على اليمين)
  */
 const STEPS = [
   { n: "1", t: "تقدم بطلبك", e: "املأ النموذج" },
   { n: "2", t: "رفع المخططات", e: "من مهندسك المعتمد" },
   { n: "3", t: "إرسال لبلدي", e: "تلقائي عبر API" },
   { n: "4", t: "الدفع الموحد", e: "رسوم + أتعاب + بيتلي" },
-  { n: "5", t: "رخصتك الرقمية", e: "في حسابك مباشرة" },
+  { n: "5", t: "الرخصة الرقمية", e: "تصلك مباشرة" },
 ];
 
 export default function PermitStepsTracker({ currentStep = 0 }) {
   return (
-    <div className="flex flex-row-reverse items-stretch justify-center gap-2 sm:gap-3 mb-8 overflow-x-auto pb-1">
+    <div className="flex flex-row-reverse items-start justify-between gap-1 sm:gap-2 mb-8 px-2">
       {STEPS.map((s, i) => {
         const isActive = i === currentStep;
         const isDone = i < currentStep;
         return (
           <React.Fragment key={i}>
-            <div
-              className={`flex-1 min-w-[120px] sm:min-w-[140px] bg-white rounded-xl p-3 text-center border transition-all ${
-                isActive
-                  ? "border-[#C9A66B] shadow-md ring-1 ring-[#C9A66B]/20"
-                  : "border-[#e2e8f0] shadow-sm"
-              }`}
-            >
+            <div className="flex flex-col items-center text-center shrink-0" style={{ flex: "1 1 0", minWidth: 64 }}>
               <div
-                className={`w-8 h-8 rounded-full text-sm font-bold flex items-center justify-center mx-auto mb-2 transition-colors ${
+                className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-base font-bold transition-all ${
                   isDone
-                    ? "bg-green-500 text-white"
+                    ? "bg-[#C6A775] text-white"
                     : isActive
-                    ? "bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] text-white"
-                    : "bg-[#f3f4f6] text-[#94a3b8]"
+                    ? "bg-[#FDF6ED] text-[#C6A775] border-2 border-[#C6A775] shadow-md"
+                    : "bg-white text-[#9CA3AF] border-2 border-[#E5E7EB]"
                 }`}
               >
-                {isDone ? <Check className="w-4 h-4" /> : s.n}
+                {isDone ? <Check className="w-5 h-5" /> : s.n}
               </div>
-              <p className="font-bold text-[#1a202c] text-xs sm:text-sm">{s.t}</p>
-              <p className="text-[#94a3b8] text-[10px] sm:text-xs mt-0.5">{s.e}</p>
+              <p className={`mt-2 text-[11px] sm:text-sm font-bold leading-tight ${isActive || isDone ? "text-[#1A1D2B]" : "text-[#9CA3AF]"}`}>
+                {s.t}
+              </p>
+              <p className="text-[9px] sm:text-xs text-[#9CA3AF] mt-0.5 leading-tight hidden sm:block">{s.e}</p>
             </div>
             {i < STEPS.length - 1 && (
-              <div className="hidden sm:flex items-center">
+              <div className="flex items-center justify-center pt-5 sm:pt-6" style={{ flex: "0 0 auto" }}>
                 <div
-                  className={`w-6 h-0.5 ${i < currentStep ? "bg-[#C9A66B]" : "bg-[#e2e8f0]"}`}
+                  className={`w-full h-0.5 rounded-full transition-colors min-w-[8px] sm:min-w-[24px] ${
+                    i < currentStep ? "bg-[#C6A775]" : "bg-[#E5E7EB]"
+                  }`}
                 />
               </div>
             )}

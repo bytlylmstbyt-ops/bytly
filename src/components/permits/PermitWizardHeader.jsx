@@ -3,13 +3,13 @@ import { Check } from "lucide-react";
 
 /**
  * رأس معالج الخطوات الفرعية داخل بطاقة الطلب
- * شريط داكن مع الخطوة النشطة بالذهبي
+ * شريط داكن (#1A1D2B) مع الخطوة النشطة بالذهبي (#C6A775)
  */
 const SUB_STEPS = ["نوع الرخصة", "بيانات الأرض", "المستندات", "الفاتورة والدفع"];
 
 export default function PermitWizardHeader({ currentStep }) {
   return (
-    <div className="bg-[#1a202c] px-4 py-3.5 sm:px-6 sm:py-4">
+    <div className="bg-[#1A1D2B] px-4 py-4 sm:px-6 sm:py-5">
       <div className="flex items-center justify-between gap-1">
         {SUB_STEPS.map((s, i) => {
           const isActive = i === currentStep;
@@ -18,19 +18,19 @@ export default function PermitWizardHeader({ currentStep }) {
             <React.Fragment key={i}>
               <div className="flex items-center gap-2 shrink-0">
                 <div
-                  className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-xs font-bold flex items-center justify-center transition-all ${
+                  className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full text-sm font-bold flex items-center justify-center transition-all ${
                     isActive
-                      ? "bg-gradient-to-br from-[#C9A66B] to-[#b79357] text-white shadow-md"
+                      ? "bg-[#C6A775] text-white shadow-lg ring-2 ring-[#C6A775]/30"
                       : isDone
-                      ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                      : "bg-white/10 text-white/40"
+                      ? "bg-[#C6A775]/20 text-[#C6A775] border border-[#C6A775]/40"
+                      : "bg-white/5 text-[#6B7280] border border-white/10"
                   }`}
                 >
                   {isDone ? <Check className="w-4 h-4" /> : i + 1}
                 </div>
                 <span
-                  className={`text-xs sm:text-sm font-medium hidden sm:block transition-colors ${
-                    isActive ? "text-[#C9A66B]" : isDone ? "text-green-400" : "text-white/40"
+                  className={`text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap ${
+                    isActive ? "text-white" : isDone ? "text-[#C6A775]" : "text-[#6B7280] hidden sm:block"
                   }`}
                 >
                   {s}
@@ -38,8 +38,8 @@ export default function PermitWizardHeader({ currentStep }) {
               </div>
               {i < SUB_STEPS.length - 1 && (
                 <div
-                  className={`flex-1 h-0.5 rounded-full mx-1 ${
-                    i < currentStep ? "bg-green-500/40" : "bg-white/10"
+                  className={`flex-1 h-0.5 rounded-full mx-1 transition-colors ${
+                    i < currentStep ? "bg-[#C6A775]" : "bg-white/10"
                   }`}
                 />
               )}
