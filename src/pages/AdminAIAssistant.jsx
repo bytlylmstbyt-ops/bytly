@@ -69,11 +69,33 @@ function PlanRow({ icon: Icon, label, value }) {
   );
 }
 
-function Bubble({ children, tone = "bot" }) {
+function AttachmentChips({ attachments, imageOnly }) {
+  if (!attachments?.length) return null;
+  return (
+    <div className="flex flex-wrap gap-2 mt-2">
+      {attachments.map((a, i) =>
+        a.isImage ? (
+          <img key={i} src={a.url} alt={a.name} className="w-20 h-20 object-cover rounded-lg border border-white/20" />
+        ) : (
+          !imageOnly && (
+            <a key={i} href={a.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-[11px] bg-black/10 rounded-lg px-2 py-1">
+              <FileText className="w-3.5 h-3.5" /> {a.name}
+            </a>
+          )
+        )
+      )}
+    </div>
+  );
+}
+
+function Bubble({ children, tone = "bot", attachments }) {
   if (tone === "user") {
     return (
       <div className="flex justify-end">
-        <div className="bg-[#4A3F35] text-white rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-[85%] text-sm">{children}</div>
+        <div className="bg-[#4A3F35] text-white rounded-2xl rounded-tl-sm px-4 py-2.5 max-w-[85%] text-sm">
+          {children}
+          <AttachmentChips attachments={attachments} />
+        </div>
       </div>
     );
   }
