@@ -49,6 +49,13 @@ Deno.serve(async (req) => {
       return Response.json({ kind: 'decision', ...res.data });
     }
 
+    // ── "تحديث معرفة المشروع" button — status only, no live re-scan
+    // (delegates to platformChangePlanner, which owns ProjectIndex access).
+    if (action === 'refresh_index_status') {
+      const res = await base44.functions.invoke('platformChangePlanner', { action: 'refresh_index_status' });
+      return Response.json({ kind: 'index_status', ...res.data });
+    }
+
     // ── Unified free-text entry point ───────────────────────────────────
     const message = (body?.message || '').trim();
     const pendingPlanId = body?.pending_plan_id || null;
