@@ -356,10 +356,16 @@ export default function AdminAIAssistant() {
         <p className="text-sm text-slate-500 mt-1">اسأل عن بيانات المنصة، أو اطلب تعديلًا — يفهم الوكيل نوع طلبك تلقائيًا بدون اختيار مسبق.</p>
       </div>
 
-      <div className="flex items-center gap-4 mb-4 text-xs text-slate-500 flex-wrap">
-        <span className="inline-flex items-center gap-1.5"><Eye className="w-3.5 h-3.5 text-[#C9A66B]" /> قراءة فقط للبيانات</span>
-        <span className="inline-flex items-center gap-1.5"><Wrench className="w-3.5 h-3.5 text-[#C9A66B]" /> معاينة قبل أي تعديل</span>
-        <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-[#C9A66B]" /> التنفيذ يدويًا في جلسة المحرر فقط</span>
+      <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
+        <div className="flex items-center gap-4 text-xs text-slate-500 flex-wrap">
+          <span className="inline-flex items-center gap-1.5"><Eye className="w-3.5 h-3.5 text-[#C9A66B]" /> قراءة فقط للبيانات</span>
+          <span className="inline-flex items-center gap-1.5"><Wrench className="w-3.5 h-3.5 text-[#C9A66B]" /> معاينة قبل أي تعديل</span>
+          <span className="inline-flex items-center gap-1.5"><ShieldCheck className="w-3.5 h-3.5 text-[#C9A66B]" /> التنفيذ يدويًا في جلسة المحرر فقط</span>
+        </div>
+        <Button size="sm" variant="outline" onClick={refreshIndexStatus} disabled={refreshingIndex} className="text-xs">
+          {refreshingIndex ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+          تحديث معرفة المشروع
+        </Button>
       </div>
 
       <Card className="border-[#EFE6D3]">
