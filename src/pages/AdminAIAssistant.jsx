@@ -326,7 +326,7 @@ export default function AdminAIAssistant() {
     }, 800);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages, conversationVersion]);
+  }, [messages]);
 
   const recentHistoryForContext = () =>
     messages.slice(-6).map((m) => ({
