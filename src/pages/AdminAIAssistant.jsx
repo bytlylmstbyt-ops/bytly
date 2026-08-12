@@ -175,6 +175,17 @@ function AgentMessage({ msg, onDecision, deciding }) {
             <PlanRow icon={ShieldCheck} label="الاختبارات المطلوبة" value={plan.tests_required?.length ? plan.tests_required.join('، ') : '—'} />
           </div>
 
+          {(plan.affected_pages?.length || plan.affected_entities?.length || plan.affected_functions?.length || plan.affected_integrations?.length || plan.unaffected_summary) && (
+            <div className="mt-3 rounded-lg border border-[#EFE6D3] p-3">
+              <p className="text-[11px] font-semibold text-slate-500 mb-2">تحليل الأثر (Impact Analysis)</p>
+              {!!plan.affected_pages?.length && <PlanRow icon={Layers} label="الصفحات المتأثرة" value={plan.affected_pages.join('، ')} />}
+              {!!plan.affected_entities?.length && <PlanRow icon={Database} label="الكيانات المتأثرة" value={plan.affected_entities.join('، ')} />}
+              {!!plan.affected_functions?.length && <PlanRow icon={Server} label="دوال Backend المتأثرة" value={plan.affected_functions.join('، ')} />}
+              {!!plan.affected_integrations?.length && <PlanRow icon={Plug} label="التكاملات المتأثرة" value={plan.affected_integrations.join('، ')} />}
+              {plan.unaffected_summary && <PlanRow icon={ShieldOff} label="ما لن يتغيّر" value={plan.unaffected_summary} />}
+            </div>
+          )}
+
           {plan.diff_preview && (
             <div className="mt-3">
               <p className="text-[11px] font-semibold text-slate-500 mb-1">معاينة التغيير (Diff تقنية، اختيارية):</p>
