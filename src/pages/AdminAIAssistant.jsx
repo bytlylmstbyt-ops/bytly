@@ -259,19 +259,43 @@ function AccessDenied() {
 export default function AdminAIAssistant() {
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [asking, setAsking] = useState(false);
   const [decidingId, setDecidingId] = useState(null);
   const [pendingPlanId, setPendingPlanId] = useState(null);
   const [refreshingIndex, setRefreshingIndex] = useState(false);
+  const [conversationId, setConversationId] = useState(null);
+  const [conversationVersion, setConversationVersion] = useState(0);
+  const [pendingAttachments, setPendingAttachments] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const scrollRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const speechSupported = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
 
   useEffect(() => {
     (async () => {
       try {
         const u = await base44.auth.me();
         setIsAdmin(u?.role === "admin");
+        setCurrentUser(u);
+        if (u?.role === "admin") {
+          const existing = await base44.entities.AIAgentConversation.filter({ asked_by_email: u.email }, "-updated_date", 1);
+          if (existing?.[0]) {
+            setConversationId(existing[0].id);
+            try {
+              const parsed = JSON.parse(existing[0].messages_json || "[]");
+              setMessages(Array.isArray(parsed) ? parsed : []);
+              const lastPlan = [...parsed].reverse().find((m) => m.role === "plan" && m.plan?.status === "proposed" && !m.plan?.blocked);
+              if (lastPlan) setPendingPlanId(lastPlan.id);
+            } catch {
+              setMessages([]);
+            }
+          }
+        }
       } catch {
         setIsAdmin(false);
       } finally {
@@ -284,6 +308,27 @@ export default function AdminAIAssistant() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, asking]);
 
+  // Persist conversation memory — debounced, fires after messages settle.
+  useEffect(() => {
+    if (!currentUser || !messages.length) return;
+    const timer = setTimeout(async () => {
+      const attachmentsCount = messages.reduce((sum, m) => sum + (m.attachments?.length || 0), 0);
+      const messages_json = JSON.stringify(messages).slice(0, 100000);
+      try {
+        if (conversationId) {
+          await base44.entities.AIAgentConversation.update(conversationId, { messages_json, attachments_count: attachmentsCount });
+        } else {
+          const created = await base44.entities.AIAgentConversation.create({ asked_by_email: currentUser.email, messages_json, attachments_count: attachmentsCount });
+          setConversationId(created.id);
+        }
+      } catch {
+        // Memory persistence is best-effort — never block the chat on a save failure.
+      }
+    }, 800);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, conversationVersion]);
+
   const recentHistoryForContext = () =>
     messages.slice(-6).map((m) => ({
       role: m.role,
@@ -292,14 +337,19 @@ export default function AdminAIAssistant() {
 
   const send = async (text) => {
     const q = (text ?? input).trim();
-    if (!q || asking) return;
+    if ((!q && !pendingAttachments.length) || asking) return;
+    const attachmentsForMessage = pendingAttachments;
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", text: q }]);
+    setPendingAttachments([]);
+    const attachmentNote = attachmentsForMessage.length
+      ? `\n\n[مرفقات أرفقها المستخدم: ${attachmentsForMessage.map((a) => `${a.name} (${a.url})`).join("، ")}]`
+      : "";
+    setMessages((prev) => [...prev, { role: "user", text: q, attachments: attachmentsForMessage }]);
     setAsking(true);
     try {
       const res = await base44.functions.invoke("platformAgent", {
         action: "message",
-        message: q,
+        message: q + attachmentNote,
         pending_plan_id: pendingPlanId,
         recent_history: recentHistoryForContext(),
       });
@@ -357,6 +407,49 @@ export default function AdminAIAssistant() {
     } finally {
       setRefreshingIndex(false);
     }
+  };
+
+  const handleFileSelect = async (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (!files.length) return;
+    setUploading(true);
+    try {
+      for (const file of files) {
+        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        setPendingAttachments((prev) => [...prev, { url: file_url, name: file.name, isImage: file.type.startsWith("image/") }]);
+      }
+    } catch {
+      setMessages((prev) => [...prev, { role: "error", text: "تعذّر رفع أحد الملفات. حاول مرة أخرى." }]);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removePendingAttachment = (idx) => {
+    setPendingAttachments((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const toggleVoice = () => {
+    if (!speechSupported) return;
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      return;
+    }
+    const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognitionCtor();
+    recognition.lang = "ar-SA";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onresult = (event) => {
+      const transcript = event.results?.[0]?.[0]?.transcript || "";
+      setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+    };
+    recognition.onend = () => setIsRecording(false);
+    recognition.onerror = () => setIsRecording(false);
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
   };
 
   if (loadingAuth) {
