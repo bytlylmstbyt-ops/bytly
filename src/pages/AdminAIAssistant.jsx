@@ -242,6 +242,7 @@ export default function AdminAIAssistant() {
   const [asking, setAsking] = useState(false);
   const [decidingId, setDecidingId] = useState(null);
   const [pendingPlanId, setPendingPlanId] = useState(null);
+  const [refreshingIndex, setRefreshingIndex] = useState(false);
   const scrollRef = useRef(null);
 
   useEffect(() => {
