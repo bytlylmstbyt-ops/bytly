@@ -96,6 +96,7 @@ function AgentMessage({ msg, onDecision, deciding }) {
   if (msg.role === "error") return <Bubble tone="error">{msg.text}</Bubble>;
   if (msg.role === "clarify") return <Bubble tone="bot">{msg.text}</Bubble>;
   if (msg.role === "decision") return <Bubble tone="bot">{msg.text}</Bubble>;
+  if (msg.role === "index_status") return <Bubble tone="bot">{msg.text}</Bubble>;
 
   if (msg.role === "data") {
     const isUnsupported = msg.coverage === "unsupported";
