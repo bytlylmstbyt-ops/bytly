@@ -267,7 +267,6 @@ export default function AdminAIAssistant() {
   const [pendingPlanId, setPendingPlanId] = useState(null);
   const [refreshingIndex, setRefreshingIndex] = useState(false);
   const [conversationId, setConversationId] = useState(null);
-  const [conversationVersion, setConversationVersion] = useState(0);
   const [pendingAttachments, setPendingAttachments] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
