@@ -114,7 +114,7 @@ function Bubble({ children, tone = "bot", attachments }) {
 }
 
 function AgentMessage({ msg, onDecision, deciding }) {
-  if (msg.role === "user") return <Bubble tone="user">{msg.text}</Bubble>;
+  if (msg.role === "user") return <Bubble tone="user" attachments={msg.attachments}>{msg.text}</Bubble>;
   if (msg.role === "error") return <Bubble tone="error">{msg.text}</Bubble>;
   if (msg.role === "clarify") return <Bubble tone="bot">{msg.text}</Bubble>;
   if (msg.role === "decision") return <Bubble tone="bot">{msg.text}</Bubble>;
