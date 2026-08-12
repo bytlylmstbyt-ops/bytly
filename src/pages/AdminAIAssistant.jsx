@@ -516,18 +516,42 @@ export default function AdminAIAssistant() {
             )}
           </div>
 
-          <form onSubmit={(e) => { e.preventDefault(); send(); }} className="mt-4 flex items-end gap-2 border-t border-[#EFE6D3] pt-4">
-            <Textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-              placeholder="ماذا تريد أن أفعل؟"
-              rows={1}
-              className="resize-none flex-1"
-            />
-            <Button type="submit" disabled={asking || !input.trim()} className="bg-[#4A3F35] hover:bg-[#3a3129] shrink-0">
-              {asking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            </Button>
+          <form onSubmit={(e) => { e.preventDefault(); send(); }} className="mt-4 border-t border-[#EFE6D3] pt-4">
+            {!!pendingAttachments.length && (
+              <div className="flex flex-wrap gap-2 mb-2">
+                {pendingAttachments.map((a, i) => (
+                  <div key={i} className="relative inline-flex items-center gap-1.5 text-[11px] bg-[#FEF9EE] border border-[#EFE6D3] rounded-lg px-2 py-1">
+                    {a.isImage ? <ImageIcon className="w-3.5 h-3.5 text-[#C9A66B]" /> : <FileText className="w-3.5 h-3.5 text-[#C9A66B]" />}
+                    <span className="max-w-[120px] truncate">{a.name}</span>
+                    <button type="button" onClick={() => removePendingAttachment(i)} className="text-slate-400 hover:text-red-500">
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex items-end gap-2">
+              <input ref={fileInputRef} type="file" multiple hidden onChange={handleFileSelect} accept="image/*,.pdf,.doc,.docx,.xlsx,.csv,.txt" />
+              <Button type="button" variant="outline" size="icon" disabled={uploading} onClick={() => fileInputRef.current?.click()} title="إرفاق صورة أو ملف" className="shrink-0">
+                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
+              </Button>
+              {speechSupported && (
+                <Button type="button" variant={isRecording ? "default" : "outline"} size="icon" onClick={toggleVoice} title="إدخال صوتي" className={`shrink-0 ${isRecording ? "bg-red-500 hover:bg-red-600" : ""}`}>
+                  {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                </Button>
+              )}
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+                placeholder={isRecording ? "جارٍ الاستماع... تحدّث" : "ماذا تريد أن أفعل؟"}
+                rows={1}
+                className="resize-none flex-1"
+              />
+              <Button type="submit" disabled={asking || (!input.trim() && !pendingAttachments.length)} className="bg-[#4A3F35] hover:bg-[#3a3129] shrink-0">
+                {asking ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
