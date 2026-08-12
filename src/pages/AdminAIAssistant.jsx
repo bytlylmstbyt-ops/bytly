@@ -320,6 +320,23 @@ export default function AdminAIAssistant() {
     }
   };
 
+  const refreshIndexStatus = async () => {
+    setRefreshingIndex(true);
+    try {
+      const res = await base44.functions.invoke("platformAgent", { action: "refresh_index_status" });
+      const data = res.data;
+      const meta = data?.meta;
+      const text = meta
+        ? `حالة فهرس المشروع: ${meta.total_count ?? data.live_total_indexed ?? "غير معروف"} عنصر مفهرس (${meta.pages_count ?? "?"} صفحة، ${meta.entities_count ?? "?"} كيان، ${meta.functions_count ?? "?"} دالة) — آخر تحديث: ${meta.last_indexed_at ? new Date(meta.last_indexed_at).toLocaleString("ar") : "غير معروف"}.\n${data.note || ""}`
+        : `لم يتم إنشاء فهرس بعد. عدد السجلات الحالية المقروءة: ${data?.live_total_indexed ?? 0}.`;
+      setMessages((prev) => [...prev, { role: "index_status", text }]);
+    } catch {
+      setMessages((prev) => [...prev, { role: "error", text: "تعذّر جلب حالة الفهرس الآن." }]);
+    } finally {
+      setRefreshingIndex(false);
+    }
+  };
+
   if (loadingAuth) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
