@@ -1,12 +1,12 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 // ════════════════════════════════════════════════════════════════════════
-// platformChangePlanner  (Phase 3 + Project Context extension)
+// platformChangePlanner  (Phase 3 + Project Context + Monitoring extension)
 //
 // This function NEVER writes to platform data and NEVER writes to the
 // app's own source code. Its writes are limited to two things:
 //   • AIChangeRequestLog — the change-plan audit/queue entity (create/update)
-//   • ProjectIndexMeta   — a "refresh requested" timestamp only (update)
+//   • ProjectIndexMeta   — read-only status only, no writes from here
 // There is no code-execution path here: "approve" only flips a status
 // field on the log row. Applying an approved plan to the actual app is
 // always a separate, manual step done by a human developer/AI-builder
@@ -15,21 +15,26 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 // Project Context: before planning, this function searches the
 // ProjectIndexEntry entity (read-only .list()/.filter()) — a curated,
 // refreshable map of pages/entities/functions/integrations — instead of
-// reasoning from a fixed hardcoded list. This is genuine "search before
-// deciding": a lightweight keyword match narrows ~hundreds of indexed
-// rows down to the ones actually relevant to the admin's request, and
-// only those are given to the planning LLM.
+// reasoning from a fixed hardcoded list.
 //
-// State machine (per plan):
-//   User Request → Intent Detection → Project Index Search (Impact
-//   Analysis inputs) → Risk Classification → Change Plan + Change Scope
-//   → Preview/Diff → Human Approval → (manual, out-of-band) Execution.
+// Lifecycle (per plan), matching AIChangeRequestLog.status:
+//   planned → awaiting_approval → approved/rejected → (if approved,
+//   applied manually by the assistant in the editor session) executing →
+//   verifying → completed/failed. This function only ever sets
+//   awaiting_approval (on propose) and approved/rejected (on decide) —
+//   the executing/verifying/completed/failed transitions are set
+//   manually by the assistant when it actually performs the work,
+//   never automatically from this endpoint.
+//
+// Security analysis: every plan includes a security_notes field — a
+// permissions/write-path review — even when the request isn't blocked,
+// so the admin always sees an explicit statement of what the change
+// does and doesn't touch on the privilege/write-access front.
 //
 // Do not add any capability here that calls .create()/.update()/.delete()
-// on anything other than AIChangeRequestLog / ProjectIndexMeta. Never
-// request, log, or store API keys/secrets/OAuth credentials anywhere in
-// this file or in ProjectIndexEntry — integrations are referenced by
-// name only.
+// on anything other than AIChangeRequestLog. Never request, log, or store
+// API keys/secrets/OAuth credentials anywhere in this file or in
+// ProjectIndexEntry — integrations are referenced by name only.
 // ════════════════════════════════════════════════════════════════════════
 
 const BLOCKED_TOPICS_AR_EN =
@@ -40,9 +45,10 @@ const BLOCKED_TOPICS_AR_EN =
   'external OAuth credentials / بيانات اعتماد OAuth الخارجية';
 
 // Defensive fallback net — independent of what the classifier LLM
-// decided. Includes destructive verbs (delete/حذف) explicitly, since a
-// request like "delete all users" must never slip through on wording alone.
-const DANGER_WORDS = /(database|db schema|قاعدة البيانات|صلاحي|role|auth|دفع|payment|refund|استرداد|سحب|withdraw|عمولة|commission|escrow|ضمان مالي|عقد|contract|deploy|نشر|api key|secret|oauth|\bحذف\b|\bdelete\b|\bremove all\b|جميع المستخدمين|all users)/i;
+// decided. Includes destructive verbs (delete/حذف) explicitly, and now
+// also privilege-expansion phrasing, since a request like "اجعلني admin"
+// or "grant this user more access" must never slip through on wording alone.
+const DANGER_WORDS = /(database|db schema|قاعدة البيانات|صلاحي|role|auth|دفع|payment|refund|استرداد|سحب|withdraw|عمولة|commission|escrow|ضمان مالي|عقد|contract|deploy|نشر|api key|secret|oauth|\bحذف\b|\bdelete\b|\bremove all\b|جميع المستخدمين|all users|admin access|اجعلني ادمن|وسّع صلاحي|grant access|elevate)/i;
 
 // Very light stopword-free keyword extraction for matching the request
 // against the Project Index. Deliberately simple — this is a relevance
@@ -107,7 +113,7 @@ Deno.serve(async (req) => {
       if (!id) return Response.json({ error: 'Missing id' }, { status: 400 });
       const status = action === 'approve' ? 'approved' : 'rejected';
       const execution_note = action === 'approve'
-        ? 'تمت الموافقة — سيتم تنفيذ التغيير يدويًا من قبل المطوّر/جلسة المساعد. لا يوجد تنفيذ تلقائي في هذه المرحلة.'
+        ? 'تمت الموافقة — سيتم تنفيذ التغيير يدويًا من قبل المطوّر/جلسة المساعد (executing → verifying → completed). لا يوجد تنفيذ تلقائي في هذه المرحلة.'
         : 'تم رفض الاقتراح ولن يُنفَّذ.';
       await base44.asServiceRole.entities.AIChangeRequestLog.update(id, { status, execution_note });
       return Response.json({ success: true, status });
@@ -135,7 +141,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── Propose: search Project Index → classify + generate a change plan ──
+    // ── Propose: search Project Index → security + risk classify → plan ──
     const request = (body?.request || '').trim();
     if (!request) return Response.json({ error: 'Missing request' }, { status: 400 });
 
@@ -150,9 +156,13 @@ ${indexMatches.map(e => `- ${e.name} [${e.file_type}]${e.route ? ` (${e.route})`
 Categories that must ALWAYS be blocked from automatic execution — if the request touches any of these, set blocked=true and change_type accordingly, and briefly explain why in block_reason (do not produce a full plan for the blocked parts):
 ${BLOCKED_TOPICS_AR_EN}
 
+SECURITY ANALYSIS (always required, even for safe requests): before proposing anything, explicitly check whether the request would touch permission/role logic, expand any user's access, or open a new write path to data that isn't already safely writable through this planner. Fill security_notes with a one-to-two-sentence Arabic statement of this review's outcome — e.g. confirming the change stays UI-only with no privilege or write-path impact, or flagging exactly what privilege/write concern it raises (in which case blocked must be true).
+
 CRITICAL: never ask for, request, or reference any API key, secret, or OAuth credential value, even for integration-related requests — only describe what KIND of credential/auth an integration needs (e.g. "OAuth" or "API key"), never a value.
 
-Admin's change request (Arabic or English, possibly informal): "${request}"
+DIAGNOSTIC REQUESTS: if the admin is reporting a problem/bug (e.g. "فيه خطأ في...", "الصفحة مو شغالة", "kind of broken", "not working") rather than requesting a new feature, fill problem_description (what's wrong) and likely_cause (best-effort diagnosis grounded in the Project Index matches) — otherwise leave both empty strings.
+
+Admin's message (Arabic or English, possibly informal): "${request}"
 
 Analyze and respond with a full structured Change Plan:
 1. language: "ar" or "en"
@@ -164,14 +174,17 @@ Analyze and respond with a full structured Change Plan:
 7. affected_functions: backend function names from the Project Index results that would be affected
 8. affected_integrations: integration names from the Project Index results that would be affected (empty array if none)
 9. unaffected_summary: one or two Arabic sentences on what will NOT change (the safe boundary of this edit)
-10. change_type: "ui_only", "logic", or "data"
-11. risk_level: "low", "medium", or "high"
-12. requires_db_change / requires_backend_change / requires_permission_change: booleans
-13. tests_required: short list of what should be checked before/after applying the change
-14. blocked: true if this touches any of the always-blocked categories above, OR if change_type is "data" or the request implies deleting/overwriting real records, OR if the Project Index has no relevant match at all for a page/component-specific request
-15. block_reason: if blocked, a one-sentence Arabic explanation of why this needs additional human review
-16. plain_explanation_ar: 2-4 sentences in clear, simple Arabic explaining what would change, written for a non-programmer, referencing the actual page/entity/function names found. If blocked, explain what was understood and why it needs a developer instead.
-17. diff_preview: a short, human-readable, diff-style text preview of the proposed change. If blocked, leave this empty.`,
+10. security_notes: the security analysis outcome described above (always fill this, in Arabic)
+11. problem_description: filled only for diagnostic/bug-report style requests (see above), else empty string
+12. likely_cause: filled only alongside problem_description, else empty string
+13. change_type: "ui_only", "logic", or "data"
+14. risk_level: "low", "medium", or "high"
+15. requires_db_change / requires_backend_change / requires_permission_change: booleans
+16. tests_required: short list of what should be checked before/after applying the change
+17. blocked: true if this touches any of the always-blocked categories above, OR if change_type is "data" or the request implies deleting/overwriting real records or expanding any privilege, OR if the Project Index has no relevant match at all for a page/component-specific request
+18. block_reason: if blocked, a one-sentence Arabic explanation of why this needs additional human review
+19. plain_explanation_ar: 2-4 sentences in clear, simple Arabic explaining what would change, written for a non-programmer, referencing the actual page/entity/function names found. If blocked, explain what was understood and why it needs a developer instead.
+20. diff_preview: a short, human-readable, diff-style text preview of the proposed change. If blocked, leave this empty.`,
       add_context_from_internet: false,
       response_json_schema: {
         type: 'object',
@@ -185,6 +198,9 @@ Analyze and respond with a full structured Change Plan:
           affected_functions: { type: 'array', items: { type: 'string' } },
           affected_integrations: { type: 'array', items: { type: 'string' } },
           unaffected_summary: { type: 'string' },
+          security_notes: { type: 'string' },
+          problem_description: { type: 'string' },
+          likely_cause: { type: 'string' },
           change_type: { type: 'string', enum: ['ui_only', 'logic', 'data'] },
           risk_level: { type: 'string', enum: ['low', 'medium', 'high'] },
           requires_db_change: { type: 'boolean' },
@@ -198,18 +214,18 @@ Analyze and respond with a full structured Change Plan:
         },
         required: [
           'language', 'detected_intent', 'target_page', 'affected_files', 'affected_pages', 'affected_entities',
-          'affected_functions', 'affected_integrations', 'unaffected_summary', 'change_type', 'risk_level',
-          'requires_db_change', 'requires_backend_change', 'requires_permission_change', 'tests_required',
-          'blocked', 'block_reason', 'plain_explanation_ar', 'diff_preview',
+          'affected_functions', 'affected_integrations', 'unaffected_summary', 'security_notes', 'problem_description',
+          'likely_cause', 'change_type', 'risk_level', 'requires_db_change', 'requires_backend_change',
+          'requires_permission_change', 'tests_required', 'blocked', 'block_reason', 'plain_explanation_ar', 'diff_preview',
         ],
       },
     });
 
     const language = planning.language === 'en' ? 'en' : 'ar';
 
-    const forceBlocked = planning.blocked || DANGER_WORDS.test(request);
-    const blockReason = planning.blocked
-      ? planning.block_reason
+    const forceBlocked = planning.blocked || !!planning.requires_permission_change || DANGER_WORDS.test(request);
+    const blockReason = planning.blocked || planning.requires_permission_change
+      ? (planning.block_reason || 'هذا الطلب يمس الصلاحيات ويحتاج مراجعة مطوّر مباشرة.')
       : (forceBlocked ? 'هذا الطلب يمس مجالًا حساسًا (بيانات/صلاحيات/أمور مالية/نشر) ويحتاج مراجعة مطوّر مباشرة.' : '');
 
     const logRow = await base44.asServiceRole.entities.AIChangeRequestLog.create({
@@ -224,6 +240,9 @@ Analyze and respond with a full structured Change Plan:
       affected_functions: planning.affected_functions || [],
       affected_integrations: planning.affected_integrations || [],
       unaffected_summary: planning.unaffected_summary?.slice(0, 800) || '',
+      security_notes: planning.security_notes?.slice(0, 800) || '',
+      problem_description: planning.problem_description?.slice(0, 800) || '',
+      likely_cause: planning.likely_cause?.slice(0, 500) || '',
       change_type: planning.change_type,
       risk_level: planning.risk_level,
       requires_db_change: !!planning.requires_db_change,
@@ -234,10 +253,10 @@ Analyze and respond with a full structured Change Plan:
       diff_preview: forceBlocked ? '' : (planning.diff_preview || '').slice(0, 3000),
       blocked: forceBlocked,
       block_reason: blockReason?.slice(0, 500) || '',
-      status: 'proposed',
+      status: 'awaiting_approval',
       execution_note: forceBlocked
         ? 'محظور من التنفيذ الآلي — يحتاج مراجعة مطوّر مباشرة.'
-        : 'بانتظار الموافقة. عند الموافقة، يُنفَّذ التغيير يدويًا — لا يوجد تنفيذ تلقائي في هذه المرحلة.',
+        : 'بانتظار الموافقة. عند الموافقة، يُنفَّذ التغيير يدويًا (executing → verifying → completed) — لا يوجد تنفيذ تلقائي في هذه المرحلة.',
     });
 
     return Response.json({
@@ -256,6 +275,9 @@ Analyze and respond with a full structured Change Plan:
         affected_functions: planning.affected_functions || [],
         affected_integrations: planning.affected_integrations || [],
         unaffected_summary: planning.unaffected_summary || '',
+        security_notes: planning.security_notes || '',
+        problem_description: forceBlocked ? '' : (planning.problem_description || ''),
+        likely_cause: forceBlocked ? '' : (planning.likely_cause || ''),
         change_type: planning.change_type,
         risk_level: planning.risk_level,
         requires_db_change: !!planning.requires_db_change,
@@ -266,7 +288,7 @@ Analyze and respond with a full structured Change Plan:
         diff_preview: forceBlocked ? '' : planning.diff_preview,
         blocked: forceBlocked,
         block_reason: blockReason,
-        status: 'proposed',
+        status: 'awaiting_approval',
       },
       response_time_ms: Date.now() - startedAt,
     });
