@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Sparkles, Send, Loader2, ShieldAlert, ArrowUpRight, ShieldCheck, Eye, HelpCircle,
   Wrench, Database, Server, KeyRound, CheckCircle2, XCircle, AlertTriangle, Ban, MessageCircle,
-  RefreshCw, Layers, Plug, ShieldOff, Mic, MicOff, Paperclip, X, FileText, Image as ImageIcon,
+  RefreshCw, Layers, Plug, ShieldOff, Mic, MicOff, Paperclip, X, FileText, Image as ImageIcon, Bug,
 } from "lucide-react";
 
 const EXAMPLE_PROMPTS = [
