@@ -550,6 +550,31 @@ const CAPABILITIES = [
       };
     },
   },
+  // ── Project monitoring (read-only view of ProjectHealthCheck log rows) ──
+  {
+    key: 'project_health_overview',
+    category: 'monitoring',
+    description_ar: 'حالة صحة المشروع: آخر فحوصات الكود المعروفة (lint، typecheck، استيرادات مكسورة) ونتائجها. ملاحظة: هذه القدرة تقرأ فحوصات سابقة مسجّلة فقط — الفحص الحي للكود يتطلّب وصولاً لملفات المشروع غير متاح لهذه الدالة في وقت التشغيل، لذا يُجرى يدويًا من قبل المساعد في جلسة المحرر.',
+    description_en: "Project code-health status: latest known lint/typecheck/broken-import findings (logged by the assistant when it runs a scan in the editor session; this capability reads that log, it doesn't scan live)",
+    admin_page: 'AdminAIAssistant',
+    data_sources: ['ProjectHealthCheck'],
+    async run(base44) {
+      const checks = await base44.asServiceRole.entities.ProjectHealthCheck.list('-checked_at', 20);
+      const bySeverityOrder = { high: 0, medium: 1, low: 2, none: 3 };
+      const sorted = [...checks].sort((a, b) => (bySeverityOrder[a.severity] ?? 4) - (bySeverityOrder[b.severity] ?? 4));
+      return {
+        columns: [
+          { key: 'check_type', label_ar: 'نوع الفحص', label_en: 'Check type' },
+          { key: 'summary', label_ar: 'الملخص', label_en: 'Summary' },
+          { key: 'severity', label_ar: 'الخطورة', label_en: 'Severity' },
+          { key: 'issue_count', label_ar: 'عدد المشاكل', label_en: 'Issues' },
+          { key: 'checked_at', label_ar: 'تاريخ الفحص', label_en: 'Checked at' },
+        ],
+        rows: sorted.slice(0, 20).map(c => ({ id: c.id, check_type: c.check_type, summary: c.summary, severity: c.severity, issue_count: c.issue_count, checked_at: c.checked_at })),
+        stats: { total_checks_logged: checks.length, highest_severity: sorted[0]?.severity || 'none' },
+      };
+    },
+  },
 ];
 
 const CAPABILITY_KEYS = CAPABILITIES.map(c => c.key);
