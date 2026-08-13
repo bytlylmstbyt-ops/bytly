@@ -235,7 +235,7 @@ function AgentMessage({ msg, onDecision, deciding }) {
             </div>
           )}
 
-          {plan.status === "proposed" && (
+          {plan.status === "awaiting_approval" && (
             <div className="mt-4 flex items-center gap-2">
               <Button size="sm" disabled={deciding} onClick={() => onDecision(msg.id, "approve")} className="bg-emerald-600 hover:bg-emerald-700">
                 {deciding === "approve" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
