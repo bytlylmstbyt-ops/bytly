@@ -194,6 +194,13 @@ function AgentMessage({ msg, onDecision, deciding }) {
           <p className="text-xs font-semibold text-slate-500 mb-1">فهمت طلبك كالتالي:</p>
           <p className="text-sm leading-relaxed text-[#4A3F35] mb-3">{plan.plain_explanation_ar}</p>
 
+          {(plan.problem_description || plan.likely_cause) && (
+            <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50/50 p-3">
+              {plan.problem_description && <PlanRow icon={Bug} label="المشكلة" value={plan.problem_description} />}
+              {plan.likely_cause && <PlanRow icon={HelpCircle} label="السبب المحتمل" value={plan.likely_cause} />}
+            </div>
+          )}
+
           <div className="rounded-lg border border-[#EFE6D3] p-3 bg-[#FEF9EE]/50">
             <PlanRow icon={ArrowUpRight} label="الصفحة المتأثرة" value={plan.target_page} />
             <PlanRow icon={Wrench} label="الملفات المتأثرة (تقديرية)" value={plan.affected_files?.length ? plan.affected_files.join('، ') : '—'} />
@@ -202,6 +209,13 @@ function AgentMessage({ msg, onDecision, deciding }) {
             <PlanRow icon={KeyRound} label="يحتاج تعديل صلاحيات؟" value={yesNo(plan.requires_permission_change)} />
             <PlanRow icon={ShieldCheck} label="الاختبارات المطلوبة" value={plan.tests_required?.length ? plan.tests_required.join('، ') : '—'} />
           </div>
+
+          {plan.security_notes && (
+            <div className="mt-3 rounded-lg border border-[#EFE6D3] p-3">
+              <p className="text-[11px] font-semibold text-slate-500 mb-2">المراجعة الأمنية</p>
+              <PlanRow icon={ShieldAlert} label="النتيجة" value={plan.security_notes} />
+            </div>
+          )}
 
           {(plan.affected_pages?.length || plan.affected_entities?.length || plan.affected_functions?.length || plan.affected_integrations?.length || plan.unaffected_summary) && (
             <div className="mt-3 rounded-lg border border-[#EFE6D3] p-3">
