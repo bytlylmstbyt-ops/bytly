@@ -165,6 +165,11 @@ function AgentMessage({ msg, onDecision, deciding }) {
             </div>
             <p className="text-sm text-red-700/90 leading-relaxed">{plan.block_reason}</p>
             <p className="text-xs text-slate-500 mt-2">فهمت طلبك كالتالي: {plan.detected_intent}</p>
+            {plan.security_notes && (
+              <div className="mt-3 rounded-lg border border-red-200 bg-white/60 p-3">
+                <PlanRow icon={ShieldAlert} label="المراجعة الأمنية" value={plan.security_notes} />
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
