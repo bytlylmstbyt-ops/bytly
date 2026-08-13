@@ -380,7 +380,7 @@ export default function AdminAIAssistant() {
         }]);
       } else if (data.kind === "plan") {
         setMessages((prev) => [...prev, { role: "plan", id: data.id, plan: data.plan }]);
-        if (!data.plan.blocked && data.plan.status === "proposed") setPendingPlanId(data.id);
+        if (!data.plan.blocked && data.plan.status === "awaiting_approval") setPendingPlanId(data.id);
       } else if (data.kind === "decision") {
         setMessages((prev) => {
           const updated = prev.map((m) => (m.role === "plan" && m.id === data.id ? { ...m, plan: { ...m.plan, status: data.status } } : m));
