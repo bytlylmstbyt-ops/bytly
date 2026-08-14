@@ -99,8 +99,7 @@ async function searchProjectIndex(base44, request) {
   // reliable than trusting this crude keyword score alone.
   const matchedIds = new Set(matched.map(e => e.id));
   const topUp = allEntries
-    .filter(e => e.file_type === 'page' && !matchedIds.has(e.id))
-    .slice(0, 25);
+    .filter(e => e.file_type === 'page' && !matchedIds.has(e.id));
   const combined = [...matched, ...topUp];
 
   return { matched: combined, totalIndexed: allEntries.length };
