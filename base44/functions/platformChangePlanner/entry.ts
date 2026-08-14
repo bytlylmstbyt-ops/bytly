@@ -86,15 +86,22 @@ async function searchProjectIndex(base44, request) {
     .slice(0, 20)
     .map(s => s.entry);
 
-  // Fallback when the keyword pre-filter finds nothing: include a broad
-  // sample of indexed PAGES (not just /Admin routes) so the planning LLM
-  // still has real structural context to reason over — Arabic requests
-  // won't keyword-match this English/Latin-named index, so this fallback
-  // is what actually carries most non-admin, customer-facing page
-  // requests (e.g. RegisterEngineer, RegisterFirm) through to the LLM,
-  // which can bridge the Arabic↔English gap itself once it sees the list.
-  const fallback = allEntries.filter(e => e.file_type === 'page').slice(0, 250);
-  const combined = matched.length ? matched : fallback;
+  // Always TOP UP with a broad sample of indexed pages, even when the
+  // keyword pre-filter already found some matches. The index mixes
+  // Arabic-named entries (score well against Arabic requests) and
+  // English-only entries (e.g. RegisterEngineer, with an empty
+  // description) that score exactly 0 against an Arabic query no matter
+  // how relevant they are — so relying on "if matched is non-empty, skip
+  // the broader pool" would silently starve the LLM of the single most
+  // relevant page whenever a handful of weaker, unrelated entries
+  // happen to score >0 on a shared word. Merging both pools and letting
+  // the LLM's own semantic judgment pick the right target is more
+  // reliable than trusting this crude keyword score alone.
+  const matchedIds = new Set(matched.map(e => e.id));
+  const topUp = allEntries
+    .filter(e => e.file_type === 'page' && !matchedIds.has(e.id))
+    .slice(0, 25);
+  const combined = [...matched, ...topUp];
 
   return { matched: combined, totalIndexed: allEntries.length };
 }
