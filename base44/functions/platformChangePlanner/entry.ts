@@ -93,7 +93,7 @@ async function searchProjectIndex(base44, request) {
   // is what actually carries most non-admin, customer-facing page
   // requests (e.g. RegisterEngineer, RegisterFirm) through to the LLM,
   // which can bridge the Arabic↔English gap itself once it sees the list.
-  const fallback = allEntries.filter(e => e.file_type === 'page').slice(0, 40);
+  const fallback = allEntries.filter(e => e.file_type === 'page').slice(0, 250);
   const combined = matched.length ? matched : fallback;
 
   return { matched: combined, totalIndexed: allEntries.length };
