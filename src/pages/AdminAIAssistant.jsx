@@ -307,7 +307,7 @@ export default function AdminAIAssistant() {
             try {
               const parsed = JSON.parse(existing[0].messages_json || "[]");
               setMessages(Array.isArray(parsed) ? parsed : []);
-              const lastPlan = [...parsed].reverse().find((m) => m.role === "plan" && m.plan?.status === "awaiting_approval" && !m.plan?.blocked);
+              const lastPlan = [...parsed].reverse().find((m) => m.role === "plan" && (m.plan?.status === "awaiting_approval" || m.plan?.status === "proposed") && !m.plan?.blocked);
               if (lastPlan) setPendingPlanId(lastPlan.id);
             } catch {
               setMessages([]);
