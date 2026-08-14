@@ -86,9 +86,14 @@ async function searchProjectIndex(base44, request) {
     .slice(0, 20)
     .map(s => s.entry);
 
-  // Always include a small set of admin-hub pages as a fallback so the
-  // planner still has structural context even on a poor keyword match.
-  const fallback = allEntries.filter(e => e.file_type === 'page' && e.route?.startsWith('/Admin')).slice(0, 10);
+  // Fallback when the keyword pre-filter finds nothing: include a broad
+  // sample of indexed PAGES (not just /Admin routes) so the planning LLM
+  // still has real structural context to reason over — Arabic requests
+  // won't keyword-match this English/Latin-named index, so this fallback
+  // is what actually carries most non-admin, customer-facing page
+  // requests (e.g. RegisterEngineer, RegisterFirm) through to the LLM,
+  // which can bridge the Arabic↔English gap itself once it sees the list.
+  const fallback = allEntries.filter(e => e.file_type === 'page').slice(0, 40);
   const combined = matched.length ? matched : fallback;
 
   return { matched: combined, totalIndexed: allEntries.length };
