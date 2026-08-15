@@ -1,0 +1,43 @@
+{
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create",
+        "update",
+        "delete"
+      ],
+      "entity_name": "Project"
+    }
+  },
+  "description": "Bidirectionally syncs project status between Base44 and Supabase whenever a project changes \u2014 pushes the changed project to Supabase and pulls externally-edited rows back to Base44 so all engineering teams stay in sync.",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "supabase_project_status_sync",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "sync": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "supabaseProjectSync",
+            "args": {
+              "project_id": "${ .trigger.entity_id }",
+              "event_type": "${ .trigger.event_type }"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "\u0645\u0632\u0627\u0645\u0646\u0629 \u062d\u0627\u0644\u0629 \u0627\u0644\u0645\u0634\u0631\u0648\u0639 \u0645\u0639 Supabase",
+            "description": "\u062f\u0641\u0639 \u0648\u0633\u062d\u0628 \u062b\u0646\u0627\u0626\u064a \u0627\u0644\u0627\u062a\u062c\u0627\u0647"
+          }
+        }
+      }
+    ]
+  },
+  "name": "Supabase Project Status Sync"
+}
