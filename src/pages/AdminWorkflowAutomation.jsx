@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { REAL_WORKFLOW_CATALOG } from "@/data/realWorkflowCatalog";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,7 +14,7 @@ import {
   Workflow, Plus, Loader2, Play, Trash2, Pencil, Zap, Clock, Hand,
   CheckCircle2, XCircle, Loader, ShieldAlert, Bell, Mail, RefreshCw,
   ListChecks, UserPlus, Link2, Filter, Sparkles, FileSignature, Receipt,
-  Search, ChevronLeft, GitBranch, Database, Timer, X, Eye, Copy,
+  Search, GitBranch, Database, X, Eye,
 } from "lucide-react";
 
 const TRIGGER_TYPE_CONFIG = {
@@ -390,12 +390,12 @@ export default function AdminWorkflowAutomation() {
   }
 
   const filteredRuns = statusFilter === "all" ? runs : runs.filter((r) => r.status === statusFilter);
-  const filteredRules = useMemo(() => rules.filter((rule) => {
+  const filteredRules = rules.filter((rule) => {
     const q = search.trim().toLowerCase();
     const matchesSearch = !q || `${rule.name || ""} ${rule.description || ""}`.toLowerCase().includes(q);
     const matchesStatus = workflowFilter === "all" || (workflowFilter === "active" ? rule.is_active !== false : rule.is_active === false);
     return matchesSearch && matchesStatus;
-  }), [rules, search, workflowFilter]);
+  });
 
   const openWorkflowDetails = (rule) => setSelectedWorkflow(rule);
 
