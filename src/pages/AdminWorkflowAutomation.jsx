@@ -236,6 +236,10 @@ export default function AdminWorkflowAutomation() {
   const [rules, setRules] = useState([]);
   const [runs, setRuns] = useState([]);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [workflowFilter, setWorkflowFilter] = useState("all");
+  const [selectedWorkflow, setSelectedWorkflow] = useState(null);
+  const [suggested, setSuggested] = useState(SUGGESTED_WORKFLOWS);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState(null);
@@ -386,6 +390,28 @@ export default function AdminWorkflowAutomation() {
   }
 
   const filteredRuns = statusFilter === "all" ? runs : runs.filter((r) => r.status === statusFilter);
+  const filteredRules = useMemo(() => rules.filter((rule) => {
+    const q = search.trim().toLowerCase();
+    const matchesSearch = !q || `${rule.name || ""} ${rule.description || ""}`.toLowerCase().includes(q);
+    const matchesStatus = workflowFilter === "all" || (workflowFilter === "active" ? rule.is_active !== false : rule.is_active === false);
+    return matchesSearch && matchesStatus;
+  }), [rules, search, workflowFilter]);
+
+  const openWorkflowDetails = (rule) => setSelectedWorkflow(rule);
+
+  const addSuggestedWorkflow = async (template) => {
+    try {
+      await base44.entities.AutomationRule.create({
+        name: template.name, description: template.description, is_active: true,
+        trigger_type: template.trigger_type, trigger_event: template.trigger_event || null,
+        schedule_cron: template.schedule_cron || null, integration_trigger: "none",
+        category: template.category, actions: template.actions, is_template: false,
+        run_count: 0, last_run_status: "never_run",
+      });
+      setSuggested((items) => items.filter((item) => item.id !== template.id));
+      await loadData();
+    } catch (error) { console.error("Error adding suggested workflow:", error); }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
@@ -419,7 +445,16 @@ export default function AdminWorkflowAutomation() {
 
         {/* ── تبويب سير العمل ── */}
         <TabsContent value="workflows">
-          {rules.length === 0 ? (
+          {suggested.length > 0 && (
+            <section className="mb-6">
+              <div className="mb-3"><h2 className="font-bold text-[#4A3F35] flex items-center gap-2"><Sparkles className="w-4 h-4 text-[#C9A66B]" />سير العمل المقترح</h2><p className="text-xs text-slate-500 mt-1">قوالب جاهزة منفصلة عن الأتمتة الحالية. لا تصبح مفعّلة إلا بعد إضافتها.</p></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {suggested.map((template) => <Card key={template.id} className="border-dashed border-[#C9A66B]/50 bg-[#FEFCF7]"><CardContent className="p-4"><div className="flex items-start justify-between gap-2"><div><p className="font-semibold text-sm text-[#4A3F35]">{template.name}</p><p className="text-xs text-slate-500 mt-1 line-clamp-3">{template.description}</p></div><Button size="icon" variant="outline" className="shrink-0" onClick={() => addSuggestedWorkflow(template)}><Plus className="w-4 h-4" /></Button></div></CardContent></Card>)}
+              </div>
+            </section>
+          )}
+          <div className="flex flex-wrap items-center gap-2 mb-5"><div className="relative flex-1 min-w-[220px]"><Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="البحث بالاسم" className="pr-9" /></div><Select value={workflowFilter} onValueChange={setWorkflowFilter}><SelectTrigger className="w-44"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">كل الحالات</SelectItem><SelectItem value="active">نشط</SelectItem><SelectItem value="inactive">متوقف</SelectItem></SelectContent></Select></div>
+          {filteredRules.length === 0 ? (
             <Card className="border-dashed border-2">
               <CardContent className="p-10 text-center text-slate-500">
                 <Workflow className="w-10 h-10 mx-auto mb-3 text-slate-300" />
@@ -428,11 +463,11 @@ export default function AdminWorkflowAutomation() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {rules.map((rule) => {
+              {filteredRules.map((rule) => {
                 const triggerCfg = TRIGGER_TYPE_CONFIG[rule.trigger_type] || TRIGGER_TYPE_CONFIG.manual;
                 const TriggerIcon = triggerCfg.icon;
                 return (
-                  <Card key={rule.id} className="border-r-4 border-[#C9A66B] hover:shadow-md transition-shadow">
+                  <Card key={rule.id} className="border-r-4 border-[#C9A66B] hover:shadow-md transition-shadow cursor-pointer" onClick={() => openWorkflowDetails(rule)}>
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div className="min-w-0">
@@ -454,7 +489,7 @@ export default function AdminWorkflowAutomation() {
                             <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{rule.description}</p>
                           )}
                         </div>
-                        <Switch checked={rule.is_active !== false} disabled={rule._sourceWorkflow} onCheckedChange={() => handleToggleActive(rule)} />
+                        <div onClick={(e) => e.stopPropagation()}><Switch checked={rule.is_active !== false} disabled={rule._sourceWorkflow} onCheckedChange={() => handleToggleActive(rule)} /></div>
                       </div>
 
                       <div className="flex flex-wrap gap-1.5 mb-3">
@@ -512,7 +547,7 @@ export default function AdminWorkflowAutomation() {
                           variant="outline"
                           className="gap-1.5 flex-1"
                           disabled={runningId === rule.id}
-                          onClick={() => handleRunNow(rule)}
+                          onClick={(e) => { e.stopPropagation(); handleRunNow(rule); }}
                         >
                           {runningId === rule.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
                           تشغيل تجريبي
