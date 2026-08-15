@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { REAL_WORKFLOW_CATALOG } from "@/data/realWorkflowCatalog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -140,11 +141,21 @@ export default function AdminWorkflowAutomation() {
   }, []);
 
   const loadData = async () => {
-    const [rulesData, runsData] = await Promise.all([
+    const [customRules, runsData] = await Promise.all([
       base44.entities.AutomationRule.list("-created_date", 200),
       base44.entities.AutomationRunLog.list("-started_at", 100),
     ]);
-    setRules(rulesData);
+
+    // The primary library comes from the real workflow files in the app.
+    // Do not fill this page with templates or sample records.
+    const realRules = REAL_WORKFLOW_CATALOG.map((workflow) => ({
+      ...workflow,
+      _sourceWorkflow: true,
+    }));
+    const manualRules = (customRules || []).filter(
+      (rule) => !rule.is_source_workflow && !rule.is_template && !rule.is_sample
+    );
+    setRules([...realRules, ...manualRules]);
     setRuns(runsData);
   };
 
