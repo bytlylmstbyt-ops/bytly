@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import {
   Workflow, Plus, Loader2, Play, Trash2, Pencil, Zap, Clock, Hand,
   CheckCircle2, XCircle, Loader, ShieldAlert, Bell, Mail, RefreshCw,
-  ListChecks, UserPlus, Link2, Filter,
+  ListChecks, UserPlus, Link2, Filter, Sparkles, FileSignature, Receipt,
 } from "lucide-react";
 
 const TRIGGER_TYPE_CONFIG = {
@@ -30,8 +30,11 @@ const TRIGGER_EVENT_LABELS = {
   payment_overdue: "تأخر دفعة",
   dispute_opened: "فتح نزاع",
   dispute_resolved: "حل نزاع",
+  proposal_accepted: "قبول عرض سعر",
   engineer_registered: "تسجيل مهندس جديد",
   engineer_approved: "اعتماد مهندس",
+  client_registered: "تسجيل عميل جديد",
+  firm_registered: "تسجيل شركة جديدة",
   withdrawal_requested: "طلب سحب رصيد",
   review_submitted: "تقديم تقييم",
   subscription_expiring: "قرب انتهاء اشتراك",
@@ -45,6 +48,8 @@ const ACTION_TYPE_CONFIG = {
   create_task: { label: "إنشاء مهمة", icon: ListChecks },
   assign_to_admin: { label: "تعيين لمشرف", icon: UserPlus },
   webhook_call: { label: "استدعاء Webhook", icon: Link2 },
+  create_contract: { label: "إنشاء عقد", icon: FileSignature },
+  generate_invoice: { label: "إصدار فاتورة", icon: Receipt },
 };
 
 const INTEGRATION_LABELS = {
