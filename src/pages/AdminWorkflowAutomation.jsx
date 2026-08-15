@@ -553,12 +553,12 @@ export default function AdminWorkflowAutomation() {
                           تشغيل تجريبي
                         </Button>
                         {!rule._sourceWorkflow && (
-                          <Button size="sm" variant="ghost" onClick={() => openEditDialog(rule)}>
+                          <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEditDialog(rule); }}>
                             <Pencil className="w-3.5 h-3.5" />
                           </Button>
                         )}
                         {!rule._sourceWorkflow && (
-                          <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50" onClick={() => handleDelete(rule)}>
+                          <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); handleDelete(rule); }}>
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
                         )}
@@ -627,6 +627,52 @@ export default function AdminWorkflowAutomation() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* ── تفاصيل الـ Workflow مثل محرر Base44 ── */}
+      <Dialog open={!!selectedWorkflow} onOpenChange={(open) => !open && setSelectedWorkflow(null)}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto p-0">
+          {selectedWorkflow && (() => {
+            const { source, nodes } = buildWorkflowNodes(selectedWorkflow);
+            const workflowRuns = runs.filter((r) => r.rule_id === selectedWorkflow.id || r.rule_name === selectedWorkflow.name).slice(0, 8);
+            const successCount = workflowRuns.filter((r) => r.status === "success").length;
+            const successRate = workflowRuns.length ? Math.round((successCount / workflowRuns.length) * 100) : null;
+            return (
+              <div dir="rtl">
+                <div className="p-5 border-b bg-[#FEFCF7] flex items-start justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1"><Workflow className="w-5 h-5 text-[#C9A66B]" /><h2 className="text-xl font-bold text-[#4A3F35]">{selectedWorkflow.name}</h2>{selectedWorkflow._sourceWorkflow && <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200">موجود فعليًا في التطبيق</Badge>}</div>
+                    <p className="text-sm text-slate-500 max-w-3xl">{selectedWorkflow.description || "لا يوجد وصف مسجل."}</p>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => setSelectedWorkflow(null)}><X className="w-4 h-4" /></Button>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] min-h-[520px]">
+                  <div className="p-6 bg-white">
+                    <div className="flex items-center justify-between mb-5"><div><h3 className="font-bold text-[#4A3F35]">سير العمل</h3><p className="text-xs text-slate-400 mt-1">تسلسل حقيقي مستخرج من تعريف الـ Workflow عند توفره.</p></div><Button size="sm" variant="outline" className="gap-1.5" disabled={runningId === selectedWorkflow.id} onClick={() => handleRunNow(selectedWorkflow)}><Play className="w-3.5 h-3.5" />انطلق الآن</Button></div>
+                    <div className="space-y-0 max-w-2xl mx-auto">
+                      {nodes.map((node, index) => { const NodeIcon = node.icon || Zap; return <React.Fragment key={`${node.type}-${index}`}>
+                        <div className="rounded-xl border bg-white shadow-sm p-4 flex items-start gap-3"><div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${node.type === "trigger" ? "bg-blue-50 text-blue-600" : node.type === "condition" ? "bg-amber-50 text-amber-600" : node.type === "integration" ? "bg-violet-50 text-violet-600" : "bg-emerald-50 text-emerald-600"}`}><NodeIcon className="w-5 h-5" /></div><div className="min-w-0"><p className="text-xs text-slate-400 mb-1">{node.title}</p><p className="font-semibold text-sm text-[#4A3F35]">{node.label}</p>{node.detail && <p className="text-[11px] text-slate-400 mt-1 font-mono">{node.detail}</p>}</div></div>
+                        {index < nodes.length - 1 && <div className="h-7 border-r-2 border-dashed border-slate-200 mr-5" />}
+                      </React.Fragment>; })}
+                    </div>
+                  </div>
+                  <aside className="border-r bg-slate-50/60 p-5">
+                    <div className="flex items-center justify-between mb-4"><h3 className="font-bold text-[#4A3F35]">تفاصيل الأتمتة</h3><Eye className="w-4 h-4 text-slate-400" /></div>
+                    <div className="space-y-3 text-sm">
+                      <div className="p-3 rounded-lg bg-white border"><p className="text-xs text-slate-400">الحالة</p><p className="font-medium mt-1">{selectedWorkflow.is_active !== false ? "نشط" : "متوقف"}</p></div>
+                      <div className="p-3 rounded-lg bg-white border"><p className="text-xs text-slate-400">المُشغّل</p><p className="font-medium mt-1">{sourceTriggerLabel(source, selectedWorkflow)}</p></div>
+                      {selectedWorkflow.sourceEntity && <div className="p-3 rounded-lg bg-white border"><p className="text-xs text-slate-400">المصدر</p><p className="font-medium mt-1 flex items-center gap-1"><Database className="w-3.5 h-3.5" />{selectedWorkflow.sourceEntity}</p></div>}
+                      <div className="grid grid-cols-2 gap-2"><div className="p-3 rounded-lg bg-white border"><p className="text-xs text-slate-400">مرات التشغيل</p><p className="font-bold mt-1">{selectedWorkflow.run_count || 0}</p></div><div className="p-3 rounded-lg bg-white border"><p className="text-xs text-slate-400">نسبة النجاح</p><p className="font-bold mt-1">{successRate === null ? "—" : `${successRate}%`}</p></div></div>
+                      <div className="p-3 rounded-lg bg-white border"><p className="text-xs text-slate-400">آخر تشغيل</p><p className="font-medium mt-1">{selectedWorkflow.last_run_at ? new Date(selectedWorkflow.last_run_at).toLocaleString("ar-SA") : "لم يُسجّل بعد"}</p></div>
+                    </div>
+                    {source?.definition?.do?.length > 0 && <div className="mt-5"><p className="text-xs font-semibold text-slate-500 mb-2">الخطوات الأصلية</p><div className="space-y-1">{source.definition.do.map((step, i) => <div key={i} className="text-[11px] bg-white border rounded p-2 font-mono break-all">{Object.keys(step)[0]}</div>)}</div></div>}
+                  </aside>
+                </div>
+                <div className="border-t p-5 bg-white"><div className="flex items-center gap-2 mb-3"><ListChecks className="w-4 h-4 text-[#C9A66B]" /><h3 className="font-bold text-[#4A3F35]">سجل التنفيذ</h3></div>{workflowRuns.length === 0 ? <p className="text-sm text-slate-400">لا توجد سجلات تنفيذ مسجلة لهذه الأتمتة حتى الآن.</p> : <div className="space-y-2">{workflowRuns.map((run) => { const cfg = RUN_STATUS_CONFIG[run.status] || RUN_STATUS_CONFIG.running; return <div key={run.id} className="flex items-center justify-between gap-3 border rounded-lg p-3"><div><p className="text-sm font-medium">{run.started_at ? new Date(run.started_at).toLocaleString("ar-SA") : "—"}</p><p className="text-xs text-slate-400">{TRIGGERED_BY_LABELS[run.triggered_by] || run.triggered_by}{run.duration_ms != null ? ` · ${run.duration_ms} مللي ثانية` : ""}</p>{run.error_message && <p className="text-xs text-red-500 mt-1">{run.error_message}</p>}</div><Badge className={cfg.badge}>{cfg.label}</Badge></div>; })}</div>}</div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
 
       {/* ── نافذة إنشاء/تعديل قاعدة أتمتة ── */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
