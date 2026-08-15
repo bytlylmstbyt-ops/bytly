@@ -153,7 +153,7 @@ export const ADMIN_CATEGORIES = [
     icon: Workflow,
     description: "بناء وإدارة قواعد سير العمل والأتمتة داخل المنصة.",
     items: [
-      { page: "WorkflowBuilder", label: "منشئ سير العمل", desc: "إنشاء وتعديل قواعد سير العمل والأتمتة" },
+      { page: "AdminWorkflowAutomation", label: "سير العمل والأتمتة", desc: "إنشاء وإدارة قواعد الأتمتة، بطاقات sir العمل، وسجل التنفيذ" },
     ],
   },
   {
