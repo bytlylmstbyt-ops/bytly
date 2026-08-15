@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { REAL_WORKFLOW_CATALOG } from "@/data/realWorkflowCatalog";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,6 +14,7 @@ import {
   Workflow, Plus, Loader2, Play, Trash2, Pencil, Zap, Clock, Hand,
   CheckCircle2, XCircle, Loader, ShieldAlert, Bell, Mail, RefreshCw,
   ListChecks, UserPlus, Link2, Filter, Sparkles, FileSignature, Receipt,
+  Search, ChevronLeft, GitBranch, Database, Timer, X, Eye, Copy,
 } from "lucide-react";
 
 const TRIGGER_TYPE_CONFIG = {
@@ -95,6 +96,123 @@ const emptyRuleForm = {
   category: "other",
   actions: [{ action_type: "send_notification", config: {} }],
 };
+
+// The source files are the authority for source workflows. The UI reads their
+// real trigger/definition data for the details view instead of inventing steps.
+const WORKFLOW_SOURCE_FILES = import.meta.glob("/base44/workflows/*.jsonc", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+});
+
+const SUGGESTED_WORKFLOWS = [
+  {
+    id: "project-appointments",
+    name: "إدارة مواعيد المشاريع",
+    description: "تذكير تلقائي بالمواعيد القادمة وإرسال إشعار للفريق والعميل.",
+    category: "projects",
+    trigger_type: "schedule",
+    schedule_cron: "0 9 * * *",
+    actions: [{ action_type: "send_notification", config: {} }, { action_type: "send_email", config: {} }],
+  },
+  {
+    id: "weekly-summary",
+    name: "الملخص الأسبوعي للمشاريع",
+    description: "إرسال ملخص أسبوعي لحالة المشاريع وإحصائياتها وحركة العمل.",
+    category: "projects",
+    trigger_type: "schedule",
+    schedule_cron: "0 9 * * 1",
+    actions: [{ action_type: "send_email", config: {} }],
+  },
+  {
+    id: "new-contractor-lifecycle",
+    name: "دورة حياة المقاولات الجديدة",
+    description: "تشغيل خطوات المتابعة الأساسية عند إنشاء مشروع مقاولة جديد.",
+    category: "projects",
+    trigger_type: "event",
+    trigger_event: "project_created",
+    actions: [{ action_type: "send_notification", config: {} }, { action_type: "create_task", config: {} }],
+  },
+  {
+    id: "project-alerts",
+    name: "تنبيهات المشاريع",
+    description: "إرسال تنبيهات تلقائية عند تغيّر حالة المشروع أو ظهور حدث مهم.",
+    category: "notifications",
+    trigger_type: "event",
+    trigger_event: "project_status_changed",
+    actions: [{ action_type: "send_notification", config: {} }],
+  },
+];
+
+function parseWorkflowSource(raw) {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    try {
+      return JSON.parse(raw.replace(/\/\/.*$/gm, "").replace(/,\s*([}\]])/g, "$1"));
+    } catch {
+      return null;
+    }
+  }
+}
+
+function getSourceDefinition(rule) {
+  if (!rule?._sourceWorkflow || !rule.sourceFile) return null;
+  const key = Object.keys(WORKFLOW_SOURCE_FILES).find((path) => path.endsWith(rule.sourceFile));
+  return key ? parseWorkflowSource(WORKFLOW_SOURCE_FILES[key]) : null;
+}
+
+function sourceTriggerLabel(source, rule) {
+  const cfg = source?.trigger?.config;
+  if (!cfg) {
+    if (rule.trigger_type === "schedule") return `مجدول${rule.schedule_cron ? ` · ${rule.schedule_cron}` : ""}`;
+    return TRIGGER_TYPE_CONFIG[rule.trigger_type]?.label || "مُشغّل";
+  }
+  if (cfg.trigger_type === "scheduled") {
+    return `مجدول · ${cfg.cron_expression || rule.schedule_cron || "جدولة مخصصة"}${cfg.timezone ? ` · ${cfg.timezone}` : ""}`;
+  }
+  if (cfg.trigger_type === "entity") {
+    const events = (cfg.events || []).join("، ");
+    return `حدث · ${cfg.entity_name || rule.sourceEntity || "كيان"}${events ? ` · ${events}` : ""}`;
+  }
+  return cfg.trigger_type || "مُشغّل";
+}
+
+function buildWorkflowNodes(rule) {
+  const source = getSourceDefinition(rule);
+  const nodes = [{
+    type: "trigger",
+    title: "المُشغّل",
+    label: sourceTriggerLabel(source, rule),
+    icon: source?.trigger?.config?.trigger_type === "scheduled" ? Clock : Zap,
+  }];
+
+  const condition = source?.trigger?.condition || (rule.conditions?.length ? rule.conditions : null);
+  if (condition) {
+    const count = Array.isArray(condition) ? condition.length : 1;
+    nodes.push({ type: "condition", title: "الشروط", label: `${count} شرط قبل التنفيذ`, icon: GitBranch });
+  }
+
+  const sourceActions = source?.definition?.do || [];
+  if (sourceActions.length) {
+    sourceActions.forEach((entry, index) => {
+      const [key, value] = Object.entries(entry)[0] || [];
+      const title = value?.["x-base44"]?.title || value?.["x-base44"]?.description || key || `الخطوة ${index + 1}`;
+      const functionName = value?.with?.function_name;
+      nodes.push({ type: "action", title: `الإجراء ${index + 1}`, label: title, detail: functionName ? `Backend: ${functionName}` : value?.call, icon: Play });
+    });
+  } else {
+    (rule.actions || []).forEach((action, index) => {
+      nodes.push({ type: "action", title: `الإجراء ${index + 1}`, label: ACTION_TYPE_CONFIG[action.action_type]?.label || action.action_type, icon: ACTION_TYPE_CONFIG[action.action_type]?.icon || Play });
+    });
+  }
+
+  if (rule.integration_trigger && rule.integration_trigger !== "none") {
+    nodes.push({ type: "integration", title: "التكامل / المخرجات", label: INTEGRATION_LABELS[rule.integration_trigger] || rule.integration_trigger, icon: Link2 });
+  }
+  return { source, nodes };
+}
 
 function AccessDenied() {
   return (
