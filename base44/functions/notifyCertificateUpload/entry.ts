@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
     // Send email to admin
     await base44.asServiceRole.integrations.Core.SendEmail({
       from_name: 'منصة بيتلي',
-      to: 'bytlylmstbyt@gmail.com',
+      to: 'info@mybytly.com',
       subject: '📜 تم رفع شهادة جودة واعتماد جديدة',
       body: `
         <div dir="rtl" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
