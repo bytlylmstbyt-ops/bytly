@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, FileText, Wallet, Scale, Bell, BarChart3, Settings as SettingsIcon,
-  FolderKanban, Building2, Link2, Mail, Megaphone, Sparkles, Layers,
+  FolderKanban, Building2, Link2, Mail, Megaphone, Sparkles, Layers, Workflow,
 } from "lucide-react";
 
 // ── Category → page map ────────────────────────────────────────────────────
@@ -145,6 +145,15 @@ export const ADMIN_CATEGORIES = [
       { page: "BIMDashboard", label: "لوحة تحكم BIM المركزية", desc: "إدارة نماذج BIM، مزامنة Google Drive، وحالة التكاملات" },
       { page: "BIMQuantitiesReport", label: "تقرير كميات BIM", desc: "استخراج وتحليل كميات المواد التفصيلية من النماذج" },
       { page: "BIMSearch", label: "محرك البحث الذكي BIM", desc: "البحث في المخططات الهندسية والعناصر بالكلمات المفتاحية" },
+    ],
+  },
+  {
+    key: "workflows",
+    label: "سير العمل والأتمتة",
+    icon: Workflow,
+    description: "بناء وإدارة قواعد سير العمل والأتمتة داخل المنصة.",
+    items: [
+      { page: "WorkflowBuilder", label: "منشئ سير العمل", desc: "إنشاء وتعديل قواعد سير العمل والأتمتة" },
     ],
   },
   {
