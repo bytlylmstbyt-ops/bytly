@@ -201,12 +201,14 @@ export default function AdminWorkflowAutomation() {
   };
 
   const handleDelete = async (rule) => {
+    if (rule._sourceWorkflow) return;
     if (!window.confirm(`حذف قاعدة "${rule.name}"؟ لا يمكن التراجع عن هذا الإجراء.`)) return;
     await base44.entities.AutomationRule.delete(rule.id);
     await loadData();
   };
 
   const handleToggleActive = async (rule) => {
+    if (rule._sourceWorkflow) return;
     await base44.entities.AutomationRule.update(rule.id, { is_active: !rule.is_active });
     await loadData();
   };
@@ -236,11 +238,13 @@ export default function AdminWorkflowAutomation() {
         steps_log: stepsLog,
       });
 
-      await base44.entities.AutomationRule.update(rule.id, {
-        run_count: (rule.run_count || 0) + 1,
+      if (!rule._sourceWorkflow) {
+        await base44.entities.AutomationRule.update(rule.id, {
+          run_count: (rule.run_count || 0) + 1,
         last_run_at: endedAt,
-        last_run_status: "success",
-      });
+          last_run_status: "success",
+        });
+      }
 
       await loadData();
       setActiveTab("activity");
@@ -316,7 +320,12 @@ export default function AdminWorkflowAutomation() {
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
                             <p className="font-semibold text-[#4A3F35] text-sm truncate">{rule.name}</p>
-                            {rule.is_template && (
+                            {rule._sourceWorkflow && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5 shrink-0">
+                                مكتشف من التطبيق
+                              </span>
+                            )}
+                            {rule.is_template && !rule._sourceWorkflow && (
                               <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-[#8a6d3b] bg-[#FEF9EE] border border-[#C9A66B]/40 rounded px-1.5 py-0.5 shrink-0">
                                 <Sparkles className="w-2.5 h-2.5" />
                                 قالب جاهز
@@ -327,7 +336,7 @@ export default function AdminWorkflowAutomation() {
                             <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{rule.description}</p>
                           )}
                         </div>
-                        <Switch checked={rule.is_active !== false} onCheckedChange={() => handleToggleActive(rule)} />
+                        <Switch checked={rule.is_active !== false} disabled={rule._sourceWorkflow} onCheckedChange={() => handleToggleActive(rule)} />
                       </div>
 
                       <div className="flex flex-wrap gap-1.5 mb-3">
@@ -354,6 +363,14 @@ export default function AdminWorkflowAutomation() {
                           );
                         })}
                       </div>
+
+                      {rule._sourceWorkflow && (rule.sourceEntity || rule.sourceFunctions?.length) && (
+                        <p className="text-[11px] text-slate-400 mb-2">
+                          المصدر: {rule.sourceEntity ? `كيان ${rule.sourceEntity}` : "مهمة مجدولة"}
+                          {rule.sourceEvents?.length ? ` · ${rule.sourceEvents.join(", ")}` : ""}
+                          {rule.sourceFunctions?.length ? ` · ${rule.sourceFunctions.join(", ")}` : ""}
+                        </p>
+                      )}
 
                       {rule.integration_trigger && rule.integration_trigger !== "none" && (
                         <p className="text-[11px] text-slate-400 mb-2 flex items-center gap-1">
@@ -382,12 +399,16 @@ export default function AdminWorkflowAutomation() {
                           {runningId === rule.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
                           تشغيل تجريبي
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => openEditDialog(rule)}>
-                          <Pencil className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50" onClick={() => handleDelete(rule)}>
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        {!rule._sourceWorkflow && (
+                          <Button size="sm" variant="ghost" onClick={() => openEditDialog(rule)}>
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                        {!rule._sourceWorkflow && (
+                          <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50" onClick={() => handleDelete(rule)}>
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
