@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
       return Response.json({ message: 'Engineer already verified, skipping', skipped: true });
     }
 
-    const admin_email = 'bytlylmstbyt@gmail.com';
+    const admin_email = 'info@mybytly.com';
 
     await base44.asServiceRole.entities.Notification.create({
       recipient_email: admin_email,
