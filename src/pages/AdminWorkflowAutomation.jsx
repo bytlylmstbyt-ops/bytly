@@ -303,7 +303,15 @@ export default function AdminWorkflowAutomation() {
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div className="min-w-0">
-                          <p className="font-semibold text-[#4A3F35] text-sm truncate">{rule.name}</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-semibold text-[#4A3F35] text-sm truncate">{rule.name}</p>
+                            {rule.is_template && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-[#8a6d3b] bg-[#FEF9EE] border border-[#C9A66B]/40 rounded px-1.5 py-0.5 shrink-0">
+                                <Sparkles className="w-2.5 h-2.5" />
+                                قالب جاهز
+                              </span>
+                            )}
+                          </div>
                           {rule.description && (
                             <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{rule.description}</p>
                           )}
