@@ -397,7 +397,8 @@ export const extraTranslations = {
         googledrive: "Google Drive",
         googlesheets: "Google Sheets",
         googlemeet: "Google Meet",
-        square: "Square للمدفوعات"
+        square: "Square للمدفوعات",
+        supabase: "Supabase لمزامنة البيانات"
       },
       adminEmail: {
         title: "إدارة البريد الإلكتروني",
@@ -978,7 +979,8 @@ export const extraTranslations = {
         googledrive: "Google Drive",
         googlesheets: "Google Sheets",
         googlemeet: "Google Meet",
-        square: "Square Payments"
+        square: "Square Payments",
+        supabase: "Supabase Data Sync"
       },
       adminEmail: {
         title: "Email Management",

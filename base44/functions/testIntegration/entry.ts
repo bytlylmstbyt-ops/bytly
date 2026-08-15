@@ -50,6 +50,11 @@ const TEST_ENDPOINTS = {
     url: 'https://connect.squareup.com/v2/merchants/me',
     headers: { Authorization: `Bearer ${token}`, 'Square-Version': '2024-08-21' },
   }),
+  supabase: (token) => ({
+    // Supabase Management API — list projects (lightweight authenticated read)
+    url: 'https://api.supabase.com/v1/projects',
+    headers: { Authorization: `Bearer ${token}` },
+  }),
 };
 
 const SECRET_KEYS = {

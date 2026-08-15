@@ -34,6 +34,7 @@ export default function AdminIntegrations() {
     { type: 'googledrive', kind: 'connector' },
     { type: 'googlesheets', kind: 'connector' },
     { type: 'googlemeet', kind: 'connector' },
+    { type: 'supabase', kind: 'connector' },
   ];
 
   // Known authorized connector types (from platform connector status)
@@ -41,6 +42,7 @@ export default function AdminIntegrations() {
     'square', 'google_analytics', 'instagram', 'tiktok',
     // square is listed above too; keeping for clarity
     'googlecalendar', 'gmail', 'linkedin', 'googledrive', 'googlesheets',
+    'supabase',
   ];
 
   const buildIntegrationData = async () => {

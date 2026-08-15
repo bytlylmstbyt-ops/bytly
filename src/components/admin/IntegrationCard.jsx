@@ -17,6 +17,7 @@ import { useLanguage } from "@/components/i18n/LanguageContext";
 const OAUTH_CONNECTORS = [
   "google_analytics", "instagram", "tiktok", "googlecalendar",
   "gmail", "linkedin", "googledrive", "googlesheets", "googlemeet", "square",
+  "supabase",
 ];
 
 // Brand logo / icon per service
@@ -32,6 +33,7 @@ const SERVICE_ICONS = {
   googlesheets: "📈",
   googlemeet: "🎥",
   square: "🔷",
+  supabase: "🗄️",
 };
 
 function formatRelative(isoString, t) {
