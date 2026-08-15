@@ -505,18 +505,52 @@ export default function AdminWorkflowAutomation() {
             )}
 
             <div>
-              <label className="text-sm font-medium">الإجراء عند التنفيذ</label>
-              <Select
-                value={form.actions[0]?.action_type || "send_notification"}
-                onValueChange={(v) => setForm({ ...form, actions: [{ action_type: v, config: {} }] })}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {Object.entries(ACTION_TYPE_CONFIG).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">خطوات التنفيذ (بالترتيب)</label>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 gap-1 text-xs"
+                  onClick={() => setForm({ ...form, actions: [...form.actions, { action_type: "send_notification", config: {} }] })}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  إضافة خطوة
+                </Button>
+              </div>
+              <div className="space-y-2 mt-1">
+                {form.actions.map((action, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <span className="text-xs text-slate-400 w-4 shrink-0">{idx + 1}.</span>
+                    <Select
+                      value={action.action_type}
+                      onValueChange={(v) => {
+                        const updated = [...form.actions];
+                        updated[idx] = { ...updated[idx], action_type: v };
+                        setForm({ ...form, actions: updated });
+                      }}
+                    >
+                      <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(ACTION_TYPE_CONFIG).map(([k, v]) => (
+                          <SelectItem key={k} value={k}>{v.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {form.actions.length > 1 && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="text-red-500 hover:bg-red-50 shrink-0"
+                        onClick={() => setForm({ ...form, actions: form.actions.filter((_, i) => i !== idx) })}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div>
