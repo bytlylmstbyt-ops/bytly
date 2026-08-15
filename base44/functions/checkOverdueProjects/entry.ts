@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
 
           // Notify admin
           await base44.asServiceRole.entities.Notification.create({
-            recipient_email: "info@mybytly.com",
+            recipient_email: "bytlylmstbyt@gmail.com",
             title: "مشروع متأخر - يحتاج متابعة",
             message: `المشروع "${project.title}" متأخر عن الموعد المحدد ${project.deadline}`,
             type: "system",
