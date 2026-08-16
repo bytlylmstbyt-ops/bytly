@@ -43,13 +43,15 @@ export default function RegisterConsultantPage() {
     setLoading(true);
 
     try {
-      await base44.entities.Consultant.create({
+      const consultant = await base44.entities.Consultant.create({
         ...formData,
         years_experience: parseInt(formData.years_experience) || 0,
         status: "pending",
         terms_accepted: true,
         terms_accepted_date: new Date().toISOString()
       });
+      try { await base44.functions.invoke("sendWelcomeEmail", { role: "consultant", id: consultant.id }); }
+      catch (welcomeErr) { console.error("sendWelcomeEmail consultant failed (non-blocking):", welcomeErr); }
 
       alert("تم تقديم طلب التسجيل بنجاح! سيتم مراجعته من قبل الإدارة.");
       navigate(createPageUrl("RegistrationSuccess"));
