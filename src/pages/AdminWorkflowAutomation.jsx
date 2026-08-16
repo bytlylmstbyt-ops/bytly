@@ -414,11 +414,11 @@ export default function AdminWorkflowAutomation() {
   const addSuggestedWorkflow = async (template) => {
     try {
       await base44.entities.AutomationRule.create({
-        name: template.name, description: template.description, is_active: true,
+        name: template.name, description: template.description, is_active: false,
         trigger_type: template.trigger_type, trigger_event: template.trigger_event || null,
         schedule_cron: template.schedule_cron || null, integration_trigger: "none",
         category: template.category, actions: template.actions, is_template: false,
-        run_count: 0, last_run_status: "never_run",
+        run_count: 0, last_run_status: "never_run", is_template: true,
       });
       setSuggested((items) => items.filter((item) => item.id !== template.id));
       await loadData();
