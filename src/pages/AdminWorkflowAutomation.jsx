@@ -585,6 +585,23 @@ export default function AdminWorkflowAutomation() {
 
         {/* ── تبويب النشاط (سجل التنفيذ) ── */}
         <TabsContent value="activity">
+          <section className="mb-6">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div><h2 className="font-bold text-[#4A3F35] flex items-center gap-2"><Zap className="w-4 h-4 text-emerald-600" />الأتمتة النشطة</h2><p className="text-xs text-slate-500 mt-1">هنا تظهر كل الأتمتة المفعّلة حاليًا، بما فيها الأتمتة الحقيقية المكتشفة من التطبيق.</p></div>
+              <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200">{rules.filter((r) => r.is_active !== false).length} نشطة</Badge>
+            </div>
+            {rules.filter((r) => r.is_active !== false).length === 0 ? (
+              <Card className="border-dashed"><CardContent className="p-6 text-center text-sm text-slate-400">لا توجد أتمتة نشطة حاليًا.</CardContent></Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {rules.filter((r) => r.is_active !== false).map((rule) => {
+                  const triggerCfg = TRIGGER_TYPE_CONFIG[rule.trigger_type] || TRIGGER_TYPE_CONFIG.manual;
+                  const TriggerIcon = triggerCfg.icon;
+                  return <button key={rule.id} type="button" onClick={() => openWorkflowDetails(rule)} className="text-right bg-white border rounded-xl p-4 hover:shadow-md hover:border-[#C9A66B] transition-all focus:outline-none focus:ring-2 focus:ring-[#C9A66B]/40"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><div className="flex items-center gap-2"><p className="font-semibold text-sm text-[#4A3F35] truncate">{rule.name}</p>{rule._sourceWorkflow && <Badge className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">حقيقية</Badge>}</div><p className="text-xs text-slate-500 mt-1 line-clamp-2">{rule.description || "أتمتة مفعّلة"}</p></div><span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0 mt-1" title="نشطة" /></div><div className="flex items-center gap-2 mt-3 text-[11px] text-slate-500"><span className="inline-flex items-center gap-1"><TriggerIcon className="w-3 h-3" />{triggerCfg.label}</span><span>·</span><span>{rule.run_count || 0} تشغيل</span></div></button>;
+                })}
+              </div>
+            )}
+          </section>
           <div className="flex items-center gap-2 mb-4">
             <Filter className="w-4 h-4 text-slate-400" />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
