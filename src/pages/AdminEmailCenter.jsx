@@ -10,6 +10,7 @@ import EmailCampaignsTab from "@/components/admin/email/EmailCampaignsTab";
 import EmailSentLogTab from "@/components/admin/email/EmailSentLogTab";
 import EmailAnalyticsTab from "@/components/admin/email/EmailAnalyticsTab";
 import EmailSettingsTab from "@/components/admin/email/EmailSettingsTab";
+import GmailManager from "@/pages/GmailManager";
 
 export default function AdminEmailCenter() {
   const { t, isRTL } = useLanguage();
@@ -130,6 +131,10 @@ export default function AdminEmailCenter() {
             <Mail className="w-3.5 h-3.5 ml-1.5" />
             {t("integrations.adminEmail.tabs.settings")}
           </TabsTrigger>
+          <TabsTrigger value="gmail" className="text-xs sm:text-sm data-[state=active]:bg-[#4A3F35] data-[state=active]:text-white">
+            <Mail className="w-3.5 h-3.5 ml-1.5" />
+            Gmail
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -152,6 +157,9 @@ export default function AdminEmailCenter() {
         </TabsContent>
         <TabsContent value="settings">
           <EmailSettingsTab />
+        </TabsContent>
+        <TabsContent value="gmail" className="mt-0">
+          <GmailManager />
         </TabsContent>
       </Tabs>
     </div>
