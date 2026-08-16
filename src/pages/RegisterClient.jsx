@@ -64,11 +64,13 @@ export default function RegisterClient() {
     e.preventDefault();
     setIsLoading(true);
     
-    await base44.entities.Client.create({
+    const client = await base44.entities.Client.create({
       ...formData,
       wallet_balance: 0,
       total_projects: 0
     });
+    try { await base44.functions.invoke("sendWelcomeEmail", { role: "client", id: client.id }); }
+    catch (welcomeErr) { console.error("sendWelcomeEmail client failed (non-blocking):", welcomeErr); }
 
     setIsLoading(false);
     navigate(createPageUrl("RegistrationSuccess"));
