@@ -54,6 +54,8 @@ export default function RegisterLegalConsultantPage() {
           accepted_date: new Date().toISOString()
         }
       });
+      try { await base44.functions.invoke("notifyNewUserSignup", { role: "legal_consultant", data: legalConsultant }); }
+      catch (notifyErr) { console.error("notifyNewUserSignup legal consultant failed (non-blocking):", notifyErr); }
       try { await base44.functions.invoke("sendWelcomeEmail", { role: "legal_consultant", id: legalConsultant.id }); }
       catch (welcomeErr) { console.error("sendWelcomeEmail legal consultant failed (non-blocking):", welcomeErr); }
 
