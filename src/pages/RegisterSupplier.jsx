@@ -174,6 +174,8 @@ export default function RegisterSupplier() {
         ...formData,
         email: user.email
       });
+      try { await base44.functions.invoke("notifyNewUserSignup", { role: "supplier", data: supplier }); }
+      catch (notifyErr) { console.error("notifyNewUserSignup supplier failed (non-blocking):", notifyErr); }
       try { await base44.functions.invoke("sendWelcomeEmail", { role: "supplier", id: supplier.id }); }
       catch (welcomeErr) { console.error("sendWelcomeEmail supplier failed (non-blocking):", welcomeErr); }
 
