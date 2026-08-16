@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { FileText, Plus, Pencil, Trash2, Loader2, CheckCircle, XCircle } from "lucide-react";
+import { FileText, Plus, Pencil, Trash2, Loader2, CheckCircle, XCircle, Sparkles } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -19,6 +19,30 @@ export default function EmailTemplatesTab({ onRefresh }) {
   const [editing, setEditing] = useState(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: "", subject: "", body: "", category: "other", variables: [], is_active: true });
+  const [seeding, setSeeding] = useState(false);
+
+  const brandedBody = (title, message, ctaText = "فتح حسابي", ctaUrl = "https://mybaytly.com") => `<!doctype html><html lang="ar" dir="rtl"><body style="margin:0;background:#f5f0e8;font-family:Arial,Tahoma,sans-serif;color:#1a1a2e"><div style="max-width:640px;margin:32px auto;background:#fff;border-radius:18px;overflow:hidden;border:1px solid #e5d4b8"><div style="padding:28px;text-align:center;background:linear-gradient(135deg,#4a3f35,#c9a66b);color:#fff"><div style="font-size:34px;font-weight:800">بيتلي</div><div style="font-size:12px;opacity:.9;margin-top:4px">المنظومة الهندسية المتكاملة</div></div><div style="padding:36px 30px;text-align:right"><h1 style="margin:0 0 18px;color:#4a3f35;font-size:24px">${title}</h1><div style="font-size:15px;line-height:1.9;color:#4b5563">${message}</div><div style="text-align:center;margin:30px 0"><a href="${ctaUrl}" style="display:inline-block;background:#6b5d4f;color:#fff;text-decoration:none;padding:13px 26px;border-radius:10px;font-weight:700">${ctaText}</a></div></div><div style="padding:18px 24px;background:#faf8f4;border-top:1px solid #eee;text-align:center;color:#8a8178;font-size:11px">بيتلي — المنظومة الهندسية المتكاملة<br>للتواصل: info@mybaytly.com</div></div></body></html>`;
+
+  const readyTemplates = [
+    { name:"ترحيب مستخدم جديد — بيتلي", subject:"مرحباً بك في بيتلي", category:"welcome", body:brandedBody("مرحباً بك في بيتلي 👋","يسعدنا انضمامك إلى بيتلي. حسابك أصبح جاهزًا، ويمكنك الآن استكشاف الخدمات الهندسية وإدارة مشاريعك من مكان واحد.") , variables:["name"]},
+    { name:"ترحيب مهندس جديد — بيتلي", subject:"مرحباً بك كمهندس في بيتلي", category:"welcome", body:brandedBody("مرحباً بك في منظومة بيتلي الهندسية","شكرًا لتسجيلك معنا. سنراجع بياناتك ومستنداتك، وبعد الاعتماد يمكنك البدء في استقبال المشاريع والعملاء عبر المنصة.","الدخول إلى حسابي"), variables:["name"]},
+    { name:"تنبيه تحديث المشروع — بيتلي", subject:"تحديث جديد على مشروعك", category:"notification", body:brandedBody("هناك تحديث جديد على مشروعك","تم تحديث حالة مشروعك في بيتلي. سجّل الدخول للاطلاع على المرحلة الحالية والتفاصيل الجديدة.","عرض المشروع"), variables:["name","project_name","project_status"]},
+    { name:"إشعار عرض/قبول مشروع — بيتلي", subject:"لديك تحديث مهم بشأن المشروع", category:"transactional", body:brandedBody("تحديث مهم بشأن مشروعك","هناك إجراء جديد متعلق بعرض أو اتفاق مشروعك. يمكنك مراجعة التفاصيل واتخاذ الإجراء المطلوب من حسابك.","مراجعة المشروع"), variables:["name","project_name"]},
+  ];
+
+  const addReadyTemplates = async () => {
+    setSeeding(true);
+    try {
+      const existing = await base44.entities.EmailTemplate.list("-created_date", 200);
+      let added = 0;
+      for (const tmpl of readyTemplates) {
+        if (!(existing || []).some(e => e.name === tmpl.name)) { await base44.entities.EmailTemplate.create({ ...tmpl, is_active:true }); added++; }
+      }
+      toast({ title: isRTL ? `تمت إضافة ${added} قوالب جاهزة بهوية بيتلي` : `${added} branded templates added` });
+      load(); onRefresh?.();
+    } catch (e) { toast({ title:isRTL?"فشل إضافة القوالب":"Failed", description:e.message, variant:"destructive" }); }
+    finally { setSeeding(false); }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -78,9 +102,14 @@ export default function EmailTemplatesTab({ onRefresh }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-[#4A3F35]">{t("integrations.adminEmail.templates.title")}</h3>
-        <Button size="sm" className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white hover:opacity-90 h-9" onClick={openNew}>
-          <Plus className="w-4 h-4" />{t("integrations.adminEmail.templates.addNew")}
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" className="h-9" onClick={addReadyTemplates} disabled={seeding}>
+            {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}قوالب بيتلي الجاهزة
+          </Button>
+          <Button size="sm" className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white hover:opacity-90 h-9" onClick={openNew}>
+            <Plus className="w-4 h-4" />{t("integrations.adminEmail.templates.addNew")}
+          </Button>
+        </div>
       </div>
 
       {loading ? (
