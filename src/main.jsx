@@ -2,11 +2,19 @@ import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import App from '@/App.jsx'
 import '@/index.css'
+import { base44 } from '@/api/base44Client';
+import { patchAgentSubscription } from '@/lib/patchAgents';
 
-// Guard against uncaught JSON.parse errors from the SDK's WebSocket handlers
-// (e.g. agents.js update_model handler calls JSON.parse without try/catch).
-// When the server pushes a malformed event, the SyntaxError becomes an
-// unhandled promise rejection that crashes the app — suppress it gracefully.
+// Expose base44 on window so the patch utility can access it, then apply
+// the patch BEFORE the app renders. This replaces the SDK's WebSocket-based
+// subscribeToConversation (which has an unguarded JSON.parse that crashes the
+// app on malformed events) with a safe polling-based implementation.
+window.base44 = base44;
+patchAgentSubscription();
+
+// Guard against uncaught JSON.parse errors from the SDK's WebSocket handlers.
+// The patch above prevents the known agents.js issue, but this catches any
+// other unguarded JSON.parse in the SDK as a safety net.
 window.addEventListener('unhandledrejection', (event) => {
   if (event?.reason instanceof SyntaxError && event.reason.message?.includes('Unexpected token')) {
     event.preventDefault();
