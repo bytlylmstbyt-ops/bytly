@@ -99,11 +99,22 @@ const emptyRuleForm = {
 
 // The source files are the authority for source workflows. The UI reads their
 // real trigger/definition data for the details view instead of inventing steps.
+// NOTE: In Vite 6, `import: "default"` + `query: "?raw"` can return module objects
+// instead of raw strings for some .jsonc files, which breaks JSON.parse. Using
+// `as: "raw"` is deprecated/removed; instead we glob without `import` and extract
+// `.default` (or fall back to the value itself if it's already a string).
 const WORKFLOW_SOURCE_FILES = import.meta.glob("/base44/workflows/*.jsonc", {
   query: "?raw",
-  import: "default",
   eager: true,
 });
+
+function getRawSource(key) {
+  const mod = WORKFLOW_SOURCE_FILES[key];
+  if (!mod) return null;
+  if (typeof mod === "string") return mod;
+  if (typeof mod === "object" && mod.default) return mod.default;
+  return null;
+}
 
 const SUGGESTED_WORKFLOWS = [
   {
@@ -145,7 +156,7 @@ const SUGGESTED_WORKFLOWS = [
 ];
 
 function parseWorkflowSource(raw) {
-  if (!raw) return null;
+  if (!raw || typeof raw !== "string") return null;
   try {
     return JSON.parse(raw);
   } catch {
@@ -160,7 +171,7 @@ function parseWorkflowSource(raw) {
 function getSourceDefinition(rule) {
   if (!rule?._sourceWorkflow || !rule.sourceFile) return null;
   const key = Object.keys(WORKFLOW_SOURCE_FILES).find((path) => path.endsWith(rule.sourceFile));
-  return key ? parseWorkflowSource(WORKFLOW_SOURCE_FILES[key]) : null;
+  return key ? parseWorkflowSource(getRawSource(key)) : null;
 }
 
 function sourceTriggerLabel(source, rule) {
