@@ -4,10 +4,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import {
   Users, Search, Loader2, RefreshCw, Plus, MessageSquare,
   Mail, Phone, ChevronLeft, AlertTriangle, ThumbsUp, MessagesSquare,
-  CheckCircle, Clock, Phone as PhoneIcon, Calendar, StickyNote
+  CheckCircle, Clock, Phone as PhoneIcon, Calendar, StickyNote, FileText, Receipt, FolderKanban, Activity
 } from "lucide-react";
 import { motion } from "framer-motion";
 import ClientFormModal from "@/components/crm/ClientFormModal";
@@ -40,6 +41,9 @@ export default function AdminClientsPage() {
   const [showInteractionForm, setShowInteractionForm] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
   const [interactionPreselect, setInteractionPreselect] = useState("");
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [clientDetails, setClientDetails] = useState({ projects: [], contracts: [], invoices: [], interactions: [] });
+  const [detailsLoading, setDetailsLoading] = useState(false);
 
   const loadData = useCallback(async () => {
     setRefreshing(true);
@@ -116,7 +120,22 @@ export default function AdminClientsPage() {
       });
   }, [interactions]);
 
+  const openClientDetails = async (client) => {
+    setSelectedClient(client);
+    setDetailsLoading(true);
+    try {
+      const [projects, contracts, invoices, clientInteractions] = await Promise.all([
+        base44.entities.Project.filter({ client_id: client.id }).catch(() => []),
+        base44.entities.Contract.filter({ client_id: client.id }).catch(() => []),
+        base44.entities.Invoice.filter({ client_id: client.id }).catch(() => []),
+        base44.entities.ClientInteraction.filter({ client_email: client.email }).catch(() => []),
+      ]);
+      setClientDetails({ projects, contracts, invoices, interactions: clientInteractions });
+    } finally { setDetailsLoading(false); }
+  };
+
   const handleEdit = (client) => {
+    setSelectedClient(null);
     setEditingClient(client);
     setShowClientForm(true);
   };
@@ -277,7 +296,7 @@ export default function AdminClientsPage() {
                 <motion.div key={client.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(idx * 0.03, 0.3) }}>
                   <Card
                     className="border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
-                    onClick={() => handleEdit(client)}
+                    onClick={() => openClientDetails(client)}
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
@@ -427,6 +446,30 @@ export default function AdminClientsPage() {
           )}
         </div>
       )}
+
+      <Dialog open={!!selectedClient} onOpenChange={(open) => !open && setSelectedClient(null)}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>ملف العميل الكامل</DialogTitle>
+            <DialogDescription>بيانات العميل ومشاريعه وعقوده وفواتيره وسجل تفاعلاته من البيانات الفعلية.</DialogDescription>
+          </DialogHeader>
+          {selectedClient && <div className="space-y-5">
+            <div className="flex items-start gap-4 p-4 rounded-2xl bg-[#F8F5EF] border border-[#E8DFD1]">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] flex items-center justify-center text-white font-bold text-xl shrink-0">{(selectedClient.full_name || "؟").charAt(0)}</div>
+              <div className="flex-1 min-w-0"><h3 className="font-bold text-lg">{selectedClient.full_name}</h3><div className="grid grid-cols-1 sm:grid-cols-2 gap-1 mt-2 text-xs text-slate-500"><span>{selectedClient.email || "بدون بريد"}</span><span>{selectedClient.phone || "بدون هاتف"}</span><span>{selectedClient.company_name || "بدون شركة"}</span><span>{selectedClient.city || "بدون مدينة"}</span></div></div>
+              <Button variant="outline" size="sm" onClick={() => handleEdit(selectedClient)}>تعديل</Button>
+            </div>
+            {detailsLoading ? <div className="py-8 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#C9A66B]" /></div> : <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{[{label:"المشاريع",value:clientDetails.projects.length,icon:FolderKanban},{label:"العقود",value:clientDetails.contracts.length,icon:FileText},{label:"الفواتير",value:clientDetails.invoices.length,icon:Receipt},{label:"التفاعلات",value:clientDetails.interactions.length,icon:Activity}].map(({label,value,icon:Icon}) => <Card key={label}><CardContent className="p-3 flex items-center gap-3"><Icon className="w-4 h-4 text-[#C9A66B]"/><div><p className="font-bold">{value}</p><p className="text-[11px] text-slate-500">{label}</p></div></CardContent></Card>)}</div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <Card><CardContent className="p-4"><h4 className="font-bold mb-3">المشاريع</h4>{clientDetails.projects.length ? <div className="space-y-2">{clientDetails.projects.slice(0,8).map(p => <div key={p.id} className="p-2 rounded-lg bg-slate-50 flex justify-between gap-2"><span className="text-sm truncate">{p.title || "مشروع بدون اسم"}</span><Badge variant="outline" className="text-[10px]">{p.status || "غير محدد"}</Badge></div>)}</div> : <p className="text-sm text-slate-400">لا توجد مشاريع مرتبطة.</p>}</CardContent></Card>
+                <Card><CardContent className="p-4"><h4 className="font-bold mb-3">العقود والفواتير</h4><div className="space-y-2"><div className="p-2 rounded-lg bg-slate-50 flex justify-between"><span>العقود</span><b>{clientDetails.contracts.length}</b></div><div className="p-2 rounded-lg bg-slate-50 flex justify-between"><span>الفواتير</span><b>{clientDetails.invoices.length}</b></div></div></CardContent></Card>
+                <Card className="md:col-span-2"><CardContent className="p-4"><h4 className="font-bold mb-3">آخر النشاط والتواصل</h4>{clientDetails.interactions.length ? <div className="space-y-2">{clientDetails.interactions.slice(0,10).map(i => <div key={i.id} className="p-2 rounded-lg border flex justify-between gap-3"><div className="min-w-0"><p className="text-sm font-medium truncate">{i.title || "تفاعل"}</p><p className="text-xs text-slate-400 truncate">{i.content || ""}</p></div><span className="text-[11px] text-slate-400 shrink-0">{i.interaction_date ? new Date(i.interaction_date).toLocaleString('ar-SA') : ""}</span></div>)}</div> : <p className="text-sm text-slate-400">لا يوجد نشاط مسجل.</p>}</CardContent></Card>
+              </div>
+            </>}
+          </div>}
+        </DialogContent>
+      </Dialog>
 
       {/* Modals */}
       <ClientFormModal
