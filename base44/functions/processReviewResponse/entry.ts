@@ -24,6 +24,14 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'المحادثة غير موجودة' }, { status: 404 });
     }
 
+    // التحقق من الصلاحيات: المتصل يجب أن يكون مالك المحادثة أو مسؤول
+    const currentUser = await base44.auth.me();
+    const conversationOwner = conversation.asked_by_email || conversation.user_email;
+    const isAdmin = currentUser.role === 'admin';
+    if (!isAdmin && conversationOwner && conversationOwner !== currentUser.email) {
+      return Response.json({ error: 'غير مصرح: المحادثة لا تخص المستخدم الحالي' }, { status: 403 });
+    }
+
     // جمع ردود العميل فقط
     const userMessages = conversation.messages
       .filter(m => m.role === 'user')
