@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,7 +18,7 @@ import { motion } from "framer-motion";
 import {
   FolderKanban, Loader2, Search, RefreshCw, Plus, Pin, PinOff, EyeOff, Eye,
   Pencil, Trash2, CheckCircle2, XCircle, Pause, TrendingUp, Clock, Scale,
-  DollarSign, Wallet, ArrowUpDown, X, MoreVertical,
+  DollarSign, Wallet, ArrowUpDown, X, MoreVertical, FileText, Receipt, UserRound, MapPin, CalendarDays,
 } from "lucide-react";
 import AddProjectDialog from "@/components/admin/AddProjectDialog";
 import { useBulkSelection } from "@/components/admin/useBulkSelection";
@@ -90,6 +91,9 @@ export default function AdminProjectsManager() {
   const [formProject, setFormProject] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [pendingBulk, setPendingBulk] = useState(null);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [projectRelations, setProjectRelations] = useState({ contracts: [], invoices: [], payments: [] });
+  const [projectDetailsLoading, setProjectDetailsLoading] = useState(false);
   const bulk = useBulkSelection();
 
   const refreshProjects = useCallback(async () => {
@@ -166,6 +170,18 @@ export default function AdminProjectsManager() {
 
   const openAdd = () => { setFormProject(null); setFormOpen(true); };
   const openEdit = (p) => { setFormProject(p); setFormOpen(true); };
+  const openProjectDetails = async (project) => {
+    setSelectedProject(project);
+    setProjectDetailsLoading(true);
+    try {
+      const [contracts, invoices, payments] = await Promise.all([
+        base44.entities.Contract.filter({ project_id: project.id }).catch(() => []),
+        base44.entities.Invoice.filter({ project_id: project.id }).catch(() => []),
+        base44.entities.Payment.filter({ project_id: project.id }).catch(() => []),
+      ]);
+      setProjectRelations({ contracts, invoices, payments });
+    } finally { setProjectDetailsLoading(false); }
+  };
   const onFormDone = async () => { setFormOpen(false); setFormProject(null); await refreshProjects(); };
 
   // single-row ops
@@ -396,7 +412,7 @@ export default function AdminProjectsManager() {
                   <tr key={p.id} className={`hover:bg-slate-50 transition-colors ${checked ? "bg-[#C9A66B]/5" : ""} ${p.is_hidden ? "opacity-60" : ""}`}>
                     <td className="py-2.5 px-3 text-center"><Checkbox checked={checked} onCheckedChange={() => bulk.toggle(p.id)} /></td>
                     <td className="py-2.5 px-3 text-slate-400 text-xs font-mono">#{p.id.slice(-6)}</td>
-                    <td className="py-2.5 px-3 font-medium text-[#4A3F35] max-w-[220px] truncate">{p.title || "—"}</td>
+                    <td className="py-2.5 px-3 font-medium text-[#4A3F35] max-w-[220px] truncate"><button type="button" onClick={() => openProjectDetails(p)} className="hover:text-[#C9A66B] hover:underline text-right truncate max-w-full">{p.title || "—"}</button></td>
                     <td className="py-2.5 px-3 text-slate-600">{lookup.clients[p.client_id] || "—"}</td>
                     <td className="py-2.5 px-3 text-slate-500 text-xs">{p.location || "—"}</td>
                     <td className="py-2.5 px-3 text-slate-600 text-xs">{(p.escrow_amount || p.budget_max || 0).toLocaleString()} ر.س</td>
@@ -466,7 +482,7 @@ export default function AdminProjectsManager() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <p className="font-bold text-[#4A3F35] text-sm mb-1">{p.title || "—"}</p>
+              <button type="button" onClick={() => openProjectDetails(p)} className="font-bold text-[#4A3F35] text-sm mb-1 hover:text-[#C9A66B] hover:underline text-right">{p.title || "—"}</button>
               <div className="text-xs text-slate-500 space-y-0.5">
                 <p>العميل: {lookup.clients[p.client_id] || "—"}</p>
                 <p>المدينة: {p.location || "—"}</p>
@@ -481,6 +497,34 @@ export default function AdminProjectsManager() {
           </Card>
         ))}
       </div>
+
+      {/* Project details */}
+      <Dialog open={!!selectedProject} onOpenChange={(open) => !open && setSelectedProject(null)}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-xl text-[#4A3F35]">ملف المشروع الكامل</DialogTitle>
+            <DialogDescription>تفاصيل المشروع وحالته المالية والتعاقدية من البيانات الفعلية.</DialogDescription>
+          </DialogHeader>
+          {selectedProject && <div className="space-y-5">
+            <div className="p-5 rounded-2xl bg-[#F8F5EF] border border-[#E8DFD1]">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h3 className="text-xl font-bold text-[#4A3F35]">{selectedProject.title || "مشروع بدون اسم"}</h3><Badge className={`${STATUS_COLORS[selectedProject.status] || "bg-slate-100"} border`} variant="outline">{STATUS_LABELS[selectedProject.status] || selectedProject.status}</Badge></div><p className="text-sm text-slate-500 mt-2">{selectedProject.description || "لا يوجد وصف"}</p></div><Button variant="outline" size="sm" onClick={() => { setSelectedProject(null); openEdit(selectedProject); }}>تعديل</Button>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 text-xs text-slate-600"><span><UserRound className="inline w-3.5 h-3.5 ml-1"/>{lookup.clients[selectedProject.client_id] || "العميل غير معروف"}</span><span><MapPin className="inline w-3.5 h-3.5 ml-1"/>{selectedProject.location || "بدون موقع"}</span><span><CalendarDays className="inline w-3.5 h-3.5 ml-1"/>{selectedProject.deadline || "بدون موعد"}</span><span>{selectedProject.category || "بدون تصنيف"}</span></div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {[{l:"تقدم المرحلة",v:`${selectedProject.phase_progress || 0}%`},{l:"العروض",v:selectedProject.total_proposals || 0},{l:"الضمان",v:`${(selectedProject.escrow_amount || 0).toLocaleString('ar-SA')} ر.س`},{l:"الدفع",v:selectedProject.payment_status || "غير مدفوع"}].map(x => <Card key={x.l}><CardContent className="p-4"><p className="font-bold text-lg">{x.v}</p><p className="text-xs text-slate-500">{x.l}</p></CardContent></Card>)}
+            </div>
+            <Card><CardContent className="p-4"><h4 className="font-bold mb-3">مسار المشروع</h4><div className="flex flex-wrap gap-2 items-center">{[["design","التصميم"],["permits","التراخيص"],["execution","التنفيذ"],["delivery","التسليم"]].map(([key,label],idx) => <React.Fragment key={key}><Badge variant={selectedProject.phase === key ? "default" : "outline"}>{label}</Badge>{idx < 3 && <span className="text-slate-300">←</span>}</React.Fragment>)}</div>{selectedProject.phase_history?.length > 0 && <p className="text-xs text-slate-500 mt-3">عدد انتقالات المرحلة: {selectedProject.phase_history.length}</p>}</CardContent></Card>
+            {projectDetailsLoading ? <div className="py-8 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-[#C9A66B]"/></div> : <div className="grid md:grid-cols-3 gap-4">
+              <Card><CardContent className="p-4"><h4 className="font-bold mb-3 flex items-center gap-2"><FileText className="w-4 h-4"/> العقود</h4><p className="text-2xl font-bold">{projectRelations.contracts.length}</p>{projectRelations.contracts.slice(0,3).map(c => <p key={c.id} className="text-xs text-slate-500 mt-2 truncate">{c.contract_number || c.name || "عقد"} · {c.status || "—"}</p>)}</CardContent></Card>
+              <Card><CardContent className="p-4"><h4 className="font-bold mb-3 flex items-center gap-2"><Receipt className="w-4 h-4"/> الفواتير</h4><p className="text-2xl font-bold">{projectRelations.invoices.length}</p>{projectRelations.invoices.slice(0,3).map(i => <p key={i.id} className="text-xs text-slate-500 mt-2 truncate">{i.invoice_number || "فاتورة"} · {(i.total_amount || i.amount || 0).toLocaleString('ar-SA')} ر.س</p>)}</CardContent></Card>
+              <Card><CardContent className="p-4"><h4 className="font-bold mb-3 flex items-center gap-2"><Wallet className="w-4 h-4"/> المدفوعات</h4><p className="text-2xl font-bold">{projectRelations.payments.length}</p>{projectRelations.payments.slice(0,3).map(p => <p key={p.id} className="text-xs text-slate-500 mt-2 truncate">{(p.amount || 0).toLocaleString('ar-SA')} ر.س · {p.status || "—"}</p>)}</CardContent></Card>
+            </div>}
+            <div className="flex flex-wrap gap-2 text-xs text-slate-500"><span>المراجعة الفنية: {selectedProject.technical_review_status || "غير محددة"}</span><span>·</span><span>الموافقة النهائية: {selectedProject.client_final_approval ? "تمت" : "لم تتم"}</span><span>·</span><span>المرفقات: {selectedProject.attachments?.length || 0}</span></div>
+          </div>}
+        </DialogContent>
+      </Dialog>
 
       {/* Add / Edit dialog */}
       <AddProjectDialog
