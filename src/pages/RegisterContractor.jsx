@@ -168,10 +168,12 @@ export default function RegisterContractor() {
     try {
       const user = await base44.auth.me();
 
-      await base44.entities.Contractor.create({
+      const contractor = await base44.entities.Contractor.create({
         ...formData,
         email: user.email
       });
+      try { await base44.functions.invoke("sendWelcomeEmail", { role: "contractor", id: contractor.id }); }
+      catch (welcomeErr) { console.error("sendWelcomeEmail contractor failed (non-blocking):", welcomeErr); }
 
       toast.success("تم تسجيل المقاول بنجاح! في انتظار الموافقة من الإدارة");
       navigate(createPageUrl("RegistrationSuccess"));
