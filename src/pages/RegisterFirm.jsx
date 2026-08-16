@@ -137,10 +137,12 @@ export default function RegisterFirm() {
     try {
       const user = await base44.auth.me();
       
-      await base44.entities.EngineeringFirm.create({
+      const firm = await base44.entities.EngineeringFirm.create({
         ...formData,
         email: user.email
       });
+      try { await base44.functions.invoke("sendWelcomeEmail", { role: "firm", id: firm.id }); }
+      catch (welcomeErr) { console.error("sendWelcomeEmail firm failed (non-blocking):", welcomeErr); }
 
       toast.success("تم تسجيل الشركة الاستشارية بنجاح! في انتظار الموافقة من الإدارة");
       navigate(createPageUrl("RegistrationSuccess"));
