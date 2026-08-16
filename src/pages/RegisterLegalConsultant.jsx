@@ -42,7 +42,7 @@ export default function RegisterLegalConsultantPage() {
     setLoading(true);
 
     try {
-      await base44.entities.LegalConsultant.create({
+      const legalConsultant = await base44.entities.LegalConsultant.create({
         ...formData,
         years_experience: parseInt(formData.years_experience) || 0,
         status: "pending",
@@ -54,6 +54,8 @@ export default function RegisterLegalConsultantPage() {
           accepted_date: new Date().toISOString()
         }
       });
+      try { await base44.functions.invoke("sendWelcomeEmail", { role: "legal_consultant", id: legalConsultant.id }); }
+      catch (welcomeErr) { console.error("sendWelcomeEmail legal consultant failed (non-blocking):", welcomeErr); }
 
       alert("تم تقديم طلب التسجيل بنجاح! سيتم مراجعته من قبل الإدارة.");
       navigate(createPageUrl("RegistrationSuccess"));
