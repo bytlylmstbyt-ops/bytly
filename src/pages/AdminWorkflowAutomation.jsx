@@ -239,6 +239,7 @@ export default function AdminWorkflowAutomation() {
   const [search, setSearch] = useState("");
   const [workflowFilter, setWorkflowFilter] = useState("all");
   const [selectedWorkflow, setSelectedWorkflow] = useState(null);
+  const [selectedNodeIndex, setSelectedNodeIndex] = useState(null);
   const [suggested, setSuggested] = useState(SUGGESTED_WORKFLOWS);
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -397,7 +398,7 @@ export default function AdminWorkflowAutomation() {
     return matchesSearch && matchesStatus;
   });
 
-  const openWorkflowDetails = (rule) => setSelectedWorkflow(rule);
+  const openWorkflowDetails = (rule) => { setSelectedWorkflow(rule); setSelectedNodeIndex(null); };
 
   const addSuggestedWorkflow = async (template) => {
     try {
@@ -629,8 +630,9 @@ export default function AdminWorkflowAutomation() {
       </Tabs>
 
       {/* ── تفاصيل الـ Workflow مثل محرر Base44 ── */}
-      <Dialog open={!!selectedWorkflow} onOpenChange={(open) => !open && setSelectedWorkflow(null)}>
+      <Dialog open={!!selectedWorkflow} onOpenChange={(open) => { if (!open) { setSelectedWorkflow(null); setSelectedNodeIndex(null); } }}>
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto p-0">
+          <DialogHeader className="sr-only"><DialogTitle>تفاصيل سير العمل</DialogTitle></DialogHeader>
           {selectedWorkflow && (() => {
             const { source, nodes } = buildWorkflowNodes(selectedWorkflow);
             const workflowRuns = runs.filter((r) => r.rule_id === selectedWorkflow.id || r.rule_name === selectedWorkflow.name).slice(0, 8);
@@ -650,13 +652,14 @@ export default function AdminWorkflowAutomation() {
                     <div className="flex items-center justify-between mb-5"><div><h3 className="font-bold text-[#4A3F35]">سير العمل</h3><p className="text-xs text-slate-400 mt-1">تسلسل حقيقي مستخرج من تعريف الـ Workflow عند توفره.</p></div><Button size="sm" variant="outline" className="gap-1.5" disabled={runningId === selectedWorkflow.id} onClick={() => handleRunNow(selectedWorkflow)}><Play className="w-3.5 h-3.5" />انطلق الآن</Button></div>
                     <div className="space-y-0 max-w-2xl mx-auto">
                       {nodes.map((node, index) => { const NodeIcon = node.icon || Zap; return <React.Fragment key={`${node.type}-${index}`}>
-                        <div className="rounded-xl border bg-white shadow-sm p-4 flex items-start gap-3"><div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${node.type === "trigger" ? "bg-blue-50 text-blue-600" : node.type === "condition" ? "bg-amber-50 text-amber-600" : node.type === "integration" ? "bg-violet-50 text-violet-600" : "bg-emerald-50 text-emerald-600"}`}><NodeIcon className="w-5 h-5" /></div><div className="min-w-0"><p className="text-xs text-slate-400 mb-1">{node.title}</p><p className="font-semibold text-sm text-[#4A3F35]">{node.label}</p>{node.detail && <p className="text-[11px] text-slate-400 mt-1 font-mono">{node.detail}</p>}</div></div>
+                        <button type="button" onClick={() => setSelectedNodeIndex(index)} className={`w-full text-right rounded-xl border shadow-sm p-4 flex items-start gap-3 transition-all hover:shadow-md hover:border-[#C9A66B] focus:outline-none focus:ring-2 focus:ring-[#C9A66B]/40 ${selectedNodeIndex === index ? "border-[#C9A66B] ring-2 ring-[#C9A66B]/20 bg-[#FFFCF5]" : "bg-white"}`}><div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${node.type === "trigger" ? "bg-blue-50 text-blue-600" : node.type === "condition" ? "bg-amber-50 text-amber-600" : node.type === "integration" ? "bg-violet-50 text-violet-600" : "bg-emerald-50 text-emerald-600"}`}><NodeIcon className="w-5 h-5" /></div><div className="min-w-0 flex-1"><p className="text-xs text-slate-400 mb-1">{node.title}</p><p className="font-semibold text-sm text-[#4A3F35]">{node.label}</p>{node.detail && <p className="text-[11px] text-slate-400 mt-1 font-mono">{node.detail}</p>}<p className="text-[11px] text-[#C9A66B] mt-2">اضغط لعرض التفاصيل</p></div><Eye className={`w-4 h-4 shrink-0 mt-1 ${selectedNodeIndex === index ? "text-[#C9A66B]" : "text-slate-300"}`} /></button>
                         {index < nodes.length - 1 && <div className="h-7 border-r-2 border-dashed border-slate-200 mr-5" />}
                       </React.Fragment>; })}
                     </div>
                   </div>
                   <aside className="border-r bg-slate-50/60 p-5">
                     <div className="flex items-center justify-between mb-4"><h3 className="font-bold text-[#4A3F35]">تفاصيل الأتمتة</h3><Eye className="w-4 h-4 text-slate-400" /></div>
+                    {selectedNodeIndex !== null && nodes[selectedNodeIndex] && <div className="mb-4 p-4 rounded-xl border border-[#C9A66B]/40 bg-[#FFFCF5]"><div className="flex items-center gap-2 mb-2"><GitBranch className="w-4 h-4 text-[#C9A66B]" /><h4 className="font-bold text-sm text-[#4A3F35]">تفاصيل الخطوة</h4></div><p className="text-xs text-slate-500 mb-1">{nodes[selectedNodeIndex].title}</p><p className="font-semibold text-sm text-[#4A3F35]">{nodes[selectedNodeIndex].label}</p>{nodes[selectedNodeIndex].detail && <p className="text-[11px] text-slate-500 mt-2 font-mono break-all">{nodes[selectedNodeIndex].detail}</p>}{nodes[selectedNodeIndex].type === "trigger" && <p className="text-xs text-slate-500 mt-2">هذه الخطوة تحدد متى يبدأ سير العمل.</p>}{nodes[selectedNodeIndex].type === "condition" && <p className="text-xs text-slate-500 mt-2">هذه الشروط يجب تحققها قبل تنفيذ الإجراءات التالية.</p>}{nodes[selectedNodeIndex].type === "action" && <p className="text-xs text-slate-500 mt-2">هذا الإجراء ينفذ بعد تحقق المشغّل والشروط.</p>}{nodes[selectedNodeIndex].type === "integration" && <p className="text-xs text-slate-500 mt-2">هذا هو التكامل أو المخرج الخارجي المستخدم في هذه الخطوة.</p>}</div>}
                     <div className="space-y-3 text-sm">
                       <div className="p-3 rounded-lg bg-white border"><p className="text-xs text-slate-400">الحالة</p><p className="font-medium mt-1">{selectedWorkflow.is_active !== false ? "نشط" : "متوقف"}</p></div>
                       <div className="p-3 rounded-lg bg-white border"><p className="text-xs text-slate-400">المُشغّل</p><p className="font-medium mt-1">{sourceTriggerLabel(source, selectedWorkflow)}</p></div>
