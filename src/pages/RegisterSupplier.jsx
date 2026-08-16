@@ -170,10 +170,12 @@ export default function RegisterSupplier() {
     try {
       const user = await base44.auth.me();
 
-      await base44.entities.Supplier.create({
+      const supplier = await base44.entities.Supplier.create({
         ...formData,
         email: user.email
       });
+      try { await base44.functions.invoke("sendWelcomeEmail", { role: "supplier", id: supplier.id }); }
+      catch (welcomeErr) { console.error("sendWelcomeEmail supplier failed (non-blocking):", welcomeErr); }
 
       toast.success("تم تسجيل المورد بنجاح! في انتظار الموافقة من الإدارة");
       navigate(createPageUrl("RegistrationSuccess"));
