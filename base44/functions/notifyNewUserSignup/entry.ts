@@ -11,8 +11,14 @@ Deno.serve(async (req) => {
 
     // Support both direct call and entity automation payload
     const userData = payload.data || payload;
-    const fullName = userData.full_name || userData.name || 'غير محدد';
+    const fullName = userData.full_name || userData.name || userData.company_name || 'غير محدد';
     const email = userData.email || 'غير محدد';
+    const role = payload.role || userData.user_type || 'مستخدم';
+    const roleLabels = {
+      engineer: 'مهندس', surveyor: 'مهندس مساح', firm: 'شركة استشارية', contractor: 'مقاول',
+      consultant: 'مستشار', supplier: 'مورد', legal_consultant: 'مستشار قانوني', client: 'عميل'
+    };
+    const roleLabel = roleLabels[role] || role;
 
     // Format signup time in Saudi timezone
     const signupTime = new Date().toLocaleString('ar-SA', {
@@ -25,20 +31,21 @@ Deno.serve(async (req) => {
     const { accessToken } = await base44.asServiceRole.connectors.getConnection('gmail');
 
     // Build email
-    const toEmail = 'info@mybytly.com';
-    const subject = 'إشعار جديد: مستخدم انضم إلى لمسة بيت';
+    const toEmail = 'bytlylmstbyt@gmail.com';
+    const subject = `إشعار تسجيل جديد: ${roleLabel} — بيتلي`;
     const body = `
 مرحباً،
 
-انضم مستخدم جديد إلى منصة بيتلي - لمسة بيت 🎉
+تم تسجيل ${roleLabel} جديد في منصة بيتلي 🎉
 
 ━━━━━━━━━━━━━━━━━━━━━━━
+📌 النوع:    ${roleLabel}
 📌 الاسم:    ${fullName}
 📧 البريد:   ${email}
 🕐 وقت التسجيل: ${signupTime}
 ━━━━━━━━━━━━━━━━━━━━━━━
 
-يمكنك الاطلاع على تفاصيل المستخدم من لوحة تحكم المنصة.
+يمكنك الاطلاع على تفاصيل التسجيل ومراجعة الحساب من لوحة تحكم المنصة.
 
 مع التحية،
 نظام إشعارات بيتلي
