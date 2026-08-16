@@ -62,9 +62,13 @@ export default function BytlyAdvisorChat() {
       setConversationId(conv.id);
 
       unsubscribeRef.current = base44.agents.subscribeToConversation(conv.id, (data) => {
-        if (data.messages && data.messages.length > 0) {
-          setMessages(data.messages);
-          setLoading(false);
+        try {
+          if (data?.messages && data.messages.length > 0) {
+            setMessages(data.messages);
+            setLoading(false);
+          }
+        } catch (e) {
+          console.warn("Agent update callback error:", e);
         }
       });
     } catch (err) {
