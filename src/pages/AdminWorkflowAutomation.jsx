@@ -417,8 +417,8 @@ export default function AdminWorkflowAutomation() {
         name: template.name, description: template.description, is_active: false,
         trigger_type: template.trigger_type, trigger_event: template.trigger_event || null,
         schedule_cron: template.schedule_cron || null, integration_trigger: "none",
-        category: template.category, actions: template.actions, is_template: false,
-        run_count: 0, last_run_status: "never_run", is_template: true,
+        category: template.category, actions: template.actions, is_template: true,
+        run_count: 0, last_run_status: "never_run",
       });
       setSuggested((items) => items.filter((item) => item.id !== template.id));
       await loadData();
