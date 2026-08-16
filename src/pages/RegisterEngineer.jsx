@@ -325,6 +325,11 @@ export default function RegisterEngineer() {
       // إرسال إشعارات التسجيل: بريد ترحيب للمهندس + بريد وتنبيه للمدير
       // (غير معتمِد على workflows المتعطلة — يُستدعى من سياق المستخدم المُصادَق عليه)
       try {
+        await base44.functions.invoke("sendWelcomeEmail", { role: formData.user_type === "surveyor" ? "surveyor" : "engineer", id: engineer.id });
+      } catch (welcomeErr) {
+        console.error("sendWelcomeEmail engineer failed (non-blocking):", welcomeErr);
+      }
+      try {
         await base44.functions.invoke("notifyNewEngineer", { engineer_id: engineer.id });
       } catch (notifyErr) {
         console.error("notifyNewEngineer failed (non-blocking):", notifyErr);
