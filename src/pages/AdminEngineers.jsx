@@ -29,6 +29,7 @@ export default function AdminEngineersPage() {
   const [reviewEngineer, setReviewEngineer] = useState(null);
   const [rejectionReason, setRejectionReason] = useState("");
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [selectedEngineer, setSelectedEngineer] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -51,6 +52,8 @@ export default function AdminEngineersPage() {
       setLoading(false);
     }
   };
+
+  const openEngineerProfile = (engineer) => setSelectedEngineer(engineer);
 
   const handleEdit = (engineer) => {
     setEditingEngineer(engineer);
@@ -281,7 +284,7 @@ export default function AdminEngineersPage() {
             >
               <Card className="hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">
-                  <div className="flex flex-col md:flex-row md:items-center gap-4">
+                  <div className="flex flex-col md:flex-row md:items-center gap-4 cursor-pointer" onClick={() => openEngineerProfile(engineer)}>
                     <div className="flex-1" style={{minWidth: 0}}>
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-lg font-bold text-[#1a1a2e]">{engineer.full_name}</h3>
@@ -387,7 +390,7 @@ export default function AdminEngineersPage() {
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      <Dialog>
+                      <Dialog onOpenChange={(open) => { if (!open) setEditingEngineer(null); }}>
                         <DialogTrigger asChild>
                           <Button
                             variant="outline"
@@ -478,6 +481,25 @@ export default function AdminEngineersPage() {
             </motion.div>
           ))}
         </div>
+
+        {/* Engineer profile */}
+        <Dialog open={!!selectedEngineer} onOpenChange={(open) => !open && setSelectedEngineer(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader><DialogTitle>الملف المهني الكامل للمهندس</DialogTitle></DialogHeader>
+            {selectedEngineer && <div className="space-y-5">
+              <div className="p-5 rounded-2xl bg-[#F8F5EF] border flex items-start gap-4">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] flex items-center justify-center text-white font-bold text-2xl shrink-0">{selectedEngineer.full_name?.charAt(0) || "؟"}</div>
+                <div className="flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="text-xl font-bold">{selectedEngineer.full_name}</h3>{selectedEngineer.is_verified && <Badge className="bg-blue-100 text-blue-800">موثق</Badge>}<Badge>{selectedEngineer.status === "approved" ? "معتمد" : selectedEngineer.status === "pending" ? "قيد المراجعة" : "مرفوض"}</Badge></div><p className="text-sm text-slate-500 mt-1">{selectedEngineer.specialization || "التخصص غير محدد"}</p><div className="grid sm:grid-cols-2 gap-2 mt-3 text-sm text-slate-600"><span><Mail className="inline w-4 h-4 ml-1"/>{selectedEngineer.email || "بدون بريد"}</span><span><Phone className="inline w-4 h-4 ml-1"/>{selectedEngineer.phone || "بدون هاتف"}</span><span><MapPin className="inline w-4 h-4 ml-1"/>{selectedEngineer.city || "بدون مدينة"}</span><span><Briefcase className="inline w-4 h-4 ml-1"/>{selectedEngineer.years_experience || 0} سنوات خبرة</span></div></div>
+                <Button variant="outline" size="sm" onClick={() => { setSelectedEngineer(null); handleEdit(selectedEngineer); }}>تعديل</Button>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{[{l:"المشاريع المكتملة",v:selectedEngineer.completed_projects||0,i:Briefcase},{l:"التقييم",v:selectedEngineer.rating?.toFixed?.(1)||"0.0",i:Star},{l:"المراجعات",v:selectedEngineer.total_reviews||0,i:Award},{l:"رصيد المحفظة",v:`${(selectedEngineer.wallet_balance||0).toLocaleString('ar-SA')} ريال`,i:DollarSign}].map(({l,v,i:Icon})=><Card key={l}><CardContent className="p-4"><Icon className="w-4 h-4 text-[#C9A66B] mb-2"/><p className="font-bold text-lg">{v}</p><p className="text-xs text-slate-500">{l}</p></CardContent></Card>)}</div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <Card><CardContent className="p-4"><h4 className="font-bold mb-3 flex items-center gap-2"><ShieldCheck className="w-4 h-4"/> التوثيق والاعتماد</h4><div className="space-y-2 text-sm"><p>رقم القيد: <b>{selectedEngineer.registration_number || "غير متوفر"}</b></p><p>اعتمد بواسطة: <b>{selectedEngineer.certified_by || "—"}</b></p><p>تاريخ الاعتماد: <b>{selectedEngineer.certified_at ? new Date(selectedEngineer.certified_at).toLocaleString('ar-SA') : "—"}</b></p></div></CardContent></Card>
+                <Card><CardContent className="p-4"><h4 className="font-bold mb-3 flex items-center gap-2"><FileText className="w-4 h-4"/> المستندات</h4><div className="space-y-2">{[["شهادة التخرج",selectedEngineer.graduation_certificate_url],["شهادة هيئة المهندسين",selectedEngineer.saudi_engineers_council_certificate_url]].map(([label,url])=><div key={label} className="flex items-center justify-between gap-2 text-sm"><span>{label}</span>{url ? <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline inline-flex items-center gap-1">عرض <ExternalLink className="w-3 h-3"/></a> : <span className="text-red-500">غير مرفوعة</span>}</div>)}</div></CardContent></Card>
+              </div>
+            </div>}
+          </DialogContent>
+        </Dialog>
 
         {/* Certification Review Dialog */}
         {reviewEngineer && (
