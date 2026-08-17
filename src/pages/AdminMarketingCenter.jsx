@@ -14,6 +14,7 @@ import MarketingCharts from "@/components/admin/marketing/MarketingCharts";
 import PostScheduler from "@/components/admin/marketing/PostScheduler";
 import CampaignReports from "@/components/admin/marketing/CampaignReports";
 import GoogleAnalyticsPanel from "@/components/admin/marketing/GoogleAnalyticsPanel";
+import AdminSearchGeoAnalytics from "@/pages/AdminSearchGeoAnalytics";
 import AddPlatformDialog from "@/components/admin/marketing/AddPlatformDialog";
 
 const PLATFORMS = [
@@ -198,6 +199,9 @@ export default function AdminMarketingCenter() {
           <TabsTrigger value="ga" className="text-xs sm:text-sm data-[state=active]:bg-[#4A3F35] data-[state=active]:text-white">
             <Gauge className="w-3.5 h-3.5 ml-1.5" />{isRTL ? "Google Analytics" : "Google Analytics"}
           </TabsTrigger>
+          <TabsTrigger value="searchGeo" className="text-xs sm:text-sm data-[state=active]:bg-[#4A3F35] data-[state=active]:text-white">
+            <Search className="w-3.5 h-3.5 ml-1.5" />{isRTL ? "محركات البحث والتحليل الجغرافي" : "Search & Geo Analytics"}
+          </TabsTrigger>
           <TabsTrigger value="errors" className="text-xs sm:text-sm data-[state=active]:bg-[#4A3F35] data-[state=active]:text-white">
             <AlertCircle className="w-3.5 h-3.5 ml-1.5" />{t("integrations.adminMarketing.tabs.errors")}
           </TabsTrigger>
@@ -209,6 +213,7 @@ export default function AdminMarketingCenter() {
         <TabsContent value="scheduler"><PostScheduler onPublished={handleRefresh} /></TabsContent>
         <TabsContent value="reports"><CampaignReports posts={posts} /></TabsContent>
         <TabsContent value="ga"><GoogleAnalyticsPanel /></TabsContent>
+        <TabsContent value="searchGeo"><AdminSearchGeoAnalytics /></TabsContent>
         <TabsContent value="errors"><MarketingErrorsTab posts={posts} /></TabsContent>
       </Tabs>
 
