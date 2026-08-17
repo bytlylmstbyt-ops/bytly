@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, ShieldAlert, ArrowUpRight } from "lucide-react";
+import { Loader2, ShieldAlert, ArrowUpRight, Globe2, ShieldCheck, Mail, Server, CheckCircle2, AlertTriangle } from "lucide-react";
 import { ADMIN_CATEGORIES as CATEGORIES } from "@/components/admin/adminSections";
 import { readAdminFilters, writeAdminFilters } from "@/components/admin/adminFilterPersistence";
 import MonthlyRevenueSummaryPanel from "@/components/admin/MonthlyRevenueSummaryPanel";
@@ -75,6 +75,27 @@ export default function AdminControlCenter() {
         <p className="text-sm text-slate-500 mt-1">
           كل أدوات إدارة بيتلي في مكان واحد — اختر قسمًا من القائمة، ثم افتح الصفحة المناسبة.
         </p>
+      </div>
+
+      <div className="mb-6">
+        <Card className="border-0 shadow-sm overflow-hidden">
+          <div className="bg-gradient-to-l from-[#4A3F35] to-[#6B5D4F] p-5 text-white">
+            <h2 className="text-lg font-bold flex items-center gap-2"><Globe2 className="w-5 h-5" />مركز إدارة النطاقات</h2>
+            <p className="text-sm text-white/75 mt-1">إدارة النطاقات المرتبطة بمنصة بيتلي وحالة الربط والتحقق والأمان والبريد.</p>
+          </div>
+          <CardContent className="p-5 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="rounded-xl border p-4"><div className="flex items-center gap-2 text-xs text-slate-500"><Globe2 className="w-4 h-4" />النطاق الأساسي</div><p className="font-bold text-[#4A3F35] mt-2">mybaytly.com</p><span className="inline-flex items-center gap-1 mt-2 rounded-full bg-emerald-100 text-emerald-700 px-2 py-1 text-xs"><CheckCircle2 className="w-3 h-3" />نشط</span></div>
+              <div className="rounded-xl border p-4"><div className="flex items-center gap-2 text-xs text-slate-500"><ShieldCheck className="w-4 h-4" />SSL</div><p className="font-bold text-[#4A3F35] mt-2">مؤمّن</p><span className="inline-flex items-center gap-1 mt-2 rounded-full bg-emerald-100 text-emerald-700 px-2 py-1 text-xs"><CheckCircle2 className="w-3 h-3" />شهادة صالحة</span></div>
+              <div className="rounded-xl border p-4"><div className="flex items-center gap-2 text-xs text-slate-500"><Mail className="w-4 h-4" />نطاق البريد</div><p className="font-bold text-[#4A3F35] mt-2">mybaytly.com</p><span className="inline-flex items-center gap-1 mt-2 rounded-full bg-emerald-100 text-emerald-700 px-2 py-1 text-xs"><CheckCircle2 className="w-3 h-3" />مهيأ</span></div>
+            </div>
+            <div className="rounded-xl border bg-slate-50 p-4">
+              <div className="flex items-center gap-2 mb-3"><Server className="w-4 h-4 text-[#C9A66B]" /><h3 className="font-bold text-[#4A3F35]">النطاقات المرتبطة</h3></div>
+              <div className="bg-white rounded-xl border p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"><div><p className="font-semibold">mybaytly.com</p><p className="text-xs text-slate-500 mt-1">النطاق الافتراضي للمنصة • DNS متصل • SSL نشط</p></div><span className="rounded-full bg-emerald-100 text-emerald-700 px-2.5 py-1 text-xs font-medium">نشط</span></div>
+            </div>
+            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex gap-3"><AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" /><div><p className="font-semibold text-amber-900">إدارة شراء وتجديد النطاقات</p><p className="text-sm text-amber-800 mt-1">الشراء والتجديد غير مفعّلين حاليًا لعدم وجود مزود نطاقات مرتبط. يمكن إضافة التكامل لاحقًا دون تغيير هذه الصفحة.</p></div></div>
+          </CardContent>
+        </Card>
       </div>
 
       <MonthlyRevenueSummaryPanel />
