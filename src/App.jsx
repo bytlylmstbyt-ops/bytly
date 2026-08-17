@@ -235,6 +235,9 @@ const AuthenticatedApp = () => {
         <Route path="/BudgetCalculator"           element={lazyRoute(React.lazy(() => import('./pages/BudgetCalculator')), "BudgetCalculator")} />
         <Route path="/PlatformDashboard"          element={lazyRoute(React.lazy(() => import('./pages/PlatformDashboard')), "PlatformDashboard")} />
         <Route path="/AdminControlCenter"        element={lazyRoute(lazyWithRetry(() => import('./pages/AdminControlCenter')), "AdminControlCenter")} />
+        <Route path="/AdminBoard"                element={lazyRoute(lazyWithRetry(() => import('./pages/AdminBoard')), "AdminBoard")} />
+        <Route path="/AdminExecutiveManagement" element={lazyRoute(lazyWithRetry(() => import('./pages/AdminExecutiveManagement')), "AdminExecutiveManagement")} />
+        <Route path="/AdminStrategicChange"     element={lazyRoute(lazyWithRetry(() => import('./pages/AdminStrategicChange')), "AdminStrategicChange")} />
         <Route path="/AdminAIAssistant"          element={lazyRoute(lazyWithRetry(() => import('./pages/AdminAIAssistant')), "AdminAIAssistant")} />
         <Route path="/AdminProjects"              element={lazyRoute(lazyWithRetry(() => import('./pages/AdminProjects')), "AdminProjects")} />
         <Route path="/AdminProviders"             element={lazyRoute(React.lazy(() => import('./pages/AdminProviders')), "AdminProviders")} />
