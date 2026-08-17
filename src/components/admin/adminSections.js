@@ -1,12 +1,24 @@
 import {
   LayoutDashboard, Users, FileText, Wallet, Scale, Bell, BarChart3, Settings as SettingsIcon,
-  FolderKanban, Building2, Link2, Mail, Megaphone, Sparkles, Layers, Workflow,
+  FolderKanban, Building2, Link2, Mail, Megaphone, Sparkles, Layers, Workflow, Crown,
 } from "lucide-react";
 
 // ── Category → page map ────────────────────────────────────────────────────
 // Shared between AdminControlCenter (renders the hub) and AdminBreadcrumb
 // (renders the trail). Single source of truth for admin section labels.
 export const ADMIN_CATEGORIES = [
+  {
+    key: "board",
+    label: "مجلس الإدارة",
+    icon: Crown,
+    description: "السلطة الإدارية العليا: الحوكمة، الإدارة التنفيذية، والتغيير الاستراتيجي.",
+    items: [
+      { page: "AdminBoard", label: "مجلس الإدارة", desc: "السلطة العليا والإشراف المؤسسي" },
+      { page: "RoleManagement", label: "الحوكمة والصلاحيات", desc: "الأدوار والصلاحيات وسجل التدقيق" },
+      { page: "AdminExecutiveManagement", label: "الإدارة التنفيذية", desc: "الوصول المنظم إلى الإدارات التنفيذية" },
+      { page: "AdminStrategicChange", label: "التخطيط والتغيير الاستراتيجي", desc: "الأهداف والمبادرات والقرارات الاستراتيجية" },
+    ],
+  },
   {
     key: "overview",
     label: "نظرة عامة",
@@ -185,7 +197,7 @@ export const ADMIN_CATEGORIES = [
   },
   {
     key: "marketing",
-    label: "مركز التسويق",
+    label: "إدارة التسويق",
     icon: Megaphone,
     description: "إدارة حسابات التواصل الاجتماعي والمنشورات والتحليلات.",
     items: [
