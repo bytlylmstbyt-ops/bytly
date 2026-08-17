@@ -237,9 +237,9 @@ function AgentMessage({ msg, onDecision, deciding }) {
 
           {(plan.status === "awaiting_approval" || plan.status === "proposed") && (
             <div className="mt-4 flex items-center gap-2">
-              <Button size="sm" disabled={deciding} onClick={() => onDecision(msg.id, "approve")} className="bg-emerald-600 hover:bg-emerald-700">
-                {deciding === "approve" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                موافقة وتنفيذ في المعاينة
+              <Button size="sm" disabled={deciding} onClick={() => onDecision(msg.id, "execute")} className="bg-emerald-600 hover:bg-emerald-700">
+                {deciding === "execute" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                موافقة وتنفيذ فعلي
               </Button>
               <Button size="sm" variant="outline" disabled={deciding} onClick={() => onDecision(msg.id, "reject")}>
                 {deciding === "reject" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
@@ -248,9 +248,10 @@ function AgentMessage({ msg, onDecision, deciding }) {
             </div>
           )}
           {plan.status === "approved" && (
-            <p className="mt-4 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-              ✓ تمت الموافقة وتسجيلها. التنفيذ الفعلي يتم يدويًا في جلسة المحرر فقط — أخبرني بالموافقة في هذه الجلسة لأطبّق التغيير فعليًا.
-            </p>
+            <p className="mt-4 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">✓ تمت الموافقة. الوكيل جاهز للانتقال إلى التنفيذ الفعلي.</p>
+          )}
+          {plan.status === "executed" && (
+            <p className="mt-4 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">✓ نفّذ الوكيل الإجراء فعليًا وتم تسجيل العملية في سجل الوكيل.</p>
           )}
           {plan.status === "rejected" && (
             <p className="mt-4 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">تم إلغاء هذا الاقتراح.</p>
@@ -400,11 +401,15 @@ export default function AdminAIAssistant() {
   const handleDecision = async (id, action) => {
     setDecidingId(`${id}:${action}`);
     try {
-      const res = await base44.functions.invoke("platformAgent", { action, id });
+      const res = await base44.functions.invoke("platformAgent", { action, id, execute: action === "execute" });
       if (res.data?.status) {
-        setMessages((prev) => prev.map((m) => (m.role === "plan" && m.id === id ? { ...m, plan: { ...m.plan, status: res.data.status } } : m)));
-        if (id === pendingPlanId) setPendingPlanId(null);
+        setMessages((prev) => prev.map((m) => (m.role === "plan" && m.id === id ? { ...m, plan: { ...m.plan, status: res.data.status, execution_result: res.data.result || res.data.note } } : m)));
+        if (id === pendingPlanId && res.data.status === "executed") setPendingPlanId(null);
+      } else if (res.data?.error) {
+        setMessages((prev) => [...prev, { role: "error", text: res.data.error }]);
       }
+    } catch {
+      setMessages((prev) => [...prev, { role: "error", text: "تعذّر تنفيذ الإجراء من الوكيل. لم يتم اعتماد أي تغيير." }]);
     } finally {
       setDecidingId(null);
     }

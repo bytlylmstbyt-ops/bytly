@@ -1,0 +1,46 @@
+{
+  "type": "object",
+  "properties": {
+    "task_id": {
+      "type": "string"
+    },
+    "action_type": {
+      "type": "string"
+    },
+    "target": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "proposed",
+        "approved",
+        "executed",
+        "failed",
+        "rejected"
+      ]
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "requested_by_email": {
+      "type": "string"
+    },
+    "details": {
+      "type": "string"
+    },
+    "result": {
+      "type": "string"
+    },
+    "executed_at": {
+      "type": "string"
+    }
+  },
+  "required": [],
+  "name": "AgentAction"
+}
