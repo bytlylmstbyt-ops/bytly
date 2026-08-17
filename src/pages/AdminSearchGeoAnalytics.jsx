@@ -59,6 +59,8 @@ export default function AdminSearchGeoAnalytics() {
   const [geo, setGeo] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [aiEnabled, setAiEnabled] = useState(true);
+  const [aiFixing, setAiFixing] = useState(false);
+  const [aiFixResult, setAiFixResult] = useState(null);
 
   const loadGeo = async () => {
     setLoading(true);
@@ -71,6 +73,41 @@ export default function AdminSearchGeoAnalytics() {
     } finally { setLoading(false); }
   };
   useEffect(() => { loadGeo(); }, []);
+
+  const handleAiFix = async () => {
+    setAiFixing(true);
+    setAiFixResult(null);
+    try {
+      const res = await base44.integrations.Core.InvokeLLM({
+        prompt: `أنت خبير في تحسين محركات البحث (SEO) وتحسين ظهور التطبيقات للذكاء الاصطناعي. حلل التطبيق الهندسي "بيتلي - المنظومة الهندسية المتكاملة" بناءً على التحذيرات التالية وقدّم خطة إصلاح عملية ومحددة لكل تحذير:
+1. أنواع البيانات التي لم يتم تصنيفها بعد للبحث
+2. تفتقر بعض أنواع البيانات إلى حقول نصية
+لكل تحذير: اشرح السبب، واقترح إجراءات تصحيحية محددة قابلة للتنفيذ، والحقول/الكيانات المتأثرة. أجب بالعربية بصيغة مختصرة وواضحة.`,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            fixes: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  warning: { type: "string" },
+                  cause: { type: "string" },
+                  actions: { type: "array", items: { type: "string" } },
+                },
+              },
+            },
+            summary: { type: "string" },
+          },
+        },
+      });
+      setAiFixResult(res);
+    } catch (_) {
+      setAiFixResult({ error: "تعذر تشغيل الإصلاح بالذكاء الاصطناعي حالياً. حاول مرة أخرى." });
+    } finally {
+      setAiFixing(false);
+    }
+  };
 
   const goodCount = 37;
   const warningCount = 2;
@@ -105,12 +142,37 @@ export default function AdminSearchGeoAnalytics() {
       </div>
 
       {activeTab === "summary" && <main className="px-8 py-7 max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-5"><div><h2 className="text-lg font-semibold">تقييمك في محركات البحث</h2><p className="text-xs text-slate-500 mt-1">يسهل العثور على تطبيقك في نتائج البحث. استمر في التحسين لنيل الصدارة.</p></div><div className="flex gap-2"><button onClick={loadGeo} className="h-9 px-4 rounded-lg border border-slate-200 text-xs bg-white hover:bg-slate-50 flex items-center gap-2"><RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />إعادة المسح</button><button className="h-9 px-4 rounded-lg bg-slate-900 text-white text-xs flex items-center gap-2"><Bot className="w-3.5 h-3.5" />إصلاح باستخدام الذكاء الاصطناعي</button></div></div>
+        <div className="flex items-center justify-between mb-5"><div><h2 className="text-lg font-semibold">تقييمك في محركات البحث</h2><p className="text-xs text-slate-500 mt-1">يسهل العثور على تطبيقك في نتائج البحث. استمر في التحسين لنيل الصدارة.</p></div><div className="flex gap-2"><button onClick={loadGeo} className="h-9 px-4 rounded-lg border border-slate-200 text-xs bg-white hover:bg-slate-50 flex items-center gap-2"><RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />إعادة المسح</button><button onClick={handleAiFix} disabled={aiFixing} className="h-9 px-4 rounded-lg bg-slate-900 text-white text-xs flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"><Bot className={`w-3.5 h-3.5 ${aiFixing ? "animate-pulse" : ""}`} />{aiFixing ? "جارٍ الإصلاح..." : "إصلاح باستخدام الذكاء الاصطناعي"}</button></div></div>
         <div className="flex gap-2 mb-5"><CountPill type="all" count={total} /><CountPill type="critical" count={0} /><CountPill type="warning" count={warningCount} /><CountPill type="good" count={goodCount} /></div>
         <div className="rounded-xl border border-slate-200 overflow-hidden bg-white">
           {warnings.map((text, i) => <div key={i} className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 hover:bg-slate-50 cursor-pointer"><div className="flex items-center gap-3"><AlertTriangle className="w-4 h-4 text-amber-500" /><span className="text-sm">{text}</span></div><ChevronLeft className="w-4 h-4 text-slate-400" /></div>)}
           {auditRows.map(([text, status], i) => <div key={i} className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 last:border-0 hover:bg-slate-50 cursor-pointer"><div className="flex items-center gap-3"><StatusIcon status={status} /><span className="text-sm">{text}</span></div><ChevronLeft className="w-4 h-4 text-slate-400" /></div>)}
         </div>
+
+        {aiFixing && <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-5 flex items-center gap-3 text-sm text-slate-600"><RefreshCw className="w-4 h-4 animate-spin text-slate-500" />جارٍ تحليل التطبيق وتوليد خطة الإصلاح بالذكاء الاصطناعي...</div>}
+        {aiFixResult && !aiFixing && (
+          <div className="mt-5 rounded-xl border border-slate-200 bg-white overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2"><Bot className="w-4 h-4 text-slate-700" /><h3 className="text-sm font-semibold">خطة الإصلاح المقترحة</h3></div>
+            {aiFixResult.error ? (
+              <div className="px-5 py-4 text-sm text-red-600">{aiFixResult.error}</div>
+            ) : (
+              <div className="px-5 py-4 space-y-4">
+                {aiFixResult.summary && <p className="text-xs text-slate-500 leading-6">{aiFixResult.summary}</p>}
+                {(aiFixResult.fixes || []).map((fix, i) => (
+                  <div key={i} className="rounded-lg border border-slate-100 p-4 bg-slate-50/50">
+                    <div className="flex items-center gap-2 mb-2"><AlertTriangle className="w-4 h-4 text-amber-500" /><span className="text-sm font-medium">{fix.warning}</span></div>
+                    {fix.cause && <p className="text-xs text-slate-600 mb-2 leading-6"><b>السبب:</b> {fix.cause}</p>}
+                    {fix.actions && fix.actions.length > 0 && (
+                      <ul className="text-xs text-slate-700 space-y-1.5 list-disc pr-4">
+                        {fix.actions.map((a, j) => <li key={j} className="leading-6">{a}</li>)}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </main>}
 
       {activeTab === "meta" && <main className="px-8 py-7 max-w-6xl mx-auto space-y-5"><div><h2 className="text-lg font-semibold">العلامات الوصفية</h2><p className="text-xs text-slate-500 mt-1">إدارة ومراجعة البيانات التي تساعد محركات البحث على فهم صفحات التطبيق.</p></div><div className="grid grid-cols-1 md:grid-cols-3 gap-4"><div className="border rounded-xl p-5"><p className="text-xs text-slate-500">عناوين الصفحات</p><p className="text-2xl font-semibold mt-2">مكتملة</p></div><div className="border rounded-xl p-5"><p className="text-xs text-slate-500">الأوصاف</p><p className="text-2xl font-semibold mt-2">مكتملة</p></div><div className="border rounded-xl p-5"><p className="text-xs text-slate-500">Schema</p><p className="text-2xl font-semibold mt-2">مفعلة</p></div></div><div className="border rounded-xl overflow-hidden">{["عنوان الصفحة المفضل", "الوصف التعريفي", "البيانات المنظمة Schema", "الصور ووسوم ALT", "Canonical URL", "Open Graph / X Cards"].map((x,i)=><div key={i} className="px-5 py-4 border-b last:border-0 flex items-center justify-between"><span className="text-sm">{x}</span><span className="text-xs text-emerald-700 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" />مكتمل</span></div>)}</div></main>}
