@@ -183,6 +183,7 @@ export const ADMIN_CATEGORIES = [
       { page: "AdminMarketingCenter", label: "مركز التسويق", desc: "إدارة منصات التواصل والمنشورات والمسودات" },
       { page: "MarketingHub", label: "مولد المحتوى", desc: "توليد ونشر المحتوى التسويقي بالذكاء الاصطناعي" },
       { page: "SocialAnalytics", label: "تحليلات التواصل الاجتماعي", desc: "تقارير التفاعل عبر المنصات" },
+      { page: "AdminSearchGeoAnalytics", label: "محركات البحث والتحليل الجغرافي", desc: "متابعة جاهزية SEO وتحليل مصادر الزيارات والمدن والصفحات النشطة" },
     ],
   },
 ];
