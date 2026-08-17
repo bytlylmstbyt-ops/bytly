@@ -32,7 +32,7 @@ function AccessDenied() {
 export default function AdminControlCenter() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const { can, loading: permissionsLoading, isAdmin: permissionsAdmin } = usePermissions();
+  const { can, permissions, loading: permissionsLoading, isAdmin: permissionsAdmin } = usePermissions();
   const [activeKey, setActiveKey] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const cat = params.get("cat");
@@ -64,10 +64,6 @@ export default function AdminControlCenter() {
     );
   }
 
-  if (!isAdmin) {
-    return <AccessDenied />;
-  }
-
   const categoryResource = {
     board: "settings",
     overview: "analytics",
@@ -91,6 +87,10 @@ export default function AdminControlCenter() {
   const visibleCategories = (isAdmin || permissionsAdmin)
     ? CATEGORIES
     : CATEGORIES.filter((cat) => can(categoryResource[cat.key] || cat.key, "view"));
+
+  if (!isAdmin && !permissionsAdmin && visibleCategories.length === 0 && Object.keys(permissions || {}).length === 0) {
+    return <AccessDenied />;
+  }
   const safeActiveKey = visibleCategories.some((c) => c.key === activeKey) ? activeKey : visibleCategories[0]?.key;
   const active = visibleCategories.find((c) => c.key === safeActiveKey) || visibleCategories[0] || CATEGORIES[0];
 
