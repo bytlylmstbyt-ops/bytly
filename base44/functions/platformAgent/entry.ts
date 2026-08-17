@@ -27,6 +27,51 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 //   in an editor session — never triggered automatically from here.
 // ════════════════════════════════════════════════════════════════════════
 
+// ── Agent Tool Registry ─────────────────────────────────────────────────
+// The registry is intentionally small and explicit. The agent can only
+// invoke tools listed here; unknown tool names are rejected. High-risk
+// data/permission/financial/code operations are NOT exposed as tools.
+const TOOL_REGISTRY = {
+  navigate_admin_page: { risk: 'low', description: 'فتح صفحة إدارية داخل لوحة التحكم' },
+  refresh_index_status: { risk: 'low', description: 'قراءة حالة فهرس المشروع' },
+  create_strategic_goal: { risk: 'medium', description: 'إنشاء هدف استراتيجي جديد بعد موافقة المدير' },
+  create_strategic_initiative: { risk: 'medium', description: 'إنشاء مبادرة استراتيجية جديدة بعد موافقة المدير' },
+  create_strategic_decision: { risk: 'medium', description: 'تسجيل قرار استراتيجي جديد بعد موافقة المدير' },
+};
+
+async function executeAgentTool(base44, toolName, args, user) {
+  const tool = TOOL_REGISTRY[toolName];
+  if (!tool) throw new Error('الأداة المطلوبة غير مسموح بها للوكيل.');
+  if (toolName === 'navigate_admin_page') {
+    const page = String(args?.page || '').trim();
+    const allowed = new Set(['AdminControlCenter','AdminEngineers','AdminClients','AdminProviders','AdminSearchGeoAnalytics','AdminDomains','AdminEmailCenter','AdminStrategicChange','PendingApprovals','RoleManagement','UserRoleAssignment','PlatformDashboard','ContractManager']);
+    if (!allowed.has(page)) throw new Error('هذه الصفحة غير موجودة ضمن الصفحات المسموح للوكيل بفتحها.');
+    return { tool: toolName, page, url: `/${page}`, message: `افتح صفحة ${page}` };
+  }
+  if (toolName === 'refresh_index_status') {
+    const res = await base44.functions.invoke('platformChangePlanner', { action: 'refresh_index_status' });
+    return { tool: toolName, ...res.data };
+  }
+  if (toolName === 'create_strategic_goal') {
+    const title = String(args?.title || '').trim();
+    if (!title) throw new Error('عنوان الهدف مطلوب.');
+    const row = await base44.asServiceRole.entities.StrategicGoal.create({ title, description: String(args?.description || ''), owner: String(args?.owner || ''), status: String(args?.status || 'planned'), progress: Number(args?.progress || 0), target_date: args?.target_date || null, created_by_email: user.email });
+    return { tool: toolName, id: row.id, message: `تم إنشاء الهدف الاستراتيجي: ${title}` };
+  }
+  if (toolName === 'create_strategic_initiative') {
+    const title = String(args?.title || '').trim();
+    if (!title) throw new Error('عنوان المبادرة مطلوب.');
+    const row = await base44.asServiceRole.entities.StrategicInitiative.create({ title, description: String(args?.description || ''), owner: String(args?.owner || ''), status: String(args?.status || 'planned'), progress: Number(args?.progress || 0), target_date: args?.target_date || null, created_by_email: user.email });
+    return { tool: toolName, id: row.id, message: `تم إنشاء المبادرة الاستراتيجية: ${title}` };
+  }
+  if (toolName === 'create_strategic_decision') {
+    const title = String(args?.title || '').trim();
+    if (!title) throw new Error('عنوان القرار مطلوب.');
+    const row = await base44.asServiceRole.entities.StrategicDecision.create({ title, description: String(args?.description || ''), owner: String(args?.owner || ''), status: String(args?.status || 'draft'), due_date: args?.due_date || null, follow_up: String(args?.follow_up || ''), created_by_email: user.email });
+    return { tool: toolName, id: row.id, message: `تم تسجيل القرار الاستراتيجي: ${title}` };
+  }
+}
+
 Deno.serve(async (req) => {
   const startedAt = Date.now();
   const base44 = createClientFromRequest(req);
@@ -39,6 +84,31 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const action = body?.action || 'message';
+
+    // ── Execute an approved Agent tool request ─────────────────────────
+    if (action === 'execute' && body?.id) {
+      const logs = await base44.asServiceRole.entities.AIChangeRequestLog.filter({ id: body.id });
+      const plan = logs?.[0];
+      if (!plan) return Response.json({ error: 'لم يتم العثور على خطة التنفيذ.' }, { status: 404 });
+      if (plan.status !== 'awaiting_approval' && plan.status !== 'approved') return Response.json({ error: 'هذه الخطة ليست في حالة تسمح بالتنفيذ.' }, { status: 400 });
+      if (!plan.execution_tool) return Response.json({ error: 'هذه الخطة لا تحتوي على أداة تنفيذية آمنة.' }, { status: 400 });
+      const tool = TOOL_REGISTRY[plan.execution_tool];
+      if (!tool || tool.risk === 'high') return Response.json({ error: 'الأداة غير مسموحة للتنفيذ الآلي.' }, { status: 403 });
+      await base44.asServiceRole.entities.AIChangeRequestLog.update(plan.id, { status: 'executing', execution_started_at: new Date().toISOString() });
+      try {
+        const result = await executeAgentTool(base44, plan.execution_tool, plan.execution_args || {}, user);
+        await base44.asServiceRole.entities.AgentAction.create({ task_id: plan.id, action_type: plan.execution_tool, target: plan.target_page || '', status: 'executed', risk_level: tool.risk, requested_by_email: user.email, details: JSON.stringify(plan.execution_args || {}), result: JSON.stringify(result), executed_at: new Date().toISOString() });
+        await base44.asServiceRole.entities.AIChangeRequestLog.update(plan.id, { status: 'executed', execution_result: JSON.stringify(result), execution_completed_at: new Date().toISOString() });
+        return Response.json({ kind: 'decision', status: 'executed', id: plan.id, result, note: 'تم تنفيذ الأداة وتسجيل العملية في سجل الوكيل.' });
+      } catch (e) {
+        await base44.asServiceRole.entities.AIChangeRequestLog.update(plan.id, { status: 'failed', execution_error: e?.message || 'Execution failed', execution_completed_at: new Date().toISOString() });
+        return Response.json({ kind: 'decision', status: 'failed', id: plan.id, error: e?.message || 'فشل التنفيذ.' });
+      }
+    }
+
+    // ── Direct low-risk tool request: the router will only use this for
+    // navigation/read operations. Mutating tools are converted into an
+    // approval plan below.
 
     // ── Pass-through: approve/reject a plan (used by the ✓/✗ buttons on
     // a plan card). Delegates to the real, unchanged platformChangePlanner.
@@ -84,16 +154,32 @@ Respond with: route, language ("ar"/"en"), detected_intent (one short English se
       response_json_schema: {
         type: 'object',
         properties: {
-          route: { type: 'string', enum: ['data_question', 'change_request', 'execution_confirm'] },
+          route: { type: 'string', enum: ['data_question', 'change_request', 'tool_request', 'execution_confirm'] },
           language: { type: 'string', enum: ['ar', 'en'] },
           detected_intent: { type: 'string' },
           confirm_action: { type: 'string', enum: ['approve', 'reject'] },
+          tool_name: { type: 'string' },
+          tool_args: { type: 'object' },
         },
-        required: ['route', 'language', 'detected_intent', 'confirm_action'],
+        required: ['route', 'language', 'detected_intent', 'confirm_action', 'tool_name', 'tool_args'],
       },
     });
 
     const language = routing.language === 'en' ? 'en' : 'ar';
+
+    // ── Route: tool request ──────────────────────────────────────────────
+    if (routing.route === 'tool_request') {
+      const toolName = String(routing.tool_name || '').trim();
+      const tool = TOOL_REGISTRY[toolName];
+      if (!tool) return Response.json({ kind: 'clarify', message: language === 'ar' ? 'الأمر مفهوم، لكن لا توجد أداة آمنة مسجلة لتنفيذه تلقائيًا.' : 'I understand the request, but no safe registered tool can execute it automatically.' });
+      if (tool.risk === 'low') {
+        const result = await executeAgentTool(base44, toolName, routing.tool_args || {}, user);
+        await base44.asServiceRole.entities.AgentAction.create({ action_type: toolName, target: routing.tool_args?.page || '', status: 'executed', risk_level: tool.risk, requested_by_email: user.email, details: JSON.stringify(routing.tool_args || {}), result: JSON.stringify(result), executed_at: new Date().toISOString() });
+        return Response.json({ kind: 'data', route: 'tool_request', answer: result.message || JSON.stringify(result), admin_page: result.page || null, tool_result: result, response_time_ms: Date.now() - startedAt });
+      }
+      const toolPlan = await base44.asServiceRole.entities.AIChangeRequestLog.create({ request: message, language, asked_by_email: user.email, asked_by_name: user.full_name || user.email, detected_intent: routing.detected_intent, target_page: routing.tool_args?.page || 'AdminStrategicChange', affected_pages: ['AdminStrategicChange'], change_type: 'data', risk_level: tool.risk, requires_db_change: true, requires_backend_change: true, requires_permission_change: false, status: 'awaiting_approval', blocked: false, security_notes: 'الأداة مسموحة ولكنها تغيّر بيانات إدارية، لذلك تتطلب موافقة صريحة قبل التنفيذ.', plain_explanation_ar: `سيقوم الوكيل بتنفيذ أداة ${toolName} بعد موافقتك.`, execution_tool: toolName, execution_args: routing.tool_args || {} });
+      return Response.json({ kind: 'plan', route: 'tool_request', id: toolPlan.id, plan: { status: 'awaiting_approval', risk_level: tool.risk, title: 'تنفيذ إجراء إداري', explanation: `سيقوم الوكيل بتنفيذ: ${tool.description}`, security_notes: 'تغيير بيانات إداري ويتطلب موافقة صريحة.', execution_tool: toolName } });
+    }
 
     // ── Route: data question → delegate to the real platformDataAssistant ──
     if (routing.route === 'data_question') {

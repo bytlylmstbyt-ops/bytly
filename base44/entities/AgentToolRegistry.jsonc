@@ -1,0 +1,39 @@
+{
+  "type": "object",
+  "properties": {
+    "tool_name": {
+      "type": "string"
+    },
+    "label_ar": {
+      "type": "string"
+    },
+    "description_ar": {
+      "type": "string"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "enabled": {
+      "type": "boolean"
+    },
+    "allowed_roles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "tool_name",
+    "label_ar",
+    "description_ar",
+    "risk_level",
+    "enabled"
+  ],
+  "name": "AgentToolRegistry"
+}
