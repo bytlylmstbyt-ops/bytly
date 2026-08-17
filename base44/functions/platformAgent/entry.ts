@@ -1,5 +1,4 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-import { DEV_TOOL_REGISTRY, assertSafePath } from './devTools.ts';
 
 // ════════════════════════════════════════════════════════════════════════
 // platformAgent — the unified Admin AI Agent entry point.
@@ -33,7 +32,6 @@ import { DEV_TOOL_REGISTRY, assertSafePath } from './devTools.ts';
 // The platform owner/admin gets the broadest business access, while finance,
 // projects, marketing and operations stay inside their own domains.
 const ROLE_POLICIES = {
-  platform_owner: { tools: ['*'], entities: ['*'], devTools: ['read_code_file','search_code','write_code_file','run_build_check'] },
   admin: { tools: ['*'], entities: ['*'] },
   executive_manager: { tools: ['navigate_admin_page','refresh_index_status','query_entity','create_entity','update_entity','create_strategic_goal','create_strategic_initiative','create_strategic_decision'], entities: ['*'] },
   finance_manager: { tools: ['navigate_admin_page','query_entity','create_entity','update_entity'], entities: ['Invoice','Payment','PlatformRevenue','Transaction','Subscription','WithdrawalRequest','Contract'] },
@@ -72,15 +70,6 @@ function canUseTool(policy, toolName) {
 
 function canUseEntity(policy, entityName) {
   return policy.entities.includes('*') || policy.entities.includes(entityName);
-}
-
-function isPlatformOwner(user) {
-  const role = String(user?.data?.admin_role || user?.admin_role || user?.role || '').toLowerCase();
-  return ['platform_owner','super_admin','owner'].includes(role);
-}
-
-function canUseDevTool(user, toolName) {
-  return isPlatformOwner(user) && Boolean(DEV_TOOL_REGISTRY[toolName]);
 }
 
 async function executeAgentTool(base44, toolName, args, user) {
@@ -152,27 +141,6 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const action = body?.action || 'message';
-
-    // ── Owner-only development tools ───────────────────────────────────
-    if (action === 'dev_tool' && body?.tool_name) {
-      if (!canUseDevTool(user, body.tool_name)) return Response.json({ error: 'أدوات تطوير الكود متاحة لمالك المنصة فقط.' }, { status: 403 });
-      const tool = DEV_TOOL_REGISTRY[body.tool_name];
-      if (body.tool_name === 'read_code_file' || body.tool_name === 'search_code') {
-        const args = body.tool_name === 'read_code_file'
-          ? { action: 'read', path: assertSafePath(body.path) }
-          : { action: 'search', query: String(body.query || '').trim(), path: body.path ? assertSafePath(body.path) : undefined };
-        if (body.tool_name === 'search_code' && !args.query) return Response.json({ error: 'عبارة البحث مطلوبة.' }, { status: 400 });
-        const res = await base44.functions.invoke('platformCodeTool', args);
-        return Response.json({ kind: 'dev_tool', status: 'executed', tool: body.tool_name, result: res.data });
-      }
-      if (tool.risk === 'high' && body.confirm !== true) return Response.json({ kind: 'dev_approval_required', tool: body.tool_name, status: 'awaiting_approval', message: 'هذه العملية عالية الخطورة وتتطلب تأكيد مالك المنصة.' });
-      const args = body.tool_name === 'write_code_file'
-        ? { action: 'write', path: assertSafePath(body.path), content: String(body.content || '') }
-        : { action: 'build' };
-      const res = await base44.functions.invoke('platformCodeTool', args);
-      await base44.asServiceRole.entities.AgentAction.create({ action_type: body.tool_name, target: body.path || 'project', status: 'executed', risk_level: tool.risk, requested_by_email: user.email, details: JSON.stringify(args), result: JSON.stringify(res.data), executed_at: new Date().toISOString() });
-      return Response.json({ kind: 'dev_tool', status: 'executed', tool: body.tool_name, result: res.data });
-    }
 
     // ── Execute an approved Agent tool request ─────────────────────────
     if (action === 'execute' && body?.id) {
