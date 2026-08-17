@@ -44,6 +44,7 @@ export const ADMIN_CATEGORIES = [
     icon: FolderKanban,
     description: "كل ما يخص المشاريع وإدارتها من لوحة واحدة.",
     items: [
+      { page: "AdminOperationsDashboard", label: "لوحة مدير العمليات", desc: "ملخص المشاريع والعروض والعقود والتنفيذ" },
       { page: "AdminProjects", label: "لوحة إدارة المشاريع", desc: "نظرة شاملة وإدارة كل مشاريع المنصة", permission: ["projects", "view"] },
       { page: "Projects", label: "سوق المشاريع", desc: "تصفح جميع المشاريع المنشورة" },
       { page: "ProjectProposals", label: "إدارة العروض", desc: "متابعة عروض المشاريع" },
