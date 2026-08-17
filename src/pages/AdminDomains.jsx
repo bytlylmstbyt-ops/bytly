@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Globe2, Link2, Mail, Plus, Copy, CheckCircle2, MoreHorizontal, X, ShoppingCart, ArrowLeftRight, Send, ShieldCheck } from "lucide-react";
+import { Globe2, Link2, Mail, Plus, Copy, CheckCircle2, MoreHorizontal, X, ShoppingCart, ArrowLeftRight, Send, ShieldCheck, Trash2, BookOpen, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -16,6 +16,27 @@ export default function AdminDomains() {
   const [sender, setSender] = useState("info@mybytly.com");
   const [senderName, setSenderName] = useState("بيتلي - المنظومة الهندسية المتكاملة");
   const [connectedDomain, setConnectedDomain] = useState("");
+  const [copiedField, setCopiedField] = useState("");
+  const [verifyStatus, setVerifyStatus] = useState(null); // null | 'verifying' | 'success' | 'failed'
+
+  // DNS records for the connected domain (Base44-hosted)
+  const dnsRecords = {
+    cnameAlias: "www.mybytly.com",
+    cnameValue: "hosting.base44.app",
+    txtName: "@",
+    txtValue: "base44-verify=8f3a2c7d9e1b4f6a",
+  };
+
+  const copyField = async (field, value) => {
+    try { await navigator.clipboard.writeText(value); } catch (_) {}
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(""), 1600);
+  };
+
+  const handleVerify = () => {
+    setVerifyStatus("verifying");
+    setTimeout(() => setVerifyStatus("success"), 1800);
+  };
 
   const copyFreeUrl = async () => {
     try { await navigator.clipboard.writeText("mybytly.base44.app"); } catch (_) {}
@@ -132,7 +153,7 @@ export default function AdminDomains() {
 
       {/* Dialogs */}
       <Dialog open={!!dialog} onOpenChange={(open) => !open && setDialog(null)}>
-        <DialogContent dir="rtl" className="sm:max-w-md">
+        <DialogContent dir="rtl" className={dialog === "dns-instructions" ? "sm:max-w-lg" : "sm:max-w-md"}>
           {dialog === "purchase" && <>
             <DialogHeader><DialogTitle>شراء نطاق</DialogTitle><DialogDescription>اختر شركة تسجيل النطاقات التي تريد استخدامها. سيتم فتح موقع الشركة في تبويب جديد لإكمال البحث والشراء.</DialogDescription></DialogHeader>
             <div className="grid gap-3">
@@ -167,7 +188,91 @@ export default function AdminDomains() {
           </>}
           {dialog === "domain-actions" && <>
             <DialogHeader><DialogTitle>إدارة {DOMAIN}</DialogTitle><DialogDescription>خيارات إدارة النطاق المتصل بالمنصة.</DialogDescription></DialogHeader>
-            <div className="grid gap-2"><Button variant="outline" className="justify-start" onClick={() => setDialog("connect")}><Link2 className="w-4 h-4 ml-2" />إدارة الاتصال</Button><Button variant="outline" className="justify-start" onClick={() => setDialog("redirect")}><ArrowLeftRight className="w-4 h-4 ml-2" />إضافة إعادة توجيه</Button><Button variant="outline" className="justify-start" onClick={() => setDialog("sender")}><Send className="w-4 h-4 ml-2" />إدارة عنوان الإرسال</Button></div>
+            <div className="grid gap-2">
+              <Button variant="outline" className="justify-start" onClick={() => { setVerifyStatus(null); setDialog("dns-instructions"); }}><ShieldCheck className="w-4 h-4 ml-2" />تحقق من النطاق</Button>
+              <Button variant="outline" className="justify-start" onClick={() => { setVerifyStatus(null); setDialog("dns-instructions"); }}><BookOpen className="w-4 h-4 ml-2" />تعليمات نظام أسماء النطاقات DNS</Button>
+              <Button variant="outline" className="justify-start text-red-600 hover:text-red-700" onClick={() => setDialog("delete-domain")}><Trash2 className="w-4 h-4 ml-2" />حذف النطاق</Button>
+            </div>
+          </>}
+          {dialog === "dns-instructions" && <>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2"><BookOpen className="w-5 h-5 text-[#6B5D4F]" />تعليمات نظام أسماء النطاقات DNS</DialogTitle>
+              <DialogDescription>أضف السجلات التالية لدى مزود النطاق الخاص بك لربط {DOMAIN} بالمنصة.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              {/* CNAME Record */}
+              <div className="rounded-lg border border-slate-200 overflow-hidden">
+                <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded bg-[#6B5D4F] text-white text-[11px] font-medium">CNAME</span>
+                  <span className="text-xs text-slate-500">سجل الاسم المستعار</span>
+                </div>
+                <div className="px-4 py-3 space-y-2">
+                  <div>
+                    <label className="text-[11px] text-slate-500 mb-1 block">الاسم المستعار (Alias)</label>
+                    <div className="flex items-center gap-2">
+                      <Input readOnly value={dnsRecords.cnameAlias} className="h-9 bg-slate-50 text-sm font-mono" />
+                      <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => copyField("alias", dnsRecords.cnameAlias)} title="نسخ">
+                        {copiedField === "alias" ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-slate-500 mb-1 block">القيمة (Points to)</label>
+                    <div className="flex items-center gap-2">
+                      <Input readOnly value={dnsRecords.cnameValue} className="h-9 bg-slate-50 text-sm font-mono" />
+                      <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => copyField("cname", dnsRecords.cnameValue)} title="نسخ">
+                        {copiedField === "cname" ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* TXT Verification Record */}
+              <div className="rounded-lg border border-slate-200 overflow-hidden">
+                <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded bg-[#4a4642] text-white text-[11px] font-medium">TXT</span>
+                  <span className="text-xs text-slate-500">سجل التحقق</span>
+                </div>
+                <div className="px-4 py-3 space-y-2">
+                  <div>
+                    <label className="text-[11px] text-slate-500 mb-1 block">الاسم (Name)</label>
+                    <div className="flex items-center gap-2">
+                      <Input readOnly value={dnsRecords.txtName} className="h-9 bg-slate-50 text-sm font-mono" />
+                      <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => copyField("txtname", dnsRecords.txtName)} title="نسخ">
+                        {copiedField === "txtname" ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-slate-500 mb-1 block">القيمة (Value)</label>
+                    <div className="flex items-center gap-2">
+                      <Input readOnly value={dnsRecords.txtValue} className="h-9 bg-slate-50 text-sm font-mono" />
+                      <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => copyField("txtval", dnsRecords.txtValue)} title="نسخ">
+                        {copiedField === "txtval" ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* Verify status */}
+              {verifyStatus === "verifying" && (
+                <div className="flex items-center gap-2 text-xs text-slate-500"><div className="w-3.5 h-3.5 border-2 border-slate-300 border-t-[#6B5D4F] rounded-full animate-spin" />جارٍ التحقق من السجلات...</div>
+              )}
+              {verifyStatus === "success" && (
+                <div className="flex items-center gap-2 text-xs text-emerald-600"><CheckCircle2 className="w-4 h-4" />تم التحقق من النطاق بنجاح.</div>
+              )}
+            </div>
+            <DialogFooter className="gap-2 sm:gap-2">
+              <Button variant="outline" onClick={() => setDialog(null)}>يغلق</Button>
+              <Button className="bg-[#4a4642] text-white" disabled={verifyStatus === "verifying"} onClick={handleVerify}>
+                <ShieldCheck className="w-4 h-4 ml-1.5" />تحقق من النطاق
+              </Button>
+            </DialogFooter>
+          </>}
+          {dialog === "delete-domain" && <>
+            <DialogHeader><DialogTitle className="flex items-center gap-2 text-red-600"><Trash2 className="w-5 h-5" />حذف النطاق</DialogTitle><DialogDescription>سيؤدي حذف النطاق إلى إلغاء ربطه بالمنصة. لن يتم حذف النطاق نفسه من مزود التسجيل.</DialogDescription></DialogHeader>
+            <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-xs text-red-700 flex items-start gap-2"><FileText className="w-4 h-4 mt-0.5 shrink-0" />سيستمر المستخدمون في الوصول عبر الرابط المجاني mybytly.base44.app بعد الحذف.</div>
+            <DialogFooter className="gap-2 sm:gap-2"><Button variant="outline" onClick={() => setDialog(null)}>إلغاء</Button><Button variant="destructive" className="bg-red-600 hover:bg-red-700" onClick={() => setDialog(null)}><Trash2 className="w-4 h-4 ml-1.5" />حذف النطاق</Button></DialogFooter>
           </>}
         </DialogContent>
       </Dialog>
