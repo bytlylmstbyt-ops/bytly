@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Megaphone, Plus, TrendingUp, FileText, AlertCircle, RefreshCw, Linkedin, Twitter, Facebook, Instagram, CalendarClock, BarChart3, Gauge } from "lucide-react";
+import { Loader2, Megaphone, Plus, TrendingUp, FileText, AlertCircle, RefreshCw, Search, Linkedin, Twitter, Facebook, Instagram, CalendarClock, BarChart3, Gauge } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
