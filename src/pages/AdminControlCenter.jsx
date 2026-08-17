@@ -5,6 +5,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, ShieldAlert, ArrowUpRight, Globe2, ShieldCheck, Mail, Server, CheckCircle2, AlertTriangle } from "lucide-react";
 import { ADMIN_CATEGORIES as CATEGORIES } from "@/components/admin/adminSections";
+import { usePermissions } from "@/components/auth/usePermissions";
 import { readAdminFilters, writeAdminFilters } from "@/components/admin/adminFilterPersistence";
 import MonthlyRevenueSummaryPanel from "@/components/admin/MonthlyRevenueSummaryPanel";
 import FinancialChartsPanel from "@/components/admin/FinancialChartsPanel";
@@ -31,6 +32,7 @@ function AccessDenied() {
 export default function AdminControlCenter() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const { can, loading: permissionsLoading, isAdmin: permissionsAdmin } = usePermissions();
   const [activeKey, setActiveKey] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const cat = params.get("cat");
@@ -54,7 +56,7 @@ export default function AdminControlCenter() {
     })();
   }, []);
 
-  if (loading) {
+  if (loading || permissionsLoading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-[#C9A66B] animate-spin" />
@@ -66,7 +68,31 @@ export default function AdminControlCenter() {
     return <AccessDenied />;
   }
 
-  const active = CATEGORIES.find((c) => c.key === activeKey) || CATEGORIES[0];
+  const categoryResource = {
+    board: "settings",
+    overview: "analytics",
+    assistant: "settings",
+    projects: "projects",
+    people: "engineers",
+    providers: "providers",
+    contracts: "contracts",
+    payments: "payments",
+    disputes: "disputes",
+    notifications: "notifications",
+    reports: "analytics",
+    settings: "settings",
+    bim: "projects",
+    workflows: "workflows",
+    domains: "domains",
+    integrations: "integrations",
+    email: "email",
+    marketing: "marketing",
+  };
+  const visibleCategories = (isAdmin || permissionsAdmin)
+    ? CATEGORIES
+    : CATEGORIES.filter((cat) => can(categoryResource[cat.key] || cat.key, "view"));
+  const safeActiveKey = visibleCategories.some((c) => c.key === activeKey) ? activeKey : visibleCategories[0]?.key;
+  const active = visibleCategories.find((c) => c.key === safeActiveKey) || visibleCategories[0] || CATEGORIES[0];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
@@ -106,9 +132,12 @@ export default function AdminControlCenter() {
       {activeKey === "bim" && <BIMProjectFilesPanel />}
 
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6">
+        {visibleCategories.length === 0 && (
+          <Card className="md:col-span-2"><CardContent className="p-8 text-center text-slate-500">لا توجد إدارات أو صفحات مخصصة لدورك حاليًا.</CardContent></Card>
+        )}
         {/* Category nav */}
         <nav className="flex md:flex-col gap-1.5 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
-          {CATEGORIES.map((cat) => {
+          {visibleCategories.map((cat) => {
             const Icon = cat.icon;
             const isActive = cat.key === activeKey;
             return (
