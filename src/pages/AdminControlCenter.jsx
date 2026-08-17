@@ -96,7 +96,30 @@ export default function AdminControlCenter() {
 
   return (
     <div className="min-h-screen bg-[#F7F8FC] px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row-reverse gap-6 items-stretch" dir="rtl">
+        <nav className="w-full md:w-[280px] md:shrink-0 rounded-2xl bg-[#11162A] border border-[#252D47] shadow-xl p-3 flex md:flex-col gap-1 overflow-x-auto md:overflow-visible md:sticky md:top-4 md:h-[calc(100vh-32px)] md:max-h-[calc(100vh-32px)] md:overflow-y-auto" aria-label="قائمة مركز الإدارة">
+          {visibleCategories.map((cat) => {
+            const Icon = cat.icon;
+            const isActive = cat.key === activeKey;
+            return (
+              <button
+                key={cat.key}
+                onClick={() => setActiveKey(cat.key)}
+                className={`flex items-center gap-2.5 shrink-0 md:shrink text-sm font-medium rounded-lg px-3 py-2.5 text-right transition-colors ${
+                  isActive
+                    ? "bg-gradient-to-l from-[#5142A4] to-[#6D5CE7] text-white shadow-md"
+                    : "text-slate-200 hover:bg-white/10 border border-transparent hover:border-white/10"
+                }`}
+              >
+                <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-slate-400"}`} />
+                <span className="whitespace-nowrap md:whitespace-normal flex-1">{cat.label}</span>
+                {isActive && <ChevronLeft className="w-3.5 h-3.5 opacity-70" />}
+              </button>
+            );
+          })}
+        </nav>
+
+        <main className="flex-1 min-w-0">
         <div className="mb-6 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
           <div className="text-right">
             <div className="inline-flex items-center gap-2 rounded-full bg-[#F1EEFF] text-[#5142A4] px-3 py-1 text-xs font-medium mb-2">
@@ -120,35 +143,12 @@ export default function AdminControlCenter() {
 
         {activeKey === "bim" && <BIMProjectFilesPanel />}
 
-        <div className="mt-7 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_280px] gap-5 items-start" dir="rtl">
         {visibleCategories.length === 0 && (
-          <Card className="md:col-span-2"><CardContent className="p-8 text-center text-slate-500">لا توجد إدارات أو صفحات مخصصة لدورك حاليًا.</CardContent></Card>
+          <Card><CardContent className="p-8 text-center text-slate-500">لا توجد إدارات أو صفحات مخصصة لدورك حاليًا.</CardContent></Card>
         )}
-        {/* Category nav */}
-        <nav className="order-2 rounded-2xl bg-[#11162A] border border-[#252D47] shadow-xl p-3 flex md:flex-col gap-1 overflow-x-auto md:overflow-visible h-fit md:sticky md:top-4 max-h-[calc(100vh-32px)] md:overflow-y-auto" aria-label="قائمة مركز الإدارة">
-          {visibleCategories.map((cat) => {
-            const Icon = cat.icon;
-            const isActive = cat.key === activeKey;
-            return (
-              <button
-                key={cat.key}
-                onClick={() => setActiveKey(cat.key)}
-                className={`flex items-center gap-2.5 shrink-0 md:shrink text-sm font-medium rounded-lg px-3 py-2.5 text-right transition-colors ${
-                  isActive
-                    ? "bg-gradient-to-l from-[#5142A4] to-[#6D5CE7] text-white shadow-md"
-                    : "text-slate-200 hover:bg-white/10 border border-transparent hover:border-white/10"
-                }`}
-              >
-                <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-slate-400"}`} />
-                <span className="whitespace-nowrap md:whitespace-normal flex-1">{cat.label}</span>
-                {isActive && <ChevronLeft className="w-3.5 h-3.5 opacity-70" />}
-              </button>
-            );
-          })}
-        </nav>
 
         {/* Active category content */}
-        <div className="order-1 min-w-0">
+        <div className="min-w-0">
           <div className="mb-4">
             <div className="rounded-2xl bg-white border border-slate-200 shadow-sm px-5 py-4">
               <h2 className="text-lg font-bold text-[#2F2945]">{active.label}</h2>
@@ -190,6 +190,7 @@ export default function AdminControlCenter() {
           </div>
         </div>
         </div>
+        </main>
       </div>
     </div>
   );
