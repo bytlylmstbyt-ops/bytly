@@ -386,7 +386,7 @@ export default function RoleManagement() {
                       >
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </Button>
-                    </>
+                    </>}
                   </div>
                 </div>
               </CardHeader>
