@@ -157,6 +157,15 @@ export const ADMIN_CATEGORIES = [
     ],
   },
   {
+    key: "domains",
+    label: "النطاقات",
+    icon: Link2,
+    description: "إدارة النطاق المجاني، النطاقات المخصصة، إعادة التوجيه، وعنوان إرسال البريد.",
+    items: [
+      { page: "AdminDomains", label: "النطاقات", desc: "شراء وربط النطاقات، إدارة إعادة التوجيه وعنوان الإرسال" },
+    ],
+  },
+  {
     key: "integrations",
     label: "التكاملات",
     icon: Link2,
