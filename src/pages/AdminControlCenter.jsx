@@ -97,7 +97,7 @@ export default function AdminControlCenter() {
   return (
     <div className="min-h-screen bg-[#F7F8FC] px-4 sm:px-6 lg:px-8 py-6 md:py-8">
       <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row gap-6 items-stretch" dir="ltr">
-        <nav className="order-2 md:order-1 w-full md:w-[280px] md:shrink-0 rounded-2xl bg-[#11162A] border border-[#252D47] shadow-xl p-3 flex md:flex-col gap-1 overflow-x-auto md:overflow-visible md:sticky md:top-4 md:h-[calc(100vh-32px)] md:max-h-[calc(100vh-32px)] md:overflow-y-auto" aria-label="قائمة مركز الإدارة">
+        <nav className="order-2 md:order-1 w-full md:w-[280px] md:shrink-0 rounded-2xl bg-[#11162A] border border-[#252D47] shadow-xl p-3 flex md:flex-col gap-1 overflow-x-auto md:overflow-visible md:sticky md:top-4 md:h-[calc(100vh-32px)] md:max-h-[calc(100vh-32px)] md:overflow-y-auto" aria-label="قائمة لوحة التحكم">
           {visibleCategories.map((cat) => {
             const Icon = cat.icon;
             const isActive = cat.key === activeKey;
@@ -131,12 +131,12 @@ export default function AdminControlCenter() {
             <div className="inline-flex items-center gap-2 rounded-full bg-[#F1EEFF] text-[#5142A4] px-3 py-1 text-xs font-medium mb-2">
               <LayoutDashboard className="w-3.5 h-3.5" /> لوحة القيادة التنفيذية
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[#25213A]">مركز الإدارة</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-[#25213A]">لوحة التحكم</h1>
             <p className="text-sm text-slate-500 mt-1">نظرة شاملة على أداء المنصة وإدارة العمليات الرئيسية.</p>
           </div>
           <div className="flex items-center gap-2 rounded-xl bg-white border border-slate-200 shadow-sm px-4 py-2.5 text-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span className="text-slate-600">مركز الإدارة الرئيسي</span>
+            <span className="text-slate-600">لوحة التحكم الرئيسية</span>
           </div>
         </div>
 
