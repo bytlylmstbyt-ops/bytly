@@ -1,0 +1,40 @@
+{
+  "name": "StrategicDecision",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "decision_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "approved",
+        "in_progress",
+        "implemented",
+        "cancelled"
+      ]
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "follow_up": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "status"
+  ]
+}

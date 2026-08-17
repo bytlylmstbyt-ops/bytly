@@ -1,0 +1,42 @@
+{
+  "name": "StrategicGoal",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "active",
+        "at_risk",
+        "completed",
+        "paused"
+      ]
+    },
+    "progress": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "target_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "success_metric": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "status",
+    "progress"
+  ]
+}

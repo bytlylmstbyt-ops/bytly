@@ -1,12 +1,29 @@
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Target, Lightbulb, ClipboardCheck } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Target, Lightbulb, ClipboardCheck, Plus, Pencil, Trash2 } from "lucide-react";
+
+const configs = {
+  goals: { title: "الأهداف الاستراتيجية", icon: Target, entity: "StrategicGoal", status: ["planned","active","at_risk","completed","paused"], labels: {planned:"مخطط",active:"نشط",at_risk:"معرض للخطر",completed:"مكتمل",paused:"متوقف"} },
+  initiatives: { title: "المبادرات والتغيير", icon: Lightbulb, entity: "StrategicInitiative", status: ["planned","active","blocked","completed","paused"], labels: {planned:"مخطط",active:"نشط",blocked:"متعثر",completed:"مكتمل",paused:"متوقف"} },
+  decisions: { title: "القرارات والمتابعة", icon: ClipboardCheck, entity: "StrategicDecision", status: ["draft","approved","in_progress","implemented","cancelled"], labels: {draft:"مسودة",approved:"معتمد",in_progress:"قيد التنفيذ",implemented:"منفذ",cancelled:"ملغى"} }
+};
 
 export default function AdminStrategicChange() {
-  const items = [
-    [Target, "الأهداف الاستراتيجية", "تحديد ومتابعة أهداف المنصة ومؤشرات نجاحها."],
-    [Lightbulb, "المبادرات والتغيير", "تسجيل المبادرات الاستراتيجية ومتابعة تقدمها."],
-    [ClipboardCheck, "القرارات والمتابعة", "مساحة منظمة للقرارات العليا وإجراءات المتابعة."],
-  ];
-  return <div className="max-w-6xl mx-auto px-4 py-8" dir="rtl"><h1 className="text-2xl font-bold text-[#4A3F35]">التخطيط والتغيير الاستراتيجي</h1><p className="text-sm text-slate-500 mt-1 mb-7">إدارة التوجه الاستراتيجي للمنصة من مستوى مجلس الإدارة.</p><div className="grid md:grid-cols-3 gap-4">{items.map(([Icon,title,desc])=><Card key={title}><CardContent className="p-5"><Icon className="w-6 h-6 text-[#C9A66B] mb-3"/><h2 className="font-bold">{title}</h2><p className="text-sm text-slate-500 mt-2">{desc}</p></CardContent></Card>)}</div></div>;
+  const [active, setActive] = useState("goals"); const [rows,setRows]=useState([]); const [open,setOpen]=useState(false); const [editing,setEditing]=useState(null); const [form,setForm]=useState({});
+  const cfg=configs[active];
+  const load=async()=>{ try{setRows(await base44.entities[cfg.entity].list("-created_date",100)||[])}catch(e){setRows([])} };
+  useEffect(()=>{load()},[active]);
+  const save=async()=>{ if(!form.title?.trim()) return; const payload={...form}; if(active!=="decisions") payload.progress=Number(form.progress||0); if(editing) await base44.entities[cfg.entity].update(editing.id,payload); else await base44.entities[cfg.entity].create(payload); setOpen(false);setEditing(null);setForm({});load(); };
+  const remove=async(id)=>{if(confirm("هل تريد حذف هذا السجل؟")){await base44.entities[cfg.entity].delete(id);load()}};
+  return <div className="max-w-7xl mx-auto px-4 py-8" dir="rtl">
+    <div className="flex items-start justify-between mb-7"><div><p className="text-xs text-[#C9A66B] font-medium">مجلس الإدارة</p><h1 className="text-2xl font-bold text-[#4A3F35] mt-1">التخطيط والتغيير الاستراتيجي</h1><p className="text-sm text-slate-500 mt-1">إدارة الأهداف والمبادرات والقرارات من مكان واحد.</p></div><Button onClick={()=>{setEditing(null);setForm({status:cfg.status[0],progress:0});setOpen(true)}}><Plus className="w-4 h-4 ml-2"/>إضافة {active==="goals"?"هدف":active==="initiatives"?"مبادرة":"قرار"}</Button></div>
+    <div className="grid md:grid-cols-3 gap-4 mb-6">{Object.entries(configs).map(([key,c])=><Card key={key} onClick={()=>setActive(key)} className={`cursor-pointer transition-shadow ${active===key?"ring-2 ring-[#C9A66B]":"hover:shadow-md"}`}><CardContent className="p-5"><c.icon className="w-6 h-6 text-[#C9A66B] mb-3"/><h2 className="font-bold">{c.title}</h2><p className="text-sm text-slate-500 mt-1">{key==="goals"?"حدد الهدف والمؤشر والموعد ونسبة الإنجاز.":key==="initiatives"?"سجل المبادرات ومراحل التغيير ومسؤولي التنفيذ.":"سجل القرارات العليا ومواعيد المتابعة وحالة التنفيذ."}</p></CardContent></Card>)}</div>
+    <Card><CardHeader><CardTitle>{cfg.title}</CardTitle></CardHeader><CardContent>{rows.length===0?<div className="text-center py-12 text-slate-500">لا توجد سجلات بعد. ابدأ بإضافة {active==="goals"?"هدف استراتيجي":active==="initiatives"?"مبادرة":"قرار"}.</div>:<div className="space-y-3">{rows.map(r=><div key={r.id} className="border rounded-xl p-4 flex items-center justify-between gap-4"><div className="min-w-0"><div className="font-semibold text-[#4A3F35]">{r.title}</div><div className="text-sm text-slate-500 mt-1">{r.description||r.follow_up||""}</div>{active!=="decisions"&&<div className="text-xs text-slate-400 mt-2">الإنجاز: {r.progress||0}% {r.target_date?`• الموعد: ${r.target_date}`:""}</div>}</div><div className="flex gap-1 shrink-0"><Button size="icon" variant="ghost" onClick={()=>{setEditing(r);setForm(r);setOpen(true)}}><Pencil className="w-4 h-4"/></Button><Button size="icon" variant="ghost" onClick={()=>remove(r.id)}><Trash2 className="w-4 h-4 text-red-500"/></Button></div></div>)}</div>}</CardContent></Card>
+    <Dialog open={open} onOpenChange={setOpen}><DialogContent dir="rtl"><DialogHeader><DialogTitle>{editing?"تعديل":"إضافة"} {active==="goals"?"هدف استراتيجي":active==="initiatives"?"مبادرة استراتيجية":"قرار استراتيجي"}</DialogTitle></DialogHeader><div className="space-y-4"><Input placeholder="العنوان" value={form.title||""} onChange={e=>setForm({...form,title:e.target.value})}/><Textarea placeholder="الوصف والتفاصيل" value={form.description||""} onChange={e=>setForm({...form,description:e.target.value})}/><Input placeholder="المسؤول" value={form.owner||""} onChange={e=>setForm({...form,owner:e.target.value})}/><select className="w-full border rounded-md h-10 px-3" value={form.status||cfg.status[0]} onChange={e=>setForm({...form,status:e.target.value})}>{cfg.status.map(s=><option key={s} value={s}>{cfg.labels[s]}</option>)}</select>{active!=="decisions"&&<Input type="number" min="0" max="100" placeholder="نسبة الإنجاز" value={form.progress??0} onChange={e=>setForm({...form,progress:e.target.value})}/>}<Input type="date" value={form.target_date||form.due_date||""} onChange={e=>setForm({...form,[active==="decisions"?"due_date":"target_date"]:e.target.value})}/>{active==="decisions"&&<Textarea placeholder="إجراء المتابعة" value={form.follow_up||""} onChange={e=>setForm({...form,follow_up:e.target.value})}/>}</div><DialogFooter><Button variant="outline" onClick={()=>setOpen(false)}>إلغاء</Button><Button onClick={save}>حفظ</Button></DialogFooter></DialogContent></Dialog>
+  </div>;
 }
