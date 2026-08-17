@@ -134,9 +134,16 @@ export default function AdminDomains() {
       <Dialog open={!!dialog} onOpenChange={(open) => !open && setDialog(null)}>
         <DialogContent dir="rtl" className="sm:max-w-md">
           {dialog === "purchase" && <>
-            <DialogHeader><DialogTitle>شراء نطاق</DialogTitle><DialogDescription>ابحث عن نطاق جديد مناسب لبيتلي ثم أكمل عملية الشراء من مزود النطاقات.</DialogDescription></DialogHeader>
-            <div className="rounded-lg bg-slate-50 p-4 flex items-center gap-3"><ShoppingCart className="w-5 h-5 text-[#6B5D4F]" /><div><p className="text-sm font-medium">شراء نطاق جديد</p><p className="text-xs text-slate-500 mt-1">سيتم فتح خطوات الشراء والتحقق من توفر النطاق.</p></div></div>
-            <DialogFooter><Button variant="outline" onClick={() => setDialog(null)}>إلغاء</Button><Button className="bg-[#4a4642] text-white">متابعة الشراء</Button></DialogFooter>
+            <DialogHeader><DialogTitle>شراء نطاق</DialogTitle><DialogDescription>اختر شركة تسجيل النطاقات التي تريد استخدامها. سيتم فتح موقع الشركة في تبويب جديد لإكمال البحث والشراء.</DialogDescription></DialogHeader>
+            <div className="grid gap-3">
+              <a href="https://onswebhost.com/domain-names/" target="_blank" rel="noopener noreferrer" onClick={() => setDialog(null)} className="rounded-xl border border-slate-200 p-4 hover:border-[#6B5D4F] hover:bg-slate-50 transition flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center"><Globe2 className="w-5 h-5 text-[#6B5D4F]" /></div><div><p className="text-sm font-semibold">ONS Technologies</p><p className="text-xs text-slate-500 mt-1">شراء وإدارة النطاقات</p></div></div><span className="text-xs text-slate-400">فتح الموقع ↗</span>
+              </a>
+              <a href="https://www.godaddy.com/domains" target="_blank" rel="noopener noreferrer" onClick={() => setDialog(null)} className="rounded-xl border border-slate-200 p-4 hover:border-[#6B5D4F] hover:bg-slate-50 transition flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center"><ShoppingCart className="w-5 h-5 text-[#6B5D4F]" /></div><div><p className="text-sm font-semibold">GoDaddy</p><p className="text-xs text-slate-500 mt-1">البحث عن نطاق وشراؤه</p></div></div><span className="text-xs text-slate-400">فتح الموقع ↗</span>
+              </a>
+            </div>
+            <DialogFooter><Button variant="outline" onClick={() => setDialog(null)}>إلغاء</Button></DialogFooter>
           </>}
           {dialog === "connect" && <>
             <DialogHeader><DialogTitle>ربط النطاق الحالي</DialogTitle><DialogDescription>أدخل النطاق الذي تملكه بالفعل لربطه بمنصة بيتلي.</DialogDescription></DialogHeader>
