@@ -18,13 +18,18 @@ export default function AdminDomains() {
   const [connectedDomain, setConnectedDomain] = useState("");
   const [copiedField, setCopiedField] = useState("");
   const [verifyStatus, setVerifyStatus] = useState(null); // null | 'verifying' | 'success' | 'failed'
+  const [dnsTab, setDnsTab] = useState("standard");
 
-  // DNS records for the connected domain (Base44-hosted)
   const dnsRecords = {
-    cnameAlias: "www.mybytly.com",
-    cnameValue: "hosting.base44.app",
-    txtName: "@",
-    txtValue: "base44-verify=8f3a2c7d9e1b4f6a",
+    standard: [
+      { type: "A", host: "@", value: "216.24.57.1" },
+      { type: "CNAME", host: "www", value: "base44.onrender.com" },
+    ],
+    alias: [
+      { type: "CNAME", host: "em", value: "u108699198.wl199.sendgrid.net" },
+      { type: "CNAME", host: "s1", value: "s1.domainkey.u108699198.wl199.sendgrid.net" },
+      { type: "CNAME", host: "s2", value: "s2.domainkey.u108699198.wl199.sendgrid.net" },
+    ],
   };
 
   const copyField = async (field, value) => {
@@ -195,80 +200,83 @@ export default function AdminDomains() {
             </div>
           </>}
           {dialog === "dns-instructions" && <>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><BookOpen className="w-5 h-5 text-[#6B5D4F]" />تعليمات نظام أسماء النطاقات DNS</DialogTitle>
-              <DialogDescription>أضف السجلات التالية لدى مزود النطاق الخاص بك لربط {DOMAIN} بالمنصة.</DialogDescription>
+            <DialogHeader className="text-right">
+              <DialogTitle className="text-xl font-semibold">قم بربط نطاقك من خلال مزود خدمة نظام أسماء النطاقات (DNS) الخاص بك</DialogTitle>
+              <DialogDescription className="text-sm leading-6">اتبع التعليمات أدناه لتكوين سجلات نظام أسماء النطاقات (DNS).</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              {/* CNAME Record */}
-              <div className="rounded-lg border border-slate-200 overflow-hidden">
-                <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded bg-[#6B5D4F] text-white text-[11px] font-medium">CNAME</span>
-                  <span className="text-xs text-slate-500">سجل الاسم المستعار</span>
-                </div>
-                <div className="px-4 py-3 space-y-2">
-                  <div>
-                    <label className="text-[11px] text-slate-500 mb-1 block">الاسم المستعار (Alias)</label>
-                    <div className="flex items-center gap-2">
-                      <Input readOnly value={dnsRecords.cnameAlias} className="h-9 bg-slate-50 text-sm font-mono" />
-                      <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => copyField("alias", dnsRecords.cnameAlias)} title="نسخ">
-                        {copiedField === "alias" ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-[11px] text-slate-500 mb-1 block">القيمة (Points to)</label>
-                    <div className="flex items-center gap-2">
-                      <Input readOnly value={dnsRecords.cnameValue} className="h-9 bg-slate-50 text-sm font-mono" />
-                      <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => copyField("cname", dnsRecords.cnameValue)} title="نسخ">
-                        {copiedField === "cname" ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+
+            <div className="-mx-6 border-t border-slate-100">
+              <div className="px-6 flex items-end gap-8 border-b border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setDnsTab("alias")}
+                  className={`relative py-3 text-sm font-medium transition-colors ${dnsTab === "alias" ? "text-[#3f3a36]" : "text-slate-500 hover:text-slate-700"}`}
+                >
+                  الاسم المستعار
+                  {dnsTab === "alias" && <span className="absolute bottom-0 right-0 left-0 h-0.5 bg-[#4a4642]" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDnsTab("standard")}
+                  className={`relative py-3 text-sm font-medium transition-colors ${dnsTab === "standard" ? "text-[#3f3a36]" : "text-slate-500 hover:text-slate-700"}`}
+                >
+                  رقم قياسي
+                  {dnsTab === "standard" && <span className="absolute bottom-0 right-0 left-0 h-0.5 bg-[#4a4642]" />}
+                </button>
               </div>
-              {/* TXT Verification Record */}
-              <div className="rounded-lg border border-slate-200 overflow-hidden">
-                <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center gap-2">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded bg-[#4a4642] text-white text-[11px] font-medium">TXT</span>
-                  <span className="text-xs text-slate-500">سجل التحقق</span>
+            </div>
+
+            <div className="space-y-4 max-h-[52vh] overflow-y-auto pr-1">
+              <p className="text-sm leading-7 text-slate-600">1. أضف هذه السجلات إلى لوحة تحكم مزود الخدمة الخاص بك لإكمال الإعداد:</p>
+
+              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                <div className="grid grid-cols-[1fr_1fr_2fr] border-b border-slate-200 bg-slate-50/70 text-sm font-medium text-slate-600">
+                  <div className="px-4 py-3">يكتب</div>
+                  <div className="px-4 py-3">يستضيف</div>
+                  <div className="px-4 py-3">قيمة</div>
                 </div>
-                <div className="px-4 py-3 space-y-2">
-                  <div>
-                    <label className="text-[11px] text-slate-500 mb-1 block">الاسم (Name)</label>
-                    <div className="flex items-center gap-2">
-                      <Input readOnly value={dnsRecords.txtName} className="h-9 bg-slate-50 text-sm font-mono" />
-                      <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => copyField("txtname", dnsRecords.txtName)} title="نسخ">
-                        {copiedField === "txtname" ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                      </Button>
+                {dnsRecords[dnsTab].map((record, index) => (
+                  <div key={`${dnsTab}-${index}`} className="grid grid-cols-[1fr_1fr_2fr] items-center border-b border-slate-100 last:border-b-0 text-sm">
+                    <div className="px-4 py-3 font-medium text-slate-700">{record.type}</div>
+                    <div className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className="min-w-0 truncate rounded-md bg-slate-50 px-2 py-1 font-mono text-sm text-slate-700">{record.host}</span>
+                        <button type="button" className="shrink-0 text-slate-400 hover:text-slate-700" onClick={() => copyField(`host-${index}`, record.host)} title="نسخ">
+                          {copiedField === `host-${index}` ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className="min-w-0 flex-1 truncate rounded-md bg-slate-50 px-2 py-1 font-mono text-sm text-slate-700" title={record.value}>{record.value}</span>
+                        <button type="button" className="shrink-0 text-slate-400 hover:text-slate-700" onClick={() => copyField(`value-${index}`, record.value)} title="نسخ">
+                          {copiedField === `value-${index}` ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <label className="text-[11px] text-slate-500 mb-1 block">القيمة (Value)</label>
-                    <div className="flex items-center gap-2">
-                      <Input readOnly value={dnsRecords.txtValue} className="h-9 bg-slate-50 text-sm font-mono" />
-                      <Button variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => copyField("txtval", dnsRecords.txtValue)} title="نسخ">
-                        {copiedField === "txtval" ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                ))}
               </div>
-              {/* Verify status */}
+
+              <div className="space-y-2 text-sm leading-7 text-slate-600">
+                <p>• تأكد من إزالة أي سجلات AAAA (IPv6)، لأنها قد تحظر الاتصالات.</p>
+                <p>2. تحقق من النطاق بعد تحديث جميع السجلات في لوحة تحكم مزود الخدمة. انقر على "تحقق من النطاق". قد تستغرق تغييرات نظام أسماء النطاقات (DNS) ما يصل إلى 48-78 ساعة حتى يتم نشرها.</p>
+                <p>يرجى ملاحظة أنه بعد إضافة سجلات نظام أسماء النطاقات (DNS)، قد يستغرق الأمر بعض الوقت حتى تنتشر التغييرات بالكامل عبر الإنترنت. خلال هذه الفترة، قد لا يعمل النطاق بشكل صحيح.</p>
+              </div>
+
               {verifyStatus === "verifying" && (
-                <div className="flex items-center gap-2 text-xs text-slate-500"><div className="w-3.5 h-3.5 border-2 border-slate-300 border-t-[#6B5D4F] rounded-full animate-spin" />جارٍ التحقق من السجلات...</div>
+                <div className="flex items-center gap-2 text-xs text-slate-500"><div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-300 border-t-[#6B5D4F]" />جارٍ التحقق من السجلات...</div>
               )}
               {verifyStatus === "success" && (
-                <div className="flex items-center gap-2 text-xs text-emerald-600"><CheckCircle2 className="w-4 h-4" />تم التحقق من النطاق بنجاح.</div>
+                <div className="flex items-center gap-2 text-xs text-emerald-600"><CheckCircle2 className="h-4 w-4" />تم التحقق من النطاق بنجاح.</div>
               )}
             </div>
-            <DialogFooter className="gap-2 sm:gap-2">
+
+            <DialogFooter className="gap-2 border-t border-slate-100 pt-4 sm:justify-start">
               <Button variant="outline" onClick={() => setDialog(null)}>يغلق</Button>
-              <Button className="bg-[#4a4642] text-white" disabled={verifyStatus === "verifying"} onClick={handleVerify}>
-                <ShieldCheck className="w-4 h-4 ml-1.5" />تحقق من النطاق
-              </Button>
+              <Button className="bg-[#4a4642] text-white hover:bg-[#3d3935]" disabled={verifyStatus === "verifying"} onClick={handleVerify}>تحقق من النطاق</Button>
             </DialogFooter>
-          </>}
+          </>
           {dialog === "delete-domain" && <>
             <DialogHeader><DialogTitle className="flex items-center gap-2 text-red-600"><Trash2 className="w-5 h-5" />حذف النطاق</DialogTitle><DialogDescription>سيؤدي حذف النطاق إلى إلغاء ربطه بالمنصة. لن يتم حذف النطاق نفسه من مزود التسجيل.</DialogDescription></DialogHeader>
             <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-xs text-red-700 flex items-start gap-2"><FileText className="w-4 h-4 mt-0.5 shrink-0" />سيستمر المستخدمون في الوصول عبر الرابط المجاني mybytly.base44.app بعد الحذف.</div>
