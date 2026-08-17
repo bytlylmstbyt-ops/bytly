@@ -97,20 +97,17 @@ export default function AdminControlCenter() {
   return (
     <div className="min-h-screen bg-[#F7F8FC] px-4 sm:px-6 lg:px-8 py-6 md:py-8">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-7 rounded-2xl bg-gradient-to-l from-[#211B3A] via-[#30245B] to-[#4A3F8A] text-white p-6 md:p-7 shadow-lg">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-3 py-1 text-xs mb-3">
-                <LayoutDashboard className="w-3.5 h-3.5" /> لوحة القيادة التنفيذية
-              </div>
-              <h1 className="text-2xl md:text-3xl font-bold">مركز إدارة المنصة</h1>
-              <p className="text-sm text-white/75 mt-2 max-w-2xl">نظرة موحدة على الأداء المالي، إنجاز المشاريع، أداء المهندسين، والمستخدمين مع وصول سريع إلى جميع إدارات المنصة.</p>
+        <div className="mb-6 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+          <div className="text-right">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#F1EEFF] text-[#5142A4] px-3 py-1 text-xs font-medium mb-2">
+              <LayoutDashboard className="w-3.5 h-3.5" /> لوحة القيادة التنفيذية
             </div>
-            <div className="rounded-xl bg-white/10 border border-white/15 px-4 py-3 text-sm min-w-[210px]">
-              <p className="text-white/60 text-xs">مستوى الإدارة</p>
-              <p className="font-semibold mt-1">مركز الإدارة الرئيسي</p>
-              <p className="text-emerald-300 text-xs mt-1">صلاحيات الإدارة محمّلة</p>
-            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-[#25213A]">مركز الإدارة</h1>
+            <p className="text-sm text-slate-500 mt-1">نظرة شاملة على أداء المنصة وإدارة العمليات الرئيسية.</p>
+          </div>
+          <div className="flex items-center gap-2 rounded-xl bg-white border border-slate-200 shadow-sm px-4 py-2.5 text-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="text-slate-600">مركز الإدارة الرئيسي</span>
           </div>
         </div>
 
@@ -123,12 +120,12 @@ export default function AdminControlCenter() {
 
         {activeKey === "bim" && <BIMProjectFilesPanel />}
 
-        <div className="mt-7 grid grid-cols-1 md:grid-cols-[250px_1fr] gap-5">
+        <div className="mt-7 grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_280px] gap-5 items-start" dir="rtl">
         {visibleCategories.length === 0 && (
           <Card className="md:col-span-2"><CardContent className="p-8 text-center text-slate-500">لا توجد إدارات أو صفحات مخصصة لدورك حاليًا.</CardContent></Card>
         )}
         {/* Category nav */}
-        <nav className="rounded-2xl bg-white border border-slate-200 shadow-sm p-2 flex md:flex-col gap-1.5 overflow-x-auto md:overflow-visible pb-2 md:pb-2 h-fit md:sticky md:top-4">
+        <nav className="order-2 rounded-2xl bg-[#11162A] border border-[#252D47] shadow-xl p-3 flex md:flex-col gap-1 overflow-x-auto md:overflow-visible h-fit md:sticky md:top-4 max-h-[calc(100vh-32px)] md:overflow-y-auto" aria-label="قائمة مركز الإدارة">
           {visibleCategories.map((cat) => {
             const Icon = cat.icon;
             const isActive = cat.key === activeKey;
@@ -138,11 +135,11 @@ export default function AdminControlCenter() {
                 onClick={() => setActiveKey(cat.key)}
                 className={`flex items-center gap-2.5 shrink-0 md:shrink text-sm font-medium rounded-lg px-3 py-2.5 text-right transition-colors ${
                   isActive
-                    ? "bg-gradient-to-l from-[#30245B] to-[#5142A4] text-white shadow-sm"
-                    : "text-[#4A3F35] hover:bg-[#F3F1FF] border border-transparent hover:border-[#D8D2F4]"
+                    ? "bg-gradient-to-l from-[#5142A4] to-[#6D5CE7] text-white shadow-md"
+                    : "text-slate-200 hover:bg-white/10 border border-transparent hover:border-white/10"
                 }`}
               >
-                <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-[#C9A66B]" : "text-[#C9A66B]"}`} />
+                <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-slate-400"}`} />
                 <span className="whitespace-nowrap md:whitespace-normal flex-1">{cat.label}</span>
                 {isActive && <ChevronLeft className="w-3.5 h-3.5 opacity-70" />}
               </button>
@@ -151,7 +148,7 @@ export default function AdminControlCenter() {
         </nav>
 
         {/* Active category content */}
-        <div>
+        <div className="order-1 min-w-0">
           <div className="mb-4">
             <div className="rounded-2xl bg-white border border-slate-200 shadow-sm px-5 py-4">
               <h2 className="text-lg font-bold text-[#2F2945]">{active.label}</h2>
@@ -178,7 +175,7 @@ export default function AdminControlCenter() {
               if (!allowed) return null;
               return (
               <Link key={item.page} to={createPageUrl(item.page)}>
-                <Card className="h-full border-r-4 border-[#C9A66B] hover:shadow-md transition-shadow group">
+                <Card className="h-full border border-slate-200 border-r-4 border-r-[#6D5CE7] hover:shadow-lg hover:-translate-y-0.5 transition-all group bg-white">
                   <CardContent className="p-4 flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="font-semibold text-[#4A3F35] text-sm">{item.label}</p>
