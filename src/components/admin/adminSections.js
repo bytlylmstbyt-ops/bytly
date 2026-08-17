@@ -55,12 +55,16 @@ export const ADMIN_CATEGORIES = [
   },
   {
     key: "people",
-    label: "المستخدمون والمهندسون",
+    label: "إدارة المستخدمين",
     icon: Users,
-    description: "إدارة المهندسين، العملاء، الأدوار، والطلبات المعلقة.",
+    description: "مركز موحد لإدارة المهندسين والعملاء ومقدمي الخدمة وعلاقات العملاء والأدوار والموافقات.",
     items: [
+      { page: "AdminUserManagementCenter", label: "مركز إدارة المستخدمين", desc: "بوابة موحدة لكل عمليات المستخدمين والعملاء والأدوار" },
       { page: "AdminEngineers", label: "إدارة المهندسين", desc: "مراجعة واعتماد ملفات المهندسين" },
       { page: "AdminClients", label: "إدارة العملاء", desc: "قائمة العملاء وبياناتهم" },
+      { page: "AdminReviews", label: "تقييمات العملاء", desc: "مراجعة تقييمات العملاء وملاحظاتهم" },
+      { page: "AdminClients", label: "علاقات العملاء CRM", desc: "متابعة علاقات العملاء والتواصل" },
+      { page: "AdminProviders", label: "الشركات ومقدمو الخدمة", desc: "الشركات والمقاولون والاستشاريون والموردون" },
       { page: "RoleManagement", label: "إدارة الأدوار", desc: "تعريف أدوار المستخدمين وصلاحياتها" },
       { page: "UserRoleAssignment", label: "تعيين الأدوار للمستخدمين", desc: "ربط المستخدمين بالأدوار" },
       { page: "PendingApprovals", label: "الموافقات المعلقة", desc: "طلبات بانتظار المراجعة" },
