@@ -110,7 +110,7 @@ export default function AdminControlCenter() {
                   params.set("cat", cat.key);
                   window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
                   setTimeout(() => document.getElementById("admin-category-content")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
-                }
+                }}
                 className={`flex items-center gap-2.5 shrink-0 md:shrink text-sm font-medium rounded-lg px-3 py-2.5 text-right transition-colors ${
                   isActive
                     ? "bg-gradient-to-l from-[#5142A4] to-[#6D5CE7] text-white shadow-md"
