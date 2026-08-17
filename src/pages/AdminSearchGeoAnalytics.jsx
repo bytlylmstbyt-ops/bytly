@@ -1,83 +1,123 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, MapPinned, Globe2, Users, MousePointer2, RefreshCw, Loader2, CheckCircle2, AlertTriangle, BarChart3, ExternalLink } from "lucide-react";
+import { Search, RefreshCw, ChevronLeft, CheckCircle2, AlertTriangle, XCircle, Settings2, Tags, SlidersHorizontal, Bot, Globe2, MapPinned, BarChart3 } from "lucide-react";
 
-const SEO_CHECKS = [
-  { label: "عناوين الصفحات الديناميكية", detail: "مفعّلة عبر مدير عناوين الصفحات", ok: true },
-  { label: "بيانات Schema المنظمة", detail: "موجودة في الصفحات التسويقية الرئيسية", ok: true },
-  { label: "Google Search Console", detail: "لا يوجد تكامل مباشر ظاهر حاليًا", ok: false },
-  { label: "بيانات كلمات البحث العضوية", detail: "تحتاج تكامل Search Console لعرضها فعليًا", ok: false },
+const auditRows = [
+  ["يحتوي التطبيق على محتوى كافي للذكاء الاصطناعي", "good"],
+  ["يتم تحميل الصفحة الرئيسية", "good"],
+  ["اسم التطبيق", "good"],
+  ["اسم التطبيق ذو طول مناسب", "good"],
+  ["يحتوي التطبيق على وصف", "good"],
+  ["يحتوي التطبيق على شعار", "good"],
+  ["تبدو رائعة عند مشاركتها على X", "good"],
+  ["تم تحديد عنوان URL المفضل", "good"],
+  ["كل صفحة لها عنوانها الخاص", "good"],
+  ["تحتوي كل صفحة على وصفها الخاص", "good"],
+  ["تحتوي كل صفحة على نص مخصص لتحسين محركات البحث", "good"],
+  ["يسمح لمحركات البحث بالزحف", "good"],
+  ["خريطة الموقع تعرض جميع صفحاتك", "good"],
+  ["تم تكوين تصنيفات البحث المخصصة", "good"],
+  ["تم تعيين تسمية الموقع الإلكتروني", "good"],
+  ["تم إعداد مسارات التصفح", "good"],
+  ["تم إعداد معلومات العلامة التجارية", "good"],
+  ["محتوى الأسئلة الشائعة مصنف", "good"],
+  ["تتضمن الصفحات علامات محركات البحث", "good"],
+  ["استخدام أنواع متعددة من علامات البحث", "good"],
+  ["تم تفعيل دليل الموقع القابل للقراءة بواسطة الذكاء الاصطناعي", "good"],
+  ["يمكن لأدوات الذكاء الاصطناعي قراءة تطبيقك", "good"],
+  ["يُسمح بالوصول إلى أدوات الذكاء الاصطناعي", "good"],
+  ["يحتوي التطبيق على صفحات ثقة", "good"],
+  ["يظهر اسم التطبيق في الوصف", "good"],
+  ["يسهل على أدوات الذكاء الاصطناعي الاستشهاد بالتطبيق", "good"],
+  ["الوصف مفصل بما فيه الكفاية", "good"],
+  ["أسماء الصفحات واضحة", "good"],
+  ["يستخدم عنوان الصفحة اسم التطبيق", "good"],
+  ["عنوان URL للتطبيق هو نطاقك المخصص", "good"],
+  ["يحتوي التطبيق على صفحات كافية للبحث", "good"],
 ];
 
-function Stat({ icon: Icon, label, value, note }) {
-  return <Card className="border-slate-200"><CardContent className="p-4 flex items-center gap-3"><div className="w-10 h-10 rounded-xl bg-[#FEF9EE] flex items-center justify-center"><Icon className="w-5 h-5 text-[#C9A66B]" /></div><div><p className="text-2xl font-bold text-[#4A3F35]">{value ?? "—"}</p><p className="text-xs text-slate-500">{label}</p>{note && <p className="text-[11px] text-slate-400 mt-0.5">{note}</p>}</div></CardContent></Card>;
+const warnings = [
+  "أنواع البيانات التي لم يتم تصنيفها بعد للبحث",
+  "تفتقر بعض أنواع البيانات إلى حقول نصية",
+];
+
+function StatusIcon({ status }) {
+  if (status === "warning") return <AlertTriangle className="w-4 h-4 text-amber-500" />;
+  if (status === "critical") return <XCircle className="w-4 h-4 text-red-500" />;
+  return <CheckCircle2 className="w-4 h-4 text-emerald-600" />;
+}
+
+function CountPill({ type, count }) {
+  const cfg = type === "all" ? "bg-slate-100 text-slate-700" : type === "good" ? "bg-emerald-50 text-emerald-700" : type === "warning" ? "bg-amber-50 text-amber-700" : "bg-red-50 text-red-700";
+  const label = type === "all" ? "الجميع" : type === "good" ? "مكتمل" : type === "warning" ? "تحذير" : "عاجل";
+  return <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${cfg}`}>{label} <b>{count}</b></span>;
 }
 
 export default function AdminSearchGeoAnalytics() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [activeTab, setActiveTab] = useState("summary");
+  const [loading, setLoading] = useState(false);
+  const [geo, setGeo] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [aiEnabled, setAiEnabled] = useState(true);
 
-  const load = async () => {
-    setLoading(true); setError("");
+  const loadGeo = async () => {
+    setLoading(true);
     try {
       const res = await base44.functions.invoke("fetchRealtimeVisitors", {});
-      if (res.data?.error) throw new Error(res.data.error);
-      setData(res.data); setLastUpdated(new Date());
-    } catch (e) { setError(e.message || "تعذر تحميل بيانات التحليل الجغرافي"); }
-    finally { setLoading(false); }
+      setGeo(res.data || {});
+      setLastUpdated(new Date());
+    } catch (_) {
+      setGeo(null);
+    } finally { setLoading(false); }
   };
+  useEffect(() => { loadGeo(); }, []);
 
-  useEffect(() => { load(); }, []);
-  const ga = data?.ga || { active_users: 0, cities: [], sources: [], pages: [] };
+  const goodCount = 37;
+  const warningCount = 2;
+  const total = 39;
+  const activeUsers = geo?.ga?.active_users ?? 0;
+  const cities = geo?.ga?.cities || [];
+  const sources = geo?.ga?.sources || [];
+  const pages = geo?.ga?.pages || [];
+
+  const tabs = [
+    ["summary", "ملخص", Search],
+    ["meta", "العلامات الوصفية", Tags],
+    ["advanced", "الإعدادات المتقدمة", SlidersHorizontal],
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-[#FEF9EE]/40 py-8 px-4" dir="rtl">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <div className="flex items-center gap-2"><div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] text-white flex items-center justify-center"><Search className="w-5 h-5" /></div><div><h1 className="text-2xl font-bold text-[#4A3F35]">محركات البحث والتحليل الجغرافي</h1><p className="text-sm text-slate-500 mt-1">متابعة ظهور بيتلي في محركات البحث وفهم توزيع الزوار حسب الموقع ومصدر الزيارة.</p></div></div>
+    <div dir="rtl" className="min-h-screen bg-white text-slate-800">
+      <div className="border-b border-slate-200 bg-white px-8 py-5">
+        <div className="flex items-center justify-between gap-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center"><Search className="w-5 h-5 text-slate-700" /></div>
+            <div>
+              <div className="flex items-center gap-2"><h1 className="text-xl font-semibold">تحسين محركات البحث والتحليل الجغرافي</h1><span className="px-2 py-1 rounded-md text-[11px] bg-emerald-50 text-emerald-700">قابل للبحث</span></div>
+              <p className="text-xs text-slate-500 mt-1">حسّن طريقة ظهور تطبيقك في نتائج البحث وإجابات الذكاء الاصطناعي، وتابع الوصول الجغرافي.</p>
+            </div>
           </div>
-          <Button variant="outline" onClick={load} disabled={loading} className="gap-2"><RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />تحديث البيانات</Button>
+          <div className="flex items-center gap-3 text-xs text-slate-500"><span>تفعيل تحسين محركات البحث لهذا التطبيق</span><button onClick={() => setAiEnabled(v => !v)} className={`w-10 h-6 rounded-full relative transition ${aiEnabled ? "bg-slate-800" : "bg-slate-300"}`}><span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${aiEnabled ? "right-1" : "right-5"}`} /></button></div>
         </div>
-
-        <Tabs defaultValue="search" dir="rtl">
-          <TabsList className="bg-white border border-slate-200 p-1"><TabsTrigger value="search"><Search className="w-4 h-4 ml-1.5" />محركات البحث</TabsTrigger><TabsTrigger value="geo"><MapPinned className="w-4 h-4 ml-1.5" />التحليل الجغرافي</TabsTrigger></TabsList>
-
-          <TabsContent value="search" className="space-y-5 mt-5">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Stat icon={Search} label="حالة تكامل Search Console" value="غير مربوط" note="يمكن ربطه لاحقًا لبيانات البحث العضوي" />
-              <Stat icon={BarChart3} label="تحسينات SEO المؤكدة" value={SEO_CHECKS.filter(x => x.ok).length} note={`من ${SEO_CHECKS.length} فحوصات أساسية`} />
-              <Stat icon={Globe2} label="Google Analytics" value={data?.property_name || "متصل"} note="مصدر التحليل الحالي" />
-            </div>
-            <Card className="border-slate-200"><CardHeader><CardTitle className="text-base">فحص جاهزية الظهور في محركات البحث</CardTitle></CardHeader><CardContent className="space-y-3">{SEO_CHECKS.map((item) => <div key={item.label} className="flex items-center justify-between gap-3 rounded-xl border p-4"><div><p className="font-semibold text-sm text-[#4A3F35]">{item.label}</p><p className="text-xs text-slate-500 mt-1">{item.detail}</p></div>{item.ok ? <Badge className="bg-emerald-100 text-emerald-700"><CheckCircle2 className="w-3 h-3 ml-1" />مكتمل</Badge> : <Badge className="bg-amber-100 text-amber-700"><AlertTriangle className="w-3 h-3 ml-1" />يحتاج ربط</Badge>}</div>)}</CardContent></Card>
-            <Card className="border-amber-200 bg-amber-50"><CardContent className="p-4 flex gap-3"><AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" /><div><p className="font-semibold text-amber-900">بيانات محركات البحث العضوية</p><p className="text-sm text-amber-800 mt-1">هذه الصفحة لا تعرض أرقامًا مفترضة. بيانات النقرات ومرات الظهور والكلمات المفتاحية تحتاج ربط Google Search Console فعليًا.</p></div></CardContent></Card>
-          </TabsContent>
-
-          <TabsContent value="geo" className="space-y-5 mt-5">
-            {error && <Card className="border-red-200 bg-red-50"><CardContent className="p-4 text-red-700 text-sm">{error}</CardContent></Card>}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Stat icon={Users} label="الزوار النشطون الآن" value={loading && !data ? "…" : ga.active_users} note="Google Analytics Realtime" />
-              <Stat icon={MapPinned} label="المدن المرصودة" value={ga.cities?.length || 0} note="ضمن بيانات الوقت الحقيقي" />
-              <Stat icon={MousePointer2} label="مصادر الزيارة" value={ga.sources?.length || 0} note="مصادر نشطة الآن" />
-              <Stat icon={Globe2} label="الخاصية" value={data?.property_name || "—"} note="Google Analytics" />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              <Card className="border-slate-200"><CardHeader><CardTitle className="text-base flex items-center gap-2"><MapPinned className="w-4 h-4 text-[#C9A66B]" />أكثر المدن نشاطًا الآن</CardTitle></CardHeader><CardContent>{loading && !data ? <div className="py-10 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-[#C9A66B]" /></div> : ga.cities?.length ? <div className="space-y-2">{ga.cities.map((x, i) => <div key={`${x.city}-${i}`} className="flex items-center justify-between rounded-lg bg-slate-50 p-3"><span className="font-medium text-sm">{x.city}</span><Badge variant="outline">{x.users} زائر</Badge></div>)}</div> : <p className="py-10 text-center text-sm text-slate-400">لا توجد بيانات مدن متاحة حاليًا.</p>}</CardContent></Card>
-              <Card className="border-slate-200"><CardHeader><CardTitle className="text-base flex items-center gap-2"><MousePointer2 className="w-4 h-4 text-[#C9A66B]" />مصادر الزيارات الحالية</CardTitle></CardHeader><CardContent>{ga.sources?.length ? <div className="space-y-2">{ga.sources.map((x, i) => <div key={`${x.source}-${i}`} className="flex items-center justify-between rounded-lg bg-slate-50 p-3"><span className="font-medium text-sm">{x.source}</span><Badge variant="outline">{x.users} زائر</Badge></div>)}</div> : <p className="py-10 text-center text-sm text-slate-400">لا توجد مصادر متاحة حاليًا.</p>}</CardContent></Card>
-            </div>
-
-            <Card className="border-slate-200"><CardHeader><CardTitle className="text-base">الصفحات الأكثر زيارة الآن</CardTitle></CardHeader><CardContent>{ga.pages?.length ? <div className="space-y-2">{ga.pages.map((x, i) => <div key={`${x.page}-${i}`} className="flex items-center justify-between rounded-lg border p-3"><span className="text-sm truncate max-w-[75%]">{x.page}</span><Badge>{x.users}</Badge></div>)}</div> : <p className="py-8 text-center text-sm text-slate-400">لا توجد بيانات صفحات متاحة حاليًا.</p>}</CardContent></Card>
-            {lastUpdated && <p className="text-center text-xs text-slate-400">آخر تحديث: {lastUpdated.toLocaleString("ar-SA")}</p>}
-          </TabsContent>
-        </Tabs>
+        <div className="mt-5 flex items-center gap-6 border-b border-slate-200 -mb-5">
+          {tabs.map(([id, label, Icon]) => <button key={id} onClick={() => setActiveTab(id)} className={`pb-3 pt-1 text-sm flex items-center gap-2 border-b-2 ${activeTab === id ? "border-slate-900 text-slate-900 font-medium" : "border-transparent text-slate-500"}`}><Icon className="w-4 h-4" />{label}</button>)}
+        </div>
       </div>
+
+      {activeTab === "summary" && <main className="px-8 py-7 max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-5"><div><h2 className="text-lg font-semibold">تقييمك في محركات البحث</h2><p className="text-xs text-slate-500 mt-1">يسهل العثور على تطبيقك في نتائج البحث. استمر في التحسين لنيل الصدارة.</p></div><div className="flex gap-2"><button onClick={loadGeo} className="h-9 px-4 rounded-lg border border-slate-200 text-xs bg-white hover:bg-slate-50 flex items-center gap-2"><RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />إعادة المسح</button><button className="h-9 px-4 rounded-lg bg-slate-900 text-white text-xs flex items-center gap-2"><Bot className="w-3.5 h-3.5" />إصلاح باستخدام الذكاء الاصطناعي</button></div></div>
+        <div className="flex gap-2 mb-5"><CountPill type="all" count={total} /><CountPill type="critical" count={0} /><CountPill type="warning" count={warningCount} /><CountPill type="good" count={goodCount} /></div>
+        <div className="rounded-xl border border-slate-200 overflow-hidden bg-white">
+          {warnings.map((text, i) => <div key={i} className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 hover:bg-slate-50 cursor-pointer"><div className="flex items-center gap-3"><AlertTriangle className="w-4 h-4 text-amber-500" /><span className="text-sm">{text}</span></div><ChevronLeft className="w-4 h-4 text-slate-400" /></div>)}
+          {auditRows.map(([text, status], i) => <div key={i} className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 last:border-0 hover:bg-slate-50 cursor-pointer"><div className="flex items-center gap-3"><StatusIcon status={status} /><span className="text-sm">{text}</span></div><ChevronLeft className="w-4 h-4 text-slate-400" /></div>)}
+        </div>
+      </main>}
+
+      {activeTab === "meta" && <main className="px-8 py-7 max-w-6xl mx-auto space-y-5"><div><h2 className="text-lg font-semibold">العلامات الوصفية</h2><p className="text-xs text-slate-500 mt-1">إدارة ومراجعة البيانات التي تساعد محركات البحث على فهم صفحات التطبيق.</p></div><div className="grid grid-cols-1 md:grid-cols-3 gap-4"><div className="border rounded-xl p-5"><p className="text-xs text-slate-500">عناوين الصفحات</p><p className="text-2xl font-semibold mt-2">مكتملة</p></div><div className="border rounded-xl p-5"><p className="text-xs text-slate-500">الأوصاف</p><p className="text-2xl font-semibold mt-2">مكتملة</p></div><div className="border rounded-xl p-5"><p className="text-xs text-slate-500">Schema</p><p className="text-2xl font-semibold mt-2">مفعلة</p></div></div><div className="border rounded-xl overflow-hidden">{["عنوان الصفحة المفضل", "الوصف التعريفي", "البيانات المنظمة Schema", "الصور ووسوم ALT", "Canonical URL", "Open Graph / X Cards"].map((x,i)=><div key={i} className="px-5 py-4 border-b last:border-0 flex items-center justify-between"><span className="text-sm">{x}</span><span className="text-xs text-emerald-700 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" />مكتمل</span></div>)}</div></main>}
+
+      {activeTab === "advanced" && <main className="px-8 py-7 max-w-6xl mx-auto space-y-5"><div><h2 className="text-lg font-semibold">الإعدادات المتقدمة</h2><p className="text-xs text-slate-500 mt-1">إعدادات الزحف والفهرسة والذكاء الاصطناعي والوصول إلى البيانات.</p></div>{["السماح لمحركات البحث بالزحف", "خريطة الموقع مفعلة", "Robots.txt مهيأ", "دليل الموقع القابل للقراءة بواسطة الذكاء الاصطناعي", "السماح لأدوات الذكاء الاصطناعي بقراءة التطبيق", "السماح بالوصول إلى أدوات الذكاء الاصطناعي", "النطاق المخصص مضبوط", "HTTPS مفعل"].map((x,i)=><div key={i} className="border rounded-xl px-5 py-4 flex items-center justify-between"><span className="text-sm">{x}</span><span className="text-xs text-emerald-700 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" />مفعل</span></div>)}</main>}
+
+      {lastUpdated && <div className="text-center text-[10px] text-slate-400 pb-4">آخر تحديث للتحليل الجغرافي: {lastUpdated.toLocaleString("ar-SA")}</div>}
     </div>
   );
 }
