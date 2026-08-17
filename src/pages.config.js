@@ -55,6 +55,7 @@ import AdminCategories from './pages/AdminCategories';
 import AdminClients from './pages/AdminClients';
 import AdminCommissionSettings from './pages/AdminCommissionSettings';
 import AdminDisputeManage from './pages/AdminDisputeManage';
+import AdminDomains from './pages/AdminDomains';
 import AdminDisputes from './pages/AdminDisputes';
 import AdminEngineers from './pages/AdminEngineers';
 import AdminRefundControl from './pages/AdminRefundControl';
@@ -164,6 +165,7 @@ export const PAGES = {
     "AdminClients": AdminClients,
     "AdminCommissionSettings": AdminCommissionSettings,
     "AdminDisputeManage": AdminDisputeManage,
+    "AdminDomains": AdminDomains,
     "AdminDisputes": AdminDisputes,
     "AdminEngineers": AdminEngineers,
     "AdminRefundControl": AdminRefundControl,
