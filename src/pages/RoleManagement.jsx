@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
   Shield, Plus, Edit2, Trash2, Users, Lock,
-  Loader2, Save, X, CheckCircle, AlertCircle
+  Loader2, Save, X, CheckCircle, AlertCircle, Copy, Eye, Power, History
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -21,6 +21,8 @@ export default function RoleManagement() {
   const [user, setUser] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
+  const [previewRole, setPreviewRole] = useState(null);
+  const [auditLogs, setAuditLogs] = useState([]);
   const [formData, setFormData] = useState({
     name: "",
     display_name: "",
@@ -52,6 +54,12 @@ export default function RoleManagement() {
   const loadRoles = async () => {
     const rolesData = await base44.entities.Role.list();
     setRoles(rolesData);
+    try {
+      const logs = await base44.entities.AdminAuditLog.list("-created_at", 50);
+      setAuditLogs(logs || []);
+    } catch (_) {
+      setAuditLogs([]);
+    }
   };
 
   function getDefaultPermissions() {
@@ -103,14 +111,16 @@ export default function RoleManagement() {
           return;
         }
         await base44.entities.Role.update(editingRole.id, formData);
+        await writeAudit("update", editingRole, "تم تعديل بيانات وصلاحيات الدور");
         toast.success("تم تحديث الدور بنجاح");
       } else {
-        await base44.entities.Role.create({
+        const created = await base44.entities.Role.create({
           ...formData,
           is_system_role: false,
           is_active: true,
           assigned_users_count: 0
         });
+        await writeAudit("create", created, "تم إنشاء دور جديد");
         toast.success("تم إنشاء الدور بنجاح");
       }
       await loadRoles();
@@ -121,6 +131,33 @@ export default function RoleManagement() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const writeAudit = async (action, role, details) => {
+    try {
+      await base44.entities.AdminAuditLog.create({ actor_email: user?.email || "", action, target_type: "role", target_id: role?.id || "", target_name: role?.display_name || "", details, created_at: new Date().toISOString() });
+    } catch (_) {}
+  };
+
+  const handleDuplicateRole = async (role) => {
+    setSaving(true);
+    try {
+      const created = await base44.entities.Role.create({ name: `${role.name}_copy`, display_name: `${role.display_name} - نسخة`, description: role.description || "", permissions: JSON.parse(JSON.stringify(role.permissions || getDefaultPermissions())), is_system_role: false, is_active: true, assigned_users_count: 0 });
+      await writeAudit("duplicate", created, `تم نسخ الدور من ${role.display_name}`);
+      toast.success("تم نسخ الدور بنجاح");
+      await loadRoles();
+    } catch (_) { toast.error("تعذر نسخ الدور"); } finally { setSaving(false); }
+  };
+
+  const handleToggleRole = async (role) => {
+    if (role.is_system_role) { toast.error("لا يمكن تعطيل دور النظام"); return; }
+    try {
+      const next = !role.is_active;
+      await base44.entities.Role.update(role.id, { is_active: next });
+      await writeAudit(next ? "activate" : "deactivate", role, `تم ${next ? "تفعيل" : "تعطيل"} الدور`);
+      toast.success(next ? "تم تفعيل الدور" : "تم تعطيل الدور");
+      await loadRoles();
+    } catch (_) { toast.error("تعذر تغيير حالة الدور"); }
   };
 
   const handleDeleteRole = async (role) => {
@@ -136,6 +173,7 @@ export default function RoleManagement() {
 
     try {
       await base44.entities.Role.delete(role.id);
+      await writeAudit("delete", role, "تم حذف الدور");
       toast.success("تم حذف الدور بنجاح");
       await loadRoles();
     } catch (error) {
@@ -319,6 +357,7 @@ export default function RoleManagement() {
                   <div className="flex-1">
                     <CardTitle className="flex items-center gap-2">
                       {role.display_name}
+                      <Badge variant={role.is_active ? "default" : "secondary"} className="text-xs">{role.is_active ? "نشط" : "معطل"}</Badge>
                       {role.is_system_role && (
                         <Badge variant="outline" className="text-xs">
                           نظام
@@ -327,8 +366,11 @@ export default function RoleManagement() {
                     </CardTitle>
                     <p className="text-sm text-slate-500 mt-1">{role.name}</p>
                   </div>
-                  {!role.is_system_role && (
-                    <div className="flex gap-1">
+                  <div className="flex gap-1">
+                    <Button size="icon" variant="ghost" title="معاينة" onClick={() => setPreviewRole(role)}><Eye className="w-4 h-4" /></Button>
+                    <Button size="icon" variant="ghost" title="نسخ الدور" onClick={() => handleDuplicateRole(role)} disabled={saving}><Copy className="w-4 h-4" /></Button>
+                    {!role.is_system_role && <>
+                    <Button size="icon" variant="ghost" title="تفعيل/تعطيل" onClick={() => handleToggleRole(role)}><Power className={`w-4 h-4 ${role.is_active ? "text-emerald-600" : "text-slate-400"}`} /></Button>
                       <Button
                         size="icon"
                         variant="ghost"
@@ -344,8 +386,8 @@ export default function RoleManagement() {
                       >
                         <Trash2 className="w-4 h-4 text-red-500" />
                       </Button>
-                    </div>
-                  )}
+                    </>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -376,6 +418,20 @@ export default function RoleManagement() {
             </Card>
           ))}
         </div>
+
+        <Card className="mt-8">
+          <CardHeader><CardTitle className="flex items-center gap-2"><History className="w-5 h-5" />سجل تغييرات الأدوار</CardTitle></CardHeader>
+          <CardContent>
+            {auditLogs.length === 0 ? <p className="text-sm text-slate-500">لا توجد تغييرات مسجلة بعد.</p> : <div className="space-y-2 max-h-64 overflow-y-auto">{auditLogs.map(log => <div key={log.id} className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3 text-sm"><div><span className="font-medium">{log.target_name || "دور"}</span><span className="text-slate-500"> — {log.details}</span></div><span className="text-xs text-slate-400">{log.actor_email}</span></div>)}</div>}
+          </CardContent>
+        </Card>
+
+        <Dialog open={!!previewRole} onOpenChange={(open) => !open && setPreviewRole(null)}>
+          <DialogContent className="max-w-2xl" dir="rtl">
+            <DialogHeader><DialogTitle>معاينة الدور: {previewRole?.display_name}</DialogTitle></DialogHeader>
+            <div className="space-y-3 max-h-[65vh] overflow-y-auto"><p className="text-sm text-slate-500">هذه المعاينة توضح ما يستطيع هذا الدور الوصول إليه قبل تعيينه للمستخدم.</p>{permissionCategories.map(category => { const enabled = Object.entries(previewRole?.permissions?.[category.id] || {}).filter(([_, value]) => value).map(([action]) => actionLabels[action]); if (!enabled.length) return null; return <div key={category.id} className="rounded-lg border p-3"><div className="font-medium mb-2">{category.label}</div><div className="flex flex-wrap gap-2">{enabled.map(label => <Badge key={label} variant="outline">{label}</Badge>)}</div></div>; })}</div>
+          </DialogContent>
+        </Dialog>
 
         {roles.length === 0 && (
           <Card>
