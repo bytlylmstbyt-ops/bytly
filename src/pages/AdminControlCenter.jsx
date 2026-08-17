@@ -189,9 +189,8 @@ export default function AdminControlCenter() {
             })}
           </div>
         </div>
-        </div>
         </main>
-      </div>
-    </div>
-  );
-}
+        </div>
+        </div>
+        );
+        }
