@@ -204,10 +204,13 @@ export const ADMIN_CATEGORIES = [
     icon: Megaphone,
     description: "إدارة حسابات التواصل الاجتماعي والمنشورات والتحليلات.",
     items: [
+      { page: "AdminMarketingDashboard", label: "لوحة مدير التسويق", desc: "ملخص التسويق والبريد وSEO والنطاقات والتحليلات" },
       { page: "AdminMarketingCenter", label: "مركز التسويق", desc: "إدارة منصات التواصل والمنشورات والمسودات", permission: ["marketing", "view"] },
       { page: "MarketingHub", label: "مولد المحتوى", desc: "توليد ونشر المحتوى التسويقي بالذكاء الاصطناعي" },
       { page: "SocialAnalytics", label: "تحليلات التواصل الاجتماعي", desc: "تقارير التفاعل عبر المنصات" },
-      { page: "AdminSearchGeoAnalytics", label: "محركات البحث والتحليل الجغرافي", desc: "متابعة جاهزية SEO وتحليل مصادر الزيارات والمدن والصفحات النشطة", permission: ["marketing", "view"] }
+      { page: "AdminSearchGeoAnalytics", label: "محركات البحث والتحليل الجغرافي", desc: "متابعة جاهزية SEO وتحليل مصادر الزيارات والمدن والصفحات النشطة", permission: ["marketing", "view"] },
+      { page: "AdminDomains", label: "إدارة النطاقات", desc: "ربط النطاقات وإعدادات DNS", permission: ["domains", "view"] },
+      { page: "AdminEmailCenter", label: "مركز البريد والقوالب", desc: "إدارة البريد والقوالب والأتمتة", permission: ["email", "view"] }
     ],
   },
 ];
