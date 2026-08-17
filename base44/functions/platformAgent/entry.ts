@@ -34,10 +34,21 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 const TOOL_REGISTRY = {
   navigate_admin_page: { risk: 'low', description: 'فتح صفحة إدارية داخل لوحة التحكم' },
   refresh_index_status: { risk: 'low', description: 'قراءة حالة فهرس المشروع' },
+  query_entity: { risk: 'low', description: 'قراءة سجلات من بيانات المنصة' },
+  create_entity: { risk: 'medium', description: 'إنشاء سجل إداري جديد بعد موافقة المدير' },
+  update_entity: { risk: 'medium', description: 'تعديل سجل إداري موجود بعد موافقة المدير' },
   create_strategic_goal: { risk: 'medium', description: 'إنشاء هدف استراتيجي جديد بعد موافقة المدير' },
   create_strategic_initiative: { risk: 'medium', description: 'إنشاء مبادرة استراتيجية جديدة بعد موافقة المدير' },
   create_strategic_decision: { risk: 'medium', description: 'تسجيل قرار استراتيجي جديد بعد موافقة المدير' },
 };
+
+const ENTITY_TOOL_ALLOWLIST = new Set([
+  'Project','Client','Engineer','EngineeringFirm','Contractor','Supplier','Consultant','LegalConsultant',
+  'Review','FirmReview','ClientInteraction','Lead','ProjectTask','Task','ProjectMilestone','Contract',
+  'Invoice','Payment','PlatformRevenue','Transaction','Subscription','WithdrawalRequest','SupportTicket',
+  'Complaint','Notification','SurveyRequest','SurveyDeliverable','StrategicGoal','StrategicInitiative','StrategicDecision',
+  'UserRole','Role','AutomationRule','EmailCampaign','SocialPost','Advertiser','Advertisement','ReadyMadeDesign'
+]);
 
 async function executeAgentTool(base44, toolName, args, user) {
   const tool = TOOL_REGISTRY[toolName];
@@ -51,6 +62,29 @@ async function executeAgentTool(base44, toolName, args, user) {
   if (toolName === 'refresh_index_status') {
     const res = await base44.functions.invoke('platformChangePlanner', { action: 'refresh_index_status' });
     return { tool: toolName, ...res.data };
+  }
+  if (toolName === 'query_entity') {
+    const entityName = String(args?.entity_name || '').trim();
+    if (!ENTITY_TOOL_ALLOWLIST.has(entityName)) throw new Error('هذا مصدر البيانات غير مسموح للوكيل بقراءته.');
+    const query = (args?.query && typeof args.query === 'object') ? args.query : {};
+    const limit = Math.min(Math.max(Number(args?.limit || 20), 1), 100);
+    const rows = await base44.asServiceRole.entities[entityName].filter(query, args?.sort || '-created_date', limit);
+    return { tool: toolName, entity_name: entityName, count: rows.length, rows };
+  }
+  if (toolName === 'create_entity') {
+    const entityName = String(args?.entity_name || '').trim();
+    if (!ENTITY_TOOL_ALLOWLIST.has(entityName)) throw new Error('هذا الكيان غير مسموح للوكيل بالكتابة إليه.');
+    if (!args?.data || typeof args.data !== 'object') throw new Error('بيانات السجل مطلوبة.');
+    const row = await base44.asServiceRole.entities[entityName].create(args.data);
+    return { tool: toolName, entity_name: entityName, id: row.id, message: `تم إنشاء سجل جديد في ${entityName}.` };
+  }
+  if (toolName === 'update_entity') {
+    const entityName = String(args?.entity_name || '').trim();
+    if (!ENTITY_TOOL_ALLOWLIST.has(entityName)) throw new Error('هذا الكيان غير مسموح للوكيل بتعديله.');
+    const id = String(args?.id || '').trim();
+    if (!id || !args?.data || typeof args.data !== 'object') throw new Error('معرف السجل والبيانات المعدلة مطلوبان.');
+    const row = await base44.asServiceRole.entities[entityName].update(id, args.data);
+    return { tool: toolName, entity_name: entityName, id, row, message: `تم تعديل السجل في ${entityName}.` };
   }
   if (toolName === 'create_strategic_goal') {
     const title = String(args?.title || '').trim();
@@ -146,10 +180,16 @@ Routes:
 Registered tools:
   • navigate_admin_page(page): open/navigate to an allowed admin page.
   • refresh_index_status(): read the current project-index status.
+  • query_entity(entity_name, query, limit, sort): read approved platform data entities.
+  • create_entity(entity_name, data): create an approved platform record; requires explicit approval.
+  • update_entity(entity_name, id, data): update an approved platform record; requires explicit approval.
   • create_strategic_goal(title, description, owner, status, progress, target_date): create a strategic goal; requires explicit approval.
   • create_strategic_initiative(title, description, owner, status, progress, target_date): create a strategic initiative; requires explicit approval.
   • create_strategic_decision(title, description, owner, status, due_date, follow_up): register a strategic decision; requires explicit approval.
 For tool_request return the exact tool_name and JSON tool_args. Never invent tools.
+For query_entity, tool_args must contain entity_name, query, limit, and optional sort.
+For create_entity, tool_args must contain entity_name and data.
+For update_entity, tool_args must contain entity_name, id, and data.
 - "execution_confirm": the admin is confirming/cancelling a change plan that was just shown to them — short imperative confirmations like "نفّذ", "execute", "موافق", "yes do it", "طبّق التغيير", "إلغاء", "cancel that". Only use this route if the message is clearly a confirmation/cancellation of something already proposed, not a new request.
 
 Context: ${pendingPlanId ? 'There IS a change plan currently awaiting the admin\'s decision.' : 'There is NO change plan currently awaiting a decision.'}
