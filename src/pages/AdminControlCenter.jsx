@@ -104,7 +104,13 @@ export default function AdminControlCenter() {
             return (
               <button
                 key={cat.key}
-                onClick={() => setActiveKey(cat.key)}
+                onClick={() => {
+                  setActiveKey(cat.key);
+                  const params = new URLSearchParams(window.location.search);
+                  params.set("cat", cat.key);
+                  window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
+                  setTimeout(() => document.getElementById("admin-category-content")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+                }
                 className={`flex items-center gap-2.5 shrink-0 md:shrink text-sm font-medium rounded-lg px-3 py-2.5 text-right transition-colors ${
                   isActive
                     ? "bg-gradient-to-l from-[#5142A4] to-[#6D5CE7] text-white shadow-md"
@@ -134,12 +140,14 @@ export default function AdminControlCenter() {
           </div>
         </div>
 
-        <div className="space-y-5">
-          <MonthlyRevenueSummaryPanel />
-          <FinancialChartsPanel />
-          <ProjectCompletionTrendPanel />
-          <EngineerPerformancePanel />
-        </div>
+        {safeActiveKey === "overview" && (
+          <div className="space-y-5">
+            <MonthlyRevenueSummaryPanel />
+            <FinancialChartsPanel />
+            <ProjectCompletionTrendPanel />
+            <EngineerPerformancePanel />
+          </div>
+        )}
 
         {activeKey === "bim" && <BIMProjectFilesPanel />}
 
@@ -148,7 +156,7 @@ export default function AdminControlCenter() {
         )}
 
         {/* Active category content */}
-        <div className="min-w-0">
+        <div id="admin-category-content" className="min-w-0 scroll-mt-6">
           <div className="mb-4">
             <div className="rounded-2xl bg-white border border-slate-200 shadow-sm px-5 py-4">
               <h2 className="text-lg font-bold text-[#2F2945]">{active.label}</h2>
