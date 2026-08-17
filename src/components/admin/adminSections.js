@@ -43,7 +43,7 @@ export const ADMIN_CATEGORIES = [
     icon: FolderKanban,
     description: "كل ما يخص المشاريع وإدارتها من لوحة واحدة.",
     items: [
-      { page: "AdminProjects", label: "لوحة إدارة المشاريع", desc: "نظرة شاملة وإدارة كل مشاريع المنصة" },
+      { page: "AdminProjects", label: "لوحة إدارة المشاريع", desc: "نظرة شاملة وإدارة كل مشاريع المنصة", permission: ["projects", "view"] },
       { page: "Projects", label: "سوق المشاريع", desc: "تصفح جميع المشاريع المنشورة" },
       { page: "ProjectProposals", label: "إدارة العروض", desc: "متابعة عروض المشاريع" },
       { page: "CompareProposals", label: "مقارنة العروض", desc: "مقارنة عروض مشروع معين" },
@@ -93,7 +93,7 @@ export const ADMIN_CATEGORIES = [
     icon: Wallet,
     description: "المحافظ، الإيرادات، طلبات السحب، والفواتير.",
     items: [
-      { page: "AdminWallet", label: "إدارة المحافظ", desc: "أرصدة ومعاملات المحافظ" },
+      { page: "AdminWallet", label: "إدارة المحافظ", desc: "أرصدة ومعاملات المحافظ", permission: ["payments", "view"] },
       { page: "AdminWalletDashboard", label: "لوحة المحافظ", desc: "نظرة عامة على حركة المحافظ" },
       { page: "AdminRefundControl", label: "إدارة المبالغ المستردة", desc: "طلبات الاسترداد" },
       { page: "AllWithdrawalRequests", label: "طلبات السحب", desc: "جميع طلبات سحب الأرصدة" },
@@ -201,10 +201,10 @@ export const ADMIN_CATEGORIES = [
     icon: Megaphone,
     description: "إدارة حسابات التواصل الاجتماعي والمنشورات والتحليلات.",
     items: [
-      { page: "AdminMarketingCenter", label: "مركز التسويق", desc: "إدارة منصات التواصل والمنشورات والمسودات" },
+      { page: "AdminMarketingCenter", label: "مركز التسويق", desc: "إدارة منصات التواصل والمنشورات والمسودات", permission: ["marketing", "view"] },
       { page: "MarketingHub", label: "مولد المحتوى", desc: "توليد ونشر المحتوى التسويقي بالذكاء الاصطناعي" },
       { page: "SocialAnalytics", label: "تحليلات التواصل الاجتماعي", desc: "تقارير التفاعل عبر المنصات" },
-      { page: "AdminSearchGeoAnalytics", label: "محركات البحث والتحليل الجغرافي", desc: "متابعة جاهزية SEO وتحليل مصادر الزيارات والمدن والصفحات النشطة" },
+      { page: "AdminSearchGeoAnalytics", label: "محركات البحث والتحليل الجغرافي", desc: "متابعة جاهزية SEO وتحليل مصادر الزيارات والمدن والصفحات النشطة", permission: ["marketing", "view"] }
     ],
   },
 ];
