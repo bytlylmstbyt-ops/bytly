@@ -16,7 +16,7 @@ export const ADMIN_CATEGORIES = [
       { page: "AdminBoard", label: "مجلس الإدارة", desc: "السلطة العليا والإشراف المؤسسي" },
       { page: "RoleManagement", label: "الحوكمة والصلاحيات", desc: "الأدوار والصلاحيات وسجل التدقيق" },
       { page: "AdminExecutiveManagement", label: "الإدارة التنفيذية", desc: "الوصول المنظم إلى الإدارات التنفيذية" },
-      { page: "AdminExecutiveDashboard", label: "لوحة المدير التنفيذي", desc: "ملخص المؤشرات والقرارات والمتابعة التنفيذية" }
+      { page: "AdminExecutiveDashboard", label: "لوحة المدير التنفيذي", desc: "ملخص المؤشرات والقرارات والمتابعة التنفيذية" },
       { page: "AdminStrategicChange", label: "التخطيط والتغيير الاستراتيجي", desc: "الأهداف والمبادرات والقرارات الاستراتيجية" },
     ],
   },
