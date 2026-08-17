@@ -96,8 +96,8 @@ export default function AdminControlCenter() {
 
   return (
     <div className="min-h-screen bg-[#F7F8FC] px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-      <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row-reverse gap-6 items-stretch" dir="rtl">
-        <nav className="w-full md:w-[280px] md:shrink-0 rounded-2xl bg-[#11162A] border border-[#252D47] shadow-xl p-3 flex md:flex-col gap-1 overflow-x-auto md:overflow-visible md:sticky md:top-4 md:h-[calc(100vh-32px)] md:max-h-[calc(100vh-32px)] md:overflow-y-auto" aria-label="قائمة مركز الإدارة">
+      <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row gap-6 items-stretch" dir="ltr">
+        <nav className="order-2 md:order-1 w-full md:w-[280px] md:shrink-0 rounded-2xl bg-[#11162A] border border-[#252D47] shadow-xl p-3 flex md:flex-col gap-1 overflow-x-auto md:overflow-visible md:sticky md:top-4 md:h-[calc(100vh-32px)] md:max-h-[calc(100vh-32px)] md:overflow-y-auto" aria-label="قائمة مركز الإدارة">
           {visibleCategories.map((cat) => {
             const Icon = cat.icon;
             const isActive = cat.key === activeKey;
@@ -119,7 +119,7 @@ export default function AdminControlCenter() {
           })}
         </nav>
 
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0" dir="rtl">
         <div className="mb-6 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
           <div className="text-right">
             <div className="inline-flex items-center gap-2 rounded-full bg-[#F1EEFF] text-[#5142A4] px-3 py-1 text-xs font-medium mb-2">
