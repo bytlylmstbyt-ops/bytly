@@ -165,7 +165,23 @@ export default function AdminControlCenter() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {active.items.map((item) => (
+            {active.items.map((item) => {
+              const itemPermission = {
+                PlatformDashboard: ["analytics", "view"],
+                AdminProjects: ["projects", "view"], Projects: ["projects", "view"], ProjectProposals: ["projects", "view"], CompareProposals: ["projects", "view"], DataClassification: ["projects", "view"], PermitApplication: ["projects", "view"],
+                AdminEngineers: ["engineers", "view"], AdminClients: ["clients", "view"], RoleManagement: ["settings", "roles"], UserRoleAssignment: ["settings", "roles"], PendingApprovals: ["engineers", "approve"],
+                AdminProviders: ["providers", "view"], ConsultingFirms: ["providers", "view"], AdminMarketEntities: ["providers", "view"],
+                ContractManager: ["contracts", "view"], ContractArchive: ["contracts", "view"], ContractTemplates: ["contracts", "view"], ContractAmendments: ["contracts", "edit"],
+                AdminWallet: ["payments", "view"], AdminWalletDashboard: ["payments", "view"], AdminRefundControl: ["payments", "refund"], AllWithdrawalRequests: ["payments", "process"], InvoiceManager: ["invoices", "view"], RevenueDashboard: ["analytics", "view"], AdminRevenueReport: ["analytics", "view"],
+                AdminDisputes: ["disputes", "view"], AdminDisputeManage: ["disputes", "manage"],
+                NotificationCenter: ["notifications", "view"], NotificationSettings: ["notifications", "edit"], SentEmailsLog: ["email", "view"],
+                AdminReports: ["analytics", "view"], Analytics: ["analytics", "view"], TaskReports: ["analytics", "view"], AdminReviews: ["analytics", "view"],
+                AdminCategories: ["settings", "edit"], AdminCommissionSettings: ["settings", "edit"], AdminSubscriptionControl: ["settings", "edit"], Settings: ["settings", "edit"],
+                BIMDashboard: ["projects", "view"], BIMQuantitiesReport: ["projects", "view"], BIMSearch: ["projects", "view"], AdminWorkflowAutomation: ["workflows", "view"], AdminDomains: ["domains", "view"], AdminIntegrations: ["integrations", "view"], AdminEmailCenter: ["email", "view"], AdminMarketingCenter: ["marketing", "view"], MarketingHub: ["marketing", "edit"], SocialAnalytics: ["marketing", "view"], AdminSearchGeoAnalytics: ["marketing", "view"],
+              }[item.page];
+              const allowed = isAdmin || permissionsAdmin || (itemPermission ? can(itemPermission[0], itemPermission[1]) : can(categoryResource[active.key] || active.key, "view"));
+              if (!allowed) return null;
+              return (
               <Link key={item.page} to={createPageUrl(item.page)}>
                 <Card className="h-full border-r-4 border-[#C9A66B] hover:shadow-md transition-shadow group">
                   <CardContent className="p-4 flex items-start justify-between gap-2">
@@ -177,7 +193,8 @@ export default function AdminControlCenter() {
                   </CardContent>
                 </Card>
               </Link>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
