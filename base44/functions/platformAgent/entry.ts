@@ -28,9 +28,18 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 // ════════════════════════════════════════════════════════════════════════
 
 // ── Agent Tool Registry ─────────────────────────────────────────────────
-// The registry is intentionally small and explicit. The agent can only
-// invoke tools listed here; unknown tool names are rejected. High-risk
-// data/permission/financial/code operations are NOT exposed as tools.
+// Each role receives only the tools and entities appropriate to its job.
+// The platform owner/admin gets the broadest business access, while finance,
+// projects, marketing and operations stay inside their own domains.
+const ROLE_POLICIES = {
+  admin: { tools: ['*'], entities: ['*'] },
+  executive_manager: { tools: ['navigate_admin_page','refresh_index_status','query_entity','create_entity','update_entity','create_strategic_goal','create_strategic_initiative','create_strategic_decision'], entities: ['*'] },
+  finance_manager: { tools: ['navigate_admin_page','query_entity','create_entity','update_entity'], entities: ['Invoice','Payment','PlatformRevenue','Transaction','Subscription','WithdrawalRequest','Contract'] },
+  project_manager: { tools: ['navigate_admin_page','query_entity','create_entity','update_entity'], entities: ['Project','ProjectTask','Task','ProjectMilestone','Contract','Engineer','EngineeringFirm','Contractor','Consultant','Supplier'] },
+  marketing_manager: { tools: ['navigate_admin_page','query_entity','create_entity','update_entity'], entities: ['Lead','Client','ClientInteraction','EmailCampaign','SocialPost','Advertiser','Advertisement','Review'] },
+  operations_manager: { tools: ['navigate_admin_page','query_entity','create_entity','update_entity'], entities: ['Client','Engineer','EngineeringFirm','Contractor','Supplier','Consultant','SupportTicket','Complaint','Notification','Project'] },
+};
+
 const TOOL_REGISTRY = {
   navigate_admin_page: { risk: 'low', description: 'فتح صفحة إدارية داخل لوحة التحكم' },
   refresh_index_status: { risk: 'low', description: 'قراءة حالة فهرس المشروع' },
@@ -50,7 +59,21 @@ const ENTITY_TOOL_ALLOWLIST = new Set([
   'UserRole','Role','AutomationRule','EmailCampaign','SocialPost','Advertiser','Advertisement','ReadyMadeDesign'
 ]);
 
+function getAgentPolicy(user) {
+  const role = String(user?.data?.admin_role || user?.admin_role || user?.role || 'admin');
+  return ROLE_POLICIES[role] || ROLE_POLICIES.admin;
+}
+
+function canUseTool(policy, toolName) {
+  return policy.tools.includes('*') || policy.tools.includes(toolName);
+}
+
+function canUseEntity(policy, entityName) {
+  return policy.entities.includes('*') || policy.entities.includes(entityName);
+}
+
 async function executeAgentTool(base44, toolName, args, user) {
+  const policy = getAgentPolicy(user);
   const tool = TOOL_REGISTRY[toolName];
   if (!tool) throw new Error('الأداة المطلوبة غير مسموح بها للوكيل.');
   if (toolName === 'navigate_admin_page') {
@@ -65,7 +88,7 @@ async function executeAgentTool(base44, toolName, args, user) {
   }
   if (toolName === 'query_entity') {
     const entityName = String(args?.entity_name || '').trim();
-    if (!ENTITY_TOOL_ALLOWLIST.has(entityName)) throw new Error('هذا مصدر البيانات غير مسموح للوكيل بقراءته.');
+    if (!ENTITY_TOOL_ALLOWLIST.has(entityName) || !canUseEntity(policy, entityName) || !canUseTool(policy, toolName)) throw new Error('دورك الإداري لا يملك صلاحية قراءة هذا المصدر.');
     const query = (args?.query && typeof args.query === 'object') ? args.query : {};
     const limit = Math.min(Math.max(Number(args?.limit || 20), 1), 100);
     const rows = await base44.asServiceRole.entities[entityName].filter(query, args?.sort || '-created_date', limit);
@@ -73,14 +96,14 @@ async function executeAgentTool(base44, toolName, args, user) {
   }
   if (toolName === 'create_entity') {
     const entityName = String(args?.entity_name || '').trim();
-    if (!ENTITY_TOOL_ALLOWLIST.has(entityName)) throw new Error('هذا الكيان غير مسموح للوكيل بالكتابة إليه.');
+    if (!ENTITY_TOOL_ALLOWLIST.has(entityName) || !canUseEntity(policy, entityName) || !canUseTool(policy, toolName)) throw new Error('دورك الإداري لا يملك صلاحية إنشاء هذا النوع من السجلات.');
     if (!args?.data || typeof args.data !== 'object') throw new Error('بيانات السجل مطلوبة.');
     const row = await base44.asServiceRole.entities[entityName].create(args.data);
     return { tool: toolName, entity_name: entityName, id: row.id, message: `تم إنشاء سجل جديد في ${entityName}.` };
   }
   if (toolName === 'update_entity') {
     const entityName = String(args?.entity_name || '').trim();
-    if (!ENTITY_TOOL_ALLOWLIST.has(entityName)) throw new Error('هذا الكيان غير مسموح للوكيل بتعديله.');
+    if (!ENTITY_TOOL_ALLOWLIST.has(entityName) || !canUseEntity(policy, entityName) || !canUseTool(policy, toolName)) throw new Error('دورك الإداري لا يملك صلاحية تعديل هذا النوع من السجلات.');
     const id = String(args?.id || '').trim();
     if (!id || !args?.data || typeof args.data !== 'object') throw new Error('معرف السجل والبيانات المعدلة مطلوبان.');
     const row = await base44.asServiceRole.entities[entityName].update(id, args.data);
