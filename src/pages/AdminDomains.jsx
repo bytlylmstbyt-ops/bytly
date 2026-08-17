@@ -276,7 +276,7 @@ export default function AdminDomains() {
               <Button variant="outline" onClick={() => setDialog(null)}>يغلق</Button>
               <Button className="bg-[#4a4642] text-white hover:bg-[#3d3935]" disabled={verifyStatus === "verifying"} onClick={handleVerify}>تحقق من النطاق</Button>
             </DialogFooter>
-          </>
+          </>}
           {dialog === "delete-domain" && <>
             <DialogHeader><DialogTitle className="flex items-center gap-2 text-red-600"><Trash2 className="w-5 h-5" />حذف النطاق</DialogTitle><DialogDescription>سيؤدي حذف النطاق إلى إلغاء ربطه بالمنصة. لن يتم حذف النطاق نفسه من مزود التسجيل.</DialogDescription></DialogHeader>
             <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-xs text-red-700 flex items-start gap-2"><FileText className="w-4 h-4 mt-0.5 shrink-0" />سيستمر المستخدمون في الوصول عبر الرابط المجاني mybytly.base44.app بعد الحذف.</div>
