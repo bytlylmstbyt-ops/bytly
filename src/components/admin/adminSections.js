@@ -90,10 +90,11 @@ export const ADMIN_CATEGORIES = [
   },
   {
     key: "payments",
-    label: "المدفوعات والمحفظة",
+    label: "الإدارة المالية",
     icon: Wallet,
     description: "المحافظ، الإيرادات، طلبات السحب، والفواتير.",
     items: [
+      { page: "AdminFinanceDashboard", label: "لوحة المدير المالي", desc: "ملخص مالي للفواتير والإيرادات والسحوبات والاستردادات" },
       { page: "AdminWallet", label: "إدارة المحافظ", desc: "أرصدة ومعاملات المحافظ", permission: ["payments", "view"] },
       { page: "AdminWalletDashboard", label: "لوحة المحافظ", desc: "نظرة عامة على حركة المحافظ" },
       { page: "AdminRefundControl", label: "إدارة المبالغ المستردة", desc: "طلبات الاسترداد" },
