@@ -142,6 +142,14 @@ Deno.serve(async (req) => {
 Routes:
 - "data_question": the admin is asking about existing platform data/status (e.g. "which projects need follow-up", "revenue this month", "top-rated engineers", "any pending requests", "summarize today").
 - "change_request": the admin wants something about the platform's UI/behavior added, changed, or removed (e.g. "add a filter", "change this page's title", "add a stats card", "reorder these cards") — including requests that will turn out to need extra review (deleting data, changing commissions, permissions, payments, etc.) — those still route here and get blocked downstream, they are not a separate route.
+- "tool_request": the admin is asking the agent to perform one of the explicitly registered safe actions below. Use this only when the request clearly maps to a registered tool and is not a general UI/code change.
+Registered tools:
+  • navigate_admin_page(page): open/navigate to an allowed admin page.
+  • refresh_index_status(): read the current project-index status.
+  • create_strategic_goal(title, description, owner, status, progress, target_date): create a strategic goal; requires explicit approval.
+  • create_strategic_initiative(title, description, owner, status, progress, target_date): create a strategic initiative; requires explicit approval.
+  • create_strategic_decision(title, description, owner, status, due_date, follow_up): register a strategic decision; requires explicit approval.
+For tool_request return the exact tool_name and JSON tool_args. Never invent tools.
 - "execution_confirm": the admin is confirming/cancelling a change plan that was just shown to them — short imperative confirmations like "نفّذ", "execute", "موافق", "yes do it", "طبّق التغيير", "إلغاء", "cancel that". Only use this route if the message is clearly a confirmation/cancellation of something already proposed, not a new request.
 
 Context: ${pendingPlanId ? 'There IS a change plan currently awaiting the admin\'s decision.' : 'There is NO change plan currently awaiting a decision.'}
@@ -149,7 +157,7 @@ Recent conversation (oldest first, may be empty): ${JSON.stringify(recentHistory
 
 Message: "${message}"
 
-Respond with: route, language ("ar"/"en"), detected_intent (one short English sentence for logging), and confirm_action ("approve" or "reject", only meaningful when route is "execution_confirm" — default "approve" for affirmative confirmations, "reject" for cancellations).`,
+Respond with: route, language ("ar"/"en"), detected_intent (one short English sentence for logging), confirm_action ("approve" or "reject", only meaningful when route is "execution_confirm" — default "approve" for affirmative confirmations, "reject" for cancellations), tool_name (empty string unless route is tool_request), and tool_args (JSON object; empty object unless route is tool_request).`,
       add_context_from_internet: false,
       response_json_schema: {
         type: 'object',
