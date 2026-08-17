@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, ShieldAlert, ArrowUpRight, Globe2, ShieldCheck, Mail, Server, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Loader2, ShieldAlert, ArrowUpRight, LayoutDashboard, ChevronLeft } from "lucide-react";
 import { ADMIN_CATEGORIES as CATEGORIES } from "@/components/admin/adminSections";
 import { usePermissions } from "@/components/auth/usePermissions";
 import { readAdminFilters, writeAdminFilters } from "@/components/admin/adminFilterPersistence";
@@ -95,48 +95,40 @@ export default function AdminControlCenter() {
   const active = visibleCategories.find((c) => c.key === safeActiveKey) || visibleCategories[0] || CATEGORIES[0];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#4A3F35]">مركز إدارة المنصة</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          كل أدوات إدارة بيتلي في مكان واحد — اختر قسمًا من القائمة، ثم افتح الصفحة المناسبة.
-        </p>
-      </div>
-
-      <div className="mb-6">
-        <Card className="border-0 shadow-sm overflow-hidden">
-          <div className="bg-gradient-to-l from-[#4A3F35] to-[#6B5D4F] p-5 text-white">
-            <h2 className="text-lg font-bold flex items-center gap-2"><Globe2 className="w-5 h-5" />مركز إدارة النطاقات</h2>
-            <p className="text-sm text-white/75 mt-1">إدارة النطاقات المرتبطة بمنصة بيتلي وحالة الربط والتحقق والأمان والبريد.</p>
+    <div className="min-h-screen bg-[#F7F8FC] px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-7 rounded-2xl bg-gradient-to-l from-[#211B3A] via-[#30245B] to-[#4A3F8A] text-white p-6 md:p-7 shadow-lg">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-3 py-1 text-xs mb-3">
+                <LayoutDashboard className="w-3.5 h-3.5" /> لوحة القيادة التنفيذية
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold">مركز إدارة المنصة</h1>
+              <p className="text-sm text-white/75 mt-2 max-w-2xl">نظرة موحدة على الأداء المالي، إنجاز المشاريع، أداء المهندسين، والمستخدمين مع وصول سريع إلى جميع إدارات المنصة.</p>
+            </div>
+            <div className="rounded-xl bg-white/10 border border-white/15 px-4 py-3 text-sm min-w-[210px]">
+              <p className="text-white/60 text-xs">مستوى الإدارة</p>
+              <p className="font-semibold mt-1">مركز الإدارة الرئيسي</p>
+              <p className="text-emerald-300 text-xs mt-1">صلاحيات الإدارة محمّلة</p>
+            </div>
           </div>
-          <CardContent className="p-5 space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="rounded-xl border p-4"><div className="flex items-center gap-2 text-xs text-slate-500"><Globe2 className="w-4 h-4" />النطاق الأساسي</div><p className="font-bold text-[#4A3F35] mt-2">mybaytly.com</p><span className="inline-flex items-center gap-1 mt-2 rounded-full bg-emerald-100 text-emerald-700 px-2 py-1 text-xs"><CheckCircle2 className="w-3 h-3" />نشط</span></div>
-              <div className="rounded-xl border p-4"><div className="flex items-center gap-2 text-xs text-slate-500"><ShieldCheck className="w-4 h-4" />SSL</div><p className="font-bold text-[#4A3F35] mt-2">مؤمّن</p><span className="inline-flex items-center gap-1 mt-2 rounded-full bg-emerald-100 text-emerald-700 px-2 py-1 text-xs"><CheckCircle2 className="w-3 h-3" />شهادة صالحة</span></div>
-              <div className="rounded-xl border p-4"><div className="flex items-center gap-2 text-xs text-slate-500"><Mail className="w-4 h-4" />نطاق البريد</div><p className="font-bold text-[#4A3F35] mt-2">mybaytly.com</p><span className="inline-flex items-center gap-1 mt-2 rounded-full bg-emerald-100 text-emerald-700 px-2 py-1 text-xs"><CheckCircle2 className="w-3 h-3" />مهيأ</span></div>
-            </div>
-            <div className="rounded-xl border bg-slate-50 p-4">
-              <div className="flex items-center gap-2 mb-3"><Server className="w-4 h-4 text-[#C9A66B]" /><h3 className="font-bold text-[#4A3F35]">النطاقات المرتبطة</h3></div>
-              <div className="bg-white rounded-xl border p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3"><div><p className="font-semibold">mybaytly.com</p><p className="text-xs text-slate-500 mt-1">النطاق الافتراضي للمنصة • DNS متصل • SSL نشط</p></div><span className="rounded-full bg-emerald-100 text-emerald-700 px-2.5 py-1 text-xs font-medium">نشط</span></div>
-            </div>
-            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex gap-3"><AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" /><div><p className="font-semibold text-amber-900">إدارة شراء وتجديد النطاقات</p><p className="text-sm text-amber-800 mt-1">الشراء والتجديد غير مفعّلين حاليًا لعدم وجود مزود نطاقات مرتبط. يمكن إضافة التكامل لاحقًا دون تغيير هذه الصفحة.</p></div></div>
-          </CardContent>
-        </Card>
-      </div>
+        </div>
 
-      <MonthlyRevenueSummaryPanel />
-      <FinancialChartsPanel />
-      <ProjectCompletionTrendPanel />
-      <EngineerPerformancePanel />
+        <div className="space-y-5">
+          <MonthlyRevenueSummaryPanel />
+          <FinancialChartsPanel />
+          <ProjectCompletionTrendPanel />
+          <EngineerPerformancePanel />
+        </div>
 
-      {activeKey === "bim" && <BIMProjectFilesPanel />}
+        {activeKey === "bim" && <BIMProjectFilesPanel />}
 
-      <div className="grid grid-cols-1 md:grid-cols-[240px_1fr] gap-6">
+        <div className="mt-7 grid grid-cols-1 md:grid-cols-[250px_1fr] gap-5">
         {visibleCategories.length === 0 && (
           <Card className="md:col-span-2"><CardContent className="p-8 text-center text-slate-500">لا توجد إدارات أو صفحات مخصصة لدورك حاليًا.</CardContent></Card>
         )}
         {/* Category nav */}
-        <nav className="flex md:flex-col gap-1.5 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+        <nav className="rounded-2xl bg-white border border-slate-200 shadow-sm p-2 flex md:flex-col gap-1.5 overflow-x-auto md:overflow-visible pb-2 md:pb-2 h-fit md:sticky md:top-4">
           {visibleCategories.map((cat) => {
             const Icon = cat.icon;
             const isActive = cat.key === activeKey;
@@ -146,12 +138,13 @@ export default function AdminControlCenter() {
                 onClick={() => setActiveKey(cat.key)}
                 className={`flex items-center gap-2.5 shrink-0 md:shrink text-sm font-medium rounded-lg px-3 py-2.5 text-right transition-colors ${
                   isActive
-                    ? "bg-[#4A3F35] text-white"
-                    : "text-[#4A3F35] hover:bg-[#FEF9EE] border border-transparent hover:border-[#C9A66B]/30"
+                    ? "bg-gradient-to-l from-[#30245B] to-[#5142A4] text-white shadow-sm"
+                    : "text-[#4A3F35] hover:bg-[#F3F1FF] border border-transparent hover:border-[#D8D2F4]"
                 }`}
               >
                 <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-[#C9A66B]" : "text-[#C9A66B]"}`} />
-                <span className="whitespace-nowrap md:whitespace-normal">{cat.label}</span>
+                <span className="whitespace-nowrap md:whitespace-normal flex-1">{cat.label}</span>
+                {isActive && <ChevronLeft className="w-3.5 h-3.5 opacity-70" />}
               </button>
             );
           })}
@@ -160,8 +153,10 @@ export default function AdminControlCenter() {
         {/* Active category content */}
         <div>
           <div className="mb-4">
-            <h2 className="text-base font-bold text-[#4A3F35]">{active.label}</h2>
-            <p className="text-xs text-slate-500 mt-0.5">{active.description}</p>
+            <div className="rounded-2xl bg-white border border-slate-200 shadow-sm px-5 py-4">
+              <h2 className="text-lg font-bold text-[#2F2945]">{active.label}</h2>
+              <p className="text-xs text-slate-500 mt-1">{active.description}</p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
