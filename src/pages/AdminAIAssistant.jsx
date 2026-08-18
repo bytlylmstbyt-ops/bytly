@@ -301,6 +301,7 @@ export default function AdminAIAssistant() {
   const [historyOpen, setHistoryOpen] = useState(true);
   const [pendingAttachments, setPendingAttachments] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const scrollRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -359,6 +360,26 @@ export default function AdminAIAssistant() {
       role: m.role,
       text: m.text || m.answer || m.plan?.detected_intent || "",
     }));
+
+  const ADDONS = [
+    { id: "github", label: "GitHub", description: "ربط مستودع الكود لاحقًا", icon: "⌘" },
+    { id: "openai", label: "ChatGPT / OpenAI", description: "إضافة قدرات الذكاء الاصطناعي", icon: "✦" },
+    { id: "supabase", label: "Supabase", description: "قاعدة البيانات والـBackend", icon: "◈" },
+    { id: "drive", label: "Google Drive", description: "الملفات والمستندات", icon: "▣" },
+    { id: "custom", label: "تكامل مخصص", description: "إضافة خدمة أو API أخرى", icon: "＋" },
+  ];
+
+  const selectAddon = (addon) => {
+    setAddMenuOpen(false);
+    const prompts = {
+      github: "أريد ربط بيتلي بمستودع GitHub الخاص بالمشروع.",
+      openai: "أريد إضافة تكامل OpenAI / ChatGPT للمساعد.",
+      supabase: "أريد ربط المساعد بـ Supabase.",
+      drive: "أريد ربط المساعد بـ Google Drive.",
+      custom: "أريد إضافة تكامل مخصص: ",
+    };
+    setInput(prompts[addon.id]);
+  };
 
   const send = async (text) => {
     const q = (text ?? input).trim();
@@ -617,8 +638,28 @@ export default function AdminAIAssistant() {
                 ))}
               </div>
             )}
-            <div className="flex items-end gap-2">
+            <div className="flex items-end gap-2 relative">
               <input ref={fileInputRef} type="file" multiple hidden onChange={handleFileSelect} accept="image/*,.pdf,.doc,.docx,.xlsx,.csv,.txt" />
+              <div className="relative shrink-0">
+                <Button type="button" variant="outline" size="icon" onClick={() => setAddMenuOpen(v => !v)} title="إضافة تكامل أو أداة" className="rounded-xl border-[#C9A66B]/50 text-[#4A3F35]">
+                  <Plus className="w-5 h-5" />
+                </Button>
+                {addMenuOpen && (
+                  <div className="absolute bottom-12 right-0 z-50 w-72 rounded-2xl border border-[#EFE6D3] bg-white shadow-xl p-2">
+                    <div className="px-3 py-2 border-b border-slate-100 mb-1">
+                      <p className="text-sm font-bold text-[#4A3F35]">إضافة تكامل أو أداة</p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">اختاري ما تريدين إضافته للمساعد</p>
+                    </div>
+                    {ADDONS.map((addon) => (
+                      <button key={addon.id} type="button" onClick={() => selectAddon(addon)} className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#FEF9EE] text-right">
+                        <span className="w-9 h-9 rounded-lg bg-[#FEF9EE] flex items-center justify-center text-[#C9A66B] font-bold">{addon.icon}</span>
+                        <span className="flex-1 min-w-0"><span className="block text-xs font-semibold text-[#4A3F35]">{addon.label}</span><span className="block text-[10px] text-slate-400 mt-0.5">{addon.description}</span></span>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <Button type="button" variant="outline" size="icon" disabled={uploading} onClick={() => fileInputRef.current?.click()} title="إرفاق صورة أو ملف" className="shrink-0">
                 {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
               </Button>
