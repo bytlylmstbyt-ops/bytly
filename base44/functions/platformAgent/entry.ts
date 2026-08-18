@@ -142,13 +142,31 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const action = body?.action || 'message';
 
-    // ── Execute an approved Agent tool request ─────────────────────────
+    // ── Execute an approved Agent request ──────────────────────────────
+    // Business-data tools can execute here. Source-code edits cannot: the
+    // running Base44 backend has no filesystem/editor API. Those plans are
+    // therefore returned as an explicit editor handoff instead of failing
+    // with the misleading "no execution tool" error.
     if (action === 'execute' && body?.id) {
       const logs = await base44.asServiceRole.entities.AIChangeRequestLog.filter({ id: body.id });
       const plan = logs?.[0];
       if (!plan) return Response.json({ error: 'لم يتم العثور على خطة التنفيذ.' }, { status: 404 });
       if (plan.status !== 'awaiting_approval' && plan.status !== 'approved') return Response.json({ error: 'هذه الخطة ليست في حالة تسمح بالتنفيذ.' }, { status: 400 });
-      if (!plan.execution_tool) return Response.json({ error: 'هذه الخطة لا تحتوي على أداة تنفيذية آمنة.' }, { status: 400 });
+      if (!plan.execution_tool) {
+        if (plan.change_type === 'ui_only' || plan.change_type === 'logic') {
+          await base44.asServiceRole.entities.AIChangeRequestLog.update(plan.id, {
+            status: 'approved',
+            execution_note: 'تمت الموافقة. هذه خطة تعديل للكود وتحتاج جلسة محرر/بيئة تطوير لتطبيق الملفات فعليًا؛ لا يملك Runtime الخاص بالتطبيق وصولًا مباشرًا إلى نظام ملفات المشروع.'
+          });
+          return Response.json({
+            kind: 'decision',
+            status: 'approved',
+            id: plan.id,
+            note: 'تم اعتماد التغيير. تطبيق ملفات الكود يحتاج جلسة محرر/بيئة تطوير، وليس Runtime التطبيق نفسه.'
+          });
+        }
+        return Response.json({ error: 'هذه الخطة لا تحتوي على أداة تنفيذية آمنة.' }, { status: 400 });
+      }
       const tool = TOOL_REGISTRY[plan.execution_tool];
       if (!tool || tool.risk === 'high') return Response.json({ error: 'الأداة غير مسموحة للتنفيذ الآلي.' }, { status: 403 });
       await base44.asServiceRole.entities.AIChangeRequestLog.update(plan.id, { status: 'executing', execution_started_at: new Date().toISOString() });
