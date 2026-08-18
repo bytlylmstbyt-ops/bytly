@@ -235,11 +235,14 @@ const AuthenticatedApp = () => {
         <Route path="/BudgetCalculator"           element={lazyRoute(React.lazy(() => import('./pages/BudgetCalculator')), "BudgetCalculator")} />
         <Route path="/PlatformDashboard"          element={lazyRoute(React.lazy(() => import('./pages/PlatformDashboard')), "PlatformDashboard")} />
         <Route path="/AdminControlCenter"        element={lazyRoute(lazyWithRetry(() => import('./pages/AdminControlCenter')), "AdminControlCenter")} />
+        <Route path="/AdminUserManagementCenter" element={lazyRoute(lazyWithRetry(() => import('./pages/AdminUserManagementCenter')), "AdminUserManagementCenter")} />
         <Route path="/AdminBoard"                element={lazyRoute(lazyWithRetry(() => import('./pages/AdminBoard')), "AdminBoard")} />
         <Route path="/AdminExecutiveManagement" element={lazyRoute(lazyWithRetry(() => import('./pages/AdminExecutiveManagement')), "AdminExecutiveManagement")} />
+        <Route path="/AdminExecutiveDashboard" element={lazyRoute(lazyWithRetry(() => import('./pages/AdminExecutiveDashboard')), "AdminExecutiveDashboard")} />
         <Route path="/AdminStrategicChange"     element={lazyRoute(lazyWithRetry(() => import('./pages/AdminStrategicChange')), "AdminStrategicChange")} />
         <Route path="/AdminAIAssistant"          element={lazyRoute(lazyWithRetry(() => import('./pages/AdminAIAssistant')), "AdminAIAssistant")} />
         <Route path="/AdminProjects"              element={lazyRoute(lazyWithRetry(() => import('./pages/AdminProjects')), "AdminProjects")} />
+        <Route path="/AdminOperationsDashboard" element={lazyRoute(lazyWithRetry(() => import('./pages/AdminOperationsDashboard')), "AdminOperationsDashboard")} />
         <Route path="/AdminProviders"             element={lazyRoute(React.lazy(() => import('./pages/AdminProviders')), "AdminProviders")} />
         <Route path="/ContractManager"           element={lazyRoute(React.lazy(() => import('./pages/ContractManager')), "ContractManager")} />
         <Route path="/FinancialReports"         element={lazyRoute(FinancialReports, "FinancialReports")} />
@@ -262,6 +265,7 @@ const AuthenticatedApp = () => {
       <Route path="/SquareInvoicePayment"        element={lazyRoute(SquareInvoicePayment, "SquareInvoicePayment")} />
       <Route path="/RevenueDashboard"           element={lazyRoute(RevenueDashboard, "RevenueDashboard")} />
         <Route path="/ProviderWallet"             element={lazyRoute(ProviderWallet, "ProviderWallet")} />
+        <Route path="/AdminFinanceDashboard"       element={lazyRoute(lazyWithRetry(() => import('./pages/AdminFinanceDashboard')), "AdminFinanceDashboard")} />
         <Route path="/SentEmailsLog"               element={lazyRoute(React.lazy(() => import('./pages/SentEmailsLog')), "SentEmailsLog")} />
         <Route path="/QuoteTemplates"               element={lazyRoute(React.lazy(() => import('./pages/QuoteTemplates')), "QuoteTemplates")} />
         {/* Bytly sections & AI tools — auth required */}
@@ -282,6 +286,7 @@ const AuthenticatedApp = () => {
         <Route path="/AdminIntegrations"           element={lazyRoute(React.lazy(() => import('./pages/AdminIntegrations')), "AdminIntegrations")} />
         <Route path="/AdminEmailCenter"            element={lazyRoute(React.lazy(() => import('./pages/AdminEmailCenter')), "AdminEmailCenter")} />
         <Route path="/AdminMarketingCenter"        element={lazyRoute(React.lazy(() => import('./pages/AdminMarketingCenter')), "AdminMarketingCenter")} />
+        <Route path="/AdminMarketingDashboard"     element={lazyRoute(lazyWithRetry(() => import('./pages/AdminMarketingDashboard')), "AdminMarketingDashboard")} />
         <Route path="/AdminSearchGeoAnalytics"   element={lazyRoute(React.lazy(() => import('./pages/AdminSearchGeoAnalytics')), "AdminSearchGeoAnalytics")} />
         <Route path="/AdminWorkflowAutomation"     element={lazyRoute(React.lazy(() => import('./pages/AdminWorkflowAutomation')), "AdminWorkflowAutomation")} />
         <Route path="/MarketingHub"                element={lazyRoute(MarketingHub, "MarketingHub")} />
