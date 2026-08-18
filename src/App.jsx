@@ -261,6 +261,9 @@ const AuthenticatedApp = () => {
         <Route path="/AdminDomains" element={lazyRoute(lazyWithRetry(() => import('./pages/AdminDomains')), "AdminDomains")} />
         <Route path="/AdminProviders"             element={lazyRoute(React.lazy(() => import('./pages/AdminProviders')), "AdminProviders")} />
         <Route path="/ContractManager"           element={lazyRoute(React.lazy(() => import('./pages/ContractManager')), "ContractManager")} />
+        <Route path="/ContractArchive"           element={lazyRoute(React.lazy(() => import('./pages/ContractArchive')), "ContractArchive")} />
+        <Route path="/ContractTemplates"         element={lazyRoute(React.lazy(() => import('./pages/ContractTemplates')), "ContractTemplates")} />
+        <Route path="/ContractAmendments"        element={lazyRoute(React.lazy(() => import('./pages/ContractAmendments')), "ContractAmendments")} />
         <Route path="/FinancialReports"         element={lazyRoute(FinancialReports, "FinancialReports")} />
         <Route path="/Subscription"               element={lazyRoute(React.lazy(() => import('./pages/Subscription')), "Subscription")} />
         <Route path="/SBCProgressDashboard"       element={lazyRoute(SBCProgressDashboard, "SBCProgressDashboard")} />
@@ -270,6 +273,16 @@ const AuthenticatedApp = () => {
         <Route path="/LaunchPerformanceDashboard" element={lazyRoute(LaunchPerformanceDashboard, "LaunchPerformanceDashboard")} />
         <Route path="/CommissionManager"           element={lazyRoute(CommissionManager, "CommissionManager")} />
         <Route path="/NotificationCenter"          element={lazyRoute(NotificationCenter, "NotificationCenter")} />
+        <Route path="/NotificationSettings"        element={lazyRoute(React.lazy(() => import('./pages/NotificationSettings')), "NotificationSettings")} />
+        <Route path="/AllWithdrawalRequests"       element={lazyRoute(React.lazy(() => import('./pages/AllWithdrawalRequests')), "AllWithdrawalRequests")} />
+        <Route path="/InvoiceManager"               element={lazyRoute(React.lazy(() => import('./pages/InvoiceManager')), "InvoiceManager")} />
+        <Route path="/Analytics"                    element={lazyRoute(React.lazy(() => import('./pages/Analytics')), "Analytics")} />
+        <Route path="/TaskReports"                  element={lazyRoute(React.lazy(() => import('./pages/TaskReports')), "TaskReports")} />
+        <Route path="/BIMDashboard"                 element={lazyRoute(React.lazy(() => import('./pages/BIMDashboard')), "BIMDashboard")} />
+        <Route path="/BIMQuantitiesReport"          element={lazyRoute(React.lazy(() => import('./pages/BIMQuantitiesReport')), "BIMQuantitiesReport")} />
+        <Route path="/BIMSearch"                    element={lazyRoute(React.lazy(() => import('./pages/BIMSearch')), "BIMSearch")} />
+        <Route path="/ConsultingFirms"              element={lazyRoute(React.lazy(() => import('./pages/ConsultingFirms')), "ConsultingFirms")} />
+        <Route path="/Settings"                     element={lazyRoute(React.lazy(() => import('./pages/Settings')), "Settings")} />
         <Route path="/AddPortfolio"                element={lazyRoute(AddPortfolio, "AddPortfolio")} />
         <Route path="/EngineerCalendar"            element={lazyRoute(EngineerCalendar, "EngineerCalendar")} />
         <Route path="/ContractorDashboard"          element={lazyRoute(ContractorDashboard, "ContractorDashboard")} />
