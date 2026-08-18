@@ -308,6 +308,37 @@ export default function AdminAIAssistant() {
   const recognitionRef = useRef(null);
   const speechSupported = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
 
+  // Load a saved conversation into the active message list.
+  const loadConversation = async (conv) => {
+    if (!conv) return;
+    try {
+      const parsed = conv.messages_json ? JSON.parse(conv.messages_json) : [];
+      setMessages(Array.isArray(parsed) ? parsed : []);
+    } catch {
+      setMessages([]);
+    }
+    setConversationId(conv.id);
+  };
+
+  // Start a fresh conversation — clears the active thread without deleting saved history.
+  const startNewConversation = () => {
+    setMessages([]);
+    setConversationId(null);
+    setInput("");
+    setPendingAttachments([]);
+    setPendingPlanId(null);
+  };
+
+  // Compact recent history sent to the platform agent for context.
+  const recentHistoryForContext = () =>
+    messages
+      .filter((m) => m.role === "user" || m.role === "assistant" || m.role === "data" || m.role === "plan")
+      .slice(-8)
+      .map((m) => ({
+        role: m.role === "user" ? "user" : "assistant",
+        text: m.text || m.answer || m.plan?.detected_intent || "",
+      }));
+
   useEffect(() => {
     (async () => {
       try {
@@ -353,13 +384,6 @@ export default function AdminAIAssistant() {
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, conversationId]);
-
-          const created = await base44.entities.AIAgentConversation.create({ asked_by_email: currentUser.email, messages_json, attachments_count: attachmentsCount });
-          setConversationId(created.id);
-          setConversations((prev) => [created, ...prev]);
-      role: m.role,
-      text: m.text || m.answer || m.plan?.detected_intent || "",
-    }));
 
   const ADDONS = [
     { id: "github", label: "GitHub", description: "ربط مستودع الكود لاحقًا", icon: "⌘" },
