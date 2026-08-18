@@ -9,6 +9,7 @@ import {
   Sparkles, Send, Loader2, ShieldAlert, ArrowUpRight, ShieldCheck, Eye, HelpCircle,
   Wrench, Database, Server, KeyRound, CheckCircle2, XCircle, AlertTriangle, Ban, MessageCircle,
   RefreshCw, Layers, Plug, ShieldOff, Mic, MicOff, Paperclip, X, FileText, Image as ImageIcon, Bug,
+  Plus, MessageSquare, Trash2, PanelLeftClose, PanelLeftOpen, ChevronRight, History,
 } from "lucide-react";
 
 const EXAMPLE_PROMPTS = [
@@ -17,6 +18,15 @@ const EXAMPLE_PROMPTS = [
   "مين أعلى المهندسين تقييمًا؟",
   "أضف فلتر للمشاريع المتأخرة",
   "أضف بطاقة تعرض عدد المشاريع النشطة",
+];
+
+const QUICK_TEMPLATES = [
+  { label: "تعديل واجهة", prompt: "عدّل واجهة الصفحة التالية: " },
+  { label: "إضافة صفحة", prompt: "أنشئ صفحة جديدة باسم: " },
+  { label: "إضافة زر", prompt: "أضف زرًا إلى الصفحة التالية: " },
+  { label: "إصلاح مشكلة", prompt: "أصلح المشكلة التالية في بيتلي: " },
+  { label: "تحسين التصميم", prompt: "حسّن تصميم الصفحة التالية مع الحفاظ على هوية بيتلي: " },
+  { label: "فحص المشروع", prompt: "افحص المشروع وابحث عن المشاكل أو الأخطاء المهمة: " },
 ];
 
 const RISK_LABELS = {
@@ -287,6 +297,8 @@ export default function AdminAIAssistant() {
   const [pendingPlanId, setPendingPlanId] = useState(null);
   const [refreshingIndex, setRefreshingIndex] = useState(false);
   const [conversationId, setConversationId] = useState(null);
+  const [conversations, setConversations] = useState([]);
+  const [historyOpen, setHistoryOpen] = useState(true);
   const [pendingAttachments, setPendingAttachments] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -302,17 +314,10 @@ export default function AdminAIAssistant() {
         setIsAdmin(u?.role === "admin");
         setCurrentUser(u);
         if (u?.role === "admin") {
-          const existing = await base44.entities.AIAgentConversation.filter({ asked_by_email: u.email }, "-updated_date", 1);
-          if (existing?.[0]) {
-            setConversationId(existing[0].id);
-            try {
-              const parsed = JSON.parse(existing[0].messages_json || "[]");
-              setMessages(Array.isArray(parsed) ? parsed : []);
-              const lastPlan = [...parsed].reverse().find((m) => m.role === "plan" && (m.plan?.status === "awaiting_approval" || m.plan?.status === "proposed") && !m.plan?.blocked);
-              if (lastPlan) setPendingPlanId(lastPlan.id);
-            } catch {
-              setMessages([]);
-            }
+          const history = await base44.entities.AIAgentConversation.filter({ asked_by_email: u.email }, "-updated_date", 50);
+          setConversations(history || []);
+          if (history?.[0]) {
+            await loadConversation(history[0]);
           }
         }
       } catch {
@@ -348,8 +353,9 @@ export default function AdminAIAssistant() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages, conversationId]);
 
-  const recentHistoryForContext = () =>
-    messages.slice(-6).map((m) => ({
+          const created = await base44.entities.AIAgentConversation.create({ asked_by_email: currentUser.email, messages_json, attachments_count: attachmentsCount });
+          setConversationId(created.id);
+          setConversations((prev) => [created, ...prev]);
       role: m.role,
       text: m.text || m.answer || m.plan?.detected_intent || "",
     }));
@@ -485,7 +491,26 @@ export default function AdminAIAssistant() {
   if (!isAdmin) return <AccessDenied />;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+    <div className="max-w-6xl mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-8" dir="rtl">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-[#C9A66B]" />
+            <h1 className="text-2xl font-bold text-[#4A3F35]">مساعد الإدارة المركزي</h1>
+          </div>
+          <p className="text-sm text-slate-500 mt-1">مساعدك كمالكة للمنصة: بيانات، تطوير، فحص، وتخطيط للتغييرات.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => setHistoryOpen(v => !v)} title="إظهار/إخفاء سجل المحادثات">
+            {historyOpen ? <PanelLeftClose className="w-4 h-4" /> : <PanelLeftOpen className="w-4 h-4" />}
+            <span className="hidden sm:inline">المحادثات</span>
+          </Button>
+          <Button size="sm" onClick={startNewConversation} className="bg-[#4A3F35] hover:bg-[#3a3129]">
+            <Plus className="w-4 h-4" /> محادثة جديدة
+          </Button>
+        </div>
+      </div>
+
       <div className="mb-4">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-[#C9A66B]" />
@@ -506,7 +531,37 @@ export default function AdminAIAssistant() {
         </Button>
       </div>
 
-      <Card className="border-[#EFE6D3]">
+      <div className={`grid gap-4 ${historyOpen ? "lg:grid-cols-[260px_minmax(0,1fr)]" : "grid-cols-1"}`}>
+        {historyOpen && (
+          <Card className="border-[#EFE6D3] h-[calc(55vh+170px)] overflow-hidden">
+            <CardContent className="p-3 h-full flex flex-col">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2 text-sm font-bold text-[#4A3F35]"><History className="w-4 h-4 text-[#C9A66B]" /> سجل المحادثات</div>
+                <span className="text-[10px] text-slate-400">{conversations.length}</span>
+              </div>
+              <div className="space-y-1.5 overflow-y-auto flex-1">
+                {conversations.length === 0 ? (
+                  <p className="text-xs text-slate-400 text-center py-8">لا توجد محادثات قديمة</p>
+                ) : conversations.map((conv) => {
+                  let title = "محادثة جديدة";
+                  try {
+                    const parsed = JSON.parse(conv.messages_json || "[]");
+                    const first = parsed.find(m => m.role === "user" && m.text);
+                    if (first?.text) title = first.text.slice(0, 42);
+                  } catch {}
+                  return (
+                    <button key={conv.id} onClick={() => loadConversation(conv)} className={`w-full text-right p-2.5 rounded-lg border transition-colors ${conversationId === conv.id ? "bg-[#FEF9EE] border-[#C9A66B]/50" : "border-transparent hover:bg-slate-50"}`}>
+                      <div className="flex items-start gap-2"><MessageSquare className="w-3.5 h-3.5 mt-0.5 text-[#C9A66B] shrink-0" /><span className="text-xs font-medium text-[#4A3F35] line-clamp-2">{title}</span></div>
+                      <span className="text-[9px] text-slate-400 mr-5">{conv.updated_date ? new Date(conv.updated_date).toLocaleDateString("ar-SA") : ""}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card className="border-[#EFE6D3]">
         <CardContent className="p-4">
           <div ref={scrollRef} className="h-[55vh] overflow-y-auto space-y-3 pr-1">
             {messages.length === 0 && (
@@ -516,10 +571,18 @@ export default function AdminAIAssistant() {
                 <p className="text-xs text-slate-400 -mt-2">اكتب طلبك مباشرة — سؤال بيانات أو طلب تعديل، بدون اختيار نوع مسبقًا</p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   {EXAMPLE_PROMPTS.map((q) => (
-                    <button key={q} onClick={() => send(q)} className="text-xs px-3 py-1.5 rounded-full border border-[#C9A66B]/40 text-[#4A3F35] hover:bg-[#FEF9EE] transition-colors">
-                      {q}
-                    </button>
+                    <button key={q} onClick={() => send(q)} className="text-xs px-3 py-1.5 rounded-full border border-[#C9A66B]/40 text-[#4A3F35] hover:bg-[#FEF9EE] transition-colors">{q}</button>
                   ))}
+                </div>
+                <div className="w-full max-w-2xl mt-2">
+                  <p className="text-[11px] font-semibold text-slate-500 mb-2">قوالب جاهزة للتطوير</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {QUICK_TEMPLATES.map((item) => (
+                      <button key={item.label} onClick={() => setInput(item.prompt)} className="text-xs px-3 py-2 rounded-xl border border-[#EFE6D3] bg-white hover:bg-[#FEF9EE] text-[#4A3F35] text-right transition-colors">
+                        <Wrench className="w-3.5 h-3.5 inline ml-1 text-[#C9A66B]" />{item.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
@@ -578,7 +641,8 @@ export default function AdminAIAssistant() {
             </div>
           </form>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }
