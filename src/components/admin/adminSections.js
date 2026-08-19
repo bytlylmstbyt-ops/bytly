@@ -153,6 +153,7 @@ export const ADMIN_CATEGORIES = [
     description: "الإعدادات العامة والتكوين الأساسي للمنصة.",
     items: [
       { page: "Settings", label: "الإعدادات العامة", desc: "إعدادات الحساب والمنصة" },
+      { page: "AdminAuthenticationSettings", label: "المصادقة والأمان", desc: "تسجيل الدخول، إعادة كلمة المرور، مزودو المصادقة، ووضع الصيانة" },
     ],
   },
   {
