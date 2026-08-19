@@ -52,6 +52,7 @@ import AddDesign from './pages/AddDesign';
 import AddEngineer from './pages/AddEngineer';
 import AddPortfolio from './pages/AddPortfolio';
 import AdminCategories from './pages/AdminCategories';
+import AdminAuthenticationSettings from './pages/AdminAuthenticationSettings';
 import AdminClients from './pages/AdminClients';
 import AdminCommissionSettings from './pages/AdminCommissionSettings';
 import AdminDisputeManage from './pages/AdminDisputeManage';
@@ -162,6 +163,7 @@ export const PAGES = {
     "AddEngineer": AddEngineer,
     "AddPortfolio": AddPortfolio,
     "AdminCategories": AdminCategories,
+    "AdminAuthenticationSettings": AdminAuthenticationSettings,
     "AdminClients": AdminClients,
     "AdminCommissionSettings": AdminCommissionSettings,
     "AdminDisputeManage": AdminDisputeManage,
