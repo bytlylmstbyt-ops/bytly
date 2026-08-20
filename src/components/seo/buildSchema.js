@@ -7,7 +7,7 @@ const SITE = "https://mybytly.com";
 export const softwareSchema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  name: "بيتلي — المنظومة الهندسية المتكاملة",
+  name: "Bytly | بيتلي",
   applicationCategory: "BusinessApplication",
   operatingSystem: "Web, iOS, Android",
   url: SITE,
