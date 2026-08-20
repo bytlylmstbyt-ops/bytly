@@ -240,7 +240,7 @@ export const translations = {
       complaints: "الشكاوى والاقتراحات",
       technicalSupport: "الدعم الفني",
       contactUs: "تواصل معنا",
-      rightsReserved: "بيتلي - المنظومة الهندسية المتكاملة. جميع الحقوق محفوظة.",
+      rightsReserved: "Bytly | بيتلي. جميع الحقوق محفوظة.",
       platform: "المنصة",
       solutionsAndResources: "الحلول والموارد",
       solutions: "الحلول",
