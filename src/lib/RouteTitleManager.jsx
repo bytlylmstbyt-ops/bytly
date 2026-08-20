@@ -7,7 +7,7 @@ import { useLocation } from 'react-router-dom';
  * so <title> is never identical to the in-page <h1> (which stays clean).
  */
 const PAGE_TITLES = {
-  '/': 'المنظومة الهندسية المتكاملة',
+  '/': 'الرئيسية',
   '/Home': 'الرئيسية',
   '/Engineers': 'المهندسون',
   '/EngineerProfile': 'ملف المهندس',
