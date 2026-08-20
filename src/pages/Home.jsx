@@ -160,7 +160,7 @@ export default function Home() {
 
   return (
     <div className="overflow-hidden">
-      <JsonLd data={webPageSchema({ name: "بيتلي — المنظومة الهندسية المتكاملة", description: "منصة هندسية متكاملة تجمع المهندسين والمعماريين والمساحين مع أصحاب المشاريع في المملكة العربية السعودية.", path: "" })} />
+      <JsonLd data={webPageSchema({ name: "Bytly | بيتلي", description: "منصة هندسية متكاملة تجمع المهندسين والمعماريين والمساحين مع أصحاب المشاريع في المملكة العربية السعودية.", path: "" })} />
       {/* Welcome Onboarding */}
       {showWelcome && userType === 'engineer' && (
         <ProfessionalWelcomeSlides 
