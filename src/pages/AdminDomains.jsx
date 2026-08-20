@@ -14,7 +14,7 @@ export default function AdminDomains() {
   const [redirects, setRedirects] = useState([]);
   const [redirectPath, setRedirectPath] = useState("");
   const [sender, setSender] = useState("info@mybytly.com");
-  const [senderName, setSenderName] = useState("بيتلي - المنظومة الهندسية المتكاملة");
+  const [senderName, setSenderName] = useState("Bytly | بيتلي");
   const [connectedDomain, setConnectedDomain] = useState("");
   const [copiedField, setCopiedField] = useState("");
   const [verifyStatus, setVerifyStatus] = useState(null); // null | 'verifying' | 'success' | 'failed'
