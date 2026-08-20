@@ -192,7 +192,7 @@ export default async function(req) {
         </div>
 
         <div style="background:#4A3F35;color:#999;padding:12px;text-align:center;font-size:11px">
-          © ${new Date().getFullYear()} بيتلي — المنظومة الهندسية المتكاملة
+          © ${new Date().getFullYear()} Bytly | بيتلي
         </div>
       </div>
     </div>`;
