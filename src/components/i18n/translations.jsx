@@ -1421,7 +1421,7 @@ export const translations = {
       complaints: "Complaints & Suggestions",
       technicalSupport: "Technical Support",
       contactUs: "Contact Us",
-      rightsReserved: "Bytly - Integrated Engineering Ecosystem. All Rights Reserved.",
+      rightsReserved: "Bytly | بيتلي. All Rights Reserved.",
       platform: "Platform",
       solutionsAndResources: "Solutions & Resources",
       solutions: "Solutions",
