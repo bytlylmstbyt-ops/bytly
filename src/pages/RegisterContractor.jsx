@@ -172,11 +172,7 @@ export default function RegisterContractor() {
         ...formData,
         email: user.email
       });
-      try { await base44.functions.invoke("notifyNewUserSignup", { role: "contractor", data: contractor }); }
-      catch (notifyErr) { console.error("notifyNewUserSignup contractor failed (non-blocking):", notifyErr); }
-      try { await base44.functions.invoke("sendWelcomeEmail", { role: "contractor", id: contractor.id }); }
-      catch (welcomeErr) { console.error("sendWelcomeEmail contractor failed (non-blocking):", welcomeErr); }
-
+      // Registration completion must not depend on email/integration credits.
       toast.success("تم تسجيل المقاول بنجاح! في انتظار الموافقة من الإدارة");
       navigate(createPageUrl("RegistrationSuccess"));
     } catch (error) {
