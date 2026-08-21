@@ -70,8 +70,10 @@ export default function RegisterClient() {
       total_projects: 0
     });
 
-    // The account/profile creation is the critical path. Email notifications must never
-    // prevent a successful registration when Base44 credits or integrations are unavailable.
+    try { await base44.functions.invoke("notifyNewUserSignup", { role: "client", data: client }); }
+    catch (notifyErr) { console.error("notifyNewUserSignup client failed:", notifyErr); }
+    try { await base44.functions.invoke("sendWelcomeEmail", { role: "client", id: client.id }); }
+    catch (welcomeErr) { console.error("sendWelcomeEmail client failed:", welcomeErr); }
 
     setIsLoading(false);
     navigate(createPageUrl("RegistrationSuccess"));
