@@ -327,9 +327,26 @@ export default function RegisterEngineer() {
         }
       }
 
-      // Registration is intentionally complete after the Engineer record is created.
-      // Notifications/emails are handled asynchronously and must not depend on credits
-      // or prevent the user from completing registration.
+      // Registration notifications: restore the original welcome/admin notification flow.
+      // Each notification is isolated so a notification failure does not undo the created profile.
+      try { await base44.functions.invoke("notifyNewUserSignup", { role: formData.user_type === "surveyor" ? "surveyor" : "engineer", data: engineer }); }
+      catch (notifyErr) { console.error("notifyNewUserSignup engineer failed:", notifyErr); }
+      try { await base44.functions.invoke("sendWelcomeEmail", { role: formData.user_type === "surveyor" ? "surveyor" : "engineer", id: engineer.id }); }
+      catch (welcomeErr) { console.error("sendWelcomeEmail engineer failed:", welcomeErr); }
+      try { await base44.functions.invoke("notifyNewEngineer", { engineer_id: engineer.id }); }
+      catch (notifyErr) { console.error("notifyNewEngineer failed:", notifyErr); }
+      try {
+        await base44.functions.invoke("notifyNewRegistration", {
+          eventType: "engineer_registered",
+          data: {
+            full_name: formData.full_name,
+            email: formData.email,
+            user_type: formData.user_type,
+            specialization: formData.specialization
+          }
+        });
+      } catch (notifyErr) { console.error("notifyNewRegistration failed:", notifyErr); }
+
       try {
         base44.analytics.track({
           eventName: "engineer_profile_created",
