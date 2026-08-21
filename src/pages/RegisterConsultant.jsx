@@ -50,8 +50,11 @@ export default function RegisterConsultantPage() {
         terms_accepted: true,
         terms_accepted_date: new Date().toISOString()
       });
-      // Notifications are intentionally outside the registration critical path so that
-      // exhausted Base44 credits/integrations cannot block account creation.
+      try { await base44.functions.invoke("notifyNewUserSignup", { role: "consultant", data: consultant }); }
+      catch (notifyErr) { console.error("notifyNewUserSignup consultant failed:", notifyErr); }
+      try { await base44.functions.invoke("sendWelcomeEmail", { role: "consultant", id: consultant.id }); }
+      catch (welcomeErr) { console.error("sendWelcomeEmail consultant failed:", welcomeErr); }
+
       alert("تم تقديم طلب التسجيل بنجاح! سيتم مراجعته من قبل الإدارة.");
       navigate(createPageUrl("RegistrationSuccess"));
     } catch (error) {
