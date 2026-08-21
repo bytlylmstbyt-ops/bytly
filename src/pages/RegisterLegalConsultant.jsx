@@ -54,11 +54,8 @@ export default function RegisterLegalConsultantPage() {
           accepted_date: new Date().toISOString()
         }
       });
-      try { await base44.functions.invoke("notifyNewUserSignup", { role: "legal_consultant", data: legalConsultant }); }
-      catch (notifyErr) { console.error("notifyNewUserSignup legal consultant failed (non-blocking):", notifyErr); }
-      try { await base44.functions.invoke("sendWelcomeEmail", { role: "legal_consultant", id: legalConsultant.id }); }
-      catch (welcomeErr) { console.error("sendWelcomeEmail legal consultant failed (non-blocking):", welcomeErr); }
-
+      // Notifications are intentionally outside the registration critical path so that
+      // exhausted Base44 credits/integrations cannot block account creation.
       alert("تم تقديم طلب التسجيل بنجاح! سيتم مراجعته من قبل الإدارة.");
       navigate(createPageUrl("RegistrationSuccess"));
     } catch (error) {
