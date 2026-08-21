@@ -69,10 +69,9 @@ export default function RegisterClient() {
       wallet_balance: 0,
       total_projects: 0
     });
-    try { await base44.functions.invoke("notifyNewUserSignup", { role: "client", data: client }); }
-    catch (notifyErr) { console.error("notifyNewUserSignup client failed (non-blocking):", notifyErr); }
-    try { await base44.functions.invoke("sendWelcomeEmail", { role: "client", id: client.id }); }
-    catch (welcomeErr) { console.error("sendWelcomeEmail client failed (non-blocking):", welcomeErr); }
+
+    // The account/profile creation is the critical path. Email notifications must never
+    // prevent a successful registration when Base44 credits or integrations are unavailable.
 
     setIsLoading(false);
     navigate(createPageUrl("RegistrationSuccess"));
