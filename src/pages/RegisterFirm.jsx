@@ -141,7 +141,11 @@ export default function RegisterFirm() {
         ...formData,
         email: user.email
       });
-      // Registration completion must not depend on email/integration credits.
+      try { await base44.functions.invoke("notifyNewUserSignup", { role: "firm", data: firm }); }
+      catch (notifyErr) { console.error("notifyNewUserSignup firm failed:", notifyErr); }
+      try { await base44.functions.invoke("sendWelcomeEmail", { role: "firm", id: firm.id }); }
+      catch (welcomeErr) { console.error("sendWelcomeEmail firm failed:", welcomeErr); }
+
       toast.success("تم تسجيل الشركة الاستشارية بنجاح! في انتظار الموافقة من الإدارة");
       navigate(createPageUrl("RegistrationSuccess"));
     } catch (error) {
