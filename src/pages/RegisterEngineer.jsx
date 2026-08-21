@@ -264,15 +264,20 @@ export default function RegisterEngineer() {
     if (isSubmitting || isFileUploading) return;
 
     setIsSubmitting(true);
-    base44.analytics.track({
-      eventName: "engineer_registration_submitted",
-      properties: {
-        user_type: formData.user_type,
-        specialization: formData.specialization,
-        city: formData.city,
-        country: formData.country
-      }
-    });
+    // Analytics is optional and must never block registration when platform credits are exhausted.
+    try {
+      base44.analytics.track({
+        eventName: "engineer_registration_submitted",
+        properties: {
+          user_type: formData.user_type,
+          specialization: formData.specialization,
+          city: formData.city,
+          country: formData.country
+        }
+      });
+    } catch (analyticsError) {
+      console.warn("Registration analytics skipped:", analyticsError);
+    }
     setNotice({
       type: "info",
       title: "جارٍ إكمال التسجيل",
@@ -322,46 +327,22 @@ export default function RegisterEngineer() {
         }
       }
 
-      // إرسال إشعارات التسجيل: بريد ترحيب للمهندس + بريد وتنبيه للمدير
-      // (غير معتمِد على workflows المتعطلة — يُستدعى من سياق المستخدم المُصادَق عليه)
+      // Registration is intentionally complete after the Engineer record is created.
+      // Notifications/emails are handled asynchronously and must not depend on credits
+      // or prevent the user from completing registration.
       try {
-        await base44.functions.invoke("notifyNewUserSignup", { role: formData.user_type === "surveyor" ? "surveyor" : "engineer", data: engineer });
-      } catch (notifyErr) {
-        console.error("notifyNewUserSignup engineer failed (non-blocking):", notifyErr);
-      }
-      try {
-        await base44.functions.invoke("sendWelcomeEmail", { role: formData.user_type === "surveyor" ? "surveyor" : "engineer", id: engineer.id });
-      } catch (welcomeErr) {
-        console.error("sendWelcomeEmail engineer failed (non-blocking):", welcomeErr);
-      }
-      try {
-        await base44.functions.invoke("notifyNewEngineer", { engineer_id: engineer.id });
-      } catch (notifyErr) {
-        console.error("notifyNewEngineer failed (non-blocking):", notifyErr);
-      }
-      try {
-        await base44.functions.invoke("notifyNewRegistration", {
-          eventType: "engineer_registered",
-          data: {
-            full_name: formData.full_name,
-            email: formData.email,
+        base44.analytics.track({
+          eventName: "engineer_profile_created",
+          properties: {
             user_type: formData.user_type,
-            specialization: formData.specialization
+            specialization: formData.specialization,
+            city: formData.city,
+            country: formData.country
           }
         });
-      } catch (notifyErr) {
-        console.error("notifyNewRegistration failed (non-blocking):", notifyErr);
+      } catch (analyticsError) {
+        console.warn("Profile analytics skipped:", analyticsError);
       }
-
-      base44.analytics.track({
-        eventName: "engineer_profile_created",
-        properties: {
-          user_type: formData.user_type,
-          specialization: formData.specialization,
-          city: formData.city,
-          country: formData.country
-        }
-      });
 
       setNotice({ type: "success", title: "تم إرسال الطلب", message: "تم حفظ طلب التسجيل بنجاح. ستتم مراجعة بياناتك قريبًا." });
       try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* تجاهل */ }
