@@ -174,7 +174,11 @@ export default function RegisterSupplier() {
         ...formData,
         email: user.email
       });
-      // Registration completion must not depend on email/integration credits.
+      try { await base44.functions.invoke("notifyNewUserSignup", { role: "supplier", data: supplier }); }
+      catch (notifyErr) { console.error("notifyNewUserSignup supplier failed:", notifyErr); }
+      try { await base44.functions.invoke("sendWelcomeEmail", { role: "supplier", id: supplier.id }); }
+      catch (welcomeErr) { console.error("sendWelcomeEmail supplier failed:", welcomeErr); }
+
       toast.success("تم تسجيل المورد بنجاح! في انتظار الموافقة من الإدارة");
       navigate(createPageUrl("RegistrationSuccess"));
     } catch (error) {
