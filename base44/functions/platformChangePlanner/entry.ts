@@ -289,7 +289,7 @@ Analyze and respond with a full structured Change Plan:
         } else if (sourcePlan?.needs_more_context) {
           sourceExecutionNote = `يحتاج المساعد قراءة ملفات إضافية قبل التنفيذ: ${(sourcePlan.missing_paths || []).join('، ')}`;
         } else if (sourcePlan?.operations?.length) {
-          executionTool = 'sourceCodeAgent';
+          executionTool = 'source_code_change';
           executionArgs = { action: 'apply', branch: sourcePlan.branch || 'main', message: request, operations: sourcePlan.operations };
           planning.affected_files = sourcePlan.operations.map(op => op.path);
           planning.tests_required = Array.from(new Set([...(planning.tests_required || []), ...(sourcePlan.tests || [])]));
