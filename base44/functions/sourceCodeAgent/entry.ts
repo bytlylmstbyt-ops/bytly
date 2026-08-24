@@ -136,7 +136,6 @@ summary_ar, needs_more_context, missing_paths[], tests[], operations:[{path,cont
     },
   });
 
-  const validPaths = new Set(state.tree.filter(x => x.type === 'blob').map(x => x.path));
   const operations = (planning.operations || []).filter(op => {
     if (!op || typeof op.content !== 'string' || typeof op.path !== 'string') return false;
     if (op.path.includes('..') || op.path.startsWith('/') || op.path.startsWith('.git/')) return false;
