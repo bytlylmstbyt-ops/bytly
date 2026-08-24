@@ -266,10 +266,41 @@ Analyze and respond with a full structured Change Plan:
 
     const language = planning.language === 'en' ? 'en' : 'ar';
 
-    const forceBlocked = planning.blocked || !!planning.requires_permission_change || DANGER_WORDS.test(request);
-    const blockReason = planning.blocked || planning.requires_permission_change
+    let forceBlocked = planning.blocked || !!planning.requires_permission_change || DANGER_WORDS.test(request);
+    let blockReason = planning.blocked || planning.requires_permission_change
       ? (planning.block_reason || 'هذا الطلب يمس الصلاحيات ويحتاج مراجعة مطوّر مباشرة.')
       : (forceBlocked ? 'هذا الطلب يمس مجالًا حساسًا (بيانات/صلاحيات/أمور مالية/نشر) ويحتاج مراجعة مطوّر مباشرة.' : '');
+
+    // When the request is a safe UI/logic source change, use the real
+    // GitHub-connected source agent to inspect files and prepare executable
+    // file operations. If GitHub is not connected yet, keep the existing
+    // planner behavior and explicitly say that source execution is waiting
+    // for the connection instead of pretending it was applied.
+    let executionTool = '';
+    let executionArgs = {};
+    let sourceExecutionNote = '';
+    if (!forceBlocked && (planning.change_type === 'ui_only' || planning.change_type === 'logic')) {
+      try {
+        const sourcePlanResponse = await base44.functions.invoke('sourceCodeAgent', { action: 'plan', request });
+        const sourcePlan = sourcePlanResponse?.data?.plan;
+        if (sourcePlan?.blocked) {
+          forceBlocked = true;
+          blockReason = sourcePlan.block_reason || 'تعذر تجهيز تعديل المصدر بأمان.';
+        } else if (sourcePlan?.needs_more_context) {
+          sourceExecutionNote = `يحتاج المساعد قراءة ملفات إضافية قبل التنفيذ: ${(sourcePlan.missing_paths || []).join('، ')}`;
+        } else if (sourcePlan?.operations?.length) {
+          executionTool = 'sourceCodeAgent';
+          executionArgs = { action: 'apply', branch: sourcePlan.branch || 'main', message: request, operations: sourcePlan.operations };
+          planning.affected_files = sourcePlan.operations.map(op => op.path);
+          planning.tests_required = Array.from(new Set([...(planning.tests_required || []), ...(sourcePlan.tests || [])]));
+          sourceExecutionNote = 'تم تجهيز عمليات الملفات من المصدر الحقيقي في GitHub، وستُطبّق بعد موافقة المالك ثم تُسجّل نتيجة الـcommit.';
+        } else {
+          sourceExecutionNote = 'لم يجد المساعد تعديلًا مصدريًا آمنًا من الملفات المتاحة؛ لم يتم اختراع أي ملف أو تغيير.';
+        }
+      } catch (sourceError) {
+        sourceExecutionNote = `التنفيذ المصدري ينتظر ربط GitHub: ${sourceError?.message || 'GitHub غير متصل بعد.'}`;
+      }
+    }
 
     const logRow = await base44.asServiceRole.entities.AIChangeRequestLog.create({
       request, language,
@@ -297,9 +328,11 @@ Analyze and respond with a full structured Change Plan:
       blocked: forceBlocked,
       block_reason: blockReason?.slice(0, 500) || '',
       status: 'awaiting_approval',
+      execution_tool: forceBlocked ? '' : executionTool,
+      execution_args: forceBlocked ? {} : executionArgs,
       execution_note: forceBlocked
         ? 'محظور من التنفيذ الآلي — يحتاج مراجعة مطوّر مباشرة.'
-        : 'بانتظار الموافقة. عند الموافقة، يُنفَّذ التغيير يدويًا (executing → verifying → completed) — لا يوجد تنفيذ تلقائي في هذه المرحلة.',
+        : (sourceExecutionNote || 'بانتظار الموافقة والتنفيذ في جلسة موثوقة.'),
     });
 
     return Response.json({
