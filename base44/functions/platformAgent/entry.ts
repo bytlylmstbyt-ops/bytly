@@ -191,8 +191,8 @@ Deno.serve(async (req) => {
       try {
         const result = await executeAgentTool(base44, plan.execution_tool, plan.execution_args || {}, user);
         await base44.asServiceRole.entities.AgentAction.create({ task_id: plan.id, action_type: plan.execution_tool, target: plan.target_page || '', status: 'executed', risk_level: tool.risk, requested_by_email: user.email, details: JSON.stringify(plan.execution_args || {}), result: JSON.stringify(result), executed_at: new Date().toISOString() });
-        await base44.asServiceRole.entities.AIChangeRequestLog.update(plan.id, { status: 'executed', execution_result: JSON.stringify(result), execution_completed_at: new Date().toISOString() });
-        return Response.json({ kind: 'decision', status: 'executed', id: plan.id, result, note: 'تم تنفيذ الأداة وتسجيل العملية في سجل الوكيل.' });
+        await base44.asServiceRole.entities.AIChangeRequestLog.update(plan.id, { status: 'completed', execution_result: JSON.stringify(result), execution_completed_at: new Date().toISOString() });
+        return Response.json({ kind: 'decision', status: 'completed', id: plan.id, result, note: 'تم تنفيذ الأداة وتسجيل العملية في سجل الوكيل.' });
       } catch (e) {
         await base44.asServiceRole.entities.AIChangeRequestLog.update(plan.id, { status: 'failed', execution_error: e?.message || 'Execution failed', execution_completed_at: new Date().toISOString() });
         return Response.json({ kind: 'decision', status: 'failed', id: plan.id, error: e?.message || 'فشل التنفيذ.' });
