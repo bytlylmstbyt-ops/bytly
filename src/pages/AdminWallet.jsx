@@ -5,8 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { 
-  Wallet, TrendingUp, Users, CheckCircle, Clock, 
-  DollarSign, AlertCircle, Eye, Loader2 
+  Wallet, Users, CheckCircle, Clock, 
+  DollarSign, AlertCircle, Loader2 
 } from "lucide-react";
 import { motion } from "framer-motion";
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Globe2, Link2, Mail, Plus, Copy, CheckCircle2, MoreHorizontal, X, ShoppingCart, ArrowLeftRight, Send, ShieldCheck, Trash2, BookOpen, FileText } from "lucide-react";
+import { Globe2, Mail, Plus, Copy, CheckCircle2, MoreHorizontal, ShoppingCart, ShieldCheck, Trash2, BookOpen, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";

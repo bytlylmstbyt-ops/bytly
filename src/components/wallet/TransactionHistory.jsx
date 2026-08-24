@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, ArrowDownLeft, Clock, Percent, RefreshCw, Filter, TrendingDown, TrendingUp, DollarSign } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, Clock, Percent, TrendingDown, TrendingUp } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import moment from "moment";
 import "moment/locale/ar";

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   FileText, Image as ImageIcon, Download, Eye, X,
-  CheckCircle, AlertCircle
+  CheckCircle
 } from "lucide-react";
 import {
   Dialog,

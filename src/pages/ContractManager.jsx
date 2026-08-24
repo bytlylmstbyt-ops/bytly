@@ -4,10 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import {
-  FileText, Upload, CheckCircle2, XCircle, Clock, Shield,
-  ChevronDown, ChevronUp, Search, Plus, Eye, Download,
-  PenLine, AlertTriangle, RefreshCw, FileCheck, Building2,
-  FileBadge, User, CalendarDays, Banknote, Hash, ArrowLeft,
+  FileText, Upload, CheckCircle2, Clock, Shield, Search, Plus, Eye,
+  PenLine, FileCheck, Building2,
+  FileBadge, User, CalendarDays, Banknote, ArrowLeft,
   ClipboardList, CloudUpload, ExternalLink, Sparkles
 } from "lucide-react";
 import moment from "moment";

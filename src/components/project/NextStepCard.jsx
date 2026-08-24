@@ -1,6 +1,4 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import {
   Users, Scale, FileSignature, CheckCircle2, Star,

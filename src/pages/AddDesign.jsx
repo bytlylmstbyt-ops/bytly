@@ -5,13 +5,13 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
   ShoppingCart, Upload, X, Loader2, CheckCircle, 
-  FileText, Plus, DollarSign, Ruler, Layers, Bed, Bath
+  FileText, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import MobileSelect from "@/components/mobile/MobileSelect";
 

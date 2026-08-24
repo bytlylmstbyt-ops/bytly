@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
-  Sparkles, Search, MapPin, DollarSign, Calendar, ArrowRight,
+  Sparkles, Search, MapPin, DollarSign, Calendar,
   CheckCircle2, User, Star, Loader2, FileText, Zap, Brain, ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

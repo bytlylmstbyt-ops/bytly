@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Wallet, CreditCard, FileText, Apple, 
-  Smartphone, CheckCircle, Shield, Zap, Building2
+  Wallet, CreditCard, FileText, Apple, Shield, Zap, Building2
 } from "lucide-react";
 
 export default function PaymentMethodSelector({ 

@@ -3,8 +3,7 @@ import { base44 } from "@/api/base44Client";
 import {
   Calendar as CalendarIcon, Clock, DollarSign, CheckCircle2,
   AlertTriangle, Video, Flag, ChevronRight, ChevronLeft,
-  Loader2, CalendarDays, Plus, Trash2, X, Link2,
-  LayoutDashboard, Kanban, CreditCard, Scale
+  Loader2, CalendarDays, Plus, Trash2, Link2
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

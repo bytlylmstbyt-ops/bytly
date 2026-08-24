@@ -7,7 +7,7 @@ import { Loader2, BarChart3, Users, Eye, MousePointerClick, RefreshCw, TrendingU
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell,
+  ResponsiveContainer, AreaChart, Area,
 } from "recharts";
 
 const PIE_COLORS = ["#C9A66B", "#1877F2", "#E1306C", "#0077B5", "#6B5D4F", "#A78BFA", "#34D399"];

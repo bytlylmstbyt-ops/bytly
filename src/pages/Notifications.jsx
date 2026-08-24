@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
-  Bell, CheckCircle, MessageSquare, Briefcase, 
-  Star, DollarSign, Settings, Trash2, Loader2, AlertCircle, ShieldAlert
+  Bell, CheckCircle, Briefcase, 
+  Star, DollarSign, Trash2, Loader2, AlertCircle, ShieldAlert
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import moment from "moment";

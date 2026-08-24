@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { FileUp, Trash2, Download, CheckCircle, Loader2 } from "lucide-react";
+import { FileUp, Trash2, Download, Loader2 } from "lucide-react";
 
 export default function LegalTemplateUploader({ consultantId, onTemplateUpload }) {
   const [templates, setTemplates] = useState([]);

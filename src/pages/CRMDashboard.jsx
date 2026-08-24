@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import MobileSelect from "@/components/mobile/MobileSelect";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Users, Plus, Search, RefreshCw, Loader2, TrendingUp,
-  TrendingDown, AlertCircle, Phone, Mail, Calendar, MessageSquare, Filter
+  Users, Plus, Search, RefreshCw, Loader2, TrendingUp, AlertCircle, Phone, Mail, Calendar, MessageSquare
 } from "lucide-react";
 import { toast } from "sonner";
 import { format, parseISO } from "date-fns";

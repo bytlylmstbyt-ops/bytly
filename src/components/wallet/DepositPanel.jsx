@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  Wallet, DollarSign, Loader2, CreditCard,
+  Wallet, DollarSign, Loader2,
   CheckCircle, Zap, Shield, ArrowLeft
 } from "lucide-react";
 import { toast } from "sonner";

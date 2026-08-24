@@ -4,8 +4,8 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Search, Filter, MapPin, Star, CheckCircle, 
-  Users, Grid3X3, List, ChevronDown, X,
+  Search, MapPin, Star, CheckCircle, 
+  Users, Grid3X3, List, X,
   Building2, Palette, PenTool, SlidersHorizontal,
   Trash2, Download, CheckSquare, Square, UserCheck, Map
 } from "lucide-react";

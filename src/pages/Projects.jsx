@@ -4,13 +4,12 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
-  Search, Filter, MapPin, Clock, DollarSign, 
-  Briefcase, PlusCircle, Calendar, Tag, Eye,
-  ChevronLeft, Users, X, SlidersHorizontal, Loader2
+  Search, MapPin, Clock, DollarSign, 
+  Briefcase, PlusCircle, Calendar, Tag, Users, X, SlidersHorizontal, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { AdInFeedSection } from "@/components/ads/SmartAdCard";

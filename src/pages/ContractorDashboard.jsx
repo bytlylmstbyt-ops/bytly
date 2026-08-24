@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
   HardHat, Briefcase, CheckCircle, DollarSign,
-  Settings, Star, Eye, Plus, Clock, FileText, Crown, Wallet
+  Settings, Star, Clock, FileText, Crown, Wallet
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

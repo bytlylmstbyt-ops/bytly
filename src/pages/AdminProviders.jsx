@@ -3,13 +3,11 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Building2, Briefcase, Scale, HardHat, Package, Loader2, Search,
-  CheckCircle2, XCircle, Clock, RefreshCw, Users, MapPin, Star
+  CheckCircle2, XCircle, Clock, RefreshCw, Users, Star
 } from "lucide-react";
 import { motion } from "framer-motion";
-import ProviderActionsMenu from "@/components/admin/ProviderActionsMenu";
 import AdvertisersPanel from "@/components/admin/AdvertisersPanel";
 import ProvidersTable from "@/components/admin/ProvidersTable";
 import BulkActionBar from "@/components/admin/BulkActionBar";

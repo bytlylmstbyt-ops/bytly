@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
-  FolderKanban, Loader2, Search, Filter, Eye, RefreshCw,
-  TrendingUp, Clock, CheckCircle2, AlertTriangle, Wallet, XCircle,
-  FileText, MapPin, ChevronRight, ChevronLeft, DollarSign, Users, Scale, Download, Loader2 as DownloadSpin
+  FolderKanban, Loader2, Search, RefreshCw,
+  TrendingUp, Clock, CheckCircle2, AlertTriangle, Wallet, XCircle, ChevronRight, ChevronLeft, DollarSign, Scale, Download, Loader2 as DownloadSpin
 } from "lucide-react";
 import { motion } from "framer-motion";
 import ProjectDetailModal from "@/components/admin/ProjectDetailModal";

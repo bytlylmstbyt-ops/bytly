@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Bell, CheckCircle, Clock, AlertCircle, DollarSign,
-  MessageSquare, Briefcase, Search, Filter, Trash2, X, Calendar
+  MessageSquare, Briefcase, Search, Filter, Trash2, Calendar
 } from "lucide-react";
 import AppointmentResponseModal from "@/components/appointments/AppointmentResponseModal";
 import AppointmentDetailModal from "@/components/appointments/AppointmentDetailModal";

@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
 import {
-  Scale, FileSignature, Download, Loader2, FileText, CheckCircle2,
+  Scale, FileSignature, Download, FileText, CheckCircle2,
   Clock, Plus, Eye
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

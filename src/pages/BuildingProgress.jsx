@@ -2,9 +2,8 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  HardHat, CheckCircle2, Clock, Circle, ChevronDown, ChevronUp,
-  Upload, Loader2, Bell, Plus, Camera, FileText, Calendar,
-  TrendingUp, AlertCircle, Edit3, X, Save
+  HardHat, CheckCircle2, Circle, ChevronDown, ChevronUp,
+  Upload, Loader2, Bell, Plus, Camera, Calendar, AlertCircle, Edit3, Save
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
-  Upload, X, Plus, CheckCircle, Loader2, Image as ImageIcon,
-  Trash2, Edit3
+  Upload, X, Plus, CheckCircle, Loader2, Image as ImageIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

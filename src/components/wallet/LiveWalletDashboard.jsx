@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Wallet, TrendingUp, TrendingDown, Percent, ArrowDownLeft, ArrowUpRight,
-  Clock, CheckCircle2, XCircle, Lock, RefreshCw, Zap, DollarSign,
-  BarChart3, List, Shield, AlertCircle, ChevronDown, Building2, User
+  Clock, CheckCircle2, Lock, RefreshCw, Zap, DollarSign,
+  BarChart3, List, Shield, AlertCircle, ChevronDown, Building2
 } from "lucide-react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import moment from "moment";

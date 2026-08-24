@@ -8,7 +8,7 @@ import MobileSelect from '@/components/mobile/MobileSelect';
 import BIMViewer from '@/components/bim/BIMViewer';
 import {
     Search, Building2, Layers, CloudDownload, RefreshCw, ExternalLink,
-    Mail, FolderOpen, TableProperties, CheckCircle2, Clock, AlertCircle,
+    Mail, FolderOpen, TableProperties, CheckCircle2, Clock,
     BarChart3, Filter, X, Eye, FileText, ArrowUpRight, Loader2,
     SlidersHorizontal, Calendar, Cloud
 } from 'lucide-react';

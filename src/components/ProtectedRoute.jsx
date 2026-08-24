@@ -42,7 +42,7 @@ export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthe
       // Use setTimeout to avoid React state update during render
       setTimeout(redirect, 0);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [needsLogin, isAuthPath]);
 
   if (isLoadingPublicSettings || isLoadingAuth) {

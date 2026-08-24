@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
   Search, MapPin, Star, Briefcase, CheckCircle,
-  Building2, Filter, Award, Users, ChevronLeft
+  Building2, Filter, Users, ChevronLeft
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
-  CheckCircle2, Circle, Clock, AlertTriangle,
+  CheckCircle2, AlertTriangle,
   PenTool, ShieldCheck, Hammer, Home, Flag, CalendarDays
 } from "lucide-react";
 

@@ -2,12 +2,9 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  DollarSign, TrendingUp, Users, Building2, 
-  ArrowUpRight, ArrowDownRight, Loader2, Search, Percent
+  DollarSign, TrendingUp, Users, Building2, Loader2, Search, Percent
 } from "lucide-react";
 import MobileSelect from "@/components/mobile/MobileSelect";
 import { motion } from "framer-motion";

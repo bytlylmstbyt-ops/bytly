@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import {
-  Shield, Building2, Award, Clock, Star, CheckCircle,
+  Shield, Award, Clock, Star, CheckCircle,
   FileCheck, Users, TrendingUp, MapPin, Phone, Mail, Globe, Calendar
 } from "lucide-react";
 import { motion } from "framer-motion";

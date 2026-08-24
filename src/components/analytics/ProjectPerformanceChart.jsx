@@ -4,7 +4,7 @@ import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from "recharts";
-import { TrendingUp, Clock, CheckCircle } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 
 export default function ProjectPerformanceChart({ projects }) {
   // Status distribution

@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Paperclip, X, FileText, Image, Download, Loader2, MessageSquare, Shield } from "lucide-react";
+import { Send, Paperclip, X, Download, Loader2, MessageSquare, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const FILE_ICONS = { pdf: "📄", dwg: "📐", dxf: "📐", png: "🖼️", jpg: "🖼️", jpeg: "🖼️", zip: "🗜️" };
 const getExt = (url) => url?.split(".").pop()?.toLowerCase() || "";

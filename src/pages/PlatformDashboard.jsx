@@ -5,14 +5,13 @@ import DailyActiveUsersPanel from "@/components/dashboard/DailyActiveUsersPanel"
 import PlatformFeeCalculator from "@/components/dashboard/PlatformFeeCalculator";
 import LiveVisitorsPanel from "@/components/dashboard/LiveVisitorsPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
-  TrendingUp, TrendingDown, Users, Briefcase, DollarSign,
+  TrendingUp, Users, Briefcase, DollarSign,
   Activity, Star, AlertCircle, CheckCircle, Clock, RefreshCw,
-  BarChart2, Target, Layers, ArrowUpRight, ArrowDownRight, Cpu, ShieldCheck, Wrench, Scale,
+  BarChart2, Target, Layers, ArrowUpRight, ArrowDownRight,
   ArrowUp, Download
 } from "lucide-react";
-import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import moment from "moment";
 import { useScrollDepthTracking } from "@/hooks/useScrollDepthTracking";
 import DashboardSectionNav from "@/components/dashboard/DashboardSectionNav";

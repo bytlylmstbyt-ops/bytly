@@ -3,8 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Loader2, History, User, Clock, TrendingUp, RefreshCw,
-  CheckCircle2, Edit3, Trash2, PlusCircle,
+  Loader2, History, User, Clock, TrendingUp, RefreshCw, Edit3, Trash2, PlusCircle,
 } from "lucide-react";
 
 const ACTION_META = {

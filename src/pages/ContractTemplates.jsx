@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
-  FileText, Plus, Edit, Trash2, Copy, Eye, 
-  Check, X, ChevronDown, ChevronUp
+  FileText, Plus, Edit, Trash2, 
+  Check, ChevronDown, ChevronUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

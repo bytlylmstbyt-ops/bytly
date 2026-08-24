@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
 import {
-  CreditCard, Plus, Loader2, CheckCircle2, Clock, Wallet,
+  CreditCard, Plus, CheckCircle2, Clock, Wallet,
   ArrowRight, Link2
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

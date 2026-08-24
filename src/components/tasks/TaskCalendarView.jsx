@@ -2,11 +2,10 @@ import React, { useState } from "react";
 import {
   format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay,
   isToday, addMonths, subMonths, parseISO, isPast,
-  startOfWeek, endOfWeek, addDays, isSameMonth, addWeeks, subWeeks,
-  getHours, getMinutes
+  startOfWeek, endOfWeek, addDays, addWeeks, subWeeks
 } from "date-fns";
 import { ar } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Clock, Calendar } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 

@@ -3,7 +3,6 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import MobileSelect from "@/components/mobile/MobileSelect";
 import { Search, Filter, X, Building2 } from "lucide-react";
 import MarketEntityCard from "@/components/market/MarketEntityCard";

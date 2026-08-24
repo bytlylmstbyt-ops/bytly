@@ -4,7 +4,6 @@ import {
   CheckCircle, Eye, MousePointerClick, Shield, Pencil,
   Trash2, XCircle, Play
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
 const CATEGORIES = [
   { value: "engineering", label: "هندسة" },

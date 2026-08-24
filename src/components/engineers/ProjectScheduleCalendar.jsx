@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, ChevronLeft, CalendarDays, Flag, Rocket, AlertTriangle, Loader2, ArrowLeft } from "lucide-react";
+import { ChevronRight, ChevronLeft, CalendarDays, Flag, Rocket, AlertTriangle, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 const WEEK_DAYS = ["أحد", "إثنين", "ثلاثاء", "أربعاء", "خميس", "جمعة", "سبت"];

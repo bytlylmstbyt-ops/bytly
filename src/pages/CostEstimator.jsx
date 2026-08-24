@@ -4,16 +4,14 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Calculator, Building2, Layers, Hammer, ChevronRight,
-  ChevronDown, Loader2, CheckCircle, Send, Star, MapPin,
-  RefreshCw, AlertCircle, ArrowLeft, Home, TrendingUp
+  Calculator, Layers, Hammer, ChevronRight, Loader2, CheckCircle, Send, Star, MapPin,
+  RefreshCw, Home, TrendingUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,

@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   MapPin, Loader2, CheckCircle2, Clock, XCircle, DollarSign,
-  FileDown, FileText, Image, Ruler, Eye, AlertTriangle, Navigation, Plus, RefreshCw, Calendar, Star
+  FileDown, FileText, Image, Ruler, Eye, AlertTriangle, Navigation, Plus, Calendar, Star
 } from 'lucide-react';
 import { BookingForm, AppointmentList } from '@/components/survey/AppointmentBooking';
 import SurveyReviewForm from '@/components/survey/SurveyReviewForm';

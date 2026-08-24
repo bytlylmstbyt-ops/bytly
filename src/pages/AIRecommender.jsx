@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { Users, ArrowRight, Star, MapPin, Sparkles } from "lucide-react";
+import { Users, ArrowRight, Star, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import AIChat from "@/components/ai/AIChat";
 import { Button } from "@/components/ui/button";
-import { base44 } from "@/api/base44Client";
 
 const SYSTEM_PROMPT = `أنت مستشار التوصية الذكي من فريق Bytly AI Engineers.
 تخصصك: مساعدة أصحاب المشاريع في العثور على أفضل المقاولين والمصممين والموردين في السوق السعودي.

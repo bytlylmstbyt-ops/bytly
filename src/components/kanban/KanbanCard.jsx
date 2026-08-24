@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Flag, Users, MessageCircle, Paperclip } from "lucide-react";
+import { Calendar, Flag, MessageCircle, Paperclip } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function KanbanCard({ task, engineer, onClick }) {

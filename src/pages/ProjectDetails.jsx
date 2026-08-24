@@ -3,10 +3,9 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
-import {
-  MapPin, Calendar, DollarSign, Clock, Users,
+import { Calendar, Users,
   FileText, MessageSquare, Send, Loader2, CheckCircle,
-  Star, Download, Eye, ArrowLeft, Scale, Upload, X, Paperclip,
+  Star, Eye, ArrowLeft, Scale, Upload, X, Paperclip,
   Kanban, Cloud, ExternalLink, LayoutDashboard, Files as FilesIcon,
   CreditCard, Activity, Video
 } from "lucide-react";
@@ -16,13 +15,11 @@ import { AdSidebarSection } from "@/components/ads/SmartAdCard";
 import { useAds } from "@/hooks/useAds";
 import ProjectChat from "@/components/project/ProjectChat";
 import MilestoneInvoicePanel from "@/components/invoices/MilestoneInvoicePanel";
-import MeetCallButton from "@/components/project/MeetCallButton";
 import AppointmentModal from "@/components/appointments/AppointmentModal";
 import EscrowTracker from "@/components/escrow/EscrowTracker";
 import NextStepCard from "@/components/project/NextStepCard";
 import ProjectFilesSection from "@/components/project/ProjectFilesSection";
 import ProjectMeetingScheduler from "@/components/project/ProjectMeetingScheduler";
-import ProjectActivityLog from "@/components/project/ProjectActivityLog";
 import WorkspaceActivityFeed from "@/components/project/WorkspaceActivityFeed";
 import ProjectContractSection from "@/components/project/ProjectContractSection";
 import ProjectPaymentsSection from "@/components/project/ProjectPaymentsSection";

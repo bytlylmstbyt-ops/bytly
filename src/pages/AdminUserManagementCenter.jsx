@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, HardHat, Building2, UserRound, Star, Handshake, ShieldCheck, ClipboardCheck, UserCog } from "lucide-react";
+import { HardHat, Building2, UserRound, Star, Handshake, ShieldCheck, ClipboardCheck, UserCog } from "lucide-react";
 import { createPageUrl } from "@/utils";
 
 const sections=[

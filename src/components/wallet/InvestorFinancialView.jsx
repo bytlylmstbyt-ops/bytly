@@ -2,8 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { 
-  TrendingUp, Building2, DollarSign, PieChart, 
+import { Building2, PieChart, 
   Target, Activity, Wallet, Lock 
 } from "lucide-react";
 import { motion } from "framer-motion";

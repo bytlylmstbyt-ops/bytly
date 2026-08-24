@@ -5,8 +5,8 @@ import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload, X, FileText, CheckCircle, ArrowRight, ArrowLeft,
-  Building2, MapPin, Users, Paperclip,
-  Send, AlertCircle, Image, File
+  Building2, Users,
+  Send, AlertCircle, Image
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

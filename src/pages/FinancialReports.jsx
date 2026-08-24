@@ -11,9 +11,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend, LineChart, Line
 } from "recharts";
-import {
-  DollarSign, TrendingUp, TrendingDown, Users, Wallet,
-  Briefcase, Loader2, Search, ArrowUpRight, ArrowDownRight,
+import { TrendingUp, Users, Wallet, Loader2, Search,
   BarChart3, PieChartIcon, Activity, Building2, HandCoins,
   ArrowRightLeft, Landmark, CreditCard, Percent, ShieldCheck
 } from "lucide-react";

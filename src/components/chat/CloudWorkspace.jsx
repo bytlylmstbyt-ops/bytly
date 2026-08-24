@@ -2,13 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
-  Cloud, MessageSquare, FileText, CheckSquare, Send,
+  Cloud, MessageSquare, CheckSquare, Send,
   ShieldCheck, MapPin, UserCheck, Loader2, FolderOpen,
   ChevronLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const STATUS_LABELS = {

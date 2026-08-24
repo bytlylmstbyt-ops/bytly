@@ -8,8 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Mail, Phone, Building2, Calendar, MessageSquare, Plus, Loader2,
-  ExternalLink, RefreshCw, Sparkles, X, Edit2, Briefcase
+  Mail, Phone, Building2, Calendar, Plus, Loader2, RefreshCw, Sparkles, X, Edit2, Briefcase
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ar } from "date-fns/locale";

@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Users, Building2, UserCircle, Search, 
-  Calendar, Gift, Crown, Loader2, Check, X
+  Calendar, Gift, Crown, Loader2
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";

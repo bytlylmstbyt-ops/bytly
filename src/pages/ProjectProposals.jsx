@@ -4,11 +4,11 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
   ArrowRight, Star, Clock, DollarSign, User, CheckCircle,
-  BarChart3, TrendingDown, Award, MessageSquare, ChevronDown, ChevronUp, Loader2,
+  BarChart3, TrendingDown, MessageSquare, ChevronDown, ChevronUp, Loader2,
   Search, Plus, RefreshCw, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";

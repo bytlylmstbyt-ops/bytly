@@ -4,15 +4,12 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
-  Search, ArrowLeft, Star, CheckCircle, Users,
-  Briefcase, Award, Shield, Palette, Building2,
+  Search, ArrowLeft, CheckCircle, Users, Shield, Palette, Building2,
   PenTool, Sparkles, ChevronLeft, Ruler, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import WelcomeSlides from "@/components/onboarding/WelcomeSlides";
 import ProfessionalWelcomeSlides from "@/components/onboarding/ProfessionalWelcomeSlides";
 import FirmWelcomeSlides from "@/components/onboarding/FirmWelcomeSlides";
@@ -34,7 +31,6 @@ import { useScrollDepthTracking } from "@/hooks/useScrollDepthTracking";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useAuth } from "@/lib/AuthContext";
 import { ClipboardList } from "lucide-react";
-import { toast } from "react-hot-toast";
 
 export default function Home() {
   const { t } = useLanguage();
@@ -50,7 +46,7 @@ export default function Home() {
 
   useEffect(() => {
     if (isAuthenticated) loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [isAuthenticated]);
 
   // Decouple welcome-check from auth state — runs once when auth resolves.
@@ -58,7 +54,7 @@ export default function Home() {
     if (isAuthenticated && user) {
       checkUserAndWelcome(user);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [isAuthenticated, user]);
 
   const handleSurveyClose = () => {

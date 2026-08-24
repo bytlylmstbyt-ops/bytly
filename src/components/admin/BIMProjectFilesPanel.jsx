@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Loader2, FolderKanban, FileBox, Search, Building2, ChevronDown, ChevronLeft,
-  Calendar, User, RefreshCw, ExternalLink, Layers, Folder, AlertCircle,
+  Calendar, RefreshCw, ExternalLink, Layers, Folder, AlertCircle,
 } from "lucide-react";
 
 const SOURCE_LABELS = {

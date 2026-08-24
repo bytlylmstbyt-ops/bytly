@@ -1,8 +1,8 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wallet, TrendingUp, Clock, ArrowUpRight, Lock, DollarSign } from "lucide-react";
+import { Wallet, TrendingUp, Clock, Lock, DollarSign } from "lucide-react";
 import { motion } from "framer-motion";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 export default function WalletOverview({ engineer }) {
   const totalBalance = (engineer?.pending_balance || 0) + (engineer?.available_balance || 0);

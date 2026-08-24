@@ -9,10 +9,9 @@ import NotificationBell from "@/components/notifications/NotificationBell";
 import { LanguageProvider, useLanguage } from "@/components/i18n/LanguageContext";
 import { useAuth } from "@/lib/AuthContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
-import { 
-  Search, MessageSquare, User, Menu, X, 
-  LogOut, Briefcase, Settings, Wallet, Bell, 
-  PlusCircle, ChevronDown, Instagram, Facebook, Mail, Phone, MessagesSquare, Scale, Linkedin, Twitter, Bot, Building2, Megaphone, Star, ShieldCheck, Trash2, LayoutGrid
+import { MessageSquare, User, Menu, X, 
+  LogOut, Briefcase, Settings, Wallet, 
+  PlusCircle, ChevronDown, Instagram, Facebook, Mail, MessagesSquare, Scale, Linkedin, Twitter, Bot, Building2, Megaphone, Star, ShieldCheck, Trash2, LayoutGrid
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import BottomNav from "@/components/mobile/BottomNav";

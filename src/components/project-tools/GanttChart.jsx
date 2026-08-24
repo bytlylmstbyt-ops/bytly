@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Plus, Calendar, Clock, CheckCircle, AlertCircle, 
+  Plus, Calendar, Clock, CheckCircle, 
   Loader2, Edit2, Trash2, Save, X 
 } from "lucide-react";
 import { format, differenceInDays, parseISO } from "date-fns";

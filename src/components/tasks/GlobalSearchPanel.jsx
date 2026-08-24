@@ -2,12 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   Search, X, FolderOpen, CheckSquare, FileText, Flag,
-  Loader2, Filter, Calendar, User, Clock
+  Loader2, Filter, User, Clock
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ar } from "date-fns/locale";

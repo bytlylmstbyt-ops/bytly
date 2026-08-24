@@ -1,19 +1,19 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MobileSelect from "@/components/mobile/MobileSelect";
 import {
   Plus, RefreshCw, Loader2, FolderOpen, CheckSquare, Calendar,
-  Bell, BellRing, Edit2, Trash2, Search, AlertCircle, LayoutList, LayoutGrid, BarChart2
+  Bell, BellRing, Edit2, Trash2, Search, LayoutList, LayoutGrid, BarChart2
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { toast } from "sonner";
-import { isPast, isToday, parseISO, differenceInDays, format } from "date-fns";
+import { isPast, parseISO, differenceInDays, format } from "date-fns";
 import { ar } from "date-fns/locale";
 import TaskCard from "@/components/tasks/TaskCard";
 import TaskFormModal from "@/components/tasks/TaskFormModal";

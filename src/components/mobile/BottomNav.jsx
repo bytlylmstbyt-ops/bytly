@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Home, Users, Briefcase, LayoutDashboard } from "lucide-react";
 import { saveScrollPosition, restoreScrollPosition } from "@/hooks/useTabScrollPosition";
 

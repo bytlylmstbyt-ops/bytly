@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   DollarSign, TrendingUp, Clock, Download, Search,
-  FileText, CheckCircle, AlertCircle, ArrowUpRight,
+  FileText, CheckCircle, ArrowUpRight,
   ArrowDownRight, Wallet, BarChart2, Filter
 } from "lucide-react";
 import jsPDF from "jspdf";

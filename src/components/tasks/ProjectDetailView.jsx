@@ -10,11 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import MobileSelect from "@/components/mobile/MobileSelect";
 import {
-  X, Plus, Flag, DollarSign, BarChart3, Loader2, Save,
-  CheckCircle2, Clock, Circle, AlertCircle, Sparkles, Link2, Trash2, Edit2, Paperclip
+  X, Plus, Flag, BarChart3, Loader2, Save,
+  CheckCircle2, Clock, Circle, Sparkles, Link2, Trash2, Edit2, Paperclip
 } from "lucide-react";
 import DocumentsPanel from "./DocumentsPanel";
-import { format, parseISO, isPast, differenceInDays } from "date-fns";
+import { format, parseISO, isPast } from "date-fns";
 import { ar } from "date-fns/locale";
 import { toast } from "sonner";
 import TaskCard from "./TaskCard";

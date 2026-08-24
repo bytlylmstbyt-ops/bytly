@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   MapPin, Star, Navigation, Loader2, Search, X,
-  Layers, Compass, ArrowUp, CheckCircle, Briefcase, Award
+  Layers, Compass, ArrowUp, CheckCircle, Briefcase
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';

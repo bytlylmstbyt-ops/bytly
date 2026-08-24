@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  DollarSign, TrendingUp, Users, Search, Wallet, CheckCircle,
-  Clock, AlertCircle, ArrowUpRight, Download, FileText, RefreshCw
+  DollarSign, Users, Search, Wallet, CheckCircle,
+  Clock, Download, RefreshCw
 } from "lucide-react";
 import jsPDF from "jspdf";
 

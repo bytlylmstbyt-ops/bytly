@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
   Building2, DollarSign, TrendingUp, Briefcase, 
-  Star, Plus, BarChart3, Eye, CheckCircle, Clock
+  Star, Plus, BarChart3, Eye, CheckCircle
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

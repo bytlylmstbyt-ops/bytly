@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from "recharts";
-import { Star, Briefcase, TrendingUp, Award } from "lucide-react";
+import { Star, Briefcase, TrendingUp } from "lucide-react";
 
 export default function EngineerAnalytics({ projects, engineers }) {
   // Engineer performance data

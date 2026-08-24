@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   FileCheck, Clock, CheckCircle, XCircle, 
   Wallet, TrendingUp, AlertCircle, FileText,
-  Eye, Filter, Calendar, Download
+  Eye, Download
 } from "lucide-react";
 import { motion } from "framer-motion";
 

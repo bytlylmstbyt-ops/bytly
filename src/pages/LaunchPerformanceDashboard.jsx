@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
@@ -10,7 +9,7 @@ import {
 } from "recharts";
 import {
   RefreshCw, Clock, Rocket, Users, Briefcase, TrendingUp,
-  UserPlus, Activity, AlertCircle, CheckCircle, Eye, FileText
+  UserPlus, Activity, AlertCircle, Eye, FileText
 } from "lucide-react";
 import moment from "moment";
 

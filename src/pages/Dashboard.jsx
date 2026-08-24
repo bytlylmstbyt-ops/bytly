@@ -4,18 +4,14 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
-  Briefcase, Wallet, Star, MessageSquare, Eye, 
-  TrendingUp, Clock, CheckCircle, Plus, ArrowLeft,
-  Upload, Settings, Grid3X3, FileText, DollarSign, Award,
+  Briefcase, Wallet, Star, 
+  TrendingUp, Clock, CheckCircle, Plus, ArrowLeft, Settings, Grid3X3, FileText, DollarSign, Award,
   Shield, Users, FileCheck, BarChart3, Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Progress } from "@/components/ui/progress";
-import InvestorClientDashboard from "@/components/client/InvestorClientDashboard";
 import IndividualClientDashboard from "@/components/client/IndividualClientDashboard";
 import DailyFollowUpTasks from "@/components/dashboard/DailyFollowUpTasks";
 import ProviderRatingsReport from "@/components/dashboard/ProviderRatingsReport";

@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { 
   MapPin, Star, CheckCircle, Briefcase, Award, Clock,
   MessageSquare, Share2, Heart, Grid3X3, ExternalLink,
-  Calendar, Phone, Mail, PlusCircle
+  Calendar, PlusCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AppointmentModal from "@/components/appointments/AppointmentModal";
@@ -14,11 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+
+
 import EngineerReviewForm from "@/components/reviews/EngineerReviewForm";
 import RatingStats from "@/components/reviews/RatingStats";
 import ImageGallerySlider from "@/components/portfolio/ImageGallerySlider";

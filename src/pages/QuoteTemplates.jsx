@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit2, Trash2, FileText, LayoutGrid, Loader2, Share2, Clock, DollarSign, Package } from "lucide-react";
 import QuoteTemplateForm from "@/components/quotes/QuoteTemplateForm";
 import { useToast } from "@/components/ui/use-toast";
-import moment from "moment";
 
 const CATEGORY_LABELS = {
   interior: "تصميم داخلي", architecture: "معماري", painting: "دهانات",

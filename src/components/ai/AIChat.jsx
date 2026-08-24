@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Mic, MicOff, Paperclip, Bot, User, Loader2, X, Image as ImageIcon, Sparkles, Wand2, Camera } from "lucide-react";
+import { Send, Mic, MicOff, Bot, User, Loader2, X, Sparkles, Wand2, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import AIImageGallery from "@/components/ai/AIImageGallery";

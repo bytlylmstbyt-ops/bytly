@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  CheckCircle2, Circle, Clock, DollarSign, Lightbulb,
-  ChevronDown, PenTool, ShieldCheck, Hammer, Home, TrendingUp
+  CheckCircle2, Clock, DollarSign, Lightbulb,
+  ChevronDown, PenTool, ShieldCheck, Hammer, Home
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

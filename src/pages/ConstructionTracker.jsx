@@ -3,9 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import { jsPDF } from "jspdf";
 import {
-  Building2, CheckCircle2, Clock, AlertTriangle, Plus, Upload,
-  ChevronRight, Edit3, Save, X, FileText, Loader2, Bell,
-  BarChart3, Calendar, User, ArrowLeft, Camera, TrendingUp, Download
+  Building2, Clock, Plus, Edit3, Save, X, Loader2, Bell, Calendar, User, Camera, TrendingUp, Download
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

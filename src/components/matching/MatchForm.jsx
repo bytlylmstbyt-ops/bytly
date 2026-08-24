@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { Search, MapPin, DollarSign, Briefcase, Clock, Sparkles } from "lucide-react";
+import { MapPin, DollarSign, Briefcase, Clock, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

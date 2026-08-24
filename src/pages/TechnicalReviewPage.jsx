@@ -11,8 +11,7 @@ import ConsultantNotesPanel from "@/components/technical/ConsultantNotesPanel";
 import CorrectedFilesUploader from "@/components/technical/CorrectedFilesUploader";
 import { downloadTechnicalReport } from "@/components/technical/downloadTechnicalReport";
 import { 
-  FileCheck, Loader2, CheckCircle, AlertCircle, 
-  Upload, Download, FileText, Award, FileDown 
+  FileCheck, Loader2, CheckCircle, AlertCircle, Download, FileText, FileDown 
 } from "lucide-react";
 import QualityCertificate from "@/components/certificates/QualityCertificate";
 

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle, Clock, Calendar, X } from "lucide-react";
+import { CheckCircle, Clock, Calendar } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 
 export default function AppointmentResponseModal({ appointment, open, onOpenChange, onSuccess }) {

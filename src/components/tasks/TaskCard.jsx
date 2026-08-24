@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, User, Flag, CheckCircle2, Circle, Clock, AlertCircle, Pause } from "lucide-react";
+import { Calendar, User, Flag, CheckCircle2, Circle, Clock, Pause } from "lucide-react";
 import { format, isPast, isToday, parseISO } from "date-fns";
 import { ar } from "date-fns/locale";
 

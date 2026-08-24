@@ -2,8 +2,8 @@ import React, { useState, useEffect, useMemo } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { base44 } from "@/api/base44Client";
 import {
-  Plus, Loader2, Clock, CheckCircle2, Circle, AlertCircle,
-  User, Calendar, Send, Trash2, Edit3, X, Flag, TrendingUp, GripVertical
+  Plus, Loader2, CheckCircle2, Circle, AlertCircle,
+  User, Calendar, Send, Trash2, Edit3, TrendingUp, GripVertical
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

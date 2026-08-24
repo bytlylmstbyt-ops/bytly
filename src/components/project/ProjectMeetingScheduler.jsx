@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
-import { Calendar, Video, Clock, CheckCircle, Loader2, RefreshCw } from "lucide-react";
+import { Calendar, Clock, Loader2, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import AppointmentModal from "@/components/appointments/AppointmentModal";
 import MeetCallButton from "@/components/project/MeetCallButton";
-import { notifyWorkspaceUpdate } from "@/components/project/notifyWorkspaceUpdate";
 
 /**
  * مكوّن موحّد لحجز الاجتماعات بين المهندس والعميل مباشرة من صفحة المشروع.

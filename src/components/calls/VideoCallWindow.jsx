@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   Phone, PhoneOff, Mic, MicOff, Video, VideoOff, 
-  Maximize2, Minimize2, Monitor, User, Volume2, VolumeX,
-  Circle, MonitorUp, Save
+  Maximize2, Minimize2, User, Volume2, VolumeX,
+  Circle, MonitorUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';

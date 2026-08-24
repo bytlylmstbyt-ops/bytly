@@ -1,10 +1,10 @@
 import React, { useMemo } from "react";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, Legend, Cell
+  Tooltip, Legend
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 
 const DEPOSIT_TYPES = ["deposit", "escrow_release", "withdrawal_completed"];
 const WITHDRAWAL_TYPES = ["withdrawal", "withdrawal_request", "escrow_hold"];

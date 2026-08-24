@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
-  FileText, CheckCircle, Loader2, Building,
+  FileText, CheckCircle, Loader2,
   CreditCard, Clock, BadgeCheck, XCircle, RefreshCw
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
   Plus, Loader2, Eye, MousePointerClick, Megaphone,
-  CheckCircle, XCircle, Shield, Pencil, Trash2, BarChart3
+  CheckCircle, XCircle, Shield, Pencil, Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";

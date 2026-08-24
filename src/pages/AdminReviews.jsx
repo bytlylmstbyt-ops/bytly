@@ -5,9 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Star, Search, Trash2, MessageSquare, User, Briefcase, Filter } from "lucide-react";
+import { Star, Search, Trash2, MessageSquare, User, Briefcase } from "lucide-react";
 
 export default function AdminReviews() {
   const [user, setUser] = useState(null);

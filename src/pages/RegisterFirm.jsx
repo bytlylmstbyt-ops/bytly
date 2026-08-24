@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Building2, Upload, Loader2, CheckCircle, FileText, Info, Phone, Globe, MapPin, Sparkles } from "lucide-react";
+import { Building2, Upload, Loader2, CheckCircle, FileText, Info } from "lucide-react";
 import { toast } from "sonner";
 
 export default function RegisterFirm() {

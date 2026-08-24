@@ -3,7 +3,6 @@ import { Calculator, ArrowRight, Sparkles, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import AIChat from "@/components/ai/AIChat";
 import { Button } from "@/components/ui/button";
-import { base44 } from "@/api/base44Client";
 import MobileSelect from "@/components/mobile/MobileSelect";
 
 const cities = ["الرياض", "جدة", "الدمام", "مكة المكرمة", "المدينة المنورة", "الخبر", "تبوك", "أبها", "أخرى"];

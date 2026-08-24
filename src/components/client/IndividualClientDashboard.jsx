@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import { 
   Briefcase, Wallet, Plus, ArrowLeft, Clock, 
-  TrendingUp, Eye, DollarSign, FileText, Settings, Shield, Unlock
+  TrendingUp, Settings, Shield, Unlock
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import {
     Camera, Upload, X, ZoomIn, ChevronLeft, ChevronRight,
-    Loader2, ImageOff, Tag, Calendar, User, MapPin, Plus
+    Loader2, ImageOff, Tag, Calendar, User, Plus
 } from 'lucide-react';
 
 const STAGE_LABELS = {

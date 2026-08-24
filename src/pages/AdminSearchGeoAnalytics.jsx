@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Search, RefreshCw, ChevronLeft, CheckCircle2, AlertTriangle, XCircle, Settings2, Tags, SlidersHorizontal, Bot, Globe2, MapPinned, BarChart3 } from "lucide-react";
+import { Search, RefreshCw, ChevronLeft, CheckCircle2, AlertTriangle, XCircle, Tags, SlidersHorizontal, Bot } from "lucide-react";
 
 const auditRows = [
   ["يحتوي التطبيق على محتوى كافي للذكاء الاصطناعي", "good"],

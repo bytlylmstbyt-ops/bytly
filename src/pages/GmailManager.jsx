@@ -3,17 +3,15 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import {
   Mail, Send, Inbox, Trash2, RefreshCw, Loader2,
-  Reply, Sparkles, Search, Eye, CheckCheck, PenSquare, X, ChevronLeft
+  Reply, Sparkles, Search, CheckCheck, PenSquare, X
 } from "lucide-react";
 import { toast } from "sonner";
-import { formatDistanceToNow } from "date-fns";
-import { ar } from "date-fns/locale";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 function EmailRow({ email, onSelect, onMarkRead, onTrash, isSent }) {

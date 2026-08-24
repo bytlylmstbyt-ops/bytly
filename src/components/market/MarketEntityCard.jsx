@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, MapPin, TrendingUp, Eye, MessageSquarePlus } from "lucide-react";
+import { Building2, MapPin, TrendingUp, MessageSquarePlus } from "lucide-react";
 import MarketContactModal from "@/components/market/MarketContactModal";
 
 export default function MarketEntityCard({ entity, onViewDetails }) {

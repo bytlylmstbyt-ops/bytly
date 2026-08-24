@@ -5,8 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-  Calendar, Clock, MapPin, Video, Phone, User, Loader2,
-  CheckCircle2, XCircle, ExternalLink, RefreshCw, AlertTriangle
+  Calendar, Clock, MapPin, Video, Phone, User, Loader2, ExternalLink, AlertTriangle
 } from 'lucide-react';
 
 const typeIcons = {

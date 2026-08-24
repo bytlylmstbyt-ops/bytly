@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Star, X, Send, Sparkles } from "lucide-react";
+import { Star, Send, Sparkles } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { toast } from "react-hot-toast";

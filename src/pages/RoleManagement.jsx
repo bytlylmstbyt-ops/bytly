@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { 
   Shield, Plus, Edit2, Trash2, Users, Lock,
-  Loader2, Save, X, CheckCircle, AlertCircle, Copy, Eye, Power, History
+  Loader2, Save, X, Copy, Eye, Power, History
 } from "lucide-react";
 import { toast } from "sonner";
 

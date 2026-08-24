@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { 
   User, Mail, Phone, MapPin, Camera, Save, 
-  Loader2, Shield, Bell, Lock, Eye, EyeOff, Trash2, AlertTriangle
+  Loader2, Shield, Bell, Lock, Trash2, AlertTriangle
 } from "lucide-react";
 import {
   Dialog,

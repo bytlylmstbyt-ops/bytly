@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, CreditCard, CheckCircle, Clock, AlertCircle, Loader2, ExternalLink } from "lucide-react";
+import { FileText, CreditCard, CheckCircle, Clock, AlertCircle, Loader2 } from "lucide-react";
 
 const statusConfig = {
   draft: { label: "مسودة", color: "bg-slate-100 text-slate-600", icon: FileText },

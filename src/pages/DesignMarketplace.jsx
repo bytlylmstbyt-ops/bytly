@@ -5,8 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
   Search, ShoppingCart, Star, Download, Ruler, Layers, 
-  Bed, Bath, Home, Plus, Filter, Grid3X3, List, Tag,
-  TrendingUp, Award, Zap
+  Bed, Bath, Home, Plus, Grid3X3, Award
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Users, Search, Edit, Ban, CheckCircle, Loader2,
+  Users, Search, Edit, CheckCircle, Loader2,
   Mail, Phone, MapPin, Award, Star, DollarSign, Briefcase,
   FileText, ShieldCheck, XCircle, ExternalLink
 } from "lucide-react";

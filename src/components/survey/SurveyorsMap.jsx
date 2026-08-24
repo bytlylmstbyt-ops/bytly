@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
   MapPin, Star, Navigation, Loader2, Ruler, Search, X,
-  Layers, Compass, ArrowUp, ArrowDown
+  Layers, Compass, ArrowUp
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';

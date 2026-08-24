@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Calculator, Landmark, UserCheck, Wallet, FileText,
   Search, RefreshCw, TrendingUp, Percent, ShieldCheck

@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import MobileSelect from "@/components/mobile/MobileSelect";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Save, Link2, X, Paperclip } from "lucide-react";
+import { Loader2, Save, Paperclip } from "lucide-react";
 import DocumentsPanel from "./DocumentsPanel";
 
 export default function TaskFormModal({ open, onClose, onSave, initial, projects, allTasks = [], loading }) {

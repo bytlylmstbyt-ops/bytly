@@ -2,13 +2,12 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { base44 } from '@/api/base44Client';
 import {
     Loader2, AlertCircle, X, ChevronRight, ChevronDown,
-    Layers, Info, List, Search, Home, ZoomIn, ZoomOut,
+    Layers, Info, List, Search, Home, ZoomIn,
     Maximize2, RotateCcw, Box, FileText, BarChart3, Construction, Camera
 } from 'lucide-react';
 import QuantitiesPanel from './QuantitiesPanel';
 import BuildingProgressPanel from './BuildingProgressPanel';
 import SitePhotoGallery from './SitePhotoGallery';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 

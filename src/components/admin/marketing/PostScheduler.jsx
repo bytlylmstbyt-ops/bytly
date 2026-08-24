@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Facebook, Instagram, Calendar, Send, Loader2, Clock, Trash2, ExternalLink } from "lucide-react";
+import { Facebook, Instagram, Calendar, Send, Loader2, Clock, Trash2 } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useToast } from "@/components/ui/use-toast";
 import moment from "moment";

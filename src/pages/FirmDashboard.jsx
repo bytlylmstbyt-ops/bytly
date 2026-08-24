@@ -4,8 +4,7 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
-  Building2, Users, Briefcase, CheckCircle, DollarSign,
-  TrendingUp, Clock, Plus, Settings, Star, Award, Eye
+  Building2, Users, Briefcase, CheckCircle, DollarSign, Plus, Settings, Star, Award, Eye
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

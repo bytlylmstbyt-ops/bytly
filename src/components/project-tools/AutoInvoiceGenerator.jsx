@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Receipt, Download, CheckCircle, Clock, AlertCircle,
+  Receipt, Download, CheckCircle, Clock,
   Loader2, DollarSign, FileText, Calendar, RefreshCw
 } from "lucide-react";
 import { format } from "date-fns";

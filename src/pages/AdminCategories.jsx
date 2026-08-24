@@ -3,10 +3,9 @@ import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { 
   Tag, Plus, Edit, Trash2, Loader2, Save, X, Search, RotateCcw,
-  ArrowUp, ArrowDown, Power, CheckCircle2, AlertCircle
+  ArrowUp, ArrowDown, Power, CheckCircle2
 } from "lucide-react";
 import { motion } from "framer-motion";
 

@@ -6,8 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   TrendingUp, DollarSign, RefreshCw, Calendar, Download,
-  Percent, CreditCard, Briefcase, BarChart3, PieChart as PieIcon,
-  ArrowUpRight, ArrowDownRight, Loader2
+  Percent, CreditCard, Briefcase, BarChart3, PieChart as PieIcon, Loader2
 } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,

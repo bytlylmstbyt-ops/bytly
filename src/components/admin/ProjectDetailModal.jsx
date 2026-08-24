@@ -5,10 +5,9 @@ import {
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Loader2, FileText, Scale, Wallet, MessagesSquare, History,
-  Briefcase, MapPin, Calendar, User, CheckCircle2, Clock, DollarSign, Paperclip
+  Briefcase, MapPin, User, Clock, DollarSign, Paperclip
 } from "lucide-react";
 import ProjectDetailActivityLog from "@/components/admin/ProjectDetailActivityLog";
 

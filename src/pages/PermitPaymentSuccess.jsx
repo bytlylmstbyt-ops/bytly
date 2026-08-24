@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { CheckCircle2, Loader2, Award, ArrowLeft, Building2, Shield, Wallet, FileText } from 'lucide-react';
+import { CheckCircle2, Loader2, ArrowLeft, Building2, Shield, Wallet, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 

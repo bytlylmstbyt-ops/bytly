@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
   Briefcase, MapPin, Calendar, DollarSign, 
-  Upload, X, Loader2, CheckCircle, FileText, Plus, Building, Zap, HelpCircle, Sparkles
+  Upload, X, Loader2, CheckCircle, FileText, Building, Zap, HelpCircle, Sparkles
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import MobileSelect from "@/components/mobile/MobileSelect";
 import AIProjectAssistant from "@/components/project/AIProjectAssistant";

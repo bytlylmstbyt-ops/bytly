@@ -4,9 +4,9 @@ import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
-  FileText, Search, Filter, Download, Eye, 
+  FileText, Search, Download, Eye, 
   Calendar, User, Building2, CheckCircle, Clock,
-  Archive, TrendingUp, FileCheck, AlertCircle
+  Archive, TrendingUp, FileCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,12 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+
+
 
 export default function ContractArchive() {
   const [contracts, setContracts] = useState([]);

@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Sparkles, Mail, Calendar, Send, Tag, Clock, Copy, CheckCircle } from "lucide-react";
+import { Loader2, Sparkles, Calendar, Send, Tag, Clock, Copy, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
 // ── helpers ──────────────────────────────────────────────────────────────────

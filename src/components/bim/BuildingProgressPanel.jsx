@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import {
-    Construction, CheckCircle2, Clock, AlertCircle, ChevronDown,
+    Construction, CheckCircle2, Clock, AlertCircle,
     Loader2, Plus, Save, RefreshCw, HardHat, Pencil, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

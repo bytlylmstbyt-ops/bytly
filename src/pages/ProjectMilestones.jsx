@@ -4,9 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, CheckCircle, Clock, Upload, DollarSign, XCircle, FileUp, AlertCircle, Wallet } from "lucide-react";
+import { Loader2, CheckCircle, Clock, Upload, DollarSign, XCircle, FileUp, AlertCircle } from "lucide-react";
 import PaymentMethodChoice from "@/components/payment/PaymentMethodChoice";
 import {
   Dialog,
@@ -16,7 +15,6 @@ import {
 } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
 import { sendNotification } from "@/components/notifications/NotificationHelper";
-import CommissionExplainer from "@/components/payment/CommissionExplainer";
 import MilestoneReviewModal from "@/components/reviews/MilestoneReviewModal";
 import MeetCallButton from "@/components/project/MeetCallButton";
 import MilestoneProgressTracker from "@/components/project/MilestoneProgressTracker";

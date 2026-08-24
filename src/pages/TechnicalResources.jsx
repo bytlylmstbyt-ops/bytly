@@ -2,14 +2,14 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
-  BookOpen, Search, Filter, ExternalLink, Download, Link2,
-  CheckCircle, AlertCircle, Clock, Plus, X, Tag, Building2,
+  BookOpen, Search, ExternalLink, Link2,
+  CheckCircle, AlertCircle, Clock, Plus, X, Building2,
   FileText, Flame, Zap, Droplets, Layers, RefreshCw, Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,

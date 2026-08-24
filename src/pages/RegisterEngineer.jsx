@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { 
   User, Mail, Phone, MapPin, Briefcase, Award,
   Upload, FileText, ArrowLeft, ArrowRight, CheckCircle,
-  Building2, PenTool, Palette, Loader2, Gift, Images, Plus
+  Building2, PenTool, Loader2, Gift
 } from "lucide-react";
 import PortfolioStep from "@/components/registration/PortfolioStep";
 import { Button } from "@/components/ui/button";

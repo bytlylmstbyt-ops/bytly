@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { 
   Loader2, BarChart3, TrendingUp, Clock, 
-  DollarSign, CheckCircle, Filter, Calendar,
+  DollarSign, CheckCircle, Filter,
   Users, Briefcase
 } from "lucide-react";
 import ProjectPerformanceChart from "@/components/analytics/ProjectPerformanceChart";

@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
-  FileText, Download, CheckCircle, Clock, Building,
-  Calendar, DollarSign, Upload, Loader2, X
+  FileText, Download, CheckCircle, Clock,
+  Calendar, Upload, Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

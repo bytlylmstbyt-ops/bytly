@@ -2,8 +2,8 @@ import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
-  Plus, Loader2, BarChart2, CheckCircle, Eye, MousePointerClick,
-  Search, Filter, Megaphone, Shield
+  Plus, Loader2, CheckCircle, Eye, MousePointerClick,
+  Search, Filter, Megaphone
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, RefreshCw, ZoomIn, X, Sparkles, ImageIcon } from "lucide-react";
+import { Download, RefreshCw, ZoomIn, X, Sparkles } from "lucide-react";
 
 export default function AIImageGallery({ images, onRegenerate, loading }) {
   const [zoomed, setZoomed] = useState(null);

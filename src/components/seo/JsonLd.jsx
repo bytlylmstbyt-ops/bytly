@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 
 /**
  * JsonLd — injects a JSON-LD structured-data script into <head>.

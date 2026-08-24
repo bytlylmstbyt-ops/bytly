@@ -4,8 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Send, MessageCircle, X, Loader2, Phone, Video, Mic, Paperclip, Square, ExternalLink } from "lucide-react";
+import { Send, MessageCircle, X, Loader2, Mic, Paperclip, Square } from "lucide-react";
 
 const WHATSAPP_NUMBER = "966550028319";
 const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent("مرحباً! أريد الاستفسار عن خدمات Bytly 🏠 | mybytly.com")}`;

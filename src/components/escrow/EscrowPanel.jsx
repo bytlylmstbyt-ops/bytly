@@ -6,8 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-    Shield, Lock, Unlock, CheckCircle2, Clock, AlertCircle, 
-    DollarSign, Loader2, ArrowLeft, Info
+    Shield, Lock, Unlock, CheckCircle2, Clock, AlertCircle, Loader2, Info
 } from 'lucide-react';
 import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription

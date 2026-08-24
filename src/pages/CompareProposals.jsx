@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
-  ArrowRight, Star, Clock, DollarSign, CheckCircle, X,
+  ArrowRight, Star, Clock, CheckCircle,
   Briefcase, Award, MessageSquare, Loader2, Trophy, Zap,
   TrendingDown, ShieldCheck, User, Calendar
 } from "lucide-react";

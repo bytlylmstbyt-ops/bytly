@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Bot, Sparkles, Home, DraftingCompass, Wrench, Calculator,
-  Layers, Users, Mic, Brain, ArrowLeft, ChevronRight, Zap,
-  Star, Shield, Globe, MessageCircle
+import { Sparkles, Home, DraftingCompass, Wrench, Calculator,
+  Layers, Users, Brain, ChevronRight, Zap,
+  Star, Shield, Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 

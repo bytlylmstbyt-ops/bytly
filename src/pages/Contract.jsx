@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { 
-  FileText, Download, CheckCircle, AlertCircle, 
-  Loader2, Calendar, DollarSign, User, Building2,
-  Scale, Shield, Clock, Send, Printer, PenLine, Lock
+  FileText, CheckCircle, User, Building2,
+  Scale, Shield, Printer, PenLine, Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import ElectronicSignModal from "@/components/contracts/ElectronicSignModal";
 
 export default function ContractPage() {

@@ -2,12 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
-import { motion } from "framer-motion";
 import { 
   ShoppingCart, Star, Download, Ruler, Layers, 
-  Bed, Bath, Home, Check, ArrowLeft, MessageSquare,
-  Zap, CheckCircle, Shield, Award, ChevronLeft, ChevronRight,
-  FileText, Edit3, Loader2, Wallet
+  Bed, Bath, ArrowLeft, MessageSquare,
+  Zap, CheckCircle, Shield, Award, ChevronLeft, ChevronRight, Edit3, Loader2
 } from "lucide-react";
 import PaymentMethodChoice from "@/components/payment/PaymentMethodChoice";
 import { Button } from "@/components/ui/button";

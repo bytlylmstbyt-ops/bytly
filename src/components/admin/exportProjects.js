@@ -1,6 +1,5 @@
 // Export projects table to an Excel-readable .xls file (HTML table with UTF-8 BOM).
 // Preserves Arabic text; Excel opens HTML tables natively.
-import { base44 } from "@/api/base44Client";
 
 const STATUS_LABELS = {
   open: "مفتوح", in_progress: "قيد التنفيذ", awaiting_technical_review: "بانتظار المراجعة الفنية",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,14 +9,14 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend
+  PieChart, Pie, Cell
 } from "recharts";
 import {
-  FileText, Download, Filter, Loader2, RefreshCw,
+  FileText, Filter, Loader2, RefreshCw,
   CheckSquare, FolderOpen, Clock, AlertCircle, TrendingUp,
-  FileSpreadsheet, FileType2, User, Calendar
+  FileSpreadsheet, FileType2, User
 } from "lucide-react";
-import { format, parseISO, isWithinInterval, subDays, subMonths, startOfMonth, endOfMonth } from "date-fns";
+import { format, isWithinInterval, subDays, startOfMonth, endOfMonth } from "date-fns";
 import { ar } from "date-fns/locale";
 import { toast } from "sonner";
 import { jsPDF } from "jspdf";

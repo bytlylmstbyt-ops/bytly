@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   TrendingUp, Users, DollarSign, Award, 
   Briefcase, CheckCircle, XCircle, Loader2,
-  BarChart3, PieChart, Activity, Wallet
+  BarChart3, Activity, Wallet
 } from "lucide-react";
 import { motion } from "framer-motion";
 

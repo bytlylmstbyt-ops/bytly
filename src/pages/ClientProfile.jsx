@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { useSearchParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  User, Building2, TrendingUp, CheckCircle, Clock,
-  DollarSign, Star, MapPin, Mail, Phone
+import { Building2,
+  DollarSign, MapPin, Mail
 } from "lucide-react";
 import { motion } from "framer-motion";
 

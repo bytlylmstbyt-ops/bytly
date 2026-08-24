@@ -9,7 +9,7 @@ import {
   Sparkles, Send, Loader2, ShieldAlert, ArrowUpRight, ShieldCheck, Eye, HelpCircle,
   Wrench, Database, Server, KeyRound, CheckCircle2, XCircle, AlertTriangle, Ban, MessageCircle,
   RefreshCw, Layers, Plug, ShieldOff, Mic, MicOff, Paperclip, X, FileText, Image as ImageIcon, Bug,
-  Plus, MessageSquare, Trash2, PanelLeftClose, PanelLeftOpen, ChevronRight, History,
+  Plus, MessageSquare, PanelLeftClose, PanelLeftOpen, ChevronRight, History,
 } from "lucide-react";
 
 const EXAMPLE_PROMPTS = [
@@ -382,7 +382,7 @@ export default function AdminAIAssistant() {
       }
     }, 800);
     return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [messages, conversationId]);
 
   const ADDONS = [
