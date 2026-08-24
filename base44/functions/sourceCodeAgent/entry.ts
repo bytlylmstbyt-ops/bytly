@@ -110,7 +110,7 @@ Rules:
 - For an integration request, identify the existing integration layer and do not invent credentials or secret values.
 - Do not change authentication, authorization, payments, escrow, financial calculations, or production deployment in this source-edit path.
 - Return complete replacement contents for each changed file, not patches. Unchanged files must not be returned.
-- You may create a new source file under src/ when the request explicitly asks for a new page/component/function. Use the exact route/architecture files supplied in context to wire it in; never invent a route registry.
+- You may create a new source file under src/, base44/functions/, or base44/agents/ when the request explicitly asks for a new page/component/function/integration. Use the exact architecture files supplied in context; never invent a route registry or credentials.
 - If the available files are insufficient, return needs_more_context=true and list the exact paths that should be read next.
 
 Return JSON with:
@@ -139,7 +139,7 @@ summary_ar, needs_more_context, missing_paths[], tests[], operations:[{path,cont
   const operations = (planning.operations || []).filter(op => {
     if (!op || typeof op.content !== 'string' || typeof op.path !== 'string') return false;
     if (op.path.includes('..') || op.path.startsWith('/') || op.path.startsWith('.git/')) return false;
-    return /^src\//.test(op.path) && /\.(jsx?|tsx?|css|json|jsonc|svg)$/.test(op.path);
+    return /^(src|base44\/functions|base44\/agents)\//.test(op.path) && /\.(jsx?|tsx?|css|json|jsonc|svg)$/.test(op.path);
   });
   return {
     branch: DEFAULT_BRANCH,
@@ -161,7 +161,7 @@ async function applyOperations(token, operations, message, branch = DEFAULT_BRAN
   for (const op of operations) {
     if (!op?.path || typeof op.content !== 'string') throw new Error('عملية ملف غير صالحة.');
     if (op.path.includes('..') || op.path.startsWith('/') || op.path.startsWith('.git/')) throw new Error('مسار ملف غير مسموح.');
-    if (!/^src\//.test(op.path) || !/\.(jsx?|tsx?|css|json|jsonc|svg)$/.test(op.path)) throw new Error(`نوع/مسار الملف غير مسموح: ${op.path}`);
+    if (!/^(src|base44\/functions|base44\/agents)\//.test(op.path) || !/\.(jsx?|tsx?|css|json|jsonc|svg)$/.test(op.path)) throw new Error(`نوع/مسار الملف غير مسموح: ${op.path}`);
   }
 
   const state = await getBranchState(token, branch);
