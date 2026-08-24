@@ -238,6 +238,14 @@ function AgentMessage({ msg, onDecision, deciding }) {
             </div>
           )}
 
+          {plan.execution_note && (
+            <div className={`mt-3 rounded-lg border p-3 ${plan.execution_ready ? "border-emerald-200 bg-emerald-50/60" : "border-amber-200 bg-amber-50/60"}`}>
+              <p className={`text-xs leading-relaxed ${plan.execution_ready ? "text-emerald-700" : "text-amber-700"}`}>
+                {plan.execution_ready ? "✓ " : "⚠ "}{plan.execution_note}
+              </p>
+            </div>
+          )}
+
           {plan.diff_preview && (
             <div className="mt-3">
               <p className="text-[11px] font-semibold text-slate-500 mb-1">معاينة التغيير (Diff تقنية، اختيارية):</p>
@@ -260,8 +268,8 @@ function AgentMessage({ msg, onDecision, deciding }) {
           {plan.status === "approved" && (
             <p className="mt-4 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">✓ تمت الموافقة. الوكيل جاهز للانتقال إلى التنفيذ الفعلي.</p>
           )}
-          {plan.status === "executed" && (
-            <p className="mt-4 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">✓ نفّذ الوكيل الإجراء فعليًا وتم تسجيل العملية في سجل الوكيل.</p>
+          {plan.status === "completed" && (
+            <p className="mt-4 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">✓ تم تنفيذ التغيير فعليًا وتسجيل نتيجة التنفيذ.</p>
           )}
           {plan.status === "rejected" && (
             <p className="mt-4 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">تم إلغاء هذا الاقتراح.</p>
