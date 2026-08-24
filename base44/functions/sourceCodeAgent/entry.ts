@@ -61,7 +61,7 @@ async function readFile(token, path, ref = DEFAULT_BRANCH) {
 function relevantFiles(tree, request) {
   const text = request.toLowerCase();
   const tokens = text.replace(/[^\p{L}\p{N}_/-]+/gu, ' ').split(/\s+/).filter(t => t.length >= 3);
-  const source = tree.filter(x => x.type === 'blob' && /\.(jsx?|tsx?|css|json|jsonc)$/.test(x.path));
+  const source = tree.filter(x => x.type === 'blob' && /\.(jsx?|tsx?|css|json|jsonc|svg)$/.test(x.path));
   const scored = source.map(file => {
     const p = file.path.toLowerCase();
     let score = 0;
@@ -73,14 +73,16 @@ function relevantFiles(tree, request) {
   });
   const ranked = scored.sort((a, b) => b.score - a.score);
   const selected = ranked.filter(x => x.score > 0).slice(0, 12);
-  return selected.length ? selected : ranked.slice(0, 8);
+  const structural = source.filter(x => /(^|\/)App\.(jsx?|tsx?)$|(^|\/)(router|routes|main)\.(jsx?|tsx?)$/i.test(x.path)).slice(0, 4);
+  const merged = [...selected, ...structural].filter((file, index, arr) => arr.findIndex(x => x.path === file.path) === index);
+  return merged.length ? merged.slice(0, 16) : ranked.slice(0, 12);
 }
 
 async function planChange(base44, token, request) {
   const state = await getBranchState(token);
   const candidates = relevantFiles(state.tree, request);
   const files = [];
-  for (const candidate of candidates.slice(0, 8)) {
+  for (const candidate of candidates.slice(0, 12)) {
     try {
       const file = await readFile(token, candidate.path);
       if (file.content.length <= 120000) files.push(file);
@@ -108,6 +110,7 @@ Rules:
 - For an integration request, identify the existing integration layer and do not invent credentials or secret values.
 - Do not change authentication, authorization, payments, escrow, financial calculations, or production deployment in this source-edit path.
 - Return complete replacement contents for each changed file, not patches. Unchanged files must not be returned.
+- You may create a new source file under src/ when the request explicitly asks for a new page/component/function. Use the exact route/architecture files supplied in context to wire it in; never invent a route registry.
 - If the available files are insufficient, return needs_more_context=true and list the exact paths that should be read next.
 
 Return JSON with:
@@ -134,7 +137,11 @@ summary_ar, needs_more_context, missing_paths[], tests[], operations:[{path,cont
   });
 
   const validPaths = new Set(state.tree.filter(x => x.type === 'blob').map(x => x.path));
-  const operations = (planning.operations || []).filter(op => validPaths.has(op.path) && typeof op.content === 'string');
+  const operations = (planning.operations || []).filter(op => {
+    if (!op || typeof op.content !== 'string' || typeof op.path !== 'string') return false;
+    if (op.path.includes('..') || op.path.startsWith('/') || op.path.startsWith('.git/')) return false;
+    return /^src\//.test(op.path) && /\.(jsx?|tsx?|css|json|jsonc|svg)$/.test(op.path);
+  });
   return {
     branch: DEFAULT_BRANCH,
     base_commit: state.commitSha,
@@ -155,7 +162,7 @@ async function applyOperations(token, operations, message, branch = DEFAULT_BRAN
   for (const op of operations) {
     if (!op?.path || typeof op.content !== 'string') throw new Error('عملية ملف غير صالحة.');
     if (op.path.includes('..') || op.path.startsWith('/') || op.path.startsWith('.git/')) throw new Error('مسار ملف غير مسموح.');
-    if (!/\.(jsx?|tsx?|css|json|jsonc)$/.test(op.path)) throw new Error(`نوع الملف غير مسموح: ${op.path}`);
+    if (!/^src\//.test(op.path) || !/\.(jsx?|tsx?|css|json|jsonc|svg)$/.test(op.path)) throw new Error(`نوع/مسار الملف غير مسموح: ${op.path}`);
   }
 
   const state = await getBranchState(token, branch);
