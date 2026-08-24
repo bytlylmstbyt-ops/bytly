@@ -220,7 +220,8 @@ Routes:
 - "tool_request": the admin is asking the agent to perform one of the explicitly registered safe actions below. Use this only when the request clearly maps to a registered tool and is not a general UI/code change.
 Registered tools:
   • navigate_admin_page(page): open/navigate to an allowed admin page.
-  • refresh_index_status(): read the current project-index status.
+  • refresh_index_status(): read project-index status only; never describe it as a code-health scan.
+  • project_health_status(): read the latest recorded lint/typecheck/broken-imports/build/manual-review results; if any check is missing, report that the health scan is incomplete rather than guessing.
   • query_entity(entity_name, query, limit, sort): read approved platform data entities.
   • create_entity(entity_name, data): create an approved platform record; requires explicit approval.
   • update_entity(entity_name, id, data): update an approved platform record; requires explicit approval.
