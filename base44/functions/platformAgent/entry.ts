@@ -33,7 +33,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 // projects, marketing and operations stay inside their own domains.
 const ROLE_POLICIES = {
   admin: { tools: ['*'], entities: ['*'] },
-  executive_manager: { tools: ['navigate_admin_page','refresh_index_status','project_health_status','query_entity','create_entity','update_entity','create_strategic_goal','create_strategic_initiative','create_strategic_decision'], entities: ['*'] },
+  executive_manager: { tools: ['navigate_admin_page','refresh_index_status','project_health_status','source_code_change','query_entity','create_entity','update_entity','create_strategic_goal','create_strategic_initiative','create_strategic_decision'], entities: ['*'] },
   finance_manager: { tools: ['navigate_admin_page','query_entity','create_entity','update_entity'], entities: ['Invoice','Payment','PlatformRevenue','Transaction','Subscription','WithdrawalRequest','Contract'] },
   project_manager: { tools: ['navigate_admin_page','query_entity','create_entity','update_entity'], entities: ['Project','ProjectTask','Task','ProjectMilestone','Contract','Engineer','EngineeringFirm','Contractor','Consultant','Supplier'] },
   marketing_manager: { tools: ['navigate_admin_page','query_entity','create_entity','update_entity'], entities: ['Lead','Client','ClientInteraction','EmailCampaign','SocialPost','Advertiser','Advertisement','Review'] },
@@ -44,6 +44,7 @@ const TOOL_REGISTRY = {
   navigate_admin_page: { risk: 'low', description: 'فتح صفحة إدارية داخل لوحة التحكم' },
   refresh_index_status: { risk: 'low', description: 'قراءة حالة فهرس المشروع فقط، وليست فحصًا للكود' },
   project_health_status: { risk: 'low', description: 'قراءة آخر نتائج فحص صحة الكود المسجلة (lint/typecheck/imports/build)' },
+  source_code_change: { risk: 'medium', description: 'تطبيق تعديل معتمد على ملفات مصدر المشروع عبر GitHub' },
   query_entity: { risk: 'low', description: 'قراءة سجلات من بيانات المنصة' },
   create_entity: { risk: 'medium', description: 'إنشاء سجل إداري جديد بعد موافقة المدير' },
   update_entity: { risk: 'medium', description: 'تعديل سجل إداري موجود بعد موافقة المدير' },
@@ -90,6 +91,17 @@ async function executeAgentTool(base44, toolName, args, user) {
   if (toolName === 'project_health_status') {
     if (!canUseTool(policy, toolName)) throw new Error('هذا الفحص متاح فقط للأدوار الإدارية المخولة.');
     const res = await base44.functions.invoke('platformChangePlanner', { action: 'project_health_status' });
+    return { tool: toolName, ...res.data };
+  }
+  if (toolName === 'source_code_change') {
+    if (!canUseTool(policy, toolName)) throw new Error('هذا الدور الإداري لا يملك صلاحية تعديل مصدر المشروع.');
+    const operations = Array.isArray(args?.operations) ? args.operations : [];
+    const res = await base44.functions.invoke('sourceCodeAgent', {
+      action: 'apply',
+      branch: args?.branch || 'main',
+      message: args?.message || 'approved source change',
+      operations,
+    });
     return { tool: toolName, ...res.data };
   }
   if (toolName === 'query_entity') {
