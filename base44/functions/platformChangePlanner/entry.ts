@@ -130,9 +130,10 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, status });
     }
 
-    // ── Refresh index status: read-only stats, no live re-scan possible
-    // from inside this function (no filesystem access to the source
-    // tree). Real re-indexing is performed by the assistant/developer.
+    // ── Refresh index status: read-only stats only.
+    // IMPORTANT: this is NOT a project health scan. It must never be
+    // presented as one. A real code scan is performed by the editor/agent
+    // session and its findings are stored in ProjectHealthCheck.
     if (action === 'refresh_index_status') {
       let meta = null;
       try {
@@ -148,7 +149,38 @@ Deno.serve(async (req) => {
         success: true,
         meta,
         live_total_indexed: total,
-        note: 'إعادة الفهرسة الفعلية (مسح الملفات من جديد) تتم عبر المساعد في جلسة المحرر — هذا الإجراء يعرض حالة الفهرس الحالي فقط.',
+        note: 'هذا الإجراء يعرض حالة الفهرس الحالي فقط ولا يفحص أخطاء الكود. فحص lint/typecheck/build/imports يحتاج جلسة المحرر/المساعد التي تملك وصولًا لملفات المشروع.'
+      });
+    }
+
+    // ── Diagnostic status: return the latest REAL health-check records.
+    // This gives the admin a truthful diagnostic answer instead of
+    // confusing index statistics with code-health results.
+    if (action === 'project_health_status') {
+      let checks = [];
+      try {
+        checks = await base44.asServiceRole.entities.ProjectHealthCheck.list('-checked_at', 50);
+      } catch (_e) { /* entity may be empty/unavailable */ }
+      const latestByType = {};
+      for (const check of checks || []) {
+        if (!latestByType[check.check_type]) latestByType[check.check_type] = check;
+      }
+      const types = ['lint', 'typecheck', 'broken_imports', 'build', 'manual_review'];
+      const missing = types.filter(type => !latestByType[type]);
+      const issueCount = Object.values(latestByType).reduce((sum, c) => sum + Number(c.issue_count || 0), 0);
+      const severities = Object.values(latestByType).map(c => c.severity || 'none');
+      const severityRank = { none: 0, low: 1, medium: 2, high: 3 };
+      const maxSeverity = severities.reduce((max, s) => severityRank[s] > severityRank[max] ? s : max, 'none');
+      return Response.json({
+        success: true,
+        scanned: Object.keys(latestByType).length > 0,
+        latest_checks: latestByType,
+        missing_checks: missing,
+        issue_count: issueCount,
+        severity: maxSeverity,
+        note: missing.length
+          ? `لم يكتمل الفحص بعد. الفحوصات الناقصة: ${missing.join(', ')}.`
+          : 'هذه نتائج فحص صحة الكود المسجلة فعليًا، وليست إحصاءات الفهرس.'
       });
     }
 
