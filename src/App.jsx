@@ -93,6 +93,7 @@ const RevenueDashboard           = React.lazy(() => import('./pages/RevenueDashb
 const ProviderWallet             = React.lazy(() => import('./pages/ProviderWallet'));
 const EngineeringFirmsLanding    = React.lazy(() => import('./pages/audiences/EngineeringFirmsLanding'));
 const GithubIssuesDashboard       = React.lazy(() => import('./pages/GithubIssuesDashboard'));
+const AdminPlatformSettings       = React.lazy(() => import('./pages/AdminPlatformSettings'));
 const ContractorsLanding         = React.lazy(() => import('./pages/audiences/ContractorsLanding'));
 const ConsultingTeamsLanding     = React.lazy(() => import('./pages/audiences/ConsultingTeamsLanding'));
 
@@ -321,6 +322,7 @@ const AuthenticatedApp = () => {
         <Route path="/AdminWorkflowAutomation"     element={lazyRoute(React.lazy(() => import('./pages/AdminWorkflowAutomation')), "AdminWorkflowAutomation")} />
         <Route path="/MarketingHub"                element={lazyRoute(MarketingHub, "MarketingHub")} />
         <Route path="/GithubIssuesDashboard"       element={lazyRoute(GithubIssuesDashboard, "GithubIssuesDashboard")} />
+        <Route path="/AdminPlatformSettings"       element={lazyRoute(lazyWithRetry(() => import('./pages/AdminPlatformSettings')), "AdminPlatformSettings")} />
         <Route path="*" element={<NotFoundError />} />
       </Route>
     </Routes>

@@ -152,6 +152,7 @@ export const ADMIN_CATEGORIES = [
     icon: SettingsIcon,
     description: "الإعدادات العامة والتكوين الأساسي للمنصة.",
     items: [
+      { page: "AdminPlatformSettings", label: "إعدادات التطبيق ووثائق API", desc: "شعار التطبيق، الوصف، الصورة الاجتماعية، ووثائق واجهة برمجة التطبيقات" },
       { page: "Settings", label: "الإعدادات العامة", desc: "إعدادات الحساب والمنصة" },
       { page: "AdminAuthenticationSettings", label: "المصادقة والأمان", desc: "تسجيل الدخول، إعادة كلمة المرور، مزودو المصادقة، ووضع الصيانة" },
     ],

@@ -1,4 +1,5 @@
 {
+  "name": "PlatformSettings",
   "type": "object",
   "properties": {
     "app_name": {
@@ -10,6 +11,9 @@
       "default": "\u0627\u0644\u0645\u0646\u0638\u0648\u0645\u0629 \u0627\u0644\u0647\u0646\u062f\u0633\u064a\u0629 \u0627\u0644\u0645\u062a\u0643\u0627\u0645\u0644\u0629"
     },
     "logo_url": {
+      "type": "string"
+    },
+    "social_image_url": {
       "type": "string"
     },
     "visibility": {
@@ -70,6 +74,5 @@
       }
     }
   },
-  "required": [],
-  "name": "PlatformSettings"
+  "required": []
 }
