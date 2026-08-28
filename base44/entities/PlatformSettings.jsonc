@@ -1,0 +1,75 @@
+{
+  "type": "object",
+  "properties": {
+    "app_name": {
+      "type": "string",
+      "default": "BYTLY - \u0628\u064a\u062a\u0644\u064a"
+    },
+    "description": {
+      "type": "string",
+      "default": "\u0627\u0644\u0645\u0646\u0638\u0648\u0645\u0629 \u0627\u0644\u0647\u0646\u062f\u0633\u064a\u0629 \u0627\u0644\u0645\u062a\u0643\u0627\u0645\u0644\u0629"
+    },
+    "logo_url": {
+      "type": "string"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "private"
+      ],
+      "default": "public"
+    },
+    "invite_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "payments_mode": {
+      "type": "string",
+      "enum": [
+        "test",
+        "live",
+        "disabled"
+      ],
+      "default": "test"
+    },
+    "template_status": {
+      "type": "string",
+      "enum": [
+        "published",
+        "draft"
+      ],
+      "default": "published"
+    },
+    "published_at": {
+      "type": "string"
+    },
+    "updated_by": {
+      "type": "string"
+    }
+  },
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "required": [],
+  "name": "PlatformSettings"
+}

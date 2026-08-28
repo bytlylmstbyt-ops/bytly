@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import EngineerReviewForm from "@/components/reviews/EngineerReviewForm";
 import RatingStats from "@/components/reviews/RatingStats";
+import EngineerReviewsPanel from "@/components/reviews/EngineerReviewsPanel";
 import ImageGallerySlider from "@/components/portfolio/ImageGallerySlider";
 import EngineerPerformancePanel from "@/components/engineers/EngineerPerformancePanel";
 
@@ -512,123 +513,30 @@ export default function EngineerProfile() {
               </Card>
             </motion.div>
 
-            {/* Reviews */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <Card className="border-0 shadow-lg">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Star className="w-5 h-5 text-amber-500" />
-                    التقييمات والمراجعات
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    {currentClient && !hasReviewed && (
-                      <EngineerReviewForm
-                        engineerId={engineerId}
-                        engineerName={engineer.full_name}
-                        clientId={currentClient.id}
-                        clientName={currentClient.full_name}
-                        onSubmitted={loadData}
-                        trigger={
-                          <Button size="sm" className="bg-gradient-to-r from-amber-500 to-amber-600 text-white gap-1">
-                            <Star className="w-4 h-4 fill-white" />
-                            اكتب تقييم
-                          </Button>
-                        }
-                      />
-                    )}
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-[#1a1a2e]">{engineer.rating?.toFixed(1) || "0.0"}</span>
-                      <div className="flex">
-                        {[1,2,3,4,5].map(s => (
-                          <Star key={s} className={`w-4 h-4 ${s <= Math.round(engineer.rating||0) ? "fill-amber-400 text-amber-400" : "text-slate-300"}`} />
-                        ))}
-                      </div>
-                      <span className="text-sm text-slate-500">({engineer.total_reviews || 0})</span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {reviews.length > 0 ? (
-                    <div className="space-y-5">
-                      {reviews.map((review, index) => (
-                        <div key={review.id} className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-amber-50/30 hover:border-amber-100 transition-all">
-                          <div className="flex items-start gap-3">
-                            <Avatar className="w-11 h-11 flex-shrink-0">
-                              <AvatarFallback className="bg-gradient-to-br from-[#6B5D4F] to-[#C9A66B] text-white font-bold">
-                                {String.fromCharCode(65 + (index % 26))}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
-                                <div className="flex items-center gap-2">
-                                  <div className="flex">
-                                    {[1, 2, 3, 4, 5].map(star => (
-                                      <Star key={star} className={`w-4 h-4 ${star <= review.rating ? "fill-amber-400 text-amber-400" : "text-slate-300"}`} />
-                                    ))}
-                                  </div>
-                                  <span className="text-sm font-bold text-amber-600">{review.rating}/5</span>
-                                </div>
-                                <span className="text-xs text-slate-400">
-                                  {new Date(review.created_date).toLocaleDateString("ar-SA", { year: "numeric", month: "short", day: "numeric" })}
-                                </span>
-                              </div>
-
-                              {/* Milestone tag — shown when review is linked to a specific phase */}
-                              {review.milestone_title && (
-                                <div className="inline-flex items-center gap-1 text-xs bg-amber-50 border border-amber-200 text-amber-700 px-2 py-0.5 rounded-full mb-2">
-                                  🏗️ {review.milestone_title}
-                                </div>
-                              )}
-
-                              {review.highlights?.length > 0 && (
-                                <div className="flex flex-wrap gap-1.5 mb-2">
-                                  {review.highlights.map((h, idx) => (
-                                    <span key={idx} className="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded-full border border-amber-200">
-                                      ✓ {h}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
-                              {review.comment && (
-                                <p className="text-slate-700 text-sm leading-relaxed mb-3">{review.comment}</p>
-                              )}
-                              {(review.quality_rating > 0 || review.communication_rating > 0 || review.delivery_rating > 0) && (
-                                <div className="flex flex-wrap gap-2">
-                                  {review.quality_rating > 0 && (
-                                    <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded-full border border-blue-100">
-                                      🏆 جودة {review.quality_rating}/5
-                                    </span>
-                                  )}
-                                  {review.communication_rating > 0 && (
-                                    <span className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full border border-green-100">
-                                      💬 تواصل {review.communication_rating}/5
-                                    </span>
-                                  )}
-                                  {review.delivery_rating > 0 && (
-                                    <span className="inline-flex items-center gap-1 text-xs bg-purple-50 text-purple-700 px-2 py-1 rounded-full border border-purple-100">
-                                      ⏱️ مواعيد {review.delivery_rating}/5
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <Star className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                      <p className="text-slate-500">لا توجد تقييمات حتى الآن</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
+            {/* Reviews — لوحة التقييمات الاحترافية */}
+            <EngineerReviewsPanel
+              engineer={engineer}
+              reviews={reviews}
+              currentClient={currentClient}
+              hasReviewed={hasReviewed}
+              reviewFormTrigger={
+                currentClient && !hasReviewed ? (
+                  <EngineerReviewForm
+                    engineerId={engineerId}
+                    engineerName={engineer.full_name}
+                    clientId={currentClient.id}
+                    clientName={currentClient.full_name}
+                    onSubmitted={loadData}
+                    trigger={
+                      <Button size="sm" className="bg-gradient-to-r from-amber-500 to-amber-600 text-white gap-1">
+                        <Star className="w-4 h-4 fill-white" />
+                        اكتب تقييم
+                      </Button>
+                    }
+                  />
+                ) : null
+              }
+            />
           </div>
 
           {/* Sidebar */}
