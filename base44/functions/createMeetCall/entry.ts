@@ -7,10 +7,16 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { project_id, project_title, attendee_emails = [], scheduled_time, topic } = await req.json();
+    const isAdmin = user.role === 'admin';
+
+    // ── Authorization: project_id is required for non-admin users (no ad-hoc relay) ──
+    if (!project_id && !isAdmin) {
+      return Response.json({ error: 'project_id is required to create a meeting' }, { status: 400 });
+    }
 
     let project = null;
+    const authorizedEmails = new Set<string>();
 
-    // ── Authorization: if a project_id is provided, verify the caller is a participant ──
     if (project_id) {
       const [proj] = await base44.asServiceRole.entities.Project.filter({ id: project_id });
       if (!proj) {
@@ -18,15 +24,42 @@ Deno.serve(async (req) => {
       }
       project = proj;
 
+      // Verify the caller is a participant of this project
       const isOwner = project.created_by === user.email;
-      const isAdmin = user.role === 'admin';
       let isAssignedEngineer = false;
       if (project.assigned_engineer_id) {
         const [eng] = await base44.asServiceRole.entities.Engineer.filter({ id: project.assigned_engineer_id });
         isAssignedEngineer = eng?.email === user.email;
+        if (eng?.email) authorizedEmails.add(eng.email.toLowerCase());
       }
       if (!isOwner && !isAdmin && !isAssignedEngineer) {
         return Response.json({ error: 'Forbidden: you are not a participant of this project' }, { status: 403 });
+      }
+
+      // Build the authorized participant email set from verified DB records
+      if (project.created_by) authorizedEmails.add(project.created_by.toLowerCase());
+      if (project.technical_consultant_id) {
+        const [tc] = await base44.asServiceRole.entities.Consultant.filter({ id: project.technical_consultant_id });
+        if (tc?.email) authorizedEmails.add(tc.email.toLowerCase());
+      }
+      if (project.legal_consultant_id) {
+        const [lc] = await base44.asServiceRole.entities.LegalConsultant.filter({ id: project.legal_consultant_id });
+        if (lc?.email) authorizedEmails.add(lc.email.toLowerCase());
+      }
+    }
+
+    // ── Validate attendees: every invitee must be an authorized project participant ──
+    const normalizedAttendees = (attendee_emails || [])
+      .map((e: string) => String(e || '').trim().toLowerCase())
+      .filter(Boolean);
+
+    if (project_id) {
+      const unauthorized = normalizedAttendees.filter((e) => !authorizedEmails.has(e));
+      if (unauthorized.length > 0) {
+        return Response.json(
+          { error: 'Forbidden: attendee emails must belong to authorized project members', unauthorized },
+          { status: 403 }
+        );
       }
     }
 
@@ -47,7 +80,7 @@ Deno.serve(async (req) => {
       description,
       start: { dateTime: startTime.toISOString(), timeZone: 'Asia/Riyadh' },
       end:   { dateTime: endTime.toISOString(),   timeZone: 'Asia/Riyadh' },
-      attendees: attendee_emails.map(email => ({ email })),
+      attendees: normalizedAttendees.map(email => ({ email })),
       conferenceData: {
         createRequest: {
           requestId: `bytly-${meetingRef}-${Date.now()}`,

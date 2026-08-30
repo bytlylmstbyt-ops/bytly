@@ -15,9 +15,42 @@ Deno.serve(async (req) => {
 
     switch (action) {
 
-      // 1. إرسال تحديثات المشروع للعملاء
+      // 1. إرسال تحديثات المشروع للعملاء — recipient derived from verified DB records
       case 'sendProjectUpdate': {
-        const { clientEmail, clientName, projectTitle, updateMessage, milestoneTitle, status } = data;
+        const { projectId, updateMessage, milestoneTitle, status } = data;
+        if (!projectId) {
+          return Response.json({ error: 'projectId is required' }, { status: 400 });
+        }
+
+        const [project] = await base44.asServiceRole.entities.Project.filter({ id: projectId });
+        if (!project) {
+          return Response.json({ error: 'Project not found' }, { status: 404 });
+        }
+
+        // Verify the caller is a project participant or admin
+        const isOwner = project.created_by === user.email;
+        const isAdmin = user.role === 'admin';
+        let isAssignedEngineer = false;
+        if (project.assigned_engineer_id) {
+          const [eng] = await base44.asServiceRole.entities.Engineer.filter({ id: project.assigned_engineer_id });
+          isAssignedEngineer = eng?.email === user.email;
+        }
+        if (!isOwner && !isAdmin && !isAssignedEngineer) {
+          return Response.json({ error: 'Forbidden: you are not a participant of this project' }, { status: 403 });
+        }
+
+        // Derive the recipient email from the verified Client record
+        if (!project.client_id) {
+          return Response.json({ error: 'Project has no associated client' }, { status: 400 });
+        }
+        const [client] = await base44.asServiceRole.entities.Client.filter({ id: project.client_id });
+        if (!client?.email) {
+          return Response.json({ error: 'Client email not found' }, { status: 404 });
+        }
+
+        const clientEmail = client.email;
+        const clientName = client.full_name || 'عميلنا العزيز';
+        const projectTitle = project.title || 'مشروع بيتلي';
         const statusAr = {
           in_progress: 'قيد التنفيذ',
           completed: 'مكتمل',
@@ -54,9 +87,37 @@ Deno.serve(async (req) => {
         return Response.json({ success: true, message: 'تم إرسال تحديث المشروع للعميل' });
       }
 
-      // 2. إبلاغ المهندسين/المصممين بمشاريع جديدة
+      // 2. إبلاغ المهندسين/المصممين بمشاريع جديدة — recipient derived from verified Engineer record
       case 'notifyEngineerNewProject': {
-        const { engineerEmail, engineerName, projectTitle, projectDescription, projectBudget, projectCategory, projectId } = data;
+        const { engineerId, projectId } = data;
+        if (!projectId || !engineerId) {
+          return Response.json({ error: 'projectId and engineerId are required' }, { status: 400 });
+        }
+
+        const [project] = await base44.asServiceRole.entities.Project.filter({ id: projectId });
+        if (!project) {
+          return Response.json({ error: 'Project not found' }, { status: 404 });
+        }
+
+        // Only the project owner or an admin may notify engineers about a project
+        const isOwner = project.created_by === user.email;
+        const isAdmin = user.role === 'admin';
+        if (!isOwner && !isAdmin) {
+          return Response.json({ error: 'Forbidden: only the project owner or admin may notify engineers' }, { status: 403 });
+        }
+
+        // Derive the recipient email from the verified Engineer record
+        const [engineer] = await base44.asServiceRole.entities.Engineer.filter({ id: engineerId });
+        if (!engineer?.email) {
+          return Response.json({ error: 'Engineer not found' }, { status: 404 });
+        }
+
+        const engineerEmail = engineer.email;
+        const engineerName = engineer.full_name || 'مهندسنا العزيز';
+        const projectTitle = project.title || 'مشروع بيتلي';
+        const projectDescription = project.description || '';
+        const projectBudget = project.budget_min ? `${project.budget_min}${project.budget_max ? ` - ${project.budget_max}` : ''}` : '';
+        const projectCategory = project.category || '';
         const categoryAr = {
           interior: 'تصميم داخلي',
           architecture: 'معماري',
@@ -94,9 +155,60 @@ Deno.serve(async (req) => {
         return Response.json({ success: true, message: 'تم إبلاغ المهندس بالمشروع الجديد' });
       }
 
-      // 3. صياغة وإرسال رسائل متابعة للمقترحات
+      // 3. صياغة وإرسال رسائل متابعة للمقترحات — recipient derived from verified Proposal/Project records
       case 'sendProposalFollowup': {
-        const { recipientEmail, recipientName, proposalTitle, proposalAmount, daysSinceSubmission, senderRole } = data;
+        const { proposalId, daysSinceSubmission } = data;
+        if (!proposalId) {
+          return Response.json({ error: 'proposalId is required' }, { status: 400 });
+        }
+
+        const [proposal] = await base44.asServiceRole.entities.Proposal.filter({ id: proposalId });
+        if (!proposal) {
+          return Response.json({ error: 'Proposal not found' }, { status: 404 });
+        }
+
+        const [project] = await base44.asServiceRole.entities.Project.filter({ id: proposal.project_id });
+        if (!project) {
+          return Response.json({ error: 'Project not found' }, { status: 404 });
+        }
+
+        // Determine the caller's role and the authorized recipient (the "other party")
+        const isAdmin = user.role === 'admin';
+        const isProposalSubmitter = proposal.created_by === user.email;
+        const isProjectOwner = project.created_by === user.email;
+        if (!isAdmin && !isProposalSubmitter && !isProjectOwner) {
+          return Response.json({ error: 'Forbidden: you are not a participant of this proposal' }, { status: 403 });
+        }
+
+        let recipientEmail: string;
+        let recipientName: string;
+        let senderRole: string;
+
+        if (isProposalSubmitter || (isAdmin && !isProjectOwner)) {
+          // Sender is the engineer → recipient is the project owner (client)
+          senderRole = 'engineer';
+          recipientEmail = project.created_by;
+          recipientName = 'عميلنا العزيز';
+        } else {
+          // Sender is the client → recipient is the engineer who submitted the proposal
+          senderRole = 'client';
+          if (!proposal.engineer_id) {
+            return Response.json({ error: 'Proposal has no associated engineer' }, { status: 400 });
+          }
+          const [engineer] = await base44.asServiceRole.entities.Engineer.filter({ id: proposal.engineer_id });
+          if (!engineer?.email) {
+            return Response.json({ error: 'Engineer email not found' }, { status: 404 });
+          }
+          recipientEmail = engineer.email;
+          recipientName = engineer.full_name || 'مهندسنا العزيز';
+        }
+
+        if (!recipientEmail) {
+          return Response.json({ error: 'Recipient email could not be resolved' }, { status: 400 });
+        }
+
+        const proposalTitle = project.title || 'مشروع بيتلي';
+        const proposalAmount = proposal.price || 0;
 
         // صياغة تلقائية بالذكاء الاصطناعي
         const aiDraft = await base44.integrations.Core.InvokeLLM({
