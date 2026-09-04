@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { appParams } from "@/lib/app-params";
 import { useAuth } from "@/lib/AuthContext";
+import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -11,24 +12,19 @@ import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 
-// Extract a relative path from fromUrl; if it's the login/register page itself, default to "/"
 const getReturnUrl = () => {
   const raw = appParams.fromUrl;
   if (!raw) return "/";
   try {
     const url = new URL(raw, window.location.origin);
-    if (["/login", "/register", "/forgot-password", "/reset-password"].includes(url.pathname)) {
-      return "/";
-    }
+    if (["/login", "/register", "/forgot-password", "/reset-password"].includes(url.pathname)) return "/";
     return url.pathname + url.search;
   } catch {
-    // Already a relative path — check if it's a login/auth page
     if (["/login", "/register", "/forgot-password", "/reset-password"].includes(raw)) return "/";
     return raw;
   }
 };
 
-// Simple SVG icons for Microsoft, Facebook, Apple
 const MicrosoftIcon = () => (
   <svg className="w-5 h-5 mr-2" viewBox="0 0 21 21" fill="none">
     <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
@@ -60,19 +56,11 @@ export default function Login() {
 
   const returnUrl = getReturnUrl();
 
-  // Redirect already-authenticated users away from the login page.
-  // Use AuthContext's validated isAuthenticated (post me() check) instead of
-  // base44.auth.isAuthenticated(), which can report true on a stale token and
-  // race the 401 handler — causing a spurious reload on the login page.
   useEffect(() => {
-    if (isAuthenticated) {
-      window.location.href = returnUrl;
-    }
+    if (isAuthenticated) window.location.href = returnUrl;
   }, [isAuthenticated, returnUrl]);
 
   const handleGoogleLogin = () => {
-    // Save return URL and redirect to Google OAuth
-    // Use absolute URL so the platform redirects to the custom domain, not Base44 dashboard
     const absoluteReturnUrl = window.location.origin + returnUrl;
     sessionStorage.setItem('loginReturnUrl', returnUrl);
     base44.auth.loginWithProvider('google', absoluteReturnUrl);
@@ -85,9 +73,7 @@ export default function Login() {
     return "";
   };
 
-  const handleEmailBlur = () => {
-    setEmailError(validateEmail(email));
-  };
+  const handleEmailBlur = () => setEmailError(validateEmail(email));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -95,7 +81,7 @@ export default function Login() {
     submitGuard.current = true;
     setLoading(true);
     setError("");
-    
+
     const emailValidation = validateEmail(email);
     if (emailValidation) {
       submitGuard.current = false;
@@ -103,10 +89,29 @@ export default function Login() {
       setLoading(false);
       return;
     }
-    
+
     try {
+      // New authentication path: try Supabase first. Existing Base44 users
+      // transparently fall back to the legacy provider when their account has
+      // not yet been migrated into auth.users.
+      let supabaseError = null;
+      if (isSupabaseConfigured && supabase) {
+        const { error: sbError } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        });
+        if (!sbError) {
+          console.log('Login successful via Supabase');
+          window.location.href = returnUrl;
+          return;
+        }
+        supabaseError = sbError;
+      }
+
+      // Compatibility fallback: do not change or invalidate the existing
+      // Base44 login flow while migration is in progress.
       const response = await base44.auth.loginViaEmailPassword(email, password);
-      console.log('Login successful:', response?.user?.email);
+      console.log('Login successful via Base44 fallback:', response?.user?.email);
       window.location.href = returnUrl;
     } catch (err) {
       console.error('Login error details:', {
@@ -115,19 +120,25 @@ export default function Login() {
         data: err?.data,
         response: err?.response?.data
       });
-      
+
       const msg = err?.message || "";
       const status = err?.status;
       const dataMsg = err?.data?.message || err?.response?.data?.message || "";
-      
-      // Handle specific error types
+      const sbMsg = typeof supabaseError?.message === 'string' ? supabaseError.message.toLowerCase() : '';
+
       if (status === 403) {
-        // Email not verified
         setError("يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب");
       } else if (status === 404 || (msg && msg.includes("not found"))) {
         setError("المستخدم غير مسجل في التطبيق");
-      } else if (status === 400 || status === 401 || msg.includes("credentials") || msg.includes("password") || dataMsg.includes("credentials")) {
-        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+      } else if (
+        status === 400 || status === 401 ||
+        msg.includes("credentials") || msg.includes("password") ||
+        dataMsg.includes("credentials") ||
+        sbMsg.includes('invalid login credentials') || sbMsg.includes('email not confirmed')
+      ) {
+        setError(sbMsg.includes('email not confirmed')
+          ? "يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب"
+          : "البريد الإلكتروني أو كلمة المرور غير صحيحة");
       } else if (status === 0 || msg.includes("network") || msg.includes("fetch") || msg.includes("NotFoundError")) {
         setError("تعذر الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت.");
       } else {
@@ -148,13 +159,9 @@ export default function Login() {
         <div className="flex flex-col gap-2 items-center">
           <p className="text-sm text-muted-foreground">
             ليس لديك حساب؟{" "}
-            <Link to="/register" className="text-primary font-medium hover:underline">
-              سجّل الآن
-            </Link>
+            <Link to="/register" className="text-primary font-medium hover:underline">سجّل الآن</Link>
           </p>
-          <Link to="/forgot-password" className="text-xs text-primary hover:underline">
-            نسيت كلمة المرور؟
-          </Link>
+          <Link to="/forgot-password" className="text-xs text-primary hover:underline">نسيت كلمة المرور؟</Link>
         </div>
       }
     >
@@ -170,26 +177,9 @@ export default function Login() {
           <Label htmlFor="email" className="text-sm font-medium">البريد الإلكتروني</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-            <Input
-              id="email"
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              enterKeyHint="next"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(""); }}
-              onBlur={handleEmailBlur}
-              className={`pl-10 h-12 ${emailError ? "border-destructive focus-visible:ring-destructive" : ""}`}
-              required
-              aria-invalid={!!emailError}
-              aria-describedby={emailError ? "email-error" : undefined}
-              disabled={loading}
-            />
+            <Input id="email" type="email" inputMode="email" autoComplete="email" enterKeyHint="next" placeholder="you@example.com" value={email} onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(""); }} onBlur={handleEmailBlur} className={`pl-10 h-12 ${emailError ? "border-destructive focus-visible:ring-destructive" : ""}`} required aria-invalid={!!emailError} aria-describedby={emailError ? "email-error" : undefined} disabled={loading} />
           </div>
-          {emailError && (
-            <p id="email-error" className="text-xs text-destructive mt-1">{emailError}</p>
-          )}
+          {emailError && <p id="email-error" className="text-xs text-destructive mt-1">{emailError}</p>}
         </div>
 
         <div className="space-y-2">
@@ -198,89 +188,41 @@ export default function Login() {
           </div>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              enterKeyHint="done"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 h-12"
-              required
-              disabled={loading}
-            />
+            <Input id="password" type="password" autoComplete="current-password" enterKeyHint="done" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10 h-12" required disabled={loading} />
           </div>
         </div>
 
-        <Button 
-          type="submit" 
-          className="w-full h-12 font-medium text-base" 
-          disabled={loading || !!emailError}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              جاري تسجيل الدخول...
-            </>
-          ) : (
-            "تسجيل الدخول"
-          )}
+        <Button type="submit" className="w-full h-12 font-medium text-base" disabled={loading || !!emailError}>
+          {loading ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" />جاري تسجيل الدخول...</> : "تسجيل الدخول"}
         </Button>
       </form>
 
-      {/* Divider */}
       <div className="relative my-6">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-muted"></div>
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">أو تابع باستخدام</span>
-        </div>
+        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-muted"></div></div>
+        <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">أو تابع باستخدام</span></div>
       </div>
 
-      {/* Social Login Buttons */}
       <div className="space-y-3">
-        <Button
-          variant="outline"
-          className="w-full h-12"
-          onClick={handleGoogleLogin}
-        >
-          <GoogleIcon />
-          تسجيل الدخول عبر Google
+        <Button variant="outline" className="w-full h-12" onClick={handleGoogleLogin}>
+          <GoogleIcon />تسجيل الدخول عبر Google
         </Button>
-        <Button
-          variant="outline"
-          className="w-full h-12"
-          onClick={() => {
-            sessionStorage.setItem('loginReturnUrl', returnUrl);
-            base44.auth.loginWithProvider('microsoft', window.location.origin + returnUrl);
-          }}
-        >
-          <MicrosoftIcon />
-          تسجيل الدخول عبر Microsoft
+        <Button variant="outline" className="w-full h-12" onClick={() => {
+          sessionStorage.setItem('loginReturnUrl', returnUrl);
+          base44.auth.loginWithProvider('microsoft', window.location.origin + returnUrl);
+        }}>
+          <MicrosoftIcon />تسجيل الدخول عبر Microsoft
         </Button>
-        <Button
-          variant="outline"
-          className="w-full h-12"
-          onClick={() => {
-            sessionStorage.setItem('loginReturnUrl', returnUrl);
-            base44.auth.loginWithProvider('facebook', window.location.origin + returnUrl);
-          }}
-        >
-          <FacebookIcon />
-          تسجيل الدخول عبر Facebook
+        <Button variant="outline" className="w-full h-12" onClick={() => {
+          sessionStorage.setItem('loginReturnUrl', returnUrl);
+          base44.auth.loginWithProvider('facebook', window.location.origin + returnUrl);
+        }}>
+          <FacebookIcon />تسجيل الدخول عبر Facebook
         </Button>
-        <Button
-          variant="outline"
-          className="w-full h-12"
-          onClick={() => {
-            sessionStorage.setItem('loginReturnUrl', returnUrl);
-            base44.auth.loginWithProvider('apple', window.location.origin + returnUrl);
-          }}
-        >
-          <AppleIcon />
-          تسجيل الدخول عبر Apple
+        <Button variant="outline" className="w-full h-12" onClick={() => {
+          sessionStorage.setItem('loginReturnUrl', returnUrl);
+          base44.auth.loginWithProvider('apple', window.location.origin + returnUrl);
+        }}>
+          <AppleIcon />تسجيل الدخول عبر Apple
         </Button>
       </div>
     </AuthLayout>
