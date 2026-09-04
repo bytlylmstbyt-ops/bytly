@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
 
         // Send email
         try {
-          await base44.integrations.Core.SendEmail({
+          await base44.asServiceRole.integrations.Core.SendEmail({
             to: approval.requested_from,
             subject: `تذكير: طلب موافقة على مشروع ${project.title}`,
             body: message

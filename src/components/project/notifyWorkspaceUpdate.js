@@ -105,32 +105,21 @@ export async function notifyWorkspaceUpdate({
   await Promise.all(
     Array.from(recipients).map(async (recipientEmail) => {
       try {
-        await base44.entities.Notification.create({
-          recipient_email: recipientEmail,
+        await base44.functions.invoke("sendPlatformNotification", {
+          recipientEmail,
           title,
           message,
           type: notifyType,
-          related_project_id: project.id,
-          related_entity_id: entityId,
-          action_url: actionUrl,
+          projectId: project.id,
+          entityId,
+          actionUrl,
           priority,
+          sendEmail,
+          fromName: "منصة بيتلي",
+          emailBody: sendEmail ? buildEmailHtml(title, message, project, actionUrl) : null,
         });
-
-        if (sendEmail) {
-          try {
-            await base44.integrations.Core.SendEmail({
-              from_name: "منصة بيتلي",
-              to: recipientEmail,
-              subject: title,
-              body: buildEmailHtml(title, message, project, actionUrl),
-            });
-          } catch (emailErr) {
-            // فشل البريد لا يوقف الإشعار الداخلي
-            console.error("Email send failed (non-blocking):", emailErr);
-          }
-        }
       } catch (err) {
-        console.error("Notification create failed (non-blocking):", err);
+        console.error("Notification/email failed (non-blocking):", err);
       }
     })
   );

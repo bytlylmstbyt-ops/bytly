@@ -11,77 +11,35 @@ export const sendNotification = async ({
   priority = "medium"
 }) => {
   try {
-    // Create notification in database
-    await base44.entities.Notification.create({
-      recipient_email: recipientEmail,
+    // Delegate to the backend function — it creates the notification record
+    // AND sends the email via the platform Core integration (service-role).
+    await base44.functions.invoke("sendPlatformNotification", {
+      recipientEmail,
       title,
       message,
       type,
-      related_project_id: projectId,
-      priority
+      projectId,
+      priority,
+      sendEmail: true,
+      fromName: "منصة بيتلي - لمسة بيت",
     });
 
-    // Send email notification
-    try {
-      await base44.integrations.Core.SendEmail({
-        from_name: "منصة بيتلي - لمسة بيت",
-        to: recipientEmail,
-        subject: title,
-        body: `
-          <div dir="rtl" style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
-            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #C9A66B 100%); padding: 30px; text-align: center;">
-              <h1 style="color: white; margin: 0; font-size: 24px;">بيتلي - لمسة بيت</h1>
-              <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 14px;">منصة ربط المصممين والعملاء</p>
-            </div>
-            
-            <div style="padding: 30px; background: #f8f9fa;">
-              <h2 style="color: #1a1a2e; margin-top: 0; font-size: 20px; border-right: 4px solid #C9A66B; padding-right: 15px;">${title}</h2>
-              <p style="color: #333; line-height: 1.8; font-size: 16px;">${message}</p>
-              
-              ${projectId ? `
-                <div style="margin: 20px 0; padding: 15px; background: white; border-radius: 8px; border: 1px solid #e0e0e0;">
-                  <p style="color: #666; margin: 0; font-size: 14px;">رقم المشروع: <strong style="color: #1a1a2e;">${projectId.slice(0, 8)}</strong></p>
-                </div>
-              ` : ''}
-              
-              <div style="text-align: center; margin-top: 30px;">
-                <a href="https://bytly.base44.com" style="display: inline-block; background: linear-gradient(135deg, #1a1a2e 0%, #C9A66B 100%); color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-                  الانتقال للمنصة
-                </a>
-              </div>
-            </div>
-            
-            <div style="padding: 20px; background: #1a1a2e; text-align: center;">
-              <p style="color: rgba(255,255,255,0.7); margin: 0; font-size: 12px;">
-                © ${new Date().getFullYear()} بيتلي - لمسة بيت. جميع الحقوق محفوظة.
-              </p>
-              <p style="color: rgba(255,255,255,0.7); margin: 10px 0 0 0; font-size: 12px;">
-                للدعم: ${ADMIN_EMAIL}
-              </p>
-            </div>
-          </div>
-        `
-      });
-    } catch (emailError) {
-      console.error("Error sending email:", emailError);
-    }
-
-    // Always notify admin
+    // Notify admin for non-low-priority notifications
     if (recipientEmail !== ADMIN_EMAIL && priority !== "low") {
-      await base44.integrations.Core.SendEmail({
-        from_name: "نظام الإشعارات - بيتلي",
-        to: ADMIN_EMAIL,
-        subject: `[${priority.toUpperCase()}] ${title}`,
-        body: `
-          <div dir="rtl">
-            <h3>إشعار إداري</h3>
-            <p><strong>المستلم:</strong> ${recipientEmail}</p>
-            <p><strong>النوع:</strong> ${type}</p>
-            <p><strong>الرسالة:</strong> ${message}</p>
-            ${projectId ? `<p><strong>المشروع:</strong> ${projectId}</p>` : ''}
-          </div>
-        `
-      });
+      try {
+        await base44.functions.invoke("sendPlatformNotification", {
+          recipientEmail: ADMIN_EMAIL,
+          title: `[${priority.toUpperCase()}] ${title}`,
+          message: `المستلم: ${recipientEmail} — ${message}`,
+          type: "system",
+          projectId,
+          priority,
+          sendEmail: true,
+          fromName: "نظام الإشعارات - بيتلي",
+        });
+      } catch (adminErr) {
+        console.error("Admin notification failed (non-blocking):", adminErr);
+      }
     }
 
     return true;

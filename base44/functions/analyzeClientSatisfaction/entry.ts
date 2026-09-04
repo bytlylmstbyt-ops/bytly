@@ -45,7 +45,7 @@ ${conversationText || 'لا توجد رسائل'}
   "summary": "<ملخص>"
 }`;
 
-    const analysisText = await base44.integrations.Core.InvokeLLM({
+    const analysisText = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
       add_context_from_internet: false,
       response_json_schema: {

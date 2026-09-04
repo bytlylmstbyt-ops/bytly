@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
         const overallScore = analysis?.overall_risk_score ?? 0;
 
         // ── 5. Generate consultative note via Bytly AI ────────────────
-        const consultativeResp = await base44.integrations.Core.InvokeLLM({
+        const consultativeResp = await base44.asServiceRole.integrations.Core.InvokeLLM({
           prompt: `أنت Bytly AI — المستشار الهندسي الذكي من منصة بيتلي للوساطة الهندسية.
 تم رصد ${delayedMilestones.length > 0 ? 'مراحل متأخرة' : 'مخاطر عالية'} في مشروع هندسي. اكتب ملاحظة استشارية احترافية وموجزة تتضمن:
 1. ملخص المراحل المتأخرة (إن وجدت) مع تأثيرها على الجدول الزمني

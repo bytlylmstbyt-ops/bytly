@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
 
     for (const user of incompleteUsers) {
       try {
-        await base44.integrations.Core.SendEmail({
+        await base44.asServiceRole.integrations.Core.SendEmail({
           to: user.email,
           subject: 'مل تسجيلك وانضم لعائلة بيتلي',
           body: `

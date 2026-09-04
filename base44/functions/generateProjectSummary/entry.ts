@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
 
 اكتب بأسلوب احترافي وودود مناسب للعميل.`;
 
-    const summary = await base44.integrations.Core.InvokeLLM({
+    const summary = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
       add_context_from_internet: false
     });

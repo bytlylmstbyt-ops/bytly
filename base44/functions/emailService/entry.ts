@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
           revision_requested: 'يحتاج مراجعة'
         }[status] || status;
 
-        await base44.integrations.Core.SendEmail({
+        await base44.asServiceRole.integrations.Core.SendEmail({
           to: clientEmail,
           subject: `تحديث مشروعك: ${escapeHtml(projectTitle)}`,
           body: `
@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
           lighting: 'إضاءة'
         }[projectCategory] || projectCategory;
 
-        await base44.integrations.Core.SendEmail({
+        await base44.asServiceRole.integrations.Core.SendEmail({
           to: engineerEmail,
           subject: `🆕 مشروع جديد يناسب تخصصك: ${escapeHtml(projectTitle)}`,
           body: `
@@ -211,7 +211,7 @@ Deno.serve(async (req) => {
         const proposalAmount = proposal.price || 0;
 
         // صياغة تلقائية بالذكاء الاصطناعي
-        const aiDraft = await base44.integrations.Core.InvokeLLM({
+        const aiDraft = await base44.asServiceRole.integrations.Core.InvokeLLM({
           prompt: `اكتب رسالة بريد إلكتروني متابعة احترافية باللغة العربية لمقترح مشروع هندسي.
 المعطيات:
 - اسم المستلم: ${recipientName}
@@ -223,7 +223,7 @@ Deno.serve(async (req) => {
 اكتب رسالة قصيرة ومهنية ودافئة (3-4 جمل فقط) تذكر المستلم بالمقترح وتطلب الرد. بدون مقدمات أو تحيات إضافية، فقط نص الرسالة.`
         });
 
-        await base44.integrations.Core.SendEmail({
+        await base44.asServiceRole.integrations.Core.SendEmail({
           to: recipientEmail,
           subject: `متابعة: ${escapeHtml(proposalTitle)}`,
           body: `
@@ -253,7 +253,7 @@ Deno.serve(async (req) => {
       case 'extractProjectFromEmail': {
         const { emailSubject, emailBody, clientEmail } = data;
 
-        const extracted = await base44.integrations.Core.InvokeLLM({
+        const extracted = await base44.asServiceRole.integrations.Core.InvokeLLM({
           prompt: `استخرج تفاصيل المشروع من رسالة البريد الإلكتروني التالية وأعد JSON منظم.
 
 الموضوع: ${emailSubject}

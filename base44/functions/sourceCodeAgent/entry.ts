@@ -89,7 +89,7 @@ async function planChange(base44, token, request) {
     } catch (_) {}
   }
 
-  const planning = await base44.integrations.Core.InvokeLLM({
+  const planning = await base44.asServiceRole.integrations.Core.InvokeLLM({
     prompt: `You are the source-code implementation planner for Bytly. You have real GitHub source files below. The admin request must be translated into concrete, minimal file edits.
 
 Repository: ${OWNER}/${REPO}, branch: ${DEFAULT_BRANCH}

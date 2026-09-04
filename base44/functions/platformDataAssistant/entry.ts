@@ -594,7 +594,7 @@ Deno.serve(async (req) => {
     question = (body?.question || '').trim();
     if (!question) return Response.json({ error: 'Missing question' }, { status: 400 });
 
-    const routing = await base44.integrations.Core.InvokeLLM({
+    const routing = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: `You are a routing classifier for a READ-ONLY admin data assistant on a construction/engineering marketplace platform called Bytly. You do not answer questions yourself — you only pick which read-only capability (if any) can answer the admin's question, including informal/conversational Arabic (dialect) or English phrasing.
 
 Available capabilities:
@@ -653,7 +653,7 @@ Decide:
 
     const { columns, rows, stats } = await capability.run(base44);
 
-    const composed = await base44.integrations.Core.InvokeLLM({
+    const composed = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: `You are a data assistant inside the admin dashboard of Bytly, a construction/engineering marketplace platform. This is a READ-ONLY tool — you never suggest actions that write, delete, pay, or publish anything.
 Answer the admin's question in ${language === 'ar' ? 'Arabic' : 'English'}, in 2-4 sentences, using ONLY the data below. Reference concrete numbers. Do not restate every row — a table is already shown below your answer. Do not invent any figure not present in the data.
 ${coverage === 'partial' ? 'Note: the matched capability only partially covers this question — mention briefly what part of the question this data addresses.' : ''}

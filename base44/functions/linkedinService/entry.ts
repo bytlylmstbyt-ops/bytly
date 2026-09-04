@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
       case 'shareDesignWork': {
         const { title, description, designCategory, projectUrl, engineerName, firmName } = data;
 
-        const caption = await base44.integrations.Core.InvokeLLM({
+        const caption = await base44.asServiceRole.integrations.Core.InvokeLLM({
           prompt: `اكتب منشور LinkedIn احترافي وجذاب باللغة العربية لمشاركة عمل تصميمي هندسي مكتمل.
 المعطيات:
 - العنوان: ${title}
@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
         const { industry, location, projectType, customMessage } = data;
 
         // صياغة رسالة تواصل مخصصة للعملاء
-        const clientMessage = await base44.integrations.Core.InvokeLLM({
+        const clientMessage = await base44.asServiceRole.integrations.Core.InvokeLLM({
           prompt: `اكتب رسالة تواصل LinkedIn احترافية موجهة لعملاء محتملين في مجال ${industry || 'البناء والتصميم'}.
 المعطيات:
 - الموقع: ${location || 'المملكة العربية السعودية'}
@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
         });
 
         // صياغة منشور للبحث عن عملاء
-        const searchPost = await base44.integrations.Core.InvokeLLM({
+        const searchPost = await base44.asServiceRole.integrations.Core.InvokeLLM({
           prompt: `اكتب منشور LinkedIn يستهدف العملاء الباحثين عن خدمات هندسية وتصميمية في ${location || 'المملكة العربية السعودية'}.
 نوع الخدمة المطلوب: ${projectType || 'تصميم معماري وداخلي'}
 المنشور يجب أن يكون 80-100 كلمة ويشجع على زيارة mybytly.com
@@ -137,7 +137,7 @@ Hashtags: #تصميم_منازل #بناء #معمارية #تصميم_داخل�
         const { engineerName, engineerSpecialization, engineerCity, customNote } = data;
 
         // صياغة رسالة طلب تواصل مخصصة للمهندس
-        const connectionMessage = await base44.integrations.Core.InvokeLLM({
+        const connectionMessage = await base44.asServiceRole.integrations.Core.InvokeLLM({
           prompt: `اكتب رسالة طلب تواصل LinkedIn موجهة لمهندس محترف للانضمام لمنصة Bytly.
 المعطيات:
 - اسم المهندس: ${engineerName || 'المهندس'}
@@ -154,7 +154,7 @@ Hashtags: #تصميم_منازل #بناء #معمارية #تصميم_داخل�
         });
 
         // منشور استقطاب مهندسين
-        const recruitPost = await base44.integrations.Core.InvokeLLM({
+        const recruitPost = await base44.asServiceRole.integrations.Core.InvokeLLM({
           prompt: `اكتب منشور LinkedIn لاستقطاب مهندسين متخصصين في ${engineerSpecialization || 'التصميم المعماري والداخلي'} للانضمام لمنصة Bytly.
 المنشور 80-100 كلمة، يذكر مزايا المنصة للمهندسين ويختتم بـ:
 Hashtags: #وظائف_هندسية #مهندس_معماري #تصميم_داخلي #فرص_عمل #Bytly`
@@ -181,7 +181,7 @@ Hashtags: #وظائف_هندسية #مهندس_معماري #تصميم_داخل
           return Response.json({ error: 'المشروع غير موجود' }, { status: 404 });
         }
 
-        const caption = await base44.integrations.Core.InvokeLLM({
+        const caption = await base44.asServiceRole.integrations.Core.InvokeLLM({
           prompt: `اكتب منشور LinkedIn احترافي للإعلان عن إتمام مشروع هندسي على منصة Bytly.
 تفاصيل المشروع:
 - العنوان: ${project.title}
@@ -210,7 +210,7 @@ Hashtags: #وظائف_هندسية #مهندس_معماري #تصميم_داخل
       case 'draftOutreachMessage': {
         const { recipientName, recipientRole, purpose, projectDetails } = data;
 
-        const message = await base44.integrations.Core.InvokeLLM({
+        const message = await base44.asServiceRole.integrations.Core.InvokeLLM({
           prompt: `اكتب رسالة تواصل LinkedIn احترافية باللغة العربية.
 - اسم المستلم: ${recipientName}
 - الدور: ${recipientRole === 'client' ? 'عميل محتمل' : 'مهندس محتمل'}

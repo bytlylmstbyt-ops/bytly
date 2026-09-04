@@ -54,7 +54,7 @@ ${engineers.slice(0, 10).map(e => `
   "matching_criteria": ["معيار1", "معيار2"]
 }`;
 
-    const suggestions = await base44.integrations.Core.InvokeLLM({
+    const suggestions = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
       add_context_from_internet: false,
       response_json_schema: {

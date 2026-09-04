@@ -218,7 +218,7 @@ Deno.serve(async (req) => {
       appUrl: appUrl || 'https://app.base44.com',
     });
 
-    await base44.integrations.Core.SendEmail({
+    await base44.asServiceRole.integrations.Core.SendEmail({
       to: recipientEmail,
       subject,
       body: html,

@@ -229,7 +229,7 @@ Deno.serve(async (req) => {
     // light session context (is there a plan awaiting confirmation?),
     // which of the two existing capabilities to invoke, or whether the
     // admin is just confirming/cancelling a plan already on screen.
-    const routing = await base44.integrations.Core.InvokeLLM({
+    const routing = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: `You are the top-level intent router for a unified admin AI agent on a construction/engineering marketplace platform called Bytly. You do not answer anything yourself — you only decide which of three routes this message belongs to, using the message and recent conversation context.
 
 Routes:

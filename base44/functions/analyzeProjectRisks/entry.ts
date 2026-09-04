@@ -147,7 +147,7 @@ Deno.serve(async (req) => {
 6. معدل استهلاك الميزانية -> توقع تجاوز التكلفة
 7. الأنماط الزمنية -> التوقعات للمستقبل القريب (7 و 14 يوماً)`;
 
-    const analysis = await base44.integrations.Core.InvokeLLM({
+    const analysis = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
       add_context_from_internet: false,
       response_json_schema: {

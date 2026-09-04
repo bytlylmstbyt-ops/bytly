@@ -189,7 +189,7 @@ Deno.serve(async (req) => {
       case 'sendSystemEmail': {
         const { to, subject, body, source = 'system', recipient_name = '' } = data;
         try {
-          await base44.integrations.Core.SendEmail({ to, subject, body });
+          await base44.asServiceRole.integrations.Core.SendEmail({ to, subject, body });
           const record = await base44.asServiceRole.entities.SentEmail.create({
             to_email: to,
             recipient_name,
@@ -239,7 +239,7 @@ Deno.serve(async (req) => {
       // AI-draft reply
       case 'draftReply': {
         const { emailBody, emailFrom, emailSubject, context } = data;
-        const draft = await base44.integrations.Core.InvokeLLM({
+        const draft = await base44.asServiceRole.integrations.Core.InvokeLLM({
           prompt: `أنت مساعد لشركة Bytly للخدمات الهندسية والتصميم في السعودية.
 
 اكتب رداً احترافياً بالعربية على هذا البريد الإلكتروني:

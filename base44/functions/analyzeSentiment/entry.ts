@@ -34,7 +34,7 @@ ${truncatedContent}
   "suggested_action": "الإجراء المقترح"
 }`;
 
-    const analysis = await base44.integrations.Core.InvokeLLM({
+    const analysis = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
       response_json_schema: {
         type: "object",

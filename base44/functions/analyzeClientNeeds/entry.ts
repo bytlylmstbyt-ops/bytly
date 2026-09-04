@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
   "summary": "وصف موجز للمشروع والاحتياجات"
 }`;
 
-    const analysis = await base44.integrations.Core.InvokeLLM({
+    const analysis = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt,
       add_context_from_internet: false,
       response_json_schema: {

@@ -190,7 +190,7 @@ Deno.serve(async (req) => {
 
     const { matched: indexMatches, totalIndexed } = await searchProjectIndex(base44, request);
 
-    const planning = await base44.integrations.Core.InvokeLLM({
+    const planning = await base44.asServiceRole.integrations.Core.InvokeLLM({
       prompt: `You are an AI Change Planner with Project Context inside the admin dashboard of Bytly, a construction/engineering marketplace platform built with React (frontend) and Base44 (backend/entities). You NEVER execute changes yourself — you only produce a structured, human-reviewable Change Plan for a non-technical admin. You do not have live access to the source code; reason using the Project Index search results below, which come from a real, refreshable index of the platform's pages/entities/functions/integrations.
 
 Project Index search results relevant to this request (name [type]: description — related entities/functions/integrations):
