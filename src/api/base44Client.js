@@ -4,11 +4,11 @@ import { appParams } from '@/lib/app-params';
 const { appId, token } = appParams;
 
 // Base44 remains the backend for existing users during the Supabase migration.
-// The Vercel-hosted SPA must use the hosted Base44 app URL explicitly; otherwise
-// SDK API calls resolve to Vercel's own /api routes instead of Base44.
+// The Vercel-hosted SPA must use the actual hosted Bytly Base44 app URL for both
+// API requests and OAuth. This value is public configuration, not a secret.
 const base44BackendUrl = import.meta.env.DEV
   ? 'http://localhost:4400'
-  : (import.meta.env.VITE_BASE44_APP_BASE_URL || 'https://base44.app');
+  : (import.meta.env.VITE_BASE44_APP_BASE_URL || 'https://bytly.base44.app');
 
 const base44Config = {
   appId,
