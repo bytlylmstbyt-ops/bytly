@@ -1,13 +1,7 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
-import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { UserPlus, Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
-import AuthLayout from "@/components/AuthLayout";
-import GoogleIcon from "@/components/GoogleIcon";
+
+const fieldStyle = { width: "100%", height: 48, boxSizing: "border-box", border: "1px solid #d1d5db", borderRadius: 10, padding: "0 14px", fontSize: 16, background: "white", color: "#111827" };
+const buttonStyle = { width: "100%", height: 48, border: 0, borderRadius: 10, padding: "0 14px", fontSize: 16, fontWeight: 600, cursor: "pointer" };
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -16,84 +10,62 @@ export default function Register() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const handleGoogleRegister = async () => {
-    if (!isSupabaseConfigured || !supabase) {
-      setError("التسجيل عبر Google غير متاح حالياً.");
-      return;
-    }
-    setError("");
-    setLoading(true);
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: `${window.location.origin}/` },
-    });
-    if (oauthError) {
-      console.error('Supabase Google registration error:', oauthError);
-      setError("تعذر بدء التسجيل عبر Google. يرجى المحاولة مرة أخرى.");
-      setLoading(false);
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setMessage("");
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
+    setError(""); setMessage("");
+    if (password.length < 6) { setError("كلمة المرور يجب أن تكون 6 أحرف على الأقل."); return; }
+    if (password !== confirmPassword) { setError("كلمتا المرور غير متطابقتين."); return; }
     setLoading(true);
-
     try {
-      if (isSupabaseConfigured && supabase) {
-        const { data, error: sbError } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: { data: { email: email.trim() } },
-        });
-
-        if (!sbError) {
-          if (data?.session) window.location.href = "/";
-          else setMessage("تم إنشاء الحساب. يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب ثم تسجيل الدخول.");
-          return;
-        }
-
-        const sbMsg = String(sbError.message || "").toLowerCase();
-        if (sbMsg.includes("already registered") || sbMsg.includes("already exists")) {
-          setError("هذا البريد مسجل بالفعل. يمكنك تسجيل الدخول.");
-          return;
-        }
+      const { supabase, isSupabaseConfigured } = await import("@/lib/supabaseClient");
+      if (!isSupabaseConfigured || !supabase) { setError("خدمة التسجيل غير مهيأة حالياً. يرجى المحاولة لاحقاً."); return; }
+      const cleanEmail = email.trim().toLowerCase();
+      const { data, error: sbError } = await supabase.auth.signUp({ email: cleanEmail, password, options: { data: { email: cleanEmail } } });
+      if (sbError) {
+        const msg = String(sbError.message || "").toLowerCase();
+        if (msg.includes("already registered") || msg.includes("already exists") || msg.includes("user already registered")) setError("هذا البريد مسجل بالفعل. يمكنك تسجيل الدخول.");
+        else { console.error("Supabase registration error:", sbError); setError("تعذر إنشاء الحساب حالياً. يرجى المحاولة مرة أخرى."); }
+        return;
       }
-
-      await base44.auth.register({ email, password });
-      setMessage("تم إنشاء الحساب. يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب.");
+      if (data?.session) window.location.replace("/");
+      else setMessage("تم إنشاء الحساب بنجاح. راجعي بريدك الإلكتروني لتفعيل الحساب ثم سجّلي الدخول.");
     } catch (err) {
-      setError(err.message || "Registration failed");
-    } finally {
-      setLoading(false);
-    }
+      console.error("Registration error:", err);
+      setError("تعذر إنشاء الحساب حالياً. يرجى المحاولة مرة أخرى.");
+    } finally { setLoading(false); }
+  };
+
+  const handleGoogleRegister = async () => {
+    setError(""); setLoading(true);
+    try {
+      const { supabase, isSupabaseConfigured } = await import("@/lib/supabaseClient");
+      if (!isSupabaseConfigured || !supabase) { setError("التسجيل عبر Google غير متاح حالياً."); return; }
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${window.location.origin}/` } });
+      if (oauthError) { console.error("Supabase Google registration error:", oauthError); setError("تعذر بدء التسجيل عبر Google. يرجى المحاولة مرة أخرى."); }
+    } catch (err) { console.error("Google registration error:", err); setError("تعذر بدء التسجيل عبر Google. يرجى المحاولة مرة أخرى."); }
+    finally { setLoading(false); }
   };
 
   return (
-    <AuthLayout
-      icon={UserPlus}
-      title="Create your account"
-      subtitle="Sign up to get started"
-      footer={<><span>Already have an account?{" "}</span><Link to="/login" className="text-primary font-medium hover:underline">Log in</Link></>}
-    >
-      {error && <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
-      {message && <div className="mb-4 p-3 rounded-lg bg-primary/10 text-primary text-sm">{message}</div>}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2"><Label htmlFor="email">Email</Label><div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true"/><Input id="email" type="email" autoComplete="email" autoFocus placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 h-12" required disabled={loading}/></div></div>
-        <div className="space-y-2"><Label htmlFor="password">Password</Label><div className="relative"><Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true"/><Input id="password" type={showPassword ? "text" : "password"} autoComplete="new-password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10 pr-10 h-12" required disabled={loading}/><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-label={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button></div></div>
-        <div className="space-y-2"><Label htmlFor="confirm">Confirm Password</Label><div className="relative"><Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true"/><Input id="confirm" type={showConfirmPassword ? "text" : "password"} autoComplete="new-password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="pl-10 pr-10 h-12" required disabled={loading}/><button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-label={showConfirmPassword ? "Hide password" : "Show password"}>{showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}</button></div></div>
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>{loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating account...</> : "Create account"}</Button>
-      </form>
-      <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-muted" /></div><div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">or continue with</span></div></div>
-      <Button variant="outline" className="w-full h-12" onClick={handleGoogleRegister} disabled={loading}><GoogleIcon />Continue with Google</Button>
-    </AuthLayout>
+    <main dir="rtl" style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, boxSizing: "border-box", background: "#f8fafc" }}>
+      <section style={{ width: "100%", maxWidth: 430, background: "white", border: "1px solid #e5e7eb", borderRadius: 18, padding: 28, boxSizing: "border-box", boxShadow: "0 8px 30px rgba(0,0,0,.06)" }}>
+        <header style={{ textAlign: "center", marginBottom: 24 }}><div style={{ fontSize: 34, marginBottom: 8 }}>🏠</div><h1 style={{ margin: 0, fontSize: 28, color: "#111827" }}>إنشاء حساب</h1><p style={{ margin: "8px 0 0", color: "#6b7280" }}>أنشئي حسابك في بيتلي</p></header>
+        {error && <div role="alert" style={{ marginBottom: 16, padding: 12, borderRadius: 10, background: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c", fontSize: 14 }}>{error}</div>}
+        {message && <div role="status" style={{ marginBottom: 16, padding: 12, borderRadius: 10, background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#166534", fontSize: 14 }}>{message}</div>}
+        <form onSubmit={handleSubmit}>
+          <label htmlFor="register-email" style={{ display: "block", marginBottom: 7, fontWeight: 600, color: "#374151" }}>البريد الإلكتروني</label>
+          <input id="register-email" name="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={loading} style={fieldStyle} />
+          <label htmlFor="register-password" style={{ display: "block", margin: "16px 0 7px", fontWeight: 600, color: "#374151" }}>كلمة المرور</label>
+          <input id="register-password" name="password" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={loading} style={fieldStyle} />
+          <label htmlFor="register-confirm" style={{ display: "block", margin: "16px 0 7px", fontWeight: 600, color: "#374151" }}>تأكيد كلمة المرور</label>
+          <input id="register-confirm" name="confirmPassword" type="password" autoComplete="new-password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required disabled={loading} style={fieldStyle} />
+          <button type="submit" disabled={loading} style={{ ...buttonStyle, marginTop: 18, background: loading ? "#9ca3af" : "#111827", color: "white", opacity: loading ? .75 : 1 }}>{loading ? "جاري إنشاء الحساب..." : "إنشاء الحساب"}</button>
+        </form>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "22px 0", color: "#9ca3af", fontSize: 12 }}><span style={{ flex: 1, height: 1, background: "#e5e7eb" }} /><span>أو</span><span style={{ flex: 1, height: 1, background: "#e5e7eb" }} /></div>
+        <button type="button" disabled={loading} onClick={handleGoogleRegister} style={{ ...buttonStyle, background: "white", color: "#374151", border: "1px solid #d1d5db" }}>التسجيل عبر Google</button>
+        <footer style={{ textAlign: "center", marginTop: 20, fontSize: 14, color: "#6b7280" }}>لديك حساب بالفعل؟ <a href="/login" style={{ color: "#2563eb", fontWeight: 600 }}>تسجيل الدخول</a></footer>
+      </section>
+    </main>
   );
 }
