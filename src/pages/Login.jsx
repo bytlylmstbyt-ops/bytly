@@ -1,40 +1,43 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
 import { appParams } from "@/lib/app-params";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
-import AuthLayout from "@/components/AuthLayout";
-import GoogleIcon from "@/components/GoogleIcon";
+
+const AUTH_PATHS = ["/login", "/register", "/forgot-password", "/reset-password"];
 
 const getReturnUrl = () => {
   const raw = appParams.fromUrl;
   if (!raw) return "/";
   try {
     const url = new URL(raw, window.location.origin);
-    if (["/login", "/register", "/forgot-password", "/reset-password"].includes(url.pathname)) return "/";
-    return url.pathname + url.search;
+    return AUTH_PATHS.includes(url.pathname) ? "/" : url.pathname + url.search;
   } catch {
-    if (["/login", "/register", "/forgot-password", "/reset-password"].includes(raw)) return "/";
-    return raw;
+    return AUTH_PATHS.includes(raw) ? "/" : raw;
   }
 };
 
-const MicrosoftIcon = () => (
-  <svg className="w-5 h-5 mr-2" viewBox="0 0 21 21" fill="none">
-    <rect x="1" y="1" width="9" height="9" fill="#F25022"/><rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
-    <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/><rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
-  </svg>
-);
-const FacebookIcon = () => (
-  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.886v2.267h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
-);
-const AppleIcon = () => (
-  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
-);
+const fieldStyle = {
+  width: "100%",
+  height: 48,
+  boxSizing: "border-box",
+  border: "1px solid #d1d5db",
+  borderRadius: 10,
+  padding: "0 14px",
+  fontSize: 16,
+  background: "white",
+  color: "#111827",
+};
+
+const buttonStyle = {
+  width: "100%",
+  height: 48,
+  border: 0,
+  borderRadius: 10,
+  padding: "0 14px",
+  fontSize: 16,
+  fontWeight: 600,
+  cursor: "pointer",
+};
 
 export default function Login() {
   const { isAuthenticated } = useAuth();
@@ -47,7 +50,7 @@ export default function Login() {
   const returnUrl = getReturnUrl();
 
   useEffect(() => {
-    if (isAuthenticated) window.location.href = returnUrl;
+    if (isAuthenticated) window.location.replace(returnUrl);
   }, [isAuthenticated, returnUrl]);
 
   const handleSocialLogin = async (provider) => {
@@ -57,7 +60,7 @@ export default function Login() {
     }
     setError("");
     setLoading(true);
-    sessionStorage.setItem('loginReturnUrl', returnUrl);
+    sessionStorage.setItem("loginReturnUrl", returnUrl);
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo: `${window.location.origin}/login?from_url=${encodeURIComponent(returnUrl)}` },
@@ -71,21 +74,20 @@ export default function Login() {
 
   const validateEmail = (value) => {
     if (!value) return "";
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(value)) return "Invalid email address";
-    return "";
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? "" : "Invalid email address";
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     if (submitGuard.current) return;
     submitGuard.current = true;
     setLoading(true);
     setError("");
-    const emailValidation = validateEmail(email);
-    if (emailValidation) {
+
+    const validation = validateEmail(email);
+    if (validation) {
+      setEmailError(validation);
       submitGuard.current = false;
-      setEmailError(emailValidation);
       setLoading(false);
       return;
     }
@@ -93,29 +95,28 @@ export default function Login() {
     let supabaseError = null;
     try {
       if (isSupabaseConfigured && supabase) {
-        const { error: sbError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-        if (!sbError) {
-          window.location.href = returnUrl;
+        const result = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+        if (!result.error) {
+          window.location.replace(returnUrl);
           return;
         }
-        supabaseError = sbError;
+        supabaseError = result.error;
       }
 
-      // Compatibility bridge for legacy users only. Load the legacy SDK lazily,
-      // after Supabase has failed, so Base44 cannot affect the public auth page startup.
-      const { base44 } = await import('@/api/base44Client');
-      const response = await base44.auth.loginViaEmailPassword(email.trim(), password);
-      console.log('Legacy login bridge succeeded:', response?.user?.email);
-      window.location.href = returnUrl;
+      // Temporary compatibility bridge for legacy accounts only.
+      // Base44 is never loaded during page startup; it is loaded only after Supabase rejects the credentials.
+      const { base44 } = await import("@/api/base44Client");
+      await base44.auth.loginViaEmailPassword(email.trim(), password);
+      window.location.replace(returnUrl);
     } catch (err) {
-      console.error('Login error:', { status: err?.status, message: err?.message, data: err?.data });
-      const msg = err?.message || "";
+      console.error("Login error:", { status: err?.status, message: err?.message });
+      const msg = String(err?.message || "").toLowerCase();
+      const sbMsg = String(supabaseError?.message || "").toLowerCase();
       const status = err?.status;
-      const sbMsg = typeof supabaseError?.message === 'string' ? supabaseError.message.toLowerCase() : '';
-      if (sbMsg.includes('email not confirmed')) setError("يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب");
-      else if (status === 404 || (msg && msg.toLowerCase().includes("not found"))) setError("المستخدم غير مسجل في التطبيق");
-      else if (status === 400 || status === 401 || msg.toLowerCase().includes("credentials") || msg.toLowerCase().includes("password") || sbMsg.includes('invalid login credentials')) setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+      if (sbMsg.includes("email not confirmed")) setError("يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب");
       else if (status === 403) setError("لا يمكن تسجيل الدخول بهذا الحساب حالياً");
+      else if (status === 404 || msg.includes("not found")) setError("المستخدم غير مسجل في التطبيق");
+      else if (status === 400 || status === 401 || msg.includes("credentials") || msg.includes("password") || sbMsg.includes("invalid login credentials")) setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
       else setError("تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
     } finally {
       submitGuard.current = false;
@@ -124,20 +125,43 @@ export default function Login() {
   };
 
   return (
-    <AuthLayout icon={LogIn} title="تسجيل الدخول" subtitle="مرحباً بعودتك" footer={<div className="flex flex-col gap-2 items-center"><p className="text-sm text-muted-foreground">ليس لديك حساب؟{" "}<Link to="/register" className="text-primary font-medium hover:underline">سجّل الآن</Link></p><Link to="/forgot-password" className="text-xs text-primary hover:underline">نسيت كلمة المرور؟</Link></div>}>
-      {error && <div className="mb-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-2" dir="rtl"><span className="text-destructive shrink-0 mt-0.5">⚠</span><span>{error}</span></div>}
-      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5" dir="rtl">
-        <div className="space-y-2"><Label htmlFor="email" className="text-sm font-medium">البريد الإلكتروني</Label><div className="relative"><Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true"/><Input id="email" type="email" inputMode="email" autoComplete="email" enterKeyHint="next" placeholder="you@example.com" value={email} onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(""); }} onBlur={() => setEmailError(validateEmail(email))} className={`pl-10 h-12 ${emailError ? "border-destructive focus-visible:ring-destructive" : ""}`} required aria-invalid={!!emailError} aria-describedby={emailError ? "email-error" : undefined} disabled={loading}/></div>{emailError && <p id="email-error" className="text-xs text-destructive mt-1">{emailError}</p>}</div>
-        <div className="space-y-2"><Label htmlFor="password" className="text-sm font-medium">كلمة المرور</Label><div className="relative"><Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true"/><Input id="password" type="password" autoComplete="current-password" enterKeyHint="done" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10 h-12" required disabled={loading}/></div></div>
-        <Button type="submit" className="w-full h-12 font-medium text-base" disabled={loading || !!emailError}>{loading ? <><Loader2 className="w-5 h-5 mr-2 animate-spin"/>جاري تسجيل الدخول...</> : "تسجيل الدخول"}</Button>
-      </form>
-      <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-muted"></div></div><div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">أو تابع باستخدام</span></div></div>
-      <div className="space-y-3">
-        <Button variant="outline" className="w-full h-12" onClick={() => handleSocialLogin('google')}><GoogleIcon/>تسجيل الدخول عبر Google</Button>
-        <Button variant="outline" className="w-full h-12" onClick={() => handleSocialLogin('azure')}><MicrosoftIcon/>تسجيل الدخول عبر Microsoft</Button>
-        <Button variant="outline" className="w-full h-12" onClick={() => handleSocialLogin('facebook')}><FacebookIcon/>تسجيل الدخول عبر Facebook</Button>
-        <Button variant="outline" className="w-full h-12" onClick={() => handleSocialLogin('apple')}><AppleIcon/>تسجيل الدخول عبر Apple</Button>
-      </div>
-    </AuthLayout>
+    <main dir="rtl" style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, boxSizing: "border-box", background: "#f8fafc" }}>
+      <section style={{ width: "100%", maxWidth: 430, background: "white", border: "1px solid #e5e7eb", borderRadius: 18, padding: 28, boxSizing: "border-box", boxShadow: "0 8px 30px rgba(0,0,0,.06)" }}>
+        <header style={{ textAlign: "center", marginBottom: 24 }}>
+          <div style={{ fontSize: 34, marginBottom: 8 }}>🏠</div>
+          <h1 style={{ margin: 0, fontSize: 28, color: "#111827" }}>تسجيل الدخول</h1>
+          <p style={{ margin: "8px 0 0", color: "#6b7280" }}>مرحباً بعودتك إلى بيتلي</p>
+        </header>
+
+        {error && <div role="alert" style={{ marginBottom: 16, padding: 12, borderRadius: 10, background: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c", fontSize: 14 }}>{error}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <label htmlFor="login-email" style={{ display: "block", marginBottom: 7, fontWeight: 600, color: "#374151" }}>البريد الإلكتروني</label>
+          <input id="login-email" name="email" type="email" inputMode="email" autoComplete="email" value={email} onChange={(e) => { setEmail(e.target.value); setEmailError(""); }} onBlur={() => setEmailError(validateEmail(email))} required disabled={loading} style={{ ...fieldStyle, borderColor: emailError ? "#dc2626" : "#d1d5db" }} />
+          {emailError && <div style={{ color: "#dc2626", fontSize: 12, marginTop: 5 }}>{emailError}</div>}
+
+          <label htmlFor="login-password" style={{ display: "block", margin: "16px 0 7px", fontWeight: 600, color: "#374151" }}>كلمة المرور</label>
+          <input id="login-password" name="password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={loading} style={fieldStyle} />
+
+          <button type="submit" disabled={loading || !!emailError} style={{ ...buttonStyle, marginTop: 18, background: loading ? "#9ca3af" : "#111827", color: "white", opacity: loading ? .75 : 1 }}>
+            {loading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
+          </button>
+        </form>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "22px 0", color: "#9ca3af", fontSize: 12 }}><span style={{ flex: 1, height: 1, background: "#e5e7eb" }} /><span>أو تابع باستخدام</span><span style={{ flex: 1, height: 1, background: "#e5e7eb" }} /></div>
+
+        <div style={{ display: "grid", gap: 10 }}>
+          <button type="button" disabled={loading} onClick={() => handleSocialLogin("google")} style={{ ...buttonStyle, background: "white", color: "#374151", border: "1px solid #d1d5db" }}>تسجيل الدخول عبر Google</button>
+          <button type="button" disabled={loading} onClick={() => handleSocialLogin("azure")} style={{ ...buttonStyle, background: "white", color: "#374151", border: "1px solid #d1d5db" }}>تسجيل الدخول عبر Microsoft</button>
+          <button type="button" disabled={loading} onClick={() => handleSocialLogin("facebook")} style={{ ...buttonStyle, background: "white", color: "#374151", border: "1px solid #d1d5db" }}>تسجيل الدخول عبر Facebook</button>
+          <button type="button" disabled={loading} onClick={() => handleSocialLogin("apple")} style={{ ...buttonStyle, background: "white", color: "#374151", border: "1px solid #d1d5db" }}>تسجيل الدخول عبر Apple</button>
+        </div>
+
+        <footer style={{ textAlign: "center", marginTop: 20, fontSize: 14 }}>
+          <p style={{ margin: "0 0 8px", color: "#6b7280" }}>ليس لديك حساب؟ <a href="/register" style={{ color: "#2563eb", fontWeight: 600 }}>سجّل الآن</a></p>
+          <a href="/forgot-password" style={{ color: "#2563eb", fontSize: 13 }}>نسيت كلمة المرور؟</a>
+        </footer>
+      </section>
+    </main>
   );
 }
