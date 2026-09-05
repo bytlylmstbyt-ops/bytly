@@ -1,14 +1,16 @@
 import { createClient } from '@base44/sdk';
 import { appParams } from '@/lib/app-params';
 
-const { appId, token, functionsVersion, appBaseUrl } = appParams;
+const { appId, token } = appParams;
 
-//Create a client with authentication required
-export const base44 = createClient({
+// Base44 is still the backend for existing users during the migration to Supabase.
+// In production, let the SDK use its hosted Base44 backend. Passing an empty
+// serverUrl makes an external Vercel-hosted SPA treat /api as a local route.
+const base44Config = {
   appId,
   token,
-  functionsVersion,
-  serverUrl: '',
   requiresAuth: false,
-  appBaseUrl
-});
+  ...(import.meta.env.DEV ? { serverUrl: 'http://localhost:4400' } : {}),
+};
+
+export const base44 = createClient(base44Config);
