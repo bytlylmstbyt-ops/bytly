@@ -51,10 +51,28 @@ export default function Login() {
     if (isAuthenticated) window.location.href = returnUrl;
   }, [isAuthenticated, returnUrl]);
 
-  const handleGoogleLogin = () => {
-    const absoluteReturnUrl = window.location.origin + returnUrl;
+  const handleSocialLogin = async (provider) => {
+    if (!isSupabaseConfigured || !supabase) {
+      setError("تسجيل الدخول الاجتماعي غير متاح حالياً. يرجى المحاولة بالبريد الإلكتروني.");
+      return;
+    }
+
+    setError("");
+    setLoading(true);
     sessionStorage.setItem('loginReturnUrl', returnUrl);
-    base44.auth.loginWithProvider('google', absoluteReturnUrl);
+
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/login?from_url=${encodeURIComponent(returnUrl)}`,
+      },
+    });
+
+    if (oauthError) {
+      console.error(`Supabase ${provider} login error:`, oauthError);
+      setError("تعذر بدء تسجيل الدخول. يرجى المحاولة مرة أخرى.");
+      setLoading(false);
+    }
   };
 
   const validateEmail = (value) => {
@@ -80,34 +98,36 @@ export default function Login() {
 
     let supabaseError = null;
     try {
-      // Supabase-first: migrated/new Supabase users enter without any visible
-      // change. Until migration is complete, Base44 remains the fallback.
       if (isSupabaseConfigured && supabase) {
         const { error: sbError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
         if (!sbError) {
-          console.log('Login successful via Supabase');
           window.location.href = returnUrl;
           return;
         }
         supabaseError = sbError;
       }
 
-      const response = await base44.auth.loginViaEmailPassword(email, password);
-      console.log('Login successful via Base44 fallback:', response?.user?.email);
+      // Compatibility bridge for legacy users only. This is temporary and
+      // will be removed once the remaining legacy accounts are migrated.
+      const response = await base44.auth.loginViaEmailPassword(email.trim(), password);
+      console.log('Legacy login bridge succeeded:', response?.user?.email);
       window.location.href = returnUrl;
     } catch (err) {
-      console.error('Login error details:', { status: err?.status, message: err?.message, data: err?.data, response: err?.response?.data });
+      console.error('Login error:', { status: err?.status, message: err?.message, data: err?.data });
       const msg = err?.message || "";
       const status = err?.status;
-      const dataMsg = err?.data?.message || err?.response?.data?.message || "";
       const sbMsg = typeof supabaseError?.message === 'string' ? supabaseError.message.toLowerCase() : '';
-      if (status === 403) setError("يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب");
-      else if (status === 404 || (msg && msg.includes("not found"))) setError("المستخدم غير مسجل في التطبيق");
-      else if (status === 400 || status === 401 || msg.includes("credentials") || msg.includes("password") || dataMsg.includes("credentials") || sbMsg.includes('invalid login credentials') || sbMsg.includes('email not confirmed')) {
-        setError(sbMsg.includes('email not confirmed') ? "يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب" : "البريد الإلكتروني أو كلمة المرور غير صحيحة");
-      } else if (status === 0 || msg.includes("network") || msg.includes("fetch") || msg.includes("NotFoundError")) {
-        setError("تعذر الاتصال بالخادم. يرجى التحقق من اتصالك بالإنترنت.");
-      } else setError(dataMsg || msg || "البريد الإلكتروني أو كلمة المرور غير صحيحة");
+      if (sbMsg.includes('email not confirmed')) {
+        setError("يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب");
+      } else if (status === 404 || (msg && msg.toLowerCase().includes("not found"))) {
+        setError("المستخدم غير مسجل في التطبيق");
+      } else if (status === 400 || status === 401 || msg.toLowerCase().includes("credentials") || msg.toLowerCase().includes("password") || sbMsg.includes('invalid login credentials')) {
+        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+      } else if (status === 403) {
+        setError("لا يمكن تسجيل الدخول بهذا الحساب حالياً");
+      } else {
+        setError("تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
+      }
     } finally {
       submitGuard.current = false;
       setLoading(false);
@@ -124,10 +144,10 @@ export default function Login() {
       </form>
       <div className="relative my-6"><div className="absolute inset-0 flex items-center"><div className="w-full border-t border-muted"></div></div><div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">أو تابع باستخدام</span></div></div>
       <div className="space-y-3">
-        <Button variant="outline" className="w-full h-12" onClick={handleGoogleLogin}><GoogleIcon/>تسجيل الدخول عبر Google</Button>
-        <Button variant="outline" className="w-full h-12" onClick={() => { sessionStorage.setItem('loginReturnUrl', returnUrl); base44.auth.loginWithProvider('microsoft', window.location.origin + returnUrl); }}><MicrosoftIcon/>تسجيل الدخول عبر Microsoft</Button>
-        <Button variant="outline" className="w-full h-12" onClick={() => { sessionStorage.setItem('loginReturnUrl', returnUrl); base44.auth.loginWithProvider('facebook', window.location.origin + returnUrl); }}><FacebookIcon/>تسجيل الدخول عبر Facebook</Button>
-        <Button variant="outline" className="w-full h-12" onClick={() => { sessionStorage.setItem('loginReturnUrl', returnUrl); base44.auth.loginWithProvider('apple', window.location.origin + returnUrl); }}><AppleIcon/>تسجيل الدخول عبر Apple</Button>
+        <Button variant="outline" className="w-full h-12" onClick={() => handleSocialLogin('google')}><GoogleIcon/>تسجيل الدخول عبر Google</Button>
+        <Button variant="outline" className="w-full h-12" onClick={() => handleSocialLogin('azure')}><MicrosoftIcon/>تسجيل الدخول عبر Microsoft</Button>
+        <Button variant="outline" className="w-full h-12" onClick={() => handleSocialLogin('facebook')}><FacebookIcon/>تسجيل الدخول عبر Facebook</Button>
+        <Button variant="outline" className="w-full h-12" onClick={() => handleSocialLogin('apple')}><AppleIcon/>تسجيل الدخول عبر Apple</Button>
       </div>
     </AuthLayout>
   );
