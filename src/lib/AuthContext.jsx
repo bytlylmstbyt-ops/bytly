@@ -1,5 +1,4 @@
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
 import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 
 const AuthContext = createContext();
@@ -30,28 +29,29 @@ export const AuthProvider = ({ children }) => {
       if (!isMounted.current) return;
 
       if (isSupabaseConfigured && supabase) {
-        const { data } = await supabase.auth.getSession();
-        if (data?.session?.user && isMounted.current) {
-          await setSupabaseUser(data.session.user);
-          return;
-        }
-
-        const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-          if (!isMounted.current) return;
-          if (session?.user) {
-            await setSupabaseUser(session.user);
-          } else if (_event === 'SIGNED_OUT') {
-            setUser(null);
-            setIsAuthenticated(false);
-            setIsLoadingAuth(false);
+        try {
+          const { data } = await supabase.auth.getSession();
+          if (data?.session?.user && isMounted.current) {
+            await setSupabaseUser(data.session.user);
+            return;
           }
-        });
-        unsubscribe = listener?.subscription;
+
+          const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+            if (!isMounted.current) return;
+            if (session?.user) {
+              await setSupabaseUser(session.user);
+            } else if (_event === 'SIGNED_OUT') {
+              setUser(null);
+              setIsAuthenticated(false);
+              setIsLoadingAuth(false);
+            }
+          });
+          unsubscribe = listener?.subscription;
+        } catch (error) {
+          console.warn('Supabase auth initialization skipped:', error?.message || error);
+        }
       }
 
-      // Public settings are no longer fetched from Base44 on an anonymous
-      // visit. That legacy endpoint returned a raw 401 HTTPException payload
-      // and was the source of the confusing "Error Type" response.
       setIsLoadingAuth(false);
       setIsLoadingPublicSettings(false);
     };
@@ -91,8 +91,12 @@ export const AuthProvider = ({ children }) => {
   const checkAppState = async () => {
     if (!isMounted.current) return;
     if (isSupabaseConfigured && supabase) {
-      const { data } = await supabase.auth.getSession();
-      if (data?.session?.user) await setSupabaseUser(data.session.user);
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data?.session?.user) await setSupabaseUser(data.session.user);
+      } catch (error) {
+        console.warn('Supabase session check skipped:', error?.message || error);
+      }
     }
     setIsLoadingPublicSettings(false);
     setIsLoadingAuth(false);
@@ -104,7 +108,12 @@ export const AuthProvider = ({ children }) => {
         console.warn('Supabase logout skipped:', error?.message || error);
       }
     }
-    try { await base44.auth.logout(); } catch (_) {}
+    // Load the legacy SDK only when a signed-out user explicitly logs out.
+    // It must not initialize on public auth pages during the migration.
+    try {
+      const { base44 } = await import('@/api/base44Client');
+      await base44.auth.logout();
+    } catch (_) {}
     setUser(null);
     setIsAuthenticated(false);
     if (shouldRedirect) window.location.href = '/login';
