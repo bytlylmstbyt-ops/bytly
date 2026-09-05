@@ -1,6 +1,7 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/:path*" },
+    { "source": "/api/:path*", "destination": "https://bytly.base44.app/api/:path*" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }
