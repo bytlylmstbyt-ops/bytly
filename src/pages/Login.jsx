@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
 import { appParams } from "@/lib/app-params";
 import { useAuth } from "@/lib/AuthContext";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
@@ -56,18 +55,13 @@ export default function Login() {
       setError("تسجيل الدخول الاجتماعي غير متاح حالياً. يرجى المحاولة بالبريد الإلكتروني.");
       return;
     }
-
     setError("");
     setLoading(true);
     sessionStorage.setItem('loginReturnUrl', returnUrl);
-
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider,
-      options: {
-        redirectTo: `${window.location.origin}/login?from_url=${encodeURIComponent(returnUrl)}`,
-      },
+      options: { redirectTo: `${window.location.origin}/login?from_url=${encodeURIComponent(returnUrl)}` },
     });
-
     if (oauthError) {
       console.error(`Supabase ${provider} login error:`, oauthError);
       setError("تعذر بدء تسجيل الدخول. يرجى المحاولة مرة أخرى.");
@@ -107,8 +101,9 @@ export default function Login() {
         supabaseError = sbError;
       }
 
-      // Compatibility bridge for legacy users only. This is temporary and
-      // will be removed once the remaining legacy accounts are migrated.
+      // Compatibility bridge for legacy users only. Load the legacy SDK lazily,
+      // after Supabase has failed, so Base44 cannot affect the public auth page startup.
+      const { base44 } = await import('@/api/base44Client');
       const response = await base44.auth.loginViaEmailPassword(email.trim(), password);
       console.log('Legacy login bridge succeeded:', response?.user?.email);
       window.location.href = returnUrl;
@@ -117,17 +112,11 @@ export default function Login() {
       const msg = err?.message || "";
       const status = err?.status;
       const sbMsg = typeof supabaseError?.message === 'string' ? supabaseError.message.toLowerCase() : '';
-      if (sbMsg.includes('email not confirmed')) {
-        setError("يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب");
-      } else if (status === 404 || (msg && msg.toLowerCase().includes("not found"))) {
-        setError("المستخدم غير مسجل في التطبيق");
-      } else if (status === 400 || status === 401 || msg.toLowerCase().includes("credentials") || msg.toLowerCase().includes("password") || sbMsg.includes('invalid login credentials')) {
-        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
-      } else if (status === 403) {
-        setError("لا يمكن تسجيل الدخول بهذا الحساب حالياً");
-      } else {
-        setError("تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
-      }
+      if (sbMsg.includes('email not confirmed')) setError("يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب");
+      else if (status === 404 || (msg && msg.toLowerCase().includes("not found"))) setError("المستخدم غير مسجل في التطبيق");
+      else if (status === 400 || status === 401 || msg.toLowerCase().includes("credentials") || msg.toLowerCase().includes("password") || sbMsg.includes('invalid login credentials')) setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+      else if (status === 403) setError("لا يمكن تسجيل الدخول بهذا الحساب حالياً");
+      else setError("تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
     } finally {
       submitGuard.current = false;
       setLoading(false);
