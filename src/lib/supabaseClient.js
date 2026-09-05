@@ -1,10 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// These are Supabase publishable client settings. They are safe to be present
+// in the browser; database protection is enforced by Supabase Auth + RLS.
+// Keep Vercel env vars as an override when they are configured.
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://wbqtgdkubrocnqnykhlt.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_8dsKwVbalFlUNA65FJaWlA_1ch0TKfw';
 
-// Keep the app buildable before the Vercel environment variables are added.
-// Authentication code should check `isSupabaseConfigured` before using this client.
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 export const supabase = isSupabaseConfigured
