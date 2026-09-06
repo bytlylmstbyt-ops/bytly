@@ -56,9 +56,9 @@ export default function RegisterConsultantPage() {
         terms_accepted: true,
         terms_accepted_date: new Date().toISOString()
       });
-      try { await base44.functions.invoke("notifyNewUserSignup", { role: "consultant", data: consultant }); }
+      try { base44.functions.invoke("notifyNewUserSignup", { role: "consultant", data: consultant }).catch((err) => console.error("Background notification failed:", err)); }
       catch (notifyErr) { console.error("notifyNewUserSignup consultant failed:", notifyErr); }
-      try { await base44.functions.invoke("sendWelcomeEmail", { role: "consultant", id: consultant.id }); }
+      try { base44.functions.invoke("sendWelcomeEmail", { role: "consultant", id: consultant.id }).catch((err) => console.error("Background notification failed:", err)); }
       catch (welcomeErr) { console.error("sendWelcomeEmail consultant failed:", welcomeErr); }
 
       alert("تم تقديم طلب التسجيل بنجاح! سيتم مراجعته من قبل الإدارة.");
