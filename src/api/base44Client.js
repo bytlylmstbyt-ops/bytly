@@ -14,8 +14,6 @@ const base44Config = { appId, token, requiresAuth: false, serverUrl: base44Backe
 const legacyBase44 = createClient(base44Config);
 const legacyAuthMe = legacyBase44.auth.me.bind(legacyBase44.auth);
 
-// Supabase is authoritative for migrated authentication. Validate the user with
-// getUser() first so admin pages do not race the local session cache.
 legacyBase44.auth.me = async () => {
   try {
     if (supabase) {
@@ -52,9 +50,6 @@ legacyBase44.auth.me = async () => {
   return legacyAuthMe();
 };
 
-// The Agent page must never lose admin access just because its legacy
-// conversation-history entity is unavailable during migration. Keep the
-// history feature best-effort while auth remains authoritative in Supabase.
 try {
   const legacyAgentConversation = legacyBase44.entities.AIAgentConversation;
   if (legacyAgentConversation?.filter) {
@@ -88,6 +83,71 @@ legacyBase44.integrations.Core.UploadFile = async ({ file }) => {
   }
   const { data: publicData } = supabase.storage.from('platform-assets').getPublicUrl(data?.path || path);
   return { file_url: publicData.publicUrl };
+};
+
+// Registration is now written to Supabase directly. This removes the legacy
+// Base44 create request from the critical path, which could remain pending.
+const legacyEngineer = legacyBase44.entities.Engineer;
+legacyBase44.entities.Engineer = {
+  ...legacyEngineer,
+  create: async (payload) => {
+    if (!supabase) throw new Error('Supabase غير مهيأ');
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError) throw authError;
+    const authUser = authData?.user;
+    if (!authUser) throw new Error('يجب تسجيل الدخول أولاً');
+
+    const row = {
+      full_name: payload.full_name,
+      email: authUser.email || payload.email || null,
+      phone: payload.phone || null,
+      city: payload.city || null,
+      country: payload.country || null,
+      specialization: payload.specialization || null,
+      bio: payload.bio || null,
+      registration_number: payload.registration_number || null,
+      years_experience: Number(payload.years_experience) || 0,
+      completed_projects: Number(payload.completed_projects) || 0,
+      graduation_certificate_url: payload.graduation_certificate_url || null,
+      saudi_engineers_council_certificate_url: payload.saudi_engineers_council_certificate_url || null,
+      profile_image: payload.profile_image || null,
+      is_verified: false,
+      is_real: true,
+      status: 'pending',
+      rating: 0,
+      total_reviews: 0,
+      wallet_balance: 0,
+      subscription_type: payload.subscription_type || 'none',
+      is_subscription_active: Boolean(payload.is_subscription_active),
+      subscription_start_date: payload.subscription_start_date || null,
+      trial_end_date: payload.trial_end_date || null,
+      user_id: authUser.id,
+      source: 'supabase',
+    };
+
+    const { data, error } = await supabase.from('engineers').insert(row).select('*').single();
+    if (error) {
+      console.error('Supabase engineer registration failed:', error);
+      throw new Error(error.message || 'تعذر حفظ تسجيل المهندس');
+    }
+    return data;
+  },
+};
+
+const legacyPortfolio = legacyBase44.entities.Portfolio;
+legacyBase44.entities.Portfolio = {
+  ...legacyPortfolio,
+  create: async (payload) => {
+    if (!supabase) throw new Error('Supabase غير مهيأ');
+    const { data, error } = await supabase.from('portfolios').insert({
+      engineer_id: payload.engineer_id || null,
+      title: payload.title || 'عمل سابق',
+      description: payload.description || null,
+      images: Array.isArray(payload.images) ? payload.images : [],
+    }).select('*').single();
+    if (error) throw new Error(error.message || 'تعذر حفظ العمل السابق');
+    return data;
+  },
 };
 
 const legacyPlatformSettings = legacyBase44.entities.PlatformSettings;
