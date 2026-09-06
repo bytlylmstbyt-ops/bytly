@@ -52,7 +52,7 @@ export default function Register() {
       if (!isSupabaseConfigured || !supabase) { setError("التسجيل عبر Google غير متاح حالياً."); return; }
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` }
+        options: { redirectTo: `${window.location.origin}/login` }
       });
       if (oauthError) { console.error("Supabase Google registration error:", oauthError); setError("تعذر بدء التسجيل عبر Google. يرجى المحاولة مرة أخرى."); }
     } catch (err) { console.error("Google registration error:", err); setError("تعذر بدء التسجيل عبر Google. يرجى المحاولة مرة أخرى."); }
