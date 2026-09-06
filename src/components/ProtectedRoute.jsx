@@ -21,14 +21,17 @@ export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthe
   const { isAuthenticated, isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const hasRedirectedRef = useRef(false);
   const isAuthPath = AUTH_PATHS.some(p => location.pathname === p || location.pathname.startsWith(p + '/'));
-  const registrationRole = ROLE_REGISTRATION_PATHS[location.pathname];
+  const baseRegistrationRole = ROLE_REGISTRATION_PATHS[location.pathname];
+  const requestedType = new URLSearchParams(location.search).get('type');
+  const registrationRole = requestedType && ['investor','client','engineer','surveyor','firm','legal','consultant','contractor','supplier'].includes(requestedType)
+    ? requestedType
+    : baseRegistrationRole;
 
   useEffect(() => {
     if (isLoadingAuth || isLoadingPublicSettings || isAuthenticated || isAuthPath || hasRedirectedRef.current) return;
     if (registrationRole) {
       hasRedirectedRef.current = true;
-      const query = location.search || '';
-      navigate(`/register-auth?type=${encodeURIComponent(registrationRole)}${query.replace(/^\?/, '&')}`, { replace: true });
+      navigate(`/register-auth?type=${encodeURIComponent(registrationRole)}`, { replace: true });
       return;
     }
     const needsLogin = (!isAuthenticated && !authError) || authError?.type === 'auth_required';
@@ -38,7 +41,7 @@ export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthe
         try { navigateToLogin(); } catch { window.location.href = '/login'; }
       }, 0);
     }
-  }, [isLoadingAuth, isLoadingPublicSettings, isAuthenticated, isAuthPath, registrationRole, location.search, navigate, navigateToLogin, authError]);
+  }, [isLoadingAuth, isLoadingPublicSettings, isAuthenticated, isAuthPath, registrationRole, navigate, navigateToLogin, authError]);
 
   if (isLoadingPublicSettings || isLoadingAuth) return fallback;
   if (isAuthPath) return <Outlet />;
