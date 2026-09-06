@@ -8,6 +8,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import NotFoundError from './lib/NotFoundError';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import RegistrationGate from '@/components/RegistrationGate';
 import React, { Suspense } from 'react';
 
 function lazyWithRetry(factory, retries = 2) {
@@ -94,11 +95,12 @@ function PublicHomeRoute() { const { isAuthenticated, isLoadingPublicSettings } 
 const { Pages, Layout } = pagesConfig;
 const LayoutWrapper = ({ children, currentPageName }) => Layout ? <Layout currentPageName={currentPageName}>{children}</Layout> : <>{children}</>;
 const lazyRoute = (Component, name) => <LayoutWrapper currentPageName={name}><Suspense fallback={<PageSpinner />}><Component /></Suspense></LayoutWrapper>;
+const protectedRoute = (Component, name) => <ProtectedRoute><RegistrationGate><LayoutWrapper currentPageName={name}><Suspense fallback={<PageSpinner />}><Component /></Suspense></LayoutWrapper></RegistrationGate></ProtectedRoute>;
 
 const AuthenticatedApp = () => {
   const { isLoadingPublicSettings } = useAuth();
   if (isLoadingPublicSettings) return <PageSpinner />;
-  const publicPages = ['ContactUs','Terms','Privacy','Copyright','Complaints','Support','RegisterChoice','RegistrationSuccess','About'];
+  const publicPages = ['ContactUs','Terms','Privacy','Copyright','Complaints','Support','RegisterChoice','RegisterAccount','RegistrationSuccess','About'];
   return <Routes>
     <Route path="/login" element={<Login />} />
     <Route path="/register" element={<Register />} />
@@ -107,8 +109,8 @@ const AuthenticatedApp = () => {
     <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/" element={<PublicHomeRoute />} />
     <Route path="/About" element={lazyRoute(About, "About")} />
-    <Route path="/RegisterContractor" element={<ProtectedRoute><LayoutWrapper currentPageName="RegisterContractor"><Suspense fallback={<PageSpinner />}><RegisterContractor /></Suspense></LayoutWrapper></ProtectedRoute>} />
-    <Route path="/RegisterSupplier" element={<ProtectedRoute><LayoutWrapper currentPageName="RegisterSupplier"><Suspense fallback={<PageSpinner />}><RegisterSupplier /></Suspense></LayoutWrapper></ProtectedRoute>} />
+    <Route path="/RegisterContractor" element={protectedRoute(RegisterContractor, "RegisterContractor")} />
+    <Route path="/RegisterSupplier" element={protectedRoute(RegisterSupplier, "RegisterSupplier")} />
     <Route path="/AdvertiseWithUs" element={lazyRoute(AdvertiseWithUs, "AdvertiseWithUs")} />
     <Route path="/landing" element={lazyRoute(React.lazy(() => import('./pages/Landing')), "Landing")} />
     <Route path="/FAQ" element={lazyRoute(React.lazy(() => import('./pages/FAQ')), "FAQ")} />
@@ -117,7 +119,7 @@ const AuthenticatedApp = () => {
     <Route path="/Resources" element={lazyRoute(Resources, "Resources")} />
     <Route path="/audiences/engineering-firms" element={lazyRoute(EngineeringFirmsLanding, "EngineeringFirmsLanding")} />
     <Route path="/audiences/contractors" element={lazyRoute(ContractorsLanding, "ContractorsLanding")} />
-    {Object.entries(Pages).map(([name, Component]) => <Route key={name} path={`/${name}`} element={publicPages.includes(name) ? lazyRoute(Component, name) : <ProtectedRoute><LayoutWrapper currentPageName={name}><Suspense fallback={<PageSpinner />}><Component /></Suspense></LayoutWrapper></ProtectedRoute>} />)}
+    {Object.entries(Pages).map(([name, Component]) => <Route key={name} path={`/${name}`} element={publicPages.includes(name) ? lazyRoute(Component, name) : protectedRoute(Component, name)} />)}
     <Route path="*" element={<NotFoundError />} />
   </Routes>;
 };
