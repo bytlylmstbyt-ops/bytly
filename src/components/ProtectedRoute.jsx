@@ -15,7 +15,7 @@ const ROLE_REGISTRATION_PATHS = {
 };
 const DefaultFallback = () => <div className="fixed inset-0 flex items-center justify-center"><div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin" /></div>;
 
-export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthenticatedElement }) {
+export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthenticatedElement, children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -44,8 +44,8 @@ export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthe
   }, [isLoadingAuth, isLoadingPublicSettings, isAuthenticated, isAuthPath, registrationRole, navigate, navigateToLogin, authError]);
 
   if (isLoadingPublicSettings || isLoadingAuth) return fallback;
-  if (isAuthPath) return <Outlet />;
+  if (isAuthPath) return children || <Outlet />;
   if (authError?.type === 'user_not_registered') return <UserNotRegisteredError />;
   if (authError || !isAuthenticated) return unauthenticatedElement;
-  return <Outlet />;
+  return children || <Outlet />;
 }
