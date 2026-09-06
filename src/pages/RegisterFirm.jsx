@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -135,11 +136,14 @@ export default function RegisterFirm() {
 
     setLoading(true);
     try {
-      const user = await base44.auth.me();
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData?.user;
+      if (!user) throw new Error("يجب تسجيل الدخول أولاً");
       
       const firm = await base44.entities.EngineeringFirm.create({
         ...formData,
-        email: user.email
+        email: user.email,
+        owner_user_id: user.id
       });
       try { await base44.functions.invoke("notifyNewUserSignup", { role: "firm", data: firm }); }
       catch (notifyErr) { console.error("notifyNewUserSignup firm failed:", notifyErr); }
