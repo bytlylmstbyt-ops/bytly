@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
   User, Mail, Phone, MapPin, Upload, 
@@ -27,8 +28,13 @@ export default function RegisterClient() {
     company_name: ""
   });
 
-  // Load Google user info if available
+  // Load the authenticated account into the role-specific form.
   useEffect(() => {
+    let active = true;
+    supabase?.auth.getUser().then(({ data }) => {
+      const user = data?.user;
+      if (active && user) setFormData(prev => ({ ...prev, full_name: user.user_metadata?.full_name || user.user_metadata?.name || prev.full_name, email: user.email || prev.email }));
+    }).catch(() => {});
     const storedInfo = sessionStorage.getItem('googleUserInfo');
     if (storedInfo) {
       try {
@@ -44,6 +50,7 @@ export default function RegisterClient() {
         console.error('Error loading Google user info:', err);
       }
     }
+    return () => { active = false; };
   }, []);
 
   const handleInputChange = (field, value) => {
@@ -64,8 +71,13 @@ export default function RegisterClient() {
     e.preventDefault();
     setIsLoading(true);
     
+    const { data: authData } = await supabase.auth.getUser();
+    const authUser = authData?.user;
+    if (!authUser) throw new Error("يجب تسجيل الدخول أولاً");
     const client = await base44.entities.Client.create({
       ...formData,
+      email: authUser.email || formData.email,
+      user_id: authUser.id,
       wallet_balance: 0,
       total_projects: 0
     });
