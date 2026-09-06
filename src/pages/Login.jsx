@@ -33,6 +33,18 @@ export default function Login() {
     return () => { active = false; };
   }, []);
 
+  const redirectAfterSuccessfulLogin = async () => {
+    const { data, error } = await withTimeout(
+      supabase.auth.getSession(),
+      10000,
+      "تم تسجيل الدخول، لكن لم تكتمل جلسة الحساب. حاولي مرة أخرى."
+    );
+    if (error) throw error;
+    if (!data?.session?.user) throw new Error("لم يتم تثبيت جلسة تسجيل الدخول. حاولي مرة أخرى.");
+    sessionStorage.removeItem("loginReturnUrl");
+    window.location.replace(getReturnUrl());
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!isSupabaseConfigured || !supabase) { setError("خدمة تسجيل الدخول غير مهيأة حالياً."); return; }
@@ -46,8 +58,7 @@ export default function Login() {
       );
 
       if (!authError) {
-        sessionStorage.removeItem("loginReturnUrl");
-        window.location.replace(getReturnUrl());
+        await redirectAfterSuccessfulLogin();
         return;
       }
 
@@ -90,8 +101,7 @@ export default function Login() {
         }
 
         if (migrated?.session) {
-          sessionStorage.removeItem("loginReturnUrl");
-          window.location.replace(getReturnUrl());
+          await redirectAfterSuccessfulLogin();
           return;
         }
 
