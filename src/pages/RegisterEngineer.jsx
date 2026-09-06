@@ -65,7 +65,7 @@ export default function RegisterEngineer() {
   useEffect(() => {
     const checkEligibility = async () => {
       try {
-        const res = await base44.functions.invoke("checkFreeRegistrationEligibility", {});
+        const res = base44.functions.invoke("checkFreeRegistrationEligibility", {}).catch((err) => console.error("Background notification failed:", err));
         const data = res.data || res;
         setFreeOffer({
           loading: false,
@@ -341,14 +341,14 @@ export default function RegisterEngineer() {
 
       // Registration notifications: restore the original welcome/admin notification flow.
       // Each notification is isolated so a notification failure does not undo the created profile.
-      try { await base44.functions.invoke("notifyNewUserSignup", { role: formData.user_type === "surveyor" ? "surveyor" : "engineer", data: engineer }); }
+      try { base44.functions.invoke("notifyNewUserSignup", { role: formData.user_type === "surveyor" ? "surveyor" : "engineer", data: engineer }).catch((err) => console.error("Background notification failed:", err)); }
       catch (notifyErr) { console.error("notifyNewUserSignup engineer failed:", notifyErr); }
-      try { await base44.functions.invoke("sendWelcomeEmail", { role: formData.user_type === "surveyor" ? "surveyor" : "engineer", id: engineer.id }); }
+      try { base44.functions.invoke("sendWelcomeEmail", { role: formData.user_type === "surveyor" ? "surveyor" : "engineer", id: engineer.id }).catch((err) => console.error("Background notification failed:", err)); }
       catch (welcomeErr) { console.error("sendWelcomeEmail engineer failed:", welcomeErr); }
-      try { await base44.functions.invoke("notifyNewEngineer", { engineer_id: engineer.id }); }
+      try { base44.functions.invoke("notifyNewEngineer", { engineer_id: engineer.id }).catch((err) => console.error("Background notification failed:", err)); }
       catch (notifyErr) { console.error("notifyNewEngineer failed:", notifyErr); }
       try {
-        await base44.functions.invoke("notifyNewRegistration", {
+        base44.functions.invoke("notifyNewRegistration", {
           eventType: "engineer_registered",
           data: {
             full_name: formData.full_name,
@@ -356,7 +356,7 @@ export default function RegisterEngineer() {
             user_type: formData.user_type,
             specialization: formData.specialization
           }
-        });
+        }).catch((err) => console.error("Background notification failed:", err));
       } catch (notifyErr) { console.error("notifyNewRegistration failed:", notifyErr); }
 
       try {
