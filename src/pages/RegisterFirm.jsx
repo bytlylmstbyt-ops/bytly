@@ -145,9 +145,9 @@ export default function RegisterFirm() {
         email: user.email,
         owner_user_id: user.id
       });
-      try { await base44.functions.invoke("notifyNewUserSignup", { role: "firm", data: firm }); }
+      try { base44.functions.invoke("notifyNewUserSignup", { role: "firm", data: firm }).catch((err) => console.error("Background notification failed:", err)); }
       catch (notifyErr) { console.error("notifyNewUserSignup firm failed:", notifyErr); }
-      try { await base44.functions.invoke("sendWelcomeEmail", { role: "firm", id: firm.id }); }
+      try { base44.functions.invoke("sendWelcomeEmail", { role: "firm", id: firm.id }).catch((err) => console.error("Background notification failed:", err)); }
       catch (welcomeErr) { console.error("sendWelcomeEmail firm failed:", welcomeErr); }
 
       toast.success("تم تسجيل الشركة الاستشارية بنجاح! في انتظار الموافقة من الإدارة");
