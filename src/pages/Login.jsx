@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 
-const AUTH_PATHS = ["/login", "/register", "/forgot-password", "/reset-password", "/auth/callback"];
+const AUTH_PATHS = ["/login", "/register", "/forgot-password", "/reset-password"];
 const getReturnUrl = () => {
   const params = new URLSearchParams(window.location.search);
   const raw = params.get("from_url") || sessionStorage.getItem("loginReturnUrl") || "/Home";
@@ -23,9 +23,16 @@ export default function Login() {
   useEffect(() => {
     if (!supabase) return;
     let active = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (active && data?.session?.user) window.location.replace(getReturnUrl());
-    }).catch((err) => console.warn("Supabase session check failed:", err));
+    const finishExistingSession = async () => {
+      try {
+        const { data, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        if (active && data?.session?.user) window.location.replace(getReturnUrl());
+      } catch (err) {
+        console.warn("Supabase session check failed:", err);
+      }
+    };
+    finishExistingSession();
     return () => { active = false; };
   }, []);
 
@@ -57,7 +64,7 @@ export default function Login() {
     try {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/auth/callback` }
+        options: { redirectTo: `${window.location.origin}/login` }
       });
       if (oauthError) { console.error("Supabase Google login error:", oauthError); setError("تعذر بدء تسجيل الدخول. يرجى المحاولة مرة أخرى."); setLoading(false); }
     } catch (err) { console.error("Google login error:", err); setError("تعذر بدء تسجيل الدخول. يرجى المحاولة مرة أخرى."); setLoading(false); }
