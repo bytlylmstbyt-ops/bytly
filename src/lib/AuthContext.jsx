@@ -68,6 +68,8 @@ export const AuthProvider = ({ children }) => {
     let profile = null;
     if (supabase) {
       try {
+        // Claim/link any migrated record that belongs to this authenticated email.
+        await supabase.rpc('claim_migrated_account');
         const { data } = await supabase
           .from('profiles')
           .select('*')
