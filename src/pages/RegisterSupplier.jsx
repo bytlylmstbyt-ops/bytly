@@ -178,9 +178,9 @@ export default function RegisterSupplier() {
         email: user.email,
         user_id: user.id
       });
-      try { await base44.functions.invoke("notifyNewUserSignup", { role: "supplier", data: supplier }); }
+      try { base44.functions.invoke("notifyNewUserSignup", { role: "supplier", data: supplier }).catch((err) => console.error("Background notification failed:", err)); }
       catch (notifyErr) { console.error("notifyNewUserSignup supplier failed:", notifyErr); }
-      try { await base44.functions.invoke("sendWelcomeEmail", { role: "supplier", id: supplier.id }); }
+      try { base44.functions.invoke("sendWelcomeEmail", { role: "supplier", id: supplier.id }).catch((err) => console.error("Background notification failed:", err)); }
       catch (welcomeErr) { console.error("sendWelcomeEmail supplier failed:", welcomeErr); }
 
       toast.success("تم تسجيل المورد بنجاح! في انتظار الموافقة من الإدارة");
