@@ -19,7 +19,6 @@ const base44Config = {
 
 const legacyBase44 = createClient(base44Config);
 const legacyAuthMe = legacyBase44.auth.me.bind(legacyBase44.auth);
-const legacyUploadFile = legacyBase44.integrations.Core.UploadFile.bind(legacyBase44.integrations.Core);
 
 // During the migration, old admin pages still call Base44's auth.me().
 // Resolve the logged-in Supabase user first so the migration is invisible to them.
