@@ -14,6 +14,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
+const directRegistrationInsert = async (table, row) => {
+  const { data, error } = await supabase.from(table).insert(row).select('*').single();
+  if (error) throw new Error(error.message || 'تعذر حفظ التسجيل');
+  return data;
+};
+
 export default function RegisterClient() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -76,12 +82,14 @@ export default function RegisterClient() {
     const { data: authData } = await supabase.auth.getUser();
     const authUser = authData?.user;
     if (!authUser) throw new Error("يجب تسجيل الدخول أولاً");
-    const client = await base44.entities.Client.create({
+    const client = await directRegistrationInsert('clients', {
       ...formData,
       email: authUser.email || formData.email,
       user_id: authUser.id,
+      is_real: true,
       wallet_balance: 0,
-      total_projects: 0
+      total_projects: 0,
+      source: 'supabase'
     });
 
     try { base44.functions.invoke("notifyNewUserSignup", { role: "client", data: client }).catch((err) => console.error("Background notification failed:", err)); }
