@@ -82,9 +82,9 @@ export default function RegisterClient() {
       total_projects: 0
     });
 
-    try { await base44.functions.invoke("notifyNewUserSignup", { role: "client", data: client }); }
+    try { base44.functions.invoke("notifyNewUserSignup", { role: "client", data: client }).catch((err) => console.error("Background notification failed:", err)); }
     catch (notifyErr) { console.error("notifyNewUserSignup client failed:", notifyErr); }
-    try { await base44.functions.invoke("sendWelcomeEmail", { role: "client", id: client.id }); }
+    try { base44.functions.invoke("sendWelcomeEmail", { role: "client", id: client.id }).catch((err) => console.error("Background notification failed:", err)); }
     catch (welcomeErr) { console.error("sendWelcomeEmail client failed:", welcomeErr); }
 
     setIsLoading(false);
