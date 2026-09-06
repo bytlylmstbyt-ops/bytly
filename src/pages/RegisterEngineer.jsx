@@ -178,12 +178,8 @@ export default function RegisterEngineer() {
         subscription_type: isFreeEligible ? "free_trial" : "none",
         is_subscription_active: isFreeEligible,
         subscription_start_date: isFreeEligible ? localDate(today) : undefined,
-        trial_end_date: isFreeEligible ? localDate(trialEnd) : undefined
-      
-        user_id: authUser.id,
+        trial_end_date: isFreeEligible ? localDate(trialEnd) : undefined,
         is_real: true,
-        status: 'pending',
-        is_verified: false,
         source: 'supabase'
       }), 15000);
 

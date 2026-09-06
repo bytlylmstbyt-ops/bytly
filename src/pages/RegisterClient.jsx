@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { toast } from "react-hot-toast";
 
 const directRegistrationInsert = async (table, row) => {
   const { data, error } = await supabase.from(table).insert(row).select('*').single();
