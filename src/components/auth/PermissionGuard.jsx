@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Lock, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
-export default function PermissionGuard({ 
-  children, 
-  resource, 
-  action, 
+const PLATFORM_OWNER_EMAIL = "bytlylmstbyt@gmail.com";
+
+export default function PermissionGuard({
+  children,
+  resource,
+  action,
   fallback = null,
-  showMessage = true 
+  showMessage = true
 }) {
   const [hasPermission, setHasPermission] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -19,40 +21,32 @@ export default function PermissionGuard({
 
   const checkPermission = async () => {
     try {
-      const user = await base44.auth.me();
-      
-      // Admins have all permissions
-      if (user.role === "admin") {
-        setHasPermission(true);
-        setLoading(false);
-        return;
-      }
-
-      // Check user roles
-      const userRoles = await base44.entities.UserRole.filter({ user_email: user.email });
-      
-      if (userRoles.length === 0) {
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
         setHasPermission(false);
-        setLoading(false);
         return;
       }
 
-      // Load role details and check permissions
-      let granted = false;
-      for (const userRole of userRoles) {
-        const [role] = await base44.entities.Role.filter({ id: userRole.role_id });
-        if (role && role.is_active) {
-          const permissions = role.permissions || {};
-          if (permissions[resource]?.[action]) {
-            granted = true;
-            break;
-          }
-        }
+      const email = (user.email || "").trim().toLowerCase();
+      if (email === PLATFORM_OWNER_EMAIL) {
+        setHasPermission(true);
+        return;
       }
 
-      setHasPermission(granted);
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profile?.role === "admin") {
+        setHasPermission(true);
+        return;
+      }
+
+      setHasPermission(false);
     } catch (error) {
-      console.error("Error checking permission:", error);
+      console.error("Error checking Supabase permission:", error);
       setHasPermission(false);
     } finally {
       setLoading(false);
@@ -69,7 +63,6 @@ export default function PermissionGuard({
 
   if (!hasPermission) {
     if (fallback) return fallback;
-    
     if (!showMessage) return null;
 
     return (
