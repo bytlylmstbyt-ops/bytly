@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, ShieldAlert, ArrowUpRight, LayoutDashboard, ChevronLeft } from "lucide-react";
@@ -13,7 +13,7 @@ import ProjectCompletionTrendPanel from "@/components/admin/ProjectCompletionTre
 import EngineerPerformancePanel from "@/components/admin/EngineerPerformancePanel";
 import BIMProjectFilesPanel from "@/components/admin/BIMProjectFilesPanel";
 
-// Category map imported from @/components/admin/adminSections
+const PLATFORM_OWNER_EMAIL = "bytlylmstbyt@gmail.com";
 
 function AccessDenied() {
   return (
@@ -32,6 +32,7 @@ function AccessDenied() {
 export default function AdminControlCenter() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isPlatformOwner, setIsPlatformOwner] = useState(false);
   const { can, permissions, loading: permissionsLoading, isAdmin: permissionsAdmin } = usePermissions();
   const [activeKey, setActiveKey] = useState(() => {
     const params = new URLSearchParams(window.location.search);
@@ -44,16 +45,37 @@ export default function AdminControlCenter() {
   useEffect(() => { writeAdminFilters("AdminControlCenter", { activeKey }); }, [activeKey]);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       try {
-        const user = await base44.auth.me();
-        setIsAdmin(user?.role === "admin");
-      } catch {
-        setIsAdmin(false);
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error || !user || cancelled) {
+          if (!cancelled) setIsAdmin(false);
+          return;
+        }
+
+        const email = (user.email || "").trim().toLowerCase();
+        const owner = email === PLATFORM_OWNER_EMAIL;
+        setIsPlatformOwner(owner);
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role,email")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (!cancelled) {
+          setIsAdmin(owner || profile?.role === "admin");
+        }
+      } catch (error) {
+        console.error("Error loading Supabase admin access:", error);
+        if (!cancelled) setIsAdmin(false);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
+
+    return () => { cancelled = true; };
   }, []);
 
   if (loading || permissionsLoading) {
@@ -65,24 +87,11 @@ export default function AdminControlCenter() {
   }
 
   const categoryResource = {
-    board: "settings",
-    overview: "analytics",
-    assistant: "settings",
-    projects: "projects",
-    people: "engineers",
-    providers: "providers",
-    contracts: "contracts",
-    payments: "payments",
-    disputes: "disputes",
-    notifications: "notifications",
-    reports: "analytics",
-    settings: "settings",
-    bim: "projects",
-    workflows: "workflows",
-    domains: "domains",
-    integrations: "integrations",
-    email: "email",
-    marketing: "marketing",
+    board: "settings", overview: "analytics", assistant: "settings", projects: "projects",
+    people: "engineers", providers: "providers", contracts: "contracts", payments: "payments",
+    disputes: "disputes", notifications: "notifications", reports: "analytics", settings: "settings",
+    bim: "projects", workflows: "workflows", domains: "domains", integrations: "integrations",
+    email: "email", marketing: "marketing",
   };
   const visibleCategories = (isAdmin || permissionsAdmin)
     ? CATEGORIES
@@ -102,21 +111,13 @@ export default function AdminControlCenter() {
             const Icon = cat.icon;
             const isActive = cat.key === activeKey;
             return (
-              <button
-                key={cat.key}
-                onClick={() => {
-                  setActiveKey(cat.key);
-                  const params = new URLSearchParams(window.location.search);
-                  params.set("cat", cat.key);
-                  window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
-                  setTimeout(() => document.getElementById("admin-category-content")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
-                }}
-                className={`flex items-center gap-2.5 shrink-0 md:shrink text-sm font-medium rounded-lg px-3 py-2.5 text-right transition-colors ${
-                  isActive
-                    ? "bg-gradient-to-l from-[#5142A4] to-[#6D5CE7] text-white shadow-md"
-                    : "text-slate-200 hover:bg-white/10 border border-transparent hover:border-white/10"
-                }`}
-              >
+              <button key={cat.key} onClick={() => {
+                setActiveKey(cat.key);
+                const params = new URLSearchParams(window.location.search);
+                params.set("cat", cat.key);
+                window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
+                setTimeout(() => document.getElementById("admin-category-content")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+              }} className={`flex items-center gap-2.5 shrink-0 md:shrink text-sm font-medium rounded-lg px-3 py-2.5 text-right transition-colors ${isActive ? "bg-gradient-to-l from-[#5142A4] to-[#6D5CE7] text-white shadow-md" : "text-slate-200 hover:bg-white/10 border border-transparent hover:border-white/10"}`}>
                 <Icon className={`w-4 h-4 shrink-0 ${isActive ? "text-white" : "text-slate-400"}`} />
                 <span className="whitespace-nowrap md:whitespace-normal flex-1">{cat.label}</span>
                 {isActive && <ChevronLeft className="w-3.5 h-3.5 opacity-70" />}
@@ -126,79 +127,75 @@ export default function AdminControlCenter() {
         </nav>
 
         <main className="flex-1 min-w-0" dir="rtl">
-        <div className="mb-6 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-          <div className="text-right">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#F1EEFF] text-[#5142A4] px-3 py-1 text-xs font-medium mb-2">
-              <LayoutDashboard className="w-3.5 h-3.5" /> لوحة القيادة التنفيذية
+          <div className="mb-6 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+            <div className="text-right">
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#F1EEFF] text-[#5142A4] px-3 py-1 text-xs font-medium mb-2">
+                <LayoutDashboard className="w-3.5 h-3.5" /> {isPlatformOwner ? "مالكة المنصة • Super Admin" : "لوحة القيادة التنفيذية"}
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold text-[#25213A]">{isPlatformOwner ? "لوحة تحكم مالكة المنصة" : "لوحة التحكم"}</h1>
+              <p className="text-sm text-slate-500 mt-1">نظرة شاملة على أداء المنصة وإدارة العمليات الرئيسية.</p>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-[#25213A]">لوحة التحكم</h1>
-            <p className="text-sm text-slate-500 mt-1">نظرة شاملة على أداء المنصة وإدارة العمليات الرئيسية.</p>
-          </div>
-          <div className="flex items-center gap-2 rounded-xl bg-white border border-slate-200 shadow-sm px-4 py-2.5 text-sm">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span className="text-slate-600">لوحة التحكم الرئيسية</span>
-          </div>
-        </div>
-
-        {safeActiveKey === "overview" && (
-          <div className="space-y-5">
-            <MonthlyRevenueSummaryPanel />
-            <FinancialChartsPanel />
-            <ProjectCompletionTrendPanel />
-            <EngineerPerformancePanel />
-          </div>
-        )}
-
-        {activeKey === "bim" && <BIMProjectFilesPanel />}
-
-        {visibleCategories.length === 0 && (
-          <Card><CardContent className="p-8 text-center text-slate-500">لا توجد إدارات أو صفحات مخصصة لدورك حاليًا.</CardContent></Card>
-        )}
-
-        {/* Active category content */}
-        <div id="admin-category-content" className="min-w-0 scroll-mt-6">
-          <div className="mb-4">
-            <div className="rounded-2xl bg-white border border-slate-200 shadow-sm px-5 py-4">
-              <h2 className="text-lg font-bold text-[#2F2945]">{active.label}</h2>
-              <p className="text-xs text-slate-500 mt-1">{active.description}</p>
+            <div className="flex items-center gap-2 rounded-xl bg-white border border-slate-200 shadow-sm px-4 py-2.5 text-sm">
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-slate-600">{isPlatformOwner ? "المالك الوحيد • صلاحيات Super Admin كاملة" : "لوحة التحكم الرئيسية"}</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {active.items.map((item) => {
-              const itemPermission = item.permission || {
-                PlatformDashboard: ["analytics", "view"],
-                AdminProjects: ["projects", "view"], Projects: ["projects", "view"], ProjectProposals: ["projects", "view"], CompareProposals: ["projects", "view"], DataClassification: ["projects", "view"], PermitApplication: ["projects", "view"],
-                AdminEngineers: ["engineers", "view"], AdminClients: ["clients", "view"], RoleManagement: ["settings", "roles"], UserRoleAssignment: ["settings", "roles"], PendingApprovals: ["engineers", "approve"],
-                AdminProviders: ["providers", "view"], ConsultingFirms: ["providers", "view"], AdminMarketEntities: ["providers", "view"],
-                ContractManager: ["contracts", "view"], ContractArchive: ["contracts", "view"], ContractTemplates: ["contracts", "view"], ContractAmendments: ["contracts", "edit"],
-                AdminWallet: ["payments", "view"], AdminWalletDashboard: ["payments", "view"], AdminRefundControl: ["payments", "refund"], AllWithdrawalRequests: ["payments", "process"], InvoiceManager: ["invoices", "view"], RevenueDashboard: ["analytics", "view"], AdminRevenueReport: ["analytics", "view"],
-                AdminDisputes: ["disputes", "view"], AdminDisputeManage: ["disputes", "manage"],
-                NotificationCenter: ["notifications", "view"], NotificationSettings: ["notifications", "edit"], SentEmailsLog: ["email", "view"],
-                AdminReports: ["analytics", "view"], Analytics: ["analytics", "view"], TaskReports: ["analytics", "view"], AdminReviews: ["analytics", "view"],
-                AdminCategories: ["settings", "edit"], AdminCommissionSettings: ["settings", "edit"], AdminSubscriptionControl: ["settings", "edit"], Settings: ["settings", "edit"], AdminAuthenticationSettings: ["settings", "edit"],
-                BIMDashboard: ["projects", "view"], BIMQuantitiesReport: ["projects", "view"], BIMSearch: ["projects", "view"], AdminWorkflowAutomation: ["workflows", "view"], AdminDomains: ["domains", "view"], AdminIntegrations: ["integrations", "view"], AdminEmailCenter: ["email", "view"], AdminMarketingCenter: ["marketing", "view"], MarketingHub: ["marketing", "edit"], SocialAnalytics: ["marketing", "view"], AdminSearchGeoAnalytics: ["marketing", "view"],
-              }[item.page];
-              const allowed = isAdmin || permissionsAdmin || (itemPermission ? can(itemPermission[0], itemPermission[1]) : can(categoryResource[active.key] || active.key, "view"));
-              if (!allowed) return null;
-              return (
-              <Link key={item.page} to={createPageUrl(item.page)}>
-                <Card className="h-full border border-slate-200 border-r-4 border-r-[#6D5CE7] hover:shadow-lg hover:-translate-y-0.5 transition-all group bg-white">
-                  <CardContent className="p-4 flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-[#4A3F35] text-sm">{item.label}</p>
-                      <p className="text-xs text-slate-500 mt-1">{item.desc}</p>
-                    </div>
-                    <ArrowUpRight className="w-4 h-4 text-[#C9A66B] shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </CardContent>
-                </Card>
-              </Link>
-              );
-            })}
+          {safeActiveKey === "overview" && (
+            <div className="space-y-5">
+              <MonthlyRevenueSummaryPanel />
+              <FinancialChartsPanel />
+              <ProjectCompletionTrendPanel />
+              <EngineerPerformancePanel />
+            </div>
+          )}
+
+          {activeKey === "bim" && <BIMProjectFilesPanel />}
+          {visibleCategories.length === 0 && <Card><CardContent className="p-8 text-center text-slate-500">لا توجد إدارات أو صفحات مخصصة لدورك حاليًا.</CardContent></Card>}
+
+          <div id="admin-category-content" className="min-w-0 scroll-mt-6">
+            <div className="mb-4">
+              <div className="rounded-2xl bg-white border border-slate-200 shadow-sm px-5 py-4">
+                <h2 className="text-lg font-bold text-[#2F2945]">{active.label}</h2>
+                <p className="text-xs text-slate-500 mt-1">{active.description}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {active.items.map((item) => {
+                const itemPermission = item.permission || {
+                  PlatformDashboard: ["analytics", "view"],
+                  AdminProjects: ["projects", "view"], Projects: ["projects", "view"], ProjectProposals: ["projects", "view"], CompareProposals: ["projects", "view"], DataClassification: ["projects", "view"], PermitApplication: ["projects", "view"],
+                  AdminEngineers: ["engineers", "view"], AdminClients: ["clients", "view"], RoleManagement: ["settings", "roles"], UserRoleAssignment: ["settings", "roles"], PendingApprovals: ["engineers", "approve"],
+                  AdminProviders: ["providers", "view"], ConsultingFirms: ["providers", "view"], AdminMarketEntities: ["providers", "view"],
+                  ContractManager: ["contracts", "view"], ContractArchive: ["contracts", "view"], ContractTemplates: ["contracts", "view"], ContractAmendments: ["contracts", "edit"],
+                  AdminWallet: ["payments", "view"], AdminWalletDashboard: ["payments", "view"], AdminRefundControl: ["payments", "refund"], AllWithdrawalRequests: ["payments", "process"], InvoiceManager: ["invoices", "view"], RevenueDashboard: ["analytics", "view"], AdminRevenueReport: ["analytics", "view"],
+                  AdminDisputes: ["disputes", "view"], AdminDisputeManage: ["disputes", "manage"],
+                  NotificationCenter: ["notifications", "view"], NotificationSettings: ["notifications", "edit"], SentEmailsLog: ["email", "view"],
+                  AdminReports: ["analytics", "view"], Analytics: ["analytics", "view"], TaskReports: ["analytics", "view"], AdminReviews: ["analytics", "view"],
+                  AdminCategories: ["settings", "edit"], AdminCommissionSettings: ["settings", "edit"], AdminSubscriptionControl: ["settings", "edit"], Settings: ["settings", "edit"], AdminAuthenticationSettings: ["settings", "edit"],
+                  BIMDashboard: ["projects", "view"], BIMQuantitiesReport: ["projects", "view"], BIMSearch: ["projects", "view"], AdminWorkflowAutomation: ["workflows", "view"], AdminDomains: ["domains", "view"], AdminIntegrations: ["integrations", "view"], AdminEmailCenter: ["email", "view"], AdminMarketingCenter: ["marketing", "view"], MarketingHub: ["marketing", "edit"], SocialAnalytics: ["marketing", "view"], AdminSearchGeoAnalytics: ["marketing", "view"],
+                }[item.page];
+                const allowed = isAdmin || permissionsAdmin || (itemPermission ? can(itemPermission[0], itemPermission[1]) : can(categoryResource[active.key] || active.key, "view"));
+                if (!allowed) return null;
+                return (
+                  <Link key={item.page} to={createPageUrl(item.page)}>
+                    <Card className="h-full border border-slate-200 border-r-4 border-r-[#6D5CE7] hover:shadow-lg hover:-translate-y-0.5 transition-all group bg-white">
+                      <CardContent className="p-4 flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-[#4A3F35] text-sm">{item.label}</p>
+                          <p className="text-xs text-slate-500 mt-1">{item.desc}</p>
+                        </div>
+                        <ArrowUpRight className="w-4 h-4 text-[#C9A66B] shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
-        </div>
         </main>
-        </div>
-        </div>
-        );
-        }
+      </div>
+    </div>
+  );
+}
