@@ -10,6 +10,10 @@ const getReturnUrl = () => {
     return AUTH_PATHS.some((path) => url.pathname === path || url.pathname.startsWith(path + "/")) ? "/Home" : url.pathname + url.search;
   } catch { return "/Home"; }
 };
+const withTimeout = (promise, timeoutMs, message) => new Promise((resolve, reject) => {
+  const timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+  Promise.resolve(promise).then((value) => { clearTimeout(timer); resolve(value); }, (error) => { clearTimeout(timer); reject(error); });
+});
 const fieldStyle = { width: "100%", height: 48, boxSizing: "border-box", border: "1px solid #d1d5db", borderRadius: 10, padding: "0 14px", fontSize: 16, background: "white", color: "#111827" };
 const buttonStyle = { width: "100%", height: 48, border: 0, borderRadius: 10, padding: "0 14px", fontSize: 16, fontWeight: 600, cursor: "pointer" };
 const logoUrl = "https://base44.com/logo_v2.svg";
@@ -35,36 +39,55 @@ export default function Login() {
     setError(""); setLoading(true);
     const cleanEmail = email.trim().toLowerCase();
     try {
-      // First try the new Supabase account.
-      const { error: authError } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
+      const { error: authError } = await withTimeout(
+        supabase.auth.signInWithPassword({ email: cleanEmail, password }),
+        15000,
+        "انتهت مهلة الاتصال بخدمة تسجيل الدخول. حاولي مرة أخرى."
+      );
+
       if (!authError) {
         sessionStorage.removeItem("loginReturnUrl");
         window.location.replace(getReturnUrl());
         return;
       }
 
+      const authCode = String(authError.code || "").toLowerCase();
       const authMessage = String(authError.message || "").toLowerCase();
-      if (!authMessage.includes("invalid login credentials")) {
-        if (authMessage.includes("email not confirmed")) setError("يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب.");
-        else setError("تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
+      if (authCode === "email_not_confirmed" || authMessage.includes("email not confirmed")) {
+        setError("الحساب لم يتم تفعيل بريده الإلكتروني بعد. افتحي رسالة التفعيل ثم سجّلي الدخول.");
         return;
       }
 
-      // Legacy migration bridge: authenticate against the old Base44 account only
-      // when Supabase says the account does not exist yet. The user's existing
-      // password is then used to create the Supabase Auth account, so the migration
-      // is invisible to the user and the password is never read or stored by Bytly.
+      // Existing Base44 users are migrated on their first successful login.
+      // The old password is only sent to the legacy auth service; Bytly never stores it.
+      if (authCode !== "invalid_credentials" && !authMessage.includes("invalid login credentials")) {
+        setError(authMessage.includes("rate limit") ? "تم تجاوز حد محاولات تسجيل الدخول. انتظري قليلاً ثم حاولي مرة أخرى." : "تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
+        return;
+      }
+
       try {
         const { base44 } = await import("@/api/base44Client");
-        await base44.auth.loginViaEmailPassword(cleanEmail, password);
+        await withTimeout(
+          base44.auth.loginViaEmailPassword(cleanEmail, password),
+          15000,
+          "انتهت مهلة التحقق من الحساب القديم."
+        );
 
-        const { data: migrated, error: migrateError } = await supabase.auth.signUp({
-          email: cleanEmail,
-          password,
-          options: { data: { email: cleanEmail } }
-        });
+        const { data: migrated, error: migrateError } = await withTimeout(
+          supabase.auth.signUp({ email: cleanEmail, password, options: { data: { email: cleanEmail } } }),
+          15000,
+          "انتهت مهلة نقل الحساب إلى نظام تسجيل الدخول الجديد."
+        );
 
-        if (migrateError) throw migrateError;
+        if (migrateError) {
+          const code = String(migrateError.code || "").toLowerCase();
+          const message = String(migrateError.message || "").toLowerCase();
+          if (code === "user_already_exists" || message.includes("already registered") || message.includes("already exists") || message.includes("user already registered")) {
+            setError("تم العثور على الحساب في النظام الجديد، لكن كلمة المرور القديمة غير مرتبطة به. استخدمي «نسيت كلمة المرور» لتعيين كلمة مرور جديدة ثم سجّلي الدخول.");
+            return;
+          }
+          throw migrateError;
+        }
 
         if (migrated?.session) {
           sessionStorage.removeItem("loginReturnUrl");
@@ -72,14 +95,13 @@ export default function Login() {
           return;
         }
 
-        // If email confirmation is enabled, Supabase will require the one-time
-        // confirmation before the new session can be created.
-        setError("تم نقل حسابك إلى النظام الجديد. راجعي بريدك الإلكتروني لتفعيل الحساب ثم سجّلي الدخول مرة أخرى.");
+        setError("تم نقل حسابك إلى نظام تسجيل الدخول الجديد. افتحي رسالة التفعيل في بريدك الإلكتروني ثم سجّلي الدخول مرة أخرى.");
       } catch (legacyError) {
         const status = legacyError?.status;
         const message = String(legacyError?.message || "").toLowerCase();
         if (status === 403) setError("لا يمكن تسجيل الدخول بهذا الحساب حالياً.");
         else if (status === 404 || message.includes("not found") || message.includes("invalid") || message.includes("credentials") || message.includes("password")) setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+        else if (message.includes("timeout") || message.includes("مهلة")) setError("تعذر الوصول إلى خدمة تسجيل الدخول القديمة. حاولي مرة أخرى بعد قليل.");
         else {
           console.error("Legacy authentication bridge failed:", legacyError);
           setError("تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
@@ -87,7 +109,7 @@ export default function Login() {
       }
     } catch (err) {
       console.error("Supabase login error:", err);
-      setError("تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
+      setError(err?.message?.includes("مهلة") ? err.message : "تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
     } finally {
       setLoading(false);
     }
@@ -98,12 +120,16 @@ export default function Login() {
     setError(""); setLoading(true);
     sessionStorage.setItem("loginReturnUrl", getReturnUrl());
     try {
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: { redirectTo: `${window.location.origin}/login?from_url=${encodeURIComponent(getReturnUrl())}` }
-      });
+      const { error: oauthError } = await withTimeout(
+        supabase.auth.signInWithOAuth({
+          provider: "google",
+          options: { redirectTo: `${window.location.origin}/login?from_url=${encodeURIComponent(getReturnUrl())}` }
+        }),
+        15000,
+        "انتهت مهلة بدء تسجيل الدخول عبر Google."
+      );
       if (oauthError) { console.error("Supabase Google login error:", oauthError); setError("تعذر بدء تسجيل الدخول. يرجى المحاولة مرة أخرى."); setLoading(false); }
-    } catch (err) { console.error("Google login error:", err); setError("تعذر بدء تسجيل الدخول. يرجى المحاولة مرة أخرى."); setLoading(false); }
+    } catch (err) { console.error("Google login error:", err); setError(err?.message || "تعذر بدء تسجيل الدخول. يرجى المحاولة مرة أخرى."); setLoading(false); }
   };
 
   return <main dir="rtl" style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, boxSizing: "border-box", background: "#f8fafc" }}>
