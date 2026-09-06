@@ -176,9 +176,9 @@ export default function RegisterContractor() {
         email: user.email,
         user_id: user.id
       });
-      try { await base44.functions.invoke("notifyNewUserSignup", { role: "contractor", data: contractor }); }
+      try { base44.functions.invoke("notifyNewUserSignup", { role: "contractor", data: contractor }).catch((err) => console.error("Background notification failed:", err)); }
       catch (notifyErr) { console.error("notifyNewUserSignup contractor failed:", notifyErr); }
-      try { await base44.functions.invoke("sendWelcomeEmail", { role: "contractor", id: contractor.id }); }
+      try { base44.functions.invoke("sendWelcomeEmail", { role: "contractor", id: contractor.id }).catch((err) => console.error("Background notification failed:", err)); }
       catch (welcomeErr) { console.error("sendWelcomeEmail contractor failed:", welcomeErr); }
 
       toast.success("تم تسجيل المقاول بنجاح! في انتظار الموافقة من الإدارة");
