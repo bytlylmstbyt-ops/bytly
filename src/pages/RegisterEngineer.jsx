@@ -172,7 +172,7 @@ export default function RegisterEngineer() {
         is_subscription_active: isFreeEligible,
         subscription_start_date: isFreeEligible ? localDate(today) : undefined,
         trial_end_date: isFreeEligible ? localDate(trialEnd) : undefined
-      }), 30000);
+      }), 15000);
 
       // The engineer row is the critical operation. Portfolio and notifications are deliberately
       // detached from the success path so a slow/failed secondary integration can never leave
