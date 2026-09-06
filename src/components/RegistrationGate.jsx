@@ -16,15 +16,20 @@ const ROLE_ROUTES = {
 };
 
 const REGISTRATION_PATHS = [
-  "/RegisterClient",
-  "/RegisterEngineer",
-  "/RegisterFirm",
-  "/RegisterLegalConsultant",
-  "/RegisterConsultant",
-  "/RegisterContractor",
-  "/RegisterSupplier",
-  "/RegistrationSuccess",
+  "/RegisterClient", "/RegisterEngineer", "/RegisterFirm", "/RegisterLegalConsultant",
+  "/RegisterConsultant", "/RegisterContractor", "/RegisterSupplier", "/RegistrationSuccess"
 ];
+
+async function hasRoleProfile(userId, role) {
+  const checks = [];
+  if (role === "engineer" || role === "surveyor") checks.push(supabase.from("engineers").select("id").eq("user_id", userId).limit(1));
+  if (role === "client" || role === "investor") checks.push(supabase.from("clients").select("id").eq("user_id", userId).limit(1));
+  if (role === "firm") checks.push(supabase.from("engineering_firms").select("id").eq("owner_user_id", userId).limit(1));
+  if (!checks.length) return null;
+  const results = await Promise.all(checks);
+  if (results.some(r => r.error && !/permission|policy|relation/i.test(r.error.message || ""))) return false;
+  return results.some(r => Array.isArray(r.data) && r.data.length > 0);
+}
 
 export default function RegistrationGate({ children }) {
   const location = useLocation();
@@ -36,25 +41,30 @@ export default function RegistrationGate({ children }) {
     let active = true;
     const check = async () => {
       try {
-        const raw = localStorage.getItem("bytly_registration_pending");
-        if (!raw) {
-          if (active) setPending(false);
-          return;
-        }
-
-        let data = {};
-        try { data = JSON.parse(raw) || {}; } catch {}
         const { data: sessionData } = await supabase.auth.getSession();
-        if (!sessionData?.session?.user) {
+        const user = sessionData?.session?.user;
+        if (!user) { if (active) setPending(false); return; }
+
+        const metaRole = user.user_metadata?.registration_role || user.user_metadata?.role;
+        const rawPending = localStorage.getItem("bytly_registration_pending");
+        let storedRole = null;
+        try { storedRole = JSON.parse(rawPending || "{}").role; } catch {}
+        const role = storedRole || metaRole;
+        if (!role || !ROLE_ROUTES[role]) { if (active) setPending(false); return; }
+
+        const complete = await hasRoleProfile(user.id, role);
+        if (complete === true) {
           localStorage.removeItem("bytly_registration_pending");
           if (active) setPending(false);
           return;
         }
 
-        const role = data.role || sessionData.session.user.user_metadata?.registration_role || sessionData.session.user.user_metadata?.role || "client";
+        // If Supabase has not yet got a role table for this role, only a locally-started
+        // registration is considered pending; this keeps existing migrated users untouched.
+        const locallyPending = !!rawPending;
         if (active) {
-          setDestination(ROLE_ROUTES[role] || ROLE_ROUTES.client);
-          setPending(true);
+          setDestination(ROLE_ROUTES[role]);
+          setPending(complete === false || locallyPending);
         }
       } finally {
         if (active) setChecking(false);
