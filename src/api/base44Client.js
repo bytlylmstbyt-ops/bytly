@@ -52,6 +52,26 @@ legacyBase44.auth.me = async () => {
   return legacyAuthMe();
 };
 
+// The Agent page must never lose admin access just because its legacy
+// conversation-history entity is unavailable during migration. Keep the
+// history feature best-effort while auth remains authoritative in Supabase.
+try {
+  const legacyAgentConversation = legacyBase44.entities.AIAgentConversation;
+  if (legacyAgentConversation?.filter) {
+    const legacyAgentFilter = legacyAgentConversation.filter.bind(legacyAgentConversation);
+    legacyAgentConversation.filter = async (...args) => {
+      try {
+        return await legacyAgentFilter(...args);
+      } catch (error) {
+        console.warn('AIAgentConversation history unavailable during migration:', error?.message || error);
+        return [];
+      }
+    };
+  }
+} catch (error) {
+  console.warn('Could not install AIAgentConversation compatibility guard:', error);
+}
+
 legacyBase44.integrations.Core.UploadFile = async ({ file }) => {
   if (!supabase) throw new Error('Supabase غير مهيأ');
   if (!file) throw new Error('لم يتم اختيار ملف');
