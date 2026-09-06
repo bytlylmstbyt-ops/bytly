@@ -3,6 +3,8 @@ import { appParams } from '@/lib/app-params';
 import { supabase } from '@/lib/supabaseClient';
 
 const { appId, token } = appParams;
+const PLATFORM_OWNER_EMAIL = 'bytlylmstbyt@gmail.com';
+const PLATFORM_OWNER_ID = '2d1b547d-ba5d-4cdc-a39c-cfb60d2f52bc';
 
 // Base44 remains available for legacy features during the migration.
 const base44BackendUrl = import.meta.env.DEV
@@ -21,27 +23,37 @@ const legacyBase44 = createClient(base44Config);
 const legacyAuthMe = legacyBase44.auth.me.bind(legacyBase44.auth);
 
 // During the migration, old admin pages still call Base44's auth.me().
-// Resolve the logged-in Supabase user first so the migration is invisible to them.
+// Resolve the logged-in Supabase user first so the migration is invisible to users.
 legacyBase44.auth.me = async () => {
   try {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (!error && user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role,email,full_name')
-        .eq('id', user.id)
-        .maybeSingle();
+    if (supabase) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const sessionUser = sessionData?.session?.user;
+      if (sessionUser) {
+        const email = (sessionUser.email || '').trim().toLowerCase();
+        const isOwner = sessionUser.id === PLATFORM_OWNER_ID || email === PLATFORM_OWNER_EMAIL;
 
-      const email = (user.email || '').trim().toLowerCase();
-      const isOwner = email === 'bytlylmstbyt@gmail.com';
-      return {
-        id: user.id,
-        user_id: user.id,
-        email: user.email,
-        full_name: profile?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || '',
-        role: isOwner || profile?.role === 'admin' ? 'admin' : (profile?.role || 'user'),
-        profile,
-      };
+        let profile = null;
+        try {
+          const { data } = await supabase
+            .from('profiles')
+            .select('role,email,full_name')
+            .eq('id', sessionUser.id)
+            .maybeSingle();
+          profile = data || null;
+        } catch {
+          // Owner access must not depend on a profile read succeeding.
+        }
+
+        return {
+          id: sessionUser.id,
+          user_id: sessionUser.id,
+          email: sessionUser.email,
+          full_name: profile?.full_name || sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || '',
+          role: isOwner || profile?.role === 'admin' ? 'admin' : (profile?.role || 'user'),
+          profile,
+        };
+      }
     }
   } catch (error) {
     console.warn('Supabase auth bridge failed; falling back to legacy auth.', error);
@@ -49,18 +61,29 @@ legacyBase44.auth.me = async () => {
   return legacyAuthMe();
 };
 
-// The platform-settings screen used Base44 UploadFile. Route that upload to
-// Supabase Storage so the old "App not found" upload error disappears.
+// Route legacy uploads to Supabase Storage. Public buckets only make downloads public;
+// INSERT/UPDATE still require Storage RLS policies.
 legacyBase44.integrations.Core.UploadFile = async ({ file }) => {
+  if (!supabase) throw new Error('Supabase غير مهيأ');
   if (!file) throw new Error('لم يتم اختيار ملف');
+
   const safeName = String(file.name || 'asset').replace(/[^a-zA-Z0-9._-]/g, '_');
-  const path = `platform/${Date.now()}-${safeName}`;
-  const { error } = await supabase.storage
+  const path = `platform/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
+  const { data, error } = await supabase.storage
     .from('platform-assets')
-    .upload(path, file, { upsert: true, contentType: file.type || undefined, cacheControl: '3600' });
-  if (error) throw error;
-  const { data } = supabase.storage.from('platform-assets').getPublicUrl(path);
-  return { file_url: data.publicUrl };
+    .upload(path, file, {
+      upsert: false,
+      contentType: file.type || 'application/octet-stream',
+      cacheControl: '3600',
+    });
+
+  if (error) {
+    console.error('Supabase platform asset upload failed:', error);
+    throw new Error(`فشل رفع الملف إلى التخزين: ${error.message || 'خطأ غير معروف'}`);
+  }
+
+  const { data: publicData } = supabase.storage.from('platform-assets').getPublicUrl(data?.path || path);
+  return { file_url: publicData.publicUrl };
 };
 
 // Keep the existing AdminPlatformSettings UI while moving its PlatformSettings
