@@ -14,8 +14,7 @@ const base44Config = { appId, token, requiresAuth: false, serverUrl: base44Backe
 const legacyBase44 = createClient(base44Config);
 const legacyAuthMe = legacyBase44.auth.me.bind(legacyBase44.auth);
 
-// Supabase is authoritative for migrated authentication. Validate the user with
-// getUser() first so admin pages do not race the local session cache.
+// Supabase is authoritative for migrated authentication.
 legacyBase44.auth.me = async () => {
   try {
     if (supabase) {
@@ -52,9 +51,8 @@ legacyBase44.auth.me = async () => {
   return legacyAuthMe();
 };
 
-// The Agent page must never lose admin access just because its legacy
-// conversation-history entity is unavailable during migration. Keep the
-// history feature best-effort while auth remains authoritative in Supabase.
+// Legacy Agent history is best-effort during migration. Its failure must not
+// revoke an already validated Supabase admin session.
 try {
   const legacyAgentConversation = legacyBase44.entities.AIAgentConversation;
   if (legacyAgentConversation?.filter) {
@@ -70,6 +68,49 @@ try {
   }
 } catch (error) {
   console.warn('Could not install AIAgentConversation compatibility guard:', error);
+}
+
+// Keep legacy page code working while its data source is migrated to Supabase.
+const makeSupabaseEntity = ({ table, mapRow = (row) => row, orderBy = 'created_at' }) => ({
+  filter: async (filters = {}, sort = null, limit = null) => {
+    if (!supabase) return [];
+    let query = supabase.from(table).select('*');
+    for (const [key, value] of Object.entries(filters || {})) {
+      if (value !== undefined && value !== null && value !== '') query = query.eq(key, value);
+    }
+    if (sort) {
+      const descending = String(sort).startsWith('-');
+      const column = descending ? String(sort).slice(1) : String(sort);
+      query = query.order(column || orderBy, { ascending: !descending });
+    } else if (orderBy) {
+      query = query.order(orderBy, { ascending: false });
+    }
+    if (limit) query = query.limit(limit);
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data || []).map(mapRow);
+  },
+  list: async (sort = null, limit = null) => {
+    return makeSupabaseEntity({ table, mapRow, orderBy }).filter({}, sort, limit);
+  },
+});
+
+try {
+  legacyBase44.entities.Engineer = makeSupabaseEntity({
+    table: 'engineers',
+    orderBy: 'rating',
+    mapRow: (row) => ({ ...row, status: row.status || 'approved' }),
+  });
+  legacyBase44.entities.EngineeringFirm = makeSupabaseEntity({ table: 'engineering_firms', orderBy: 'created_at' });
+  legacyBase44.entities.Client = makeSupabaseEntity({ table: 'clients', orderBy: 'created_at' });
+  // Portfolio is not yet represented in the migrated schema. Return an empty
+  // collection rather than failing Promise.all and hiding the engineer list.
+  legacyBase44.entities.Portfolio = {
+    filter: async () => [],
+    list: async () => [],
+  };
+} catch (error) {
+  console.warn('Could not install Supabase directory entity bridges:', error);
 }
 
 legacyBase44.integrations.Core.UploadFile = async ({ file }) => {
