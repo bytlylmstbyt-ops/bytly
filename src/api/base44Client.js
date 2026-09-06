@@ -14,24 +14,42 @@ const base44Config = { appId, token, requiresAuth: false, serverUrl: base44Backe
 const legacyBase44 = createClient(base44Config);
 const legacyAuthMe = legacyBase44.auth.me.bind(legacyBase44.auth);
 
+const withHardTimeout = (promise, timeoutMs, message = 'انتهت مهلة الاتصال بخدمة التسجيل') =>
+  new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+    Promise.resolve(promise).then((value) => {
+      clearTimeout(timer);
+      resolve(value);
+    }, (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
+  });
+
 legacyBase44.auth.me = async () => {
   try {
     if (supabase) {
       let sessionUser = null;
       try {
-        const { data } = await supabase.auth.getUser();
+        const { data } = await withHardTimeout(supabase.auth.getUser(), 10000, 'انتهت مهلة التحقق من جلسة الدخول');
         sessionUser = data?.user || null;
       } catch {}
       if (!sessionUser) {
-        const { data } = await supabase.auth.getSession();
-        sessionUser = data?.session?.user || null;
+        try {
+          const { data } = await withHardTimeout(supabase.auth.getSession(), 10000, 'انتهت مهلة قراءة جلسة الدخول');
+          sessionUser = data?.session?.user || null;
+        } catch {}
       }
       if (sessionUser) {
         const email = (sessionUser.email || '').trim().toLowerCase();
         const isOwner = sessionUser.id === PLATFORM_OWNER_ID || email === PLATFORM_OWNER_EMAIL;
         let profile = null;
         try {
-          const { data } = await supabase.from('profiles').select('role,email,full_name').eq('id', sessionUser.id).maybeSingle();
+          const { data } = await withHardTimeout(
+            supabase.from('profiles').select('role,email,full_name').eq('id', sessionUser.id).maybeSingle(),
+            10000,
+            'انتهت مهلة قراءة الملف الشخصي'
+          );
           profile = data || null;
         } catch {}
         return {
@@ -72,11 +90,15 @@ legacyBase44.integrations.Core.UploadFile = async ({ file }) => {
   if (!file) throw new Error('لم يتم اختيار ملف');
   const safeName = String(file.name || 'asset').replace(/[^a-zA-Z0-9._-]/g, '_');
   const path = `platform/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
-  const { data, error } = await supabase.storage.from('platform-assets').upload(path, file, {
-    upsert: false,
-    contentType: file.type || 'application/octet-stream',
-    cacheControl: '3600',
-  });
+  const { data, error } = await withHardTimeout(
+    supabase.storage.from('platform-assets').upload(path, file, {
+      upsert: false,
+      contentType: file.type || 'application/octet-stream',
+      cacheControl: '3600',
+    }),
+    120000,
+    'انتهت مهلة رفع الملف'
+  );
   if (error) {
     console.error('Supabase platform asset upload failed:', error);
     throw new Error(`فشل رفع الملف إلى التخزين: ${error.message || 'خطأ غير معروف'}`);
@@ -85,16 +107,23 @@ legacyBase44.integrations.Core.UploadFile = async ({ file }) => {
   return { file_url: publicData.publicUrl };
 };
 
-// Registration is now written to Supabase directly. This removes the legacy
-// Base44 create request from the critical path, which could remain pending.
+// Registration is written to Supabase directly. Never leave the UI waiting indefinitely.
 const legacyEngineer = legacyBase44.entities.Engineer;
 legacyBase44.entities.Engineer = {
   ...legacyEngineer,
   create: async (payload) => {
     if (!supabase) throw new Error('Supabase غير مهيأ');
-    const { data: authData, error: authError } = await supabase.auth.getUser();
-    if (authError) throw authError;
-    const authUser = authData?.user;
+
+    // getSession reads the locally persisted Supabase session and avoids a potentially
+    // hanging network call to auth.getUser() during the registration submit path.
+    const { data: sessionData, error: sessionError } = await withHardTimeout(
+      supabase.auth.getSession(),
+      10000,
+      'انتهت مهلة جلسة الدخول. أعد فتح الصفحة ثم حاول مرة أخرى.'
+    );
+    if (sessionError) throw sessionError;
+
+    const authUser = sessionData?.session?.user;
     if (!authUser) throw new Error('يجب تسجيل الدخول أولاً');
 
     const row = {
@@ -125,7 +154,11 @@ legacyBase44.entities.Engineer = {
       source: 'supabase',
     };
 
-    const { data, error } = await supabase.from('engineers').insert(row).select('*').single();
+    const { data, error } = await withHardTimeout(
+      supabase.from('engineers').insert(row).select('*').single(),
+      15000,
+      'انتهت مهلة حفظ بيانات التسجيل. تحقق من اتصال Supabase وحاول مرة أخرى.'
+    );
     if (error) {
       console.error('Supabase engineer registration failed:', error);
       throw new Error(error.message || 'تعذر حفظ تسجيل المهندس');
@@ -139,12 +172,16 @@ legacyBase44.entities.Portfolio = {
   ...legacyPortfolio,
   create: async (payload) => {
     if (!supabase) throw new Error('Supabase غير مهيأ');
-    const { data, error } = await supabase.from('portfolios').insert({
-      engineer_id: payload.engineer_id || null,
-      title: payload.title || 'عمل سابق',
-      description: payload.description || null,
-      images: Array.isArray(payload.images) ? payload.images : [],
-    }).select('*').single();
+    const { data, error } = await withHardTimeout(
+      supabase.from('portfolios').insert({
+        engineer_id: payload.engineer_id || null,
+        title: payload.title || 'عمل سابق',
+        description: payload.description || null,
+        images: Array.isArray(payload.images) ? payload.images : [],
+      }).select('*').single(),
+      10000,
+      'انتهت مهلة حفظ الأعمال السابقة'
+    );
     if (error) throw new Error(error.message || 'تعذر حفظ العمل السابق');
     return data;
   },
@@ -154,17 +191,21 @@ const legacyPlatformSettings = legacyBase44.entities.PlatformSettings;
 legacyBase44.entities.PlatformSettings = {
   ...legacyPlatformSettings,
   list: async () => {
-    const { data, error } = await supabase.from('platform_settings').select('*').order('updated_at', { ascending: false }).limit(1);
+    const { data, error } = await withHardTimeout(
+      supabase.from('platform_settings').select('*').order('updated_at', { ascending: false }).limit(1),
+      10000,
+      'انتهت مهلة قراءة إعدادات المنصة'
+    );
     if (error) throw error;
     return data || [];
   },
   create: async (payload) => {
-    const { data, error } = await supabase.from('platform_settings').insert(payload).select('*').single();
+    const { data, error } = await withHardTimeout(supabase.from('platform_settings').insert(payload).select('*').single(), 10000, 'انتهت مهلة حفظ إعدادات المنصة');
     if (error) throw error;
     return data;
   },
   update: async (id, payload) => {
-    const { data, error } = await supabase.from('platform_settings').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', id).select('*').single();
+    const { data, error } = await withHardTimeout(supabase.from('platform_settings').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', id).select('*').single(), 10000, 'انتهت مهلة تحديث إعدادات المنصة');
     if (error) throw error;
     return data;
   },
