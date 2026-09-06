@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,17 +11,25 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError("");
     try {
-      await base44.auth.resetPasswordRequest(email);
-    } catch {
-      // Always show success regardless
+      if (!isSupabaseConfigured || !supabase) throw new Error("Supabase is not configured");
+      const cleanEmail = email.trim().toLowerCase();
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (resetError) throw resetError;
+      setSent(true);
+    } catch (err) {
+      console.error("Supabase password reset request error:", err);
+      setError("تعذر إرسال رابط إعادة تعيين كلمة المرور حالياً. تأكدي من البريد وحاولي مرة أخرى.");
     } finally {
       setLoading(false);
-      setSent(true);
     }
   };
 
@@ -42,6 +50,7 @@ export default function ForgotPassword() {
         </p>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
+          {error && <div role="alert" className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
           <div className="space-y-2">
             <Label htmlFor="email">Email address</Label>
             <div className="relative">
@@ -60,14 +69,7 @@ export default function ForgotPassword() {
             </div>
           </div>
           <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Sending...
-              </>
-            ) : (
-              "Send reset link"
-            )}
+            {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</> : "Send reset link"}
           </Button>
         </form>
       )}
