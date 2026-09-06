@@ -18,6 +18,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MobileSelect from "@/components/mobile/MobileSelect";
 import { toast } from "react-hot-toast";
 
+const directRegistrationInsert = async (table, row) => {
+  const { data, error } = await supabase.from(table).insert(row).select('*').single();
+  if (error) throw new Error(error.message || 'تعذر حفظ التسجيل');
+  return data;
+};
+
 export default function RegisterEngineer() {
   const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
@@ -157,7 +163,8 @@ export default function RegisterEngineer() {
       const authUser = sessionData?.session?.user;
       if (!authUser) throw new Error("يجب تسجيل الدخول أولاً");
 
-      const engineer = await withTimeout(base44.entities.Engineer.create({
+      const engineer = await withTimeout(directRegistrationInsert('engineers', {
+        
         ...formData,
         email: authUser.email || formData.email,
         user_id: authUser.id,
@@ -172,6 +179,12 @@ export default function RegisterEngineer() {
         is_subscription_active: isFreeEligible,
         subscription_start_date: isFreeEligible ? localDate(today) : undefined,
         trial_end_date: isFreeEligible ? localDate(trialEnd) : undefined
+      
+        user_id: authUser.id,
+        is_real: true,
+        status: 'pending',
+        is_verified: false,
+        source: 'supabase'
       }), 15000);
 
       // The engineer row is the critical operation. Portfolio and notifications are deliberately
