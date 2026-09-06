@@ -90,12 +90,15 @@ import ProjectMilestones from './pages/ProjectMilestones';
 import ProjectTools from './pages/ProjectTools';
 import ProjectWorkspace from './pages/ProjectWorkspace';
 import Projects from './pages/Projects';
+import RegisterAccount from './pages/RegisterAccount';
 import RegisterChoice from './pages/RegisterChoice';
 import RegisterClient from './pages/RegisterClient';
 import RegisterConsultant from './pages/RegisterConsultant';
+import RegisterContractor from './pages/RegisterContractor';
 import RegisterEngineer from './pages/RegisterEngineer';
 import RegisterFirm from './pages/RegisterFirm';
 import RegisterLegalConsultant from './pages/RegisterLegalConsultant';
+import RegisterSupplier from './pages/RegisterSupplier';
 import RegistrationSuccess from './pages/RegistrationSuccess';
 import RoleManagement from './pages/RoleManagement';
 import Settings from './pages/Settings';
@@ -201,12 +204,15 @@ export const PAGES = {
     "ProjectTools": ProjectTools,
     "ProjectWorkspace": ProjectWorkspace,
     "Projects": Projects,
+    "RegisterAccount": RegisterAccount,
     "RegisterChoice": RegisterChoice,
     "RegisterClient": RegisterClient,
     "RegisterConsultant": RegisterConsultant,
+    "RegisterContractor": RegisterContractor,
     "RegisterEngineer": RegisterEngineer,
     "RegisterFirm": RegisterFirm,
     "RegisterLegalConsultant": RegisterLegalConsultant,
+    "RegisterSupplier": RegisterSupplier,
     "RegistrationSuccess": RegistrationSuccess,
     "RoleManagement": RoleManagement,
     "Settings": Settings,
