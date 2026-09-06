@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
   User, Mail, Phone, MapPin, Briefcase, Award,
@@ -36,8 +37,13 @@ export default function RegisterEngineer() {
   const [portfolioItems, setPortfolioItems] = useState([]);
   const [skippedUploads, setSkippedUploads] = useState(new Set());
 
-  // Load Google user info if available
+  // Prefill the professional form from the authenticated Supabase account.
   useEffect(() => {
+    let active = true;
+    supabase?.auth.getUser().then(({ data }) => {
+      const user = data?.user;
+      if (active && user) setFormData(prev => ({ ...prev, full_name: user.user_metadata?.full_name || user.user_metadata?.name || prev.full_name, email: user.email || prev.email }));
+    }).catch(() => {});
     const storedInfo = sessionStorage.getItem('googleUserInfo');
     if (storedInfo) {
       try {
@@ -53,6 +59,7 @@ export default function RegisterEngineer() {
         console.error('Error loading Google user info:', err);
       }
     }
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -293,8 +300,13 @@ export default function RegisterEngineer() {
       // تاريخ محلي بدلاً من UTC لتفادي انزياح اليوم عند التسجيل ليلاً (toISOString يُرجع UTC)
       const localDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
+      const { data: authData } = await supabase.auth.getUser();
+      const authUser = authData?.user;
+      if (!authUser) throw new Error("يجب تسجيل الدخول أولاً");
       const engineer = await withTimeout(base44.entities.Engineer.create({
         ...formData,
+        email: authUser.email || formData.email,
+        user_id: authUser.id,
         years_experience: parseInt(formData.years_experience) || 0,
         completed_projects: parseInt(formData.completed_projects) || 0,
         status: "pending",
