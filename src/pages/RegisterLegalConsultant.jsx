@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,8 +43,13 @@ export default function RegisterLegalConsultantPage() {
     setLoading(true);
 
     try {
+      const { data: authData } = await supabase.auth.getUser();
+      const authUser = authData?.user;
+      if (!authUser) throw new Error("يجب تسجيل الدخول أولاً");
       const legalConsultant = await base44.entities.LegalConsultant.create({
         ...formData,
+        email: authUser.email || formData.email,
+        user_id: authUser.id,
         years_experience: parseInt(formData.years_experience) || 0,
         status: "pending",
         terms_and_conditions: {
