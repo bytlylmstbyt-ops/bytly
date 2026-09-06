@@ -69,7 +69,9 @@ export default function RegisterClient() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isLoading) return;
     setIsLoading(true);
+    try {
     
     const { data: authData } = await supabase.auth.getUser();
     const authUser = authData?.user;
@@ -87,8 +89,13 @@ export default function RegisterClient() {
     try { base44.functions.invoke("sendWelcomeEmail", { role: "client", id: client.id }).catch((err) => console.error("Background notification failed:", err)); }
     catch (welcomeErr) { console.error("sendWelcomeEmail client failed:", welcomeErr); }
 
-    setIsLoading(false);
     navigate(createPageUrl("RegistrationSuccess"));
+    } catch (error) {
+      console.error("Client registration error:", error);
+      toast.error(error?.message || "تعذر إكمال التسجيل. حاول مرة أخرى.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const isFormValid = formData.full_name && formData.email && formData.phone;
