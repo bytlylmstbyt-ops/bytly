@@ -98,7 +98,7 @@ const lazyRoute = (Component, name) => <LayoutWrapper currentPageName={name}><Su
 const AuthenticatedApp = () => {
   const { isLoadingPublicSettings } = useAuth();
   if (isLoadingPublicSettings) return <PageSpinner />;
-  const publicPages = ['ContactUs','Terms','Privacy','Copyright','Complaints','Support','RegisterChoice','RegisterEngineer','RegisterClient','RegisterConsultant','RegisterFirm','RegisterLegalConsultant','RegistrationSuccess','About'];
+  const publicPages = ['ContactUs','Terms','Privacy','Copyright','Complaints','Support','RegisterChoice','RegistrationSuccess','About'];
   return <Routes>
     <Route path="/login" element={<Login />} />
     <Route path="/register" element={<Register />} />
@@ -107,8 +107,8 @@ const AuthenticatedApp = () => {
     <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/" element={<PublicHomeRoute />} />
     <Route path="/About" element={lazyRoute(About, "About")} />
-    <Route path="/RegisterContractor" element={lazyRoute(RegisterContractor, "RegisterContractor")} />
-    <Route path="/RegisterSupplier" element={lazyRoute(RegisterSupplier, "RegisterSupplier")} />
+    <Route path="/RegisterContractor" element={<ProtectedRoute><LayoutWrapper currentPageName="RegisterContractor"><Suspense fallback={<PageSpinner />}><RegisterContractor /></Suspense></LayoutWrapper></ProtectedRoute>} />
+    <Route path="/RegisterSupplier" element={<ProtectedRoute><LayoutWrapper currentPageName="RegisterSupplier"><Suspense fallback={<PageSpinner />}><RegisterSupplier /></Suspense></LayoutWrapper></ProtectedRoute>} />
     <Route path="/AdvertiseWithUs" element={lazyRoute(AdvertiseWithUs, "AdvertiseWithUs")} />
     <Route path="/landing" element={lazyRoute(React.lazy(() => import('./pages/Landing')), "Landing")} />
     <Route path="/FAQ" element={lazyRoute(React.lazy(() => import('./pages/FAQ')), "FAQ")} />
