@@ -28,12 +28,7 @@ export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthe
     : baseRegistrationRole;
 
   useEffect(() => {
-    if (isLoadingAuth || isLoadingPublicSettings || isAuthenticated || isAuthPath || hasRedirectedRef.current) return;
-    if (registrationRole) {
-      hasRedirectedRef.current = true;
-      navigate(`/register-auth?type=${encodeURIComponent(registrationRole)}`, { replace: true });
-      return;
-    }
+    if (isLoadingAuth || isLoadingPublicSettings || isAuthenticated || isAuthPath || registrationRole || hasRedirectedRef.current) return;
     const needsLogin = (!isAuthenticated && !authError) || authError?.type === 'auth_required';
     if (needsLogin) {
       hasRedirectedRef.current = true;
