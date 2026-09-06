@@ -27,10 +27,10 @@ export const AuthProvider = ({ children }) => {
 
     const initialize = async () => {
       if (!isMounted.current) return;
-
       if (isSupabaseConfigured && supabase) {
         try {
-          const { data } = await supabase.auth.getSession();
+          const { data, error } = await supabase.auth.getSession();
+          if (error) throw error;
           if (data?.session?.user && isMounted.current) {
             await setSupabaseUser(data.session.user);
           }
@@ -48,11 +48,13 @@ export const AuthProvider = ({ children }) => {
           unsubscribe = listener?.subscription;
         } catch (error) {
           console.warn('Supabase auth initialization skipped:', error?.message || error);
+          if (isMounted.current) setAuthError(error);
         }
       }
-
-      setIsLoadingAuth(false);
-      setIsLoadingPublicSettings(false);
+      if (isMounted.current) {
+        setIsLoadingAuth(false);
+        setIsLoadingPublicSettings(false);
+      }
     };
 
     initialize();
@@ -64,23 +66,20 @@ export const AuthProvider = ({ children }) => {
 
   const setSupabaseUser = async (authUser) => {
     if (!authUser || !isMounted.current) return;
-
     let profile = null;
     if (supabase) {
       try {
-        // Claim/link any migrated record that belongs to this authenticated email.
-        await supabase.rpc('claim_migrated_account');
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', authUser.id)
           .maybeSingle();
+        if (error) throw error;
         profile = data || null;
       } catch (error) {
         console.warn('Supabase profile lookup skipped:', error?.message || error);
       }
     }
-
     if (isMounted.current) {
       setUser(normalizeSupabaseUser(authUser, profile));
       setIsAuthenticated(true);
