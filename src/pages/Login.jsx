@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 
 const AUTH_PATHS = ["/login", "/register", "/forgot-password", "/reset-password"];
@@ -23,16 +23,9 @@ export default function Login() {
   useEffect(() => {
     if (!supabase) return;
     let active = true;
-    const finishExistingSession = async () => {
-      try {
-        const { data, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
-        if (active && data?.session?.user) window.location.replace(getReturnUrl());
-      } catch (err) {
-        console.warn("Supabase session check failed:", err);
-      }
-    };
-    finishExistingSession();
+    supabase.auth.getSession().then(({ data }) => {
+      if (active && data?.session?.user) window.location.replace(getReturnUrl());
+    }).catch(() => {});
     return () => { active = false; };
   }, []);
 
@@ -40,31 +33,74 @@ export default function Login() {
     event.preventDefault();
     if (!isSupabaseConfigured || !supabase) { setError("خدمة تسجيل الدخول غير مهيأة حالياً."); return; }
     setError(""); setLoading(true);
+    const cleanEmail = email.trim().toLowerCase();
     try {
-      const { error: authError } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
-      if (authError) {
-        const msg = String(authError.message || "").toLowerCase();
-        if (msg.includes("email not confirmed")) setError("يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب.");
-        else if (msg.includes("invalid login credentials")) setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+      // First try the new Supabase account.
+      const { error: authError } = await supabase.auth.signInWithPassword({ email: cleanEmail, password });
+      if (!authError) {
+        sessionStorage.removeItem("loginReturnUrl");
+        window.location.replace(getReturnUrl());
+        return;
+      }
+
+      const authMessage = String(authError.message || "").toLowerCase();
+      if (!authMessage.includes("invalid login credentials")) {
+        if (authMessage.includes("email not confirmed")) setError("يرجى التحقق من بريدك الإلكتروني لتفعيل الحساب.");
         else setError("تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
         return;
       }
-      const returnUrl = getReturnUrl();
-      sessionStorage.removeItem("loginReturnUrl");
-      window.location.replace(returnUrl);
+
+      // Legacy migration bridge: authenticate against the old Base44 account only
+      // when Supabase says the account does not exist yet. The user's existing
+      // password is then used to create the Supabase Auth account, so the migration
+      // is invisible to the user and the password is never read or stored by Bytly.
+      try {
+        const { base44 } = await import("@/api/base44Client");
+        await base44.auth.loginViaEmailPassword(cleanEmail, password);
+
+        const { data: migrated, error: migrateError } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password,
+          options: { data: { email: cleanEmail } }
+        });
+
+        if (migrateError) throw migrateError;
+
+        if (migrated?.session) {
+          sessionStorage.removeItem("loginReturnUrl");
+          window.location.replace(getReturnUrl());
+          return;
+        }
+
+        // If email confirmation is enabled, Supabase will require the one-time
+        // confirmation before the new session can be created.
+        setError("تم نقل حسابك إلى النظام الجديد. راجعي بريدك الإلكتروني لتفعيل الحساب ثم سجّلي الدخول مرة أخرى.");
+      } catch (legacyError) {
+        const status = legacyError?.status;
+        const message = String(legacyError?.message || "").toLowerCase();
+        if (status === 403) setError("لا يمكن تسجيل الدخول بهذا الحساب حالياً.");
+        else if (status === 404 || message.includes("not found") || message.includes("invalid") || message.includes("credentials") || message.includes("password")) setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+        else {
+          console.error("Legacy authentication bridge failed:", legacyError);
+          setError("تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
+        }
+      }
     } catch (err) {
       console.error("Supabase login error:", err);
       setError("تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSocialLogin = async () => {
     if (!isSupabaseConfigured || !supabase) { setError("تسجيل الدخول غير مهيأ حالياً."); return; }
     setError(""); setLoading(true);
+    sessionStorage.setItem("loginReturnUrl", getReturnUrl());
     try {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/login` }
+        options: { redirectTo: `${window.location.origin}/login?from_url=${encodeURIComponent(getReturnUrl())}` }
       });
       if (oauthError) { console.error("Supabase Google login error:", oauthError); setError("تعذر بدء تسجيل الدخول. يرجى المحاولة مرة أخرى."); setLoading(false); }
     } catch (err) { console.error("Google login error:", err); setError("تعذر بدء تسجيل الدخول. يرجى المحاولة مرة أخرى."); setLoading(false); }
