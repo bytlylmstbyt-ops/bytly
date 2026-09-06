@@ -83,6 +83,7 @@ export default function RegistrationAuth() {
       }
 
       if (data?.session) {
+        try { await supabase.rpc('claim_migrated_account'); } catch {}
         navigate(nextPage, { replace: true });
         return;
       }
