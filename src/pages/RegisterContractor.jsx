@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -166,11 +167,14 @@ export default function RegisterContractor() {
 
     setLoading(true);
     try {
-      const user = await base44.auth.me();
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData?.user;
+      if (!user) throw new Error("يجب تسجيل الدخول أولاً");
 
       const contractor = await base44.entities.Contractor.create({
         ...formData,
-        email: user.email
+        email: user.email,
+        user_id: user.id
       });
       try { await base44.functions.invoke("notifyNewUserSignup", { role: "contractor", data: contractor }); }
       catch (notifyErr) { console.error("notifyNewUserSignup contractor failed:", notifyErr); }
