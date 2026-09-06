@@ -44,6 +44,9 @@ export default function ProtectedRoute({ fallback = <DefaultFallback />, unauthe
   }, [isLoadingAuth, isLoadingPublicSettings, isAuthenticated, isAuthPath, registrationRole, navigate, navigateToLogin, authError]);
 
   if (isLoadingPublicSettings || isLoadingAuth) return fallback;
+  // Never redirect a new visitor away from a role-specific registration form.
+  // The form itself must be visible so every account type can collect its own data.
+  if (registrationRole) return children || <Outlet />;
   if (isAuthPath) return children || <Outlet />;
   if (authError?.type === 'user_not_registered') return <UserNotRegisteredError />;
   if (authError || !isAuthenticated) return unauthenticatedElement;
