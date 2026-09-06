@@ -60,9 +60,9 @@ export default function RegisterLegalConsultantPage() {
           accepted_date: new Date().toISOString()
         }
       });
-      try { await base44.functions.invoke("notifyNewUserSignup", { role: "legal_consultant", data: legalConsultant }); }
+      try { base44.functions.invoke("notifyNewUserSignup", { role: "legal_consultant", data: legalConsultant }).catch((err) => console.error("Background notification failed:", err)); }
       catch (notifyErr) { console.error("notifyNewUserSignup legal consultant failed:", notifyErr); }
-      try { await base44.functions.invoke("sendWelcomeEmail", { role: "legal_consultant", id: legalConsultant.id }); }
+      try { base44.functions.invoke("sendWelcomeEmail", { role: "legal_consultant", id: legalConsultant.id }).catch((err) => console.error("Background notification failed:", err)); }
       catch (welcomeErr) { console.error("sendWelcomeEmail legal consultant failed:", welcomeErr); }
 
       alert("تم تقديم طلب التسجيل بنجاح! سيتم مراجعته من قبل الإدارة.");
