@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 
-const AUTH_PATHS = ["/login", "/register", "/forgot-password", "/reset-password"];
+const AUTH_PATHS = ["/login", "/register", "/forgot-password", "/reset-password", "/auth/callback"];
 const getReturnUrl = () => {
   const params = new URLSearchParams(window.location.search);
   const raw = params.get("from_url") || sessionStorage.getItem("loginReturnUrl") || "/Home";
   try {
     const url = new URL(raw, window.location.origin);
-    return AUTH_PATHS.includes(url.pathname) ? "/Home" : url.pathname + url.search;
+    return AUTH_PATHS.some((path) => url.pathname === path || url.pathname.startsWith(path + "/")) ? "/Home" : url.pathname + url.search;
   } catch { return "/Home"; }
 };
 const fieldStyle = { width: "100%", height: 48, boxSizing: "border-box", border: "1px solid #d1d5db", borderRadius: 10, padding: "0 14px", fontSize: 16, background: "white", color: "#111827" };
@@ -19,14 +19,16 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     if (!supabase) return;
     let active = true;
     supabase.auth.getSession().then(({ data }) => {
       if (active && data?.session?.user) window.location.replace(getReturnUrl());
-    });
+    }).catch((err) => console.warn("Supabase session check failed:", err));
     return () => { active = false; };
   }, []);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (!isSupabaseConfigured || !supabase) { setError("خدمة تسجيل الدخول غير مهيأة حالياً."); return; }
@@ -40,21 +42,27 @@ export default function Login() {
         else setError("تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
         return;
       }
+      const returnUrl = getReturnUrl();
       sessionStorage.removeItem("loginReturnUrl");
-      window.location.replace(getReturnUrl());
+      window.location.replace(returnUrl);
     } catch (err) {
       console.error("Supabase login error:", err);
       setError("تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
     } finally { setLoading(false); }
   };
+
   const handleSocialLogin = async () => {
     if (!isSupabaseConfigured || !supabase) { setError("تسجيل الدخول غير مهيأ حالياً."); return; }
     setError(""); setLoading(true);
     try {
-      const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${window.location.origin}/login` } });
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/auth/callback` }
+      });
       if (oauthError) { console.error("Supabase Google login error:", oauthError); setError("تعذر بدء تسجيل الدخول. يرجى المحاولة مرة أخرى."); setLoading(false); }
     } catch (err) { console.error("Google login error:", err); setError("تعذر بدء تسجيل الدخول. يرجى المحاولة مرة أخرى."); setLoading(false); }
   };
+
   return <main dir="rtl" style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, boxSizing: "border-box", background: "#f8fafc" }}>
     <section style={{ width: "100%", maxWidth: 430, background: "white", border: "1px solid #e5e7eb", borderRadius: 18, padding: 28, boxSizing: "border-box", boxShadow: "0 8px 30px rgba(0,0,0,.06)" }}>
       <header style={{ textAlign: "center", marginBottom: 24 }}>
