@@ -33,7 +33,6 @@ export const AuthProvider = ({ children }) => {
           const { data } = await supabase.auth.getSession();
           if (data?.session?.user && isMounted.current) {
             await setSupabaseUser(data.session.user);
-            return;
           }
 
           const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -108,12 +107,6 @@ export const AuthProvider = ({ children }) => {
         console.warn('Supabase logout skipped:', error?.message || error);
       }
     }
-    // Load the legacy SDK only when a signed-out user explicitly logs out.
-    // It must not initialize on public auth pages during the migration.
-    try {
-      const { base44 } = await import('@/api/base44Client');
-      await base44.auth.logout();
-    } catch (_) {}
     setUser(null);
     setIsAuthenticated(false);
     if (shouldRedirect) window.location.href = '/login';
