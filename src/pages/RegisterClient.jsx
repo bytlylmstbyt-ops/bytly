@@ -87,7 +87,7 @@ export default function RegisterClient() {
       fullName: formData.full_name,
       email: formData.email,
       phone: formData.phone,
-      row: { ...formData, is_real: true, wallet_balance: 0, total_projects: 0, source: "supabase" }
+      row: { full_name: formData.full_name, phone: formData.phone, city: formData.city, country: formData.country, client_type: formData.client_type, company_name: formData.company_name, is_real: true, wallet_balance: 0, total_projects: 0, source: "supabase" }
     });
 
     toast.success("تم التسجيل بنجاح");
