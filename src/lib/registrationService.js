@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 
-export async function saveRegistration({ table, row, role, fullName, email, phone }) {
+export async function saveRegistration({ table, row, role, fullName, email, phone, userIdField = "user_id" }) {
   const { data: authData, error: authError } = await supabase.auth.getUser();
   if (authError) throw authError;
   const user = authData?.user;
@@ -17,7 +17,7 @@ export async function saveRegistration({ table, row, role, fullName, email, phon
 
   const { data, error } = await supabase.from(table).insert({
     ...row,
-    user_id: user.id,
+    [userIdField]: user.id,
     email: user.email || email || row.email
   }).select("*").single();
   if (error) throw error;
