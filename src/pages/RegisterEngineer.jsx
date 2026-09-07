@@ -40,6 +40,19 @@ export default function RegisterEngineer() {
   const [skippedUploads, setSkippedUploads] = useState(new Set());
 
   useEffect(() => {
+    try {
+      const draft = JSON.parse(sessionStorage.getItem("bytly_registration_draft") || "null");
+      if (draft?.full_name || draft?.email) {
+        setFormData(prev => ({
+          ...prev,
+          full_name: draft.full_name || prev.full_name,
+          email: draft.email || prev.email
+        }));
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
     let active = true;
     supabase?.auth.getUser().then(({ data }) => {
       const user = data?.user;
@@ -274,8 +287,11 @@ export default function RegisterEngineer() {
             {step === 3 && <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3"><Award className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" /><div className="text-sm text-blue-800"><p className="font-semibold mb-1">نظام الاعتماد المهني</p><p>رفع رقم القيد المهني وشهادة التخرج وشهادة القيد في الهيئة السعودية للمهندسين إلزامي للحصول على شارة "مهندس معتمد". ستتم مراجعة وثائقك من قبل إدارة المنصة قبل ظهور الشارة في ملفك الشخصي.</p></div></div>}
 
             {step === 1 && <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-              <div className="space-y-2"><Label htmlFor="full_name">الاسم الكامل *</Label><div className="relative"><User className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><Input id="full_name" value={formData.full_name} onChange={(e) => handleInputChange("full_name", e.target.value)} className="pr-10" placeholder="أدخل اسمك الكامل" /></div></div>
-              <div className="space-y-2"><Label htmlFor="email">البريد الإلكتروني *</Label><div className="relative"><Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><Input id="email" type="email" value={formData.email} onChange={(e) => handleInputChange("email", e.target.value)} className="pr-10" placeholder="example@email.com" /></div></div>
+              <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-slate-700">
+                <p className="font-semibold text-[#1a1a2e]">بيانات الحساب</p>
+                <p className="mt-1">{formData.full_name} — {formData.email}</p>
+                <p className="text-xs text-slate-500 mt-1">تم إدخال هذه البيانات في بداية التسجيل ولا تحتاجين لإدخالها مرة أخرى.</p>
+              </div>
               <div className="space-y-2"><Label htmlFor="phone">رقم الهاتف *</Label><div className="relative"><Phone className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><Input id="phone" value={formData.phone} onChange={(e) => handleInputChange("phone", e.target.value)} className="pr-10" placeholder="+966 5xx xxx xxx" /></div></div>
             </motion.div>}
 
