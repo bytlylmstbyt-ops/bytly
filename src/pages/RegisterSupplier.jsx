@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
+import { saveRegistration } from "@/lib/registrationService";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -173,10 +174,9 @@ export default function RegisterSupplier() {
       const user = authData?.user;
       if (!user) throw new Error("يجب تسجيل الدخول أولاً");
 
-      const supplier = await base44.entities.Supplier.create({
-        ...formData,
-        email: user.email,
-        user_id: user.id
+      const supplier = await saveRegistration({
+        table: "suppliers", role: "supplier", fullName: formData.company_name, email: formData.email, phone: formData.phone,
+        row: { ...formData, status: "pending" }
       });
       try { base44.functions.invoke("notifyNewUserSignup", { role: "supplier", data: supplier }).catch((err) => console.error("Background notification failed:", err)); }
       catch (notifyErr) { console.error("notifyNewUserSignup supplier failed:", notifyErr); }
