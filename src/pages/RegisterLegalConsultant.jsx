@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
+import { saveRegistration } from "@/lib/registrationService";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,19 +47,11 @@ export default function RegisterLegalConsultantPage() {
       const { data: authData } = await supabase.auth.getUser();
       const authUser = authData?.user;
       if (!authUser) throw new Error("يجب تسجيل الدخول أولاً");
-      const legalConsultant = await base44.entities.LegalConsultant.create({
-        ...formData,
-        email: authUser.email || formData.email,
-        user_id: authUser.id,
-        years_experience: parseInt(formData.years_experience) || 0,
-        status: "pending",
-        terms_and_conditions: {
-          confidentiality_clause: "تم الموافقة",
-          responsibility_clause: "تم الموافقة",
-          intellectual_property_clause: "تم الموافقة",
-          accepted: true,
-          accepted_date: new Date().toISOString()
-        }
+      const legalConsultant = await saveRegistration({
+        table: "legal_consultants", role: "legal_consultant", fullName: formData.full_name, email: formData.email, phone: formData.phone,
+        row: { ...formData, years_experience: parseInt(formData.years_experience) || 0, status: "pending", terms_and_conditions: {
+          confidentiality_clause: "تم الموافقة", responsibility_clause: "تم الموافقة", intellectual_property_clause: "تم الموافقة", accepted: true, accepted_date: new Date().toISOString()
+        }}
       });
       try { base44.functions.invoke("notifyNewUserSignup", { role: "legal_consultant", data: legalConsultant }).catch((err) => console.error("Background notification failed:", err)); }
       catch (notifyErr) { console.error("notifyNewUserSignup legal consultant failed:", notifyErr); }
