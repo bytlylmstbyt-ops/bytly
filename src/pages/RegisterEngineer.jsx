@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
+import { saveRegistration } from "@/lib/registrationService";
 import { motion } from "framer-motion";
 import { 
   User, Mail, Phone, MapPin, Briefcase, Award,
@@ -165,16 +166,16 @@ export default function RegisterEngineer() {
       trialEnd.setMonth(trialEnd.getMonth() + 3);
       const localDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-      const { data: sessionData, error: sessionError } = await withTimeout(supabase.auth.getSession(), 10000);
-      if (sessionError) throw sessionError;
-      const authUser = sessionData?.session?.user;
-      if (!authUser) throw new Error("يجب تسجيل الدخول أولاً");
-
-      const engineer = await withTimeout(directRegistrationInsert('engineers', {
+      const engineer = await withTimeout(saveRegistration({
+        table: "engineers",
+        role: "engineer",
+        fullName: formData.full_name,
+        email: formData.email,
+        phone: formData.phone,
+        row: {
         
         ...formData,
-        email: authUser.email || formData.email,
-        user_id: authUser.id,
+        
         years_experience: parseInt(formData.years_experience) || 0,
         completed_projects: parseInt(formData.completed_projects) || 0,
         status: "pending",
@@ -187,7 +188,7 @@ export default function RegisterEngineer() {
         subscription_start_date: isFreeEligible ? localDate(today) : undefined,
         trial_end_date: isFreeEligible ? localDate(trialEnd) : undefined,
         is_real: true,
-        source: 'supabase'
+        source: 'supabase' }
       }), 15000);
 
       // The engineer row is the critical operation. Portfolio and notifications are deliberately
