@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
+import { saveRegistration } from "@/lib/registrationService";
 import { motion } from "framer-motion";
 import { 
   User, Mail, Phone, MapPin, Upload, 
@@ -80,24 +81,16 @@ export default function RegisterClient() {
     setIsLoading(true);
     try {
     
-    const { data: authData } = await supabase.auth.getUser();
-    const authUser = authData?.user;
-    if (!authUser) throw new Error("يجب تسجيل الدخول أولاً");
-    const client = await directRegistrationInsert('clients', {
-      ...formData,
-      email: authUser.email || formData.email,
-      user_id: authUser.id,
-      is_real: true,
-      wallet_balance: 0,
-      total_projects: 0,
-      source: 'supabase'
+    const client = await saveRegistration({
+      table: "clients",
+      role: "client",
+      fullName: formData.full_name,
+      email: formData.email,
+      phone: formData.phone,
+      row: { ...formData, is_real: true, wallet_balance: 0, total_projects: 0, source: "supabase" }
     });
 
-    try { base44.functions.invoke("notifyNewUserSignup", { role: "client", data: client }).catch((err) => console.error("Background notification failed:", err)); }
-    catch (notifyErr) { console.error("notifyNewUserSignup client failed:", notifyErr); }
-    try { base44.functions.invoke("sendWelcomeEmail", { role: "client", id: client.id }).catch((err) => console.error("Background notification failed:", err)); }
-    catch (welcomeErr) { console.error("sendWelcomeEmail client failed:", welcomeErr); }
-
+    toast.success("تم التسجيل بنجاح");
     navigate(createPageUrl("RegistrationSuccess"));
     } catch (error) {
       console.error("Client registration error:", error);
