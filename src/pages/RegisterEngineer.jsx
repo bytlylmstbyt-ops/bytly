@@ -145,6 +145,13 @@ export default function RegisterEngineer() {
 
   const handleSubmit = async () => {
     if (isSubmitting || isFileUploading) return;
+    if (!isStep3Valid) {
+      setStep(3);
+      const message = "أكمل رقم القيد المهني والوثائق المطلوبة أولاً، ثم تابع لإتمام التسجيل.";
+      setNotice({ type: "error", title: "بيانات الاعتماد غير مكتملة", message });
+      toast.error(message);
+      return;
+    }
     setIsSubmitting(true);
     try {
       void Promise.resolve(base44.analytics.track({ eventName: "engineer_registration_submitted", properties: { user_type: formData.user_type, specialization: formData.specialization, city: formData.city, country: formData.country } })).catch(() => {});
@@ -291,7 +298,7 @@ export default function RegisterEngineer() {
 
             <div className="flex justify-between pt-6">
               {step > 1 ? <Button variant="outline" onClick={() => setStep(step - 1)} className="gap-2"><ArrowRight className="w-4 h-4" />السابق</Button> : <div />}
-              {step < 4 ? <Button onClick={() => setStep(step + 1)} disabled={(step === 1 && !isStep1Valid) || (step === 2 && !isStep2Valid)} className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white gap-2">التالي<ArrowLeft className="w-4 h-4" /></Button> : <Button onClick={handleSubmit} disabled={isSubmitting || !isStep3Valid || isFileUploading} className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white gap-2">{isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" />جاري التسجيل...</> : <>إتمام التسجيل<CheckCircle className="w-4 h-4" /></>}</Button>}
+              {step < 4 ? <Button onClick={() => setStep(step + 1)} disabled={(step === 1 && !isStep1Valid) || (step === 2 && !isStep2Valid)} onClick={() => { if (step === 3 && !isStep3Valid) { const message = "أكمل رقم القيد المهني والوثائق المطلوبة أولاً قبل الانتقال للأعمال السابقة."; setNotice({ type: "error", title: "بيانات الاعتماد غير مكتملة", message }); toast.error(message); return; } setStep(step + 1); }} className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white gap-2">التالي<ArrowLeft className="w-4 h-4" /></Button> : <Button onClick={handleSubmit} disabled={isSubmitting || isFileUploading} className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white gap-2">{isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" />جاري التسجيل...</> : <>إتمام التسجيل<CheckCircle className="w-4 h-4" /></>}</Button>}
             </div>
           </CardContent>
         </Card>
