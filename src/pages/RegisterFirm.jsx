@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
+import { saveRegistration } from "@/lib/registrationService";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -136,14 +137,29 @@ export default function RegisterFirm() {
 
     setLoading(true);
     try {
-      const { data: authData } = await supabase.auth.getUser();
-      const user = authData?.user;
-      if (!user) throw new Error("يجب تسجيل الدخول أولاً");
-      
-      const firm = await base44.entities.EngineeringFirm.create({
-        ...formData,
-        email: user.email,
-        owner_user_id: user.id
+      const firm = await saveRegistration({
+        table: "engineering_firms",
+        role: "firm",
+        fullName: formData.company_name,
+        email: formData.email,
+        phone: formData.phone,
+        userIdField: "owner_user_id",
+        row: {
+          company_name: formData.company_name,
+          phone: formData.phone,
+          commercial_registration: formData.commercial_registration,
+          city: formData.city,
+          country: formData.country,
+          website: formData.website,
+          specializations: formData.specializations,
+          is_verified: false,
+          status: "pending",
+          total_projects: 0,
+          active_projects: 0,
+          wallet_balance: 0,
+          is_real: true,
+          source: "supabase"
+        }
       });
       try { base44.functions.invoke("notifyNewUserSignup", { role: "firm", data: firm }).catch((err) => console.error("Background notification failed:", err)); }
       catch (notifyErr) { console.error("notifyNewUserSignup firm failed:", notifyErr); }
