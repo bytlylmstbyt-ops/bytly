@@ -173,8 +173,7 @@ export default function RegisterEngineer() {
         email: formData.email,
         phone: formData.phone,
         row: {
-        
-        ...formData,
+        full_name: formData.full_name, phone: formData.phone, city: formData.city, country: formData.country, specialization: formData.specialization, registration_number: formData.registration_number, bio: formData.bio, graduation_certificate_url: formData.graduation_certificate_url, saudi_engineers_council_certificate_url: formData.saudi_engineers_council_certificate_url, profile_image: formData.profile_image,
         
         years_experience: parseInt(formData.years_experience) || 0,
         completed_projects: parseInt(formData.completed_projects) || 0,
