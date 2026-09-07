@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
+import { saveRegistration } from "@/lib/registrationService";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,14 +48,9 @@ export default function RegisterConsultantPage() {
       const { data: authData } = await supabase.auth.getUser();
       const authUser = authData?.user;
       if (!authUser) throw new Error("يجب تسجيل الدخول أولاً");
-      const consultant = await base44.entities.Consultant.create({
-        ...formData,
-        email: authUser.email || formData.email,
-        user_id: authUser.id,
-        years_experience: parseInt(formData.years_experience) || 0,
-        status: "pending",
-        terms_accepted: true,
-        terms_accepted_date: new Date().toISOString()
+      const consultant = await saveRegistration({
+        table: "consultants", role: "consultant", fullName: formData.full_name, email: formData.email, phone: formData.phone,
+        row: { ...formData, years_experience: parseInt(formData.years_experience) || 0, status: "pending", terms_accepted: true, terms_accepted_date: new Date().toISOString() }
       });
       try { base44.functions.invoke("notifyNewUserSignup", { role: "consultant", data: consultant }).catch((err) => console.error("Background notification failed:", err)); }
       catch (notifyErr) { console.error("notifyNewUserSignup consultant failed:", notifyErr); }
