@@ -114,15 +114,14 @@ export default function RegisterLegalConsultantPage() {
                     <p className="text-xs text-slate-500 mt-1">تم إدخال هذه البيانات في بداية التسجيل ولا تحتاج لإدخالها مرة أخرى.</p>
                   </div>
 
-                    <div>
-                      <Label htmlFor="phone">رقم الهاتف *</Label>
-                      <Input
-                        id="phone"
-                        required
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      />
-                    </div>
+                  <div>
+                    <Label htmlFor="phone">رقم الهاتف *</Label>
+                    <Input
+                      id="phone"
+                      required
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    />
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-4">
