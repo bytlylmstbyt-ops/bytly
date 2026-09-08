@@ -120,7 +120,7 @@ export default function RegisterAccount() {
                 <div className="relative"><LockKeyhole className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><Input id="register-confirm-password" type={showConfirm ? "text" : "password"} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="pr-10 pl-10" autoComplete="new-password" minLength={6} required /><button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" aria-label="إظهار تأكيد كلمة المرور">{showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}</button></div>
               </div>
               <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white h-12">
-                {loading ? <><Loader2 className="w-4 h-4 ml-2 animate-spin" />جاري إنشاء الحساب...</> : <>متابعة التسجيل<ArrowLeft className="w-4 h-4 mr-2" /></>}
+                {loading ? <><Loader2 className="w-4 h-4 ml-2 animate-spin" />جاري المتابعة...</> : <>متابعة التسجيل<ArrowLeft className="w-4 h-4 mr-2" /></>}
               </Button>
             </form>
           </CardContent>
