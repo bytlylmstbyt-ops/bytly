@@ -18,7 +18,8 @@ export default function RegisterFirm() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingDocs, setUploadingDocs] = useState(false);
-  
+  const [authChecked, setAuthChecked] = useState(false);
+
   const [formData, setFormData] = useState({
     company_name: "",
     email: "",
@@ -40,6 +41,7 @@ export default function RegisterFirm() {
       const draft = JSON.parse(sessionStorage.getItem("bytly_registration_draft") || "null");
       if (draft?.email) setFormData(prev => ({ ...prev, email: draft.email }));
     } catch {}
+    setAuthChecked(true);
   }, []);
 
   const specializations = [

@@ -20,6 +20,12 @@ Deno.serve(async (req) => {
             return Response.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
+        // Prevent open mail relay: the confirmation email must go to the authenticated user only.
+        const currentUser = await base44.auth.me();
+        if (!currentUser || currentUser.email !== email) {
+            return Response.json({ error: 'Email must match your authenticated account' }, { status: 403 });
+        }
+
         const emailBody = `
             <div style="font-family: Arial, sans-serif; direction: rtl; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9f9f9;">
                 <div style="background: linear-gradient(135deg, #1a1a2e, #d4a574); padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">

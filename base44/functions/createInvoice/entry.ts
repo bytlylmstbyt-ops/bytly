@@ -28,7 +28,12 @@ Deno.serve(async (req) => {
       if (!milestone || !project) {
         return Response.json({ error: 'Milestone not found' }, { status: 404 });
       }
-      
+
+      // Ownership check: only the project's client may invoice its milestones.
+      if (project.client_id !== client.id) {
+        return Response.json({ error: 'You do not own this project' }, { status: 403 });
+      }
+
       amount = milestone.amount;
       projectId = project.id;
     } else if (invoice_type === 'design' && design_id) {
