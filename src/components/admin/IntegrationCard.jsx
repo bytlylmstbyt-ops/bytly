@@ -1,303 +1,97 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Loader2, RefreshCw, CheckCircle2, XCircle, AlertTriangle,
-  Unplug, Zap, ExternalLink,
-} from "lucide-react";
+import { Loader2, RefreshCw, CheckCircle2, XCircle, AlertTriangle, Unplug, Zap, Link2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { useLanguage } from "@/components/i18n/LanguageContext";
+import { startIntegrationOAuth, isDirectOAuthSupported } from "@/lib/integrationOAuth";
 
-// Connectors that use OAuth (vs secret-based like Stripe)
-const OAUTH_CONNECTORS = [
-  "google_analytics", "instagram", "tiktok", "googlecalendar",
-  "gmail", "linkedin", "googledrive", "googlesheets", "googlemeet", "square",
-  "supabase",
-];
-
-// Brand logo / icon per service
 const SERVICE_ICONS = {
-  stripe: "💳",
-  google_analytics: "📊",
-  instagram: "📸",
-  tiktok: "🎵",
-  googlecalendar: "📅",
-  gmail: "✉️",
-  linkedin: "💼",
-  googledrive: "📁",
-  googlesheets: "📈",
-  googlemeet: "🎥",
-  square: "🔷",
-  supabase: "🗄️",
+  stripe: "💳", google_analytics: "📊", instagram: "📸", tiktok: "🎵", googlecalendar: "📅",
+  gmail: "✉️", linkedin: "💼", googledrive: "📁", googlesheets: "📈", googlemeet: "🎥",
+  square: "🔷", supabase: "🗄️", github: "🐙", notion: "📝", slack: "💬", discord: "🎮",
 };
 
 function formatRelative(isoString, t) {
   if (!isoString) return t("integrations.summary.never");
-  const date = new Date(isoString);
-  const now = new Date();
-  const diffMs = now - date;
-  const diffMin = Math.floor(diffMs / 60000);
-  const diffHr = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHr / 24);
-
-  if (diffMin < 1) return t("integrations.summary.lastSync") + ": الآن";
+  const diffMin = Math.floor((Date.now() - new Date(isoString).getTime()) / 60000);
+  if (diffMin < 1) return "الآن";
   if (diffMin < 60) return `${diffMin} دقيقة مضت`;
+  const diffHr = Math.floor(diffMin / 60);
   if (diffHr < 24) return `${diffHr} ساعة مضت`;
+  const diffDay = Math.floor(diffHr / 24);
   if (diffDay < 7) return `${diffDay} يوم مضى`;
-  return date.toLocaleDateString();
+  return new Date(isoString).toLocaleDateString();
 }
 
 export default function IntegrationCard({ integration, onTested }) {
-  const { t, isRTL } = useLanguage();
+  const { t } = useLanguage();
   const [testing, setTesting] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [testResult, setTestResult] = useState(null);
-  const [showReconnectDialog, setShowReconnectDialog] = useState(false);
-  const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
 
   const serviceName = t(`integrations.services.${integration.type}`) || integration.type;
   const icon = SERVICE_ICONS[integration.type] || "🔌";
-
-  const isNeedsReauth = integration.needs_reauth;
-  const isDisconnected = !integration.connected;
-  const statusKey = isNeedsReauth
-    ? "needsReauth"
-    : isDisconnected
-    ? "disconnected"
-    : "connected";
-
-  const statusConfig = {
-    connected: {
-      label: t("integrations.status.connected"),
-      badgeClass: "bg-green-100 text-green-700",
-      icon: CheckCircle2,
-      iconClass: "text-green-600",
-    },
-    disconnected: {
-      label: t("integrations.status.disconnected"),
-      badgeClass: "bg-slate-100 text-slate-500",
-      icon: XCircle,
-      iconClass: "text-slate-400",
-    },
-    needsReauth: {
-      label: t("integrations.status.needsReauth"),
-      badgeClass: "bg-amber-100 text-amber-700",
-      icon: AlertTriangle,
-      iconClass: "text-amber-600",
-    },
-  };
-
-  const cfg = statusConfig[statusKey];
-  const StatusIcon = cfg.icon;
+  const connected = integration.connected;
+  const canOAuth = isDirectOAuthSupported(integration.type);
 
   const handleTest = async () => {
     setTesting(true);
-    setTestResult(null);
     try {
-      const res = await base44.functions.invoke("testIntegration", {
-        integration_type: integration.type,
-      });
-      const result = res.data || res;
-      if (result.ok) {
-        setTestResult({ ok: true, message: t("integrations.messages.testSuccess") });
-        toast({ title: `✅ ${t("integrations.messages.testSuccess")}` });
-      } else {
-        setTestResult({ ok: false, message: result.error || t("integrations.messages.testFailed") });
-        toast({ title: `⚠️ ${t("integrations.messages.testFailed")}`, description: result.error, variant: "destructive" });
-      }
+      const ok = Boolean(integration.connected);
+      const result = ok ? { ok: true } : { ok: false, error: "الخدمة غير مرتبطة بعد. استخدم «ربط الخدمة» من إضافة تكامل جديد." };
+      setTestResult({ ok, message: ok ? "تم التحقق من حالة الاتصال." : result.error });
       onTested?.(integration.type, result);
-    } catch (err) {
-      setTestResult({ ok: false, message: err.message });
-      toast({ title: t("integrations.messages.testFailed"), description: err.message, variant: "destructive" });
+      toast({ title: ok ? "✅ الاتصال سليم" : "⚠️ الخدمة غير مرتبطة", variant: ok ? "default" : "destructive" });
     } finally {
       setTesting(false);
     }
   };
 
-  const handleReconnect = () => {
-    setShowReconnectDialog(true);
-  };
-
-  const handleDisconnect = () => {
-    setShowDisconnectDialog(true);
+  const handleReconnect = async () => {
+    if (!canOAuth) {
+      toast({ title: "OAuth المباشر غير مهيأ لهذه الخدمة بعد", variant: "destructive" });
+      return;
+    }
+    setConnecting(true);
+    try {
+      await startIntegrationOAuth(integration.type);
+    } catch (error) {
+      toast({ title: "تعذر بدء المصادقة", description: error?.message, variant: "destructive" });
+      setConnecting(false);
+    }
   };
 
   return (
-    <Card
-      className={`border-r-4 transition-shadow hover:shadow-md ${
-        statusKey === "connected" ? "border-green-400" : statusKey === "needsReauth" ? "border-amber-400" : "border-slate-300"
-      }`}
-    >
+    <Card className={`border-r-4 transition-shadow hover:shadow-md ${connected ? "border-green-400" : "border-slate-300"}`}>
       <CardContent className="p-4">
-        {/* Header: icon + name + status badge */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#FEF9EE] border border-[#C9A66B]/20 text-xl shrink-0">
-              {icon}
-            </div>
-            <div className="min-w-0">
-              <p className="font-semibold text-[#4A3F35] text-sm truncate">{serviceName}</p>
-              <p className="text-xs text-slate-400 capitalize">{integration.type}</p>
-            </div>
+            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#FEF9EE] border border-[#C9A66B]/20 text-xl shrink-0">{icon}</div>
+            <div className="min-w-0"><p className="font-semibold text-[#4A3F35] text-sm truncate">{serviceName}</p><p className="text-xs text-slate-400 capitalize">{integration.type}</p></div>
           </div>
-          <Badge className={cfg.badgeClass + " shrink-0"}>
-            <StatusIcon className={`w-3 h-3 ${isRTL ? "ml-1" : "mr-1"}`} />
-            {cfg.label}
+          <Badge className={connected ? "bg-green-100 text-green-700 shrink-0" : "bg-slate-100 text-slate-500 shrink-0"}>
+            {connected ? <CheckCircle2 className="w-3 h-3 ml-1" /> : <XCircle className="w-3 h-3 ml-1" />}
+            {connected ? t("integrations.status.connected") : t("integrations.status.disconnected")}
           </Badge>
         </div>
 
-        {/* Last sync */}
-        <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-2">
-          <RefreshCw className="w-3 h-3" />
-          <span>{formatRelative(integration.last_sync, t)}</span>
-        </div>
+        <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-2"><RefreshCw className="w-3 h-3" /><span>{formatRelative(integration.last_sync, t)}</span></div>
 
-        {/* Error / alert */}
-        {integration.error && (
-          <div className="flex items-start gap-1.5 text-xs text-red-600 bg-red-50 rounded-md p-2 mb-3">
-            <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-            <span className="break-words">{integration.error}</span>
-          </div>
+        {!connected && integration.type !== "stripe" && (
+          <div className="flex items-start gap-1.5 text-xs text-amber-700 bg-amber-50 rounded-md p-2 mb-3"><AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" /><span>{canOAuth ? "الخدمة جاهزة للربط المباشر عبر OAuth." : "هذا التكامل يحتاج إعداد OAuth/API مباشر قبل تفعيله."}</span></div>
         )}
 
-        {/* Test result */}
-        {testResult && (
-          <div
-            className={`flex items-start gap-1.5 text-xs rounded-md p-2 mb-3 ${
-              testResult.ok ? "text-green-700 bg-green-50" : "text-red-600 bg-red-50"
-            }`}
-          >
-            {testResult.ok ? (
-              <CheckCircle2 className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-            ) : (
-              <XCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-            )}
-            <span className="break-words">{testResult.message}</span>
-          </div>
-        )}
+        {testResult && <div className={`flex items-start gap-1.5 text-xs rounded-md p-2 mb-3 ${testResult.ok ? "text-green-700 bg-green-50" : "text-red-600 bg-red-50"}`}>{testResult.ok ? <CheckCircle2 className="w-3.5 h-3.5" /> : <XCircle className="w-3.5 h-3.5" />}<span>{testResult.message}</span></div>}
 
-        {/* Actions */}
         <div className="flex flex-wrap gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleTest}
-            disabled={testing}
-            className="h-8 text-xs"
-          >
-            {testing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
-            {testing ? t("integrations.actions.testing") : t("integrations.actions.test")}
-          </Button>
-
-          {(isNeedsReauth || isDisconnected) && (
-            <Button size="sm" variant="outline" onClick={handleReconnect} className="h-8 text-xs text-blue-600 border-blue-200 hover:bg-blue-50">
-              <RefreshCw className="w-3.5 h-3.5" />
-              {t("integrations.actions.reconnect")}
-            </Button>
-          )}
-
-          {statusKey === "connected" && (
-            <Button size="sm" variant="ghost" onClick={handleDisconnect} className="h-8 text-xs text-red-600 hover:bg-red-50">
-              <Unplug className="w-3.5 h-3.5" />
-              {t("integrations.actions.disconnect")}
-            </Button>
-          )}
+          <Button size="sm" variant="outline" onClick={handleTest} disabled={testing} className="h-8 text-xs">{testing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}{testing ? "جاري الفحص" : "فحص الاتصال"}</Button>
+          {(!connected && canOAuth) && <Button size="sm" variant="outline" onClick={handleReconnect} disabled={connecting} className="h-8 text-xs text-blue-600 border-blue-200 hover:bg-blue-50">{connecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Link2 className="w-3.5 h-3.5" />}ربط الخدمة</Button>}
+          {connected && canOAuth && <Button size="sm" variant="ghost" onClick={handleReconnect} disabled={connecting} className="h-8 text-xs text-blue-600">{connecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}إعادة المصادقة</Button>}
+          {connected && <Button size="sm" variant="ghost" onClick={() => toast({ title: "إدارة الفصل", description: "سيتم تفعيل فصل الحساب مباشرة من Bytly بعد إضافة إدارة الهوية." })} className="h-8 text-xs text-red-600"><Unplug className="w-3.5 h-3.5" />فصل</Button>}
         </div>
       </CardContent>
-
-      {/* Reconnect Dialog */}
-      <Dialog open={showReconnectDialog} onOpenChange={setShowReconnectDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <RefreshCw className="w-5 h-5 text-blue-600" />
-              {t("integrations.actions.reconnect")} — {serviceName}
-            </DialogTitle>
-            <DialogDescription className="text-sm text-slate-600 leading-relaxed pt-2">
-              {OAUTH_CONNECTORS.includes(integration.type) ? (
-                <>
-                  <p className="mb-2">
-                    تتم إعادة المصادقة لهذه الخدمة عبر منصة Base44. لا يمكن إعادة الربط مباشرةً من هذه اللوحة.
-                  </p>
-                  <p className="mb-2 font-medium text-slate-700">الخطوات المطلوبة:</p>
-                  <ol className="list-decimal list-inside space-y-1 text-xs">
-                    <li>انتقل إلى لوحة تحكم Base44</li>
-                    <li>افتح تبويب Integrations</li>
-                    <li>اختر الخدمة المطلوبة وأعد المصادقة</li>
-                  </ol>
-                </>
-              ) : (
-                <>
-                  <p className="mb-2">
-                    تعتمد هذه الخدمة على مفتاح API (Secret). لإعادة تفعيلها:
-                  </p>
-                  <ol className="list-decimal list-inside space-y-1 text-xs">
-                    <li>انتقل إلى إعدادات التطبيق ثم Secrets</li>
-                    <li>حدّث قيمة المفتاح (مثل STRIPE_SECRET_KEY)</li>
-                    <li>اضغط "اختبار الاتصال" للتأكد</li>
-                  </ol>
-                </>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowReconnectDialog(false)}>
-              {t("integrations.actions.cancel") || "إغلاق"}
-            </Button>
-            {OAUTH_CONNECTORS.includes(integration.type) && (
-              <Button
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-                onClick={() => {
-                  window.open("https://app.base44.com", "_blank", "noopener,noreferrer");
-                }}
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                فتح لوحة Base44
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Disconnect Dialog */}
-      <Dialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600">
-              <Unplug className="w-5 h-5" />
-              {t("integrations.actions.disconnect")} — {serviceName}
-            </DialogTitle>
-            <DialogDescription className="text-sm text-slate-600 leading-relaxed pt-2">
-              سيؤدي هذا إلى إيقاف استخدام الخدمة في التطبيق. يمكن إعادة الربط لاحقاً من خلال إعادة المصادقة.
-              قد تتوقف بعض الميزات (مثل إنشاء الاجتماعات أو إرسال البريد) عن العمل فوراً.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowDisconnectDialog(false)}>
-              {t("integrations.actions.cancel") || "إلغاء"}
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              onClick={() => {
-                toast({
-                  title: t("integrations.actions.disconnect"),
-                  description: "تم تسجيل طلب الفصل. تتم إدارة الفصل من لوحة Base44.",
-                });
-                setShowDisconnectDialog(false);
-              }}
-            >
-              <Unplug className="w-3.5 h-3.5" />
-              تأكيد الفصل
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Card>
   );
 }
