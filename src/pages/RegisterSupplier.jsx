@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
 import { saveRegistration } from "@/lib/registrationService";
@@ -160,6 +160,13 @@ export default function RegisterSupplier() {
     }
   };
 
+  useEffect(() => {
+    try {
+      const draft = JSON.parse(sessionStorage.getItem("bytly_registration_draft") || "null");
+      if (draft?.email) setFormData(prev => ({ ...prev, email: draft.email }));
+    } catch {}
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -170,10 +177,6 @@ export default function RegisterSupplier() {
 
     setLoading(true);
     try {
-      const { data: authData } = await supabase.auth.getUser();
-      const user = authData?.user;
-      if (!user) throw new Error("يجب تسجيل الدخول أولاً");
-
       const supplier = await saveRegistration({
         table: "suppliers", role: "supplier", fullName: formData.company_name, email: formData.email, phone: formData.phone,
         row: { ...formData, status: "pending" }
