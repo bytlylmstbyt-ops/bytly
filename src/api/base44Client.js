@@ -6,9 +6,8 @@ const { appId, token } = appParams;
 const PLATFORM_OWNER_EMAIL = 'bytlylmstbyt@gmail.com';
 const PLATFORM_OWNER_ID = '2d1b547d-ba5d-4cdc-a39c-cfb60d2f52bc';
 
-const base44BackendUrl = import.meta.env.DEV
-  ? 'http://localhost:4400'
-  : (import.meta.env.VITE_BASE44_APP_BASE_URL || 'https://bytly.base44.app');
+const base44BackendUrl =
+  import.meta.env.VITE_BASE44_APP_BASE_URL || 'https://bytly.base44.app';
 
 const base44Config = { appId, token, requiresAuth: false, serverUrl: base44BackendUrl, appBaseUrl: base44BackendUrl };
 const legacyBase44 = createClient(base44Config);
@@ -46,7 +45,7 @@ legacyBase44.auth.me = async () => {
         let profile = null;
         try {
           const { data } = await withHardTimeout(
-            supabase.from('profiles').select('role,email,full_name').eq('id', sessionUser.id).maybeSingle(),
+            supabase.from('profiles').select('role,email,full_name').eq('user_id', sessionUser.id).maybeSingle(),
             10000,
             'انتهت مهلة قراءة الملف الشخصي'
           );
