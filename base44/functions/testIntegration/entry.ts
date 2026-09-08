@@ -42,7 +42,7 @@ const TEST_ENDPOINTS = {
     headers: { Authorization: `Bearer ${token}` },
   }),
   googlemeet: (token) => ({
-    url: 'https://www.googleapis.com/calendar/v3/users/me/calendarList/primary',
+    url: 'https://meet.googleapis.com/v2/conferenceRecords?pageSize=1',
     headers: { Authorization: `Bearer ${token}` },
   }),
   square: (token) => ({
