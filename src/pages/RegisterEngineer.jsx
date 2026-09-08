@@ -228,7 +228,7 @@ export default function RegisterEngineer() {
 
       const notificationPayload = {
         full_name: formData.full_name,
-        email: authUser.email || formData.email,
+        email: formData.email,
         user_type: formData.user_type,
         specialization: formData.specialization
       };
