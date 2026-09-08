@@ -15,7 +15,6 @@ import { toast } from "sonner";
 export default function RegisterFirm() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [authChecked, setAuthChecked] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingDocs, setUploadingDocs] = useState(false);
@@ -37,15 +36,10 @@ export default function RegisterFirm() {
   });
 
   useEffect(() => {
-    base44.auth.isAuthenticated().then((ok) => {
-      if (!ok) {
-        window.location.href = "/login";
-        return;
-      }
-      setAuthChecked(true);
-    }).catch(() => {
-      window.location.href = "/login";
-    });
+    try {
+      const draft = JSON.parse(sessionStorage.getItem("bytly_registration_draft") || "null");
+      if (draft?.email) setFormData(prev => ({ ...prev, email: draft.email }));
+    } catch {}
   }, []);
 
   const specializations = [
