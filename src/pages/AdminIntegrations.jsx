@@ -46,28 +46,46 @@ export default function AdminIntegrations() {
   ];
 
   const buildIntegrationData = async () => {
-    // Fetch SyncState records for last-sync timestamps
+    // Do not infer health from connector existence or a 404 page.
+    // Each integration is verified by the backend against its real provider API.
     const syncStates = await base44.entities.SyncState.list();
     const syncMap = {};
     syncStates.forEach((s) => { syncMap[s.service] = s; });
 
     const now = new Date().toISOString();
-    const results = INTEGRATIONS.map((integ) => {
+    const results = await Promise.all(INTEGRATIONS.map(async (integ) => {
       const existing = syncMap[integ.type];
-      const lastSync = existing?.last_sync || null;
-      const connected = integ.kind === 'connector'
-        ? AUTHORIZED_CONNECTORS.includes(integ.type)
-        : true; // secret-based: assume connected (stripe key exists)
+      const fallbackLastSync = existing?.last_sync || null;
 
-      return {
-        type: integ.type,
-        kind: integ.kind,
-        connected,
-        needs_reauth: false,
-        error: null,
-        last_sync: connected ? (lastSync || now) : lastSync,
-      };
-    });
+      try {
+        const response = await base44.functions.invoke("testIntegration", {
+          integration_type: integ.type,
+        });
+        const result = response?.data || response || {};
+        const isConnected = result.ok === true;
+        const needsReauth = result.status === "needs_reauth";
+
+        return {
+          type: integ.type,
+          kind: integ.kind,
+          connected: isConnected,
+          needs_reauth: needsReauth,
+          error: isConnected ? null : (result.error || "Connection test failed"),
+          last_sync: isConnected ? (now) : fallbackLastSync,
+          http_status: result.http_status || null,
+        };
+      } catch (error) {
+        return {
+          type: integ.type,
+          kind: integ.kind,
+          connected: false,
+          needs_reauth: false,
+          error: error?.message || "Connection test failed",
+          last_sync: fallbackLastSync,
+          http_status: null,
+        };
+      }
+    }));
 
     return {
       integrations: results,
