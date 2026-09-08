@@ -261,24 +261,44 @@ export default function AdminWorkflowAutomation() {
 
   useEffect(() => {
     (async () => {
+      let admin = false;
       try {
         const user = await base44.auth.me();
-        const admin = user?.role === "admin";
-        setIsAdmin(admin);
-        if (admin) await loadData();
+        admin = user?.role === "admin";
       } catch {
-        setIsAdmin(false);
-      } finally {
-        setLoading(false);
+        admin = false;
       }
+      // Authorization is decided here and only here. A failure loading the
+      // workflow/run-log lists below (e.g. a stale backend session) must
+      // never flip a real admin back to "access denied" — that previously
+      // caused verified admins to see the "admins only" screen.
+      setIsAdmin(admin);
+      if (admin) {
+        try {
+          await loadData();
+        } catch (dataError) {
+          console.error("Error loading workflow automation data:", dataError);
+        }
+      }
+      setLoading(false);
     })();
   }, []);
 
   const loadData = async () => {
-    const [customRules, runsData] = await Promise.all([
+    const [customRulesResult, runsResult] = await Promise.allSettled([
       base44.entities.AutomationRule.list("-created_date", 200),
       base44.entities.AutomationRunLog.list("-started_at", 100),
     ]);
+
+    if (customRulesResult.status === "rejected") {
+      console.error("Error loading AutomationRule list:", customRulesResult.reason);
+    }
+    if (runsResult.status === "rejected") {
+      console.error("Error loading AutomationRunLog list:", runsResult.reason);
+    }
+
+    const customRules = customRulesResult.status === "fulfilled" ? customRulesResult.value : [];
+    const runsData = runsResult.status === "fulfilled" ? runsResult.value : [];
 
     // The primary library comes from the real workflow files in the app.
     // Do not fill this page with templates or sample records.
@@ -290,7 +310,7 @@ export default function AdminWorkflowAutomation() {
       (rule) => !rule.is_source_workflow && !rule.is_template && !rule.is_sample
     );
     setRules([...realRules, ...manualRules]);
-    setRuns(runsData);
+    setRuns(runsData || []);
   };
 
   const openCreateDialog = () => {
