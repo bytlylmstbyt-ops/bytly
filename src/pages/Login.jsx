@@ -2,6 +2,24 @@ import React, { useState, useEffect } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 
 const AUTH_PATHS = ["/login", "/register", "/forgot-password", "/reset-password"];
+const REGISTRATION_RETURN_PATHS = {
+  investor: "/RegisterClient?type=investor",
+  client: "/RegisterClient?type=individual",
+  engineer: "/RegisterEngineer?type=engineer",
+  surveyor: "/RegisterEngineer?type=surveyor",
+  firm: "/RegisterFirm",
+  legal: "/RegisterLegalConsultant",
+  consultant: "/RegisterConsultant",
+  contractor: "/RegisterContractor",
+  supplier: "/RegisterSupplier"
+};
+const getPendingRegistrationUrl = () => {
+  try {
+    const raw = sessionStorage.getItem("bytly_registration_draft");
+    const draft = raw ? JSON.parse(raw) : null;
+    return draft?.role && REGISTRATION_RETURN_PATHS[draft.role] ? REGISTRATION_RETURN_PATHS[draft.role] : null;
+  } catch { return null; }
+};
 const getReturnUrl = () => {
   const params = new URLSearchParams(window.location.search);
   const raw = params.get("from_url") || sessionStorage.getItem("loginReturnUrl") || "/Home";
@@ -28,7 +46,7 @@ export default function Login() {
     if (!supabase) return;
     let active = true;
     supabase.auth.getSession().then(({ data }) => {
-      if (active && data?.session?.user) window.location.replace(getReturnUrl());
+      if (active && data?.session?.user) window.location.replace(getPendingRegistrationUrl() || getReturnUrl());
     }).catch(() => {});
     return () => { active = false; };
   }, []);
@@ -42,7 +60,7 @@ export default function Login() {
     if (error) throw error;
     if (!data?.session?.user) throw new Error("لم يتم تثبيت جلسة تسجيل الدخول. حاولي مرة أخرى.");
     sessionStorage.removeItem("loginReturnUrl");
-    window.location.replace(getReturnUrl());
+    window.location.replace(getPendingRegistrationUrl() || getReturnUrl());
   };
 
   const handleSubmit = async (event) => {
@@ -69,27 +87,18 @@ export default function Login() {
         return;
       }
 
-      // Existing Base44 users are migrated on their first successful login.
-      // The old password is only sent to the legacy auth service; Bytly never stores it.
-      if (authCode !== "invalid_credentials" && !authMessage.includes("invalid login credentials")) {
-        setError(authMessage.includes("rate limit") ? "تم تجاوز حد محاولات تسجيل الدخول. انتظري قليلاً ثم حاولي مرة أخرى." : "تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
-        return;
-      }
-
       try {
         const { base44 } = await import("@/api/base44Client");
-        await withTimeout(
-          base44.auth.loginViaEmailPassword(cleanEmail, password),
-          15000,
-          "انتهت مهلة التحقق من الحساب القديم."
-        );
-
+        if (authCode !== "invalid_credentials" && !authMessage.includes("invalid login credentials")) {
+          setError(authMessage.includes("rate limit") ? "تم تجاوز حد محاولات تسجيل الدخول. انتظري قليلاً ثم حاولي مرة أخرى." : "تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
+          return;
+        }
+        await withTimeout(base44.auth.loginViaEmailPassword(cleanEmail, password), 15000, "انتهت مهلة التحقق من الحساب القديم.");
         const { data: migrated, error: migrateError } = await withTimeout(
           supabase.auth.signUp({ email: cleanEmail, password, options: { data: { email: cleanEmail } } }),
           15000,
           "انتهت مهلة نقل الحساب إلى نظام تسجيل الدخول الجديد."
         );
-
         if (migrateError) {
           const code = String(migrateError.code || "").toLowerCase();
           const message = String(migrateError.message || "").toLowerCase();
@@ -99,12 +108,10 @@ export default function Login() {
           }
           throw migrateError;
         }
-
         if (migrated?.session) {
           await redirectAfterSuccessfulLogin();
           return;
         }
-
         setError("تم نقل حسابك إلى نظام تسجيل الدخول الجديد. افتحي رسالة التفعيل في بريدك الإلكتروني ثم سجّلي الدخول مرة أخرى.");
       } catch (legacyError) {
         const status = legacyError?.status;
@@ -139,7 +146,7 @@ export default function Login() {
         "انتهت مهلة بدء تسجيل الدخول عبر Google."
       );
       if (oauthError) { console.error("Supabase Google login error:", oauthError); setError("تعذر بدء تسجيل الدخول. يرجى المحاولة مرة أخرى."); setLoading(false); }
-    } catch (err) { console.error("Google login error:", err); setError(err?.message || "تعذر بدء تسجيل الدخول. يرجى المحاولة مرة أخرى."); setLoading(false); }
+    } catch (err) { console.error("Google login error:", err); setError(err?.message || "تعذر تسجيل الدخول. يرجى المحاولة مرة أخرى."); setLoading(false); }
   };
 
   return <main dir="rtl" style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, boxSizing: "border-box", background: "#f8fafc" }}>
