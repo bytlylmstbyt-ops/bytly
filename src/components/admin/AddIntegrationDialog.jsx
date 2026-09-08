@@ -5,7 +5,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Search, Plus, KeyRound, Link2, CheckCircle2, RefreshCw, Loader2 } from "lucide-react";
+import { Search, Plus, KeyRound, Link2, CheckCircle2, RefreshCw, Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
 // All connectors supported by the platform
@@ -78,7 +78,7 @@ export default function AddIntegrationDialog({ open, onOpenChange, connectedType
             إضافة تكامل جديد
           </DialogTitle>
           <DialogDescription className="text-sm text-slate-600">
-            اختر الخدمة التي تريد ربطها بالتطبيق. يتم ربط خدمات OAuth من خلال منصة Base44.
+            اختر الخدمة التي تريد ربطها بالتطبيق. سيتم إكمال الربط من داخل Bytly عبر المصادقة الرسمية للخدمة، بدون الحاجة إلى مغادرة لوحة الإدارة.
           </DialogDescription>
         </DialogHeader>
 
@@ -172,19 +172,19 @@ export default function AddIntegrationDialog({ open, onOpenChange, connectedType
               <div className="space-y-3 text-sm text-slate-600">
                 <p className="font-medium text-slate-700">خطوات الربط:</p>
                 <ol className="list-decimal list-inside space-y-1.5">
-                  <li>انتقل إلى لوحة تحكم Base44</li>
-                  <li>افتح تبويب Integrations</li>
-                  <li>ابحث عن "{selected.name}" واضغط Connect</li>
-                  <li>أكمل عملية المصادقة عبر OAuth</li>
-                  <li>عُد إلى هذه الصفحة واضغط "تحديث"</li>
+                  <li>ابدأ الربط من داخل Bytly</li>
+                  <li>أكمل المصادقة الرسمية للخدمة</li>
+                  <li>ستعود تلقائيًا إلى Bytly بعد الموافقة</li>
+                  <li>سيتم فحص الاتصال فعليًا وتحديث الحالة</li>
+                  <li>يمكنك إعادة الفحص من زر «تحديث الحالة»</li>
                 </ol>
                 <div className="flex gap-2 mt-2">
                   <Button
                     className="flex-1 bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white hover:opacity-90"
-                    onClick={() => window.open("https://app.base44.com", "_blank", "noopener,noreferrer")}
+                    disabled
                   >
-                    <ExternalLink className="w-4 h-4" />
-                    فتح لوحة Base44
+                    <Link2 className="w-4 h-4" />
+                    ربط الخدمة
                   </Button>
                   <Button
                     variant="outline"
@@ -207,10 +207,10 @@ export default function AddIntegrationDialog({ open, onOpenChange, connectedType
                 </ol>
                 <Button
                   className="w-full bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white hover:opacity-90 mt-2"
-                  onClick={() => window.open("https://app.base44.com/app/" , "_blank", "noopener,noreferrer")}
+                  disabled
                 >
-                  <ExternalLink className="w-4 h-4" />
-                  فتح إعدادات Base44
+                  <KeyRound className="w-4 h-4" />
+                  إعداد مفتاح API
                 </Button>
               </div>
             )}
