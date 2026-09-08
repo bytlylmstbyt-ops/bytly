@@ -52,9 +52,7 @@ export default function RegisterConsultantPage() {
     setLoading(true);
 
     try {
-      const { data: authData } = await supabase.auth.getUser();
-      const authUser = authData?.user;
-      if (!authUser) throw new Error("يجب تسجيل الدخول أولاً");
+      // saveRegistration creates or reuses the Supabase Auth account on this final step.
       const consultant = await saveRegistration({
         table: "consultants", role: "consultant", fullName: formData.full_name, email: formData.email, phone: formData.phone,
         row: { ...formData, years_experience: parseInt(formData.years_experience) || 0, status: "pending", terms_accepted: true, terms_accepted_date: new Date().toISOString() }
