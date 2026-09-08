@@ -138,7 +138,17 @@ export default function RegisterEngineer() {
     setIsFileUploading(true);
     setNotice({ type: "info", title: "جارٍ رفع الملف", message: `جارٍ رفع: ${file.name} — قد يستغرق ذلك قليلًا...` });
     try {
-      const { file_url } = await withTimeout(base44.integrations.Core.UploadFile({ file }), 120000);
+      // Registration documents are stored in Supabase so uploading does not depend on Base44.
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `engineers/${Date.now()}-${Math.random().toString(36).slice(2)}-${safeName}`;
+      const { error: uploadError } = await withTimeout(
+        supabase.storage.from("registration-documents").upload(path, file, { upsert: false, contentType: file.type || undefined }),
+        120000
+      );
+      if (uploadError) throw uploadError;
+      const { data: publicUrlData } = supabase.storage.from("registration-documents").getPublicUrl(path);
+      const file_url = publicUrlData?.publicUrl;
+      if (!file_url) throw new Error("تم رفع الملف لكن تعذر الحصول على رابطه.");
       handleInputChange(field, file_url);
       setSkippedUploads(prev => { const next = new Set(prev); next.delete(field); return next; });
       setNotice({ type: "success", title: "تم رفع الملف بنجاح", message: "يمكنك المتابعة في إكمال التسجيل." });
