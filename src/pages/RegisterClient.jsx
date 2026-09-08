@@ -106,7 +106,13 @@ export default function RegisterClient() {
     }
   };
 
-  const isFormValid = formData.full_name && formData.email && formData.phone;
+  const isFormValid = Boolean(
+    formData.full_name &&
+    formData.email &&
+    formData.phone &&
+    formData.client_type &&
+    (formData.client_type !== "investor" || formData.company_name?.trim())
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-12">
@@ -264,7 +270,7 @@ export default function RegisterClient() {
                   </>
                 ) : (
                   <>
-                    إنشاء الحساب
+                    إتمام التسجيل
                     <CheckCircle className="w-5 h-5 mr-2" />
                   </>
                 )}
