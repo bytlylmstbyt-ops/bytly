@@ -8,22 +8,40 @@ import AIAssistant from './pages/AIAssistant';
 import AddDesign from './pages/AddDesign';
 import AddEngineer from './pages/AddEngineer';
 import AddPortfolio from './pages/AddPortfolio';
-import AdminCategories from './pages/AdminCategories';
+import AdminAIAssistant from './pages/AdminAIAssistant';
 import AdminAuthenticationSettings from './pages/AdminAuthenticationSettings';
+import AdminBoard from './pages/AdminBoard';
+import AdminCategories from './pages/AdminCategories';
 import AdminClients from './pages/AdminClients';
 import AdminCommissionSettings from './pages/AdminCommissionSettings';
 import AdminControlCenter from './pages/AdminControlCenter';
 import AdminDisputeManage from './pages/AdminDisputeManage';
-import AdminDomains from './pages/AdminDomains';
 import AdminDisputes from './pages/AdminDisputes';
+import AdminDomains from './pages/AdminDomains';
+import AdminEmailCenter from './pages/AdminEmailCenter';
 import AdminEngineers from './pages/AdminEngineers';
+import AdminExecutiveDashboard from './pages/AdminExecutiveDashboard';
+import AdminExecutiveManagement from './pages/AdminExecutiveManagement';
+import AdminFinanceDashboard from './pages/AdminFinanceDashboard';
+import AdminIntegrations from './pages/AdminIntegrations';
+import AdminMarketEntities from './pages/AdminMarketEntities';
+import AdminMarketingCenter from './pages/AdminMarketingCenter';
+import AdminMarketingDashboard from './pages/AdminMarketingDashboard';
+import AdminOperationsDashboard from './pages/AdminOperationsDashboard';
+import AdminPlatformSettings from './pages/AdminPlatformSettings';
+import AdminProjects from './pages/AdminProjects';
+import AdminProviders from './pages/AdminProviders';
 import AdminRefundControl from './pages/AdminRefundControl';
 import AdminReports from './pages/AdminReports';
 import AdminRevenueReport from './pages/AdminRevenueReport';
 import AdminReviews from './pages/AdminReviews';
+import AdminSearchGeoAnalytics from './pages/AdminSearchGeoAnalytics';
+import AdminStrategicChange from './pages/AdminStrategicChange';
 import AdminSubscriptionControl from './pages/AdminSubscriptionControl';
+import AdminUserManagementCenter from './pages/AdminUserManagementCenter';
 import AdminWallet from './pages/AdminWallet';
 import AdminWalletDashboard from './pages/AdminWalletDashboard';
+import AdminWorkflowAutomation from './pages/AdminWorkflowAutomation';
 import AllCertifications from './pages/AllCertifications';
 import AllWithdrawalRequests from './pages/AllWithdrawalRequests';
 import Analytics from './pages/Analytics';
@@ -37,11 +55,12 @@ import CertificationPage from './pages/CertificationPage';
 import ClientDashboard from './pages/ClientDashboard';
 import ClientOnboarding from './pages/ClientOnboarding';
 import ClientProfile from './pages/ClientProfile';
-import ContactUs from './pages/ContactUs';
+import CompareProposals from './pages/CompareProposals';
 import Complaints from './pages/Complaints';
 import ConsultantApproval from './pages/ConsultantApproval';
 import ConsultantDashboard from './pages/ConsultantDashboard';
 import ConsultingFirms from './pages/ConsultingFirms';
+import ContactUs from './pages/ContactUs';
 import Contract from './pages/Contract';
 import ContractAmendments from './pages/ContractAmendments';
 import ContractArchive from './pages/ContractArchive';
@@ -49,6 +68,7 @@ import ContractTemplates from './pages/ContractTemplates';
 import Copyright from './pages/Copyright';
 import CreateProject from './pages/CreateProject';
 import Dashboard from './pages/Dashboard';
+import DataClassification from './pages/DataClassification';
 import DesignDetails from './pages/DesignDetails';
 import DesignMarketplace from './pages/DesignMarketplace';
 import DesignPurchaseSuccess from './pages/DesignPurchaseSuccess';
@@ -71,6 +91,7 @@ import InvoiceManager from './pages/InvoiceManager';
 import InvoicePayment from './pages/InvoicePayment';
 import LegalConsultantProfile from './pages/LegalConsultantProfile';
 import LinkedInManager from './pages/LinkedInManager';
+import MarketingHub from './pages/MarketingHub';
 import Messages from './pages/Messages';
 import MyDisputes from './pages/MyDisputes';
 import MyFavorites from './pages/MyFavorites';
@@ -82,11 +103,15 @@ import Notifications from './pages/Notifications';
 import Packages from './pages/Packages';
 import Payment from './pages/Payment';
 import PaymentSuccess from './pages/PaymentSuccess';
+import PendingApprovals from './pages/PendingApprovals';
+import PermitApplication from './pages/PermitApplication';
+import PlatformDashboard from './pages/PlatformDashboard';
 import Privacy from './pages/Privacy';
 import ProjectChat from './pages/ProjectChat';
 import ProjectDetails from './pages/ProjectDetails';
 import ProjectKanban from './pages/ProjectKanban';
 import ProjectMilestones from './pages/ProjectMilestones';
+import ProjectProposals from './pages/ProjectProposals';
 import ProjectTools from './pages/ProjectTools';
 import ProjectWorkspace from './pages/ProjectWorkspace';
 import Projects from './pages/Projects';
@@ -100,8 +125,11 @@ import RegisterFirm from './pages/RegisterFirm';
 import RegisterLegalConsultant from './pages/RegisterLegalConsultant';
 import RegisterSupplier from './pages/RegisterSupplier';
 import RegistrationSuccess from './pages/RegistrationSuccess';
+import RevenueDashboard from './pages/RevenueDashboard';
 import RoleManagement from './pages/RoleManagement';
+import SentEmailsLog from './pages/SentEmailsLog';
 import Settings from './pages/Settings';
+import SocialAnalytics from './pages/SocialAnalytics';
 import Subscription from './pages/Subscription';
 import Support from './pages/Support';
 import TaskManager from './pages/TaskManager';
@@ -122,22 +150,40 @@ export const PAGES = {
     "AddDesign": AddDesign,
     "AddEngineer": AddEngineer,
     "AddPortfolio": AddPortfolio,
-    "AdminCategories": AdminCategories,
+    "AdminAIAssistant": AdminAIAssistant,
     "AdminAuthenticationSettings": AdminAuthenticationSettings,
+    "AdminBoard": AdminBoard,
+    "AdminCategories": AdminCategories,
     "AdminClients": AdminClients,
     "AdminCommissionSettings": AdminCommissionSettings,
     "AdminControlCenter": AdminControlCenter,
     "AdminDisputeManage": AdminDisputeManage,
-    "AdminDomains": AdminDomains,
     "AdminDisputes": AdminDisputes,
+    "AdminDomains": AdminDomains,
+    "AdminEmailCenter": AdminEmailCenter,
     "AdminEngineers": AdminEngineers,
+    "AdminExecutiveDashboard": AdminExecutiveDashboard,
+    "AdminExecutiveManagement": AdminExecutiveManagement,
+    "AdminFinanceDashboard": AdminFinanceDashboard,
+    "AdminIntegrations": AdminIntegrations,
+    "AdminMarketEntities": AdminMarketEntities,
+    "AdminMarketingCenter": AdminMarketingCenter,
+    "AdminMarketingDashboard": AdminMarketingDashboard,
+    "AdminOperationsDashboard": AdminOperationsDashboard,
+    "AdminPlatformSettings": AdminPlatformSettings,
+    "AdminProjects": AdminProjects,
+    "AdminProviders": AdminProviders,
     "AdminRefundControl": AdminRefundControl,
     "AdminReports": AdminReports,
     "AdminRevenueReport": AdminRevenueReport,
     "AdminReviews": AdminReviews,
+    "AdminSearchGeoAnalytics": AdminSearchGeoAnalytics,
+    "AdminStrategicChange": AdminStrategicChange,
     "AdminSubscriptionControl": AdminSubscriptionControl,
+    "AdminUserManagementCenter": AdminUserManagementCenter,
     "AdminWallet": AdminWallet,
     "AdminWalletDashboard": AdminWalletDashboard,
+    "AdminWorkflowAutomation": AdminWorkflowAutomation,
     "AllCertifications": AllCertifications,
     "AllWithdrawalRequests": AllWithdrawalRequests,
     "Analytics": Analytics,
@@ -151,11 +197,12 @@ export const PAGES = {
     "ClientDashboard": ClientDashboard,
     "ClientOnboarding": ClientOnboarding,
     "ClientProfile": ClientProfile,
-    "ContactUs": ContactUs,
+    "CompareProposals": CompareProposals,
     "Complaints": Complaints,
     "ConsultantApproval": ConsultantApproval,
     "ConsultantDashboard": ConsultantDashboard,
     "ConsultingFirms": ConsultingFirms,
+    "ContactUs": ContactUs,
     "Contract": Contract,
     "ContractAmendments": ContractAmendments,
     "ContractArchive": ContractArchive,
@@ -163,6 +210,7 @@ export const PAGES = {
     "Copyright": Copyright,
     "CreateProject": CreateProject,
     "Dashboard": Dashboard,
+    "DataClassification": DataClassification,
     "DesignDetails": DesignDetails,
     "DesignMarketplace": DesignMarketplace,
     "DesignPurchaseSuccess": DesignPurchaseSuccess,
@@ -185,6 +233,7 @@ export const PAGES = {
     "InvoicePayment": InvoicePayment,
     "LegalConsultantProfile": LegalConsultantProfile,
     "LinkedInManager": LinkedInManager,
+    "MarketingHub": MarketingHub,
     "Messages": Messages,
     "MyDisputes": MyDisputes,
     "MyFavorites": MyFavorites,
@@ -196,11 +245,15 @@ export const PAGES = {
     "Packages": Packages,
     "Payment": Payment,
     "PaymentSuccess": PaymentSuccess,
+    "PendingApprovals": PendingApprovals,
+    "PermitApplication": PermitApplication,
+    "PlatformDashboard": PlatformDashboard,
     "Privacy": Privacy,
     "ProjectChat": ProjectChat,
     "ProjectDetails": ProjectDetails,
     "ProjectKanban": ProjectKanban,
     "ProjectMilestones": ProjectMilestones,
+    "ProjectProposals": ProjectProposals,
     "ProjectTools": ProjectTools,
     "ProjectWorkspace": ProjectWorkspace,
     "Projects": Projects,
@@ -214,8 +267,11 @@ export const PAGES = {
     "RegisterLegalConsultant": RegisterLegalConsultant,
     "RegisterSupplier": RegisterSupplier,
     "RegistrationSuccess": RegistrationSuccess,
+    "RevenueDashboard": RevenueDashboard,
     "RoleManagement": RoleManagement,
+    "SentEmailsLog": SentEmailsLog,
     "Settings": Settings,
+    "SocialAnalytics": SocialAnalytics,
     "Subscription": Subscription,
     "Support": Support,
     "TaskManager": TaskManager,
