@@ -53,6 +53,7 @@ export default function RegistrationAuth() {
     setError("");
     setMessage("");
     const cleanEmail = email.trim().toLowerCase();
+    const cleanName = fullName.trim();
     if (!supabase) return setError("خدمة التسجيل غير مهيأة حالياً.");
     if (password.length < 8) return setError("كلمة المرور يجب أن تكون 8 أحرف على الأقل.");
     if (password !== confirmPassword) return setError("كلمتا المرور غير متطابقتين.");
@@ -64,8 +65,8 @@ export default function RegistrationAuth() {
         password,
         options: {
           data: {
-            full_name: fullName.trim(),
-            name: fullName.trim(),
+            full_name: cleanName,
+            name: cleanName,
             role,
             account_type: role
           }
@@ -82,13 +83,11 @@ export default function RegistrationAuth() {
         return;
       }
 
-      // Keep the draft so the professional registration page can finish the same
-      // registration even when Supabase requires email confirmation and returns no session.
+      // Keep only non-sensitive handoff data. The password is never persisted in browser storage.
       try {
         sessionStorage.setItem("bytly_registration_draft", JSON.stringify({
-          full_name: fullName.trim(),
+          full_name: cleanName,
           email: cleanEmail,
-          password,
           role
         }));
       } catch (storageError) {
@@ -101,9 +100,7 @@ export default function RegistrationAuth() {
         return;
       }
 
-      // No session means the account was created but still needs email confirmation.
-      // Do not report this as a failed registration.
-      setMessage("تم إنشاء الحساب بنجاح. أرسلنا رسالة تفعيل إلى بريدك الإلكتروني. بعد التفعيل سجّل الدخول لإكمال بيانات حسابك.");
+      setMessage("تم إنشاء الحساب بنجاح. أرسلنا رسالة تفعيل إلى بريدك الإلكتروني. بعد التفعيل سجّل الدخول، وسنأخذك تلقائياً لإكمال بيانات حسابك.");
     } catch (err) {
       console.error("Registration auth error:", err);
       setError("تعذر إنشاء الحساب حالياً. يرجى المحاولة مرة أخرى.");
