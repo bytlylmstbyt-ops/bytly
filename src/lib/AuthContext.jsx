@@ -69,13 +69,22 @@ export const AuthProvider = ({ children }) => {
     let profile = null;
     if (supabase) {
       try {
-        const { data, error } = await supabase
+        let result = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', authUser.id)
+          .eq('user_id', authUser.id)
           .maybeSingle();
-        if (error) throw error;
-        profile = data || null;
+
+        // Backward compatibility with older profile schemas that used id.
+        if (result.error && /user_id/i.test(result.error.message || '')) {
+          result = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', authUser.id)
+            .maybeSingle();
+        }
+        if (result.error) throw result.error;
+        profile = result.data || null;
       } catch (error) {
         console.warn('Supabase profile lookup skipped:', error?.message || error);
       }
