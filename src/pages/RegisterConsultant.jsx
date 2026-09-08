@@ -34,6 +34,13 @@ export default function RegisterConsultantPage() {
   });
   const [termsAccepted, setTermsAccepted] = useState(false);
 
+  useEffect(() => {
+    try {
+      const draft = JSON.parse(sessionStorage.getItem("bytly_registration_draft") || "null");
+      if (draft?.full_name || draft?.email) setFormData(prev => ({ ...prev, full_name: draft.full_name || prev.full_name, email: draft.email || prev.email }));
+    } catch {}
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -114,27 +121,12 @@ export default function RegisterConsultantPage() {
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-slate-900">المعلومات الشخصية</h3>
                   
-                  <div>
-                    <Label htmlFor="full_name">الاسم الكامل *</Label>
-                    <Input
-                      id="full_name"
-                      required
-                      value={formData.full_name}
-                      onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                    />
+                  <div className="md:col-span-2 rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-slate-700">
+                    <p className="font-semibold text-[#1a1a2e]">بيانات الحساب</p>
+                    <p className="mt-1">{formData.full_name} — {formData.email}</p>
+                    <p className="text-xs text-slate-500 mt-1">تم إدخال هذه البيانات في بداية التسجيل ولا تحتاج لإدخالها مرة أخرى.</p>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="email">البريد الإلكتروني *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        required
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      />
-                    </div>
                     <div>
                       <Label htmlFor="phone">رقم الهاتف *</Label>
                       <Input
