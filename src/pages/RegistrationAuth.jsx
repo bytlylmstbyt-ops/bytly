@@ -82,13 +82,28 @@ export default function RegistrationAuth() {
         return;
       }
 
+      // Keep the draft so the professional registration page can finish the same
+      // registration even when Supabase requires email confirmation and returns no session.
+      try {
+        sessionStorage.setItem("bytly_registration_draft", JSON.stringify({
+          full_name: fullName.trim(),
+          email: cleanEmail,
+          password,
+          role
+        }));
+      } catch (storageError) {
+        console.warn("Could not persist registration draft:", storageError);
+      }
+
       if (data?.session) {
         try { await supabase.rpc('claim_migrated_account'); } catch {}
         navigate(nextPage, { replace: true });
         return;
       }
 
-      setMessage("تم إنشاء الحساب. أرسلنا رسالة تفعيل إلى بريدك الإلكتروني. بعد التفعيل سجّل الدخول، ثم أكمل بيانات حسابك.");
+      // No session means the account was created but still needs email confirmation.
+      // Do not report this as a failed registration.
+      setMessage("تم إنشاء الحساب بنجاح. أرسلنا رسالة تفعيل إلى بريدك الإلكتروني. بعد التفعيل سجّل الدخول لإكمال بيانات حسابك.");
     } catch (err) {
       console.error("Registration auth error:", err);
       setError("تعذر إنشاء الحساب حالياً. يرجى المحاولة مرة أخرى.");
