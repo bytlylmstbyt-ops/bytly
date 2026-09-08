@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
 import { saveRegistration } from "@/lib/registrationService";
 import { motion } from "framer-motion";
@@ -76,9 +75,23 @@ export default function RegisterClient() {
     if (!file) return;
 
     setIsLoading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    handleInputChange("profile_image", file_url);
-    setIsLoading(false);
+    try {
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `profiles/${Date.now()}-${safeName}`;
+      const { error } = await supabase.storage.from("registration-documents").upload(path, file, {
+        upsert: false,
+        contentType: file.type || undefined
+      });
+      if (error) throw error;
+      const { data } = supabase.storage.from("registration-documents").getPublicUrl(path);
+      if (!data?.publicUrl) throw new Error("تعذر الحصول على رابط الصورة.");
+      handleInputChange("profile_image", data.publicUrl);
+      toast.success("تم رفع الصورة بنجاح");
+    } catch (error) {
+      toast.error(error?.message || "تعذر رفع الصورة");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
