@@ -43,11 +43,20 @@ export async function startIntegrationOAuth(type) {
     throw new Error("هذا التكامل لا يملك OAuth مباشرًا مهيأً في Bytly حتى الآن.");
   }
 
-  const redirectTo = `${window.location.origin}${window.location.pathname}?integration_connected=${encodeURIComponent(type)}`;
+  // Keep the callback on the fixed production admin route so Supabase's
+  // Redirect URL allow-list can match it exactly. Preserve the selected
+  // integration locally instead of putting it into the redirect URL.
+  const redirectTo = `${window.location.origin}/admincontrolcenter`;
+  try {
+    window.sessionStorage.setItem("bytly_pending_integration", type);
+  } catch (_) {
+    // Session storage can be unavailable in hardened/private browser modes.
+  }
+
   const options = {
     redirectTo,
     queryParams: {
-      prompt: "select_account consent",
+      prompt: "select_account",
       access_type: "offline",
     },
   };
@@ -61,7 +70,17 @@ export async function startIntegrationOAuth(type) {
     options,
   });
 
-  if (error) throw error;
+  if (error) {
+    const message = error.message || "تعذر بدء مصادقة مزود الخدمة.";
+    if (/manual linking|identity linking|linking is disabled/i.test(message)) {
+      throw new Error("ربط الحسابات OAuth غير مفعّل في Supabase. فعّل Enable Manual Linking من إعدادات Authentication ثم أعد المحاولة.");
+    }
+    if (/redirect|redirect_to|not allowed/i.test(message)) {
+      throw new Error("عنوان الرجوع OAuth غير مسموح في Supabase. يجب السماح بـ https://mybytly.com/admincontrolcenter في Redirect URLs.");
+    }
+    throw new Error(message);
+  }
+
   return data;
 }
 
