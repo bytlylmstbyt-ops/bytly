@@ -10,16 +10,30 @@ import { useLanguage } from "@/components/i18n/LanguageContext";
 export default function RegisterChoice() {
   const { t } = useLanguage();
 
+  // Non-engineer roles now go directly to their complete registration form.
+  // Engineers/surveyors keep the dedicated multi-step account flow.
+  const roleLinks = {
+    investor: `${createPageUrl("RegisterClient")}?type=investor`,
+    client: `${createPageUrl("RegisterClient")}?type=individual`,
+    engineer: `${createPageUrl("RegisterAccount")}?role=engineer`,
+    surveyor: `${createPageUrl("RegisterAccount")}?role=surveyor`,
+    firm: createPageUrl("RegisterFirm"),
+    legal: createPageUrl("RegisterLegalConsultant"),
+    consultant: createPageUrl("RegisterConsultant"),
+    contractor: createPageUrl("RegisterContractor"),
+    supplier: createPageUrl("RegisterSupplier")
+  };
+
   const options = [
-    { id: "investor", icon: Building2, title: t('registerChoice.roles.investor.title'), description: t('registerChoice.roles.investor.description'), features: t('registerChoice.roles.investor.features'), color: "from-purple-600 to-indigo-600", link: `${createPageUrl("RegisterAccount")}?role=investor`, featured: true },
-    { id: "client", icon: Briefcase, title: t('registerChoice.roles.homeowner.title'), description: t('registerChoice.roles.homeowner.description'), features: t('registerChoice.roles.homeowner.features'), color: "from-amber-500 to-orange-500", link: `${createPageUrl("RegisterAccount")}?role=client` },
-    { id: "engineer", icon: Building2, title: t('registerChoice.roles.engineer.title'), description: t('registerChoice.roles.engineer.description'), features: t('registerChoice.roles.engineer.features'), color: "from-blue-500 to-cyan-500", link: `${createPageUrl("RegisterAccount")}?role=engineer` },
-    { id: "surveyor", icon: MapPin, title: t('registerChoice.roles.surveyor.title'), description: t('registerChoice.roles.surveyor.description'), features: t('registerChoice.roles.surveyor.features'), color: "from-green-500 to-emerald-600", link: `${createPageUrl("RegisterAccount")}?role=surveyor` },
-    { id: "firm", icon: Building2, title: t('registerChoice.roles.firm.title'), description: t('registerChoice.roles.firm.description'), features: t('registerChoice.roles.firm.features'), color: "from-teal-600 to-cyan-600", link: `${createPageUrl("RegisterAccount")}?role=firm` },
-    { id: "legal", icon: Scale, title: t('registerChoice.roles.legal.title'), description: t('registerChoice.roles.legal.description'), features: t('registerChoice.roles.legal.features'), color: "from-slate-600 to-gray-700", link: `${createPageUrl("RegisterAccount")}?role=legal` },
-    { id: "consultant", icon: Compass, title: t('registerChoice.roles.consultant.title'), description: t('registerChoice.roles.consultant.description'), features: t('registerChoice.roles.consultant.features'), color: "from-amber-600 to-yellow-600", link: `${createPageUrl("RegisterAccount")}?role=consultant` },
-    { id: "contractor", icon: HardHat, title: t('registerChoice.roles.contractor.title'), description: t('registerChoice.roles.contractor.description'), features: t('registerChoice.roles.contractor.features'), color: "from-orange-600 to-amber-600", link: `${createPageUrl("RegisterAccount")}?role=contractor` },
-    { id: "supplier", icon: Package, title: t('registerChoice.roles.supplier.title'), description: t('registerChoice.roles.supplier.description'), features: t('registerChoice.roles.supplier.features'), color: "from-indigo-600 to-blue-600", link: `${createPageUrl("RegisterAccount")}?role=supplier` }
+    { id: "investor", icon: Building2, title: t('registerChoice.roles.investor.title'), description: t('registerChoice.roles.investor.description'), features: t('registerChoice.roles.investor.features'), color: "from-purple-600 to-indigo-600", link: roleLinks.investor, featured: true },
+    { id: "client", icon: Briefcase, title: t('registerChoice.roles.homeowner.title'), description: t('registerChoice.roles.homeowner.description'), features: t('registerChoice.roles.homeowner.features'), color: "from-amber-500 to-orange-500", link: roleLinks.client },
+    { id: "engineer", icon: Building2, title: t('registerChoice.roles.engineer.title'), description: t('registerChoice.roles.engineer.description'), features: t('registerChoice.roles.engineer.features'), color: "from-blue-500 to-cyan-500", link: roleLinks.engineer },
+    { id: "surveyor", icon: MapPin, title: t('registerChoice.roles.surveyor.title'), description: t('registerChoice.roles.surveyor.description'), features: t('registerChoice.roles.surveyor.features'), color: "from-green-500 to-emerald-600", link: roleLinks.surveyor },
+    { id: "firm", icon: Building2, title: t('registerChoice.roles.firm.title'), description: t('registerChoice.roles.firm.description'), features: t('registerChoice.roles.firm.features'), color: "from-teal-600 to-cyan-600", link: roleLinks.firm },
+    { id: "legal", icon: Scale, title: t('registerChoice.roles.legal.title'), description: t('registerChoice.roles.legal.description'), features: t('registerChoice.roles.legal.features'), color: "from-slate-600 to-gray-700", link: roleLinks.legal },
+    { id: "consultant", icon: Compass, title: t('registerChoice.roles.consultant.title'), description: t('registerChoice.roles.consultant.description'), features: t('registerChoice.roles.consultant.features'), color: "from-amber-600 to-yellow-600", link: roleLinks.consultant },
+    { id: "contractor", icon: HardHat, title: t('registerChoice.roles.contractor.title'), description: t('registerChoice.roles.contractor.description'), features: t('registerChoice.roles.contractor.features'), color: "from-orange-600 to-amber-600", link: roleLinks.contractor },
+    { id: "supplier", icon: Package, title: t('registerChoice.roles.supplier.title'), description: t('registerChoice.roles.supplier.description'), features: t('registerChoice.roles.supplier.features'), color: "from-indigo-600 to-blue-600", link: roleLinks.supplier }
   ];
 
   return (
