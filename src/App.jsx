@@ -20,6 +20,7 @@ function lazyWithRetry(factory, retries = 2) {
 
 import Login from './pages/Login';
 import Register from './pages/Register';
+import AuthCallback from './pages/AuthCallback';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import PublicLanding from './pages/PublicLanding';
@@ -107,6 +108,7 @@ const AuthenticatedApp = () => {
     <Route path="/login" element={<Login />} />
     <Route path="/register" element={<Register />} />
     <Route path="/register-auth" element={<Navigate to="/register" replace />} />
+    <Route path="/auth/callback" element={<AuthCallback />} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
     <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/" element={<PublicHomeRoute />} />
