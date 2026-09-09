@@ -5,8 +5,8 @@ function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const isAuthenticated = await base44.auth.isAuthenticated();
-    if (!isAuthenticated) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const user = await base44.auth.me();
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const payload = await req.json();
     const event = payload.event;
 
@@ -21,6 +21,19 @@ Deno.serve(async (req) => {
 
     if (!contract) {
       return Response.json({ error: 'Contract not found' }, { status: 404 });
+    }
+
+    // Authorize: only the project owner, the assigned engineer, or an admin
+    // may trigger contract signing events. Without this, any logged-in user
+    // could invoke this endpoint with an arbitrary contract id to fire
+    // signing notifications and project status changes.
+    const [project] = await base44.asServiceRole.entities.Project.filter({ id: contract.project_id });
+    const [engineer] = await base44.asServiceRole.entities.Engineer.filter({ id: contract.engineer_id });
+    const isProjectOwner = project?.created_by === user.email;
+    const isAssignedEngineer = engineer?.email === user.email;
+    const isAdmin = user.role === 'admin';
+    if (!isProjectOwner && !isAssignedEngineer && !isAdmin) {
+      return Response.json({ error: 'Forbidden: not a contract participant' }, { status: 403 });
     }
 
     // ── Intermediate signing notifications (before both parties sign) ──
