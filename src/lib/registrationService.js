@@ -1,70 +1,61 @@
 import { supabase } from "@/lib/supabaseClient";
 
-const withTimeout = (promise, ms, label) =>
-  Promise.race([
-    promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error(label || "انتهت مهلة العملية. تحقق من الاتصال وحاول مرة أخرى.")), ms))
-  ]);
+const withTimeout = (promise, ms, label) => Promise.race([
+  promise,
+  new Promise((_, reject) => setTimeout(() => reject(new Error(label || "انتهت مهلة العملية. تحقق من الاتصال وحاول مرة أخرى.")), ms))
+]);
 
-const generateTemporaryPassword = () => {
-  // The user is no longer asked for a password during registration.
-  // Supabase still needs a password for a password-auth user, so create a
-  // strong random temporary value that is never displayed or persisted.
-  const bytes = new Uint8Array(24);
-  crypto.getRandomValues(bytes);
-  return `Bytly-${Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("")}-A9!`;
-};
-
-async function ensureRegistrationUser({ fullName, email, role }) {
+async function getCurrentUser() {
   const current = await withTimeout(supabase.auth.getUser(), 12000, "تعذر التحقق من جلسة التسجيل.");
   if (current.error) throw current.error;
-  if (current.data?.user) return current.data.user;
+  return current.data?.user || null;
+}
 
+function persistPendingRegistration(payload) {
+  const safe = {
+    table: payload.table,
+    row: payload.row || {},
+    role: payload.role,
+    fullName: payload.fullName || "",
+    email: String(payload.email || "").trim().toLowerCase(),
+    phone: payload.phone || "",
+    userIdField: payload.userIdField || "user_id",
+    created_at: Date.now()
+  };
+  try {
+    localStorage.setItem("bytly_pending_registration", JSON.stringify(safe));
+    localStorage.setItem("bytly_registration_pending", JSON.stringify({ role: safe.role }));
+  } catch {}
+}
+
+async function startPasswordlessRegistration({ fullName, email, role }) {
   const cleanEmail = String(email || "").trim().toLowerCase();
   if (!cleanEmail) throw new Error("البريد الإلكتروني مطلوب.");
 
-  const password = generateTemporaryPassword();
   const { data, error } = await withTimeout(
-    supabase.auth.signUp({
+    supabase.auth.signInWithOtp({
       email: cleanEmail,
-      password,
       options: {
+        shouldCreateUser: true,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
         data: {
           full_name: String(fullName || "").trim(),
           name: String(fullName || "").trim(),
           role,
           account_type: role
-        },
-        emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
       }
     }),
     12000,
     "REGISTRATION_TIMEOUT"
   );
-
   if (error) throw error;
-  if (!data?.user) throw new Error("تعذر إنشاء حساب المستخدم.");
-
-  // If email confirmation is disabled, Supabase gives us a session and the
-  // role-specific record can be saved immediately. If confirmation is enabled,
-  // the callback will complete the pending registration after verification.
-  if (data.session?.user) return data.session.user;
-
-  try {
-    localStorage.setItem("bytly_registration_pending", JSON.stringify({ role, next_path: window.location.pathname }));
-  } catch {}
-  throw new Error("EMAIL_CONFIRMATION_REQUIRED");
+  return data;
 }
 
-export async function saveRegistration({ table, row, role, fullName, email, phone, userIdField = "user_id" }) {
-  if (!supabase) throw new Error("خدمة التسجيل غير مهيأة حالياً.");
-
-  const user = await ensureRegistrationUser({ fullName, email, role });
-
+async function saveAuthenticatedRegistration({ table, row, role, fullName, email, phone, userIdField }, user) {
   const metadataRole = user.user_metadata?.role || user.user_metadata?.account_type;
-  if (metadataRole && role && metadataRole !== role) {
-    throw new Error("نوع الحساب لا يطابق مسار التسجيل الحالي. ابدأ التسجيل من جديد.");
-  }
+  if (metadataRole && role && metadataRole !== role) throw new Error("نوع الحساب لا يطابق مسار التسجيل الحالي. ابدأ التسجيل من جديد.");
 
   const profilePayload = {
     user_id: user.id,
@@ -81,12 +72,7 @@ export async function saveRegistration({ table, row, role, fullName, email, phon
   );
   if (profile.error) throw profile.error;
 
-  const rolePayload = {
-    ...row,
-    [userIdField]: user.id,
-    email: user.email || email || row.email
-  };
-
+  const rolePayload = { ...row, [userIdField]: user.id, email: user.email || email || row.email };
   const existing = await withTimeout(
     supabase.from(table).select("id").eq(userIdField, user.id).limit(1),
     12000,
@@ -112,5 +98,34 @@ export async function saveRegistration({ table, row, role, fullName, email, phon
 
   try { sessionStorage.removeItem("bytly_registration_draft"); } catch {}
   try { localStorage.removeItem("bytly_registration_pending"); } catch {}
+  try { localStorage.removeItem("bytly_pending_registration"); } catch {}
   return saved.data;
+}
+
+export async function saveRegistration(payload) {
+  if (!supabase) throw new Error("خدمة التسجيل غير مهيأة حالياً.");
+
+  const user = await getCurrentUser();
+  if (!user) {
+    // No password is requested during registration. Save only the non-secret form
+    // payload locally, then send a one-time email link. The callback resumes this
+    // exact registration after the email is verified.
+    persistPendingRegistration(payload);
+    await startPasswordlessRegistration(payload);
+    throw new Error("EMAIL_CONFIRMATION_REQUIRED");
+  }
+
+  return saveAuthenticatedRegistration(payload, user);
+}
+
+export async function resumePendingRegistration() {
+  if (!supabase) throw new Error("خدمة التسجيل غير مهيأة حالياً.");
+  const user = await getCurrentUser();
+  if (!user) return null;
+
+  let pending = null;
+  try { pending = JSON.parse(localStorage.getItem("bytly_pending_registration") || "null"); } catch {}
+  if (!pending?.table || !pending?.role) return null;
+
+  return saveAuthenticatedRegistration(pending, user);
 }
