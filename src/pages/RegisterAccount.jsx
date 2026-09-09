@@ -8,9 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "react-hot-toast";
 
-const SIGNUP_TIMEOUT_MS = 12000;
-const SIGNIN_TIMEOUT_MS = 10000;
-
 const ROLE_ROUTES = {
   investor: "/RegisterClient?type=investor",
   client: "/RegisterClient?type=individual",
@@ -24,14 +21,14 @@ const ROLE_ROUTES = {
 };
 
 const ROLE_LABELS = {
-  investor: "مستثمر / مطور", client: "صاحب منزل / مشروع", engineer: "مهندس",
-  surveyor: "مهندس مساحة", firm: "مكتب هندسي", legal: "مستشار قانوني",
-  consultant: "مستشار", contractor: "مقاول", supplier: "مورد",
+  investor: "مستثمر / مطور", client: "صاحب منزل / مشروع", engineer: "مهندس", surveyor: "مهندس مساحة",
+  firm: "مكتب هندسي", legal: "مستشار قانوني", consultant: "مستشار", contractor: "مقاول", supplier: "مورد",
 };
 
-function withTimeout(promise, ms, timeoutMessage) {
+const SIGNUP_TIMEOUT_MS = 20000;
+function withTimeout(promise, ms) {
   let timer;
-  const timeout = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(timeoutMessage)), ms); });
+  const timeout = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error("REGISTRATION_TIMEOUT")), ms); });
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
@@ -44,56 +41,35 @@ export default function RegisterAccount() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const saveDraft = () => {
-    try {
-      sessionStorage.setItem("bytly_registration_draft", JSON.stringify({ full_name: fullName.trim(), email: email.trim().toLowerCase(), role, next_path: destination, created_at: Date.now() }));
-    } catch {}
-  };
-
-  const continueAfterAuth = () => {
-    saveDraft();
-    navigate(destination, { replace: true });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
     const cleanEmail = email.trim().toLowerCase();
     const cleanName = fullName.trim();
-    if (!cleanName || !cleanEmail) return toast.error("يرجى تعبئة الاسم والبريد الإلكتروني");
+    if (!cleanName || !cleanEmail) return toast.error("يرجى تعبئة جميع بيانات الحساب");
     if (!isSupabaseConfigured || !supabase) return toast.error("خدمة التسجيل غير مهيأة حالياً");
-
     setLoading(true);
-    saveDraft();
     try {
-      const signupPromise = supabase.auth.signInWithOtp({
+      const { data, error } = await withTimeout(supabase.auth.signInWithOtp({
         email: cleanEmail,
         options: {
           shouldCreateUser: true,
           emailRedirectTo: `${window.location.origin}/auth/callback`,
           data: { full_name: cleanName, name: cleanName, role, account_type: role }
         }
-      });
-      const { error } = await withTimeout(signupPromise, SIGNUP_TIMEOUT_MS, "REGISTRATION_TIMEOUT");
-      if (error) throw error;
-
-      // If the project has email confirmation enabled, the link creates the session.
-      // If a session is already available, continue immediately.
-      const sessionResult = await withTimeout(supabase.auth.getSession(), SIGNIN_TIMEOUT_MS, "SESSION_TIMEOUT");
-      if (sessionResult?.data?.session?.user) {
-        continueAfterAuth();
+      }), SIGNUP_TIMEOUT_MS);
+      if (error) {
+        const msg = String(error.message || "").toLowerCase();
+        if (msg.includes("already registered") || msg.includes("already exists")) toast.error("هذا البريد مسجل بالفعل. يمكنك تسجيل الدخول.");
+        else toast.error(error.message || "تعذر إنشاء الحساب حالياً");
         return;
       }
-      toast.success("تم إنشاء الحساب. راجعي بريدك الإلكتروني لتفعيل الحساب ثم إكمال التسجيل.");
+      sessionStorage.setItem("bytly_registration_draft", JSON.stringify({ full_name: cleanName, email: cleanEmail, role, next_path: destination, created_at: Date.now() }));
+      toast.success("تم إرسال رابط التفعيل إلى بريدك الإلكتروني لإكمال التسجيل.");
     } catch (error) {
       console.error("Registration error:", error);
-      const msg = String(error?.message || "");
-      if (/already registered|already exists/i.test(msg)) toast.error("هذا البريد مسجل بالفعل. يمكنك تسجيل الدخول.");
-      else if (msg === "REGISTRATION_TIMEOUT" || msg === "SESSION_TIMEOUT") toast.error("استغرق التسجيل وقتاً أطول من المتوقع. حاولي مرة أخرى.");
-      else toast.error(msg || "تعذر إنشاء الحساب حالياً. حاولي مرة أخرى.");
-    } finally {
-      setLoading(false);
-    }
+      toast.error(error?.message === "REGISTRATION_TIMEOUT" ? "استغرق إنشاء الحساب وقتاً أطول من المتوقع. حاولي مرة أخرى." : "تعذر إنشاء الحساب حالياً. حاول مرة أخرى.");
+    } finally { setLoading(false); }
   };
 
   return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-12">
@@ -103,7 +79,7 @@ export default function RegisterAccount() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2"><Label>الاسم الكامل *</Label><div className="relative"><User className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"/><Input value={fullName} onChange={e=>setFullName(e.target.value)} className="pr-10" autoComplete="name" required/></div></div>
           <div className="space-y-2"><Label>البريد الإلكتروني *</Label><div className="relative"><Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"/><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} className="pr-10" autoComplete="email" required/></div></div>
-          <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white h-12">{loading?<><Loader2 className="w-4 h-4 ml-2 animate-spin"/>جاري إنشاء الحساب...</>:<>إنشاء الحساب<ArrowLeft className="w-4 h-4 mr-2"/></>}</Button>
+          <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white h-12">{loading?<><Loader2 className="w-4 h-4 ml-2 animate-spin"/>جاري إنشاء الحساب...</>:<>متابعة<ArrowLeft className="w-4 h-4 mr-2"/></>}</Button>
         </form>
       </CardContent></Card>
     </div>
