@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "react-hot-toast";
 
 const SIGNUP_TIMEOUT_MS = 12000;
+const SIGNIN_TIMEOUT_MS = 10000;
 
 const ROLE_ROUTES = {
   investor: "/RegisterClient?type=investor",
@@ -28,35 +29,30 @@ const ROLE_LABELS = {
   consultant: "مستشار", contractor: "مقاول", supplier: "مورد",
 };
 
-function withTimeout(promise, ms, message) {
+function withTimeout(promise, ms, timeoutMessage) {
   let timer;
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(message)), ms); })
-  ]).finally(() => clearTimeout(timer));
-}
-
-function generateTemporaryPassword() {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return `Bytly-${Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("")}-A9!`;
+  const timeout = new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(timeoutMessage)), ms); });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
 export default function RegisterAccount() {
   const navigate = useNavigate();
-  const role = new URLSearchParams(window.location.search).get("role") || "engineer";
-  const destination = ROLE_ROUTES[role] || ROLE_ROUTES.engineer;
-  const roleLabel = ROLE_LABELS[role] || ROLE_LABELS.engineer;
+  const role = new URLSearchParams(window.location.search).get("role") || "client";
+  const destination = ROLE_ROUTES[role] || ROLE_ROUTES.client;
+  const roleLabel = ROLE_LABELS[role] || ROLE_LABELS.client;
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
   const saveDraft = () => {
     try {
-      const draft = { full_name: fullName.trim(), email: email.trim().toLowerCase(), role, next_path: destination, created_at: Date.now() };
-      sessionStorage.setItem("bytly_registration_draft", JSON.stringify(draft));
-      localStorage.setItem("bytly_registration_pending", JSON.stringify({ role, next_path: destination }));
+      sessionStorage.setItem("bytly_registration_draft", JSON.stringify({ full_name: fullName.trim(), email: email.trim().toLowerCase(), role, next_path: destination, created_at: Date.now() }));
     } catch {}
+  };
+
+  const continueAfterAuth = () => {
+    saveDraft();
+    navigate(destination, { replace: true });
   };
 
   const handleSubmit = async (e) => {
@@ -70,54 +66,46 @@ export default function RegisterAccount() {
     setLoading(true);
     saveDraft();
     try {
-      const { data, error } = await withTimeout(
-        supabase.auth.signUp({
-          email: cleanEmail,
-          password: generateTemporaryPassword(),
-          options: {
-            data: { full_name: cleanName, name: cleanName, role, account_type: role },
-            emailRedirectTo: `${window.location.origin}/auth/callback`
-          }
-        }),
-        SIGNUP_TIMEOUT_MS,
-        "REGISTRATION_TIMEOUT"
-      );
+      const signupPromise = supabase.auth.signInWithOtp({
+        email: cleanEmail,
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: { full_name: cleanName, name: cleanName, role, account_type: role }
+        }
+      });
+      const { error } = await withTimeout(signupPromise, SIGNUP_TIMEOUT_MS, "REGISTRATION_TIMEOUT");
       if (error) throw error;
-      if (!data?.user) throw new Error("تعذر إنشاء الحساب حالياً");
 
-      if (data.session?.user) {
-        saveDraft();
-        navigate(destination, { replace: true });
+      // If the project has email confirmation enabled, the link creates the session.
+      // If a session is already available, continue immediately.
+      const sessionResult = await withTimeout(supabase.auth.getSession(), SIGNIN_TIMEOUT_MS, "SESSION_TIMEOUT");
+      if (sessionResult?.data?.session?.user) {
+        continueAfterAuth();
         return;
       }
-
-      toast.success("تم إنشاء الحساب. راجعي بريدك الإلكتروني لتفعيل الحساب، ثم أكملي التسجيل.");
+      toast.success("تم إنشاء الحساب. راجعي بريدك الإلكتروني لتفعيل الحساب ثم إكمال التسجيل.");
     } catch (error) {
       console.error("Registration error:", error);
       const msg = String(error?.message || "");
       if (/already registered|already exists/i.test(msg)) toast.error("هذا البريد مسجل بالفعل. يمكنك تسجيل الدخول.");
-      else if (msg === "REGISTRATION_TIMEOUT") toast.error("استغرق إنشاء الحساب وقتاً أطول من المتوقع. حاولي مرة أخرى.");
+      else if (msg === "REGISTRATION_TIMEOUT" || msg === "SESSION_TIMEOUT") toast.error("استغرق التسجيل وقتاً أطول من المتوقع. حاولي مرة أخرى.");
       else toast.error(msg || "تعذر إنشاء الحساب حالياً. حاولي مرة أخرى.");
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-12">
-      <div className="max-w-lg mx-auto px-4">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e] mb-2">إنشاء حساب {roleLabel}</h1>
-          <p className="text-slate-600">اكتبي بياناتك الأساسية للبدء في بيتلي.</p>
-        </div>
-        <Card className="border-0 shadow-xl"><CardHeader><CardTitle className="text-xl">بيانات الحساب</CardTitle></CardHeader><CardContent>
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2"><Label>الاسم الكامل *</Label><div className="relative"><User className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"/><Input value={fullName} onChange={e=>setFullName(e.target.value)} className="pr-10" autoComplete="name" required/></div></div>
-            <div className="space-y-2"><Label>البريد الإلكتروني *</Label><div className="relative"><Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"/><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} className="pr-10" autoComplete="email" required/></div></div>
-            <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white h-12">{loading ? <><Loader2 className="w-4 h-4 ml-2 animate-spin"/>جاري إنشاء الحساب...</> : <>إنشاء الحساب<ArrowLeft className="w-4 h-4 mr-2"/></>}</Button>
-          </form>
-        </CardContent></Card>
-      </div>
+  return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-12">
+    <div className="max-w-lg mx-auto px-4">
+      <div className="text-center mb-8"><h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e] mb-2">إنشاء حساب {roleLabel}</h1><p className="text-slate-600">أنشئ حسابك أولاً ثم أكمل بيانات التسجيل.</p></div>
+      <Card className="border-0 shadow-xl"><CardHeader><CardTitle className="text-xl">بيانات الحساب</CardTitle></CardHeader><CardContent>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-2"><Label>الاسم الكامل *</Label><div className="relative"><User className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"/><Input value={fullName} onChange={e=>setFullName(e.target.value)} className="pr-10" autoComplete="name" required/></div></div>
+          <div className="space-y-2"><Label>البريد الإلكتروني *</Label><div className="relative"><Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"/><Input type="email" value={email} onChange={e=>setEmail(e.target.value)} className="pr-10" autoComplete="email" required/></div></div>
+          <Button type="submit" disabled={loading} className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white h-12">{loading?<><Loader2 className="w-4 h-4 ml-2 animate-spin"/>جاري إنشاء الحساب...</>:<>إنشاء الحساب<ArrowLeft className="w-4 h-4 mr-2"/></>}</Button>
+        </form>
+      </CardContent></Card>
     </div>
-  );
+  </div>;
 }
