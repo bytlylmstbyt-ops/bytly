@@ -20,7 +20,6 @@ function lazyWithRetry(factory, retries = 2) {
 
 import Login from './pages/Login';
 import Register from './pages/Register';
-import RegistrationAuth from './pages/RegistrationAuth';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import PublicLanding from './pages/PublicLanding';
@@ -100,17 +99,18 @@ const protectedRoute = (Component, name) => <ProtectedRoute><RegistrationGate><L
 const AuthenticatedApp = () => {
   const { isLoadingPublicSettings } = useAuth();
   if (isLoadingPublicSettings) return <PageSpinner />;
-  const publicPages = ['ContactUs','Terms','Privacy','Copyright','Complaints','Support','RegisterChoice','RegisterAccount','RegistrationSuccess','About'];
+  const publicPages = [
+    'ContactUs','Terms','Privacy','Copyright','Complaints','Support','RegisterChoice','RegisterAccount','RegistrationSuccess','About',
+    'RegisterClient','RegisterEngineer','RegisterFirm','RegisterLegalConsultant','RegisterConsultant','RegisterContractor','RegisterSupplier'
+  ];
   return <Routes>
     <Route path="/login" element={<Login />} />
     <Route path="/register" element={<Register />} />
-    <Route path="/register-auth" element={<RegistrationAuth />} />
+    <Route path="/register-auth" element={<Navigate to="/register" replace />} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
     <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/" element={<PublicHomeRoute />} />
     <Route path="/About" element={lazyRoute(About, "About")} />
-    <Route path="/RegisterContractor" element={protectedRoute(RegisterContractor, "RegisterContractor")} />
-    <Route path="/RegisterSupplier" element={protectedRoute(RegisterSupplier, "RegisterSupplier")} />
     <Route path="/AdvertiseWithUs" element={lazyRoute(AdvertiseWithUs, "AdvertiseWithUs")} />
     <Route path="/landing" element={lazyRoute(React.lazy(() => import('./pages/Landing')), "Landing")} />
     <Route path="/FAQ" element={lazyRoute(React.lazy(() => import('./pages/FAQ')), "FAQ")} />
