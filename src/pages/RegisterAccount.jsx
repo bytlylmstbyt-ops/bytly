@@ -26,6 +26,16 @@ const ROLE_LABELS = {
   consultant: "مستشار", contractor: "مقاول", supplier: "مورد",
 };
 
+const SIGNUP_TIMEOUT_MS = 20000;
+
+function withTimeout(promise, ms) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error("REGISTRATION_TIMEOUT")), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 export default function RegisterAccount() {
   const navigate = useNavigate();
   const role = new URLSearchParams(window.location.search).get("role") || "client";
@@ -51,7 +61,7 @@ export default function RegisterAccount() {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const signupPromise = supabase.auth.signUp({
         email: cleanEmail,
         password,
         options: {
@@ -59,27 +69,55 @@ export default function RegisterAccount() {
           emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
+
+      const { data, error } = await withTimeout(signupPromise, SIGNUP_TIMEOUT_MS);
+
       if (error) {
         const msg = String(error.message || "").toLowerCase();
-        if (msg.includes("already registered") || msg.includes("already exists")) toast.error("هذا البريد مسجل بالفعل. يمكنك تسجيل الدخول.");
-        else { console.error("Supabase signUp:", error); toast.error(error.message || "تعذر إنشاء الحساب حالياً"); }
+        if (msg.includes("already registered") || msg.includes("already exists")) {
+          toast.error("هذا البريد مسجل بالفعل. يمكنك تسجيل الدخول.");
+        } else {
+          console.error("Supabase signUp:", error);
+          toast.error(error.message || "تعذر إنشاء الحساب حالياً");
+        }
         return;
       }
 
       // Never store passwords. Keep only non-sensitive onboarding data.
       sessionStorage.setItem("bytly_registration_draft", JSON.stringify({
-        full_name: cleanName, email: cleanEmail, role, next_path: destination, created_at: Date.now()
+        full_name: cleanName,
+        email: cleanEmail,
+        role,
+        next_path: destination,
+        created_at: Date.now()
       }));
 
+      // A session means Supabase accepted the account and the user can safely
+      // continue to the role-specific onboarding form immediately.
       if (data?.session?.user) {
         navigate(destination, { replace: true });
-      } else {
-        toast.success("تم إنشاء الحساب. راجع بريدك الإلكتروني لتفعيله ثم تابع إكمال التسجيل.");
+        return;
       }
+
+      // Email confirmation is enabled: there is a user, but Supabase correctly
+      // withholds the session until the email is verified. Do not send the user
+      // into an RLS-protected onboarding form without authentication.
+      if (data?.user) {
+        toast.success("تم إنشاء الحساب. افتح رسالة التفعيل في بريدك الإلكتروني، ثم ارجع لإكمال التسجيل.");
+        return;
+      }
+
+      throw new Error("SIGNUP_RETURNED_NO_USER");
     } catch (error) {
       console.error("Registration error:", error);
-      toast.error("تعذر إنشاء الحساب حالياً. حاول مرة أخرى.");
-    } finally { setLoading(false); }
+      if (error?.message === "REGISTRATION_TIMEOUT") {
+        toast.error("استغرق إنشاء الحساب وقتاً أطول من المتوقع. لم يتم تعليق الصفحة؛ تحققي من الاتصال وحاولي مرة أخرى.");
+      } else {
+        toast.error("تعذر إنشاء الحساب حالياً. حاول مرة أخرى.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-12">
