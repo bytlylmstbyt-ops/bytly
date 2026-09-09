@@ -6,22 +6,60 @@ const withTimeout = (promise, ms, label) =>
     new Promise((_, reject) => setTimeout(() => reject(new Error(label || "انتهت مهلة العملية. تحقق من الاتصال وحاول مرة أخرى.")), ms))
   ]);
 
+const generateTemporaryPassword = () => {
+  // The user is no longer asked for a password during registration.
+  // Supabase still needs a password for a password-auth user, so create a
+  // strong random temporary value that is never displayed or persisted.
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
+  return `Bytly-${Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("")}-A9!`;
+};
+
+async function ensureRegistrationUser({ fullName, email, role }) {
+  const current = await withTimeout(supabase.auth.getUser(), 12000, "تعذر التحقق من جلسة التسجيل.");
+  if (current.error) throw current.error;
+  if (current.data?.user) return current.data.user;
+
+  const cleanEmail = String(email || "").trim().toLowerCase();
+  if (!cleanEmail) throw new Error("البريد الإلكتروني مطلوب.");
+
+  const password = generateTemporaryPassword();
+  const { data, error } = await withTimeout(
+    supabase.auth.signUp({
+      email: cleanEmail,
+      password,
+      options: {
+        data: {
+          full_name: String(fullName || "").trim(),
+          name: String(fullName || "").trim(),
+          role,
+          account_type: role
+        },
+        emailRedirectTo: `${window.location.origin}/auth/callback`
+      }
+    }),
+    12000,
+    "REGISTRATION_TIMEOUT"
+  );
+
+  if (error) throw error;
+  if (!data?.user) throw new Error("تعذر إنشاء حساب المستخدم.");
+
+  // If email confirmation is disabled, Supabase gives us a session and the
+  // role-specific record can be saved immediately. If confirmation is enabled,
+  // the callback will complete the pending registration after verification.
+  if (data.session?.user) return data.session.user;
+
+  try {
+    localStorage.setItem("bytly_registration_pending", JSON.stringify({ role, next_path: window.location.pathname }));
+  } catch {}
+  throw new Error("EMAIL_CONFIRMATION_REQUIRED");
+}
+
 export async function saveRegistration({ table, row, role, fullName, email, phone, userIdField = "user_id" }) {
   if (!supabase) throw new Error("خدمة التسجيل غير مهيأة حالياً.");
 
-  // Authentication is created exactly once by RegisterAccount. This service only
-  // saves the authenticated user's profile and role-specific record.
-  const current = await withTimeout(
-    supabase.auth.getUser(),
-    12000,
-    "تعذر التحقق من جلسة التسجيل."
-  );
-  if (current.error) throw current.error;
-
-  const user = current.data?.user || null;
-  if (!user) {
-    throw new Error("انتهت جلسة التسجيل. ابدأ من صفحة إنشاء الحساب مرة أخرى.");
-  }
+  const user = await ensureRegistrationUser({ fullName, email, role });
 
   const metadataRole = user.user_metadata?.role || user.user_metadata?.account_type;
   if (metadataRole && role && metadataRole !== role) {
@@ -49,8 +87,6 @@ export async function saveRegistration({ table, row, role, fullName, email, phon
     email: user.email || email || row.email
   };
 
-  // Retrying the final step must update the user's own pending record instead of
-  // creating duplicates. RLS remains the source of truth for ownership.
   const existing = await withTimeout(
     supabase.from(table).select("id").eq(userIdField, user.id).limit(1),
     12000,
