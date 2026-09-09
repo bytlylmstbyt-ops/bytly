@@ -42,10 +42,15 @@ export default function AuthCallback() {
 
         // The registration draft contains no password. It only tells us which
         // onboarding screen the user selected before email confirmation.
+        // Check localStorage first (persists across tabs), then sessionStorage.
         let draft = null;
         try {
-          const raw = sessionStorage.getItem("bytly_registration_draft");
-          draft = raw ? JSON.parse(raw) : null;
+          const rawPending = localStorage.getItem("bytly_registration_pending");
+          if (rawPending) draft = JSON.parse(rawPending);
+          if (!draft) {
+            const raw = sessionStorage.getItem("bytly_registration_draft");
+            draft = raw ? JSON.parse(raw) : null;
+          }
         } catch {}
 
         const role = draft?.role || user.user_metadata?.role || user.user_metadata?.account_type || null;

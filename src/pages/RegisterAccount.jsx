@@ -52,13 +52,18 @@ export default function RegisterAccount() {
 
   const saveDraft = () => {
     try {
-      sessionStorage.setItem("bytly_registration_draft", JSON.stringify({
+      const draft = {
         full_name: fullName.trim(),
         email: email.trim().toLowerCase(),
         role,
         next_path: destination,
         created_at: Date.now()
-      }));
+      };
+      sessionStorage.setItem("bytly_registration_draft", JSON.stringify(draft));
+      // localStorage persists across tabs and sessions — essential for the
+      // email-confirmation flow where sessionStorage is lost. RegistrationGate
+      // reads this flag to redirect half-registered users back to their role page.
+      localStorage.setItem("bytly_registration_pending", JSON.stringify({ role, next_path: destination }));
     } catch {}
   };
 
@@ -81,15 +86,17 @@ export default function RegisterAccount() {
     if (!isSupabaseConfigured || !supabase) return toast.error("خدمة التسجيل غير مهيأة حالياً");
 
     setLoading(true);
+    saveDraft(); // Set the pending flag before any network call so it survives even if signup hangs.
     try {
-      // Keep signup focused on account creation. The redirect URL is only needed
-      // for the confirmation-email flow and can cause avoidable signup failures
-      // when an allowed redirect is changed between root and www domains.
+      // emailRedirectTo ensures the user lands on /auth/callback after confirming
+      // their email, which exchanges the code for a session and routes them to
+      // the correct role-specific onboarding page.
       const signupPromise = supabase.auth.signUp({
         email: cleanEmail,
         password,
         options: {
-          data: { full_name: cleanName, name: cleanName, role, account_type: role }
+          data: { full_name: cleanName, name: cleanName, role, account_type: role },
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
 
@@ -148,6 +155,9 @@ export default function RegisterAccount() {
 
       // With email confirmation enabled Supabase intentionally returns a user
       // without a session. This is a successful registration, not a failure.
+      // The pending flag is already set by saveDraft() above, so when the user
+      // confirms their email and returns, RegistrationGate will redirect them
+      // to the correct role page to finish onboarding.
       if (data?.user) {
         toast.success("تم إنشاء الحساب. افتح رسالة التفعيل في بريدك الإلكتروني، ثم ارجع لإكمال التسجيل.");
         return;

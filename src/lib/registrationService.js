@@ -75,5 +75,6 @@ export async function saveRegistration({ table, row, role, fullName, email, phon
   if (saved.error) throw saved.error;
 
   try { sessionStorage.removeItem("bytly_registration_draft"); } catch {}
+  try { localStorage.removeItem("bytly_registration_pending"); } catch {}
   return saved.data;
 }

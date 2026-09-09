@@ -15,6 +15,11 @@ const REGISTRATION_RETURN_PATHS = {
 };
 const getPendingRegistrationUrl = () => {
   try {
+    // Check localStorage first (persists across tabs/sessions for email-confirmation flow),
+    // then sessionStorage as a fallback.
+    const rawPending = localStorage.getItem("bytly_registration_pending");
+    const pending = rawPending ? JSON.parse(rawPending) : null;
+    if (pending?.role && REGISTRATION_RETURN_PATHS[pending.role]) return REGISTRATION_RETURN_PATHS[pending.role];
     const raw = sessionStorage.getItem("bytly_registration_draft");
     const draft = raw ? JSON.parse(raw) : null;
     return draft?.role && REGISTRATION_RETURN_PATHS[draft.role] ? REGISTRATION_RETURN_PATHS[draft.role] : null;
