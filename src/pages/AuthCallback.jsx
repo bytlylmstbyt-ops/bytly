@@ -2,6 +2,18 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase, isSupabaseConfigured } from "@/lib/supabaseClient";
 
+const ROLE_ROUTES = {
+  investor: "/RegisterClient?type=investor",
+  client: "/RegisterClient?type=individual",
+  engineer: "/RegisterEngineer?type=engineer",
+  surveyor: "/RegisterEngineer?type=surveyor",
+  firm: "/RegisterFirm",
+  legal: "/RegisterLegalConsultant",
+  consultant: "/RegisterConsultant",
+  contractor: "/RegisterContractor",
+  supplier: "/RegisterSupplier",
+};
+
 export default function AuthCallback() {
   const navigate = useNavigate();
   const [error, setError] = useState("");
@@ -18,7 +30,6 @@ export default function AuthCallback() {
       try {
         const params = new URLSearchParams(window.location.search);
         const code = params.get("code");
-
         if (code) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) throw exchangeError;
@@ -26,16 +37,47 @@ export default function AuthCallback() {
 
         const { data, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
-        if (!data?.session?.user) throw new Error("لم يتم إنشاء جلسة تسجيل الدخول.");
+        const user = data?.session?.user;
+        if (!user) throw new Error("لم يتم إنشاء جلسة تسجيل الدخول.");
+
+        // The registration draft contains no password. It only tells us which
+        // onboarding screen the user selected before email confirmation.
+        let draft = null;
+        try {
+          const raw = sessionStorage.getItem("bytly_registration_draft");
+          draft = raw ? JSON.parse(raw) : null;
+        } catch {}
+
+        const role = draft?.role || user.user_metadata?.role || user.user_metadata?.account_type || null;
+        const fullName = draft?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || "";
+        const email = user.email || draft?.email || "";
+
+        // Create the base profile immediately after authentication. This is safe
+        // because RLS limits the write to auth.uid(). Existing profiles are updated,
+        // not duplicated.
+        const { error: profileError } = await supabase.from("profiles").upsert({
+          user_id: user.id,
+          full_name: fullName,
+          email,
+          phone: "",
+          role: role || "client"
+        }, { onConflict: "user_id" });
+        if (profileError) throw profileError;
+
+        try { await supabase.rpc("claim_migrated_account"); } catch {}
 
         if (active) {
-          const returnUrl = sessionStorage.getItem("loginReturnUrl");
-          sessionStorage.removeItem("loginReturnUrl");
-          navigate(returnUrl && !returnUrl.startsWith("/login") ? returnUrl : "/Home", { replace: true });
+          const nextPath = role && ROLE_ROUTES[role] ? ROLE_ROUTES[role] : "/Home";
+          if (role && ROLE_ROUTES[role]) {
+            navigate(nextPath, { replace: true });
+          } else {
+            sessionStorage.removeItem("bytly_registration_draft");
+            navigate("/Home", { replace: true });
+          }
         }
       } catch (err) {
         console.error("Supabase auth callback error:", err);
-        if (active) setError("تعذر إكمال تسجيل الدخول. يرجى المحاولة مرة أخرى.");
+        if (active) setError("تعذر إكمال التسجيل. يرجى المحاولة مرة أخرى.");
       }
     };
 
@@ -58,7 +100,7 @@ export default function AuthCallback() {
 
   return (
     <main dir="rtl" style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f8fafc" }}>
-      <div style={{ color: "#6b7280" }}>جاري إكمال تسجيل الدخول...</div>
+      <div style={{ color: "#6b7280" }}>جاري إكمال التسجيل...</div>
     </main>
   );
 }
