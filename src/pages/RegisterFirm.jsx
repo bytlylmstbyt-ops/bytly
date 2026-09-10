@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
 import { saveRegistration } from "@/lib/registrationService";
+import EmailConfirmationPending from "@/components/registration/EmailConfirmationPending";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +16,7 @@ import { toast } from "sonner";
 export default function RegisterFirm() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [confirmationEmail, setConfirmationEmail] = useState(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingDocs, setUploadingDocs] = useState(false);
@@ -165,6 +167,10 @@ export default function RegisterFirm() {
       toast.success("تم تسجيل الشركة الاستشارية بنجاح! في انتظار الموافقة من الإدارة");
       navigate(createPageUrl("RegistrationSuccess"));
     } catch (error) {
+      if (error?.message === "EMAIL_CONFIRMATION_REQUIRED") {
+        setConfirmationEmail(formData.email);
+        return;
+      }
       console.error("Error:", error);
       if (error?.status === 401 || error?.message?.includes("401")) {
         toast.error("انتهت الجلسة، يرجى تسجيل الدخول");
@@ -181,6 +187,16 @@ export default function RegisterFirm() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[#C9A66B]" />
+      </div>
+    );
+  }
+
+  if (confirmationEmail) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-6 md:py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
+          <EmailConfirmationPending email={confirmationEmail} />
+        </div>
       </div>
     );
   }

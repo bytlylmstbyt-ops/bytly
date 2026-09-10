@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { supabase } from "@/lib/supabaseClient";
 import { saveRegistration } from "@/lib/registrationService";
+import EmailConfirmationPending from "@/components/registration/EmailConfirmationPending";
 import { motion } from "framer-motion";
 import { 
   User, Mail, Phone, MapPin, Upload, 
@@ -24,6 +25,7 @@ const directRegistrationInsert = async (table, row) => {
 export default function RegisterClient() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [confirmationEmail, setConfirmationEmail] = useState(null);
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
@@ -91,6 +93,11 @@ export default function RegisterClient() {
     toast.success("تم التسجيل بنجاح");
     navigate(createPageUrl("RegistrationSuccess"));
     } catch (error) {
+      if (error?.message === "EMAIL_CONFIRMATION_REQUIRED") {
+        setConfirmationEmail(formData.email);
+        toast.success("تحققي من بريدك الإلكتروني لإكمال إنشاء الحساب.");
+        return;
+      }
       console.error("Client registration error:", error);
       if (error?.message === "EMAIL_CONFIRMATION_REQUIRED") {
         toast.success("أرسلنا رابط تفعيل إلى بريدك الإلكتروني. افتحه لإكمال التسجيل.", { duration: 8000 });
@@ -109,6 +116,16 @@ export default function RegisterClient() {
     formData.client_type &&
     (formData.client_type !== "investor" || formData.company_name?.trim())
   );
+
+  if (confirmationEmail) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-12">
+        <div className="max-w-lg mx-auto px-4 sm:px-6 lg:px-8">
+          <EmailConfirmationPending email={confirmationEmail} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-12">

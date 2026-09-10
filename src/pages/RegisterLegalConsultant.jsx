@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
 import { saveRegistration } from "@/lib/registrationService";
+import EmailConfirmationPending from "@/components/registration/EmailConfirmationPending";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +17,7 @@ import LegalTermsSection from "../components/LegalTermsSection";
 export default function RegisterLegalConsultantPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [confirmationEmail, setConfirmationEmail] = useState(null);
   const [termsAccepted, setTermsAccepted] = useState({
     confidentiality: false,
     responsibility: false,
@@ -66,12 +68,26 @@ export default function RegisterLegalConsultantPage() {
       alert("تم تقديم طلب التسجيل بنجاح! سيتم مراجعته من قبل الإدارة.");
       navigate(createPageUrl("RegistrationSuccess"));
     } catch (error) {
+      if (error?.message === "EMAIL_CONFIRMATION_REQUIRED") {
+        setConfirmationEmail(formData.email);
+        return;
+      }
       console.error("Error registering legal consultant:", error);
       alert("حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى.");
     } finally {
       setLoading(false);
     }
   };
+
+  if (confirmationEmail) {
+    return (
+      <div className="min-h-screen py-12 px-4" dir="rtl">
+        <div className="max-w-3xl mx-auto">
+          <EmailConfirmationPending email={confirmationEmail} />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-12 px-4" dir="rtl">
