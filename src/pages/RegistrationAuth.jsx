@@ -132,11 +132,11 @@ export default function RegistrationAuth() {
           </div>
           <div>
             <label className="block mb-1.5 text-sm font-medium">كلمة المرور</label>
-            <input className="w-full h-12 rounded-lg border px-3" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={loading} autoComplete="new-password" />
+            <input className="w-full h-12 rounded-lg border px-3" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={loading} autoComplete="new-password" maxLength={72} />
           </div>
           <div>
             <label className="block mb-1.5 text-sm font-medium">تأكيد كلمة المرور</label>
-            <input className="w-full h-12 rounded-lg border px-3" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required disabled={loading} autoComplete="new-password" />
+            <input className="w-full h-12 rounded-lg border px-3" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required disabled={loading} autoComplete="new-password" maxLength={72} />
           </div>
           <button className="w-full h-12 rounded-lg bg-slate-900 text-white font-semibold disabled:opacity-50" disabled={loading}>
             {loading ? "جاري إنشاء الحساب..." : "إنشاء الحساب والمتابعة"}
