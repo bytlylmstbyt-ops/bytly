@@ -128,4 +128,4 @@ const AuthenticatedApp = () => {
   </Routes>;
 };
 
-export default function App() { return <QueryClientProvider client={queryClientInstance}><Router><AuthProvider><NavigationTracker /><RouteTitleManager /><AuthenticatedApp /><Toaster /></AuthProvider></Router></QueryClientProvider>; }
+export default function App() { return <QueryClientProvider client={queryClientInstance}><Router><AuthProvider><NavigationTracker /><RouteTitleManager /><AuthenticatedApp /><Toaster /><HotToastToaster position="top-center" toastOptions={{ duration: 5000 }} /><SonnerToaster position="top-center" richColors /></AuthProvider></Router></QueryClientProvider>; }
