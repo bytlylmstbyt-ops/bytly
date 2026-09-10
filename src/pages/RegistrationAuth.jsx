@@ -56,6 +56,7 @@ export default function RegistrationAuth() {
     const cleanName = fullName.trim();
     if (!supabase) return setError("خدمة التسجيل غير مهيأة حالياً.");
     if (password.length < 8) return setError("كلمة المرور يجب أن تكون 8 أحرف على الأقل.");
+    if (password.length > 72) return setError("كلمة المرور طويلة جداً (الحد الأقصى 72 حرفًا). يرجى اختيار كلمة مرور أقصر.");
     if (password !== confirmPassword) return setError("كلمتا المرور غير متطابقتين.");
 
     setLoading(true);
