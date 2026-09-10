@@ -99,11 +99,7 @@ export default function RegisterClient() {
         return;
       }
       console.error("Client registration error:", error);
-      if (error?.message === "EMAIL_CONFIRMATION_REQUIRED") {
-        toast.success("أرسلنا رابط تفعيل إلى بريدك الإلكتروني. افتحه لإكمال التسجيل.", { duration: 8000 });
-      } else {
-        toast.error(error?.message || "تعذر إكمال التسجيل. حاول مرة أخرى.");
-      }
+      toast.error(error?.message || "تعذر إكمال التسجيل. حاول مرة أخرى.");
     } finally {
       setIsLoading(false);
     }
