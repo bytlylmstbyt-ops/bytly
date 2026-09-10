@@ -77,6 +77,8 @@ export default function RegistrationAuth() {
         const msg = String(signUpError.message || "").toLowerCase();
         if (msg.includes("already registered") || msg.includes("already exists") || msg.includes("user already registered")) {
           setError("هذا البريد مسجل بالفعل. يمكنك تسجيل الدخول.");
+        } else if (msg.includes("72 characters") || msg.includes("password") && msg.includes("long")) {
+          setError("كلمة المرور طويلة جداً (الحد الأقصى 72 حرفًا). يرجى اختيار كلمة مرور أقصر.");
         } else {
           console.error("Supabase registration error:", signUpError);
           setError("تعذر إنشاء الحساب حالياً. يرجى المحاولة مرة أخرى.");
