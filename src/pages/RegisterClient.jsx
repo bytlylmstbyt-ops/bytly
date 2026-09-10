@@ -35,36 +35,15 @@ export default function RegisterClient() {
     company_name: ""
   });
 
-  // Load account data entered at the start of registration, without asking twice.
+  // New registrations always start with empty account fields.
+  // Existing users must use the Login flow instead of this registration page.
   useEffect(() => {
-    try {
-      const draft = JSON.parse(sessionStorage.getItem("bytly_registration_draft") || "null");
-      if (draft?.full_name || draft?.email) setFormData(prev => ({ ...prev, full_name: draft.full_name || prev.full_name, email: draft.email || prev.email }));
-    } catch {}
-
-
     let active = true;
-    supabase?.auth.getUser().then(({ data }) => {
-      const user = data?.user;
-      if (active && user) setFormData(prev => ({ ...prev, full_name: user.user_metadata?.full_name || user.user_metadata?.name || prev.full_name, email: user.email || prev.email }));
+    supabase.auth.getSession().then(({ data }) => {
+      if (active && data?.session?.user) navigate(createPageUrl("Home"), { replace: true });
     }).catch(() => {});
-    const storedInfo = sessionStorage.getItem('googleUserInfo');
-    if (storedInfo) {
-      try {
-        const userInfo = JSON.parse(storedInfo);
-        setFormData(prev => ({
-          ...prev,
-          full_name: userInfo.name || prev.full_name,
-          email: userInfo.email || prev.email,
-          profile_image: userInfo.picture || prev.profile_image
-        }));
-        sessionStorage.removeItem('googleUserInfo');
-      } catch (err) {
-        console.error('Error loading Google user info:', err);
-      }
-    }
     return () => { active = false; };
-  }, []);
+  }, [navigate]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -201,10 +180,20 @@ export default function RegisterClient() {
                 </div>
               )}
 
-              <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-slate-700">
-                <p className="font-semibold text-[#1a1a2e]">بيانات الحساب</p>
-                <p className="mt-1">{formData.full_name} — {formData.email}</p>
-                <p className="text-xs text-slate-500 mt-1">تم إدخال الاسم والبريد في بداية التسجيل ولا تحتاجين لإدخالهما مرة أخرى.</p>
+              <div className="space-y-2">
+                <Label htmlFor="full_name">الاسم الكامل *</Label>
+                <div className="relative">
+                  <User className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Input id="full_name" value={formData.full_name} onChange={(e) => handleInputChange("full_name", e.target.value)} className="pr-10" placeholder="اكتب اسمك الكامل" required />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">البريد الإلكتروني *</Label>
+                <div className="relative">
+                  <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Input id="email" type="email" value={formData.email} onChange={(e) => handleInputChange("email", e.target.value)} className="pr-10" placeholder="example@email.com" required />
+                </div>
               </div>
 
               <div className="space-y-2">
