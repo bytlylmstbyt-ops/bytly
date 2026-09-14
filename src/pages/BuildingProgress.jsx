@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   HardHat, CheckCircle2, Circle, ChevronDown, ChevronUp,
@@ -143,7 +144,7 @@ export default function BuildingProgress() {
     const file = e.target.files[0];
     if (!file) return;
     setIsUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const file_url = await uploadScopedFile("building-progress", file);
     setUpdateForm(p => ({ ...p, attachments: [...p.attachments, file_url] }));
     setIsUploading(false);
   };
