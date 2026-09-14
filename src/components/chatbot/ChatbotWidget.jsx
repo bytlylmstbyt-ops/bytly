@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -86,7 +87,7 @@ export default function ChatbotWidget() {
     setUploading(true);
     try {
       for (const file of files) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        const file_url = await uploadScopedFile("chatbot/widget", file);
         setAttachments(prev => [...prev, {
           name: file.name,
           url: file_url,
@@ -168,7 +169,7 @@ export default function ChatbotWidget() {
               retryCount++;
               
               // Direct upload with optimized buffer (immediate processing)
-              const { file_url } = await base44.integrations.Core.UploadFile({ file: audioFile });
+              const file_url = await uploadScopedFile("chatbot/widget/audio", audioFile);
               
               // Immediate transcription (no waiting delay)
               transcriptionResult = await base44.integrations.Core.InvokeLLM({
