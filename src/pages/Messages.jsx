@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, Suspense } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Search, Send, Paperclip, MoreVertical,
@@ -181,7 +182,7 @@ export default function Messages() {
     const file = e.target.files[0];
     if (!file || !selectedConversation) return;
     setIsSending(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const file_url = await uploadScopedFile("messages", file);
     const message = await base44.entities.Message.create({
       conversation_id: selectedConversation.id,
       project_id: selectedConversation.project_id || "direct",
@@ -240,7 +241,7 @@ export default function Messages() {
       const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
       stream.getTracks().forEach(t => t.stop());
       const file = new File([blob], 'voice-message.webm', { type: 'audio/webm' });
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("messages", file);
       const msg = await base44.entities.Message.create({
         conversation_id: selectedConversation.id,
         project_id: selectedConversation.project_id || "direct",
