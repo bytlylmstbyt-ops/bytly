@@ -1,10 +1,20 @@
-import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import React, { useState, useEffect } from "react";
+import { uploadScopedFile, resolveProjectFileUrl, getProjectFileName } from "@/lib/projectFileStorage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, Loader2, FileText, X, Paperclip } from "lucide-react";
 
 export default function CorrectedFilesUploader({ correctedFiles, onChange, disabled }) {
   const [uploading, setUploading] = useState(false);
+  const [resolvedUrls, setResolvedUrls] = useState({});
+
+  useEffect(() => {
+    let active = true;
+    Promise.all((correctedFiles || []).map(async (url) => [url, await resolveProjectFileUrl(url).catch(() => url)]))
+      .then(entries => {
+        if (active) setResolvedUrls(Object.fromEntries(entries));
+      });
+    return () => { active = false; };
+  }, [correctedFiles]);
 
   const handleUpload = async (e) => {
     const file = e.target.files[0];
@@ -12,7 +22,7 @@ export default function CorrectedFilesUploader({ correctedFiles, onChange, disab
     e.target.value = "";
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("technical-corrections", file);
       onChange([...(correctedFiles || []), file_url]);
     } catch (err) {
       console.error("Upload failed:", err);
@@ -30,7 +40,7 @@ export default function CorrectedFilesUploader({ correctedFiles, onChange, disab
 
   const getFileName = (url) => {
     try {
-      const decoded = decodeURIComponent(url.split("/").pop() || url);
+      const decoded = getProjectFileName(url);
       return decoded.length > 40 ? decoded.slice(-40) : decoded;
     } catch {
       return "ملف مرفق";
@@ -72,7 +82,7 @@ export default function CorrectedFilesUploader({ correctedFiles, onChange, disab
               <div key={i} className="flex items-center gap-2 p-2.5 rounded-lg bg-slate-50 border border-slate-100">
                 <FileText className="w-4 h-4 text-[#C9A66B] shrink-0" />
                 <a
-                  href={url}
+                  href={resolvedUrls[url] || url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 text-sm text-slate-700 hover:text-[#C9A66B] truncate"
