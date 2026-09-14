@@ -1,7 +1,0 @@
-{
-  "type": "tiktok",
-  "scopes": [
-    "user.info.basic",
-    "user.info.profile"
-  ]
-}
