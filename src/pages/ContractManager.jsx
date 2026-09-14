@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
@@ -215,7 +216,7 @@ function ContractDetail({ contract, project, onClose, onRefresh }) {
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const file_url = await uploadScopedFile("contracts", file);
     await base44.entities.Contract.update(contract.id, {
       contract_pdf_url: file_url,
       status: contract.status === "draft" ? "pending_signature" : contract.status,
