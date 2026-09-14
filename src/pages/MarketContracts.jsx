@@ -63,7 +63,7 @@ export default function MarketContractsPage() {
     let fileName = null;
 
     if (contractFile) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: contractFile });
+      const file_url = await uploadScopedFile("market-contracts", contractFile);
       fileUrl = file_url;
       fileName = contractFile.name;
     }
