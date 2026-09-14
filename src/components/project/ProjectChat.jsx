@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadProjectFile } from "@/lib/projectFileStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Paperclip, X, Download, Loader2, MessageSquare, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -117,7 +118,7 @@ export default function ProjectChat({ projectId, project, currentUser, engineerN
     setUploading(true);
     const uploaded = [];
     for (const file of files) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadProjectFile(projectId, file);
       uploaded.push({ name: file.name, url: file_url });
     }
     setPendingFiles(prev => [...prev, ...uploaded]);
