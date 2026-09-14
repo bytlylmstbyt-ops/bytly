@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -75,13 +75,13 @@ export default function AddProjectDialog({ open, onOpenChange, onCreated, onUpda
       setForm(EMPTY);
     }
     Promise.all([
-      base44.entities.Client.list().catch(() => []),
-      base44.entities.Engineer.filter({ status: "approved" }).catch(() => []),
-      base44.entities.EngineeringFirm.filter({ status: "approved" }).catch(() => []),
+      supabase.from("clients").select("*").order("created_at", { ascending: false }),
+      supabase.from("engineers").select("*").eq("status", "approved").order("created_at", { ascending: false }),
+      supabase.from("engineering_firms").select("*").eq("status", "approved").order("created_at", { ascending: false }),
     ]).then(([c, e, f]) => {
-      setClients(c);
-      setEngineers(e);
-      setFirms(f);
+      setClients(c.data || []);
+      setEngineers(e.data || []);
+      setFirms(f.data || []);
     });
   }, [open]);
 
@@ -118,8 +118,7 @@ export default function AddProjectDialog({ open, onOpenChange, onCreated, onUpda
 
     setSaving(true);
     try {
-      let actor = null;
-      try { actor = await base44.auth.me(); } catch {}
+      const { data: { user: actor } } = await supabase.auth.getUser();
 
       const payload = {
         ...form,
@@ -128,29 +127,29 @@ export default function AddProjectDialog({ open, onOpenChange, onCreated, onUpda
         is_direct_hire: form.is_direct_hire ?? false,
       };
 
+      const selectedClient = clients.find((c) => c.id === form.client_id);
+      const supabasePayload = {
+        ...payload,
+        client_id: selectedClient?.id || form.client_id,
+        client_user_id: selectedClient?.user_id || null,
+        assigned_engineer_id: form.assigned_engineer_id || null,
+        technical_consultant_id: form.technical_consultant_id || null,
+        created_by: actor?.id || null,
+      };
+      delete supabasePayload.id;
+      delete supabasePayload.created_at;
+      delete supabasePayload.updated_at;
       if (editing) {
-        const updated = await base44.entities.Project.update(project.id, payload);
-        await logProjectChange(project, payload, actor);
+        const { data: updated, error } = await supabase.from("projects").update(supabasePayload).eq("id", project.id).select().single();
+        if (error) throw error;
+        await logProjectChange(updated, supabasePayload, actor);
         toast({ title: "تم تحديث المشروع", description: "حُدّثت بيانات المشروع وحدّثت الإحصائيات تلقائياً." });
         onUpdated?.(updated);
         onCreated?.(updated);
         onOpenChange?.(false);
       } else {
-        const created = await base44.entities.Project.create(payload);
-        if (created?.id) {
-          await base44.entities.TaskActivityLog.create({
-            project_id: created.id,
-            task_id: created.id,
-            task_title: created.title || "",
-            actor_email: actor?.email || "",
-            actor_name: actor?.full_name || actor?.email || "",
-            action_type: "created",
-            field_name: "project",
-            old_value: "",
-            new_value: created.status || "open",
-            summary: `تم إنشاء المشروع «${created.title || ""}» بواسطة ${actor?.full_name || "الأدمن"}`,
-          }).catch(() => {});
-        }
+        const { data: created, error } = await supabase.from("projects").insert(supabasePayload).select().single();
+        if (error) throw error;
         toast({ title: "تم إنشاء المشروع", description: "أُضيف المشروع وحدّثت الإحصائيات تلقائياً." });
         onCreated?.(created);
         onOpenChange?.(false);
