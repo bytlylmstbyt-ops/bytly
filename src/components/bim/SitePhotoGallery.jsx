@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
+import { uploadScopedFile } from '@/lib/projectFileStorage';
 import { Button } from '@/components/ui/button';
 import {
     Camera, Upload, X, ZoomIn, ChevronLeft, ChevronRight,
@@ -95,7 +96,7 @@ function UploadForm({ bimModelId, elementDbId, elementName, onUploaded, onCancel
     const handleSubmit = async () => {
         if (!file) return;
         setUploading(true);
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        const file_url = await uploadScopedFile(`bim/site-photos/${projectId || "general"}`, file);
         const user = await base44.auth.me();
         await base44.entities.SitePhoto.create({
             bim_model_id: bimModelId,
