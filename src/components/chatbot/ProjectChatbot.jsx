@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Loader2, Bot, User, AlertTriangle, X, ChevronDown, ChevronUp, Paperclip } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,7 @@ export default function ProjectChatbot({ projectId, projectTitle }) {
     if (!files.length) return;
     setUploading(true);
     for (const file of files) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("chatbot/project", file);
       setAttachments(prev => [...prev, { name: file.name, url: file_url }]);
     }
     setUploading(false);
