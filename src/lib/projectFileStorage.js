@@ -3,6 +3,20 @@ import { supabase } from "@/lib/supabaseClient";
 const BUCKET = "project-files";
 const PREFIX = "supabase://project-files/";
 
+export async function uploadScopedFile(scope, file) {
+  if (!supabase) throw new Error("Supabase غير مهيأ.");
+  if (!scope || !file) throw new Error("بيانات الملف غير مكتملة.");
+
+  const safeName = (file.name || "file").replace(/[^\\w.\\-\\u0600-\\u06FF ]/g, "_");
+  const path = `${scope}/${crypto.randomUUID()}-${safeName}`;
+  const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
+    upsert: false,
+    contentType: file.type || undefined,
+  });
+  if (error) throw error;
+  return `${PREFIX}${path}`;
+}
+
 export async function uploadProjectFile(projectId, file) {
   if (!supabase) throw new Error("Supabase غير مهيأ.");
   if (!projectId || !file) throw new Error("بيانات الملف غير مكتملة.");
