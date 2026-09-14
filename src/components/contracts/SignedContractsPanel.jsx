@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile, resolveProjectFileUrl } from "@/lib/projectFileStorage";
 import { Upload, FileText, Download, Loader2, Scale, CheckCircle, Eye, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +20,7 @@ export default function SignedContractsPanel({ project, user, userEngineer, user
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
+  const [resolvedFileUrls, setResolvedFileUrls] = useState({});
   const [uploadData, setUploadData] = useState({
     contract_number: "",
     title: "",
@@ -57,7 +59,7 @@ export default function SignedContractsPanel({ project, user, userEngineer, user
     if (!uploadData.file) return;
     setIsUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: uploadData.file });
+      const file_url = await uploadScopedFile(`contracts/${project.id}`, uploadData.file);
 
       await base44.entities.Contract.create({
         project_id: project.id,
@@ -97,6 +99,13 @@ export default function SignedContractsPanel({ project, user, userEngineer, user
       alert("تعذّر حذف العقد.");
     }
   };
+
+  useEffect(() => {
+    let active = true;
+    Promise.all(contracts.filter(c => c.contract_pdf_url).map(async (c) => [c.id, await resolveProjectFileUrl(c.contract_pdf_url).catch(() => c.contract_pdf_url)]))
+      .then(entries => { if (active) setResolvedFileUrls(Object.fromEntries(entries)); });
+    return () => { active = false; };
+  }, [contracts]);
 
   const getStatusBadge = (status) => {
     const map = {
