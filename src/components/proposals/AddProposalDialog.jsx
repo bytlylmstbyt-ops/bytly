@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
@@ -117,7 +118,7 @@ export default function AddProposalDialog({ open, onOpenChange, onCreated, prese
     try {
       const urls = [];
       for (const file of files) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        const file_url = await uploadScopedFile("proposals", file);
         if (file_url) urls.push(file_url);
       }
       setForm((p) => ({ ...p, attachments: [...(p.attachments || []), ...urls] }));
