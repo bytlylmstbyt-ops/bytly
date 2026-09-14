@@ -106,25 +106,19 @@ legacyBase44.integrations.Core.UploadFile = async ({ file }) => {
   return { file_url: publicData.publicUrl };
 };
 
-// Registration is written to Supabase directly. Never leave the UI waiting indefinitely.
 const legacyEngineer = legacyBase44.entities.Engineer;
 legacyBase44.entities.Engineer = {
   ...legacyEngineer,
   create: async (payload) => {
     if (!supabase) throw new Error('Supabase غير مهيأ');
-
-    // getSession reads the locally persisted Supabase session and avoids a potentially
-    // hanging network call to auth.getUser() during the registration submit path.
     const { data: sessionData, error: sessionError } = await withHardTimeout(
       supabase.auth.getSession(),
       10000,
       'انتهت مهلة جلسة الدخول. أعد فتح الصفحة ثم حاول مرة أخرى.'
     );
     if (sessionError) throw sessionError;
-
     const authUser = sessionData?.session?.user;
     if (!authUser) throw new Error('يجب تسجيل الدخول أولاً');
-
     const row = {
       full_name: payload.full_name,
       email: authUser.email || payload.email || null,
@@ -152,16 +146,12 @@ legacyBase44.entities.Engineer = {
       user_id: authUser.id,
       source: 'supabase',
     };
-
     const { data, error } = await withHardTimeout(
       supabase.from('engineers').insert(row).select('*').single(),
       15000,
       'انتهت مهلة حفظ بيانات التسجيل. تحقق من اتصال Supabase وحاول مرة أخرى.'
     );
-    if (error) {
-      console.error('Supabase engineer registration failed:', error);
-      throw new Error(error.message || 'تعذر حفظ تسجيل المهندس');
-    }
+    if (error) throw new Error(error.message || 'تعذر حفظ تسجيل المهندس');
     return data;
   },
 };
@@ -209,5 +199,54 @@ legacyBase44.entities.PlatformSettings = {
     return data;
   },
 };
+
+// Registration-only function compatibility: these calls no longer reach Base44.
+// They are backed by Supabase so a Base44 outage/plan limit cannot block registration.
+const legacyFunctions = legacyBase44.functions;
+if (legacyFunctions?.invoke) {
+  const legacyInvoke = legacyFunctions.invoke.bind(legacyFunctions);
+  legacyFunctions.invoke = async (name, payload = {}) => {
+    const registrationFunctions = new Set([
+      'checkFreeRegistrationEligibility',
+      'notifyNewUserSignup',
+      'sendWelcomeEmail',
+      'notifyNewEngineer',
+      'notifyNewRegistration',
+    ]);
+    if (!registrationFunctions.has(name) || !supabase) return legacyInvoke(name, payload);
+
+    if (name === 'checkFreeRegistrationEligibility') {
+      const { count, error } = await supabase
+        .from('engineers')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_real', true);
+      if (error) throw error;
+      const registeredCount = count || 0;
+      return { data: { is_eligible: registeredCount < 100, remaining_free_slots: Math.max(0, 100 - registeredCount), registered_count: registeredCount } };
+    }
+
+    // In-app admin notification is persisted in Supabase. Email delivery is deliberately
+    // non-blocking here; the registration itself must never depend on an external mail provider.
+    if (['notifyNewUserSignup', 'notifyNewEngineer', 'notifyNewRegistration'].includes(name)) {
+      const data = payload?.data || payload || {};
+      const { error } = await supabase.from('notifications').insert({
+        user_id: PLATFORM_OWNER_ID,
+        type: 'new_registration',
+        title: 'تسجيل مستخدم جديد في بيتلي',
+        body: `${data.full_name || 'مستخدم جديد'} — ${data.email || ''} — ${data.user_type || payload?.role || 'user'}`,
+        entity_type: 'registration',
+        entity_id: data.id || data.engineer_id || null,
+      });
+      if (error) console.warn('Admin registration notification could not be saved:', error.message);
+      return { data: { ok: true } };
+    }
+
+    // Welcome email is intentionally non-blocking until the dedicated Supabase email
+    // provider is configured; it must not prevent account creation.
+    if (name === 'sendWelcomeEmail') return { data: { ok: true, queued: false } };
+
+    return { data: { ok: true } };
+  };
+}
 
 export const base44 = legacyBase44;
