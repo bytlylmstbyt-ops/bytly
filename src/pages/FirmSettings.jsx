@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -34,9 +35,9 @@ export default function FirmSettings() {
 
     setUploading({ ...uploading, stamp: true });
     try {
-      const { data } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("firm-settings/stamps", file);
       await base44.entities.EngineeringFirm.update(firm.id, {
-        official_stamp: data.file_url
+        official_stamp: file_url
       });
       toast.success("تم رفع الختم الرسمي بنجاح");
       await loadFirm();
@@ -53,9 +54,9 @@ export default function FirmSettings() {
 
     setUploading({ ...uploading, signature: true });
     try {
-      const { data } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("firm-settings/signatures", file);
       await base44.entities.EngineeringFirm.update(firm.id, {
-        authorized_signature: data.file_url
+        authorized_signature: file_url
       });
       toast.success("تم رفع التوقيع الرسمي بنجاح");
       await loadFirm();
