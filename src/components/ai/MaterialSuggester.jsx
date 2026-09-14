@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import {
   Layers, Sparkles, Loader2, Upload, X, ExternalLink,
   MapPin, ShoppingBag, Star, ChevronDown, ChevronUp, Package
@@ -188,7 +189,7 @@ export default function MaterialSuggester({ designImageUrl = null }) {
     const reader = new FileReader();
     reader.onload = (ev) => setUploadedPreview(ev.target.result);
     reader.readAsDataURL(file);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const file_url = await uploadScopedFile("ai/material-suggester", file);
     setUploadedUrl(file_url);
   };
 
