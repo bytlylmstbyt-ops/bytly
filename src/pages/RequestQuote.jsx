@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload, X, FileText, CheckCircle, ArrowRight, ArrowLeft,
@@ -100,7 +101,7 @@ export default function RequestQuote() {
     const names = [...form.file_names];
 
     for (const file of valid) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("quotes", file);
       urls.push(file_url);
       names.push(file.name);
     }
