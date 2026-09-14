@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion } from "framer-motion";
 import { 
   Briefcase, MapPin, Calendar, DollarSign, 
@@ -94,7 +95,7 @@ export default function CreateProject() {
     
     const uploadedUrls = [];
     for (const file of files) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("project-drafts", file);
       uploadedUrls.push(file_url);
     }
     
