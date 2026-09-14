@@ -112,19 +112,14 @@ legacyBase44.entities.Engineer = {
   ...legacyEngineer,
   create: async (payload) => {
     if (!supabase) throw new Error('Supabase غير مهيأ');
-
-    // getSession reads the locally persisted Supabase session and avoids a potentially
-    // hanging network call to auth.getUser() during the registration submit path.
     const { data: sessionData, error: sessionError } = await withHardTimeout(
       supabase.auth.getSession(),
       10000,
       'انتهت مهلة جلسة الدخول. أعد فتح الصفحة ثم حاول مرة أخرى.'
     );
     if (sessionError) throw sessionError;
-
     const authUser = sessionData?.session?.user;
     if (!authUser) throw new Error('يجب تسجيل الدخول أولاً');
-
     const row = {
       full_name: payload.full_name,
       email: authUser.email || payload.email || null,
@@ -152,7 +147,6 @@ legacyBase44.entities.Engineer = {
       user_id: authUser.id,
       source: 'supabase',
     };
-
     const { data, error } = await withHardTimeout(
       supabase.from('engineers').insert(row).select('*').single(),
       15000,
@@ -163,6 +157,86 @@ legacyBase44.entities.Engineer = {
       throw new Error(error.message || 'تعذر حفظ تسجيل المهندس');
     }
     return data;
+  },
+};
+
+// Project compatibility bridge: existing pages can keep their UI contract while
+// project reads/writes are executed against Supabase during the migration.
+const legacyProject = legacyBase44.entities.Project;
+legacyBase44.entities.Project = {
+  ...legacyProject,
+  filter: async (filters = {}) => {
+    if (!supabase) return legacyProject.filter(filters);
+    let query = supabase.from('projects').select('*');
+    for (const [key, value] of Object.entries(filters || {})) {
+      if (value === null) query = query.is(key, null);
+      else if (Array.isArray(value)) query = query.in(key, value);
+      else query = query.eq(key, value);
+    }
+    const { data, error } = await withHardTimeout(query, 10000, 'انتهت مهلة قراءة المشروع');
+    if (error) throw new Error(error.message || 'تعذر قراءة المشروع');
+    return data || [];
+  },
+  list: async () => {
+    if (!supabase) return legacyProject.list();
+    const { data, error } = await withHardTimeout(
+      supabase.from('projects').select('*').order('created_at', { ascending: false }),
+      10000,
+      'انتهت مهلة قراءة المشاريع'
+    );
+    if (error) throw new Error(error.message || 'تعذر قراءة المشاريع');
+    return data || [];
+  },
+  update: async (id, payload) => {
+    if (!supabase) return legacyProject.update(id, payload);
+    const { data, error } = await withHardTimeout(
+      supabase.from('projects').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', id).select('*').single(),
+      10000,
+      'انتهت مهلة تحديث المشروع'
+    );
+    if (error) throw new Error(error.message || 'تعذر تحديث المشروع');
+    return data;
+  },
+  create: async (payload) => {
+    if (!supabase) return legacyProject.create(payload);
+    const row = { ...payload };
+    delete row.id;
+    delete row.created_date;
+    const { data, error } = await withHardTimeout(
+      supabase.from('projects').insert(row).select('*').single(),
+      10000,
+      'انتهت مهلة إنشاء المشروع'
+    );
+    if (error) throw new Error(error.message || 'تعذر إنشاء المشروع');
+    return data;
+  },
+  delete: async (id) => {
+    if (!supabase) return legacyProject.delete(id);
+    const { error } = await withHardTimeout(
+      supabase.from('projects').delete().eq('id', id),
+      10000,
+      'انتهت مهلة حذف المشروع'
+    );
+    if (error) throw new Error(error.message || 'تعذر حذف المشروع');
+    return true;
+  },
+};
+
+// Client compatibility bridge for project workspace/admin flows.
+const legacyClient = legacyBase44.entities.Client;
+legacyBase44.entities.Client = {
+  ...legacyClient,
+  filter: async (filters = {}) => {
+    if (!supabase) return legacyClient.filter(filters);
+    let query = supabase.from('clients').select('*');
+    for (const [key, value] of Object.entries(filters || {})) {
+      if (value === null) query = query.is(key, null);
+      else if (Array.isArray(value)) query = query.in(key, value);
+      else query = query.eq(key, value);
+    }
+    const { data, error } = await withHardTimeout(query, 10000, 'انتهت مهلة قراءة العميل');
+    if (error) throw new Error(error.message || 'تعذر قراءة العميل');
+    return data || [];
   },
 };
 
