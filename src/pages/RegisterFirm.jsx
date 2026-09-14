@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { saveRegistration } from "@/lib/registrationService";
 import EmailConfirmationPending from "@/components/registration/EmailConfirmationPending";
 import { useNavigate } from "react-router-dom";
@@ -62,7 +63,7 @@ export default function RegisterFirm() {
 
     setUploadingLogo(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("registration/firms", file);
       setFormData({ ...formData, company_logo: file_url });
       toast.success("تم رفع الشعار بنجاح");
     } catch (error) {
@@ -78,7 +79,7 @@ export default function RegisterFirm() {
 
     setUploadingCover(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("registration/firms", file);
       setFormData({ ...formData, cover_image: file_url });
       toast.success("تم رفع صورة الغلاف بنجاح");
     } catch (error) {
@@ -96,7 +97,7 @@ export default function RegisterFirm() {
     try {
       const uploadedDocs = [];
       for (const file of files) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        const file_url = await uploadScopedFile("registration/firms", file);
         uploadedDocs.push(file_url);
       }
       setFormData({ 
