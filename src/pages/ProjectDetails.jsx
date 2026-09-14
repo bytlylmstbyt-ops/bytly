@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
+import { resolveProjectFileUrl } from "@/lib/projectFileStorage";
 import { motion } from "framer-motion";
 import { Calendar, Users,
   FileText, MessageSquare, Send, Loader2, CheckCircle,
@@ -177,8 +179,49 @@ export default function ProjectDetails() {
     setIsExportingToDrive(true);
     setDriveExportResult(null);
     try {
-      const response = await base44.functions.invoke("exportProjectFilesToDrive", { project_id: projectId });
-      setDriveExportResult(response.data);
+      const { data: sessionData } = await supabase.auth.getSession();
+      const session = sessionData?.session;
+      const accessToken = session?.provider_token;
+      if (!accessToken) throw new Error("يجب ربط Google Drive من مركز الإدارة أولاً ثم إعادة المحاولة.");
+
+      const sourceFiles = (project.attachments || []).filter(Boolean);
+      if (sourceFiles.length === 0) throw new Error("لا توجد ملفات للمشروع لتصديرها.");
+
+      let uploadedCount = 0;
+      const failedFiles = [];
+      const metadata = { name: `Bytly - ${project.title || projectId}`, mimeType: "application/vnd.google-apps.folder" };
+      const folderResponse = await fetch("https://www.googleapis.com/drive/v3/files?fields=id,webViewLink", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify(metadata),
+      });
+      if (!folderResponse.ok) throw new Error("تعذر إنشاء مجلد المشروع في Google Drive.");
+      const folder = await folderResponse.json();
+
+      for (const source of sourceFiles) {
+        try {
+          const resolvedUrl = await resolveProjectFileUrl(source);
+          const fileResponse = await fetch(resolvedUrl);
+          if (!fileResponse.ok) throw new Error(`تعذر قراءة الملف (${fileResponse.status})`);
+          const blob = await fileResponse.blob();
+          const fileName = decodeURIComponent(source.split("/").pop() || "project-file").replace(/^\\w+-/, "");
+          const body = new FormData();
+          body.append("metadata", new Blob([JSON.stringify({ name: fileName, parents: [folder.id] })], { type: "application/json" }));
+          body.append("file", blob, fileName);
+          const uploadResponse = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${accessToken}` },
+            body,
+          });
+          if (!uploadResponse.ok) throw new Error(`Drive upload failed (${uploadResponse.status})`);
+          uploadedCount += 1;
+        } catch (fileError) {
+          failedFiles.push(source);
+          console.warn("Drive export skipped file:", fileError);
+        }
+      }
+
+      setDriveExportResult({ success: uploadedCount > 0, uploaded_count: uploadedCount, failed_count: failedFiles.length, folder_url: folder.webViewLink || `https://drive.google.com/drive/folders/${folder.id}` });
     } catch (error) {
       console.error("Error exporting to Drive:", error);
       setDriveExportResult({ error: error.message || "حدث خطأ أثناء التصدير" });
