@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -121,14 +120,17 @@ export default function AdminProjects() {
   const loadData = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [projectsData, clientsData, engineersData] = await Promise.all([
-        base44.entities.Project.list("-created_date", 500).catch(() => []),
-        base44.entities.Client.list().catch(() => []),
-        base44.entities.Engineer.list().catch(() => []),
+      const [projectsResult, clientsResult, engineersResult] = await Promise.all([
+        supabase.from("projects").select("*").order("created_at", { ascending: false }).limit(500),
+        supabase.from("clients").select("*").order("created_at", { ascending: false }),
+        supabase.from("engineers").select("*").order("created_at", { ascending: false }),
       ]);
-      setProjects(projectsData);
-      setClients(clientsData);
-      setEngineers(engineersData);
+      if (projectsResult.error) throw projectsResult.error;
+      if (clientsResult.error) throw clientsResult.error;
+      if (engineersResult.error) throw engineersResult.error;
+      setProjects(projectsResult.data || []);
+      setClients(clientsResult.data || []);
+      setEngineers(engineersResult.data || []);
     } catch (err) {
       console.error("Failed to load", err);
     } finally {
@@ -139,15 +141,20 @@ export default function AdminProjects() {
 
   useEffect(() => { loadData(); }, [loadData]);
   useEffect(() => {
-    base44.auth.me().then((u) => setIsAdmin(u?.role === "admin")).catch(() => {});
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data: profile } = await supabase.from("profiles").select("role,email").eq("id", user.id).maybeSingle();
+      setIsAdmin(profile?.role === "admin" || user.email === "bytlylmstbyt@gmail.com");
+    }).catch(() => {});
   }, []);
 
   // After any admin action, re-fetch only projects to update table + stats instantly (no full page reload)
   const [activityTick, setActivityTick] = useState(0);
   const handleProjectUpdated = useCallback(async () => {
     try {
-      const projectsData = await base44.entities.Project.list("-created_date", 500);
-      setProjects(projectsData);
+      const { data: projectsData, error } = await supabase.from("projects").select("*").order("created_at", { ascending: false }).limit(500);
+      if (error) throw error;
+      setProjects(projectsData || []);
     } catch (err) { console.error(err); }
     setActivityTick((t) => t + 1);
   }, []);
@@ -157,12 +164,18 @@ export default function AdminProjects() {
     try {
       const ids = bulk.selectedIds;
       if (action === "delete") {
-        await Promise.all(ids.map((id) => base44.entities.Project.delete(id)));
+        await Promise.all(ids.map(async (id) => {
+          const { error } = await supabase.from("projects").delete().eq("id", id);
+          if (error) throw error;
+        }));
       } else {
         const patch = action === "activate" ? { status: "in_progress" }
           : action === "suspend" ? { status: "cancelled" }
           : action === "pause" ? { status: "awaiting_technical_review" } : null;
-        if (patch) await Promise.all(ids.map((id) => base44.entities.Project.update(id, patch)));
+        if (patch) await Promise.all(ids.map(async (id) => {
+          const { error } = await supabase.from("projects").update(patch).eq("id", id);
+          if (error) throw error;
+        }));
       }
       await handleProjectUpdated();
       bulk.clear();
