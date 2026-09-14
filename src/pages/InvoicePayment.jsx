@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion } from "framer-motion";
 import { 
   FileText, Download, CheckCircle, Clock,
@@ -41,7 +42,7 @@ export default function InvoicePayment() {
     if (!file) return;
 
     setIsLoading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const file_url = await uploadScopedFile("payment-proofs", file);
     setPaymentProof(file_url);
     setIsLoading(false);
   };
