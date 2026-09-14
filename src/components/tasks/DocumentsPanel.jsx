@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile, resolveProjectFileUrl } from "@/lib/projectFileStorage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -61,7 +62,7 @@ function UploadDocDialog({ open, onClose, onUploaded, linkedTo, linkedId }) {
     setUploading(true);
     try {
       const user = await base44.auth.me();
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile(`documents/${linkedTo || "general"}/${linkedId || "unlinked"}`, file);
       await base44.entities.Document.create({
         name,
         file_url,
