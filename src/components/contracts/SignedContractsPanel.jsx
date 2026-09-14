@@ -258,7 +258,7 @@ export default function SignedContractsPanel({ project, user, userEngineer, user
                     {contract.contract_pdf_url && (
                       <div className="flex items-center gap-2 mt-2">
                         <a
-                          href={contract.contract_pdf_url}
+                          href={resolvedFileUrls[contract.id] || contract.contract_pdf_url}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs text-[#C9A66B] hover:underline"
@@ -267,7 +267,7 @@ export default function SignedContractsPanel({ project, user, userEngineer, user
                           عرض
                         </a>
                         <a
-                          href={contract.contract_pdf_url}
+                          href={resolvedFileUrls[contract.id] || contract.contract_pdf_url}
                           download
                           className="inline-flex items-center gap-1 text-xs text-blue-500 hover:underline"
                         >
