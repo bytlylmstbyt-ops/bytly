@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { saveRegistration } from "@/lib/registrationService";
 import EmailConfirmationPending from "@/components/registration/EmailConfirmationPending";
 import { useNavigate } from "react-router-dom";
@@ -71,7 +72,7 @@ export default function RegisterSupplier() {
     if (!file) return;
     setUploadingLogo(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("registration/suppliers", file);
       setFormData({ ...formData, profile_image: file_url });
       toast.success("تم رفع الشعار بنجاح");
     } catch (error) {
@@ -86,7 +87,7 @@ export default function RegisterSupplier() {
     if (!file) return;
     setUploadingCover(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("registration/suppliers", file);
       setFormData({ ...formData, cover_image: file_url });
       toast.success("تم رفع صورة الغلاف بنجاح");
     } catch (error) {
@@ -101,7 +102,7 @@ export default function RegisterSupplier() {
     if (!file) return;
     setUploadingLicense(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("registration/suppliers", file);
       setFormData({ ...formData, license_file: file_url });
       toast.success("تم رفع رخصة العمل بنجاح");
     } catch (error) {
@@ -116,7 +117,7 @@ export default function RegisterSupplier() {
     if (!file) return;
     setUploadingReg(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("registration/suppliers", file);
       setFormData({ ...formData, registration_file: file_url });
       toast.success("تم رفع السجل التجاري بنجاح");
     } catch (error) {
@@ -133,7 +134,7 @@ export default function RegisterSupplier() {
     try {
       const uploadedDocs = [];
       for (const file of files) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        const file_url = await uploadScopedFile("registration/suppliers", file);
         uploadedDocs.push(file_url);
       }
       setFormData({
