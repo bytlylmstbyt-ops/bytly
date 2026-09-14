@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, X, Minimize2, Maximize2, Loader2, Sparkles, Bot, User, RotateCcw, Mic, Square } from "lucide-react";
 
@@ -118,7 +119,7 @@ export default function BytlyAdvisorChat() {
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         const file = new File([blob], `voice_${Date.now()}.webm`, { type: "audio/webm" });
         try {
-          const { file_url } = await base44.integrations.Core.UploadFile({ file });
+          const file_url = await uploadScopedFile("chatbot/advisor", file);
           const text = await base44.integrations.Core.TranscribeAudio({ audio_url: file_url });
           if (text) setInputValue(text);
         } catch { /* silent */ }
