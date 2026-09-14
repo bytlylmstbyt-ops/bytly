@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Send, Paperclip, X, Video, Phone } from "lucide-react";
@@ -20,7 +21,7 @@ export default function ChatInput({ onMessageSend, onVideoCall, onVoiceCall, dis
     setUploading(true);
     try {
       for (const file of files) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        const file_url = await uploadScopedFile("chat", file);
         setAttachments(prev => [
           ...prev,
           {
@@ -61,7 +62,7 @@ export default function ChatInput({ onMessageSend, onVideoCall, onVoiceCall, dis
   const handleVoiceSend = async ({ audioFile, duration }) => {
     setUploading(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: audioFile });
+      const file_url = await uploadScopedFile("chat/audio", audioFile);
       
       await onMessageSend({
         content: "🎤 رسالة صوتية",
