@@ -5,6 +5,7 @@
  */
 import { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { uploadScopedFile } from '@/lib/projectFileStorage';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -130,7 +131,7 @@ export default function PermitApplication() {
     const file = e.target.files[0];
     if (!file) return;
     setUploadingFiles(p => ({ ...p, [key]: true }));
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const file_url = await uploadScopedFile("permits", file);
     if (key === 'drawings_files') {
       setForm(f => ({ ...f, drawings_files: [...f.drawings_files, file_url] }));
     } else {
