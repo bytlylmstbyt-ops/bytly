@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion } from "framer-motion";
 import {
   MapPin, DollarSign, FileCheck,
@@ -37,7 +38,7 @@ export default function InvestorHub() {
     if (!file) return;
     try {
       setUploading(true);
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("investor", file);
       toast.success("تم رفع المستند بنجاح");
       loadInvestorData();
     } catch (err) {
