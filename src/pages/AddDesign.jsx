@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion } from "framer-motion";
 import { 
   ShoppingCart, Upload, X, Loader2, CheckCircle, 
@@ -87,7 +88,7 @@ export default function AddDesign() {
     
     const uploadedUrls = [];
     for (const file of files) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("ready-designs", file);
       uploadedUrls.push(file_url);
     }
     
