@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
   User, Upload, X, Loader2, CheckCircle, Mail, Phone, 
@@ -52,8 +52,11 @@ export default function AddEngineer() {
     if (!file) return;
 
     setIsUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    setFormData(prev => ({ ...prev, [field]: file_url }));
+    const path = `engineer-admin/${crypto.randomUUID()}-${(file.name || "file").replace(/[^\w.\-\u0600-\u06FF ]/g, "_")}`;
+    const { error } = await supabase.storage.from("registration-documents").upload(path, file, { upsert: false, contentType: file.type || undefined });
+    if (error) throw error;
+    const { data } = supabase.storage.from("registration-documents").getPublicUrl(path);
+    setFormData(prev => ({ ...prev, [field]: data.publicUrl }));
     setIsUploading(false);
   };
 
@@ -61,10 +64,12 @@ export default function AddEngineer() {
     e.preventDefault();
     setIsLoading(true);
     
-    await base44.entities.Engineer.create({
-      ...formData,
-      years_experience: parseInt(formData.years_experience)
-    });
+    const { data: created, error } = await supabase
+      .from("engineers")
+      .insert({ ...formData, years_experience: parseInt(formData.years_experience) || 0 })
+      .select()
+      .single();
+    if (error) throw error;
 
     setIsLoading(false);
     navigate(createPageUrl("Engineers"));
