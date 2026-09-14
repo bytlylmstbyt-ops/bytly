@@ -18,7 +18,6 @@ export default function ClientFormModal({ open, onOpenChange, onSaved, editingCl
     country: editingClient?.country || "السعودية",
     client_type: editingClient?.client_type || "individual",
     company_name: editingClient?.company_name || "",
-    description: editingClient?.description || "",
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -32,7 +31,6 @@ export default function ClientFormModal({ open, onOpenChange, onSaved, editingCl
       country: editingClient?.country || "السعودية",
       client_type: editingClient?.client_type || "individual",
       company_name: editingClient?.company_name || "",
-      description: editingClient?.description || "",
     });
   }, [editingClient, open]);
 
@@ -102,10 +100,6 @@ export default function ClientFormModal({ open, onOpenChange, onSaved, editingCl
               <Label>الشركة (للمستثمرين)</Label>
               <Input value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} />
             </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>ملاحظات</Label>
-            <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} />
           </div>
         </div>
         <DialogFooter>
