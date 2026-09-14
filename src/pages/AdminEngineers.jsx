@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,14 +37,18 @@ export default function AdminEngineersPage() {
 
   const loadData = async () => {
     try {
-      const user = await base44.auth.me();
-      if (user.role !== "admin") {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw authError || new Error("انتهت جلسة الدخول");
+      const { data: profile, error: profileError } = await supabase.from("profiles").select("role,email").eq("id", user.id).maybeSingle();
+      if (profileError) throw profileError;
+      if (profile?.role !== "admin" && (user.email || "").toLowerCase() !== "bytlylmstbyt@gmail.com") {
         alert("غير مصرح لك بالوصول لهذه الصفحة");
         return;
       }
 
-      const engineersData = await base44.entities.Engineer.list("-created_date");
-      setEngineers(engineersData);
+      const { data: engineersData, error: engineersError } = await supabase.from("engineers").select("*").order("created_at", { ascending: false });
+      if (engineersError) throw engineersError;
+      setEngineers(engineersData || []);
     } catch (error) {
       console.error("Error loading data:", error);
       alert("حدث خطأ في تحميل البيانات");
@@ -69,7 +73,8 @@ export default function AdminEngineersPage() {
 
   const saveEdit = async () => {
     try {
-      await base44.entities.Engineer.update(editingEngineer.id, editFormData);
+      const { error } = await supabase.from("engineers").update(editFormData).eq("id", editingEngineer.id);
+      if (error) throw error;
       await loadData();
       setEditingEngineer(null);
       alert("تم تحديث البيانات بنجاح");
@@ -80,7 +85,8 @@ export default function AdminEngineersPage() {
 
   const updateStatus = async (engineer, newStatus) => {
     try {
-      await base44.entities.Engineer.update(engineer.id, { status: newStatus });
+      const { error } = await supabase.from("engineers").update({ status: newStatus, updated_at: new Date().toISOString() }).eq("id", engineer.id);
+      if (error) throw error;
       await loadData();
       alert(`تم ${newStatus === 'approved' ? 'قبول' : newStatus === 'rejected' ? 'رفض' : 'تحديث'} المهندس`);
     } catch (error) {
@@ -90,20 +96,25 @@ export default function AdminEngineersPage() {
 
   const toggleVerification = async (engineer) => {
     try {
-      const user = await base44.auth.me();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw authError || new Error("انتهت جلسة الدخول");
       if (engineer.is_verified) {
-        await base44.entities.Engineer.update(engineer.id, { 
+        const { error } = await supabase.from("engineers").update({ 
           is_verified: false,
           certified_at: null,
-          certified_by: null
-        });
+          certified_by: null,
+          updated_at: new Date().toISOString()
+        }).eq("id", engineer.id);
+        if (error) throw error;
       } else {
-        await base44.entities.Engineer.update(engineer.id, { 
+        const { error } = await supabase.from("engineers").update({ 
           is_verified: true,
           certified_at: new Date().toISOString(),
           certified_by: user.email,
-          status: "approved"
-        });
+          status: "approved",
+          updated_at: new Date().toISOString()
+        }).eq("id", engineer.id);
+        if (error) throw error;
       }
       await loadData();
     } catch (error) {
@@ -114,21 +125,26 @@ export default function AdminEngineersPage() {
   const handleCertificationReview = async (engineer, approved) => {
     setSubmittingReview(true);
     try {
-      const user = await base44.auth.me();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw authError || new Error("انتهت جلسة الدخول");
       if (approved) {
-        await base44.entities.Engineer.update(engineer.id, {
+        const { error } = await supabase.from("engineers").update({
           is_verified: true,
           certified_at: new Date().toISOString(),
           certified_by: user.email,
-          status: "approved"
-        });
+          status: "approved",
+          updated_at: new Date().toISOString()
+        }).eq("id", engineer.id);
+        if (error) throw error;
       } else {
-        await base44.entities.Engineer.update(engineer.id, {
+        const { error } = await supabase.from("engineers").update({
           is_verified: false,
           status: "rejected",
           certified_at: null,
-          certified_by: user.email
-        });
+          certified_by: user.email,
+          updated_at: new Date().toISOString()
+        }).eq("id", engineer.id);
+        if (error) throw error;
       }
 
       // Send notification to the engineer (in-app + email)
