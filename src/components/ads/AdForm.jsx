@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import {
   Loader2, Upload, Image as ImageIcon, Play, Shield,
   CheckCircle, X
@@ -56,7 +57,7 @@ export default function AdForm({ editingAd, onSave, onCancel }) {
     if (!file) return;
     setUploading(prev => ({ ...prev, [key]: true }));
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("ads", file);
       setForm(prev => ({ ...prev, [field]: file_url }));
     } finally {
       setUploading(prev => ({ ...prev, [key]: false }));
