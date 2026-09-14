@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
 } from "@/components/ui/dialog";
@@ -50,11 +50,16 @@ export default function InteractionFormModal({ open, onOpenChange, onSaved, clie
     setSaving(true);
     setError("");
     try {
-      await base44.entities.ClientInteraction.create({
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase.from("client_interactions").insert({
         ...form,
+        follow_up_date: form.follow_up_date || null,
         interaction_date: new Date().toISOString(),
         status: "open",
+        created_by: user?.id || null,
+        recorded_by: user?.email || null,
       });
+      if (error) throw error;
       onSaved();
       onOpenChange(false);
     } catch (err) {
