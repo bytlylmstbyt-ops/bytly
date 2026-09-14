@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Mic, MicOff, Bot, User, Loader2, X, Sparkles, Wand2, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import AIImageGallery from "@/components/ai/AIImageGallery";
 import { buildImagePrompt, shouldGenerateImage, SMART_COMMANDS } from "@/components/ai/imagePromptBuilder";
 
@@ -174,7 +175,7 @@ ${historyForPrompt}
     const reader = new FileReader();
     reader.onload = (ev) => setUploadedImage(ev.target.result);
     reader.readAsDataURL(file);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const file_url = await uploadScopedFile("ai-chat", file);
     setImageUrl(file_url);
   };
 
@@ -191,7 +192,7 @@ ${historyForPrompt}
     mediaRecorder.ondataavailable = e => audioChunksRef.current.push(e.data);
     mediaRecorder.onstop = async () => {
       const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: blob });
+      const file_url = await uploadScopedFile("ai-chat/audio", blob);
       const transcript = await base44.integrations.Core.TranscribeAudio({ audio_url: file_url });
       setInput(transcript);
     };
