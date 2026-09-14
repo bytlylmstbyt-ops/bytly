@@ -4,66 +4,30 @@ import { supabase } from '@/lib/supabaseClient';
 
 const { appId, token } = appParams;
 const PLATFORM_OWNER_EMAIL = 'bytlylmstbyt@gmail.com';
-const PLATFORM_OWNER_ID = '2d1b547d-ba5d-4cdc-a39c-cfb60d2f52bc';
-
-const base44BackendUrl =
-  import.meta.env.VITE_BASE44_APP_BASE_URL || 'https://bytly.base44.app';
-
-const base44Config = { appId, token, requiresAuth: false, serverUrl: base44BackendUrl, appBaseUrl: base44BackendUrl };
-const legacyBase44 = createClient(base44Config);
+const PLATFORM_OWNER_ID = '2d1b547d-5ba5-4cdc-a39c-cfb60d2f52bc';
+const base44BackendUrl = import.meta.env.VITE_BASE44_APP_BASE_URL || 'https://bytly.base44.app';
+const legacyBase44 = createClient({ appId, token, requiresAuth: false, serverUrl: base44BackendUrl, appBaseUrl: base44BackendUrl });
 const legacyAuthMe = legacyBase44.auth.me.bind(legacyBase44.auth);
-
-const withHardTimeout = (promise, timeoutMs, message = 'انتهت مهلة الاتصال بخدمة التسجيل') =>
-  new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error(message)), timeoutMs);
-    Promise.resolve(promise).then((value) => {
-      clearTimeout(timer);
-      resolve(value);
-    }, (error) => {
-      clearTimeout(timer);
-      reject(error);
-    });
-  });
+const withHardTimeout = (promise, timeoutMs, message = 'انتهت مهلة الاتصال بالخدمة') => new Promise((resolve, reject) => {
+  const timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+  Promise.resolve(promise).then(v => { clearTimeout(timer); resolve(v); }, e => { clearTimeout(timer); reject(e); });
+});
 
 legacyBase44.auth.me = async () => {
   try {
     if (supabase) {
       let sessionUser = null;
-      try {
-        const { data } = await withHardTimeout(supabase.auth.getUser(), 10000, 'انتهت مهلة التحقق من جلسة الدخول');
-        sessionUser = data?.user || null;
-      } catch {}
-      if (!sessionUser) {
-        try {
-          const { data } = await withHardTimeout(supabase.auth.getSession(), 10000, 'انتهت مهلة قراءة جلسة الدخول');
-          sessionUser = data?.session?.user || null;
-        } catch {}
-      }
+      try { sessionUser = (await withHardTimeout(supabase.auth.getUser(), 10000)).data?.user || null; } catch {}
+      if (!sessionUser) { try { sessionUser = (await withHardTimeout(supabase.auth.getSession(), 10000)).data?.session?.user || null; } catch {} }
       if (sessionUser) {
         const email = (sessionUser.email || '').trim().toLowerCase();
         const isOwner = sessionUser.id === PLATFORM_OWNER_ID || email === PLATFORM_OWNER_EMAIL;
         let profile = null;
-        try {
-          const { data } = await withHardTimeout(
-            supabase.from('profiles').select('role,email,full_name').eq('user_id', sessionUser.id).maybeSingle(),
-            10000,
-            'انتهت مهلة قراءة الملف الشخصي'
-          );
-          profile = data || null;
-        } catch {}
-        return {
-          id: sessionUser.id,
-          user_id: sessionUser.id,
-          email: sessionUser.email,
-          full_name: profile?.full_name || sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || '',
-          role: isOwner || profile?.role === 'admin' ? 'admin' : (profile?.role || 'user'),
-          profile,
-        };
+        try { profile = (await withHardTimeout(supabase.from('profiles').select('role,email,full_name').eq('user_id', sessionUser.id).maybeSingle(), 10000)).data || null; } catch {}
+        return { id: sessionUser.id, user_id: sessionUser.id, email: sessionUser.email, full_name: profile?.full_name || sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || '', role: isOwner || profile?.role === 'admin' ? 'admin' : (profile?.role || 'user'), profile };
       }
     }
-  } catch (error) {
-    console.warn('Supabase auth bridge failed; falling back to legacy auth.', error);
-  }
+  } catch (error) { console.warn('Supabase auth bridge failed; falling back to legacy auth.', error); }
   return legacyAuthMe();
 };
 
@@ -71,217 +35,96 @@ try {
   const legacyAgentConversation = legacyBase44.entities.AIAgentConversation;
   if (legacyAgentConversation?.filter) {
     const legacyAgentFilter = legacyAgentConversation.filter.bind(legacyAgentConversation);
-    legacyAgentConversation.filter = async (...args) => {
-      try {
-        return await legacyAgentFilter(...args);
-      } catch (error) {
-        console.warn('AIAgentConversation history unavailable during migration:', error?.message || error);
-        return [];
-      }
-    };
+    legacyAgentConversation.filter = async (...args) => { try { return await legacyAgentFilter(...args); } catch { return []; } };
   }
-} catch (error) {
-  console.warn('Could not install AIAgentConversation compatibility guard:', error);
-}
+} catch {}
 
 legacyBase44.integrations.Core.UploadFile = async ({ file }) => {
   if (!supabase) throw new Error('Supabase غير مهيأ');
   if (!file) throw new Error('لم يتم اختيار ملف');
   const safeName = String(file.name || 'asset').replace(/[^a-zA-Z0-9._-]/g, '_');
   const path = `platform/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`;
-  const { data, error } = await withHardTimeout(
-    supabase.storage.from('platform-assets').upload(path, file, {
-      upsert: false,
-      contentType: file.type || 'application/octet-stream',
-      cacheControl: '3600',
-    }),
-    120000,
-    'انتهت مهلة رفع الملف'
-  );
-  if (error) {
-    console.error('Supabase platform asset upload failed:', error);
-    throw new Error(`فشل رفع الملف إلى التخزين: ${error.message || 'خطأ غير معروف'}`);
-  }
-  const { data: publicData } = supabase.storage.from('platform-assets').getPublicUrl(data?.path || path);
-  return { file_url: publicData.publicUrl };
+  const { data, error } = await withHardTimeout(supabase.storage.from('platform-assets').upload(path, file, { upsert: false, contentType: file.type || 'application/octet-stream', cacheControl: '3600' }), 120000, 'انتهت مهلة رفع الملف');
+  if (error) throw new Error(`فشل رفع الملف إلى التخزين: ${error.message || 'خطأ غير معروف'}`);
+  return { file_url: supabase.storage.from('platform-assets').getPublicUrl(data?.path || path).data.publicUrl };
 };
 
-// Registration is written to Supabase directly. Never leave the UI waiting indefinitely.
-const legacyEngineer = legacyBase44.entities.Engineer;
-legacyBase44.entities.Engineer = {
-  ...legacyEngineer,
-  create: async (payload) => {
-    if (!supabase) throw new Error('Supabase غير مهيأ');
-    const { data: sessionData, error: sessionError } = await withHardTimeout(
-      supabase.auth.getSession(),
-      10000,
-      'انتهت مهلة جلسة الدخول. أعد فتح الصفحة ثم حاول مرة أخرى.'
-    );
-    if (sessionError) throw sessionError;
-    const authUser = sessionData?.session?.user;
-    if (!authUser) throw new Error('يجب تسجيل الدخول أولاً');
-    const row = {
-      full_name: payload.full_name,
-      email: authUser.email || payload.email || null,
-      phone: payload.phone || null,
-      city: payload.city || null,
-      country: payload.country || null,
-      specialization: payload.specialization || null,
-      bio: payload.bio || null,
-      registration_number: payload.registration_number || null,
-      years_experience: Number(payload.years_experience) || 0,
-      completed_projects: Number(payload.completed_projects) || 0,
-      graduation_certificate_url: payload.graduation_certificate_url || null,
-      saudi_engineers_council_certificate_url: payload.saudi_engineers_council_certificate_url || null,
-      profile_image: payload.profile_image || null,
-      is_verified: false,
-      is_real: true,
-      status: 'pending',
-      rating: 0,
-      total_reviews: 0,
-      wallet_balance: 0,
-      subscription_type: payload.subscription_type || 'none',
-      is_subscription_active: Boolean(payload.is_subscription_active),
-      subscription_start_date: payload.subscription_start_date || null,
-      trial_end_date: payload.trial_end_date || null,
-      user_id: authUser.id,
-      source: 'supabase',
-    };
-    const { data, error } = await withHardTimeout(
-      supabase.from('engineers').insert(row).select('*').single(),
-      15000,
-      'انتهت مهلة حفظ بيانات التسجيل. تحقق من اتصال Supabase وحاول مرة أخرى.'
-    );
-    if (error) {
-      console.error('Supabase engineer registration failed:', error);
-      throw new Error(error.message || 'تعذر حفظ تسجيل المهندس');
-    }
-    return data;
-  },
-};
-
-// Project compatibility bridge: existing pages can keep their UI contract while
-// project reads/writes are executed against Supabase during the migration.
-const legacyProject = legacyBase44.entities.Project;
-legacyBase44.entities.Project = {
-  ...legacyProject,
-  filter: async (filters = {}) => {
-    if (!supabase) return legacyProject.filter(filters);
-    let query = supabase.from('projects').select('*');
-    for (const [key, value] of Object.entries(filters || {})) {
-      if (value === null) query = query.is(key, null);
-      else if (Array.isArray(value)) query = query.in(key, value);
-      else query = query.eq(key, value);
-    }
-    const { data, error } = await withHardTimeout(query, 10000, 'انتهت مهلة قراءة المشروع');
-    if (error) throw new Error(error.message || 'تعذر قراءة المشروع');
-    return data || [];
-  },
+// Marketing compatibility bridge: old UI contracts now read/write Supabase tables.
+const legacySyncState = legacyBase44.entities.SyncState;
+legacyBase44.entities.SyncState = {
+  ...legacySyncState,
   list: async () => {
-    if (!supabase) return legacyProject.list();
-    const { data, error } = await withHardTimeout(
-      supabase.from('projects').select('*').order('created_at', { ascending: false }),
-      10000,
-      'انتهت مهلة قراءة المشاريع'
-    );
-    if (error) throw new Error(error.message || 'تعذر قراءة المشاريع');
+    const { data, error } = await withHardTimeout(supabase.from('sync_states').select('*').order('last_sync', { ascending: false }), 10000, 'انتهت مهلة قراءة حالات التكامل');
+    if (error) throw new Error(error.message || 'تعذر قراءة حالات التكامل');
     return data || [];
   },
-  update: async (id, payload) => {
-    if (!supabase) return legacyProject.update(id, payload);
-    const { data, error } = await withHardTimeout(
-      supabase.from('projects').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', id).select('*').single(),
-      10000,
-      'انتهت مهلة تحديث المشروع'
-    );
-    if (error) throw new Error(error.message || 'تعذر تحديث المشروع');
-    return data;
+};
+
+const legacySocialPost = legacyBase44.entities.SocialPost;
+legacyBase44.entities.SocialPost = {
+  ...legacySocialPost,
+  list: async (sort = '-created_at', limit = 100) => {
+    let query = supabase.from('social_posts').select('*').limit(limit);
+    query = query.order(sort.replace(/^-/, ''), { ascending: !sort.startsWith('-') });
+    const { data, error } = await withHardTimeout(query, 10000, 'انتهت مهلة قراءة المنشورات');
+    if (error) throw new Error(error.message || 'تعذر قراءة المنشورات');
+    return data || [];
   },
-  create: async (payload) => {
-    if (!supabase) return legacyProject.create(payload);
+  filter: async (filters = {}, sort = '-scheduled_at', limit = 50) => {
+    let query = supabase.from('social_posts').select('*');
+    Object.entries(filters || {}).forEach(([key, value]) => { query = value === null ? query.is(key, null) : query.eq(key, value); });
+    query = query.limit(limit).order(sort.replace(/^-/, ''), { ascending: !sort.startsWith('-') });
+    const { data, error } = await withHardTimeout(query, 10000, 'انتهت مهلة قراءة المنشورات المجدولة');
+    if (error) throw new Error(error.message || 'تعذر قراءة المنشورات');
+    return data || [];
+  },
+  create: async payload => {
     const row = { ...payload };
     delete row.id;
-    delete row.created_date;
-    const { data, error } = await withHardTimeout(
-      supabase.from('projects').insert(row).select('*').single(),
-      10000,
-      'انتهت مهلة إنشاء المشروع'
-    );
-    if (error) throw new Error(error.message || 'تعذر إنشاء المشروع');
+    if (!row.created_by) { try { row.created_by = (await supabase.auth.getUser()).data?.user?.id || null; } catch {} }
+    const { data, error } = await withHardTimeout(supabase.from('social_posts').insert(row).select('*').single(), 10000, 'انتهت مهلة حفظ المنشور');
+    if (error) throw new Error(error.message || 'تعذر حفظ المنشور');
     return data;
   },
-  delete: async (id) => {
-    if (!supabase) return legacyProject.delete(id);
-    const { error } = await withHardTimeout(
-      supabase.from('projects').delete().eq('id', id),
-      10000,
-      'انتهت مهلة حذف المشروع'
-    );
-    if (error) throw new Error(error.message || 'تعذر حذف المشروع');
+  update: async (id, payload) => {
+    const { data, error } = await withHardTimeout(supabase.from('social_posts').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', id).select('*').single(), 10000, 'انتهت مهلة تحديث المنشور');
+    if (error) throw new Error(error.message || 'تعذر تحديث المنشور');
+    return data;
+  },
+  delete: async id => {
+    const { error } = await withHardTimeout(supabase.from('social_posts').delete().eq('id', id), 10000, 'انتهت مهلة حذف المنشور');
+    if (error) throw new Error(error.message || 'تعذر حذف المنشور');
     return true;
   },
 };
 
-// Client compatibility bridge for project workspace/admin flows.
-const legacyClient = legacyBase44.entities.Client;
-legacyBase44.entities.Client = {
-  ...legacyClient,
-  filter: async (filters = {}) => {
-    if (!supabase) return legacyClient.filter(filters);
-    let query = supabase.from('clients').select('*');
-    for (const [key, value] of Object.entries(filters || {})) {
-      if (value === null) query = query.is(key, null);
-      else if (Array.isArray(value)) query = query.in(key, value);
-      else query = query.eq(key, value);
-    }
-    const { data, error } = await withHardTimeout(query, 10000, 'انتهت مهلة قراءة العميل');
-    if (error) throw new Error(error.message || 'تعذر قراءة العميل');
-    return data || [];
-  },
+const legacyEngineer = legacyBase44.entities.Engineer;
+legacyBase44.entities.Engineer = { ...legacyEngineer, create: async payload => {
+  const { data: sessionData } = await withHardTimeout(supabase.auth.getSession(), 10000, 'انتهت مهلة جلسة الدخول');
+  const authUser = sessionData?.session?.user;
+  if (!authUser) throw new Error('يجب تسجيل الدخول أولاً');
+  const row = { full_name: payload.full_name, email: authUser.email || payload.email || null, phone: payload.phone || null, city: payload.city || null, country: payload.country || null, specialization: payload.specialization || null, bio: payload.bio || null, registration_number: payload.registration_number || null, years_experience: Number(payload.years_experience) || 0, completed_projects: Number(payload.completed_projects) || 0, graduation_certificate_url: payload.graduation_certificate_url || null, saudi_engineers_council_certificate_url: payload.saudi_engineers_council_certificate_url || null, profile_image: payload.profile_image || null, is_verified: false, is_real: true, status: 'pending', rating: 0, total_reviews: 0, wallet_balance: 0, subscription_type: payload.subscription_type || 'none', is_subscription_active: Boolean(payload.is_subscription_active), subscription_start_date: payload.subscription_start_date || null, trial_end_date: payload.trial_end_date || null, user_id: authUser.id, source: 'supabase' };
+  const { data, error } = await withHardTimeout(supabase.from('engineers').insert(row).select('*').single(), 15000, 'انتهت مهلة حفظ بيانات التسجيل');
+  if (error) throw new Error(error.message || 'تعذر حفظ تسجيل المهندس');
+  return data;
+}};
+
+const legacyProject = legacyBase44.entities.Project;
+legacyBase44.entities.Project = { ...legacyProject,
+  filter: async filters => { let q=supabase.from('projects').select('*'); Object.entries(filters||{}).forEach(([k,v])=>{q=v===null?q.is(k,null):Array.isArray(v)?q.in(k,v):q.eq(k,v)}); const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة المشروع'); if(error)throw new Error(error.message); return data||[]; },
+  list: async()=>{const {data,error}=await withHardTimeout(supabase.from('projects').select('*').order('created_at',{ascending:false}),10000,'انتهت مهلة قراءة المشاريع');if(error)throw new Error(error.message);return data||[]},
+  update: async(id,payload)=>{const {data,error}=await withHardTimeout(supabase.from('projects').update({...payload,updated_at:new Date().toISOString()}).eq('id',id).select('*').single(),10000,'انتهت مهلة تحديث المشروع');if(error)throw new Error(error.message);return data},
+  create: async payload=>{const row={...payload};delete row.id;delete row.created_date;const {data,error}=await withHardTimeout(supabase.from('projects').insert(row).select('*').single(),10000,'انتهت مهلة إنشاء المشروع');if(error)throw new Error(error.message);return data},
+  delete: async id=>{const {error}=await withHardTimeout(supabase.from('projects').delete().eq('id',id),10000,'انتهت مهلة حذف المشروع');if(error)throw new Error(error.message);return true},
 };
+
+const legacyClient = legacyBase44.entities.Client;
+legacyBase44.entities.Client = {...legacyClient,filter:async filters=>{let q=supabase.from('clients').select('*');Object.entries(filters||{}).forEach(([k,v])=>{q=v===null?q.is(k,null):Array.isArray(v)?q.in(k,v):q.eq(k,v)});const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة العميل');if(error)throw new Error(error.message);return data||[]}};
 
 const legacyPortfolio = legacyBase44.entities.Portfolio;
-legacyBase44.entities.Portfolio = {
-  ...legacyPortfolio,
-  create: async (payload) => {
-    if (!supabase) throw new Error('Supabase غير مهيأ');
-    const { data, error } = await withHardTimeout(
-      supabase.from('portfolios').insert({
-        engineer_id: payload.engineer_id || null,
-        title: payload.title || 'عمل سابق',
-        description: payload.description || null,
-        images: Array.isArray(payload.images) ? payload.images : [],
-      }).select('*').single(),
-      10000,
-      'انتهت مهلة حفظ الأعمال السابقة'
-    );
-    if (error) throw new Error(error.message || 'تعذر حفظ العمل السابق');
-    return data;
-  },
-};
+legacyBase44.entities.Portfolio = {...legacyPortfolio,create:async payload=>{const {data,error}=await withHardTimeout(supabase.from('portfolios').insert({engineer_id:payload.engineer_id||null,title:payload.title||'عمل سابق',description:payload.description||null,images:Array.isArray(payload.images)?payload.images:[]}).select('*').single(),10000,'انتهت مهلة حفظ الأعمال السابقة');if(error)throw new Error(error.message);return data}};
 
 const legacyPlatformSettings = legacyBase44.entities.PlatformSettings;
-legacyBase44.entities.PlatformSettings = {
-  ...legacyPlatformSettings,
-  list: async () => {
-    const { data, error } = await withHardTimeout(
-      supabase.from('platform_settings').select('*').order('updated_at', { ascending: false }).limit(1),
-      10000,
-      'انتهت مهلة قراءة إعدادات المنصة'
-    );
-    if (error) throw error;
-    return data || [];
-  },
-  create: async (payload) => {
-    const { data, error } = await withHardTimeout(supabase.from('platform_settings').insert(payload).select('*').single(), 10000, 'انتهت مهلة حفظ إعدادات المنصة');
-    if (error) throw error;
-    return data;
-  },
-  update: async (id, payload) => {
-    const { data, error } = await withHardTimeout(supabase.from('platform_settings').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', id).select('*').single(), 10000, 'انتهت مهلة تحديث إعدادات المنصة');
-    if (error) throw error;
-    return data;
-  },
-};
+legacyBase44.entities.PlatformSettings = {...legacyPlatformSettings,list:async()=>{const {data,error}=await withHardTimeout(supabase.from('platform_settings').select('*').order('updated_at',{ascending:false}).limit(1),10000,'انتهت مهلة قراءة إعدادات المنصة');if(error)throw error;return data||[]},create:async p=>{const {data,error}=await withHardTimeout(supabase.from('platform_settings').insert(p).select('*').single(),10000,'انتهت مهلة حفظ إعدادات المنصة');if(error)throw error;return data},update:async(id,p)=>{const {data,error}=await withHardTimeout(supabase.from('platform_settings').update({...p,updated_at:new Date().toISOString()}).eq('id',id).select('*').single(),10000,'انتهت مهلة تحديث إعدادات المنصة');if(error)throw error;return data}};
 
 export const base44 = legacyBase44;
