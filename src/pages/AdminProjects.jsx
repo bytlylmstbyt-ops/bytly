@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,10 +83,36 @@ export default function AdminProjects() {
   const handleExport = async () => {
     setExporting(true);
     try {
-      // Export the filtered set; if list is incomplete, fetch full filtered set first
-      await exportProjectsToExcel({ projects: filtered, clients, engineers });
+      // التصدير مستقل عن Base44: يقرأ البيانات الحالية مباشرة من Supabase ثم يطبق نفس الفلاتر.
+      const [{ data: supabaseProjects, error: projectsError }, { data: supabaseClients, error: clientsError }, { data: supabaseEngineers, error: engineersError }] = await Promise.all([
+        supabase.from("projects").select("*"),
+        supabase.from("clients").select("id,full_name"),
+        supabase.from("engineers").select("id,full_name"),
+      ]);
+      if (projectsError) throw projectsError;
+      if (clientsError) throw clientsError;
+      if (engineersError) throw engineersError;
+
+      const source = supabaseProjects || [];
+      const filteredForExport = source.filter(p => {
+        const q = search.toLowerCase();
+        const createdAt = p.created_at || p.created_date;
+        const matchSearch = !q || (p.title || "").toLowerCase().includes(q) || (p.id || "").toLowerCase().includes(q) || (p.id || "").slice(-6).toLowerCase().includes(q);
+        const matchStatus = statusFilter === "all" ? true : statusFilter === "active" ? ["open", "in_progress"].includes(p.status) : statusFilter === "pending" ? ["awaiting_technical_review", "technical_approved", "pending_client_approval"].includes(p.status) : statusFilter === "suspended" ? ["cancelled", "disputed"].includes(p.status) : statusFilter === "completed" ? p.status === "completed" : statusFilter === "overdue" ? ["open", "in_progress", "awaiting_technical_review", "technical_approved", "pending_client_approval"].includes(p.status) && !!p.deadline && new Date(p.deadline) < new Date() : true;
+        const matchCity = cityFilter === "all" || p.location === cityFilter;
+        const matchType = typeFilter === "all" || p.project_type === typeFilter;
+        const matchEngineer = engineerFilter === "all" || p.assigned_engineer_id === engineerFilter;
+        const matchClient = clientFilter === "all" || p.client_id === clientFilter;
+        let matchDate = true;
+        const cd = createdAt ? new Date(createdAt) : null;
+        if (cd && dateFrom) matchDate = cd >= new Date(dateFrom);
+        if (cd && dateTo) matchDate = matchDate && cd <= new Date(dateTo + "T23:59:59");
+        return matchSearch && matchStatus && matchCity && matchType && matchEngineer && matchClient && matchDate;
+      });
+      await exportProjectsToExcel({ projects: filteredForExport, clients: supabaseClients, engineers: supabaseEngineers });
     } catch (err) {
-      alert("فشل التصدير");
+      console.error("Supabase export failed", err);
+      alert("فشل التصدير من مصدر البيانات المستقل");
     } finally {
       setExporting(false);
     }
