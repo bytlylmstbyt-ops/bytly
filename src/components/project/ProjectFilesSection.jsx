@@ -1,5 +1,6 @@
 import React, { useState, useRef, useMemo } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
+import { uploadProjectFile, resolveProjectFileUrl, deleteProjectFile, getProjectFileName } from "@/lib/projectFileStorage";
 import {
   Upload, Download, FileText, Loader2, X, Paperclip, Eye, Files,
   Folder, Image as ImageIcon, FileBox, PencilRuler
@@ -47,8 +48,7 @@ function getFileIcon(folderId) {
 }
 
 function getFileName(url) {
-  const decoded = decodeURIComponent(url.split("/").pop() || "ملف");
-  return decoded;
+  return getProjectFileName(url);
 }
 
 export default function ProjectFilesSection({ project, user, userEngineer, assignedEngineer, onUpdated }) {
@@ -93,12 +93,13 @@ export default function ProjectFilesSection({ project, user, userEngineer, assig
     try {
       const uploadedUrls = [];
       for (const file of files) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        uploadedUrls.push(file_url);
+        uploadedUrls.push(await uploadProjectFile(project.id, file));
       }
-      await base44.entities.Project.update(project.id, {
-        attachments: [...attachments, ...uploadedUrls],
-      });
+      const { error: updateError } = await supabase
+        .from("projects")
+        .update({ attachments: [...attachments, ...uploadedUrls], updated_at: new Date().toISOString() })
+        .eq("id", project.id);
+      if (updateError) throw updateError;
 
       // تصنيف الملفات المرفوعة حديثاً للإشعار
       const newCategories = uploadedUrls.map(u => {
@@ -131,8 +132,14 @@ export default function ProjectFilesSection({ project, user, userEngineer, assig
   };
 
   const handleRemove = async (index) => {
+    const removed = attachments[index];
     const newAttachments = attachments.filter((_, i) => i !== index);
-    await base44.entities.Project.update(project.id, { attachments: newAttachments });
+    const { error: updateError } = await supabase
+      .from("projects")
+      .update({ attachments: newAttachments, updated_at: new Date().toISOString() })
+      .eq("id", project.id);
+    if (updateError) throw updateError;
+    await deleteProjectFile(removed).catch(() => {});
 
     await notifyWorkspaceUpdate({
       project,
@@ -250,14 +257,20 @@ export default function ProjectFilesSection({ project, user, userEngineer, assig
                         <Eye className="w-4 h-4 text-slate-700" />
                       </button>
                     )}
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={async () => {
+                        try {
+                          const resolved = await resolveProjectFileUrl(url);
+                          if (resolved) window.open(resolved, "_blank", "noopener,noreferrer");
+                        } catch (error) {
+                          console.error("Project file download failed:", error);
+                        }
+                      }}
                       className="w-9 h-9 rounded-full bg-white/90 flex items-center justify-center hover:bg-white"
+                      title="تحميل الملف"
                     >
                       <Download className="w-4 h-4 text-slate-700" />
-                    </a>
+                    </button>
                     {canUpload && (
                       <button
                         onClick={() => handleRemove(index)}
