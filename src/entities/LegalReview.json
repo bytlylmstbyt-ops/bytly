@@ -1,0 +1,18 @@
+{
+  "name": "LegalReview",
+  "type": "object",
+  "properties": {
+    "project_id": { "type": "string", "description": "معرف المشروع" },
+    "contract_id": { "type": "string", "description": "معرف العقد" },
+    "legal_consultant_id": { "type": "string", "description": "معرف المستشار القانوني" },
+    "description": { "type": "string", "description": "وصف تفصيلي للمراجعة القانونية وملاحظاتها", "maxLength": 1000 },
+    "review_notes": { "type": "string", "description": "ملاحظات المراجعة القانونية" },
+    "status": { "type": "string", "enum": ["pending", "in_progress", "approved", "rejected"], "default": "pending", "description": "حالة المراجعة" },
+    "review_date": { "type": "string", "format": "date-time", "description": "تاريخ المراجعة" },
+    "report_file": { "type": "string", "description": "ملف التقرير القانوني" },
+    "risk_level": { "type": "string", "enum": ["low", "medium", "high"], "description": "مستوى المخاطر القانونية" },
+    "recommendations": { "type": "array", "items": { "type": "string" }, "description": "التوصيات القانونية" }
+  },
+  "required": ["project_id", "legal_consultant_id"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

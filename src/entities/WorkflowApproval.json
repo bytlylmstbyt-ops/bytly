@@ -1,0 +1,17 @@
+{
+  "name": "WorkflowApproval",
+  "type": "object",
+  "properties": {
+    "project_id": { "type": "string", "description": "معرف المشروع" },
+    "workflow_id": { "type": "string", "description": "معرف سير العمل" },
+    "approver_email": { "type": "string", "description": "بريد المعتمد" },
+    "description": { "type": "string", "description": "وصف تفصيلي لخطوة الاعتماد وسياق القرار", "maxLength": 1000 },
+    "step_name": { "type": "string", "description": "اسم خطوة الاعتماد" },
+    "status": { "type": "string", "enum": ["pending", "approved", "rejected", "skipped"], "default": "pending", "description": "حالة الاعتماد" },
+    "notes": { "type": "string", "description": "ملاحظات المعتمد" },
+    "approval_date": { "type": "string", "format": "date-time", "description": "تاريخ الاعتماد" },
+    "due_date": { "type": "string", "format": "date-time", "description": "تاريخ الاستحقاق" }
+  },
+  "required": ["project_id", "approver_email", "step_name"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

@@ -1,0 +1,49 @@
+{
+  "name": "SyncState",
+  "type": "object",
+  "properties": {
+    "service": {
+      "type": "string",
+      "description": "\u0627\u0644\u062e\u062f\u0645\u0629 (googlecalendar, etc)"
+    },
+    "sync_token": {
+      "type": "string",
+      "description": "\u0631\u0645\u0632 \u0627\u0644\u0645\u0632\u0627\u0645\u0646\u0629"
+    },
+    "last_sync": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u0622\u062e\u0631 \u0645\u0632\u0627\u0645\u0646\u0629"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u0648\u0635\u0641",
+      "maxLength": 500
+    }
+  },
+  "required": [
+    "service"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "Subscription",
+  "type": "object",
+  "properties": {
+    "engineer_id": { "type": "string", "description": "معرف المهندس" },
+    "package_id": { "type": "string", "description": "معرف الباقة" },
+    "plan_type": { "type": "string", "enum": ["monthly", "yearly"], "description": "نوع الخطة" },
+    "amount": { "type": "number", "description": "المبلغ" },
+    "description": { "type": "string", "description": "وصف الاشتراك وتفاصيل الباقة المختارة", "maxLength": 1000 },
+    "start_date": { "type": "string", "format": "date", "description": "تاريخ البداية" },
+    "end_date": { "type": "string", "format": "date", "description": "تاريخ الانتهاء" },
+    "status": { "type": "string", "enum": ["active", "expired", "cancelled", "pending"], "default": "pending", "description": "حالة الاشتراك" },
+    "auto_renew": { "type": "boolean", "default": false, "description": "تجديد تلقائي" },
+    "payment_method": { "type": "string", "enum": ["mada", "visa", "mastercard", "apple_pay"], "description": "طريقة الدفع" },
+    "payment_reference": { "type": "string", "description": "رقم مرجع الدفع" },
+    "payment_status": { "type": "string", "enum": ["pending", "completed", "failed", "refunded"], "default": "pending", "description": "حالة الدفع" },
+    "payment_date": { "type": "string", "format": "date-time", "description": "تاريخ الدفع" }
+  },
+  "required": ["engineer_id", "package_id", "plan_type", "amount"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

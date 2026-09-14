@@ -1,0 +1,15 @@
+{
+  "name": "ConsultantComment",
+  "type": "object",
+  "properties": {
+    "project_id": { "type": "string", "description": "معرف المشروع" },
+    "consultant_id": { "type": "string", "description": "معرف المستشار" },
+    "contract_id": { "type": "string", "description": "معرف العقد" },
+    "comment": { "type": "string", "description": "التعليق" },
+    "description": { "type": "string", "description": "وصف تفصيلي لتعليق المستشار والملاحظات الفنية", "maxLength": 1000 },
+    "attachments": { "type": "array", "items": { "type": "string" }, "description": "المرفقات" },
+    "comment_type": { "type": "string", "enum": ["general", "technical", "quality", "safety"], "default": "general", "description": "نوع التعليق" }
+  },
+  "required": ["consultant_id", "comment"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

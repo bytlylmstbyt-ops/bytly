@@ -1,0 +1,16 @@
+{
+  "name": "ChatbotFAQ",
+  "type": "object",
+  "properties": {
+    "question": { "type": "string", "description": "السؤال" },
+    "answer": { "type": "string", "description": "الإجابة" },
+    "description": { "type": "string", "description": "وصف تفصيلي للسؤال الشائع وسياقه وحالات الاستخدام", "maxLength": 1000 },
+    "category": { "type": "string", "enum": ["clients", "engineers", "payments", "general", "technical"], "description": "تصنيف السؤال" },
+    "keywords": { "type": "array", "items": { "type": "string" }, "description": "الكلمات المفتاحية" },
+    "priority": { "type": "number", "default": 0, "description": "أولوية الظهور" },
+    "is_active": { "type": "boolean", "default": true, "description": "نشط" },
+    "reference_link": { "type": "string", "description": "رابط مرجعي" }
+  },
+  "required": ["question", "answer"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

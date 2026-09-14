@@ -1,0 +1,14 @@
+{
+  "name": "NotificationSettings",
+  "type": "object",
+  "properties": {
+    "user_email": { "type": "string", "description": "بريد المستخدم" },
+    "description": { "type": "string", "description": "وصف إعدادات الإشعارات وتفضيلات المستخدم", "maxLength": 1000 },
+    "email_notifications": { "type": "boolean", "default": true, "description": "إشعارات البريد الإلكتروني" },
+    "in_app_notifications": { "type": "boolean", "default": true, "description": "إشعارات داخل التطبيق" },
+    "notification_preferences": { "type": "object", "description": "تفضيلات الإشعارات التفصيلية" },
+    "reminder_timing": { "type": "object", "properties": { "before_deadline_days": { "type": "number" }, "payment_reminder_days": { "type": "number" } }, "description": "توقيت التذكيرات" }
+  },
+  "required": ["user_email"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

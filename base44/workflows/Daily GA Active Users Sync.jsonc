@@ -1,0 +1,41 @@
+{
+  "name": "Daily GA Active Users Sync",
+  "description": "\u064a\u062c\u0644\u0628 \u0628\u064a\u0627\u0646\u0627\u062a \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645\u064a\u0646 \u0627\u0644\u0646\u0634\u0637\u064a\u0646 \u0627\u0644\u064a\u0648\u0645\u064a\u0629 \u0645\u0646 Google Analytics 4 \u0648\u064a\u062e\u0632\u0646\u0647\u0627 \u0641\u064a \u0643\u064a\u0627\u0646 AnalyticsDailyActiveUser",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 2 * * *",
+      "one_time_date": null,
+      "timezone": "UTC",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "daily_ga_active_users_sync",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "fetchDailyActiveUsers",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  }
+}

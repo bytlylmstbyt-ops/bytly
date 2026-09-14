@@ -1,0 +1,18 @@
+{
+  "name": "Proposal",
+  "type": "object",
+  "properties": {
+    "project_id": { "type": "string", "description": "معرف المشروع" },
+    "engineer_id": { "type": "string", "description": "معرف المهندس" },
+    "price": { "type": "number", "description": "السعر المقترح" },
+    "delivery_days": { "type": "number", "description": "مدة التسليم بالأيام" },
+    "cover_letter": { "type": "string", "description": "رسالة العرض" },
+    "description": { "type": "string", "description": "وصف تفصيلي للعرض والخدمات المقدمة", "maxLength": 1000 },
+    "attachments": { "type": "array", "items": { "type": "string" }, "description": "المرفقات" },
+    "portfolio_items": { "type": "array", "items": { "type": "string" }, "description": "معرض أعمال مرفق خاص بالمشروع" },
+    "custom_milestones": { "type": "array", "items": { "type": "object" }, "description": "مراحل تنفيذ مخصصة" },
+    "status": { "type": "string", "enum": ["pending", "accepted", "rejected"], "default": "pending", "description": "حالة العرض" }
+  },
+  "required": ["project_id", "engineer_id", "price"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

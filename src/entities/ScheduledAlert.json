@@ -1,0 +1,17 @@
+{
+  "name": "ScheduledAlert",
+  "type": "object",
+  "properties": {
+    "user_email": { "type": "string", "description": "بريد المستخدم المستهدف" },
+    "title": { "type": "string", "description": "عنوان التنبيه" },
+    "description": { "type": "string", "description": "وصف تفصيلي للتنبيه المجدول وسياقه", "maxLength": 1000 },
+    "message": { "type": "string", "description": "نص التنبيه" },
+    "alert_type": { "type": "string", "enum": ["deadline", "payment", "review", "subscription", "custom"], "description": "نوع التنبيه" },
+    "scheduled_date": { "type": "string", "format": "date-time", "description": "تاريخ التنبيه المجدول" },
+    "is_sent": { "type": "boolean", "default": false, "description": "تم الإرسال" },
+    "related_entity_id": { "type": "string", "description": "معرف الكيان المرتبط" },
+    "related_entity_type": { "type": "string", "description": "نوع الكيان المرتبط" }
+  },
+  "required": ["user_email", "title", "scheduled_date"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

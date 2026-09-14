@@ -1,0 +1,10 @@
+{
+  "type": "square",
+  "scopes": [
+    "PAYMENTS_WRITE",
+    "PAYMENTS_READ",
+    "ORDERS_WRITE",
+    "ORDERS_READ",
+    "MERCHANT_PROFILE_READ"
+  ]
+}

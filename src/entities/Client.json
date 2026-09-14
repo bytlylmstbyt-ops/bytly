@@ -1,0 +1,32 @@
+{
+  "name": "Client",
+  "type": "object",
+  "properties": {
+    "full_name": { "type": "string", "description": "الاسم الكامل" },
+    "email": { "type": "string", "description": "البريد الإلكتروني" },
+    "phone": { "type": "string", "description": "رقم الهاتف" },
+    "city": { "type": "string", "description": "المدينة" },
+    "country": { "type": "string", "description": "الدولة" },
+    "profile_image": { "type": "string", "description": "صورة الملف الشخصي" },
+    "description": { "type": "string", "description": "وصف العميل وتفاصيل احتياجاته ومشاريعه", "maxLength": 1000 },
+    "client_type": { "type": "string", "enum": ["individual", "investor"], "default": "individual", "description": "نوع العميل" },
+    "company_name": { "type": "string", "description": "اسم الشركة" },
+    "preferred_firms": { "type": "array", "items": { "type": "string" }, "description": "قائمة الشركات المفضلة" },
+    "real_estate_portfolio": { "type": "array", "items": { "type": "object", "properties": { "property_name": { "type": "string" }, "location": { "type": "string" }, "project_id": { "type": "string" }, "status": { "type": "string", "enum": ["planning", "construction", "completed"] }, "investment_value": { "type": "number" } } }, "description": "محفظة العقارات للمستثمرين" },
+    "trust_score": { "type": "number", "default": 0, "description": "نقاط الثقة" },
+    "payment_history_score": { "type": "number", "default": 0, "description": "نقاط سجل الدفع" },
+    "communication_score": { "type": "number", "default": 0, "description": "نقاط التواصل الواضح" },
+    "on_time_payments": { "type": "number", "default": 0, "description": "عدد الدفعات في الوقت المحدد" },
+    "total_payments": { "type": "number", "default": 0, "description": "إجمالي الدفعات" },
+    "wallet_balance": { "type": "number", "default": 0, "description": "رصيد المحفظة" },
+    "total_projects": { "type": "number", "default": 0, "description": "إجمالي المشاريع" },
+    "subscription_type": { "type": "string", "enum": ["free_trial", "basic", "premium"], "default": "free_trial", "description": "نوع الاشتراك" },
+    "subscription_start_date": { "type": "string", "format": "date", "description": "تاريخ بداية الاشتراك" },
+    "subscription_end_date": { "type": "string", "format": "date", "description": "تاريخ انتهاء الاشتراك" },
+    "trial_end_date": { "type": "string", "format": "date", "description": "تاريخ انتهاء الفترة التجريبية" },
+    "is_subscription_active": { "type": "boolean", "default": true, "description": "هل الاشتراك نشط" },
+    "notification_sent_15_days": { "type": "boolean", "default": false, "description": "تم إرسال تنبيه 15 يوم قبل الانتهاء" }
+  },
+  "required": ["full_name", "email"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

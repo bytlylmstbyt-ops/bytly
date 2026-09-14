@@ -1,0 +1,177 @@
+{
+  "name": "AutomationRule",
+  "properties": {
+    "actions": {
+      "description": "\u0627\u0644\u0625\u062c\u0631\u0627\u0621\u0627\u062a \u0627\u0644\u0645\u0646\u0641\u0630\u0629 \u0639\u0646\u062f \u062a\u062d\u0642\u0642 \u0627\u0644\u0634\u0631\u0648\u0637",
+      "items": {
+        "properties": {
+          "action_type": {
+            "enum": [
+              "send_notification",
+              "send_email",
+              "update_status",
+              "create_task",
+              "assign_to_admin",
+              "webhook_call"
+            ],
+            "type": "string"
+          },
+          "config": {
+            "description": "\u0625\u0639\u062f\u0627\u062f\u0627\u062a \u0627\u0644\u0625\u062c\u0631\u0627\u0621 (\u0646\u0635 \u0627\u0644\u0631\u0633\u0627\u0644\u0629\u060c \u0627\u0644\u062d\u0627\u0644\u0629 \u0627\u0644\u062c\u062f\u064a\u062f\u0629\u060c \u0631\u0627\u0628\u0637 \u0627\u0644\u0640 webhook\u060c \u0625\u0644\u062e)",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "category": {
+      "default": "other",
+      "description": "\u062a\u0635\u0646\u064a\u0641 \u0627\u0644\u0642\u0627\u0639\u062f\u0629",
+      "enum": [
+        "projects",
+        "payments",
+        "engineers",
+        "disputes",
+        "contracts",
+        "notifications",
+        "other"
+      ],
+      "type": "string"
+    },
+    "conditions": {
+      "description": "\u0634\u0631\u0648\u0637 \u0625\u0636\u0627\u0641\u064a\u0629 \u0642\u0628\u0644 \u062a\u0646\u0641\u064a\u0630 \u0627\u0644\u0642\u0627\u0639\u062f\u0629",
+      "items": {
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "operator": {
+            "enum": [
+              "equals",
+              "not_equals",
+              "greater_than",
+              "less_than",
+              "contains"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "created_by_email": {
+      "description": "\u0628\u0631\u064a\u062f \u0627\u0644\u0645\u0634\u0631\u0641 \u0627\u0644\u0630\u064a \u0623\u0646\u0634\u0623 \u0627\u0644\u0642\u0627\u0639\u062f\u0629",
+      "type": "string"
+    },
+    "description": {
+      "description": "\u0648\u0635\u0641 \u0645\u0627 \u062a\u0642\u0648\u0645 \u0628\u0647 \u0627\u0644\u0642\u0627\u0639\u062f\u0629",
+      "type": "string"
+    },
+    "integration_trigger": {
+      "default": "none",
+      "description": "\u0627\u0644\u062a\u0643\u0627\u0645\u0644 \u0627\u0644\u062e\u0627\u0631\u062c\u064a \u0627\u0644\u0645\u0631\u062a\u0628\u0637 \u0628\u062a\u0634\u063a\u064a\u0644 \u0627\u0644\u0642\u0627\u0639\u062f\u0629 \u0625\u0646 \u0648\u062c\u062f",
+      "enum": [
+        "none",
+        "email",
+        "notification_center",
+        "webhook",
+        "slack"
+      ],
+      "type": "string"
+    },
+    "is_active": {
+      "default": true,
+      "description": "\u0647\u0644 \u0627\u0644\u0642\u0627\u0639\u062f\u0629 \u0645\u0641\u0639\u0651\u0644\u0629",
+      "type": "boolean"
+    },
+    "last_run_at": {
+      "description": "\u0622\u062e\u0631 \u0648\u0642\u062a \u062a\u0646\u0641\u064a\u0630",
+      "format": "date-time",
+      "type": "string"
+    },
+    "last_run_status": {
+      "default": "never_run",
+      "enum": [
+        "success",
+        "failed",
+        "never_run"
+      ],
+      "type": "string"
+    },
+    "name": {
+      "description": "\u0627\u0633\u0645 \u0642\u0627\u0639\u062f\u0629 \u0627\u0644\u0623\u062a\u0645\u062a\u0629",
+      "type": "string"
+    },
+    "run_count": {
+      "default": 0,
+      "description": "\u0639\u062f\u062f \u0645\u0631\u0627\u062a \u0627\u0644\u062a\u0646\u0641\u064a\u0630",
+      "type": "number"
+    },
+    "schedule_cron": {
+      "description": "\u062c\u062f\u0648\u0644\u0629 \u0627\u0644\u062a\u0643\u0631\u0627\u0631 (\u0639\u0646\u062f trigger_type = schedule)\u060c \u0645\u062b\u0627\u0644: \u0643\u0644 \u064a\u0648\u0645 \u0627\u0644\u0633\u0627\u0639\u0629 9 \u0635\u0628\u0627\u062d\u064b\u0627",
+      "type": "string"
+    },
+    "trigger_event": {
+      "description": "\u0627\u0644\u062d\u062f\u062b \u0627\u0644\u0645\u064f\u0634\u063a\u0651\u0644 \u0644\u0644\u0642\u0627\u0639\u062f\u0629 (\u0639\u0646\u062f trigger_type = event)",
+      "enum": [
+        "project_created",
+        "project_status_changed",
+        "proposal_submitted",
+        "contract_signed",
+        "payment_completed",
+        "payment_overdue",
+        "dispute_opened",
+        "dispute_resolved",
+        "engineer_registered",
+        "engineer_approved",
+        "withdrawal_requested",
+        "review_submitted",
+        "subscription_expiring",
+        "milestone_completed"
+      ],
+      "type": "string"
+    },
+    "trigger_type": {
+      "default": "event",
+      "description": "\u0646\u0648\u0639 \u0627\u0644\u0645\u064f\u0634\u063a\u0651\u0644: \u0639\u0646\u062f \u062d\u062f\u062b\u060c \u0645\u062c\u062f\u0648\u0644\u060c \u0623\u0648 \u064a\u062f\u0648\u064a",
+      "enum": [
+        "event",
+        "schedule",
+        "manual"
+      ],
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "trigger_type"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "type": "object"
+}

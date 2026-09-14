@@ -1,0 +1,17 @@
+{
+  "name": "OnboardingFlow",
+  "type": "object",
+  "properties": {
+    "user_email": { "type": "string", "description": "بريد المستخدم" },
+    "user_type": { "type": "string", "enum": ["engineer", "client", "firm", "consultant"], "description": "نوع المستخدم" },
+    "description": { "type": "string", "description": "وصف مسار الإعداد والخطوات التي أكملها المستخدم", "maxLength": 1000 },
+    "current_step": { "type": "number", "default": 1, "description": "الخطوة الحالية" },
+    "total_steps": { "type": "number", "description": "إجمالي الخطوات" },
+    "completed_steps": { "type": "array", "items": { "type": "string" }, "description": "الخطوات المكتملة" },
+    "is_completed": { "type": "boolean", "default": false, "description": "اكتمل الإعداد" },
+    "completion_date": { "type": "string", "format": "date-time", "description": "تاريخ الاكتمال" },
+    "skipped_steps": { "type": "array", "items": { "type": "string" }, "description": "الخطوات المتجاوزة" }
+  },
+  "required": ["user_email", "user_type"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

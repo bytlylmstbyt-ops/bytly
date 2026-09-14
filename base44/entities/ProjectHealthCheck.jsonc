@@ -1,0 +1,83 @@
+{
+  "name": "ProjectHealthCheck",
+  "type": "object",
+  "properties": {
+    "check_type": {
+      "type": "string",
+      "enum": [
+        "lint",
+        "typecheck",
+        "broken_imports",
+        "build",
+        "manual_review"
+      ],
+      "description": "\u0646\u0648\u0639 \u0627\u0644\u0641\u062d\u0635 \u0627\u0644\u0630\u064a \u0623\u0646\u062a\u062c \u0647\u0630\u0627 \u0627\u0644\u0633\u062c\u0644"
+    },
+    "summary": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "\u0645\u0644\u062e\u0635 \u0646\u062a\u064a\u062c\u0629 \u0627\u0644\u0641\u062d\u0635"
+    },
+    "issue_count": {
+      "type": "number",
+      "default": 0,
+      "description": "\u0639\u062f\u062f \u0627\u0644\u0645\u0634\u0627\u0643\u0644 \u0627\u0644\u0645\u0643\u062a\u0634\u0641\u0629"
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "none",
+        "low",
+        "medium",
+        "high"
+      ],
+      "description": "\u0623\u0639\u0644\u0649 \u0645\u0633\u062a\u0648\u0649 \u062e\u0637\u0648\u0631\u0629 \u0628\u064a\u0646 \u0627\u0644\u0645\u0634\u0627\u0643\u0644 \u0627\u0644\u0645\u0643\u062a\u0634\u0641\u0629 \u0641\u064a \u0647\u0630\u0627 \u0627\u0644\u0641\u062d\u0635"
+    },
+    "affected_files": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "\u0627\u0644\u0645\u0644\u0641\u0627\u062a \u0627\u0644\u0645\u062a\u0623\u062b\u0631\u0629 (\u0639\u064a\u0651\u0646\u0629 \u062a\u0645\u062b\u064a\u0644\u064a\u0629 \u0639\u0646\u062f \u0643\u062b\u0631\u0629 \u0627\u0644\u0639\u062f\u062f)"
+    },
+    "details": {
+      "type": "string",
+      "maxLength": 3000,
+      "description": "\u062a\u0641\u0627\u0635\u064a\u0644 \u0625\u0636\u0627\u0641\u064a\u0629 \u0639\u0646 \u0627\u0644\u0646\u062a\u0627\u0626\u062c (\u0646\u0635 \u062d\u0631)"
+    },
+    "checked_by": {
+      "type": "string",
+      "description": "\u0645\u0646 \u0623\u062c\u0631\u0649 \u0627\u0644\u0641\u062d\u0635 (\u0627\u0644\u0645\u0633\u0627\u0639\u062f \u0641\u064a \u062c\u0644\u0633\u0629 \u0627\u0644\u0645\u062d\u0631\u0631\u060c \u0623\u0648 \u0646\u0648\u0639 \u0627\u0644\u0623\u062f\u0627\u0629)"
+    },
+    "checked_at": {
+      "type": "string",
+      "description": "\u062a\u0648\u0642\u064a\u062a \u0625\u062c\u0631\u0627\u0621 \u0627\u0644\u0641\u062d\u0635 (ISO)"
+    }
+  },
+  "required": [
+    "check_type",
+    "summary"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

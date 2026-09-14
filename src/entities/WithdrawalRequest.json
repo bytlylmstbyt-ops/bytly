@@ -1,0 +1,29 @@
+{
+  "name": "WithdrawalRequest",
+  "type": "object",
+  "properties": {
+    "engineer_id": { "type": "string", "description": "معرف المهندس" },
+    "amount": { "type": "number", "description": "المبلغ المطلوب سحبه" },
+    "iban": { "type": "string", "description": "رقم الآيبان" },
+    "bank_name": { "type": "string", "description": "اسم البنك" },
+    "account_holder_name": { "type": "string", "description": "اسم صاحب الحساب" },
+    "description": { "type": "string", "description": "وصف طلب السحب وسبب التحويل البنكي", "maxLength": 1000 },
+    "status": { "type": "string", "enum": ["pending", "processing", "completed", "rejected"], "default": "pending", "description": "حالة الطلب" },
+    "consultant_approval": { "type": "boolean", "default": false, "description": "اعتماد المستشار" },
+    "consultant_id": { "type": "string", "description": "معرف المستشار المعتمد" },
+    "consultant_approval_date": { "type": "string", "format": "date-time", "description": "تاريخ اعتماد المستشار" },
+    "consultant_notes": { "type": "string", "description": "ملاحظات المستشار" },
+    "compliance_status": { "type": "string", "enum": ["compliant", "compliant_with_notes", "rejected"], "description": "حالة المطابقة" },
+    "saudi_code_notes": { "type": "string", "description": "ملاحظات الكود السعودي ومدى التزام التصميم بالمعايير الوطنية" },
+    "implementation_recommendations": { "type": "string", "description": "توصيات التنفيذ على أرض الواقع" },
+    "approved_report_file": { "type": "string", "description": "ملف التقرير المعتمد PDF مع ختم المستشار الإلكتروني" },
+    "request_date": { "type": "string", "format": "date-time", "description": "تاريخ تقديم الطلب" },
+    "processing_date": { "type": "string", "format": "date-time", "description": "تاريخ بدء المعالجة" },
+    "completion_date": { "type": "string", "format": "date-time", "description": "تاريخ الإنجاز" },
+    "rejection_reason": { "type": "string", "description": "سبب الرفض إن وجد" },
+    "admin_notes": { "type": "string", "description": "ملاحظات الإدارة" },
+    "transaction_reference": { "type": "string", "description": "رقم مرجع التحويل البنكي" }
+  },
+  "required": ["engineer_id", "amount", "iban", "account_holder_name"],
+  "rls": { "create": { "created_by": "{{user.email}}" } }
+}

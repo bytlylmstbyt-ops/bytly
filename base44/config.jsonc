@@ -1,0 +1,9 @@
+{
+  "name": "\u0628\u064a\u062a\u0644\u064a - \u0644\u0645\u0633\u0629 \u0628\u064a\u062a ",
+  "site": {
+    "installCommand": "npm install",
+    "buildCommand": "npm run build",
+    "serveCommand": "npm run dev",
+    "outputDirectory": "./dist"
+  }
+}

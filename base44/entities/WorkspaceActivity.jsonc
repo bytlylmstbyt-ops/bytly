@@ -1,0 +1,120 @@
+{
+  "name": "WorkspaceActivity",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0645\u0634\u0631\u0648\u0639 \u0627\u0644\u0645\u0631\u062a\u0628\u0637"
+    },
+    "actor_email": {
+      "type": "string",
+      "description": "\u0628\u0631\u064a\u062f \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645 \u0627\u0644\u0630\u064a \u0642\u0627\u0645 \u0628\u0627\u0644\u0625\u062c\u0631\u0627\u0621"
+    },
+    "actor_name": {
+      "type": "string",
+      "description": "\u0627\u0633\u0645 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645 \u0627\u0644\u0630\u064a \u0642\u0627\u0645 \u0628\u0627\u0644\u0625\u062c\u0631\u0627\u0621"
+    },
+    "actor_role": {
+      "type": "string",
+      "enum": [
+        "client",
+        "engineer",
+        "admin",
+        "system"
+      ],
+      "description": "\u062f\u0648\u0631 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645 \u0648\u0642\u062a \u0627\u0644\u0625\u062c\u0631\u0627\u0621"
+    },
+    "activity_type": {
+      "type": "string",
+      "enum": [
+        "project_created",
+        "project_status_changed",
+        "file_uploaded",
+        "file_deleted",
+        "milestone_created",
+        "milestone_status_changed",
+        "milestone_submitted",
+        "milestone_approved",
+        "task_created",
+        "task_updated",
+        "task_status_changed",
+        "task_deleted",
+        "proposal_submitted",
+        "proposal_accepted",
+        "proposal_rejected",
+        "contract_created",
+        "contract_signed",
+        "contract_updated",
+        "payment_made",
+        "escrow_held",
+        "escrow_released",
+        "meeting_scheduled",
+        "message_sent",
+        "review_submitted",
+        "appointment_booked"
+      ],
+      "description": "\u0646\u0648\u0639 \u0627\u0644\u0646\u0634\u0627\u0637"
+    },
+    "entity_type": {
+      "type": "string",
+      "description": "\u0646\u0648\u0639 \u0627\u0644\u0643\u064a\u0627\u0646 \u0627\u0644\u0645\u062a\u0623\u062b\u0631: task, milestone, file, contract, proposal, payment, etc."
+    },
+    "entity_id": {
+      "type": "string",
+      "description": "\u0645\u0639\u0631\u0641 \u0627\u0644\u0643\u064a\u0627\u0646 \u0627\u0644\u0645\u062a\u0623\u062b\u0631"
+    },
+    "entity_title": {
+      "type": "string",
+      "description": "\u0639\u0646\u0648\u0627\u0646 \u0623\u0648 \u0627\u0633\u0645 \u0627\u0644\u0643\u064a\u0627\u0646 \u0644\u0644\u0639\u0631\u0636 \u0627\u0644\u0633\u0631\u064a\u0639"
+    },
+    "summary": {
+      "type": "string",
+      "description": "\u0648\u0635\u0641 \u0645\u062e\u062a\u0635\u0631 \u0628\u0644\u063a\u0629 \u0645\u0641\u0647\u0648\u0645\u0629 \u0644\u0644\u0639\u0645\u064a\u0644 \u0648\u0627\u0644\u0645\u0647\u0646\u062f\u0633"
+    },
+    "old_value": {
+      "type": "string",
+      "description": "\u0627\u0644\u0642\u064a\u0645\u0629 \u0627\u0644\u0642\u062f\u064a\u0645\u0629 (\u0644\u0644\u062a\u063a\u064a\u064a\u0631\u0627\u062a \u0627\u0644\u062c\u0632\u0626\u064a\u0629)"
+    },
+    "new_value": {
+      "type": "string",
+      "description": "\u0627\u0644\u0642\u064a\u0645\u0629 \u0627\u0644\u062c\u062f\u064a\u062f\u0629 (\u0644\u0644\u062a\u063a\u064a\u064a\u0631\u0627\u062a \u0627\u0644\u062c\u0632\u0626\u064a\u0629)"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "\u0628\u064a\u0627\u0646\u0627\u062a \u0625\u0636\u0627\u0641\u064a\u0629 (\u0631\u0627\u0628\u0637 \u0645\u0644\u0641\u060c \u0645\u0628\u0644\u063a\u060c \u0625\u0644\u062e)"
+    }
+  },
+  "required": [
+    "project_id",
+    "actor_email",
+    "activity_type",
+    "summary"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
