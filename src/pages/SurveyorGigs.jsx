@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { uploadScopedFile } from '@/lib/projectFileStorage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -123,8 +124,7 @@ function SubmitDeliverablesForm({ request, onDone }) {
 
     setError('');
     try {
-      const res = await base44.integrations.Core.UploadFile({ file });
-      const url = res.file_url;
+      const url = await uploadScopedFile("surveyor-gigs", file);
       if (type === 'cad') setCadFiles(prev => [...prev, url]);
       else setVisualFiles(prev => [...prev, url]);
     } catch (e) { setError('فشل رفع الملف'); }
