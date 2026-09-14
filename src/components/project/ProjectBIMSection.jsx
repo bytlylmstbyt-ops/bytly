@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadProjectFile } from "@/lib/projectFileStorage";
 import {
   Card, CardContent, CardHeader, CardTitle
 } from "@/components/ui/card";
@@ -111,7 +112,7 @@ export default function ProjectBIMSection({ project, user, userEngineer, assigne
     setUploading(true);
     try {
       // 1) Upload the file
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: pendingFile });
+      const file_url = await uploadProjectFile(project.id, pendingFile);
       const classification = classifyUploadedFile(pendingFile.name);
 
       // 2) Create BIMModel record
