@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
 } from "@/components/ui/dialog";
@@ -45,9 +45,11 @@ export default function ClientFormModal({ open, onOpenChange, onSaved, editingCl
     setError("");
     try {
       if (editingClient) {
-        await base44.entities.Client.update(editingClient.id, form);
+        const { error } = await supabase.from("clients").update({ ...form, updated_at: new Date().toISOString() }).eq("id", editingClient.id);
+        if (error) throw error;
       } else {
-        await base44.entities.Client.create(form);
+        const { error } = await supabase.from("clients").insert({ ...form, is_real: true, source: "admin_crm" });
+        if (error) throw error;
       }
       onSaved();
       onOpenChange(false);
