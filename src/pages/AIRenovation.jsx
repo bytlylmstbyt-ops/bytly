@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import AIChat from "@/components/ai/AIChat";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 
 const SYSTEM_PROMPT = `أنت خبير تجديد وتحسين المنازل من فريق Bytly AI Engineers.
 تخصصك: تحليل صور الغرف والمنازل واقتراح التجديدات والتحسينات.
@@ -32,7 +33,7 @@ export default function AIRenovation() {
     for (const file of files) {
       const reader = new FileReader();
       await new Promise(resolve => { reader.onload = resolve; reader.readAsDataURL(file); });
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("ai/renovation", file);
       results.push({ preview: reader.result, url: file_url, name: file.name });
     }
     setUploadedImages(prev => [...prev, ...results].slice(0, 3));
