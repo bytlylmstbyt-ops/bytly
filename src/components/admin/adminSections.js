@@ -45,7 +45,7 @@ export const ADMIN_CATEGORIES = [
     description: "كل ما يخص المشاريع وإدارتها من لوحة واحدة.",
     items: [
       { page: "AdminOperationsDashboard", label: "لوحة مدير العمليات", desc: "ملخص المشاريع والعروض والعقود والتنفيذ" },
-      { page: "AdminProjects", label: "لوحة إدارة المشاريع", desc: "نظرة شاملة وإدارة كل مشاريع المنصة", permission: ["projects", "view"] },
+      { page: "AdminProjects", label: "لوحة إدارة المشاريع", desc: "نظرة شاملة وإدارة كل مشاريع المنصة", permission: ["projects", "view"], priority: "critical" },
       { page: "Projects", label: "سوق المشاريع", desc: "تصفح جميع المشاريع المنشورة" },
       { page: "ProjectProposals", label: "إدارة العروض", desc: "متابعة عروض المشاريع" },
       { page: "CompareProposals", label: "مقارنة العروض", desc: "مقارنة عروض مشروع معين" },
@@ -61,15 +61,15 @@ export const ADMIN_CATEGORIES = [
     description: "مركز موحد لإدارة المهندسين والعملاء ومقدمي الخدمة وعلاقات العملاء والأدوار والموافقات.",
     items: [
       { page: "AdminUserManagementCenter", label: "مركز إدارة المستخدمين", desc: "بوابة موحدة لكل عمليات المستخدمين والعملاء والأدوار" },
-      { page: "AdminEngineers", label: "إدارة المهندسين", desc: "مراجعة واعتماد ملفات المهندسين" },
-      { page: "AdminClients", label: "إدارة العملاء", desc: "قائمة العملاء وبياناتهم" },
+      { page: "AdminEngineers", label: "إدارة المهندسين", desc: "مراجعة واعتماد ملفات المهندسين", priority: "critical" },
+      { page: "AdminClients", label: "إدارة العملاء", desc: "قائمة العملاء وبياناتهم", priority: "critical" },
       { page: "AdminReviews", label: "تقييمات العملاء", desc: "مراجعة تقييمات العملاء وملاحظاتهم" },
       { page: "AdminClients", label: "علاقات العملاء CRM", desc: "متابعة علاقات العملاء والتواصل" },
-      { page: "AdminProviders", label: "الشركات ومقدمو الخدمة", desc: "الشركات والمقاولون والاستشاريون والموردون" },
+      { page: "AdminProviders", label: "الشركات ومقدمو الخدمة", desc: "الشركات والمقاولون والاستشاريون والموردون", priority: "critical" },
       { page: "AdminMarketEntities", label: "إدارة كيانات السوق", desc: "الشركات والموردون في السوق" },
       { page: "RoleManagement", label: "إدارة الأدوار", desc: "تعريف أدوار المستخدمين وصلاحياتها" },
       { page: "UserRoleAssignment", label: "تعيين الأدوار للمستخدمين", desc: "ربط المستخدمين بالأدوار" },
-      { page: "PendingApprovals", label: "الموافقات المعلقة", desc: "طلبات بانتظار المراجعة" },
+      { page: "PendingApprovals", label: "الموافقات المعلقة", desc: "طلبات بانتظار المراجعة", priority: "critical" },
     ],
   },
   {
@@ -102,7 +102,7 @@ export const ADMIN_CATEGORIES = [
     description: "المحافظ، الإيرادات، طلبات السحب، والفواتير.",
     items: [
       { page: "AdminFinanceDashboard", label: "لوحة المدير المالي", desc: "ملخص مالي للفواتير والإيرادات والسحوبات والاستردادات" },
-      { page: "AdminWallet", label: "إدارة المحافظ", desc: "أرصدة ومعاملات المحافظ", permission: ["payments", "view"] },
+      { page: "AdminWallet", label: "إدارة المحافظ", desc: "أرصدة ومعاملات المحافظ", permission: ["payments", "view"], priority: "critical" },
       { page: "AdminWalletDashboard", label: "لوحة المحافظ", desc: "نظرة عامة على حركة المحافظ" },
       { page: "AdminRefundControl", label: "إدارة المبالغ المستردة", desc: "طلبات الاسترداد" },
       { page: "AllWithdrawalRequests", label: "طلبات السحب", desc: "جميع طلبات سحب الأرصدة" },
@@ -192,7 +192,7 @@ export const ADMIN_CATEGORIES = [
     icon: Link2,
     description: "إدارة جميع التكاملات والخدمات الخارجية المتصلة بالمنصة.",
     items: [
-      { page: "AdminIntegrations", label: "لوحة التكاملات", desc: "عرض وإدارة جميع التكاملات وحالة الاتصال" },
+      { page: "AdminIntegrations", label: "لوحة التكاملات", desc: "عرض وإدارة جميع التكاملات وحالة الاتصال", priority: "high" }
     ],
   },
   {
