@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,16 +48,20 @@ export default function AdminClientsPage() {
   const loadData = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [clientsData, interactionsData] = await Promise.all([
-        base44.entities.Client.list("-created_date", 500).catch(() => []),
-        base44.entities.ClientInteraction.list("-created_date", 500).catch(() => []),
+      const [{ data: clientsData, error: clientsError }, { data: interactionsData, error: interactionsError }, { data: projectsData, error: projectsError }] = await Promise.all([
+        supabase.from("clients").select("*").order("created_at", { ascending: false }).limit(500),
+        supabase.from("client_interactions").select("*").order("created_at", { ascending: false }).limit(500),
+        supabase.from("projects").select("id,title,status,client_user_id,created_at").limit(1000),
       ]);
+      if (clientsError) throw clientsError;
+      if (interactionsError) throw interactionsError;
+      if (projectsError) throw projectsError;
       // count interactions + projects per client
       const enriched = await Promise.all(
         clientsData.map(async (c) => {
           const [clientInteractions, projects] = await Promise.all([
-            base44.entities.ClientInteraction.filter({ client_email: c.email }).catch(() => []),
-            base44.entities.Project.filter({ client_id: c.id }).catch(() => []),
+            Promise.resolve((interactionsData || []).filter(i => i.client_email === c.email)),
+            Promise.resolve((projectsData || []).filter(p => p.client_user_id && p.client_user_id === c.user_id)),
           ]);
           return {
             ...c,
@@ -124,13 +128,13 @@ export default function AdminClientsPage() {
     setSelectedClient(client);
     setDetailsLoading(true);
     try {
-      const [projects, contracts, invoices, clientInteractions] = await Promise.all([
-        base44.entities.Project.filter({ client_id: client.id }).catch(() => []),
-        base44.entities.Contract.filter({ client_id: client.id }).catch(() => []),
-        base44.entities.Invoice.filter({ client_id: client.id }).catch(() => []),
-        base44.entities.ClientInteraction.filter({ client_email: client.email }).catch(() => []),
+      const [{ data: projects, error: projectsError }, { data: clientInteractions, error: interactionsError }] = await Promise.all([
+        supabase.from("projects").select("*").eq("client_user_id", client.user_id).order("created_at", { ascending: false }),
+        supabase.from("client_interactions").select("*").eq("client_email", client.email).order("interaction_date", { ascending: false }),
       ]);
-      setClientDetails({ projects, contracts, invoices, interactions: clientInteractions });
+      if (projectsError) throw projectsError;
+      if (interactionsError) throw interactionsError;
+      setClientDetails({ projects: projects || [], contracts: [], invoices: [], interactions: clientInteractions || [] });
     } finally { setDetailsLoading(false); }
   };
 
@@ -143,7 +147,8 @@ export default function AdminClientsPage() {
   const toggleStatus = async (client) => {
     const newStatus = client.is_subscription_active === false ? true : false;
     try {
-      await base44.entities.Client.update(client.id, { is_subscription_active: newStatus });
+      const { error } = await supabase.from("clients").update({ is_subscription_active: newStatus, updated_at: new Date().toISOString() }).eq("id", client.id);
+      if (error) throw error;
       loadData();
     } catch (err) { console.error(err); }
   };
@@ -431,7 +436,8 @@ export default function AdminClientsPage() {
                         size="sm"
                         variant="outline"
                         onClick={async () => {
-                          await base44.entities.ClientInteraction.update(interaction.id, { status: "closed" });
+                          const { error } = await supabase.from("client_interactions").update({ status: "closed", updated_at: new Date().toISOString() }).eq("id", interaction.id);
+                          if (error) throw error;
                           loadData();
                         }}
                         className="text-green-600 border-green-200 hover:bg-green-50 shrink-0"
