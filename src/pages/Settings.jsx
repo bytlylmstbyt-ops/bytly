@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion } from "framer-motion";
 import { 
   User, Mail, Phone, MapPin, Camera, Save, 
@@ -121,7 +122,7 @@ export default function Settings() {
 
     setIsSaving(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("profiles", file);
       handleInputChange("profile_image", file_url);
       toast.success(t('settings.profile.saveSuccess'));
     } catch (error) {
