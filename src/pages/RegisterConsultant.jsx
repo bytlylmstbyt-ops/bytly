@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { saveRegistration } from "@/lib/registrationService";
 import EmailConfirmationPending from "@/components/registration/EmailConfirmationPending";
 import { useNavigate } from "react-router-dom";
@@ -83,7 +84,7 @@ export default function RegisterConsultantPage() {
     if (!file) return;
 
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const file_url = await uploadScopedFile("registration/consultants", file);
       setFormData({
         ...formData,
         certificates: [...formData.certificates, file_url]
