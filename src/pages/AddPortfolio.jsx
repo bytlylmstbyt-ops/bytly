@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion } from "framer-motion";
 import { 
   Upload, X, Plus, CheckCircle, Loader2, Image as ImageIcon
@@ -101,7 +102,7 @@ export default function AddPortfolio() {
     
     try {
       const uploadPromises = files.map(async (file) => {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        const file_url = await uploadScopedFile("portfolio", file);
         return file_url;
       });
 
