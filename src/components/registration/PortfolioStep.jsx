@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { Images, Plus, X, Upload, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +33,7 @@ export default function PortfolioStep({ portfolioItems, setPortfolioItems }) {
     try {
       const uploadedUrls = [];
       for (const file of files) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
+        const file_url = await uploadScopedFile("portfolio", file);
         uploadedUrls.push(file_url);
       }
       setPortfolioItems(portfolioItems.map((item, i) =>
