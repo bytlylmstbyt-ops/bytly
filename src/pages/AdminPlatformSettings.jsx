@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
-import { appParams } from "@/lib/app-params";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +10,7 @@ import { Pencil, Image as ImageIcon, Trash2, Maximize2, Copy, Check, Code2, Shie
 
 export default function AdminPlatformSettings() {
   const { toast } = useToast();
-  const appId = appParams.appId || "—";
+  const projectUrl = import.meta.env.VITE_SUPABASE_URL || "—";
 
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,16 +24,22 @@ export default function AdminPlatformSettings() {
   const loadSettings = useCallback(async () => {
     setLoading(true);
     try {
-      const list = await base44.entities.PlatformSettings.list();
-      if (list.length > 0) {
+      const { data: list, error } = await supabase.from("platform_settings").select("*").limit(1);
+      if (error) throw error;
+      if (list?.length > 0) {
         setSettings(list[0]);
       } else {
-        const created = await base44.entities.PlatformSettings.create({
-          app_name: "BYTLY - بيتلي",
-          description: "بيتلي - المنظومة الهندسية المتكاملة توفر نظامًا ذكيًا لإدارة المشاريع الهندسية بكفاءة، مع 5 أنواع بيانات متزامنة ووصول مباشر لـ 8 صفحات أساسية.",
-          logo_url: "",
-          social_image_url: "",
-        });
+        const { data: created, error: createError } = await supabase
+          .from("platform_settings")
+          .insert({
+            app_name: "BYTLY - بيتلي",
+            description: "بيتلي - المنظومة الهندسية المتكاملة",
+            logo_url: "",
+            social_image_url: "",
+          })
+          .select()
+          .single();
+        if (createError) throw createError;
         setSettings(created);
       }
     } catch (e) {
@@ -50,7 +55,13 @@ export default function AdminPlatformSettings() {
 
   const updateField = async (field, value) => {
     try {
-      const updated = await base44.entities.PlatformSettings.update(settings.id, { [field]: value });
+      const { data: updated, error } = await supabase
+        .from("platform_settings")
+        .update({ [field]: value, updated_at: new Date().toISOString() })
+        .eq("id", settings.id)
+        .select()
+        .single();
+      if (error) throw error;
       setSettings(updated);
       toast({ title: "تم الحفظ", description: "تم تحديث الإعداد بنجاح" });
     } catch (e) {
@@ -63,8 +74,11 @@ export default function AdminPlatformSettings() {
     if (!file) return;
     setUploadingLogo(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      await updateField("logo_url", file_url);
+      const path = `branding/logo-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`;
+      const { error: uploadError } = await supabase.storage.from("platform-assets").upload(path, file, { upsert: true, contentType: file.type || undefined });
+      if (uploadError) throw uploadError;
+      const { data: publicUrlData } = supabase.storage.from("platform-assets").getPublicUrl(path);
+      await updateField("logo_url", publicUrlData.publicUrl);
     } catch (e) {
       toast({ title: "خطأ في الرفع", description: e.message, variant: "destructive" });
     } finally {
@@ -77,8 +91,11 @@ export default function AdminPlatformSettings() {
     if (!file) return;
     setUploadingSocial(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      await updateField("social_image_url", file_url);
+      const path = `branding/social-${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "-")}`;
+      const { error: uploadError } = await supabase.storage.from("platform-assets").upload(path, file, { upsert: true, contentType: file.type || undefined });
+      if (uploadError) throw uploadError;
+      const { data: publicUrlData } = supabase.storage.from("platform-assets").getPublicUrl(path);
+      await updateField("social_image_url", publicUrlData.publicUrl);
     } catch (e) {
       toast({ title: "خطأ في الرفع", description: e.message, variant: "destructive" });
     } finally {
@@ -100,15 +117,13 @@ export default function AdminPlatformSettings() {
     );
   }
 
-  const installCmd = "npm install @base44/sdk";
-  const initCode = `import { createClient } from '@base44/sdk';
+  const installCmd = "npm install @supabase/supabase-js";
+  const initCode = `import { createClient } from '@supabase/supabase-js';
 
-const base44 = createClient({
-  appId: "${appId}",
-  headers: {
-    "api_key": "<YOUR_API_KEY>"
-  }
-});`;
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);`;
 
   return (
     <div className="min-h-screen bg-[#F7F8FC] py-6 px-4 md:px-8" dir="rtl">
