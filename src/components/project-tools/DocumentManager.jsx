@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,8 +64,8 @@ export default function DocumentManager({ project, user }) {
     try {
       const uploadedUrls = [];
       for (const file of files) {
-        const { data } = await base44.integrations.Core.UploadFile({ file });
-        uploadedUrls.push(data.file_url);
+        const file_url = await uploadScopedFile(`projects/${project.id}/documents`, file);
+        uploadedUrls.push(file_url);
       }
 
       // Update project attachments
