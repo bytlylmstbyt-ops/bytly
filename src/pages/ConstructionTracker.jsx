@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import { jsPDF } from "jspdf";
 import {
@@ -141,7 +142,7 @@ export default function ConstructionTracker() {
     const file = e.target.files[0];
     if (!file) return;
     setUploadingFile(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const file_url = await uploadScopedFile("construction-tracker", file);
     setEditForm(p => ({ ...p, attachments: [...(p.attachments || []), file_url] }));
     setUploadingFile(false);
   };
