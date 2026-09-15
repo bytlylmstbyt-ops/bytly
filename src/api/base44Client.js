@@ -1,6 +1,7 @@
 import { createClient } from '@base44/sdk';
 import { appParams } from '@/lib/app-params';
 import { supabase } from '@/lib/supabaseClient';
+import { publishLinkedInPost } from '@/lib/linkedinSupabaseService';
 
 const { appId, token } = appParams;
 const PLATFORM_OWNER_EMAIL = 'bytlylmstbyt@gmail.com';
@@ -126,5 +127,25 @@ legacyBase44.entities.Portfolio = {...legacyPortfolio,create:async payload=>{con
 
 const legacyPlatformSettings = legacyBase44.entities.PlatformSettings;
 legacyBase44.entities.PlatformSettings = {...legacyPlatformSettings,list:async()=>{const {data,error}=await withHardTimeout(supabase.from('platform_settings').select('*').order('updated_at',{ascending:false}).limit(1),10000,'انتهت مهلة قراءة إعدادات المنصة');if(error)throw error;return data||[]},create:async p=>{const {data,error}=await withHardTimeout(supabase.from('platform_settings').insert(p).select('*').single(),10000,'انتهت مهلة حفظ إعدادات المنصة');if(error)throw error;return data},update:async(id,p)=>{const {data,error}=await withHardTimeout(supabase.from('platform_settings').update({...p,updated_at:new Date().toISOString()}).eq('id',id).select('*').single(),10000,'انتهت مهلة تحديث إعدادات المنصة');if(error)throw error;return data}};
+
+// LinkedIn compatibility bridge: keep existing UI contracts while routing actual publishing to Supabase.
+const legacyFunctions = legacyBase44.functions;
+legacyBase44.functions = {
+  ...legacyFunctions,
+  invoke: async (name, payload) => {
+    if (name === 'linkedinService' && payload?.action === 'shareDesignWork') {
+      const text = payload?.data?.customCaption;
+      const published = await publishLinkedInPost(text);
+      return {
+        data: {
+          success: true,
+          message: 'تم النشر على LinkedIn عبر Supabase ✓',
+          postId: published?.postId || null,
+        },
+      };
+    }
+    return legacyFunctions.invoke(name, payload);
+  },
+};
 
 export const base44 = legacyBase44;
