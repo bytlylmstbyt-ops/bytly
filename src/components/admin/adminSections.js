@@ -208,9 +208,10 @@ export const ADMIN_CATEGORIES = [
     key: "marketing",
     label: "إدارة التسويق",
     icon: Megaphone,
-    description: "إدارة حسابات التواصل الاجتماعي والمنشورات والتحليلات.",
+    description: "إدارة التسويق والعلاقات والقنوات والمحتوى والتحليلات.",
     items: [
       { page: "AdminMarketingDashboard", label: "لوحة مدير التسويق", desc: "ملخص التسويق والبريد وSEO والنطاقات والتحليلات" },
+      { page: "MarketingAgent", label: "وكيل التسويق", desc: "جسم مستقل لتحليل المنصة وبناء خطط التواصل المباشر وLinkedIn والفعاليات والقنوات التسويقية", permission: ["marketing", "view"], priority: "high" },
       { page: "AdminMarketingCenter", label: "مركز التسويق", desc: "إدارة منصات التواصل والمنشورات والمسودات", permission: ["marketing", "view"] },
       { page: "MarketingHub", label: "مولد المحتوى", desc: "توليد ونشر المحتوى التسويقي بالذكاء الاصطناعي" },
       { page: "SocialAnalytics", label: "تحليلات التواصل الاجتماعي", desc: "تقارير التفاعل عبر المنصات" },
