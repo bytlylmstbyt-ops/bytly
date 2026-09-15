@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Megaphone, Plus, TrendingUp, FileText, AlertCircle, RefreshCw, Search, Linkedin, Twitter, Facebook, Instagram, CalendarClock, BarChart3, Gauge, Sparkles } from "lucide-react";
+import { Loader2, Megaphone, Plus, TrendingUp, FileText, AlertCircle, RefreshCw, Search, Linkedin, Twitter, Facebook, Instagram, CalendarClock, BarChart3, Gauge } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,7 +14,6 @@ import CampaignReports from "@/components/admin/marketing/CampaignReports";
 import GoogleAnalyticsPanel from "@/components/admin/marketing/GoogleAnalyticsPanel";
 import AdminSearchGeoAnalytics from "@/pages/AdminSearchGeoAnalytics";
 import AddPlatformDialog from "@/components/admin/marketing/AddPlatformDialog";
-import MarketingAgentPanel from "@/components/admin/MarketingAgentPanel";
 import { listSyncStates, listSocialPosts, testMarketingConnection, getMarketingAnalytics } from "@/lib/marketingService";
 
 const PLATFORMS = [
@@ -31,7 +30,7 @@ export default function AdminMarketingCenter() {
   const [loading, setLoading] = useState(true);
   const [syncStates, setSyncStates] = useState({});
   const [posts, setPosts] = useState([]);
-  const [activeTab, setActiveTab] = useState("agent");
+  const [activeTab, setActiveTab] = useState("posts");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [extraPlatforms, setExtraPlatforms] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -85,7 +84,6 @@ export default function AdminMarketingCenter() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">{allPlatforms.map((platform) => <MarketingPlatformCard key={platform.id} platform={platform} connected={getConnectionStatus(platform)} lastSync={getLastSync(platform.id)} onTest={() => handleTestConnection(platform.id)} />)}</div>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="flex flex-wrap h-auto gap-1 mb-4 bg-transparent p-1 border border-slate-200 rounded-lg">
-          <TabsTrigger value="agent" className="text-xs sm:text-sm data-[state=active]:bg-[#4A3F35] data-[state=active]:text-white"><Sparkles className="w-3.5 h-3.5 ml-1.5" />{isRTL ? "وكيل التسويق" : "Marketing Agent"}</TabsTrigger>
           <TabsTrigger value="posts" className="text-xs sm:text-sm data-[state=active]:bg-[#4A3F35] data-[state=active]:text-white"><FileText className="w-3.5 h-3.5 ml-1.5" />{t("integrations.adminMarketing.tabs.posts")}</TabsTrigger>
           <TabsTrigger value="compose" className="text-xs sm:text-sm data-[state=active]:bg-[#4A3F35] data-[state=active]:text-white"><Plus className="w-3.5 h-3.5 ml-1.5" />{t("integrations.adminMarketing.tabs.compose")}</TabsTrigger>
           <TabsTrigger value="analytics" className="text-xs sm:text-sm data-[state=active]:bg-[#4A3F35] data-[state=active]:text-white"><TrendingUp className="w-3.5 h-3.5 ml-1.5" />{t("integrations.adminMarketing.tabs.analytics")}</TabsTrigger>
@@ -95,7 +93,6 @@ export default function AdminMarketingCenter() {
           <TabsTrigger value="searchGeo" className="text-xs sm:text-sm data-[state=active]:bg-[#4A3F35] data-[state=active]:text-white"><Search className="w-3.5 h-3.5 ml-1.5" />{isRTL ? "محركات البحث والتحليل الجغرافي" : "Search & Geo Analytics"}</TabsTrigger>
           <TabsTrigger value="errors" className="text-xs sm:text-sm data-[state=active]:bg-[#4A3F35] data-[state=active]:text-white"><AlertCircle className="w-3.5 h-3.5 ml-1.5" />{t("integrations.adminMarketing.tabs.errors")}</TabsTrigger>
         </TabsList>
-        <TabsContent value="agent"><MarketingAgentPanel /></TabsContent>
         <TabsContent value="posts"><MarketingPostsList posts={posts} onRefresh={handleRefresh} /></TabsContent>
         <TabsContent value="compose"><MarketingPostComposer onPublished={handleRefresh} /></TabsContent>
         <TabsContent value="analytics"><MarketingAnalyticsTab posts={posts} /></TabsContent>
