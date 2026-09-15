@@ -1,27 +1,22 @@
 import { supabase } from '@/lib/supabaseClient';
 
-const TABLES = ['clients', 'engineers', 'engineering_firms'];
-
-const sourceMeta = {
-  clients: { account_type: 'عميل', name: (r) => r.full_name || r.company_name || 'بدون اسم' },
-  engineers: { account_type: 'مهندس', name: (r) => r.full_name || 'بدون اسم' },
-  engineering_firms: { account_type: 'شركة هندسية', name: (r) => r.company_name || 'بدون اسم' },
+const SOURCE_CONFIG = {
+  clients: { select: 'id,full_name,company_name,email,phone,city,is_real,status,created_at', account_type: 'عميل', name: (r) => r.full_name || r.company_name || 'بدون اسم' },
+  engineers: { select: 'id,full_name,email,phone,city,is_real,status,created_at', account_type: 'مهندس', name: (r) => r.full_name || 'بدون اسم' },
+  engineering_firms: { select: 'id,company_name,email,phone,city,is_real,status,created_at', account_type: 'شركة هندسية', name: (r) => r.company_name || 'بدون اسم' },
 };
 
 export async function getOutreachContacts() {
-  const results = await Promise.all(TABLES.map(async (table) => {
-    const { data, error } = await supabase.from(table)
-      .select('id,full_name,company_name,email,phone,city,is_real,status,created_at')
-      .order('created_at', { ascending: false }).limit(100);
+  const results = await Promise.all(Object.entries(SOURCE_CONFIG).map(async ([table, config]) => {
+    const { data, error } = await supabase.from(table).select(config.select).order('created_at', { ascending: false }).limit(100);
     if (error) throw error;
-    const meta = sourceMeta[table];
     return (data || []).map((row) => ({
       id: `${table}:${row.id}`,
       source_table: table,
       source_id: row.id,
-      name: meta.name(row),
+      name: config.name(row),
       company_name: row.company_name || null,
-      account_type: meta.account_type,
+      account_type: config.account_type,
       email: row.email || null,
       phone: row.phone || null,
       city: row.city || null,
@@ -55,9 +50,7 @@ export async function ensureTrackedContact(contact) {
 
 export async function saveDraftMessage(contact, body, channel = 'direct_outreach') {
   const tracked = await ensureTrackedContact(contact);
-  const { data, error } = await supabase.from('marketing_outreach_messages').insert({
-    contact_id: tracked.id, channel, direction: 'outbound', status: 'draft', body,
-  }).select().single();
+  const { data, error } = await supabase.from('marketing_outreach_messages').insert({ contact_id: tracked.id, channel, direction: 'outbound', status: 'draft', body }).select().single();
   if (error) throw error;
   return data;
 }
