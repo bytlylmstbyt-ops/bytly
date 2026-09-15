@@ -2,19 +2,19 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Megaphone, Plus, TrendingUp, FileText, AlertCircle, RefreshCw, Search, Linkedin, Twitter, Facebook, Instagram, CalendarClock, BarChart3, Gauge } from "lucide-react";
+import { Loader2, Megaphone, Plus, TrendingUp, FileText, AlertCircle, RefreshCw, Search, Linkedin, Twitter, Facebook, Instagram, CalendarClock, BarChart3, Gauge, Sparkles } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useToast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import MarketingPlatformCard from "@/components/admin/marketing/MarketingPlatformCard";
 import MarketingPostComposer from "@/components/admin/marketing/MarketingPostComposer";
 import MarketingPostsList from "@/components/admin/marketing/MarketingPostsList";
-import MarketingCharts from "@/components/admin/marketing/MarketingCharts";
 import PostScheduler from "@/components/admin/marketing/PostScheduler";
 import CampaignReports from "@/components/admin/marketing/CampaignReports";
 import GoogleAnalyticsPanel from "@/components/admin/marketing/GoogleAnalyticsPanel";
 import AdminSearchGeoAnalytics from "@/pages/AdminSearchGeoAnalytics";
 import AddPlatformDialog from "@/components/admin/marketing/AddPlatformDialog";
+import MarketingAgentPanel from "@/components/admin/MarketingAgentPanel";
 import { listSyncStates, listSocialPosts, testMarketingConnection, getMarketingAnalytics } from "@/lib/marketingService";
 
 const PLATFORMS = [
@@ -31,7 +31,7 @@ export default function AdminMarketingCenter() {
   const [loading, setLoading] = useState(true);
   const [syncStates, setSyncStates] = useState({});
   const [posts, setPosts] = useState([]);
-  const [activeTab, setActiveTab] = useState("posts");
+  const [activeTab, setActiveTab] = useState("agent");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [extraPlatforms, setExtraPlatforms] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -52,11 +52,9 @@ export default function AdminMarketingCenter() {
 
   useEffect(() => { loadData(); }, [loadData]);
   const handleRefresh = () => { setRefreshing(true); loadData(); };
-
   const getConnectionStatus = (platform) => Boolean(syncStates[platform.id]?.sync_token);
   const getLastSync = (platformId) => syncStates[platformId]?.last_sync || null;
   const handleAddPlatform = (platform) => { setExtraPlatforms((prev) => [...prev, platform]); setShowAddDialog(false); toast({ title: isRTL ? `تمت إضافة ${platform.label}` : `${platform.label} added` }); };
-
   const handleTestConnection = async (platformId) => {
     try {
       const res = await testMarketingConnection(platformId);
@@ -87,6 +85,7 @@ export default function AdminMarketingCenter() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">{allPlatforms.map((platform) => <MarketingPlatformCard key={platform.id} platform={platform} connected={getConnectionStatus(platform)} lastSync={getLastSync(platform.id)} onTest={() => handleTestConnection(platform.id)} />)}</div>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="flex flex-wrap h-auto gap-1 mb-4 bg-transparent p-1 border border-slate-200 rounded-lg">
+          <TabsTrigger value="agent" className="text-xs sm:text-sm data-[state=active]:bg-[#4A3F35] data-[state=active]:text-white"><Sparkles className="w-3.5 h-3.5 ml-1.5" />{isRTL ? "وكيل التسويق" : "Marketing Agent"}</TabsTrigger>
           <TabsTrigger value="posts" className="text-xs sm:text-sm data-[state=active]:bg-[#4A3F35] data-[state=active]:text-white"><FileText className="w-3.5 h-3.5 ml-1.5" />{t("integrations.adminMarketing.tabs.posts")}</TabsTrigger>
           <TabsTrigger value="compose" className="text-xs sm:text-sm data-[state=active]:bg-[#4A3F35] data-[state=active]:text-white"><Plus className="w-3.5 h-3.5 ml-1.5" />{t("integrations.adminMarketing.tabs.compose")}</TabsTrigger>
           <TabsTrigger value="analytics" className="text-xs sm:text-sm data-[state=active]:bg-[#4A3F35] data-[state=active]:text-white"><TrendingUp className="w-3.5 h-3.5 ml-1.5" />{t("integrations.adminMarketing.tabs.analytics")}</TabsTrigger>
@@ -96,6 +95,7 @@ export default function AdminMarketingCenter() {
           <TabsTrigger value="searchGeo" className="text-xs sm:text-sm data-[state=active]:bg-[#4A3F35] data-[state=active]:text-white"><Search className="w-3.5 h-3.5 ml-1.5" />{isRTL ? "محركات البحث والتحليل الجغرافي" : "Search & Geo Analytics"}</TabsTrigger>
           <TabsTrigger value="errors" className="text-xs sm:text-sm data-[state=active]:bg-[#4A3F35] data-[state=active]:text-white"><AlertCircle className="w-3.5 h-3.5 ml-1.5" />{t("integrations.adminMarketing.tabs.errors")}</TabsTrigger>
         </TabsList>
+        <TabsContent value="agent"><MarketingAgentPanel /></TabsContent>
         <TabsContent value="posts"><MarketingPostsList posts={posts} onRefresh={handleRefresh} /></TabsContent>
         <TabsContent value="compose"><MarketingPostComposer onPublished={handleRefresh} /></TabsContent>
         <TabsContent value="analytics"><MarketingAnalyticsTab posts={posts} /></TabsContent>
@@ -111,19 +111,19 @@ export default function AdminMarketingCenter() {
 }
 
 function MarketingAnalyticsTab({ posts }) {
-  const { t, isRTL } = useLanguage();
+  const { t } = useLanguage();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => { (async () => { try { setData(await getMarketingAnalytics(posts)); } catch (e) { console.error(e); } finally { setLoading(false); } })(); }, [posts]);
   if (loading) return <div className="flex items-center justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-slate-400" /></div>;
   const publishedWithMetrics = (posts || []).filter((p) => p.status === "published" && p.metrics);
   if (!data && publishedWithMetrics.length === 0) return <Card className="border-slate-200"><CardContent className="text-center py-16 text-slate-400"><TrendingUp className="w-10 h-10 mx-auto mb-2 opacity-40" /><p className="text-sm">{t("integrations.adminMarketing.empty")}</p></CardContent></Card>;
-  return <div className="space-y-4"><MarketingCharts posts={posts} /><div className="grid grid-cols-2 md:grid-cols-4 gap-3"><Card><CardContent className="p-3"><p className="font-bold text-xl">{data.summary?.totalEngagement ?? 0}</p><p className="text-xs text-slate-500">{t("integrations.adminMarketing.analytics.totalEngagement")}</p></CardContent></Card><Card><CardContent className="p-3"><p className="font-bold text-xl">{data.summary?.totalLikes ?? 0}</p><p className="text-xs text-slate-500">{t("integrations.adminMarketing.analytics.totalLikes")}</p></CardContent></Card><Card><CardContent className="p-3"><p className="font-bold text-xl">{data.summary?.totalComments ?? 0}</p><p className="text-xs text-slate-500">{t("integrations.adminMarketing.analytics.totalComments")}</p></CardContent></Card><Card><CardContent className="p-3"><p className="font-bold text-xl">{data.platforms ? Object.keys(data.platforms).length : 0}</p><p className="text-xs text-slate-500">{t("integrations.adminMarketing.analytics.activePlatforms")}</p></CardContent></Card></div><div className="grid grid-cols-1 md:grid-cols-3 gap-4">{Object.entries(data.platforms || {}).map(([key, pData]) => { const config = PLATFORMS.find((p) => p.id === key); const Icon = config?.icon || Megaphone; return <Card key={key}><CardContent className="p-4 space-y-2"><div className="flex items-center gap-2"><Icon className="w-4 h-4" /><p className="font-medium text-sm">{config?.label || key}</p></div><div className="grid grid-cols-2 gap-2 text-xs"><div><p className="font-bold">{pData.total_likes}</p><p className="text-slate-500">{isRTL ? "إعجابات" : "Likes"}</p></div><div><p className="font-bold">{pData.total_comments}</p><p className="text-slate-500">{isRTL ? "تعليقات" : "Comments"}</p></div><div><p className="font-bold">{pData.total_engagement}</p><p className="text-slate-500">{isRTL ? "تفاعل" : "Engagement"}</p></div><div><p className="font-bold">{pData.posts_count}</p><p className="text-slate-500">{isRTL ? "منشورات" : "Posts"}</p></div></div></CardContent></Card>; })}</div></div>;
+  return <MarketingCharts data={data} posts={posts} />;
 }
 
 function MarketingErrorsTab({ posts }) {
-  const { t, isRTL } = useLanguage();
-  const errors = posts.filter((p) => p.status === "failed" && p.error_message);
-  if (errors.length === 0) return <Card className="border-slate-200"><CardContent className="text-center py-16 text-slate-400"><AlertCircle className="w-10 h-10 mx-auto mb-2 opacity-40" /><p className="text-sm">{t("integrations.adminMarketing.errors.noErrors")}</p></CardContent></Card>;
-  return <Card className="border-slate-200"><CardContent className="p-0"><div className="overflow-x-auto"><table className="w-full text-sm"><thead className="bg-slate-50 border-b"><tr className={`text-xs text-slate-500 ${isRTL ? "text-right" : "text-left"}`}><th className="p-3 font-medium">{t("integrations.adminMarketing.errors.platform")}</th><th className="p-3 font-medium">{t("integrations.adminMarketing.errors.error")}</th></tr></thead><tbody>{errors.map((post) => <tr key={post.id} className="border-b last:border-0"><td className="p-3"><Badge className="bg-red-100 text-red-700 text-xs">{post.platform}</Badge></td><td className="p-3 text-xs text-slate-600">{post.error_message}</td></tr>)}</tbody></table></div></CardContent></Card>;
+  const { isRTL } = useLanguage();
+  const failed = (posts || []).filter((p) => p.status === "failed");
+  if (!failed.length) return <Card><CardContent className="py-16 text-center text-slate-400">{isRTL ? "لا توجد أخطاء منشورة مسجلة" : "No failed posts recorded"}</CardContent></Card>;
+  return <div className="space-y-3">{failed.map((p) => <Card key={p.id}><CardContent className="p-4"><div className="flex justify-between gap-3"><div><p className="font-semibold">{p.content?.slice(0, 120)}</p><p className="text-xs text-slate-500 mt-1">{p.platform} · {p.error_message || ""}</p></div><Badge variant="destructive">{p.status}</Badge></div></CardContent></Card>)}</div>;
 }
