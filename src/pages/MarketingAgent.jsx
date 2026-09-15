@@ -2,6 +2,7 @@ import React from "react";
 import { Brain, MessageCircle, Linkedin, Users, CalendarDays, ShieldCheck } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MarketingAgentPanel from "@/components/admin/MarketingAgentPanel";
+import MarketingOutreachPanel from "@/components/admin/MarketingOutreachPanel";
 
 export default function MarketingAgent() {
   return (
@@ -20,6 +21,7 @@ export default function MarketingAgent() {
       </div>
       <Card className="mb-6 border-[#C9A66B]/30"><CardHeader><CardTitle className="flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-[#C9A66B]" />سياسة التشغيل</CardTitle></CardHeader><CardContent className="text-sm text-slate-600 space-y-2"><p>الوكيل يحلل البيانات ويقترح الخطط والمهام، ولا يرسل رسائل أو ينشر محتوى أو ينفق ميزانية دون اعتماد.</p><p>أي لقطة شاشة حقيقية من لوحات بيتلي للنشر يجب مراجعتها أولًا وإخفاء بيانات العملاء والمعلومات الحساسة.</p></CardContent></Card>
       <MarketingAgentPanel />
+      <div className="mt-8"><MarketingOutreachPanel /></div>
     </div>
   );
 }
