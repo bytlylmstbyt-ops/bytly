@@ -1,28 +1,28 @@
 import React, { useState } from 'react';
-import { Brain, CheckCircle2, ClipboardCheck, Loader2, Sparkles, Target } from 'lucide-react';
+import { Brain, CheckCircle2, ClipboardCheck, Loader2, MessageCircle, Linkedin, Users, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { approveChannelPlans, approveRecommendations, buildChannelPlans, buildMarketingInsights, CHANNELS, createTasksFromRecommendations, getMarketingAgentSnapshot, saveMarketingSuggestions } from '@/lib/marketingAgentService';
+import { approveRecommendations, buildMarketingInsights, CHANNELS, createTasksFromRecommendations, getMarketingAgentSnapshot, saveMarketingSuggestions } from '@/lib/marketingAgentService';
+import { buildEngagementPlaybooks, saveEngagementPlaybooks } from '@/lib/marketingEngagementService';
 
-const priorityRank = { 'عالية جدًا': 4, 'عالية': 3, 'متوسطة': 2, 'منخفضة': 1, 'منخفضة مؤقتًا': 0 };
-const priorityClass = p => priorityRank[p] >= 4 ? 'bg-red-100 text-red-800' : priorityRank[p] >= 3 ? 'bg-orange-100 text-orange-800' : 'bg-muted text-foreground';
+const priorityRank = { 'عالية جدًا': 4, 'عالية': 3, 'متوسطة': 2, 'منخفضة': 1 };
 
 export default function MarketingAgentPanel() {
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [snapshot, setSnapshot] = useState(null);
   const [insights, setInsights] = useState([]);
-  const [channelPlans, setChannelPlans] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
+  const [playbooks, setPlaybooks] = useState([]);
   const [message, setMessage] = useState('');
 
   const analyze = async () => {
-    setLoading(true); setMessage(''); setRecommendations([]); setChannelPlans([]);
+    setLoading(true); setMessage(''); setRecommendations([]); setPlaybooks([]);
     try {
       const s = await getMarketingAgentSnapshot();
       const nextInsights = buildMarketingInsights(s).sort((a, b) => (priorityRank[b.priority] || 0) - (priorityRank[a.priority] || 0));
-      setSnapshot(s); setInsights(nextInsights); setChannelPlans(buildChannelPlans(s, nextInsights));
+      setSnapshot(s); setInsights(nextInsights); setPlaybooks(buildEngagementPlaybooks(s));
     } catch (error) { setMessage(error?.message || 'تعذر تحليل بيانات المنصة.'); }
     finally { setLoading(false); }
   };
@@ -31,11 +31,11 @@ export default function MarketingAgentPanel() {
     if (!snapshot || !insights.length) return;
     setActionLoading(true); setMessage('');
     try {
-      const result = await saveMarketingSuggestions(insights, snapshot, channelPlans);
+      const result = await saveMarketingSuggestions(insights, snapshot);
+      if (playbooks.length) await saveEngagementPlaybooks(playbooks);
       setRecommendations(result.recommendations || []);
-      setChannelPlans(result.channelPlans || channelPlans);
-      setMessage('تم حفظ التحليل وخطط القنوات والمهام المقترحة بحالة «مقترح من الوكيل». لم يتم تنفيذ أي نشر أو إنفاق.');
-    } catch (error) { setMessage(error?.message || 'تعذر حفظ اقتراحات الوكيل.'); }
+      setMessage('تم حفظ المهام والخطط بحالة «مقترح من الوكيل». لم يتم إرسال رسائل أو نشر محتوى أو إنفاق ميزانية.');
+    } catch (error) { setMessage(error?.message || 'تعذر حفظ مقترحات الوكيل.'); }
     finally { setActionLoading(false); }
   };
 
@@ -46,20 +46,8 @@ export default function MarketingAgentPanel() {
     try {
       const updated = await approveRecommendations(ids);
       setRecommendations(prev => prev.map(r => updated.find(u => u.id === r.id) || r));
-      setMessage('تم اعتماد المهام المقترحة. لم يتم نشر محتوى أو إنفاق ميزانية.');
+      setMessage('تم اعتماد الاقتراحات. لم يتم نشر محتوى أو إرسال رسائل أو إنفاق ميزانية.');
     } catch (error) { setMessage(error?.message || 'تعذر اعتماد الاقتراحات.'); }
-    finally { setActionLoading(false); }
-  };
-
-  const approvePlans = async () => {
-    const ids = channelPlans.filter(p => p.status === 'proposed').map(p => p.id).filter(Boolean);
-    if (!ids.length) return;
-    setActionLoading(true); setMessage('');
-    try {
-      const updated = await approveChannelPlans(ids);
-      setChannelPlans(prev => prev.map(p => updated.find(u => u.id === p.id) || p));
-      setMessage('تم اعتماد خطط القنوات. ما زال التنفيذ اليدوي فقط.');
-    } catch (error) { setMessage(error?.message || 'تعذر اعتماد خطط القنوات.'); }
     finally { setActionLoading(false); }
   };
 
@@ -79,12 +67,11 @@ export default function MarketingAgentPanel() {
     <Card>
       <CardHeader><CardTitle className="flex items-center gap-2"><Brain className="h-5 w-5" /> وكيل تسويق بيتلي</CardTitle></CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">يحلل بيانات بيتلي الفعلية ويحوّلها إلى قرارات تسويقية: فجوات، مهام مقترحة، وخطة مستقلة لكل قناة. الأولويات تتغير حسب البيانات، ولا يوجد نشر أو إنفاق أو تنفيذ تلقائي.</p>
+        <p className="text-sm text-muted-foreground">يحلل بيانات بيتلي الفعلية ثم يبني مهامًا وخطط علاقات وتسويق. لا يوجد إرسال أو نشر أو إنفاق تلقائي.</p>
         <div className="flex flex-wrap gap-2">
           <Button onClick={analyze} disabled={loading || actionLoading}>{loading ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Sparkles className="h-4 w-4 ml-2" />}حلّل المنصة واقترح مهام جديدة</Button>
-          {insights.length > 0 && !recommendations.length && <Button variant="outline" onClick={saveDrafts} disabled={actionLoading}><ClipboardCheck className="h-4 w-4 ml-2" />حفظ التحليل والمقترحات</Button>}
-          {recommendations.some(r => r.status === 'proposed') && <Button variant="outline" onClick={approveAll} disabled={actionLoading}><CheckCircle2 className="h-4 w-4 ml-2" />اعتماد المهام المقترحة</Button>}
-          {channelPlans.some(p => p.status === 'proposed' && p.id) && <Button variant="outline" onClick={approvePlans} disabled={actionLoading}><Target className="h-4 w-4 ml-2" />اعتماد خطط القنوات</Button>}
+          {insights.length > 0 && !recommendations.length && <Button variant="outline" onClick={saveDrafts} disabled={actionLoading}><ClipboardCheck className="h-4 w-4 ml-2" />حفظ كمقترحات</Button>}
+          {recommendations.some(r => r.status === 'proposed') && <Button variant="outline" onClick={approveAll} disabled={actionLoading}><CheckCircle2 className="h-4 w-4 ml-2" />اعتماد الاقتراحات</Button>}
           {recommendations.some(r => r.status === 'approved') && <Button variant="outline" onClick={createTasks} disabled={actionLoading}><ClipboardCheck className="h-4 w-4 ml-2" />تحويل إلى مهام</Button>}
         </div>
         {message && <div className="rounded-lg border p-3 text-sm">{message}</div>}
@@ -97,9 +84,23 @@ export default function MarketingAgentPanel() {
       {CHANNELS.map(c => <Card key={c.id}><CardHeader><CardTitle className="text-base">{c.name}</CardTitle></CardHeader><CardContent><p className="text-sm font-medium mb-2">الجمهور</p><p className="text-sm text-muted-foreground mb-3">{c.audience}</p><p className="text-sm font-medium mb-2">كيف يعمل؟</p><p className="text-sm text-muted-foreground">{c.how}</p></CardContent></Card>)}
     </div>
 
-    {channelPlans.length > 0 && <Card><CardHeader><CardTitle className="flex items-center gap-2"><Target className="h-5 w-5" /> خطط القنوات</CardTitle></CardHeader><CardContent className="space-y-4">{channelPlans.map((p,i)=><div key={p.id || `${p.channel}-${i}`} className="border rounded-xl p-4 space-y-2"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{CHANNELS.find(c => c.id === p.channel)?.name || p.channel}</h3><Badge className={priorityClass(p.priority)}>{p.priority}</Badge></div><p className="text-sm"><b>الجمهور:</b> {p.audience}</p><p className="text-sm"><b>الهدف:</b> {p.objective}</p><p className="text-sm"><b>زاوية الرسالة:</b> {p.message_angle}</p><p className="text-sm"><b>العرض / CTA:</b> {p.offer_cta}</p><p className="text-sm"><b>الميزانية المقترحة:</b> {p.budget_suggestion}</p><p className="text-sm"><b>KPI:</b> {p.kpi}</p><p className="text-sm"><b>الإيقاع:</b> {p.cadence}</p><p className="text-sm"><b>النتيجة المتوقعة:</b> {p.expected_outcome}</p><p className="text-xs text-muted-foreground"><b>الدليل:</b> {p.evidence}</p><p className="text-xs text-muted-foreground">الحالة: {p.status === 'approved' ? 'معتمد' : 'مقترح من الوكيل'}</p></div>)}</CardContent></Card>}
+    {playbooks.length > 0 && <Card>
+      <CardHeader><CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> خطط العلاقات والتواصل</CardTitle></CardHeader>
+      <CardContent className="space-y-4">
+        {playbooks.map(p => <div key={p.channel} className="rounded-xl border p-4 space-y-3">
+          <div className="flex items-center justify-between gap-3"><h3 className="font-semibold flex items-center gap-2">{p.channel === 'linkedin' ? <Linkedin className="h-4 w-4" /> : p.channel === 'direct_outreach' ? <MessageCircle className="h-4 w-4" /> : <Users className="h-4 w-4" />}{p.title}</h3><Badge>{p.priority}</Badge></div>
+          <p className="text-sm"><b>الجمهور:</b> {p.audience}</p>
+          <p className="text-sm"><b>الهدف:</b> {p.objective}</p>
+          <div><p className="text-sm font-medium mb-1">خطة التنفيذ المقترحة</p><ol className="list-decimal pr-5 text-sm text-muted-foreground space-y-1">{p.steps.map((s,i)=><li key={i}>{s}</li>)}</ol></div>
+          <p className="text-sm"><b>CTA:</b> {p.cta}</p>
+          <p className="text-sm"><b>KPI:</b> {p.channel === 'direct_outreach' ? 'جهات اتصال → ردود → اجتماعات → تسجيلات → مشاريع' : p.channel === 'linkedin' ? 'وصول مهني → زيارات → محادثات → تسجيلات/اجتماعات' : 'لقاءات → اجتماعات متابعة → شراكات → فرص/صفقات'}</p>
+          <p className="text-xs text-muted-foreground"><b>ضابط:</b> {p.guardrail}</p>
+          <p className="text-xs text-muted-foreground"><b>الدليل:</b> {p.evidence}</p>
+        </div>)}
+      </CardContent>
+    </Card>}
 
-    {insights.length > 0 && <Card><CardHeader><CardTitle>مهام مقترحة من الوكيل</CardTitle></CardHeader><CardContent className="space-y-3">{insights.map((x,i)=><div key={i} className="border rounded-lg p-4"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{x.title}</h3><Badge>{x.priority}</Badge></div><p className="text-sm mt-2"><b>القناة:</b> {CHANNELS.find(c => c.id === x.channel)?.name || x.channel}</p><p className="text-sm mt-2"><b>الجمهور:</b> {x.audience}</p><p className="text-sm mt-2"><b>الهدف:</b> {x.objective}</p><p className="text-sm mt-2"><b>الدليل:</b> {x.evidence}</p><p className="text-sm mt-2"><b>التوصية:</b> {x.recommendation}</p><p className="text-xs text-muted-foreground mt-3">الحالة: مقترح من الوكيل</p></div>)}</CardContent></Card>}
+    {insights.length > 0 && <Card><CardHeader><CardTitle>اقتراحات الوكيل</CardTitle></CardHeader><CardContent className="space-y-3">{insights.map((x,i)=><div key={i} className="border rounded-lg p-4"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{x.title}</h3><Badge>{x.priority}</Badge></div><p className="text-sm mt-2"><b>القناة:</b> {CHANNELS.find(c => c.id === x.channel)?.name || x.channel}</p><p className="text-sm mt-2"><b>الجمهور:</b> {x.audience}</p><p className="text-sm mt-2"><b>الهدف:</b> {x.objective}</p><p className="text-sm mt-2"><b>الدليل:</b> {x.evidence}</p><p className="text-sm mt-2"><b>التوصية:</b> {x.recommendation}</p><p className="text-xs text-muted-foreground mt-3">الحالة: مقترح من الوكيل</p></div>)}</CardContent></Card>}
 
     {recommendations.length > 0 && <Card><CardHeader><CardTitle>دورة اعتماد التسويق</CardTitle></CardHeader><CardContent className="space-y-2">{recommendations.map(r => <div key={r.id} className="flex items-center justify-between gap-3 rounded-lg border p-3"><span className="text-sm">{r.title}</span><Badge variant="outline">{r.status === 'proposed' ? 'مقترح من الوكيل' : r.status === 'approved' ? 'معتمد' : 'تحول إلى مهمة'}</Badge></div>)}</CardContent></Card>}
   </div>;
