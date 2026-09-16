@@ -94,7 +94,7 @@ export const ADMIN_CATEGORIES = [
     { page: "AdManager", label: "مدير الإعلانات", desc: "إنشاء وتعديل ومتابعة الإعلانات" },
     { page: "AdvertiseWithUs", label: "أعلن معنا", desc: "مراجعة وإدارة واجهة طلبات الإعلان" },
     { page: "AdvertiserPortal", label: "المعلنون", desc: "إدارة المعلنين وإعلاناتهم وتقارير الأداء" },
-    { page: "AdvertiserGateway", label: "بوابة المعلن", desc: "بوابة المعلن وتقارير الإعلانات والأداء" },
+    { page: "AdvertiserPortal", label: "بوابة المعلن", desc: "بوابة المعلن وتقارير الإعلانات والأداء" },
   ] },
   { key: "marketing", label: "إدارة التسويق", icon: Megaphone, description: "إدارة التسويق والعلاقات والقنوات والمحتوى والتحليلات.", items: [
     { page: "AdminMarketingDashboard", label: "لوحة مدير التسويق", desc: "ملخص التسويق والبريد وSEO والنطاقات والتحليلات" },
