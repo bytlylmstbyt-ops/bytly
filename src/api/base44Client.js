@@ -2,6 +2,7 @@ import { createClient } from '@base44/sdk';
 import { appParams } from '@/lib/app-params';
 import { supabase } from '@/lib/supabaseClient';
 import { publishLinkedInPost } from '@/lib/linkedinSupabaseService';
+import { callGemini } from '@/lib/geminiClient';
 
 const { appId, token } = appParams;
 const PLATFORM_OWNER_EMAIL = 'bytlylmstbyt@gmail.com';
@@ -32,6 +33,22 @@ legacyBase44.auth.me = async () => {
   return legacyAuthMe();
 };
 
+// AI compatibility bridge: existing Bytly AI pages keep their UI contracts, while
+// InvokeLLM is now routed to the secure Supabase Gemini gateway instead of Base44.
+legacyBase44.integrations.Core.InvokeLLM = async ({ prompt, response_json_schema, agent = 'assistant', context = {} } = {}) => {
+  const wantsJson = Boolean(response_json_schema);
+  const result = await callGemini({
+    agent,
+    prompt,
+    context: { ...context, requested_schema: response_json_schema || null },
+    responseFormat: wantsJson ? 'json' : 'text',
+  });
+  if (wantsJson && result?.raw) {
+    try { return JSON.parse(result.raw); } catch {}
+  }
+  return result;
+};
+
 try {
   const legacyAgentConversation = legacyBase44.entities.AIAgentConversation;
   if (legacyAgentConversation?.filter) {
@@ -50,7 +67,6 @@ legacyBase44.integrations.Core.UploadFile = async ({ file }) => {
   return { file_url: supabase.storage.from('platform-assets').getPublicUrl(data?.path || path).data.publicUrl };
 };
 
-// Marketing compatibility bridge: old UI contracts now read/write Supabase tables.
 const legacySyncState = legacyBase44.entities.SyncState;
 legacyBase44.entities.SyncState = {
   ...legacySyncState,
@@ -128,7 +144,6 @@ legacyBase44.entities.Portfolio = {...legacyPortfolio,create:async payload=>{con
 const legacyPlatformSettings = legacyBase44.entities.PlatformSettings;
 legacyBase44.entities.PlatformSettings = {...legacyPlatformSettings,list:async()=>{const {data,error}=await withHardTimeout(supabase.from('platform_settings').select('*').order('updated_at',{ascending:false}).limit(1),10000,'انتهت مهلة قراءة إعدادات المنصة');if(error)throw error;return data||[]},create:async p=>{const {data,error}=await withHardTimeout(supabase.from('platform_settings').insert(p).select('*').single(),10000,'انتهت مهلة حفظ إعدادات المنصة');if(error)throw error;return data},update:async(id,p)=>{const {data,error}=await withHardTimeout(supabase.from('platform_settings').update({...p,updated_at:new Date().toISOString()}).eq('id',id).select('*').single(),10000,'انتهت مهلة تحديث إعدادات المنصة');if(error)throw error;return data}};
 
-// LinkedIn compatibility bridge: keep existing UI contracts while routing actual publishing to Supabase.
 const legacyFunctions = legacyBase44.functions;
 legacyBase44.functions = {
   ...legacyFunctions,
@@ -136,13 +151,7 @@ legacyBase44.functions = {
     if (name === 'linkedinService' && payload?.action === 'shareDesignWork') {
       const text = payload?.data?.customCaption;
       const published = await publishLinkedInPost(text);
-      return {
-        data: {
-          success: true,
-          message: 'تم النشر على LinkedIn عبر Supabase ✓',
-          postId: published?.postId || null,
-        },
-      };
+      return { data: { success: true, message: 'تم النشر على LinkedIn عبر Supabase ✓', postId: published?.postId || null } };
     }
     return legacyFunctions.invoke(name, payload);
   },
