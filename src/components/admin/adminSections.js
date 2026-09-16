@@ -79,21 +79,24 @@ export const ADMIN_CATEGORIES = [
   { key: "settings", label: "إعدادات المنصة", icon: SettingsIcon, description: "الإعدادات العامة والتكوين الأساسي للمنصة.", items: [
     { page: "AdminPlatformSettings", label: "إعدادات التطبيق ووثائق API", desc: "شعار التطبيق، الوصف، الصورة الاجتماعية، ووثائق واجهة برمجة التطبيقات" },
     { page: "Settings", label: "الإعدادات العامة", desc: "إعدادات الحساب والمنصة" },
-    { page: "AdminAuthenticationSettings", label: "المصادقة والأمان", desc: "تسجيل الدخول، إعادة كلمة المرور، مزودو المصادقة، ووضع الصيانة" },
+    { page: "AdminAuthenticationSettings", label: "إعدادات المصادقة", desc: "إعدادات تسجيل الدخول والمصادقة" },
   ] },
-  { key: "bim", label: "إدارة BIM", icon: Layers, description: "النماذج الهندسية ثلاثية الأبعاد، استخراج الكميات، والبحث الذكي.", items: [
-    { page: "BIMDashboard", label: "لوحة تحكم BIM المركزية", desc: "إدارة نماذج BIM، مزامنة Google Drive، وحالة التكاملات" },
-    { page: "BIMQuantitiesReport", label: "تقرير كميات BIM", desc: "استخراج وتحليل كميات المواد التفصيلية من النماذج" },
-    { page: "BIMSearch", label: "محرك البحث الذكي BIM", desc: "البحث في المخططات الهندسية والعناصر بالكلمات المفتاحية" },
+  { key: "bim", label: "BIM", icon: Layers, description: "إدارة ملفات ومخرجات BIM والتقارير الهندسية.", items: [
+    { page: "BIMDashboard", label: "لوحة BIM", desc: "ملفات ومشاريع BIM" },
+    { page: "BIMQuantitiesReport", label: "تقرير كميات BIM", desc: "تقرير الكميات المستخرج من نماذج BIM" },
+    { page: "BIMSearch", label: "بحث BIM", desc: "البحث في بيانات نماذج BIM" },
   ] },
-  { key: "workflows", label: "سير العمل والأتمتة", icon: Workflow, description: "بناء وإدارة قواعد سير العمل والأتمتة داخل المنصة.", items: [{ page: "AdminWorkflowAutomation", label: "سير العمل والأتمتة", desc: "إنشاء وإدارة قواعد الأتمتة، بطاقات سير العمل، وسجل التنفيذ" }] },
+  { key: "workflows", label: "الأتمتة وسير العمل", icon: Workflow, description: "بناء ومتابعة سير العمل والأتمتة.", items: [
+    { page: "AdminWorkflowAutomation", label: "أتمتة سير العمل", desc: "إدارة عمليات الأتمتة" },
+    { page: "WorkflowBuilder", label: "منشئ سير العمل", desc: "إنشاء وتعديل مسارات العمل" },
+  ] },
   { key: "domains", label: "النطاقات", icon: Link2, description: "إدارة النطاق المجاني، النطاقات المخصصة، إعادة التوجيه، وعنوان إرسال البريد.", items: [{ page: "AdminDomains", label: "النطاقات", desc: "شراء وربط النطاقات، إدارة إعادة التوجيه وعنوان الإرسال" }] },
   { key: "integrations", label: "التكاملات", icon: Link2, description: "إدارة جميع التكاملات والخدمات الخارجية المتصلة بالمنصة.", items: [{ page: "AdminIntegrations", label: "لوحة التكاملات", desc: "عرض وإدارة جميع التكاملات وحالة الاتصال", priority: "high" }] },
   { key: "email", label: "إدارة البريد الإلكتروني", icon: Mail, description: "إدارة بريد المنصة والقوالب والحملات والإحصائيات.", items: [{ page: "AdminEmailCenter", label: "مركز البريد الإلكتروني", desc: "إدارة شاملة للبريد والقوالب والحملات المجدولة" }] },
   { key: "ads", label: "مركز الإعلانات", icon: Megaphone, description: "إدارة الإعلانات والمعلنين وطلبات الإعلان من مركز واحد.", items: [
     { page: "AdManager", label: "مدير الإعلانات", desc: "إنشاء وتعديل ومتابعة الإعلانات" },
     { page: "AdvertiseWithUs", label: "أعلن معنا", desc: "واجهة التعريف بالإعلان والباقات وبدء طلب الإعلان" },
-    { page: "AdvertisersDirectory", label: "المعلنون", desc: "قائمة المعلنين وإجمالي إعلاناتهم وظهورهم ونقراتهم" },
+    { page: "AdvertiserDirectory", label: "المعلنون", desc: "قائمة المعلنين وإجمالي إعلاناتهم وظهورهم ونقراتهم" },
     { page: "AdvertiserGateway", label: "بوابة المعلن", desc: "لوحة الإعلانات وتقرير الأداء والمشاهدات والنقرات" },
   ] },
   { key: "marketing", label: "إدارة التسويق", icon: Megaphone, description: "إدارة التسويق والعلاقات والقنوات والمحتوى والتحليلات.", items: [
