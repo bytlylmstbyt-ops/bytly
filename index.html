@@ -1,154 +1,28 @@
 <!doctype html>
-<html lang="en">
+<html lang="ar" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="https://base44.com/logo_v2.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="manifest" href="/manifest.json" />
     <title>Bytly | بيتلي</title>
-    <meta name="description" content="bytly (لمسة بيت) — منصة هندسية متكاملة تجمع المهندسين والمعماريين والمساحين مع أصحاب المشاريع في المملكة العربية السعودية. خدمات التصميم الداخلي والمعماري والهندسة المدنية والمساحات والرخص ورخص البناء ومتابعة التنفيذ في مكان واحد." />
-    <meta name="keywords" content="bytly, لمسة بيت, هندسة, تصميم داخلي, تصميم معماري, هندسة مدنية, مساحة, رخصة بناء, مهندس, معمار, السعودية" />
+    <meta name="description" content="Bytly | بيتلي — المنظومة الهندسية المتكاملة في المملكة العربية السعودية، تربط أصحاب المشاريع بالمهندسين والاستشاريين ومقدمي الخدمات الهندسية." />
+    <meta name="keywords" content="Bytly, بيتلي, هندسة, تصميم معماري, هندسة مدنية, مهندس, استشاري, مشاريع, السعودية" />
     <meta name="author" content="Bytly | بيتلي" />
     <meta name="application-name" content="Bytly | بيتلي" />
     <meta name="twitter:title" content="Bytly | بيتلي" />
     <meta property="og:title" content="Bytly | بيتلي" />
-    <meta property="og:description" content="منصة هندسية متكاملة تجمع المهندسين والمعماريين والمساحين مع أصحاب المشاريع. حلولك الهندسية الذكية في مكان واحد." />
+    <meta property="og:description" content="المنظومة الهندسية المتكاملة في المملكة العربية السعودية." />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Bytly | بيتلي" />
     <meta property="og:url" content="https://mybytly.com" />
-    <script>
-      // In the iframe preview, Vite's @vite/client creates a WebSocket for HMR
-      // that can't connect and throws "WebSocket closed without opened".
-      // 1. Mock the WebSocket so @vite/client never gets the chance to throw.
-      // 2. Suppress the error message at all levels as a backup.
-      (function () {
-        var MSG = 'WebSocket closed without opened';
-
-        // 1. Override WebSocket — mock connections to the Vite dev server (same origin or localhost)
-        // Real app WebSockets (cross-origin, different host) pass through unchanged.
-        var OriginalWebSocket = window.WebSocket;
-
-        function MockWebSocket(url, protocols) {
-          var self = this;
-          var listeners = {};
-
-          this.readyState = 0; // CONNECTING
-          this.url = url;
-          this.extensions = '';
-          this.protocol = '';
-          this.binaryType = 'blob';
-          this.bufferedAmount = 0;
-          this.onopen = null;
-          this.onclose = null;
-          this.onerror = null;
-          this.onmessage = null;
-
-          this.addEventListener = function (type, listener) {
-            if (!listeners[type]) listeners[type] = [];
-            listeners[type].push(listener);
-          };
-          this.removeEventListener = function (type, listener) {
-            if (!listeners[type]) return;
-            listeners[type] = listeners[type].filter(function (l) { return l !== listener; });
-          };
-          this.dispatchEvent = function (event) {
-            var arr = listeners[event.type];
-            if (arr) arr.forEach(function (l) { try { l(event); } catch (e) {} });
-            var handler = self['on' + event.type];
-            if (typeof handler === 'function') { try { handler(event); } catch (e) {} }
-            return true;
-          };
-          this.send = function () {};
-          this.close = function () {};
-
-          // Fire a fake 'open' so @vite/client thinks HMR connected.
-          // Never fire 'close' — prevents "WebSocket closed without opened".
-          setTimeout(function () {
-            self.readyState = 1; // OPEN
-            try { self.dispatchEvent({ type: 'open' }); } catch (e) {}
-          }, 0);
-        }
-        MockWebSocket.CONNECTING = 0;
-        MockWebSocket.OPEN = 1;
-        MockWebSocket.CLOSING = 2;
-        MockWebSocket.CLOSED = 3;
-
-        // Only mock WebSocket connections to the Vite dev server (same origin or localhost).
-        // Real app WebSockets (Base44 SDK realtime subscriptions, cross-origin) pass through
-        // to the real implementation so they can connect/reconnect normally.
-        window.WebSocket = function (url, protocols) {
-          var isViteHmr = false;
-          try {
-            var parsed = new URL(url, window.location.origin);
-            isViteHmr = parsed.origin === window.location.origin ||
-                        parsed.hostname === 'localhost' ||
-                        parsed.hostname === '127.0.0.1';
-          } catch (e) {
-            isViteHmr = false; // unparseable URL → let real WebSocket handle it
-          }
-          if (isViteHmr) {
-            return new MockWebSocket(url, protocols);
-          }
-          return new OriginalWebSocket(url, protocols);
-        };
-        window.WebSocket.prototype = OriginalWebSocket.prototype;
-        window.WebSocket.CONNECTING = 0;
-        window.WebSocket.OPEN = 1;
-        window.WebSocket.CLOSING = 2;
-        window.WebSocket.CLOSED = 3;
-
-        // 2. Backup: filter the WebSocket error message everywhere it might surface
-        var origConsoleError = console.error;
-        var origConsoleWarn = console.warn;
-        // Check if all args are empty/undefined/null — suppress noise with no diagnostic value
-        var isEmptyWarning = function (args) {
-          if (args.length === 0) return true;
-          return args.every(function (a) { return a === undefined || a === null || a === '' || (typeof a === 'string' && a.trim() === ''); });
-        };
-
-        console.error = function () {
-          var args = Array.prototype.slice.call(arguments);
-          if (args.some(function (a) { return typeof a === 'string' && a.indexOf(MSG) !== -1; })) return;
-          if (isEmptyWarning(args)) return;
-          return origConsoleError.apply(console, args);
-        };
-        console.warn = function () {
-          var args = Array.prototype.slice.call(arguments);
-          if (args.some(function (a) { return typeof a === 'string' && a.indexOf(MSG) !== -1; })) return;
-          if (isEmptyWarning(args)) return;
-          return origConsoleWarn.apply(console, args);
-        };
-
-        window.onerror = function (message, source, lineno, colno, error) {
-          if (typeof message === 'string' && message.indexOf(MSG) !== -1) return true;
-          if (error && error.message && error.message.indexOf(MSG) !== -1) return true;
-        };
-        window.addEventListener('error', function (e) {
-          var msg = e.message || (e.error && e.error.message) || '';
-          if (typeof msg === 'string' && msg.indexOf(MSG) !== -1) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            return true;
-          }
-        }, true);
-        window.addEventListener('unhandledrejection', function (e) {
-          var msg = (e.reason && e.reason.message) || '';
-          if (typeof msg === 'string' && msg.indexOf(MSG) !== -1) {
-            e.preventDefault();
-          }
-        }, true);
-      })();
-    </script>
-    <!-- Structured data: Organization + WebSite -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "Bytly | بيتلي",
-      "alternateName": "bytly",
+      "alternateName": "Bytly",
       "url": "https://mybytly.com",
-      "logo": "https://base44.com/logo_v2.svg",
-      "description": "المنظومة الهندسية المتكاملة — منصة هندسية تجمع المهندسين والمعماريين والمساحين والاستشاريين مع أصحاب المشاريع في المملكة العربية السعودية.",
+      "description": "المنظومة الهندسية المتكاملة في المملكة العربية السعودية، تربط أصحاب المشاريع بالمهندسين والاستشاريين ومقدمي الخدمات الهندسية.",
       "sameAs": [
         "https://www.instagram.com/bytlylmstbyt",
         "https://www.facebook.com/profile.php?id=61587162083581",
@@ -167,12 +41,10 @@
     </script>
   </head>
   <body>
-    <!-- Crawlable content for search engines and OAuth brand verification -->
     <noscript>
-      <div style="padding: 2rem; font-family: system-ui, sans-serif; max-width: 800px; margin: 0 auto;">
-        <p><strong>بيتلي/bytly</strong> — المنظومة الهندسية المتكاملة في المملكة العربية السعودية. منصة هندسية شاملة تجمع المهندسين والمعماريين والمساحين والاستشاريين مع أصحاب المشاريع في مكان واحد.</p>
-        <p>غرض التطبيق: تقديم خدمات هندسية متكاملة تشمل التصميم الداخلي، التصميم المعماري، الهندسة المدنية، المساحات والرسم التنفيذي، إصدار رخص البناء، متابعة تنفيذ المشاريع، حساب تكاليف البناء، وربط أصحاب المشاريع بالمهندسين المعتمدين.</p>
-        <p>يتيح بيتلي/bytly للمستخدمين: البحث عن مهندسين معتمدين، طلب عروض أسعار، إدارة العقود والمراحل، الدفع الآمن عبر الضمان، ومتابعة تقدم المشاريع الهندسية بشكل شفاف وموثوق.</p>
+      <div style="padding:2rem;font-family:system-ui,sans-serif;max-width:800px;margin:0 auto">
+        <p><strong>Bytly | بيتلي</strong> — المنظومة الهندسية المتكاملة في المملكة العربية السعودية.</p>
+        <p>منصة هندسية تربط أصحاب المشاريع بالمهندسين والاستشاريين ومقدمي الخدمات الهندسية، وتدعم إدارة المشاريع والعقود والمراحل والخدمات الهندسية في مكان واحد.</p>
       </div>
     </noscript>
     <div id="root"></div>
