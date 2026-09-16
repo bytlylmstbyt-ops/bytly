@@ -2,443 +2,403 @@ import React, { useState, useEffect, useRef, Suspense } from "react";
 import { base44 } from "@/api/base44Client";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
+import {
   Search, Send, Paperclip, MoreVertical,
   Phone, Video, ChevronLeft, Download, Loader2, Mic, MicOff,
   Users, User, Building2, Filter, Plus, X, UserCircle, MessageCircle
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useLanguage } from "@/components/i18n/LanguageContext";
+import { toast } from "sonner";
 import CloudWorkspace from "@/components/chat/CloudWorkspace";
-import { Cloud, FileText } from "lucide-react";
-
+import { FileText } from "lucide-react";
 const SendQuoteDialog = React.lazy(() => import("@/components/quotes/SendQuoteDialog"));
 
-const CATEGORY_FILTERS = [
-  { key: "all", label: "الكل", icon: Filter },
-  { key: "client", label: "العملاء", icon: User },
-  { key: "engineer", label: "المهندسون", icon: UserCircle },
-  { key: "firm", label: "الشركات", icon: Building2 },
+const DIRECTORY_TYPES = [
+  { key: "all", label: "الكل" },
+  { key: "client", label: "العملاء" },
+  { key: "engineer", label: "المهندسون" },
+  { key: "firm", label: "الشركات / المكاتب" },
+  { key: "consultant", label: "الاستشاريون" },
 ];
 
-export default function Messages() {
-  const { t, language } = useLanguage();
-  const urlParams = new URLSearchParams(window.location.search);
-  const engineerIdFromUrl = urlParams.get("engineer");
-  const projectFromUrl = urlParams.get("project");
+function normalizeUser(record, type) {
+  if (!record?.email) return null;
+  const name = record.full_name || record.company_name || record.name || record.email;
+  return {
+    id: record.id,
+    email: record.email,
+    name,
+    full_name: record.full_name,
+    company_name: record.company_name,
+    phone: record.phone,
+    city: record.city,
+    profile_image: record.profile_image || record.company_logo,
+    type,
+    _type: type,
+    status: record.status,
+    is_verified: record.is_verified,
+  };
+}
 
-  const [user, setUser] = useState(null);
+export default function Messages() {
+  const [me, setMe] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
-  const [isSending, setIsSending] = useState(false);
-  const [allUsers, setAllUsers] = useState({ engineers: [], clients: [], firms: [] });
   const [usersMap, setUsersMap] = useState({});
-  const [showMobileChat, setShowMobileChat] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
+  const [directory, setDirectory] = useState([]);
+  const [directoryType, setDirectoryType] = useState("all");
+  const [directorySearch, setDirectorySearch] = useState("");
   const [showNewChat, setShowNewChat] = useState(false);
-  const [userSearch, setUserSearch] = useState("");
-  const [showCloudWorkspace, setShowCloudWorkspace] = useState(false);
+  const [search, setSearch] = useState("");
+  const [newMessage, setNewMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isLoadingDirectory, setIsLoadingDirectory] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [showQuoteDialog, setShowQuoteDialog] = useState(false);
+  const [quoteConversation, setQuoteConversation] = useState(null);
   const messagesEndRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
-  useEffect(() => { loadInitialData(); }, []);
-  useEffect(() => { if (selectedConversation) loadMessages(selectedConversation.id); }, [selectedConversation]);
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  const loadDirectory = async () => {
+    setIsLoadingDirectory(true);
+    try {
+      const results = await Promise.allSettled([
+        base44.entities.Engineer.list("-created_date", 500),
+        base44.entities.Client.list("-created_date", 500),
+        base44.entities.EngineeringFirm.list("-created_date", 500),
+        base44.entities.Consultant.list("-created_date", 500),
+      ]);
+      const rows = [];
+      const maps = {};
+      const add = (result, type) => {
+        if (result.status !== "fulfilled") return;
+        (result.value || []).forEach((record) => {
+          const user = normalizeUser(record, type);
+          if (!user || user.email === me?.email) return;
+          if (!maps[user.email]) {
+            maps[user.email] = user;
+            rows.push(user);
+          }
+        });
+      };
+      add(results[0], "engineer");
+      add(results[1], "client");
+      add(results[2], "firm");
+      add(results[3], "consultant");
+      setDirectory(rows);
+      setUsersMap((prev) => ({ ...prev, ...Object.fromEntries(rows.map((u) => [u.email, u])) }));
+    } catch (error) {
+      console.error("Directory load error:", error);
+      toast.error("تعذر تحميل قائمة المستخدمين");
+    } finally {
+      setIsLoadingDirectory(false);
+    }
+  };
 
-  const loadInitialData = async () => {
+  const loadConversations = async () => {
     setIsLoading(true);
     setLoadError("");
     try {
-      const currentUser = await base44.auth.me();
-      if (!currentUser?.email) throw new Error("AUTH_REQUIRED");
-      setUser(currentUser);
-
-      const [conversationsResult, engineersResult, clientsResult, firmsResult] = await Promise.allSettled([
-        base44.entities.Conversation.filter({ participants: currentUser.email }, "-last_message_date"),
-        base44.entities.Engineer.list(),
-        base44.entities.Client.list(),
-        base44.entities.EngineeringFirm.list(),
+      const current = await base44.auth.me();
+      setMe(current);
+      const [conversationResult, engineerResult, clientResult, firmResult, consultantResult] = await Promise.allSettled([
+        base44.entities.Conversation.filter({ participants: current.email }, "-last_message_date", 200),
+        base44.entities.Engineer.list("-created_date", 500),
+        base44.entities.Client.list("-created_date", 500),
+        base44.entities.EngineeringFirm.list("-created_date", 500),
+        base44.entities.Consultant.list("-created_date", 500),
       ]);
-
-      if (conversationsResult.status !== "fulfilled") {
-        throw conversationsResult.reason || new Error("CONVERSATIONS_LOAD_FAILED");
-      }
-
-      const convos = conversationsResult.value || [];
-      const engineersData = engineersResult.status === "fulfilled" ? (engineersResult.value || []) : [];
-      const clientsData = clientsResult.status === "fulfilled" ? (clientsResult.value || []) : [];
-      const firmsData = firmsResult.status === "fulfilled" ? (firmsResult.value || []) : [];
-
-      const map = {};
-      engineersData.forEach(u => { if (u.email) map[u.email] = { ...u, _type: "engineer" }; });
-      clientsData.forEach(u => { if (u.email) map[u.email] = { ...u, _type: "client" }; });
-      firmsData.forEach(u => { if (u.email) map[u.email] = { ...u, _type: "firm", full_name: u.company_name }; });
-
-      setUsersMap(map);
-      setAllUsers({ engineers: engineersData, clients: clientsData, firms: firmsData });
-      setConversations(convos);
-
-      if (engineerIdFromUrl) {
-        const engineer = engineersData.find(e => e.id === engineerIdFromUrl);
-        if (engineer) {
-          const existing = convos.find(c => c.participants?.includes(engineer.email) && c.participants?.includes(currentUser.email) && c.project_id === (projectFromUrl || "direct"));
-          if (existing) {
-            setSelectedConversation(existing);
-          } else {
-            const newConvo = await base44.entities.Conversation.create({
-              project_id: projectFromUrl || "direct",
-              participants: [currentUser.email, engineer.email],
-              participant_roles: { engineer: engineer.email, client: currentUser.email },
-              type: "direct",
-              name: engineer.full_name,
-            });
-            setConversations(prev => [newConvo, ...prev]);
-            setSelectedConversation(newConvo);
-          }
-          setShowMobileChat(true);
-        }
-      }
+      if (conversationResult.status !== "fulfilled") throw conversationResult.reason;
+      const maps = {};
+      const addMap = (result, type) => {
+        if (result.status !== "fulfilled") return;
+        (result.value || []).forEach((r) => {
+          const u = normalizeUser(r, type);
+          if (u) maps[u.email] = u;
+        });
+      };
+      addMap(engineerResult, "engineer");
+      addMap(clientResult, "client");
+      addMap(firmResult, "firm");
+      addMap(consultantResult, "consultant");
+      setUsersMap(maps);
+      setDirectory(Object.values(maps).filter((u) => u.email !== current.email));
+      setConversations(conversationResult.value || []);
     } catch (error) {
       console.error("Messages load error:", error);
-      setLoadError(error?.message === "AUTH_REQUIRED" ? "يجب تسجيل الدخول أولاً لعرض المحادثات." : "تعذر تحميل المحادثات. حاولي تحديث الصفحة مرة أخرى.");
+      setLoadError(error?.message || "حدث خطأ في تحميل المحادثات");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const loadMessages = async (conversationId) => {
+  useEffect(() => { loadConversations(); }, []);
+
+  useEffect(() => {
+    if (me) loadDirectory();
+  }, [me?.email]);
+
+  const loadMessages = async (conversation) => {
+    setSelectedConversation(conversation);
+    setIsLoadingMessages(true);
     try {
-      const msgs = await base44.entities.Message.filter({ conversation_id: conversationId }, "created_date");
-      setMessages(msgs || []);
-      const unread = (msgs || []).filter(m => !m.is_read && m.sender_email !== user?.email);
-      for (const msg of unread) {
-        try { await base44.entities.Message.update(msg.id, { is_read: true }); } catch (e) { console.error("mark read error:", e); }
-      }
+      const list = await base44.entities.Message.filter({ conversation_id: conversation.id }, "created_date", 500);
+      setMessages(list || []);
+      const unread = (list || []).filter((m) => !m.is_read && m.sender_email !== me?.email);
+      await Promise.allSettled(unread.map((m) => base44.entities.Message.update(m.id, { is_read: true })));
     } catch (error) {
-      console.error("Messages fetch error:", error);
-      setMessages([]);
+      console.error("Message load error:", error);
+      toast.error("تعذر تحميل الرسائل");
+    } finally {
+      setIsLoadingMessages(false);
     }
   };
 
-  const getConversationName = (conversation) => {
-    if (conversation.name) return conversation.name;
-    const others = (conversation.participants || []).filter(e => e !== user?.email);
-    return others.map(e => usersMap[e]?.full_name || usersMap[e]?.company_name || e).join("، ");
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const getOtherParticipants = (conversation) => (conversation?.participants || []).filter((email) => email !== me?.email);
+  const getConversationTitle = (conversation) => {
+    if (conversation?.name) return conversation.name;
+    const names = getOtherParticipants(conversation).map((email) => usersMap[email]?.name || email);
+    return names.join("، ") || "محادثة";
   };
 
-  const getConversationAvatar = (conversation) => {
-    const others = (conversation.participants || []).filter(e => e !== user?.email);
-    if (others.length === 1) return usersMap[others[0]]?.profile_image || usersMap[others[0]]?.company_logo;
-    return null;
-  };
+  const findExistingConversation = (email) => conversations.find((c) =>
+    c.type === "direct" && Array.isArray(c.participants) && c.participants.length === 2 &&
+    c.participants.includes(me?.email) && c.participants.includes(email)
+  );
 
-  const getConversationType = (conversation) => {
-    if (conversation.type === "group" || (conversation.participants?.length > 2)) return "group";
-    const other = (conversation.participants || []).find(e => e !== user?.email);
-    return usersMap[other]?._type || "direct";
-  };
-
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation) return;
-    const text = newMessage.trim();
-    const senderInfo = usersMap[user.email] || {};
-    const tempId = `optimistic-${Date.now()}`;
-    const optimisticMsg = {
-      id: tempId,
-      conversation_id: selectedConversation.id,
-      project_id: selectedConversation.project_id || "direct",
-      sender_email: user.email,
-      sender_name: user.full_name || senderInfo.full_name,
-      sender_role: senderInfo._type || "client",
-      content: text,
-      created_date: new Date().toISOString(),
-    };
-    setMessages(prev => [...prev, optimisticMsg]);
-    setNewMessage("");
-    setIsSending(true);
-
+  const openDirectConversation = async (person) => {
+    if (!me?.email || !person?.email) return;
+    setShowNewChat(false);
+    const existing = findExistingConversation(person.email);
+    if (existing) {
+      await loadMessages(existing);
+      return;
+    }
     try {
-      const message = await base44.entities.Message.create({
-        conversation_id: selectedConversation.id,
-        project_id: selectedConversation.project_id || "direct",
-        sender_email: user.email,
-        sender_name: user.full_name || senderInfo.full_name,
-        sender_role: senderInfo._type || "client",
-        content: text,
-      });
-      await base44.entities.Conversation.update(selectedConversation.id, {
-        last_message: text,
+      const conversation = await base44.entities.Conversation.create({
+        project_id: "direct",
+        type: "direct",
+        name: person.name,
+        participants: [me.email, person.email],
+        participant_roles: { [person.type]: person.email },
+        is_archived: false,
+        muted_by: [],
+        is_main_room: false,
+        last_message: "",
         last_message_date: new Date().toISOString(),
       });
-      setMessages(prev => prev.map(m => (m.id === tempId ? message : m)));
-    } catch (e) {
-      console.error('handleSendMessage error:', e);
-      setMessages(prev => prev.filter(m => m.id !== tempId));
-      setNewMessage(text);
-    } finally {
-      setIsSending(false);
+      setConversations((prev) => [conversation, ...prev]);
+      setUsersMap((prev) => ({ ...prev, [person.email]: person }));
+      await loadMessages(conversation);
+      toast.success(`تم فتح المحادثة مع ${person.name}`);
+    } catch (error) {
+      console.error("Create conversation error:", error);
+      toast.error("تعذر إنشاء المحادثة");
     }
   };
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file || !selectedConversation) return;
+  const sendMessage = async () => {
+    const content = newMessage.trim();
+    if (!content || !selectedConversation || !me || isSending) return;
     setIsSending(true);
     try {
-      const file_url = await uploadScopedFile("messages", file);
       const message = await base44.entities.Message.create({
         conversation_id: selectedConversation.id,
         project_id: selectedConversation.project_id || "direct",
-        sender_email: user.email,
-        sender_name: user.full_name,
-        content: `📎 ${file.name}`,
-        attachments: [{ name: file.name, url: file_url, type: file.type }],
-      });
-      await base44.entities.Conversation.update(selectedConversation.id, {
-        last_message: "📎 مرفق",
-        last_message_date: new Date().toISOString(),
-      });
-      setMessages(prev => [...prev, message]);
-    } catch (e) {
-      console.error('handleFileUpload error:', e);
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  const getJitsiRoomId = (id) => `bytly-${id?.replace(/[^a-zA-Z0-9]/g, '').slice(0, 20)}`;
-
-  const handleVideoCall = () => {
-    if (!selectedConversation) return;
-    const url = `https://meet.jit.si/${getJitsiRoomId(selectedConversation.id)}`;
-    sendCallInvite('فيديو', url);
-    window.open(url, '_blank', 'width=900,height=700');
-  };
-
-  const handleVoiceCall = () => {
-    if (!selectedConversation) return;
-    const url = `https://meet.jit.si/${getJitsiRoomId(selectedConversation.id)}#config.startWithVideoMuted=true`;
-    sendCallInvite('صوتية', url);
-    window.open(url, '_blank', 'width=900,height=700');
-  };
-
-  const sendCallInvite = async (type, url) => {
-    try {
-      const message = await base44.entities.Message.create({
-        conversation_id: selectedConversation.id,
-        project_id: selectedConversation.project_id || "direct",
-        sender_email: user.email,
-        sender_name: user.full_name,
-        content: `📞 دعوة مكالمة ${type} — انضم عبر: ${url}`,
+        sender_email: me.email,
+        sender_name: me.full_name || me.email,
+        sender_role: me.role === "admin" ? "admin" : (usersMap[me.email]?._type || "client"),
+        content,
+        original_content: content,
+        has_sensitive_data: false,
+        is_read: false,
         is_system_message: false,
       });
       await base44.entities.Conversation.update(selectedConversation.id, {
-        last_message: `📞 دعوة مكالمة ${type}`,
+        last_message: content.slice(0, 100),
         last_message_date: new Date().toISOString(),
       });
-      setMessages(prev => [...prev, message]);
-    } catch (e) {
-      console.error('sendCallInvite error:', e);
+      setMessages((prev) => [...prev, message]);
+      setConversations((prev) => prev.map((c) => c.id === selectedConversation.id ? { ...c, last_message: content, last_message_date: new Date().toISOString() } : c));
+      setSelectedConversation((prev) => prev ? { ...prev, last_message: content, last_message_date: new Date().toISOString() } : prev);
+      setNewMessage("");
+    } catch (error) {
+      console.error("Send message error:", error);
+      toast.error("تعذر إرسال الرسالة");
+    } finally {
+      setIsSending(false);
     }
   };
 
-  const handleVoiceRecord = async () => {
-    if (isRecording) {
-      mediaRecorderRef.current?.stop();
-      setIsRecording(false);
-      return;
+  const uploadAttachment = async (file) => {
+    if (!file || !selectedConversation || !me) return;
+    try {
+      const url = await uploadScopedFile("messages", file);
+      const message = await base44.entities.Message.create({
+        conversation_id: selectedConversation.id,
+        project_id: selectedConversation.project_id || "direct",
+        sender_email: me.email,
+        sender_name: me.full_name || me.email,
+        sender_role: "client",
+        content: `📎 ${file.name}`,
+        attachments: [{ name: file.name, url, size: file.size, type: file.type }],
+        is_read: false,
+        is_system_message: false,
+      });
+      setMessages((prev) => [...prev, message]);
+      await base44.entities.Conversation.update(selectedConversation.id, { last_message: `📎 ${file.name}`, last_message_date: new Date().toISOString() });
+    } catch (error) {
+      console.error("Attachment error:", error);
+      toast.error("تعذر رفع الملف");
     }
+  };
+
+  const sendCallInvite = async (type) => {
+    if (!selectedConversation || !me) return;
+    const roomId = `bytly-${selectedConversation.id.replace(/[^a-zA-Z0-9]/g, "").slice(0, 20)}`;
+    const url = `https://meet.jit.si/${roomId}${type === "صوتية" ? "#config.startWithVideoMuted=true" : ""}`;
+    try {
+      const message = await base44.entities.Message.create({
+        conversation_id: selectedConversation.id,
+        project_id: selectedConversation.project_id || "direct",
+        sender_email: me.email,
+        sender_name: me.full_name || me.email,
+        sender_role: "client",
+        content: `📞 دعوة مكالمة ${type}\n\nانضم للمكالمة عبر الرابط:\n${url}`,
+        is_system_message: true,
+        is_read: false,
+      });
+      setMessages((prev) => [...prev, message]);
+      await base44.entities.Conversation.update(selectedConversation.id, { last_message: `📞 مكالمة ${type}`, last_message_date: new Date().toISOString() });
+      window.open(url, "_blank", "width=900,height=700");
+    } catch (error) {
+      console.error("Call invite error:", error);
+      toast.error("تعذر إرسال دعوة المكالمة");
+    }
+  };
+
+  const startRecording = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) return toast.error("التسجيل الصوتي غير متاح في هذا المتصفح");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
       audioChunksRef.current = [];
-      recorder.ondataavailable = (e) => audioChunksRef.current.push(e.data);
+      recorder.ondataavailable = (e) => { if (e.data.size) audioChunksRef.current.push(e.data); };
       recorder.onstop = async () => {
-        try {
-          const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-          stream.getTracks().forEach(t => t.stop());
-          const file = new File([blob], 'voice-message.webm', { type: 'audio/webm' });
-          const file_url = await uploadScopedFile("messages", file);
-          const msg = await base44.entities.Message.create({
-            conversation_id: selectedConversation.id,
-            project_id: selectedConversation.project_id || "direct",
-            sender_email: user.email,
-            sender_name: user.full_name,
-            content: '🎤 رسالة صوتية',
-            attachments: [{ name: 'voice-message.webm', url: file_url, type: 'audio/webm' }],
-          });
-          setMessages(prev => [...prev, msg]);
-        } catch (e) { console.error('voice message error:', e); }
+        stream.getTracks().forEach((track) => track.stop());
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const file = new File([blob], `voice-${Date.now()}.webm`, { type: "audio/webm" });
+        await uploadAttachment(file);
       };
-      recorder.start();
       mediaRecorderRef.current = recorder;
+      recorder.start();
       setIsRecording(true);
-    } catch (e) {
-      console.error('microphone error:', e);
+    } catch (error) {
+      console.error(error);
+      toast.error("تعذر الوصول إلى الميكروفون");
     }
   };
 
-  const startNewConversation = async (targetUser, targetType) => {
-    if (!user) return;
-    const targetEmail = targetUser.email;
-    const existing = conversations.find(c => c.participants?.includes(targetEmail) && c.participants?.includes(user.email) && c.participants?.length === 2);
-    if (existing) {
-      setSelectedConversation(existing);
-      setShowNewChat(false);
-      setShowMobileChat(true);
-      return;
-    }
-    try {
-      const name = targetType === "firm" ? targetUser.company_name : targetUser.full_name;
-      const newConvo = await base44.entities.Conversation.create({
-        project_id: "direct",
-        participants: [user.email, targetEmail],
-        type: "direct",
-        name,
-        participant_roles: targetType === "firm"
-          ? { firm: targetEmail }
-          : targetType === "engineer"
-            ? { engineer: targetEmail }
-            : { client: targetEmail },
-      });
-      setConversations(prev => [newConvo, ...prev]);
-      setSelectedConversation(newConvo);
-      setShowNewChat(false);
-      setShowMobileChat(true);
-    } catch (e) { console.error('startNewConversation error:', e); }
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setIsRecording(false);
   };
 
-  const createGroupChat = async (participants, groupName) => {
-    try {
-      const newConvo = await base44.entities.Conversation.create({
-        project_id: "group",
-        participants: [user.email, ...participants.map(p => p.email)],
-        type: "group",
-        name: groupName || "محادثة جماعية",
-      });
-      setConversations(prev => [newConvo, ...prev]);
-      setSelectedConversation(newConvo);
-      setShowNewChat(false);
-      setShowMobileChat(true);
-    } catch (e) { console.error('createGroupChat error:', e); }
-  };
-
-  const filteredConversations = conversations.filter(c => {
-    const name = getConversationName(c).toLowerCase();
-    const matchSearch = !searchQuery || name.includes(searchQuery.toLowerCase());
-    if (!matchSearch) return false;
-    if (categoryFilter === "all") return true;
-    const type = getConversationType(c);
-    return type === categoryFilter;
+  const filteredDirectory = directory.filter((person) => {
+    const typeOk = directoryType === "all" || person.type === directoryType;
+    const q = directorySearch.trim().toLowerCase();
+    const text = `${person.name} ${person.email} ${person.company_name || ""} ${person.city || ""}`.toLowerCase();
+    return typeOk && (!q || text.includes(q));
   });
 
-  const searchResults = userSearch.trim().length > 0
-    ? [
-        ...allUsers.engineers.filter(e => e.email !== user?.email && (e.full_name?.toLowerCase().includes(userSearch.toLowerCase()) || e.email?.includes(userSearch))).map(e => ({ ...e, _type: "engineer" })),
-        ...allUsers.clients.filter(c => c.email !== user?.email && (c.full_name?.toLowerCase().includes(userSearch.toLowerCase()) || c.email?.includes(userSearch))).map(c => ({ ...c, _type: "client" })),
-        ...allUsers.firms.filter(f => f.company_name?.toLowerCase().includes(userSearch.toLowerCase()) || f.email?.includes(userSearch)).map(f => ({ ...f, _type: "firm", full_name: f.company_name })),
-      ]
-    : [];
+  const filteredConversations = conversations.filter((c) => {
+    const text = `${getConversationTitle(c)} ${c.last_message || ""}`.toLowerCase();
+    return text.includes(search.toLowerCase());
+  });
 
-  const typeLabel = { engineer: "مهندس", client: "عميل", firm: "شركة استشارية" };
-  const typeBadgeColor = { engineer: "bg-blue-100 text-blue-700", client: "bg-green-100 text-green-700", firm: "bg-purple-100 text-purple-700" };
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin" /></div>;
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4" dir="rtl">
-        <Loader2 className="w-10 h-10 animate-spin text-[#C9A66B]" />
-        <p className="text-sm text-slate-500">جاري تحميل مركز المحادثات...</p>
+  if (loadError) return (
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="max-w-md w-full rounded-2xl border p-6 text-center bg-white">
+        <MessageCircle className="w-10 h-10 mx-auto mb-3" />
+        <h2 className="font-bold text-lg mb-2">تعذر تحميل المحادثات</h2>
+        <p className="text-sm text-gray-500 mb-4">{loadError}</p>
+        <button onClick={loadConversations} className="px-4 py-2 rounded-lg bg-black text-white">إعادة المحاولة</button>
       </div>
-    );
-  }
-
-  if (loadError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50" dir="rtl">
-        <div className="bg-white rounded-2xl shadow-lg border p-8 max-w-md w-full text-center">
-          <MessageCircle className="w-12 h-12 mx-auto mb-4 text-[#C9A66B]" />
-          <h2 className="text-lg font-bold text-slate-800 mb-2">مركز المحادثات</h2>
-          <p className="text-sm text-slate-500 mb-6">{loadError}</p>
-          <Button onClick={loadInitialData} className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">إعادة المحاولة</Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (showCloudWorkspace) {
-    return (
-      <div className="bg-slate-50" dir="rtl">
-        <CloudWorkspace user={user} usersMap={usersMap} onBack={() => setShowCloudWorkspace(false)} />
-      </div>
-    );
-  }
+    </div>
+  );
 
   return (
-    <div className="h-[calc(100vh-80px)] bg-slate-50" dir="rtl">
-      <div className="max-w-7xl mx-auto h-full">
-        <div className="flex h-full bg-white shadow-lg rounded-lg overflow-hidden">
-          <div className={`w-full md:w-96 border-l flex flex-col ${showMobileChat ? "hidden md:flex" : "flex"}`}>
-            <div className="p-4 border-b space-y-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-[#1a1a2e]">المحادثات</h2>
-                <div className="flex items-center gap-2">
-                  <Button size="sm" variant="outline" onClick={() => setShowCloudWorkspace(true)} className="gap-1 border-[#C9A66B] text-[#C9A66B] hover:bg-[#f3f0e8]"><Cloud className="w-4 h-4" />مساحة العمل السحابية</Button>
-                  <Button size="sm" onClick={() => setShowNewChat(true)} className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white gap-1"><Plus className="w-4 h-4" />محادثة جديدة</Button>
-                </div>
-              </div>
-              <div className="relative"><Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><Input placeholder="ابحث في المحادثات..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pr-9 text-sm" /></div>
-              <div className="flex gap-1.5 flex-wrap">
-                {CATEGORY_FILTERS.map(f => <button key={f.key} onClick={() => setCategoryFilter(f.key)} className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${categoryFilter === f.key ? "bg-[#1a1a2e] text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}><f.icon className="w-3 h-3" />{f.label}</button>)}
-              </div>
+    <div className="min-h-screen bg-slate-50 p-4 md:p-6">
+      <div className="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border overflow-hidden flex min-h-[760px]">
+        <aside className={`${selectedConversation ? "hidden md:flex" : "flex"} w-full md:w-[360px] border-l flex-col`}>
+          <div className="p-4 border-b">
+            <div className="flex items-center justify-between mb-3">
+              <h1 className="text-xl font-bold flex items-center gap-2"><MessageCircle className="w-5 h-5" /> المحادثات</h1>
+              <button onClick={() => setShowNewChat(true)} className="rounded-lg p-2 bg-amber-100 hover:bg-amber-200" title="محادثة جديدة"><Plus className="w-5 h-5" /></button>
             </div>
-            <ScrollArea className="flex-1">
-              {filteredConversations.length > 0 ? filteredConversations.map((conversation) => {
-                const isSelected = selectedConversation?.id === conversation.id;
-                const name = getConversationName(conversation);
-                const avatar = getConversationAvatar(conversation);
-                const type = getConversationType(conversation);
-                const isGroup = type === "group";
-                return <div key={conversation.id} onClick={() => { setSelectedConversation(conversation); setShowMobileChat(true); }} className={`p-4 flex items-center gap-3 cursor-pointer transition-colors border-b ${isSelected ? "bg-amber-50 border-r-2 border-r-[#C9A66B]" : "hover:bg-slate-50"}`}>
-                  <div className="relative"><Avatar className="w-12 h-12"><AvatarImage src={avatar} /><AvatarFallback className={`text-white ${isGroup ? 'bg-gradient-to-br from-purple-500 to-indigo-500' : 'bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B]'}`}>{isGroup ? <Users className="w-5 h-5" /> : name?.charAt(0)}</AvatarFallback></Avatar>{isGroup && <div className="absolute -bottom-1 -left-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center"><Users className="w-3 h-3 text-white" /></div>}</div>
-                  <div className="flex-1 min-w-0"><div className="flex items-center justify-between gap-2"><h3 className="font-semibold text-slate-800 truncate text-sm">{name}</h3><span className="text-xs text-slate-400 flex-shrink-0">{conversation.last_message_date && new Date(conversation.last_message_date).toLocaleDateString('ar')}</span></div><div className="flex items-center gap-1 mt-0.5">{!isGroup && type !== "direct" && <span className={`text-xs px-1.5 py-0.5 rounded-full ${typeBadgeColor[type] || 'bg-slate-100 text-slate-600'}`}>{typeLabel[type] || type}</span>}{isGroup && <span className="text-xs px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-700">جماعية</span>}<p className="text-xs text-slate-500 truncate">{conversation.last_message || "ابدأ المحادثة"}</p></div></div>
-                </div>;
-              }) : <div className="p-8 text-center text-slate-500"><Users className="w-12 h-12 mx-auto mb-3 text-slate-300" /><p className="text-sm">لا توجد محادثات</p></div>}
-            </ScrollArea>
+            <div className="relative"><Search className="absolute right-3 top-3 w-4 h-4 text-gray-400" /><input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="ابحث في المحادثات" className="w-full rounded-lg border py-2 pr-9 pl-3" /></div>
           </div>
+          <div className="flex-1 overflow-y-auto">
+            {filteredConversations.length === 0 ? <div className="p-8 text-center text-gray-500"><MessageCircle className="w-10 h-10 mx-auto mb-2 opacity-40" /><p>لا توجد محادثات بعد</p><button onClick={() => setShowNewChat(true)} className="mt-3 text-amber-700 font-semibold">ابدأ محادثة جديدة</button></div> : filteredConversations.map((conversation) => (
+              <button key={conversation.id} onClick={() => loadMessages(conversation)} className="w-full text-right p-4 border-b hover:bg-slate-50 flex gap-3">
+                <UserCircle className="w-10 h-10 text-gray-400" />
+                <div className="min-w-0 flex-1"><div className="font-semibold truncate">{getConversationTitle(conversation)}</div><div className="text-sm text-gray-500 truncate">{conversation.last_message || "ابدأ المحادثة"}</div></div>
+              </button>
+            ))}
+          </div>
+        </aside>
 
-          <div className={`flex-1 flex flex-col ${!showMobileChat ? "hidden md:flex" : "flex"}`}>
-            {selectedConversation ? <>
-              <div className="p-4 border-b flex items-center justify-between bg-white shadow-sm">
-                <div className="flex items-center gap-3"><button onClick={() => setShowMobileChat(false)} className="md:hidden p-2 hover:bg-slate-100 rounded-lg"><ChevronLeft className="w-5 h-5" /></button><Avatar className="w-10 h-10"><AvatarImage src={getConversationAvatar(selectedConversation)} /><AvatarFallback className={`text-white ${getConversationType(selectedConversation) === 'group' ? 'bg-gradient-to-br from-purple-500 to-indigo-500' : 'bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B]'}`}>{getConversationType(selectedConversation) === 'group' ? <Users className="w-5 h-5" /> : getConversationName(selectedConversation)?.charAt(0)}</AvatarFallback></Avatar><div><h3 className="font-semibold text-slate-800 text-sm">{getConversationName(selectedConversation)}</h3>{getConversationType(selectedConversation) === "group" ? <p className="text-xs text-purple-600">محادثة جماعية · {selectedConversation.participants?.length} مشاركين</p> : <p className="text-xs text-green-500">متصل الآن</p>}</div></div>
-                <div className="flex items-center gap-2"><button onClick={handleVoiceCall} className="p-2 rounded-full bg-green-100 hover:bg-green-200 text-green-600 transition-colors" title="مكالمة صوتية جماعية"><Phone className="w-5 h-5" /></button><button onClick={handleVideoCall} className="p-2 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-600 transition-colors" title="مكالمة فيديو جماعية"><Video className="w-5 h-5" /></button><button onClick={() => setShowQuoteDialog(true)} className="p-2 rounded-full bg-amber-100 hover:bg-amber-200 text-[#C9A66B] transition-colors" title="إرسال عرض سعر / مشروع"><FileText className="w-5 h-5" /></button><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="w-5 h-5" /></Button></DropdownMenuTrigger><DropdownMenuContent align="start"><DropdownMenuItem>عرض المشاركين</DropdownMenuItem><DropdownMenuItem>كتم الإشعارات</DropdownMenuItem><DropdownMenuItem className="text-red-600">حذف المحادثة</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div>
+        <main className={`${selectedConversation ? "flex" : "hidden md:flex"} flex-1 flex-col`}>
+          {!selectedConversation ? (
+            <div className="flex-1 flex items-center justify-center text-gray-500"><div className="text-center"><MessageCircle className="w-14 h-14 mx-auto mb-3 opacity-30" /><h2 className="font-bold text-xl text-gray-700">اختر محادثة</h2><p>أو ابدأ محادثة جديدة مع أحد مستخدمي بيتلي</p></div></div>
+          ) : (
+            <>
+              <header className="p-4 border-b flex items-center gap-3">
+                <button className="md:hidden" onClick={() => setSelectedConversation(null)}><ChevronLeft /></button>
+                <UserCircle className="w-10 h-10 text-gray-400" />
+                <div className="flex-1"><div className="font-bold">{getConversationTitle(selectedConversation)}</div><div className="text-xs text-gray-500">{getOtherParticipants(selectedConversation).map((e) => usersMap[e]?.email || e).join("، ")}</div></div>
+                <button onClick={() => sendCallInvite("صوتية")} title="مكالمة صوتية" className="p-2 rounded-lg hover:bg-gray-100"><Phone /></button>
+                <button onClick={() => sendCallInvite("فيديو")} title="مكالمة فيديو" className="p-2 rounded-lg hover:bg-gray-100"><Video /></button>
+              </header>
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {isLoadingMessages ? <div className="h-full flex items-center justify-center"><Loader2 className="animate-spin" /></div> : messages.map((m) => (
+                  <div key={m.id} className={`flex ${m.sender_email === me?.email ? "justify-start" : "justify-end"}`}><div className={`max-w-[75%] rounded-2xl px-4 py-2 ${m.sender_email === me?.email ? "bg-amber-100" : "bg-slate-100"}`}><div className="whitespace-pre-wrap text-sm">{m.content}</div>{m.attachments?.map((a) => <a key={a.url} href={a.url} target="_blank" rel="noreferrer" className="mt-2 flex items-center gap-2 text-xs underline"><Download className="w-3 h-3" />{a.name}</a>)}</div></div>
+                ))}<div ref={messagesEndRef} /></div>
+              <div className="border-t p-3 flex items-center gap-2">
+                <input type="file" id="message-file" className="hidden" onChange={(e) => uploadAttachment(e.target.files?.[0])} />
+                <label htmlFor="message-file" className="p-2 rounded-lg hover:bg-gray-100 cursor-pointer"><Paperclip /></label>
+                <button onClick={isRecording ? stopRecording : startRecording} className={`p-2 rounded-lg ${isRecording ? "bg-red-100 text-red-600" : "hover:bg-gray-100"}`} title="رسالة صوتية">{isRecording ? <MicOff /> : <Mic />}</button>
+                <input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }} placeholder="اكتب رسالتك..." className="flex-1 rounded-xl border px-4 py-2" />
+                <button onClick={sendMessage} disabled={isSending || !newMessage.trim()} className="p-3 rounded-xl bg-amber-500 disabled:opacity-40"><Send className="w-5 h-5" /></button>
               </div>
-              {getConversationType(selectedConversation) === "group" && selectedConversation.participants?.length > 0 && <div className="px-4 py-2 bg-purple-50 border-b flex items-center gap-2 overflow-x-auto"><span className="text-xs text-purple-600 font-medium flex-shrink-0">المشاركون:</span>{selectedConversation.participants.map(email => { const u = usersMap[email]; const name = u?.full_name || u?.company_name || email; const type = u?._type; return <div key={email} className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full flex-shrink-0 ${typeBadgeColor[type] || 'bg-slate-100 text-slate-600'}`}>{type === "firm" ? <Building2 className="w-3 h-3" /> : type === "engineer" ? <UserCircle className="w-3 h-3" /> : <User className="w-3 h-3" />}{name}</div>; })}</div>}
-              <ScrollArea className="flex-1 p-4 bg-slate-50"><div className="space-y-4">{messages.map((message) => { const isOwn = message.sender_email === user?.email; const senderInfo = usersMap[message.sender_email]; const senderType = senderInfo?._type; return <motion.div key={message.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex gap-2 ${isOwn ? "justify-start" : "justify-end"}`}>{!isOwn && <Avatar className="w-8 h-8 flex-shrink-0"><AvatarImage src={senderInfo?.profile_image || senderInfo?.company_logo} /><AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] text-white text-xs">{(message.sender_name || message.sender_email)?.charAt(0)}</AvatarFallback></Avatar>}<div className="max-w-[65%]">{!isOwn && getConversationType(selectedConversation) === "group" && <div className="flex items-center gap-1 mb-1"><span className="text-xs text-slate-600 font-medium">{message.sender_name || message.sender_email}</span>{senderType && <span className={`text-xs px-1.5 py-0.5 rounded-full ${typeBadgeColor[senderType] || ''}`}>{typeLabel[senderType]}</span>}</div>}<div className={`rounded-2xl px-4 py-2 ${isOwn ? "bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white rounded-br-none" : "bg-white shadow-sm rounded-bl-none"}`}><p className="text-sm">{message.content}</p>{message.attachments?.map((att, i) => <a key={i} href={att.url || att} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 mt-2 text-sm ${isOwn ? "text-white/80 hover:text-white" : "text-blue-600 hover:text-blue-800"}`}><Download className="w-4 h-4" />{att.name || "تحميل المرفق"}</a>)}</div><p className={`text-xs text-slate-400 mt-1 ${isOwn ? "text-right" : "text-left"}`}>{new Date(message.created_date).toLocaleTimeString('ar', { hour: "2-digit", minute: "2-digit" })}</p></div></motion.div>; })}<div ref={messagesEndRef} /></div></ScrollArea>
-              <div className="p-4 border-t bg-white"><div className="flex items-center gap-2"><input type="file" id="file-upload" className="hidden" onChange={handleFileUpload} /><label htmlFor="file-upload" className="p-2 hover:bg-slate-100 rounded-lg cursor-pointer"><Paperclip className="w-5 h-5 text-slate-500" /></label><button onClick={handleVoiceRecord} className={`p-2 rounded-lg transition-colors ${isRecording ? 'bg-red-100 text-red-600 animate-pulse' : 'hover:bg-slate-100 text-slate-500'}`}>{isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}</button><Input placeholder="اكتب رسالتك..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === "Enter" && handleSendMessage()} className="flex-1" /><Button onClick={handleSendMessage} disabled={!newMessage.trim() || isSending} className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">{isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}</Button></div></div>
-            </> : <div className="flex-1 flex items-center justify-center bg-slate-50"><div className="text-center"><div className="w-24 h-24 mx-auto mb-4 rounded-full bg-slate-200 flex items-center justify-center"><Send className="w-10 h-10 text-slate-400" /></div><h3 className="text-lg font-semibold text-slate-700 mb-2">اختر محادثة</h3><p className="text-slate-500 text-sm">اختر محادثة أو ابدأ محادثة جديدة</p><Button onClick={() => setShowNewChat(true)} className="mt-4 bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white"><Plus className="w-4 h-4 ml-2" />محادثة جديدة</Button></div></div>}
-          </div>
-        </div>
+            </>
+          )}
+        </main>
       </div>
 
-      <AnimatePresence>{showNewChat && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowNewChat(false)}><motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}><div className="flex items-center justify-between mb-4"><h3 className="text-lg font-bold text-[#1a1a2e]">محادثة جديدة</h3><button onClick={() => setShowNewChat(false)} className="p-1 hover:bg-slate-100 rounded-lg"><X className="w-5 h-5" /></button></div><div className="relative mb-4"><Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" /><Input placeholder="ابحث عن عميل، مهندس، أو شركة..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} className="pr-9" autoFocus /></div><div className="space-y-2 max-h-80 overflow-y-auto">{searchResults.length > 0 ? searchResults.map((u) => <div key={u.email} onClick={() => startNewConversation(u, u._type)} className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors"><Avatar className="w-10 h-10"><AvatarImage src={u.profile_image || u.company_logo} /><AvatarFallback className="bg-gradient-to-br from-[#1a1a2e] to-[#C9A66B] text-white">{(u.full_name || u.company_name)?.charAt(0)}</AvatarFallback></Avatar><div className="flex-1 min-w-0"><p className="font-medium text-slate-800 text-sm">{u.full_name || u.company_name}</p><p className="text-xs text-slate-500 truncate">{u.email}</p></div><span className={`text-xs px-2 py-1 rounded-full flex-shrink-0 ${typeBadgeColor[u._type]}`}>{typeLabel[u._type]}</span></div>) : userSearch.length > 0 ? <p className="text-center text-slate-500 py-4 text-sm">لا توجد نتائج</p> : <div className="text-center py-6"><p className="text-sm text-slate-500 mb-3">أو أنشئ محادثة جماعية ثلاثية</p><Button variant="outline" className="gap-2 border-purple-200 text-purple-700 hover:bg-purple-50" onClick={() => { const participants = [...allUsers.engineers.slice(0,1), ...allUsers.firms.slice(0,1)]; if (participants.length > 0) createGroupChat(participants, "محادثة مشروع جماعية"); }}><Users className="w-4 h-4" />إنشاء محادثة جماعية</Button></div>}</div></motion.div></motion.div>}</AnimatePresence>
-      {showQuoteDialog && <Suspense fallback={null}><SendQuoteDialog open={showQuoteDialog} onOpenChange={setShowQuoteDialog} conversation={selectedConversation} user={user} onSent={(msg) => { setMessages(prev => [...prev, msg]); }} /></Suspense>}
+      <AnimatePresence>
+        {showNewChat && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+          <motion.div initial={{ scale: .97, y: 10 }} animate={{ scale: 1, y: 0 }} className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden shadow-2xl">
+            <div className="p-4 border-b flex items-center gap-3"><div className="flex-1"><h2 className="font-bold text-lg">محادثة جديدة</h2><p className="text-sm text-gray-500">اختر الشخص الذي تريد التواصل معه</p></div><button onClick={() => setShowNewChat(false)}><X /></button></div>
+            <div className="p-4 border-b space-y-3"><div className="relative"><Search className="absolute right-3 top-3 w-4 h-4 text-gray-400" /><input value={directorySearch} onChange={(e) => setDirectorySearch(e.target.value)} placeholder="ابحث بالاسم أو البريد أو الشركة أو المدينة" className="w-full rounded-lg border py-2 pr-9 pl-3" /></div><div className="flex gap-2 overflow-x-auto">{DIRECTORY_TYPES.map((type) => <button key={type.key} onClick={() => setDirectoryType(type.key)} className={`whitespace-nowrap px-3 py-2 rounded-lg text-sm ${directoryType === type.key ? "bg-amber-500 text-white" : "bg-gray-100"}`}>{type.label}</button>)}</div></div>
+            <div className="max-h-[55vh] overflow-y-auto p-2">
+              {isLoadingDirectory ? <div className="p-10 text-center"><Loader2 className="animate-spin mx-auto" /></div> : filteredDirectory.length === 0 ? <div className="p-10 text-center text-gray-500"><Users className="w-10 h-10 mx-auto mb-2 opacity-30" />لا يوجد مستخدمون مطابقون</div> : filteredDirectory.map((person) => <button key={`${person.type}-${person.email}`} onClick={() => openDirectConversation(person)} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 text-right border-b last:border-0"><div className="w-11 h-11 rounded-full bg-slate-100 overflow-hidden flex items-center justify-center">{person.profile_image ? <img src={person.profile_image} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-gray-400" />}</div><div className="min-w-0 flex-1"><div className="font-semibold truncate">{person.name}</div><div className="text-xs text-gray-500">{person.type === "engineer" ? "مهندس" : person.type === "client" ? "عميل" : person.type === "firm" ? "شركة / مكتب" : "استشاري"}{person.city ? ` · ${person.city}` : ""}</div><div className="text-xs text-gray-400 truncate">{person.email}</div></div>{person.is_verified && <span className="text-xs text-emerald-600">موثق</span>}</button>)}
+            </div>
+          </motion.div>
+        </motion.div>}
+      </AnimatePresence>
+
+      <Suspense fallback={null}>{showQuoteDialog && quoteConversation && <SendQuoteDialog conversation={quoteConversation} onClose={() => { setShowQuoteDialog(false); setQuoteConversation(null); }} />}</Suspense>
     </div>
   );
 }
