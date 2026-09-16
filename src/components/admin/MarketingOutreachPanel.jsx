@@ -30,15 +30,20 @@ export default function MarketingOutreachPanel() {
   }), [contacts]);
 
   const openMessages = async (contact) => {
-    setSelected(contact); setNotice('');
-    try { setMessages(await getContactMessages(contact.id)); }
-    catch (e) { setMessages([]); setNotice(`تعذر تحميل الرسائل: ${e?.message || 'خطأ'}`); }
+    setNotice('');
+    try {
+      const tracked = await ensureTrackedContact(contact);
+      const enriched = { ...contact, ...tracked };
+      setSelected(enriched);
+      setMessages(await getContactMessages(tracked.id));
+    } catch (e) { setMessages([]); setNotice(`تعذر تحميل الرسائل: ${e?.message || 'خطأ'}`); }
   };
 
   const prepareMessage = async (contact) => {
     setBusy(contact.id); setNotice('');
     try {
-      const existing = await getContactMessages(contact.id);
+      const tracked = await ensureTrackedContact(contact);
+      const existing = await getContactMessages(tracked.id);
       if (!existing.some(m => m.status === 'draft')) await saveDraftMessage(contact, buildClientMessage(contact));
       await openMessages(contact);
     } catch (e) { setNotice(`تعذر تجهيز الرسالة: ${e?.message || 'خطأ'}`); }
@@ -53,7 +58,7 @@ export default function MarketingOutreachPanel() {
       const draft = ms.find(m => m.status === 'draft');
       await markContacted(contact, draft?.id || null);
       await load();
-      if (selected?.id === contact.id) setMessages(await getContactMessages(tracked.id));
+      if (selected?.source_table === contact.source_table && selected?.source_id === contact.source_id) setMessages(await getContactMessages(tracked.id));
       setNotice('تم تسجيل الإرسال. لا يظهر هنا إلا بعد تأكيد أن الرسالة أُرسلت فعليًا.');
     } catch (e) { setNotice(`تعذر تسجيل الإرسال: ${e?.message || 'خطأ'}`); }
     finally { setBusy(null); }
