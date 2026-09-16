@@ -5,20 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Send, Paperclip, Users, Shield, Loader2, AlertTriangle, Video, Phone, MoreVertical
-} from "lucide-react";
+import { Send, Paperclip, Users, Shield, Loader2, AlertTriangle, Video, Phone, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
 import FilePreview from "./FilePreview";
 import { motion, AnimatePresence } from "framer-motion";
 import CallManager from "../calls/CallManager";
 
-export default function EnhancedChatWindow({ 
-  conversation, 
-  currentUserEmail, 
-  onClose,
-  projectData 
-}) {
+export default function EnhancedChatWindow({ conversation, currentUserEmail, onClose, projectData }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -28,7 +21,6 @@ export default function EnhancedChatWindow({
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Call Management
   const callManager = CallManager({
     conversationId: conversation.id,
     currentUserEmail,
@@ -40,38 +32,22 @@ export default function EnhancedChatWindow({
 
   useEffect(() => {
     loadMessages();
-    
-    // Real-time subscription to new messages
     const unsubscribe = base44.entities.Message.subscribe((event) => {
       if (event.data?.conversation_id === conversation.id) {
         setMessages(prev => {
-          // Avoid duplicates
           if (event.type === 'create' && !prev.find(m => m.id === event.id)) {
-            // Remove any optimistic placeholder from same sender and replace with real record
             const withoutOptimistic = prev.filter(m => !(m._optimistic && m.sender_email === event.data?.sender_email));
-            const newMessages = [...withoutOptimistic, event.data].sort((a, b) =>
-              new Date(a.created_date) - new Date(b.created_date)
-            );
+            const newMessages = [...withoutOptimistic, event.data].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
             setTimeout(scrollToBottom, 100);
-            
-            // Play notification sound for new messages from others
-            if (event.data.sender_email !== currentUserEmail) {
-              playNotificationSound();
-            }
-            
+            if (event.data.sender_email !== currentUserEmail) playNotificationSound();
             return newMessages;
           }
-          if (event.type === 'update') {
-            return prev.map(m => m.id === event.id ? event.data : m);
-          }
-          if (event.type === 'delete') {
-            return prev.filter(m => m.id !== event.id);
-          }
+          if (event.type === 'update') return prev.map(m => m.id === event.id ? event.data : m);
+          if (event.type === 'delete') return prev.filter(m => m.id !== event.id);
           return prev;
         });
       }
     });
-
     return () => unsubscribe();
   }, [conversation.id, currentUserEmail]);
 
@@ -92,10 +68,7 @@ export default function EnhancedChatWindow({
 
   const loadMessages = async () => {
     try {
-      const msgs = await base44.entities.Message.filter(
-        { conversation_id: conversation.id },
-        "created_date"
-      );
+      const msgs = await base44.entities.Message.filter({ conversation_id: conversation.id }, "created_date");
       setMessages(msgs);
       scrollToBottom();
     } catch (error) {
@@ -105,33 +78,23 @@ export default function EnhancedChatWindow({
     }
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 
   const handleFileUpload = async (files) => {
     setUploading(true);
     try {
       const attachments = [];
-      
       for (const file of files) {
         const { data } = await base44.functions.invoke('uploadFile', { file });
-        attachments.push({
-          name: file.name,
-          url: data.file_url,
-          size: file.size,
-          type: file.type
-        });
+        attachments.push({ name: file.name, url: data.file_url, size: file.size, type: file.type });
       }
-
       await sendMessageWithAttachments(attachments);
-      
-      // Update last message
       await base44.entities.Conversation.update(conversation.id, {
         last_message: `📎 ${attachments.length} ملف(ات)`,
         last_message_date: new Date().toISOString()
       });
     } catch (error) {
+      console.error("File upload error:", error);
       toast.error("خطأ في رفع الملفات");
     } finally {
       setUploading(false);
@@ -140,7 +103,6 @@ export default function EnhancedChatWindow({
 
   const sendMessageWithAttachments = async (attachments) => {
     const user = await base44.auth.me();
-    
     await base44.entities.Message.create({
       conversation_id: conversation.id,
       project_id: conversation.project_id,
@@ -150,8 +112,6 @@ export default function EnhancedChatWindow({
       content: attachments.length > 0 ? `📎 ${attachments.length} ملف(ات) مرفقة` : "",
       attachments
     });
-
-    // حفظ نسخة تلقائية من المرفقات في سجل المشروع
     if (conversation.project_id) {
       try {
         await base44.functions.invoke("saveChatAttachmentToProject", {
@@ -165,17 +125,13 @@ export default function EnhancedChatWindow({
         console.error("Auto-save attachments to project failed:", e);
       }
     }
-
     await loadMessages();
   };
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() && !uploading) return;
-
     const optimisticText = newMessage;
     const optimisticId = `optimistic-${Date.now()}`;
-
-    // Optimistic UI: add message immediately before API call
     const optimisticMsg = {
       id: optimisticId,
       conversation_id: conversation.id,
@@ -189,30 +145,13 @@ export default function EnhancedChatWindow({
     setMessages(prev => [...prev, optimisticMsg]);
     setNewMessage("");
     setTimeout(scrollToBottom, 50);
-
     setSending(true);
     setSensitiveWarning(null);
-
     try {
       const user = await base44.auth.me();
-
-      // Filter sensitive data
-      const { data: filterResult } = await base44.functions.invoke(
-        'filterSensitiveData',
-        { content: optimisticText }
-      );
-
-      if (filterResult.hasSensitiveData) {
-        setSensitiveWarning(filterResult.warning);
-      }
-
-      // Replace optimistic message with confirmed content
-      setMessages(prev => prev.map(m =>
-        m.id === optimisticId
-          ? { ...m, content: filterResult.filteredContent, has_sensitive_data: filterResult.hasSensitiveData }
-          : m
-      ));
-
+      const { data: filterResult } = await base44.functions.invoke('filterSensitiveData', { content: optimisticText });
+      if (filterResult.hasSensitiveData) setSensitiveWarning(filterResult.warning);
+      setMessages(prev => prev.map(m => m.id === optimisticId ? { ...m, content: filterResult.filteredContent, has_sensitive_data: filterResult.hasSensitiveData } : m));
       await base44.entities.Message.create({
         conversation_id: conversation.id,
         project_id: conversation.project_id,
@@ -223,16 +162,11 @@ export default function EnhancedChatWindow({
         original_content: filterResult.originalContent,
         has_sensitive_data: filterResult.hasSensitiveData
       });
-
-      // Update last message in conversation
       await base44.entities.Conversation.update(conversation.id, {
         last_message: filterResult.filteredContent.substring(0, 100),
         last_message_date: new Date().toISOString()
       });
-
-      // Real-time subscription will replace the optimistic entry when the real record arrives
     } catch (error) {
-      // Rollback optimistic message on failure
       setMessages(prev => prev.filter(m => m.id !== optimisticId));
       setNewMessage(optimisticText);
       toast.error("خطأ في إرسال الرسالة");
@@ -259,20 +193,32 @@ export default function EnhancedChatWindow({
     return badges[role] || badges.admin;
   };
 
+  const renderMessageContent = (content, isSystem) => {
+    const parts = String(content || '').split(/(https?:\/\/[^\s]+)/g);
+    return parts.map((part, index) => {
+      if (/^https?:\/\//i.test(part)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`underline font-medium break-all ${isSystem ? 'text-emerald-800' : 'text-blue-200'}`}
+          >
+            {part}
+          </a>
+        );
+      }
+      return <React.Fragment key={index}>{part}</React.Fragment>;
+    });
+  };
+
   if (loading) {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-center h-96">
-          <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-        </CardContent>
-      </Card>
-    );
+    return <Card><CardContent className="flex items-center justify-center h-96"><Loader2 className="w-8 h-8 animate-spin text-slate-400" /></CardContent></Card>;
   }
 
   return (
     <>
-      {callManager.VideoCallWindow}
-      
       <Card className="flex flex-col h-[600px]">
         <CardHeader className="border-b">
           <CardTitle className="flex items-center justify-between">
@@ -280,169 +226,70 @@ export default function EnhancedChatWindow({
               <Users className="w-5 h-5 text-[#C9A66B]" />
               <span>{conversation.name || "غرفة المشروع الرئيسية"}</span>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => callManager.startCall(false)}
-                disabled={callManager.isCallActive}
-                className="p-2 hover:bg-gray-100 rounded-full transition disabled:opacity-50"
-                title="مكالمة صوتية"
-              >
+            <div className="flex items-center gap-2">
+              <button onClick={() => callManager.startCall(false)} disabled={callManager.isCallActive} className="p-2 hover:bg-gray-100 rounded-full transition disabled:opacity-50" title="مكالمة صوتية">
                 <Phone size={20} className="text-gray-600" />
               </button>
-              <button
-                onClick={() => callManager.startCall(true)}
-                disabled={callManager.isCallActive}
-                className="p-2 hover:bg-gray-100 rounded-full transition disabled:opacity-50"
-                title="مكالمة فيديو"
-              >
+              <button onClick={() => callManager.startCall(true)} disabled={callManager.isCallActive} className="p-2 hover:bg-gray-100 rounded-full transition disabled:opacity-50" title="مكالمة فيديو">
                 <Video size={20} className="text-gray-600" />
               </button>
-              <button className="p-2 hover:bg-gray-100 rounded-full transition">
+              <callManager.GoogleMeetButton />
+              <button className="p-2 hover:bg-gray-100 rounded-full transition" title="المزيد">
                 <MoreVertical size={20} className="text-gray-600" />
               </button>
-              <Badge variant="outline" className="flex items-center gap-1">
-                <Shield className="w-3 h-3" />
-                محمية
-              </Badge>
+              <Badge variant="outline" className="flex items-center gap-1"><Shield className="w-3 h-3" />محمية</Badge>
             </div>
           </CardTitle>
-        
-        {conversation.is_main_room && (
-          <p className="text-xs text-slate-500 mt-1">
-            جميع الأطراف: العميل • المهندس • الشركة الاستشارية
-          </p>
-        )}
-      </CardHeader>
+          {conversation.is_main_room && <p className="text-xs text-slate-500 mt-1">جميع الأطراف: العميل • المهندس • الشركة الاستشارية</p>}
+        </CardHeader>
 
-      <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
-        <AnimatePresence>
-          {messages.map((message) => {
-            const isMe = message.sender_email === currentUserEmail;
-            const roleBadge = getRoleBadge(message.sender_role);
-            
-            return (
-              <motion.div
-                key={message.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
-              >
-                <div className={`max-w-[70%] ${isMe ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
-                  {!isMe && (
-                    <div className="flex items-center gap-2">
-                      <Avatar className="w-6 h-6">
-                        <AvatarFallback className="text-xs">
-                          {message.sender_name?.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-xs font-medium">{message.sender_name}</span>
-                      <Badge className={`text-xs ${roleBadge.color}`}>
-                        {roleBadge.text}
-                      </Badge>
+        <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
+          <AnimatePresence>
+            {messages.map((message) => {
+              const isMe = message.sender_email === currentUserEmail;
+              const roleBadge = getRoleBadge(message.sender_role);
+              return (
+                <motion.div key={message.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[70%] ${isMe ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
+                    {!isMe && (
+                      <div className="flex items-center gap-2">
+                        <Avatar className="w-6 h-6"><AvatarFallback className="text-xs">{message.sender_name?.charAt(0)}</AvatarFallback></Avatar>
+                        <span className="text-xs font-medium">{message.sender_name}</span>
+                        <Badge className={`text-xs ${roleBadge.color}`}>{roleBadge.text}</Badge>
+                      </div>
+                    )}
+                    <div className={`rounded-lg p-3 ${isMe ? 'bg-blue-600 text-white' : message.is_system_message ? 'bg-amber-50 border border-amber-200 text-amber-900' : 'bg-slate-100 text-slate-900'}`}>
+                      <p className="text-sm whitespace-pre-wrap">{renderMessageContent(message.content, message.is_system_message)}</p>
+                      {message.has_sensitive_data && <div className="flex items-center gap-1 mt-2 text-xs opacity-75"><AlertTriangle className="w-3 h-3" /><span>تم حجب معلومات اتصال</span></div>}
+                      {message.attachments?.length > 0 && (
+                        <div className="mt-2 space-y-2">
+                          {message.attachments.map((att, idx) => <FilePreview key={idx} attachment={att} canMarkOfficial={!isMe} onMarkOfficial={() => {}} />)}
+                        </div>
+                      )}
                     </div>
-                  )}
-                  
-                  <div className={`rounded-lg p-3 ${
-                    isMe 
-                      ? 'bg-blue-600 text-white' 
-                      : message.is_system_message 
-                        ? 'bg-amber-50 border border-amber-200 text-amber-900'
-                        : 'bg-slate-100 text-slate-900'
-                  }`}>
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                    
-                    {message.has_sensitive_data && (
-                      <div className="flex items-center gap-1 mt-2 text-xs opacity-75">
-                        <AlertTriangle className="w-3 h-3" />
-                        <span>تم حجب معلومات اتصال</span>
-                      </div>
-                    )}
-
-                    {message.attachments?.length > 0 && (
-                      <div className="mt-2 space-y-2">
-                        {message.attachments.map((att, idx) => (
-                          <FilePreview
-                            key={idx}
-                            attachment={att}
-                            canMarkOfficial={!isMe}
-                            onMarkOfficial={() => {}}
-                          />
-                        ))}
-                      </div>
-                    )}
+                    <span className="text-xs text-slate-500">{new Date(message.created_date).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
-                  
-                  <span className="text-xs text-slate-500">
-                    {new Date(message.created_date).toLocaleTimeString('ar-SA', {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </span>
-                </div>
-              </motion.div>
-            );
-          })}
-        </AnimatePresence>
-        <div ref={messagesEndRef} />
-      </CardContent>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+          <div ref={messagesEndRef} />
+        </CardContent>
 
-      <div className="border-t p-4 space-y-2">
-        {sensitiveWarning && (
-          <div className="flex items-start gap-2 p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800">
-            <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <p>{sensitiveWarning}</p>
+        <div className="border-t p-4 space-y-2">
+          {sensitiveWarning && <div className="flex items-start gap-2 p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800"><AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" /><p>{sensitiveWarning}</p></div>}
+          <div className="flex items-center gap-2">
+            <input type="file" ref={fileInputRef} multiple accept=".pdf,.dwg,.dxf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => handleFileUpload(Array.from(e.target.files))} />
+            <Button variant="outline" size="icon" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
+            </Button>
+            <Input placeholder="اكتب رسالتك..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()} disabled={sending} />
+            <Button onClick={handleSendMessage} disabled={sending || (!newMessage.trim() && !uploading)} className="bg-gradient-to-r from-blue-600 to-indigo-600">
+              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            </Button>
           </div>
-        )}
-
-        <div className="flex items-center gap-2">
-          <input
-            type="file"
-            ref={fileInputRef}
-            multiple
-            accept=".pdf,.dwg,.dxf,.jpg,.jpeg,.png"
-            className="hidden"
-            onChange={(e) => handleFileUpload(Array.from(e.target.files))}
-          />
-          
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-          >
-            {uploading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Paperclip className="w-4 h-4" />
-            )}
-          </Button>
-
-          <Input
-            placeholder="اكتب رسالتك..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-            disabled={sending}
-          />
-
-          <Button
-            onClick={handleSendMessage}
-            disabled={sending || (!newMessage.trim() && !uploading)}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600"
-          >
-            {sending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
-          </Button>
+          <p className="text-xs text-slate-500 text-center">🔒 جميع المحادثات محمية ومؤرشفة للرجوع إليها عند الحاجة</p>
         </div>
-
-        <p className="text-xs text-slate-500 text-center">
-          🔒 جميع المحادثات محمية ومؤرشفة للرجوع إليها عند الحاجة
-        </p>
-      </div>
       </Card>
     </>
   );
