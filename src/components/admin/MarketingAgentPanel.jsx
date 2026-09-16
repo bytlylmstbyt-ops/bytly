@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Brain, CheckCircle2, ClipboardCheck, Loader2, MessageCircle, Linkedin, Users, Sparkles, RefreshCw, AlertCircle } from 'lucide-react';
+import { Brain, CheckCircle2, ClipboardCheck, Loader2, MessageCircle, Linkedin, Users, Sparkles, RefreshCw, AlertCircle, Globe2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { approveChannelPlans, approveRecommendations, buildChannelPlans, buildMarketingInsights, CHANNELS, createTasksFromRecommendations, getMarketingAgentSnapshot, saveMarketingSuggestions } from '@/lib/marketingAgentService';
+import { runMarketingAgent } from '@/lib/marketingAgentAi';
 
 const priorityRank = { 'عالية جدًا': 4, 'عالية': 3, 'متوسطة': 2, 'منخفضة': 1 };
 const withTimeout = (promise, ms = 60000) => Promise.race([
@@ -15,6 +17,9 @@ const channelIcon = (id) => id === 'linkedin' ? <Linkedin className="h-4 w-4" />
 export default function MarketingAgentPanel() {
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [aiResult, setAiResult] = useState(null);
   const [snapshot, setSnapshot] = useState(null);
   const [insights, setInsights] = useState([]);
   const [channelPlans, setChannelPlans] = useState([]);
@@ -24,7 +29,7 @@ export default function MarketingAgentPanel() {
   const [error, setError] = useState('');
 
   const analyze = async () => {
-    if (loading || actionLoading) return;
+    if (loading || actionLoading || aiLoading) return;
     setLoading(true); setMessage('جاري قراءة بيانات بيتلي وتحليلها…'); setError(''); setRecommendations([]); setSavedPlans([]);
     try {
       const s = await withTimeout(getMarketingAgentSnapshot());
@@ -36,6 +41,22 @@ export default function MarketingAgentPanel() {
       setError(err?.message || 'تعذر تحليل بيانات المنصة.');
       setMessage('فشل التحليل. راجعي رسالة الخطأ الظاهرة أسفل الأزرار.');
     } finally { setLoading(false); }
+  };
+
+  const runAi = async () => {
+    if (!aiPrompt.trim() || aiLoading || loading || actionLoading) return;
+    setAiLoading(true); setError(''); setMessage('وكيل التسويق يحلل الطلب ويستخدم البحث الحي عند الحاجة…'); setAiResult(null);
+    try {
+      const liveSnapshot = snapshot || await withTimeout(getMarketingAgentSnapshot());
+      if (!snapshot) setSnapshot(liveSnapshot);
+      const result = await withTimeout(runMarketingAgent({ prompt: aiPrompt, context: liveSnapshot }), 90000);
+      setAiResult(result);
+      setMessage(result.searched ? 'اكتمل التحليل باستخدام Gemini مع بحث Google حي.' : 'اكتمل التحليل بواسطة Gemini. لم يحتج الطلب إلى بحث حي.');
+    } catch (err) {
+      console.error('Gemini Marketing Agent failed:', err);
+      setError(err?.message || 'تعذر تشغيل وكيل التسويق.');
+      setMessage('تعذر تشغيل الوكيل.');
+    } finally { setAiLoading(false); }
   };
 
   const saveDrafts = async () => {
@@ -89,15 +110,23 @@ export default function MarketingAgentPanel() {
     <Card className="border-2 border-[#C9A66B]/40 shadow-sm">
       <CardHeader><CardTitle className="flex items-center gap-2"><Brain className="h-5 w-5 text-[#C9A66B]" /> وكيل تسويق بيتلي</CardTitle></CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">هذا هو جسم الوكيل المستقل داخل إدارة التسويق. اضغطي «حلّل المنصة» ليقرأ بيانات Supabase الفعلية ويولد توصيات وخططًا قابلة للاعتماد.</p>
+        <p className="text-sm text-muted-foreground">هذا هو جسم الوكيل المستقل داخل إدارة التسويق. يقرأ بيانات Supabase الفعلية، ويمكنه الآن الاستعانة بـ Gemini والبحث الحي في Google عند الحاجة.</p>
+        <div className="rounded-xl border border-[#C9A66B]/30 bg-[#C9A66B]/5 p-4 space-y-3">
+          <div className="flex items-center gap-2 font-semibold"><Globe2 className="h-5 w-5 text-[#C9A66B]" /> تشغيل الوكيل الذكي + البحث الحي</div>
+          <p className="text-xs text-muted-foreground">اكتبي سؤالًا مثل: «حلل المنافسين في السوق السعودي للمنصات الهندسية وابحث عن فرص SEO/GEO لبيتلي». سيستخدم الوكيل بيانات بيتلي الداخلية، ويبحث في Google عندما يكون البحث الحديث مفيدًا.</p>
+          <Textarea value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} placeholder="اكتبي مهمة التسويق التي تريدين من الوكيل تنفيذ تحليلها…" rows={4} disabled={aiLoading || loading || actionLoading} />
+          <Button type="button" onClick={runAi} disabled={!aiPrompt.trim() || aiLoading || loading || actionLoading}>
+            {aiLoading ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Globe2 className="h-4 w-4 ml-2" />}
+            {aiLoading ? 'جاري البحث والتحليل…' : 'شغّل الوكيل الذكي'}
+          </Button>
+        </div>
+        {aiResult && <Card className="border-slate-200"><CardHeader><CardTitle className="text-base flex items-center gap-2"><Sparkles className="h-4 w-4" /> نتيجة وكيل Gemini <Badge variant="outline">{aiResult.model}</Badge>{aiResult.searched && <Badge>بحث Google حي</Badge>}</CardTitle></CardHeader><CardContent className="space-y-4"><div className="whitespace-pre-wrap text-sm leading-7">{aiResult.result}</div>{aiResult.citations?.length > 0 && <div className="border-t pt-3"><p className="text-sm font-semibold mb-2">المصادر التي استخدمها البحث الحي</p><div className="space-y-2">{aiResult.citations.map((c, i) => <a key={`${c.url}-${i}`} href={c.url} target="_blank" rel="noreferrer" className="block text-sm text-blue-700 hover:underline">{c.title || c.url}</a>)}</div></div>}</CardContent></Card>}
         <div className="flex flex-wrap gap-3">
-          <Button type="button" size="lg" className="min-w-[230px]" onClick={analyze} disabled={loading || actionLoading}>
+          <Button type="button" size="lg" className="min-w-[230px]" onClick={analyze} disabled={loading || actionLoading || aiLoading}>
             {loading ? <Loader2 className="h-5 w-5 animate-spin ml-2" /> : <Sparkles className="h-5 w-5 ml-2" />}
             {loading ? 'جاري التحليل…' : 'حلّل المنصة الآن'}
           </Button>
-          <Button type="button" variant="outline" size="lg" onClick={analyze} disabled={loading || actionLoading}>
-            <RefreshCw className="h-4 w-4 ml-2" /> إعادة التحليل
-          </Button>
+          <Button type="button" variant="outline" size="lg" onClick={analyze} disabled={loading || actionLoading || aiLoading}><RefreshCw className="h-4 w-4 ml-2" /> إعادة التحليل</Button>
           {insights.length > 0 && !recommendations.length && <Button type="button" variant="outline" size="lg" onClick={saveDrafts} disabled={actionLoading}><ClipboardCheck className="h-4 w-4 ml-2" />حفظ كمقترحات</Button>}
           {recommendations.some(r => r.status === 'proposed') && <Button type="button" variant="outline" size="lg" onClick={approveAll} disabled={actionLoading}><CheckCircle2 className="h-4 w-4 ml-2" />اعتماد الاقتراحات</Button>}
           {savedPlans.some(p => p.status === 'proposed') && <Button type="button" variant="outline" size="lg" onClick={approvePlans} disabled={actionLoading}><CheckCircle2 className="h-4 w-4 ml-2" />اعتماد خطط القنوات</Button>}
@@ -110,9 +139,7 @@ export default function MarketingAgentPanel() {
 
     {snapshot && <Card><CardHeader><CardTitle>قراءة بيانات المنصة</CardTitle></CardHeader><CardContent><div className="grid grid-cols-2 md:grid-cols-6 gap-3">{Object.entries(snapshot.counts).map(([k,v]) => <div key={k} className="rounded-lg border p-3"><div className="text-xs text-muted-foreground">{k}</div><div className="text-xl font-semibold">{v ?? '—'}</div></div>)}</div><p className="text-xs text-muted-foreground mt-3">وقت التحليل: {new Date(snapshot.generated_at).toLocaleString('ar-SA')}</p></CardContent></Card>}
 
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {CHANNELS.map(c => <Card key={c.id}><CardHeader><CardTitle className="text-base">{c.name}</CardTitle></CardHeader><CardContent><p className="text-sm font-medium mb-2">الجمهور</p><p className="text-sm text-muted-foreground mb-3">{c.audience}</p><p className="text-sm font-medium mb-2">كيف يعمل؟</p><p className="text-sm text-muted-foreground">{c.how}</p></CardContent></Card>)}
-    </div>
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">{CHANNELS.map(c => <Card key={c.id}><CardHeader><CardTitle className="text-base">{c.name}</CardTitle></CardHeader><CardContent><p className="text-sm font-medium mb-2">الجمهور</p><p className="text-sm text-muted-foreground mb-3">{c.audience}</p><p className="text-sm font-medium mb-2">كيف يعمل؟</p><p className="text-sm text-muted-foreground">{c.how}</p></CardContent></Card>)}</div>
 
     {channelPlans.length > 0 && <Card><CardHeader><CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> خطط القنوات</CardTitle></CardHeader><CardContent className="space-y-4">{channelPlans.map(p => <div key={p.channel} className="rounded-xl border p-4 space-y-3"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold flex items-center gap-2">{channelIcon(p.channel)}{CHANNELS.find(c => c.id === p.channel)?.name || p.channel}</h3><Badge>{p.priority}</Badge></div><p className="text-sm"><b>الجمهور:</b> {p.audience}</p><p className="text-sm"><b>الهدف:</b> {p.objective}</p><p className="text-sm"><b>الزاوية:</b> {p.message_angle}</p><p className="text-sm"><b>CTA:</b> {p.offer_cta}</p><p className="text-sm"><b>KPI:</b> {p.kpi}</p><p className="text-sm"><b>وتيرة التنفيذ:</b> {p.cadence}</p><p className="text-sm"><b>الميزانية:</b> {p.budget_suggestion}</p><p className="text-sm"><b>النتيجة المتوقعة:</b> {p.expected_outcome}</p><p className="text-xs text-muted-foreground"><b>الدليل:</b> {p.evidence}</p><p className="text-xs text-muted-foreground">الحالة: {savedPlans.find(x => x.channel === p.channel)?.status === 'approved' ? 'معتمد' : 'مقترح من الوكيل'}</p></div>)}</CardContent></Card>}
 
