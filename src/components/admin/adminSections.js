@@ -36,7 +36,7 @@ export const ADMIN_CATEGORIES = [
     { page: "PendingApprovals", label: "الموافقات المعلقة", desc: "طلبات بانتظار المراجعة", priority: "critical" },
   ] },
   { key: "developers_investors", label: "إدارة المطورين والمستثمرين", icon: Building2, description: "سجل مستقل للمطورين والمستثمرين المنقولين من بيانات المنصة، منفصل عن إدارة العملاء.", items: [
-    { page: "AdminMarketEntities", label: "قائمة المطورين والمستثمرين", desc: "عرض الاسم والشركة والنوع والمنطقة والجوال والبريد وحجم الاستثمار", priority: "high" },
+    { page: "AdminDeveloperInvestorManagement", label: "قائمة المطورين والمستثمرين", desc: "عرض الاسم والشركة والنوع والمنطقة والجوال والبريد وحجم الاستثمار", priority: "high" },
   ] },
   { key: "providers", label: "مقدمو الخدمة", icon: Building2, description: "الشركات الهندسية والاستشارية والاستشاريون والمقاولون والموردون.", items: [
     { page: "AdminProviders", label: "لوحة مقدمي الخدمة", desc: "إدارة الشركات الهندسية والاستشارية والاستشاريين والمقاولين والموردين" },
