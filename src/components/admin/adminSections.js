@@ -73,6 +73,15 @@ export const ADMIN_CATEGORIES = [
     ],
   },
   {
+    key: "developers_investors",
+    label: "إدارة المطورين والمستثمرين",
+    icon: Building2,
+    description: "بيانات المستثمرين والمطورين المسجلين كعملاء: الاسم، الشركة، النوع، المنطقة، الجوال والبريد، مع ملف العميل وسجل التواصل والمشاريع.",
+    items: [
+      { page: "AdminClients", label: "المستثمرون والمطورون", desc: "عرض البيانات الفعلية للمستثمرين/المطورين وإدارة ملف العميل والتواصل والمتابعة", priority: "high" },
+    ],
+  },
+  {
     key: "providers",
     label: "مقدمو الخدمة",
     icon: Building2,
