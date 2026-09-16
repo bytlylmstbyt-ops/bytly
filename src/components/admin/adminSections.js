@@ -90,6 +90,11 @@ export const ADMIN_CATEGORIES = [
   { key: "domains", label: "النطاقات", icon: Link2, description: "إدارة النطاق المجاني، النطاقات المخصصة، إعادة التوجيه، وعنوان إرسال البريد.", items: [{ page: "AdminDomains", label: "النطاقات", desc: "شراء وربط النطاقات، إدارة إعادة التوجيه وعنوان الإرسال" }] },
   { key: "integrations", label: "التكاملات", icon: Link2, description: "إدارة جميع التكاملات والخدمات الخارجية المتصلة بالمنصة.", items: [{ page: "AdminIntegrations", label: "لوحة التكاملات", desc: "عرض وإدارة جميع التكاملات وحالة الاتصال", priority: "high" }] },
   { key: "email", label: "إدارة البريد الإلكتروني", icon: Mail, description: "إدارة بريد المنصة والقوالب والحملات والإحصائيات.", items: [{ page: "AdminEmailCenter", label: "مركز البريد الإلكتروني", desc: "إدارة شاملة للبريد والقوالب والحملات المجدولة" }] },
+  { key: "ads", label: "مركز الإعلانات", icon: Megaphone, description: "إدارة الإعلانات والمعلنين وطلبات الإعلان من مركز واحد.", items: [
+    { page: "AdManager", label: "مدير الإعلانات", desc: "إنشاء وتعديل ومتابعة الإعلانات" },
+    { page: "AdvertiseWithUs", label: "أعلن معنا", desc: "مراجعة وإدارة واجهة طلبات الإعلان" },
+    { page: "AdvertiserPortal", label: "المعلنون", desc: "إدارة المعلنين وإعلاناتهم وتقارير الأداء" },
+  ] },
   { key: "marketing", label: "إدارة التسويق", icon: Megaphone, description: "إدارة التسويق والعلاقات والقنوات والمحتوى والتحليلات.", items: [
     { page: "AdminMarketingDashboard", label: "لوحة مدير التسويق", desc: "ملخص التسويق والبريد وSEO والنطاقات والتحليلات" },
     { page: "MarketingAgent", label: "وكيل التسويق", desc: "جسم مستقل لتحليل المنصة وبناء خطط التواصل المباشر وLinkedIn والفعاليات والقنوات التسويقية", permission: ["marketing", "view"], priority: "high" },
