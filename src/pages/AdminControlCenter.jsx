@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, ShieldAlert, ArrowUpRight, LayoutDashboard, ChevronLeft, KeyRound, PlugZap, ExternalLink, EyeOff, Copy, Check } from "lucide-react";
+import { Loader2, ShieldAlert, ArrowUpRight, LayoutDashboard, ChevronLeft, KeyRound, PlugZap, ExternalLink, EyeOff, Copy, Check, BriefcaseBusiness } from "lucide-react";
 import { ADMIN_CATEGORIES as CATEGORIES } from "@/components/admin/adminSections";
 import { usePermissions } from "@/components/auth/usePermissions";
 import { readAdminFilters, writeAdminFilters } from "@/components/admin/adminFilterPersistence";
@@ -136,9 +136,10 @@ export default function AdminControlCenter() {
   const [activeKey, setActiveKey] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const cat = params.get("cat");
-    if (cat && (CATEGORIES.find((c) => c.key === cat) || cat === "platform_tools")) return cat;
+    const standaloneKeys = ["mcp", "secrets", "investor_center"];
+    if (cat && (CATEGORIES.find((c) => c.key === cat) || standaloneKeys.includes(cat))) return cat;
     const saved = readAdminFilters("AdminControlCenter");
-    if (saved.activeKey && (CATEGORIES.find((c) => c.key === saved.activeKey) || saved.activeKey === "platform_tools")) return saved.activeKey;
+    if (saved.activeKey && (CATEGORIES.find((c) => c.key === saved.activeKey) || standaloneKeys.includes(saved.activeKey))) return saved.activeKey;
     return CATEGORIES[0].key;
   });
   useEffect(() => { writeAdminFilters("AdminControlCenter", { activeKey }); }, [activeKey]);
@@ -167,16 +168,13 @@ export default function AdminControlCenter() {
   const categoryResource = {
     board: "settings", overview: "analytics", assistant: "settings", projects: "projects", people: "engineers", providers: "providers", contracts: "contracts", payments: "payments", disputes: "disputes", notifications: "notifications", reports: "analytics", settings: "settings", bim: "projects", workflows: "workflows", domains: "domains", integrations: "integrations", email: "email", marketing: "marketing",
   };
-  const platformToolsCategory = {
-    key: "platform_tools", label: "أدوات المنصة", icon: KeyRound, description: "أدوات الإدارة الحساسة ومركز المستثمر.",
-    items: [
-      { page: "__MCP__", label: "MCP", desc: "إعداد وصول مساعدي الذكاء الاصطناعي إلى التطبيق" },
-      { page: "__SECRETS__", label: "أسرار التطبيق", desc: "إدارة أسماء الأسرار مع إخفاء القيم الحساسة" },
-      { page: "__INVESTOR__", label: "مركز المستثمر", desc: "فتح مركز المستثمر الحالي من داخل مركز الإدارة" },
-    ],
-  };
+  const standaloneCategories = [
+    { key: "investor_center", label: "مركز المستثمر", icon: BriefcaseBusiness, description: "مركز المستثمر مستقل داخل مركز إدارة المنصة.", items: [{ page: "__INVESTOR__", label: "مركز المستثمر", desc: "فتح مركز المستثمر الحالي من داخل مركز الإدارة" }] },
+    { key: "mcp", label: "MCP", icon: PlugZap, description: "إعداد وصول MCP للمساعدين الذين يعملون بالذكاء الاصطناعي.", items: [{ page: "__MCP__", label: "MCP", desc: "إعداد وصول مساعدي الذكاء الاصطناعي إلى التطبيق" }] },
+    { key: "secrets", label: "الأسرار", icon: KeyRound, description: "إدارة أسماء الأسرار مع إخفاء القيم الحساسة.", items: [{ page: "__SECRETS__", label: "أسرار التطبيق", desc: "إدارة أسماء الأسرار مع إخفاء القيم الحساسة" }] },
+  ];
   const baseVisibleCategories = (isAdmin || permissionsAdmin) ? CATEGORIES : CATEGORIES.filter((cat) => can(categoryResource[cat.key] || cat.key, "view"));
-  const visibleCategories = (isAdmin || permissionsAdmin) ? [...baseVisibleCategories, platformToolsCategory] : baseVisibleCategories;
+  const visibleCategories = (isAdmin || permissionsAdmin) ? [...baseVisibleCategories, ...standaloneCategories] : baseVisibleCategories;
 
   if (!isAdmin && !permissionsAdmin && visibleCategories.length === 0 && Object.keys(permissions || {}).length === 0) return <AccessDenied />;
   const safeActiveKey = visibleCategories.some((c) => c.key === activeKey) ? activeKey : visibleCategories[0]?.key;
@@ -214,15 +212,20 @@ export default function AdminControlCenter() {
           {activeKey === "bim" && <BIMProjectFilesPanel />}
           {visibleCategories.length === 0 && <Card><CardContent className="p-8 text-center text-slate-500">لا توجد إدارات أو صفحات مخصصة لدورك حاليًا.</CardContent></Card>}
 
-          {activeKey === "platform_tools" ? (
+          {activeKey === "investor_center" ? (
             <div id="admin-category-content" className="min-w-0 scroll-mt-6">
-              <div className="mb-4"><div className="rounded-2xl bg-white border border-slate-200 shadow-sm px-5 py-4"><h2 className="text-lg font-bold text-[#2F2945]">أدوات المنصة</h2><p className="text-xs text-slate-500 mt-1">أدوات الإدارة الحساسة ومركز المستثمر.</p></div></div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-                {active.items.map((item) => <button key={item.page} type="button" onClick={() => document.getElementById(item.page)?.scrollIntoView({ behavior: "smooth" })} className="text-right"><Card className="h-full border border-slate-200 border-r-4 border-r-[#6D5CE7] hover:shadow-lg transition-all bg-white"><CardContent className="p-4"><p className="font-semibold text-[#4A3F35] text-sm">{item.label}</p><p className="text-xs text-slate-500 mt-1">{item.desc}</p></CardContent></Card></button>)}
-              </div>
-              <div id="__MCP__" className="mb-8"><AdminMCPPage /></div>
-              <div id="__SECRETS__" className="mb-8"><AdminSecretsPage /></div>
-              <div id="__INVESTOR__" className="mb-8"><AdminInvestorPage /></div>
+              <div className="mb-4"><div className="rounded-2xl bg-white border border-slate-200 shadow-sm px-5 py-4"><h2 className="text-lg font-bold text-[#2F2945]">مركز المستثمر</h2><p className="text-xs text-slate-500 mt-1">مركز مستقل داخل مركز إدارة المنصة.</p></div></div>
+              <AdminInvestorPage />
+            </div>
+          ) : activeKey === "mcp" ? (
+            <div id="admin-category-content" className="min-w-0 scroll-mt-6">
+              <div className="mb-4"><div className="rounded-2xl bg-white border border-slate-200 shadow-sm px-5 py-4"><h2 className="text-lg font-bold text-[#2F2945]">MCP</h2><p className="text-xs text-slate-500 mt-1">قسم مستقل لإعداد وصول MCP.</p></div></div>
+              <AdminMCPPage />
+            </div>
+          ) : activeKey === "secrets" ? (
+            <div id="admin-category-content" className="min-w-0 scroll-mt-6">
+              <div className="mb-4"><div className="rounded-2xl bg-white border border-slate-200 shadow-sm px-5 py-4"><h2 className="text-lg font-bold text-[#2F2945]">الأسرار</h2><p className="text-xs text-slate-500 mt-1">قسم مستقل لإدارة أسماء الأسرار دون عرض قيمها.</p></div></div>
+              <AdminSecretsPage />
             </div>
           ) : (
             <div id="admin-category-content" className="min-w-0 scroll-mt-6">
