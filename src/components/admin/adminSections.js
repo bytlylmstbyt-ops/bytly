@@ -92,9 +92,9 @@ export const ADMIN_CATEGORIES = [
   { key: "email", label: "إدارة البريد الإلكتروني", icon: Mail, description: "إدارة بريد المنصة والقوالب والحملات والإحصائيات.", items: [{ page: "AdminEmailCenter", label: "مركز البريد الإلكتروني", desc: "إدارة شاملة للبريد والقوالب والحملات المجدولة" }] },
   { key: "ads", label: "مركز الإعلانات", icon: Megaphone, description: "إدارة الإعلانات والمعلنين وطلبات الإعلان من مركز واحد.", items: [
     { page: "AdManager", label: "مدير الإعلانات", desc: "إنشاء وتعديل ومتابعة الإعلانات" },
-    { page: "AdvertiseWithUs", label: "أعلن معنا", desc: "مراجعة وإدارة واجهة طلبات الإعلان" },
-    { page: "AdvertiserPortal", label: "المعلنون", desc: "إدارة المعلنين وإعلاناتهم وتقارير الأداء" },
-    { page: "AdvertiserPortal", label: "بوابة المعلن", desc: "بوابة المعلن وتقارير الإعلانات والأداء" },
+    { page: "AdvertiseWithUs", label: "أعلن معنا", desc: "واجهة التعريف بالإعلان والباقات وبدء طلب الإعلان" },
+    { page: "AdvertisersDirectory", label: "المعلنون", desc: "قائمة المعلنين وإجمالي إعلاناتهم وظهورهم ونقراتهم" },
+    { page: "AdvertiserGateway", label: "بوابة المعلن", desc: "لوحة الإعلانات وتقرير الأداء والمشاهدات والنقرات" },
   ] },
   { key: "marketing", label: "إدارة التسويق", icon: Megaphone, description: "إدارة التسويق والعلاقات والقنوات والمحتوى والتحليلات.", items: [
     { page: "AdminMarketingDashboard", label: "لوحة مدير التسويق", desc: "ملخص التسويق والبريد وSEO والنطاقات والتحليلات" },
