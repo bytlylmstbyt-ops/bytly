@@ -29,6 +29,7 @@ export default function EnhancedChatWindow({ conversation, currentUserEmail, onC
       avatar: null
     }
   });
+  const GoogleMeetButton = callManager.GoogleMeetButton;
 
   useEffect(() => {
     loadMessages();
@@ -197,17 +198,7 @@ export default function EnhancedChatWindow({ conversation, currentUserEmail, onC
     const parts = String(content || '').split(/(https?:\/\/[^\s]+)/g);
     return parts.map((part, index) => {
       if (/^https?:\/\//i.test(part)) {
-        return (
-          <a
-            key={index}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`underline font-medium break-all ${isSystem ? 'text-emerald-800' : 'text-blue-200'}`}
-          >
-            {part}
-          </a>
-        );
+        return <a key={index} href={part} target="_blank" rel="noopener noreferrer" className={`underline font-medium break-all ${isSystem ? 'text-emerald-800' : 'text-blue-200'}`}>{part}</a>;
       }
       return <React.Fragment key={index}>{part}</React.Fragment>;
     });
@@ -218,79 +209,54 @@ export default function EnhancedChatWindow({ conversation, currentUserEmail, onC
   }
 
   return (
-    <>
-      <Card className="flex flex-col h-[600px]">
-        <CardHeader className="border-b">
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Users className="w-5 h-5 text-[#C9A66B]" />
-              <span>{conversation.name || "غرفة المشروع الرئيسية"}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => callManager.startCall(false)} disabled={callManager.isCallActive} className="p-2 hover:bg-gray-100 rounded-full transition disabled:opacity-50" title="مكالمة صوتية">
-                <Phone size={20} className="text-gray-600" />
-              </button>
-              <button onClick={() => callManager.startCall(true)} disabled={callManager.isCallActive} className="p-2 hover:bg-gray-100 rounded-full transition disabled:opacity-50" title="مكالمة فيديو">
-                <Video size={20} className="text-gray-600" />
-              </button>
-              <callManager.GoogleMeetButton />
-              <button className="p-2 hover:bg-gray-100 rounded-full transition" title="المزيد">
-                <MoreVertical size={20} className="text-gray-600" />
-              </button>
-              <Badge variant="outline" className="flex items-center gap-1"><Shield className="w-3 h-3" />محمية</Badge>
-            </div>
-          </CardTitle>
-          {conversation.is_main_room && <p className="text-xs text-slate-500 mt-1">جميع الأطراف: العميل • المهندس • الشركة الاستشارية</p>}
-        </CardHeader>
-
-        <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
-          <AnimatePresence>
-            {messages.map((message) => {
-              const isMe = message.sender_email === currentUserEmail;
-              const roleBadge = getRoleBadge(message.sender_role);
-              return (
-                <motion.div key={message.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[70%] ${isMe ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
-                    {!isMe && (
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-6 h-6"><AvatarFallback className="text-xs">{message.sender_name?.charAt(0)}</AvatarFallback></Avatar>
-                        <span className="text-xs font-medium">{message.sender_name}</span>
-                        <Badge className={`text-xs ${roleBadge.color}`}>{roleBadge.text}</Badge>
-                      </div>
-                    )}
-                    <div className={`rounded-lg p-3 ${isMe ? 'bg-blue-600 text-white' : message.is_system_message ? 'bg-amber-50 border border-amber-200 text-amber-900' : 'bg-slate-100 text-slate-900'}`}>
-                      <p className="text-sm whitespace-pre-wrap">{renderMessageContent(message.content, message.is_system_message)}</p>
-                      {message.has_sensitive_data && <div className="flex items-center gap-1 mt-2 text-xs opacity-75"><AlertTriangle className="w-3 h-3" /><span>تم حجب معلومات اتصال</span></div>}
-                      {message.attachments?.length > 0 && (
-                        <div className="mt-2 space-y-2">
-                          {message.attachments.map((att, idx) => <FilePreview key={idx} attachment={att} canMarkOfficial={!isMe} onMarkOfficial={() => {}} />)}
-                        </div>
-                      )}
-                    </div>
-                    <span className="text-xs text-slate-500">{new Date(message.created_date).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</span>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-          <div ref={messagesEndRef} />
-        </CardContent>
-
-        <div className="border-t p-4 space-y-2">
-          {sensitiveWarning && <div className="flex items-start gap-2 p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800"><AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" /><p>{sensitiveWarning}</p></div>}
+    <Card className="flex flex-col h-[600px]">
+      <CardHeader className="border-b">
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-3"><Users className="w-5 h-5 text-[#C9A66B]" /><span>{conversation.name || "غرفة المشروع الرئيسية"}</span></div>
           <div className="flex items-center gap-2">
-            <input type="file" ref={fileInputRef} multiple accept=".pdf,.dwg,.dxf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => handleFileUpload(Array.from(e.target.files))} />
-            <Button variant="outline" size="icon" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-              {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
-            </Button>
-            <Input placeholder="اكتب رسالتك..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()} disabled={sending} />
-            <Button onClick={handleSendMessage} disabled={sending || (!newMessage.trim() && !uploading)} className="bg-gradient-to-r from-blue-600 to-indigo-600">
-              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-            </Button>
+            <button onClick={() => callManager.startCall(false)} disabled={callManager.isCallActive} className="p-2 hover:bg-gray-100 rounded-full transition disabled:opacity-50" title="مكالمة صوتية"><Phone size={20} className="text-gray-600" /></button>
+            <button onClick={() => callManager.startCall(true)} disabled={callManager.isCallActive} className="p-2 hover:bg-gray-100 rounded-full transition disabled:opacity-50" title="مكالمة فيديو"><Video size={20} className="text-gray-600" /></button>
+            <GoogleMeetButton />
+            <button className="p-2 hover:bg-gray-100 rounded-full transition" title="المزيد"><MoreVertical size={20} className="text-gray-600" /></button>
+            <Badge variant="outline" className="flex items-center gap-1"><Shield className="w-3 h-3" />محمية</Badge>
           </div>
-          <p className="text-xs text-slate-500 text-center">🔒 جميع المحادثات محمية ومؤرشفة للرجوع إليها عند الحاجة</p>
+        </CardTitle>
+        {conversation.is_main_room && <p className="text-xs text-slate-500 mt-1">جميع الأطراف: العميل • المهندس • الشركة الاستشارية</p>}
+      </CardHeader>
+
+      <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
+        <AnimatePresence>
+          {messages.map((message) => {
+            const isMe = message.sender_email === currentUserEmail;
+            const roleBadge = getRoleBadge(message.sender_role);
+            return (
+              <motion.div key={message.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[70%] ${isMe ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
+                  {!isMe && <div className="flex items-center gap-2"><Avatar className="w-6 h-6"><AvatarFallback className="text-xs">{message.sender_name?.charAt(0)}</AvatarFallback></Avatar><span className="text-xs font-medium">{message.sender_name}</span><Badge className={`text-xs ${roleBadge.color}`}>{roleBadge.text}</Badge></div>}
+                  <div className={`rounded-lg p-3 ${isMe ? 'bg-blue-600 text-white' : message.is_system_message ? 'bg-amber-50 border border-amber-200 text-amber-900' : 'bg-slate-100 text-slate-900'}`}>
+                    <p className="text-sm whitespace-pre-wrap">{renderMessageContent(message.content, message.is_system_message)}</p>
+                    {message.has_sensitive_data && <div className="flex items-center gap-1 mt-2 text-xs opacity-75"><AlertTriangle className="w-3 h-3" /><span>تم حجب معلومات اتصال</span></div>}
+                    {message.attachments?.length > 0 && <div className="mt-2 space-y-2">{message.attachments.map((att, idx) => <FilePreview key={idx} attachment={att} canMarkOfficial={!isMe} onMarkOfficial={() => {}} />)}</div>}
+                  </div>
+                  <span className="text-xs text-slate-500">{new Date(message.created_date).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</span>
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+        <div ref={messagesEndRef} />
+      </CardContent>
+
+      <div className="border-t p-4 space-y-2">
+        {sensitiveWarning && <div className="flex items-start gap-2 p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800"><AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" /><p>{sensitiveWarning}</p></div>}
+        <div className="flex items-center gap-2">
+          <input type="file" ref={fileInputRef} multiple accept=".pdf,.dwg,.dxf,.jpg,.jpeg,.png" className="hidden" onChange={(e) => handleFileUpload(Array.from(e.target.files))} />
+          <Button variant="outline" size="icon" onClick={() => fileInputRef.current?.click()} disabled={uploading}>{uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}</Button>
+          <Input placeholder="اكتب رسالتك..." value={newMessage} onChange={(e) => setNewMessage(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()} disabled={sending} />
+          <Button onClick={handleSendMessage} disabled={sending || (!newMessage.trim() && !uploading)} className="bg-gradient-to-r from-blue-600 to-indigo-600">{sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}</Button>
         </div>
-      </Card>
-    </>
+        <p className="text-xs text-slate-500 text-center">🔒 جميع المحادثات محمية ومؤرشفة للرجوع إليها عند الحاجة</p>
+      </div>
+    </Card>
   );
 }
