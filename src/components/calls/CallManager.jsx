@@ -40,6 +40,7 @@ export default function CallManager({ conversationId, currentUserEmail, recipien
     } catch (error) {
       console.error('Error sending call invite:', error);
       toast.error('تعذر إرسال دعوة المكالمة');
+      return;
     }
     window.open(callUrl, '_blank', 'width=900,height=700,scrollbars=no,resizable=yes');
   };
@@ -96,6 +97,6 @@ export default function CallManager({ conversationId, currentUserEmail, recipien
     acceptCall: () => {},
     rejectCall: () => {},
     endCall: () => {},
-    VideoCallWindow: <GoogleMeetButton />
+    VideoCallWindow: null
   };
 }
