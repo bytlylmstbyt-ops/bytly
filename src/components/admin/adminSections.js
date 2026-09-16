@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Users, FileText, Wallet, Scale, Bell, BarChart3, Settings as SettingsIcon,
-  FolderKanban, Building2, Link2, Mail, Megaphone, Sparkles, Layers, Workflow, Crown,
+  FolderKanban, Building2, Link2, Mail, Megaphone, Sparkles, Layers, Workflow, Crown, MessageCircle,
 } from "lucide-react";
 
 export const ADMIN_CATEGORIES = [
@@ -12,6 +12,11 @@ export const ADMIN_CATEGORIES = [
     { page: "AdminStrategicChange", label: "التخطيط والتغيير الاستراتيجي", desc: "الأهداف والمبادرات والقرارات الاستراتيجية" },
   ] },
   { key: "overview", label: "نظرة عامة", icon: LayoutDashboard, description: "المؤشرات الرئيسية لأداء المنصة.", items: [{ page: "PlatformDashboard", label: "لوحة أداء المنصة", desc: "مؤشرات المشاريع، الإيرادات، والمهندسين" }] },
+  { key: "conversations", label: "مركز المحادثات", icon: MessageCircle, description: "مركز مستقل لمتابعة محادثات المنصة ورسائلها." , items: [
+    { page: "AdminConversationsCenter", label: "مركز المحادثات", desc: "عرض المحادثات والرسائل والنشاط من مكان واحد", priority: "high" },
+    { page: "Messages", label: "محادثات المستخدمين", desc: "واجهة المحادثات والرسائل للمستخدمين" },
+    { page: "ProjectChat", label: "محادثات المشاريع", desc: "غرف محادثات المشاريع والمشاركين" },
+  ] },
   { key: "assistant", label: "مساعد الإدارة المركزي", icon: Sparkles, description: "وكيل ذكاء اصطناعي موحّد — أسئلة عن البيانات أو طلبات تعديل، بدون اختيار نوع الطلب مسبقًا.", items: [{ page: "AdminAIAssistant", label: "مساعد الإدارة المركزي", desc: "اكتب طلبك مباشرة — سؤال بيانات (قراءة فقط) أو طلب تعديل (خطة + معاينة قبل أي تنفيذ) — يفهم الوكيل نوع طلبك تلقائيًا" }] },
   { key: "projects", label: "إدارة المشاريع", icon: FolderKanban, description: "كل ما يخص المشاريع وإدارتها من لوحة واحدة.", items: [
     { page: "AdminOperationsDashboard", label: "لوحة مدير العمليات", desc: "ملخص المشاريع والعروض والعقود والتنفيذ" },
