@@ -9,11 +9,32 @@ const CHANNELS = [
   { id: 'referrals', name: 'الإحالات والشراكات', audience: 'المهندسون والعملاء والمكاتب والشركات والشركاء', how: 'اكتشاف الشرائح النشطة واقتراح برامج إحالة أو شراكات قابلة للقياس.' },
 ];
 
+function errorText(value, depth = 0) {
+  if (value == null || depth > 8) return '';
+  if (typeof value === 'string') return value.trim();
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (value instanceof Error) return errorText(value.message, depth + 1) || errorText(value.cause, depth + 1);
+  if (Array.isArray(value)) return value.map((item) => errorText(item, depth + 1)).filter(Boolean).join(' | ');
+  if (typeof value === 'object') {
+    for (const key of ['message', 'error', 'details', 'detail', 'hint', 'reason', 'code']) {
+      if (value[key] != null) {
+        const text = errorText(value[key], depth + 1);
+        if (text && text !== '[object Object]' && text !== 'Object object') return text;
+      }
+    }
+    try {
+      const json = JSON.stringify(value);
+      if (json && json !== '{}') return json;
+    } catch {}
+  }
+  return '';
+}
+
 const safeCount = async (table, filter) => {
   let q = supabase.from(table).select('*', { count: 'exact', head: true });
   if (filter) q = filter(q);
   const { count, error } = await q;
-  return error ? { count: null, error: error.message } : { count: count || 0, error: null };
+  return error ? { count: null, error: errorText(error) || 'تعذر قراءة عدد السجلات.' } : { count: count || 0, error: null };
 };
 
 export async function getMarketingAgentSnapshot() {
@@ -26,8 +47,16 @@ export async function getMarketingAgentSnapshot() {
     supabase.from('social_posts').select('id,platform,status,scheduled_at,published_at,created_at,metrics,content').order('created_at', { ascending: false }).limit(100),
     supabase.from('registration_attempts').select('id,email,status,error_stage,created_at').order('created_at', { ascending: false }).limit(100),
   ]);
-  const errors = [projectsError, postsError, registrationsError, projects.error, engineers.error, clients.error, firms.error, socialPosts.error, registrations.error].filter(Boolean);
-  if (errors.length) throw new Error(`تعذر قراءة بيانات التحليل: ${errors[0]}`);
+  const errors = [
+    ['projects', projectsError], ['social_posts', postsError], ['registration_attempts', registrationsError],
+    ['projects_count', projects.error], ['engineers_count', engineers.error], ['clients_count', clients.error],
+    ['engineering_firms_count', firms.error], ['social_posts_count', socialPosts.error], ['registration_attempts_count', registrations.error],
+  ].filter(([, value]) => Boolean(value));
+  if (errors.length) {
+    const [source, value] = errors[0];
+    const detail = errorText(value) || 'خطأ غير معروف';
+    throw new Error(`تعذر قراءة بيانات التحليل من ${source}: ${detail}`);
+  }
   return {
     generated_at: new Date().toISOString(),
     counts: { projects: projects.count, engineers: engineers.count, clients: clients.count, firms: firms.count, social_posts: socialPosts.count, registration_attempts: registrations.count },
@@ -136,28 +165,28 @@ export function buildChannelPlans(snapshot, insights = buildMarketingInsights(sn
 export async function saveMarketingSuggestions(insights, snapshot, channelPlans) {
   const recommendations = insights.map((x) => ({ title: x.title, type: x.type, channel: x.channel, priority: x.priority, audience: x.audience, objective: x.objective, message_angle: x.message_angle, evidence: x.evidence, recommendation: x.recommendation, status: 'proposed', source: 'marketing-agent', source_snapshot: snapshot }));
   const { data: recData, error: recError } = await supabase.from('marketing_recommendations').insert(recommendations).select('*');
-  if (recError) throw new Error(recError.message);
+  if (recError) throw new Error(errorText(recError) || 'تعذر حفظ توصيات التسويق.');
   const plans = channelPlans.map((x) => ({ ...x, source_snapshot: snapshot }));
   const { data: planData, error: planError } = await supabase.from('marketing_channel_plans').insert(plans).select('*');
-  if (planError) throw new Error(planError.message);
+  if (planError) throw new Error(errorText(planError) || 'تعذر حفظ خطط القنوات.');
   return { recommendations: recData || [], channelPlans: planData || [] };
 }
 
 export async function approveRecommendations(ids) {
   const { data, error } = await supabase.from('marketing_recommendations').update({ status: 'approved', approved_at: new Date().toISOString() }).in('id', ids).select('*');
-  if (error) throw new Error(error.message); return data || [];
+  if (error) throw new Error(errorText(error) || 'تعذر اعتماد التوصيات.'); return data || [];
 }
 export async function approveChannelPlans(ids) {
   const { data, error } = await supabase.from('marketing_channel_plans').update({ status: 'approved', approved_at: new Date().toISOString() }).in('id', ids).select('*');
-  if (error) throw new Error(error.message); return data || [];
+  if (error) throw new Error(errorText(error) || 'تعذر اعتماد خطط القنوات.'); return data || [];
 }
 export async function createTasksFromRecommendations(ids) {
   const { data: recs, error: recError } = await supabase.from('marketing_recommendations').select('*').in('id', ids);
-  if (recError) throw new Error(recError.message);
+  if (recError) throw new Error(errorText(recError) || 'تعذر قراءة التوصيات.');
   if (!recs?.length) return [];
   const tasks = recs.map(r => ({ title: r.title, description: `${r.objective}\n\n${r.recommendation}\n\nالدليل: ${r.evidence}`, status: 'pending_approval', priority: r.priority, source: 'marketing-agent', recommendation_id: r.id }));
   const { data, error } = await supabase.from('marketing_tasks').insert(tasks).select('*');
-  if (error) throw new Error(error.message); return data || [];
+  if (error) throw new Error(errorText(error) || 'تعذر إنشاء المهام.'); return data || [];
 }
 
 export { CHANNELS };
