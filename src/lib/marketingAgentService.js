@@ -35,8 +35,33 @@ export async function getMarketingAgentSnapshot() {
   };
 }
 
+function toDisplayText(value, fallback = 'غير محدد', depth = 0) {
+  if (value == null || value === '') return fallback;
+  if (depth > 8) return fallback;
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (Array.isArray(value)) {
+    const parts = value.map(item => toDisplayText(item, '', depth + 1)).filter(Boolean);
+    return parts.length ? parts.join('، ') : fallback;
+  }
+  if (typeof value === 'object') {
+    const object = value;
+    for (const key of ['name', 'label', 'title', 'value', 'text', 'city', 'region', 'location', 'content']) {
+      if (object[key] != null) {
+        const text = toDisplayText(object[key], '', depth + 1);
+        if (text) return text;
+      }
+    }
+    try { return JSON.stringify(object, null, 2); } catch { return fallback; }
+  }
+  return fallback;
+}
+
 function groupCount(items, key) {
-  return items.reduce((acc, item) => { const value = item?.[key] || 'غير محدد'; acc[value] = (acc[value] || 0) + 1; return acc; }, {});
+  return items.reduce((acc, item) => {
+    const value = toDisplayText(item?.[key]);
+    acc[value] = (acc[value] || 0) + 1;
+    return acc;
+  }, {});
 }
 function priorityScore({ demand = 0, supply = 0, conversionRisk = 0, contentGap = 0, executionGap = 0 }) {
   return demand * 3 + Math.max(0, demand - supply) * 4 + conversionRisk * 5 + contentGap * 2 + executionGap * 2;
