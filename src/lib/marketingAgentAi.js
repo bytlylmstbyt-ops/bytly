@@ -2,18 +2,24 @@ import { supabase } from '@/lib/supabaseClient';
 
 function toDisplayText(value, depth = 0) {
   if (value == null) return '';
-  if (depth > 8) return '';
+  if (depth > 10) return '';
   if (typeof value === 'string') {
     const trimmed = value.trim();
     return trimmed === '[object Object]' || trimmed === 'Object object' ? '' : value;
   }
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  if (value instanceof Error) {
+    return toDisplayText(value.message, depth + 1) || toDisplayText(value.cause, depth + 1);
+  }
   if (Array.isArray(value)) {
     return value.map((item) => toDisplayText(item, depth + 1)).filter(Boolean).join('\n');
   }
   if (typeof value === 'object') {
     const object = value;
-    const preferredKeys = ['text', 'value', 'content', 'output_text', 'message', 'parts', 'result', 'response'];
+    const preferredKeys = [
+      'message', 'error', 'detail', 'details', 'reason', 'text', 'value',
+      'content', 'output_text', 'parts', 'result', 'response', 'cause',
+    ];
     for (const key of preferredKeys) {
       if (object[key] != null) {
         const text = toDisplayText(object[key], depth + 1);
@@ -21,7 +27,8 @@ function toDisplayText(value, depth = 0) {
       }
     }
     try {
-      return JSON.stringify(object, null, 2);
+      const json = JSON.stringify(object, null, 2);
+      return json === '{}' ? '' : json;
     } catch {
       return '';
     }
@@ -34,16 +41,33 @@ export function normalizeMarketingResult(value) {
   return text || 'لم يُرجع الوكيل نصًا قابلًا للعرض.';
 }
 
+function normalizeMarketingError(value, fallback = 'تعذر الحصول على نتيجة من وكيل التسويق.') {
+  const text = toDisplayText(value).trim();
+  return text || fallback;
+}
+
 export async function runMarketingAgent({ prompt, context = {} }) {
   const cleanPrompt = String(prompt || '').trim();
   if (!cleanPrompt) throw new Error('يرجى إدخال طلب للوكيل التسويقي.');
 
-  const { data, error } = await supabase.functions.invoke('marketing-agent', {
-    body: { prompt: cleanPrompt, context },
-  });
+  let response;
+  try {
+    response = await supabase.functions.invoke('marketing-agent', {
+      body: { prompt: cleanPrompt, context },
+    });
+  } catch (invokeError) {
+    throw new Error(normalizeMarketingError(invokeError, 'تعذر الاتصال بوكيل التسويق.'));
+  }
 
-  if (error) throw new Error(error.message || 'تعذر الاتصال بوكيل التسويق.');
-  if (!data?.success) throw new Error(data?.error || 'تعذر الحصول على نتيجة من وكيل التسويق.');
+  const { data, error } = response || {};
+
+  if (error) {
+    throw new Error(normalizeMarketingError(error, 'تعذر الاتصال بوكيل التسويق.'));
+  }
+
+  if (!data?.success) {
+    throw new Error(normalizeMarketingError(data?.error ?? data?.message, 'تعذر الحصول على نتيجة من وكيل التسويق.'));
+  }
 
   return {
     result: normalizeMarketingResult(data.result),
