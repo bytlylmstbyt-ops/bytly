@@ -25,7 +25,7 @@ export function usePermissions() {
       const { data: profile } = await supabase
         .from("profiles")
         .select("role,email,full_name")
-        .eq("id", authUser.id)
+        .eq("user_id", authUser.id)
         .maybeSingle();
 
       const isPlatformOwner = email === PLATFORM_OWNER_EMAIL;
@@ -38,7 +38,7 @@ export function usePermissions() {
       };
       setUser(userData);
 
-      // The platform owner is the sole Super Admin and receives full permissions.
+      // The platform owner and every profile explicitly assigned the admin role receive full permissions.
       if (isPlatformOwner || profile?.role === "admin") {
         setPermissions(getAllPermissions());
         return;
