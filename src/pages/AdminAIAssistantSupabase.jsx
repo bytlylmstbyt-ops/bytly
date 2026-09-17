@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { supabase } from "@/lib/supabaseClient";
 import LegacyAdminAIAssistant from "./AdminAIAssistant";
+import { useAuth } from "@/lib/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, ShieldAlert } from "lucide-react";
 
@@ -22,63 +22,32 @@ function AccessDenied() {
 }
 
 export default function AdminAIAssistantSupabase() {
-  const [state, setState] = useState({ loading: true, admin: false, user: null });
+  const { user, isAuthenticated, isLoadingAuth } = useAuth();
 
+  const email = (user?.email || "").trim().toLowerCase();
+  const isAdmin = isAuthenticated && (
+    email === PLATFORM_OWNER_EMAIL ||
+    user?.role === "admin" ||
+    user?.profile?.role === "admin"
+  );
+
+  // The legacy assistant still owns its existing history/agent UI. We only
+  // provide it with the already-resolved Supabase identity after AuthProvider
+  // finishes loading, avoiding the previous race where it saw no session.
   useEffect(() => {
-    let mounted = true;
-
-    const resolveAdmin = async () => {
-      try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        const user = data?.session?.user;
-
-        if (!user) {
-          if (mounted) setState({ loading: false, admin: false, user: null });
-          return;
-        }
-
-        const email = (user.email || "").trim().toLowerCase();
-        let profile = null;
-        try {
-          const result = await supabase
-            .from("profiles")
-            .select("role,email,full_name")
-            .eq("user_id", user.id)
-            .maybeSingle();
-          profile = result.data || null;
-        } catch {}
-
-        const isAdmin = email === PLATFORM_OWNER_EMAIL || profile?.role === "admin";
-        const normalizedUser = {
-          id: user.id,
-          user_id: user.id,
-          email: user.email,
-          full_name: profile?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || "",
-          role: isAdmin ? "admin" : (profile?.role || "user"),
-          profile,
-          _authProvider: "supabase",
-        };
-
-        // Install the compatibility response only after Supabase has positively
-        // resolved the current user. The legacy assistant is rendered afterwards,
-        // so its existing history/agent behavior remains unchanged.
-        if (isAdmin) {
-          base44.auth.me = async () => normalizedUser;
-        }
-
-        if (mounted) setState({ loading: false, admin: isAdmin, user: normalizedUser });
-      } catch (error) {
-        console.warn("Admin assistant Supabase access check failed:", error?.message || error);
-        if (mounted) setState({ loading: false, admin: false, user: null });
-      }
+    if (!isAdmin || !user) return;
+    const normalizedUser = {
+      ...user,
+      id: user.id,
+      user_id: user.id,
+      email: user.email,
+      role: "admin",
+      _authProvider: "supabase",
     };
+    base44.auth.me = async () => normalizedUser;
+  }, [isAdmin, user]);
 
-    resolveAdmin();
-    return () => { mounted = false; };
-  }, []);
-
-  if (state.loading) {
+  if (isLoadingAuth) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <Loader2 className="w-7 h-7 animate-spin text-[#C9A66B]" />
@@ -86,7 +55,7 @@ export default function AdminAIAssistantSupabase() {
     );
   }
 
-  if (!state.admin) return <AccessDenied />;
+  if (!isAdmin) return <AccessDenied />;
 
   return <LegacyAdminAIAssistant />;
 }
