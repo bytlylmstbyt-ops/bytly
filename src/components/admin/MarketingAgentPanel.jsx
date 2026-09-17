@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Brain, CheckCircle2, ClipboardCheck, Loader2, MessageCircle, Linkedin, Users, Sparkles, RefreshCw, AlertCircle, Globe2, Search, Mail, Target, PenLine, BarChart3, KeyRound, Megaphone } from 'lucide-react';
+import { Brain, CheckCircle2, ClipboardCheck, Loader2, MessageCircle, Linkedin, Users, Sparkles, RefreshCw, AlertCircle, Globe2, Mail, Target, PenLine, BarChart3, KeyRound, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { approveChannelPlans, approveRecommendations, buildChannelPlans, buildMarketingInsights, CHANNELS, createTasksFromRecommendations, getMarketingAgentSnapshot, saveMarketingSuggestions } from '@/lib/marketingAgentService';
-import { runMarketingAgent } from '@/lib/marketingAgentAi';
+import { normalizeMarketingResult, runMarketingAgent } from '@/lib/marketingAgentAi';
 
 const priorityRank = { 'عالية جدًا': 4, 'عالية': 3, 'متوسطة': 2, 'منخفضة': 1 };
 const withTimeout = (promise, ms = 60000) => Promise.race([
@@ -14,210 +14,68 @@ const withTimeout = (promise, ms = 60000) => Promise.race([
 ]);
 const channelIcon = (id) => id === 'linkedin' ? <Linkedin className="h-4 w-4" /> : id === 'direct_outreach' ? <MessageCircle className="h-4 w-4" /> : <Users className="h-4 w-4" />;
 
+const displayValue = (value) => {
+  if (value == null || value === '') return 'لا توجد بيانات متاحة حاليًا';
+  return normalizeMarketingResult(value);
+};
+
 const ACTION_CARDS = [
-  {
-    id: 'outreach', title: 'التواصل المباشر', icon: MessageCircle,
-    description: 'استهداف العملاء والمكاتب الهندسية برسائل مخصصة مبنية على بيانات بيتلي والبحث الحي عند الحاجة.',
-    actions: [
-      { label: 'توليد نصوص استهداف الواتساب والإيميل', icon: Mail, prompt: 'ولّد نصوص استهداف احترافية وقابلة للتخصيص للواتساب والإيميل لاستقطاب العملاء والمكاتب الهندسية إلى Bytly. أنشئ نسختين: قصيرة للواتساب ونسخة مهنية للإيميل، مع CTA واضح. لا تفترض أسماء أو أرقام عملاء حقيقية.' },
-      { label: 'اكتشاف عملاء ومكاتب هندسية مستهدفة', icon: Target, prompt: 'اكتشف شرائح وعملاء ومكاتب هندسية مستهدفة في السعودية مناسبة لـ Bytly. استخدم بيانات بيتلي الداخلية، واستخدم البحث الحي في Google عند الحاجة لاكتشاف جهات عامة أو فرص سوقية. افصل بوضوح بين جهات تم العثور عليها من البحث وبين الشرائح المقترحة، ولا تخترع بيانات اتصال.' },
-    ],
-  },
-  {
-    id: 'linkedin', title: 'LinkedIn', icon: Linkedin,
-    description: 'محتوى مهني وتحليل للمنافسين يساعد بيتلي على بناء حضور هندسي موثوق.',
-    actions: [
-      { label: 'صياغة منشور مهني للمنصة', icon: PenLine, prompt: 'اكتب منشور LinkedIn مهنيًا لمنصة Bytly يستهدف المهندسين والمكاتب والشركات الهندسية في السعودية. اجعله هندسيًا واحترافيًا، واضح المشكلة والحل، مع CTA واحد مناسب لبيتلي. لا تستخدم أرقامًا غير موجودة في بيانات بيتلي.' },
-      { label: 'تحليل تجارب المنافسين على LinkedIn', icon: BarChart3, prompt: 'حلل حضور وتجارب المنافسين في مجال المنصات الهندسية والعقارية والخدمات المهنية على LinkedIn. استخدم البحث الحي في Google، اذكر المنافسين أو الأمثلة التي تستطيع التحقق منها فقط، واستخرج أنماط المحتوى والرسائل ومواضع الفرص لبيتلي دون اختلاق نتائج.' },
-    ],
-  },
-  {
-    id: 'seo', title: 'SEO / GEO', icon: Globe2,
-    description: 'تحويل احتياجات السوق الهندسي إلى محتوى قابل للاكتشاف في البحث التقليدي ومحركات الإجابة.',
-    actions: [
-      { label: 'توليد مقال معماري معزز للـ SEO', icon: PenLine, prompt: 'اكتب مقالًا معماريًا احترافيًا موجهًا للسوق السعودي ومُحسنًا لـ SEO وGEO. اختر موضوعًا ذا صلة بطلب المستخدمين على الخدمات الهندسية، وضع عنوانًا، مقدمة، عناوين فرعية، أسئلة وأجوبة، وصفًا مختصرًا، وCTA لبيتلي. استخدم البحث الحي إذا كان اختيار الموضوع أو الحقائق الحديثة يحتاج ذلك.' },
-      { label: 'استخراج الكلمات المفتاحية الأكثر بحثاً', icon: KeyRound, prompt: 'ابحث حيًا عن الكلمات والعبارات المرتبطة بالخدمات الهندسية، التصميم المعماري، الاستشارات، المقاولات، والمشاريع في السعودية. قدم الكلمات التي تستطيع دعمها بنتائج بحث حديثة، وميّز بين كلمات ذات دليل بحث فعلي وبين أفكار كلمات مقترحة. لا تدّعِ حجم بحث رقميًا ما لم يكن مصدرًا متاحًا.' },
-    ],
-  },
-  {
-    id: 'ads', title: 'الإعلانات والشراكات', icon: Megaphone,
-    description: 'بناء استراتيجية إعلانية مدفوعة قابلة للقياس، مع إبقاء النشر والإنفاق تحت موافقة الإدارة.',
-    actions: [
-      { label: 'بناء استراتيجية حملة إعلانية مدفوعة', icon: Megaphone, prompt: 'ابنِ استراتيجية حملة إعلانية مدفوعة لـ Bytly في السعودية. حدد الهدف، الجمهور، الرسائل، القنوات، مراحل الاختبار، المقاييس، والميزانية المقترحة كنطاقات أو سيناريوهات وليس كأرقام مؤكدة. استخدم بيانات بيتلي الداخلية، وابحث حيًا عن اتجاهات السوق أو المنافسين عند الحاجة. لا تنشر الحملة ولا تنفق أي ميزانية.' },
-    ],
-  },
+  { id: 'outreach', title: 'التواصل المباشر', icon: MessageCircle, description: 'استهداف العملاء والمكاتب الهندسية برسائل مخصصة مبنية على بيانات بيتلي والبحث الحي عند الحاجة.', actions: [
+    { label: 'توليد نصوص استهداف الواتساب والإيميل', icon: Mail, prompt: 'ولّد نصوص استهداف احترافية وقابلة للتخصيص للواتساب والإيميل لاستقطاب العملاء والمكاتب الهندسية إلى Bytly. أنشئ نسختين: قصيرة للواتساب ونسخة مهنية للإيميل، مع CTA واضح. لا تفترض أسماء أو أرقام عملاء حقيقية.' },
+    { label: 'اكتشاف عملاء ومكاتب هندسية مستهدفة', icon: Target, prompt: 'اكتشف شرائح وعملاء ومكاتب هندسية مستهدفة في السعودية مناسبة لـ Bytly. استخدم بيانات بيتلي الداخلية، واستخدم البحث الحي في Google عند الحاجة لاكتشاف جهات عامة أو فرص سوقية. افصل بوضوح بين جهات تم العثور عليها من البحث وبين الشرائح المقترحة، ولا تخترع بيانات اتصال.' },
+  ] },
+  { id: 'linkedin', title: 'LinkedIn', icon: Linkedin, description: 'محتوى مهني وتحليل للمنافسين يساعد بيتلي على بناء حضور هندسي موثوق.', actions: [
+    { label: 'صياغة منشور مهني للمنصة', icon: PenLine, prompt: 'اكتب منشور LinkedIn مهنيًا لمنصة Bytly يستهدف المهندسين والمكاتب والشركات الهندسية في السعودية. اجعله هندسيًا واحترافيًا، واضح المشكلة والحل، مع CTA واحد مناسب لبيتلي. لا تستخدم أرقامًا غير موجودة في بيانات بيتلي.' },
+    { label: 'تحليل تجارب المنافسين على LinkedIn', icon: BarChart3, prompt: 'حلل حضور وتجارب المنافسين في مجال المنصات الهندسية والعقارية والخدمات المهنية على LinkedIn. استخدم البحث الحي في Google، اذكر المنافسين أو الأمثلة التي تستطيع التحقق منها فقط، واستخرج أنماط المحتوى والرسائل ومواضع الفرص لبيتلي دون اختلاق نتائج.' },
+  ] },
+  { id: 'seo', title: 'SEO / GEO', icon: Globe2, description: 'تحويل احتياجات السوق الهندسي إلى محتوى قابل للاكتشاف في البحث التقليدي ومحركات الإجابة.', actions: [
+    { label: 'توليد مقال معماري معزز للـ SEO', icon: PenLine, prompt: 'اكتب مقالًا معماريًا احترافيًا موجهًا للسوق السعودي ومُحسنًا لـ SEO وGEO. اختر موضوعًا ذا صلة بطلب المستخدمين على الخدمات الهندسية، وضع عنوانًا، مقدمة، عناوين فرعية، أسئلة وأجوبة، وصفًا مختصرًا، وCTA لبيتلي. استخدم البحث الحي إذا كان اختيار الموضوع أو الحقائق الحديثة يحتاج ذلك.' },
+    { label: 'استخراج الكلمات المفتاحية الأكثر بحثاً', icon: KeyRound, prompt: 'ابحث حيًا عن الكلمات والعبارات المرتبطة بالخدمات الهندسية، التصميم المعماري، الاستشارات، المقاولات، والمشاريع في السعودية. قدم الكلمات التي تستطيع دعمها بنتائج بحث حديثة، وميّز بين كلمات ذات دليل بحث فعلي وبين أفكار كلمات مقترحة. لا تدّعِ حجم بحث رقميًا ما لم يكن مصدرًا متاحًا.' },
+  ] },
+  { id: 'ads', title: 'الإعلانات والشراكات', icon: Megaphone, description: 'بناء استراتيجية إعلانية مدفوعة قابلة للقياس، مع إبقاء النشر والإنفاق تحت موافقة الإدارة.', actions: [
+    { label: 'بناء استراتيجية حملة إعلانية مدفوعة', icon: Megaphone, prompt: 'ابنِ استراتيجية حملة إعلانية مدفوعة لـ Bytly في السعودية. حدد الهدف، الجمهور، الرسائل، القنوات، مراحل الاختبار، المقاييس، والميزانية المقترحة كنطاقات أو سيناريوهات وليس كأرقام مؤكدة. استخدم بيانات بيتلي الداخلية، وابحث حيًا عن اتجاهات السوق أو المنافسين عند الحاجة. لا تنشر الحملة ولا تنفق أي ميزانية.' },
+  ] },
 ];
 
 export default function MarketingAgentPanel() {
-  const [loading, setLoading] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [aiResult, setAiResult] = useState(null);
-  const [snapshot, setSnapshot] = useState(null);
-  const [insights, setInsights] = useState([]);
-  const [channelPlans, setChannelPlans] = useState([]);
-  const [savedPlans, setSavedPlans] = useState([]);
-  const [recommendations, setRecommendations] = useState([]);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false); const [actionLoading, setActionLoading] = useState(false); const [aiLoading, setAiLoading] = useState(false); const [aiPrompt, setAiPrompt] = useState(''); const [aiResult, setAiResult] = useState(null); const [snapshot, setSnapshot] = useState(null); const [insights, setInsights] = useState([]); const [channelPlans, setChannelPlans] = useState([]); const [savedPlans, setSavedPlans] = useState([]); const [recommendations, setRecommendations] = useState([]); const [message, setMessage] = useState(''); const [error, setError] = useState('');
 
   const analyze = async () => {
-    if (loading || actionLoading || aiLoading) return;
-    setLoading(true); setMessage('جاري قراءة بيانات بيتلي وتحليلها…'); setError(''); setRecommendations([]); setSavedPlans([]);
-    try {
-      const s = await withTimeout(getMarketingAgentSnapshot());
-      const nextInsights = buildMarketingInsights(s).sort((a, b) => (priorityRank[b.priority] || 0) - (priorityRank[a.priority] || 0));
-      setSnapshot(s); setInsights(nextInsights); setChannelPlans(buildChannelPlans(s, nextInsights));
-      setMessage(`اكتمل التحليل بنجاح: تم تحليل ${Object.values(s.counts).filter(v => typeof v === 'number').reduce((a, b) => a + b, 0)} سجلًا ضمن مصادر الوكيل، وتم إنشاء ${nextInsights.length} توصيات.`);
-    } catch (err) {
-      console.error('Marketing Agent analysis failed:', err);
-      setError(err?.message || 'تعذر تحليل بيانات المنصة.');
-      setMessage('فشل التحليل. راجعي رسالة الخطأ الظاهرة أسفل الأزرار.');
-    } finally { setLoading(false); }
+    if (loading || actionLoading || aiLoading) return; setLoading(true); setMessage('جاري قراءة بيانات بيتلي وتحليلها…'); setError(''); setRecommendations([]); setSavedPlans([]);
+    try { const s = await withTimeout(getMarketingAgentSnapshot()); const nextInsights = buildMarketingInsights(s).sort((a, b) => (priorityRank[b.priority] || 0) - (priorityRank[a.priority] || 0)); setSnapshot(s); setInsights(nextInsights); setChannelPlans(buildChannelPlans(s, nextInsights)); setMessage(`اكتمل التحليل بنجاح: تم تحليل ${Object.values(s.counts).filter(v => typeof v === 'number').reduce((a, b) => a + b, 0)} سجلًا ضمن مصادر الوكيل، وتم إنشاء ${nextInsights.length} توصيات.`); }
+    catch (err) { console.error('Marketing Agent analysis failed:', err); setError(err?.message || 'تعذر تحليل بيانات المنصة.'); setMessage('فشل التحليل. راجعي رسالة الخطأ الظاهرة أسفل الأزرار.'); } finally { setLoading(false); }
   };
 
   const runAi = async () => {
-    if (!aiPrompt.trim() || aiLoading || loading || actionLoading) return;
-    setAiLoading(true); setError(''); setMessage('وكيل التسويق يحلل الطلب ويستخدم البحث الحي عند الحاجة…'); setAiResult(null);
-    try {
-      const liveSnapshot = snapshot || await withTimeout(getMarketingAgentSnapshot());
-      if (!snapshot) setSnapshot(liveSnapshot);
-      const result = await withTimeout(runMarketingAgent({ prompt: aiPrompt, context: liveSnapshot }), 90000);
-      setAiResult(result);
-      setMessage(result.searched ? 'اكتمل التحليل باستخدام Gemini مع بحث Google حي.' : 'اكتمل التحليل بواسطة Gemini. لم يحتج الطلب إلى بحث حي.');
-    } catch (err) {
-      console.error('Gemini Marketing Agent failed:', err);
-      setError(err?.message || 'تعذر تشغيل وكيل التسويق.');
-      setMessage('تعذر تشغيل الوكيل.');
-    } finally { setAiLoading(false); }
+    if (!aiPrompt.trim() || aiLoading || loading || actionLoading) return; setAiLoading(true); setError(''); setMessage('وكيل التسويق يحلل الطلب ويستخدم البحث الحي عند الحاجة…'); setAiResult(null);
+    try { const liveSnapshot = snapshot || await withTimeout(getMarketingAgentSnapshot()); if (!snapshot) setSnapshot(liveSnapshot); const result = await withTimeout(runMarketingAgent({ prompt: aiPrompt, context: liveSnapshot }), 90000); setAiResult({ ...result, result: normalizeMarketingResult(result?.result) }); setMessage(result.searched ? 'اكتمل التحليل باستخدام Gemini مع بحث Google حي.' : 'اكتمل التحليل بواسطة Gemini. لم يحتج الطلب إلى بحث حي.'); }
+    catch (err) { console.error('Gemini Marketing Agent failed:', err); setError(err?.message || 'تعذر تشغيل وكيل التسويق.'); setMessage('تعذر تشغيل الوكيل.'); } finally { setAiLoading(false); }
   };
 
   const runAction = async (action) => {
-    if (aiLoading || loading || actionLoading) return;
-    setAiLoading(true); setError(''); setMessage(`جاري تنفيذ: ${action.label}…`); setAiResult(null);
-    try {
-      const liveSnapshot = snapshot || await withTimeout(getMarketingAgentSnapshot());
-      if (!snapshot) setSnapshot(liveSnapshot);
-      const result = await withTimeout(runMarketingAgent({ prompt: action.prompt, context: liveSnapshot }), 90000);
-      setAiResult(result);
-      setAiPrompt(action.prompt);
-      setMessage(result.searched ? `اكتمل «${action.label}» باستخدام البحث الحي في Google.` : `اكتمل «${action.label}» بنجاح.`);
-    } catch (err) {
-      console.error(`Marketing action failed: ${action.id || action.label}`, err);
-      setError(err?.message || 'تعذر تنفيذ الإجراء التسويقي.');
-      setMessage('تعذر تنفيذ الإجراء.');
-    } finally { setAiLoading(false); }
+    if (aiLoading || loading || actionLoading) return; setAiLoading(true); setError(''); setMessage(`جاري تنفيذ: ${action.label}…`); setAiResult(null);
+    try { const liveSnapshot = snapshot || await withTimeout(getMarketingAgentSnapshot()); if (!snapshot) setSnapshot(liveSnapshot); const result = await withTimeout(runMarketingAgent({ prompt: action.prompt, context: liveSnapshot }), 90000); setAiResult({ ...result, result: normalizeMarketingResult(result?.result) }); setAiPrompt(action.prompt); setMessage(result.searched ? `اكتمل «${action.label}» باستخدام البحث الحي في Google.` : `اكتمل «${action.label}» بنجاح.`); }
+    catch (err) { console.error(`Marketing action failed: ${action.id || action.label}`, err); setError(err?.message || 'تعذر تنفيذ الإجراء التسويقي.'); setMessage('تعذر تنفيذ الإجراء.'); } finally { setAiLoading(false); }
   };
 
-  const saveDrafts = async () => {
-    if (!snapshot || !insights.length || actionLoading) return;
-    setActionLoading(true); setError(''); setMessage('جاري حفظ المقترحات…');
-    try {
-      const result = await withTimeout(saveMarketingSuggestions(insights, snapshot, channelPlans));
-      setRecommendations(result.recommendations || []); setSavedPlans(result.channelPlans || []);
-      setMessage('تم حفظ المقترحات وخطط القنوات بحالة «مقترح من الوكيل». لم يتم إرسال رسائل أو نشر محتوى أو إنفاق ميزانية.');
-    } catch (err) { setError(err?.message || 'تعذر حفظ مقترحات الوكيل.'); setMessage('تعذر الحفظ.'); }
-    finally { setActionLoading(false); }
-  };
-
-  const approveAll = async () => {
-    const ids = recommendations.filter(r => r.status === 'proposed').map(r => r.id);
-    if (!ids.length || actionLoading) return;
-    setActionLoading(true); setError('');
-    try {
-      const updated = await withTimeout(approveRecommendations(ids));
-      setRecommendations(prev => prev.map(r => updated.find(u => u.id === r.id) || r));
-      setMessage('تم اعتماد الاقتراحات. لم يتم نشر محتوى أو إرسال رسائل أو إنفاق ميزانية.');
-    } catch (err) { setError(err?.message || 'تعذر اعتماد الاقتراحات.'); }
-    finally { setActionLoading(false); }
-  };
-
-  const approvePlans = async () => {
-    const ids = savedPlans.filter(p => p.status === 'proposed').map(p => p.id);
-    if (!ids.length || actionLoading) return;
-    setActionLoading(true); setError('');
-    try {
-      const updated = await withTimeout(approveChannelPlans(ids));
-      setSavedPlans(prev => prev.map(p => updated.find(u => u.id === p.id) || p));
-      setMessage('تم اعتماد خطط القنوات. التنفيذ الفعلي ما زال يدويًا وبموافقة منفصلة.');
-    } catch (err) { setError(err?.message || 'تعذر اعتماد خطط القنوات.'); }
-    finally { setActionLoading(false); }
-  };
-
-  const createTasks = async () => {
-    const ids = recommendations.filter(r => r.status === 'approved').map(r => r.id);
-    if (!ids.length || actionLoading) return;
-    setActionLoading(true); setError('');
-    try {
-      await withTimeout(createTasksFromRecommendations(ids));
-      setRecommendations(prev => prev.map(r => ids.includes(r.id) ? { ...r, status: 'converted_to_task' } : r));
-      setMessage('تم تحويل الاقتراحات المعتمدة إلى مهام تنفيذية بحالة «بانتظار الموافقة».');
-    } catch (err) { setError(err?.message || 'تعذر إنشاء المهام.'); }
-    finally { setActionLoading(false); }
-  };
+  const saveDrafts = async () => { if (!snapshot || !insights.length || actionLoading) return; setActionLoading(true); setError(''); setMessage('جاري حفظ المقترحات…'); try { const result = await withTimeout(saveMarketingSuggestions(insights, snapshot, channelPlans)); setRecommendations(result.recommendations || []); setSavedPlans(result.channelPlans || []); setMessage('تم حفظ المقترحات وخطط القنوات بحالة «مقترح من الوكيل». لم يتم إرسال رسائل أو نشر محتوى أو إنفاق ميزانية.'); } catch (err) { setError(err?.message || 'تعذر حفظ مقترحات الوكيل.'); setMessage('تعذر الحفظ.'); } finally { setActionLoading(false); } };
+  const approveAll = async () => { const ids = recommendations.filter(r => r.status === 'proposed').map(r => r.id); if (!ids.length || actionLoading) return; setActionLoading(true); setError(''); try { const updated = await withTimeout(approveRecommendations(ids)); setRecommendations(prev => prev.map(r => updated.find(u => u.id === r.id) || r)); setMessage('تم اعتماد الاقتراحات. لم يتم نشر محتوى أو إرسال رسائل أو إنفاق ميزانية.'); } catch (err) { setError(err?.message || 'تعذر اعتماد الاقتراحات.'); } finally { setActionLoading(false); } };
+  const approvePlans = async () => { const ids = savedPlans.filter(p => p.status === 'proposed').map(p => p.id); if (!ids.length || actionLoading) return; setActionLoading(true); setError(''); try { const updated = await withTimeout(approveChannelPlans(ids)); setSavedPlans(prev => prev.map(p => updated.find(u => u.id === p.id) || p)); setMessage('تم اعتماد خطط القنوات. التنفيذ الفعلي ما زال يدويًا وبموافقة منفصلة.'); } catch (err) { setError(err?.message || 'تعذر اعتماد خطط القنوات.'); } finally { setActionLoading(false); } };
+  const createTasks = async () => { const ids = recommendations.filter(r => r.status === 'approved').map(r => r.id); if (!ids.length || actionLoading) return; setActionLoading(true); setError(''); try { await withTimeout(createTasksFromRecommendations(ids)); setRecommendations(prev => prev.map(r => ids.includes(r.id) ? { ...r, status: 'converted_to_task' } : r)); setMessage('تم تحويل الاقتراحات المعتمدة إلى مهام تنفيذية بحالة «بانتظار الموافقة».'); } catch (err) { setError(err?.message || 'تعذر إنشاء المهام.'); } finally { setActionLoading(false); } };
 
   return <div className="space-y-6" dir="rtl">
-    <Card className="border-2 border-[#C9A66B]/40 shadow-sm">
-      <CardHeader><CardTitle className="flex items-center gap-2"><Brain className="h-5 w-5 text-[#C9A66B]" /> وكيل تسويق بيتلي</CardTitle></CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">هذا هو جسم الوكيل المستقل داخل إدارة التسويق. يقرأ بيانات Supabase الفعلية، ويمكنه الاستعانة بـ Gemini والبحث الحي في Google عند الحاجة.</p>
-        <div className="rounded-xl border border-[#C9A66B]/30 bg-[#C9A66B]/5 p-4 space-y-3">
-          <div className="flex items-center gap-2 font-semibold"><Globe2 className="h-5 w-5 text-[#C9A66B]" /> تشغيل الوكيل الذكي + البحث الحي</div>
-          <p className="text-xs text-muted-foreground">اكتبي سؤالًا أو استخدمي إحدى البطاقات التنفيذية أدناه. سيستخدم الوكيل بيانات بيتلي الداخلية، ويبحث في Google عندما يكون البحث الحديث مفيدًا.</p>
-          <Textarea value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} placeholder="اكتبي مهمة التسويق التي تريدين من الوكيل تنفيذ تحليلها…" rows={4} disabled={aiLoading || loading || actionLoading} />
-          <Button type="button" onClick={runAi} disabled={!aiPrompt.trim() || aiLoading || loading || actionLoading}>
-            {aiLoading ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Globe2 className="h-4 w-4 ml-2" />}
-            {aiLoading ? 'جاري البحث والتحليل…' : 'شغّل الوكيل الذكي'}
-          </Button>
-        </div>
-        {aiResult && <Card className="border-slate-200"><CardHeader><CardTitle className="text-base flex items-center gap-2"><Sparkles className="h-4 w-4" /> نتيجة وكيل Gemini <Badge variant="outline">{aiResult.model}</Badge>{aiResult.searched && <Badge>بحث Google حي</Badge>}</CardTitle></CardHeader><CardContent className="space-y-4"><div className="whitespace-pre-wrap text-sm leading-7">{aiResult.result}</div>{aiResult.citations?.length > 0 && <div className="border-t pt-3"><p className="text-sm font-semibold mb-2">المصادر التي استخدمها البحث الحي</p><div className="space-y-2">{aiResult.citations.map((c, i) => <a key={`${c.url}-${i}`} href={c.url} target="_blank" rel="noreferrer" className="block text-sm text-blue-700 hover:underline">{c.title || c.url}</a>)}</div></div>}</CardContent></Card>}
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {ACTION_CARDS.map((card) => {
-            const Icon = card.icon;
-            return <Card key={card.id} className="h-full border-[#C9A66B]/30 hover:border-[#C9A66B]/70 transition-colors">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base"><Icon className="h-5 w-5 text-[#C9A66B]" />{card.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground min-h-[60px]">{card.description}</p>
-                {card.actions.map((action) => {
-                  const ActionIcon = action.icon;
-                  return <Button key={action.label} type="button" variant="outline" className="w-full justify-start h-auto min-h-10 whitespace-normal text-right" onClick={() => runAction(action)} disabled={aiLoading || loading || actionLoading}>
-                    {aiLoading ? <Loader2 className="h-4 w-4 shrink-0 ml-2 animate-spin" /> : <ActionIcon className="h-4 w-4 shrink-0 ml-2" />}
-                    <span>{aiLoading ? 'جاري التنفيذ…' : action.label}</span>
-                  </Button>;
-                })}
-              </CardContent>
-            </Card>;
-          })}
-        </div>
-
-        <div className="rounded-lg border bg-slate-50 p-3 text-xs text-muted-foreground">الأزرار أعلاه تولّد المخرجات وتعرضها هنا مباشرة. لا يتم إرسال رسائل، نشر محتوى، أو إنفاق ميزانية تلقائيًا.</div>
-
-        <div className="flex flex-wrap gap-3">
-          <Button type="button" size="lg" className="min-w-[230px]" onClick={analyze} disabled={loading || actionLoading || aiLoading}>
-            {loading ? <Loader2 className="h-5 w-5 animate-spin ml-2" /> : <Sparkles className="h-5 w-5 ml-2" />}
-            {loading ? 'جاري التحليل…' : 'حلّل المنصة الآن'}
-          </Button>
-          <Button type="button" variant="outline" size="lg" onClick={analyze} disabled={loading || actionLoading || aiLoading}><RefreshCw className="h-4 w-4 ml-2" /> إعادة التحليل</Button>
-          {insights.length > 0 && !recommendations.length && <Button type="button" variant="outline" size="lg" onClick={saveDrafts} disabled={actionLoading}><ClipboardCheck className="h-4 w-4 ml-2" />حفظ كمقترحات</Button>}
-          {recommendations.some(r => r.status === 'proposed') && <Button type="button" variant="outline" size="lg" onClick={approveAll} disabled={actionLoading}><CheckCircle2 className="h-4 w-4 ml-2" />اعتماد الاقتراحات</Button>}
-          {savedPlans.some(p => p.status === 'proposed') && <Button type="button" variant="outline" size="lg" onClick={approvePlans} disabled={actionLoading}><CheckCircle2 className="h-4 w-4 ml-2" />اعتماد خطط القنوات</Button>}
-          {recommendations.some(r => r.status === 'approved') && <Button type="button" variant="outline" size="lg" onClick={createTasks} disabled={actionLoading}><ClipboardCheck className="h-4 w-4 ml-2" />تحويل إلى مهام</Button>}
-        </div>
-        {message && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">{message}</div>}
-        {error && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 flex items-start gap-2"><AlertCircle className="h-5 w-5 shrink-0 mt-0.5" /><span>{error}</span></div>}
-      </CardContent>
-    </Card>
-
-    {snapshot && <Card><CardHeader><CardTitle>قراءة بيانات المنصة</CardTitle></CardHeader><CardContent><div className="grid grid-cols-2 md:grid-cols-6 gap-3">{Object.entries(snapshot.counts).map(([k,v]) => <div key={k} className="rounded-lg border p-3"><div className="text-xs text-muted-foreground">{k}</div><div className="text-xl font-semibold">{v ?? '—'}</div></div>)}</div><p className="text-xs text-muted-foreground mt-3">وقت التحليل: {new Date(snapshot.generated_at).toLocaleString('ar-SA')}</p></CardContent></Card>}
-
-    {channelPlans.length > 0 && <Card><CardHeader><CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> خطط القنوات</CardTitle></CardHeader><CardContent className="space-y-4">{channelPlans.map(p => <div key={p.channel} className="rounded-xl border p-4 space-y-3"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold flex items-center gap-2">{channelIcon(p.channel)}{CHANNELS.find(c => c.id === p.channel)?.name || p.channel}</h3><Badge>{p.priority}</Badge></div><p className="text-sm"><b>الجمهور:</b> {p.audience}</p><p className="text-sm"><b>الهدف:</b> {p.objective}</p><p className="text-sm"><b>الزاوية:</b> {p.message_angle}</p><p className="text-sm"><b>CTA:</b> {p.offer_cta}</p><p className="text-sm"><b>KPI:</b> {p.kpi}</p><p className="text-sm"><b>وتيرة التنفيذ:</b> {p.cadence}</p><p className="text-sm"><b>الميزانية:</b> {p.budget_suggestion}</p><p className="text-sm"><b>النتيجة المتوقعة:</b> {p.expected_outcome}</p><p className="text-xs text-muted-foreground"><b>الدليل:</b> {p.evidence}</p><p className="text-xs text-muted-foreground">الحالة: {savedPlans.find(x => x.channel === p.channel)?.status === 'approved' ? 'معتمد' : 'مقترح من الوكيل'}</p></div>)}</CardContent></Card>}
-
-    {insights.length > 0 && <Card><CardHeader><CardTitle>المهام المقترحة</CardTitle></CardHeader><CardContent className="space-y-3">{insights.map((x,i)=><div key={i} className="border rounded-lg p-4"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{x.title}</h3><Badge>{x.priority}</Badge></div><p className="text-sm mt-2"><b>القناة:</b> {CHANNELS.find(c => c.id === x.channel)?.name || x.channel}</p><p className="text-sm mt-2"><b>الجمهور:</b> {x.audience}</p><p className="text-sm mt-2"><b>الهدف:</b> {x.objective}</p><p className="text-sm mt-2"><b>الدليل:</b> {x.evidence}</p><p className="text-sm mt-2"><b>التوصية:</b> {x.recommendation}</p><p className="text-xs text-muted-foreground mt-3">الحالة: مقترح من الوكيل</p></div>)}</CardContent></Card>}
-
-    {recommendations.length > 0 && <Card><CardHeader><CardTitle>دورة اعتماد التسويق</CardTitle></CardHeader><CardContent className="space-y-2">{recommendations.map(r => <div key={r.id} className="flex items-center justify-between gap-3 rounded-lg border p-3"><span className="text-sm">{r.title}</span><Badge variant="outline">{r.status === 'proposed' ? 'مقترح من الوكيل' : r.status === 'approved' ? 'معتمد' : 'تحول إلى مهمة'}</Badge></div>)}</CardContent></Card>}
+    <Card className="border-2 border-[#C9A66B]/40 shadow-sm"><CardHeader><CardTitle className="flex items-center gap-2"><Brain className="h-5 w-5 text-[#C9A66B]" /> وكيل تسويق بيتلي</CardTitle></CardHeader><CardContent className="space-y-4">
+      <p className="text-sm text-muted-foreground">هذا هو جسم الوكيل المستقل داخل إدارة التسويق. يقرأ بيانات Supabase الفعلية، ويمكنه الاستعانة بـ Gemini والبحث الحي في Google عند الحاجة.</p>
+      <div className="rounded-xl border border-[#C9A66B]/30 bg-[#C9A66B]/5 p-4 space-y-3"><div className="flex items-center gap-2 font-semibold"><Globe2 className="h-5 w-5 text-[#C9A66B]" /> تشغيل الوكيل الذكي + البحث الحي</div><p className="text-xs text-muted-foreground">اكتبي سؤالًا أو استخدمي إحدى البطاقات التنفيذية أدناه. سيستخدم الوكيل بيانات بيتلي الداخلية، ويبحث في Google عندما يكون البحث الحديث مفيدًا.</p><Textarea value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} placeholder="اكتبي مهمة التسويق التي تريدين من الوكيل تنفيذ تحليلها…" rows={4} disabled={aiLoading || loading || actionLoading} /><Button type="button" onClick={runAi} disabled={!aiPrompt.trim() || aiLoading || loading || actionLoading}>{aiLoading ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Globe2 className="h-4 w-4 ml-2" />}{aiLoading ? 'جاري البحث والتحليل…' : 'شغّل الوكيل الذكي'}</Button></div>
+      {aiResult && <Card className="border-slate-200"><CardHeader><CardTitle className="text-base flex items-center gap-2"><Sparkles className="h-4 w-4" /> نتيجة وكيل Gemini <Badge variant="outline">{displayValue(aiResult.model)}</Badge>{aiResult.searched && <Badge>بحث Google حي</Badge>}</CardTitle></CardHeader><CardContent className="space-y-4"><div className="whitespace-pre-wrap text-sm leading-7">{displayValue(aiResult.result)}</div>{aiResult.citations?.length > 0 && <div className="border-t pt-3"><p className="text-sm font-semibold mb-2">المصادر التي استخدمها البحث الحي</p><div className="space-y-2">{aiResult.citations.map((c, i) => <a key={`${displayValue(c?.url)}-${i}`} href={displayValue(c?.url)} target="_blank" rel="noreferrer" className="block text-sm text-blue-700 hover:underline">{displayValue(c?.title || c?.url)}</a>)}</div></div>}</CardContent></Card>}
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">{ACTION_CARDS.map((card) => { const Icon = card.icon; return <Card key={card.id} className="h-full border-[#C9A66B]/30 hover:border-[#C9A66B]/70 transition-colors"><CardHeader><CardTitle className="flex items-center gap-2 text-base"><Icon className="h-5 w-5 text-[#C9A66B]" />{card.title}</CardTitle></CardHeader><CardContent className="space-y-3"><p className="text-sm text-muted-foreground min-h-[60px]">{card.description}</p>{card.actions.map((action) => { const ActionIcon = action.icon; return <Button key={action.label} type="button" variant="outline" className="w-full justify-start h-auto min-h-10 whitespace-normal text-right" onClick={() => runAction(action)} disabled={aiLoading || loading || actionLoading}>{aiLoading ? <Loader2 className="h-4 w-4 shrink-0 ml-2 animate-spin" /> : <ActionIcon className="h-4 w-4 shrink-0 ml-2" />}<span>{aiLoading ? 'جاري التنفيذ…' : action.label}</span></Button>; })}</CardContent></Card>; })}</div>
+      <div className="rounded-lg border bg-slate-50 p-3 text-xs text-muted-foreground">الأزرار أعلاه تولّد المخرجات وتعرضها هنا مباشرة. لا يتم إرسال رسائل، نشر محتوى، أو إنفاق ميزانية تلقائيًا.</div>
+      <div className="flex flex-wrap gap-3"><Button type="button" size="lg" className="min-w-[230px]" onClick={analyze} disabled={loading || actionLoading || aiLoading}>{loading ? <Loader2 className="h-5 w-5 animate-spin ml-2" /> : <Sparkles className="h-5 w-5 ml-2" />}{loading ? 'جاري التحليل…' : 'حلّل المنصة الآن'}</Button><Button type="button" variant="outline" size="lg" onClick={analyze} disabled={loading || actionLoading || aiLoading}><RefreshCw className="h-4 w-4 ml-2" /> إعادة التحليل</Button>{insights.length > 0 && !recommendations.length && <Button type="button" variant="outline" size="lg" onClick={saveDrafts} disabled={actionLoading}><ClipboardCheck className="h-4 w-4 ml-2" />حفظ كمقترحات</Button>}{recommendations.some(r => r.status === 'proposed') && <Button type="button" variant="outline" size="lg" onClick={approveAll} disabled={actionLoading}><CheckCircle2 className="h-4 w-4 ml-2" />اعتماد الاقتراحات</Button>}{savedPlans.some(p => p.status === 'proposed') && <Button type="button" variant="outline" size="lg" onClick={approvePlans} disabled={actionLoading}><CheckCircle2 className="h-4 w-4 ml-2" />اعتماد خطط القنوات</Button>}{recommendations.some(r => r.status === 'approved') && <Button type="button" variant="outline" size="lg" onClick={createTasks} disabled={actionLoading}><ClipboardCheck className="h-4 w-4 ml-2" />تحويل إلى مهام</Button>}</div>
+      {message && <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm">{message}</div>}{error && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 flex items-start gap-2"><AlertCircle className="h-5 w-5 shrink-0 mt-0.5" /><span>{error}</span></div>}
+    </CardContent></Card>
+    {snapshot && <Card><CardHeader><CardTitle>قراءة بيانات المنصة</CardTitle></CardHeader><CardContent><div className="grid grid-cols-2 md:grid-cols-6 gap-3">{Object.entries(snapshot.counts).map(([k,v]) => <div key={k} className="rounded-lg border p-3"><div className="text-xs text-muted-foreground">{displayValue(k)}</div><div className="text-xl font-semibold">{displayValue(v)}</div></div>)}</div><p className="text-xs text-muted-foreground mt-3">وقت التحليل: {displayValue(new Date(snapshot.generated_at).toLocaleString('ar-SA'))}</p></CardContent></Card>}
+    {channelPlans.length > 0 && <Card><CardHeader><CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> خطط القنوات</CardTitle></CardHeader><CardContent className="space-y-4">{channelPlans.map(p => <div key={p.channel} className="rounded-xl border p-4 space-y-3"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold flex items-center gap-2">{channelIcon(p.channel)}{displayValue(CHANNELS.find(c => c.id === p.channel)?.name || p.channel)}</h3><Badge>{displayValue(p.priority)}</Badge></div><p className="text-sm"><b>الجمهور:</b> {displayValue(p.audience)}</p><p className="text-sm"><b>الهدف:</b> {displayValue(p.objective)}</p><p className="text-sm"><b>الزاوية:</b> {displayValue(p.message_angle)}</p><p className="text-sm"><b>CTA:</b> {displayValue(p.offer_cta)}</p><p className="text-sm"><b>KPI:</b> {displayValue(p.kpi)}</p><p className="text-sm"><b>وتيرة التنفيذ:</b> {displayValue(p.cadence)}</p><p className="text-sm"><b>الميزانية:</b> {displayValue(p.budget_suggestion)}</p><p className="text-sm"><b>النتيجة المتوقعة:</b> {displayValue(p.expected_outcome)}</p><p className="text-xs text-muted-foreground"><b>الدليل:</b> {displayValue(p.evidence)}</p><p className="text-xs text-muted-foreground">الحالة: {displayValue(savedPlans.find(x => x.channel === p.channel)?.status === 'approved' ? 'معتمد' : 'مقترح من الوكيل')}</p></div>)}</CardContent></Card>}
+    {insights.length > 0 && <Card><CardHeader><CardTitle>المهام المقترحة</CardTitle></CardHeader><CardContent className="space-y-3">{insights.map((x,i)=><div key={i} className="border rounded-lg p-4"><div className="flex items-center justify-between gap-3"><h3 className="font-semibold">{displayValue(x.title)}</h3><Badge>{displayValue(x.priority)}</Badge></div><p className="text-sm mt-2"><b>القناة:</b> {displayValue(CHANNELS.find(c => c.id === x.channel)?.name || x.channel)}</p><p className="text-sm mt-2"><b>الجمهور:</b> {displayValue(x.audience)}</p><p className="text-sm mt-2"><b>الهدف:</b> {displayValue(x.objective)}</p><p className="text-sm mt-2"><b>الدليل:</b> {displayValue(x.evidence)}</p><p className="text-sm mt-2"><b>التوصية:</b> {displayValue(x.recommendation)}</p><p className="text-xs text-muted-foreground mt-3">الحالة: مقترح من الوكيل</p></div>)}</CardContent></Card>}
+    {recommendations.length > 0 && <Card><CardHeader><CardTitle>دورة اعتماد التسويق</CardTitle></CardHeader><CardContent className="space-y-2">{recommendations.map(r => <div key={r.id} className="flex items-center justify-between gap-3 rounded-lg border p-3"><span className="text-sm">{displayValue(r.title)}</span><Badge variant="outline">{displayValue(r.status === 'proposed' ? 'مقترح من الوكيل' : r.status === 'approved' ? 'معتمد' : 'تحول إلى مهمة')}</Badge></div>)}</CardContent></Card>}
   </div>;
 }
