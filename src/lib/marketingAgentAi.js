@@ -3,7 +3,10 @@ import { supabase } from '@/lib/supabaseClient';
 function toDisplayText(value, depth = 0) {
   if (value == null) return '';
   if (depth > 8) return '';
-  if (typeof value === 'string') return value;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed === '[object Object]' || trimmed === 'Object object' ? '' : value;
+  }
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   if (Array.isArray(value)) {
     return value.map((item) => toDisplayText(item, depth + 1)).filter(Boolean).join('\n');
