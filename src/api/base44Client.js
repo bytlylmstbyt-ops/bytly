@@ -25,8 +25,29 @@ legacyBase44.auth.me = async () => {
         const email = (sessionUser.email || '').trim().toLowerCase();
         const isOwner = sessionUser.id === PLATFORM_OWNER_ID || email === PLATFORM_OWNER_EMAIL;
         let profile = null;
-        try { profile = (await withHardTimeout(supabase.from('profiles').select('role,email,full_name').eq('user_id', sessionUser.id).maybeSingle(), 10000)).data || null; } catch {}
-        return { id: sessionUser.id, user_id: sessionUser.id, email: sessionUser.email, full_name: profile?.full_name || sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || '', role: isOwner || profile?.role === 'admin' ? 'admin' : (profile?.role || 'user'), profile };
+        try {
+          let profileResult = await withHardTimeout(
+            supabase.from('profiles').select('role,email,full_name').eq('user_id', sessionUser.id).maybeSingle(),
+            10000
+          );
+          if (!profileResult.data && !profileResult.error) {
+            profileResult = await withHardTimeout(
+              supabase.from('profiles').select('role,email,full_name').eq('id', sessionUser.id).maybeSingle(),
+              10000
+            );
+          }
+          profile = profileResult.data || null;
+        } catch {}
+        const role = isOwner || profile?.role === 'admin' ? 'admin' : (profile?.role || 'user');
+        return {
+          id: sessionUser.id,
+          user_id: sessionUser.id,
+          email: sessionUser.email,
+          full_name: profile?.full_name || sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || '',
+          role,
+          profile,
+          _authProvider: 'supabase',
+        };
       }
     }
   } catch (error) { console.warn('Supabase auth bridge failed; falling back to legacy auth.', error); }
@@ -92,7 +113,7 @@ legacyBase44.entities.SocialPost = {
     Object.entries(filters || {}).forEach(([key, value]) => { query = value === null ? query.is(key, null) : query.eq(key, value); });
     query = query.limit(limit).order(sort.replace(/^-/, ''), { ascending: !sort.startsWith('-') });
     const { data, error } = await withHardTimeout(query, 10000, 'انتهت مهلة قراءة المنشورات المجدولة');
-    if (error) throw new Error(error.message || 'تعذر قراءة المنشورات');
+    if (error) throw new Error(error.message || 'تعذر قراءة المنشورات المجدولة');
     return data || [];
   },
   create: async payload => {
