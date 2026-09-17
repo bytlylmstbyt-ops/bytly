@@ -37,21 +37,20 @@ export async function getMarketingAgentSnapshot() {
 
 function toDisplayText(value, fallback = 'غير محدد', depth = 0) {
   if (value == null || value === '') return fallback;
-  if (depth > 8) return fallback;
+  if (depth > 6) return fallback;
   if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value);
   if (Array.isArray(value)) {
-    const parts = value.map(item => toDisplayText(item, '', depth + 1)).filter(Boolean);
+    const parts = value.map((item) => toDisplayText(item, '', depth + 1)).filter(Boolean);
     return parts.length ? parts.join('، ') : fallback;
   }
   if (typeof value === 'object') {
-    const object = value;
     for (const key of ['name', 'label', 'title', 'value', 'text', 'city', 'region', 'location', 'content']) {
-      if (object[key] != null) {
-        const text = toDisplayText(object[key], '', depth + 1);
+      if (value[key] != null) {
+        const text = toDisplayText(value[key], '', depth + 1);
         if (text) return text;
       }
     }
-    try { return JSON.stringify(object, null, 2); } catch { return fallback; }
+    try { return JSON.stringify(value, null, 2); } catch { return fallback; }
   }
   return fallback;
 }
@@ -127,56 +126,38 @@ export function buildChannelPlans(snapshot, insights = buildMarketingInsights(sn
   };
   const plans = [
     { channel: 'direct_outreach', priority: scoreFor('direct_outreach') >= 4 ? 'عالية جدًا' : scoreFor('direct_outreach') >= 3 ? 'عالية' : 'متوسطة', audience: `مهندسو ومقدمو خدمات ${topLocation} + المستخدمون المتعثرون في التسجيل`, objective: 'رفع المعروض المؤهل وتحويل التواصل إلى تسجيلات ومشاريع مكتملة.', message_angle: 'البدء من طلب حقيقي داخل بيتلي وليس رسالة جماعية عامة.', offer_cta: 'أنشئ حسابك الآن / تواصل مع بيتلي', budget_suggestion: 'منخفض — تواصل يدوي أولًا قبل أي إنفاق.', kpi: 'عدد جهات الاتصال المؤهلة → الردود → التسجيلات المكتملة → المشاريع الناتجة', cadence: 'قائمة أسبوعية + متابعة خلال 48–72 ساعة', expected_outcome: 'زيادة العرض المؤهل واكتشاف الشرائح الأكثر استجابة.', evidence: `المدينة الأعلى ظهورًا في المشاريع: ${topLocation}; محاولات التسجيل المتعثرة: ${failed}.`, score: scoreFor('direct_outreach') },
-    { channel: 'linkedin', priority: published === 0 ? 'عالية' : 'متوسطة', audience: 'المهندسون والمكاتب والشركات والمطورون والقطاع المهني', objective: 'بناء ثقة مهنية وتحويل الاهتمام إلى زيارات وتسجيلات مؤهلة.', message_angle: `لقطات حقيقية من بيتلي + حالة استخدام مرتبطة بـ${topCategory} + CTA واحد.`, offer_cta: 'شاهد كيف تعمل بيتلي / أنشئ حسابك', budget_suggestion: '0 ريال للنشر العضوي؛ الإعلان لاحقًا بعد إثبات أفضل رسالة.', kpi: 'الوصول → النقرات → زيارات صفحة التسجيل → التسجيلات المكتملة', cadence: '3 منشورات أسبوعيًا + مراجعة KPI أسبوعية', expected_outcome: 'تحديد الرسائل المهنية الأعلى تفاعلًا قبل التوسع المدفوع.', evidence: `المنشورات المنشورة حاليًا: ${published}. الفئة الأبرز: ${topCategory}.`, score: published === 0 ? 3 : 2 },
-    { channel: 'seo_geo', priority: topCategory !== 'الخدمات الهندسية المطلوبة' ? 'عالية' : 'متوسطة', audience: 'أصحاب المشاريع والعملاء الباحثون عن خدمات هندسية', objective: 'التقاط الطلب المتكرر من البحث وتحويله إلى زيارات ومشاريع.', message_angle: `محتوى متخصص حول ${topCategory} مبني على بيانات بيتلي الفعلية.`, offer_cta: 'اطلب خدمة هندسية / ابدأ مشروعك', budget_suggestion: 'منخفض — محتوى وصفحات أولًا.', kpi: 'الزيارات العضوية → CTR → التسجيلات → طلبات المشاريع', cadence: 'صفحة/موضوع واحد أسبوعيًا + تحديث شهري', expected_outcome: 'بناء أصول بحثية تراكمية بدل الاعتماد على الإعلانات فقط.', evidence: `الفئة الأبرز في أحدث المشاريع: ${topCategory}.`, score: scoreFor('seo_geo') },
-    { channel: 'paid_ads', priority: failed > 0 ? 'منخفضة مؤقتًا' : 'متوسطة', audience: `جمهور ${topLocation} + شرائح مرتبطة بـ${topCategory}`, objective: 'اختبار رسائل وجماهير قابلة للقياس بعد استقرار التسجيل.', message_angle: 'رسالة واحدة لكل شريحة مع صفحة هبوط ومسار تحويل واضح.', offer_cta: 'أنشئ حسابك الآن', budget_suggestion: 'لا يُصرف تلقائيًا؛ ابدأ باختبار صغير بعد اعتماد الخطة.', kpi: 'CPC → تكلفة التسجيل المكتمل → تكلفة المشروع المؤهل', cadence: 'اختبار أسبوعين ثم قرار استمرار/إيقاف', expected_outcome: 'معرفة تكلفة اكتساب المستخدم المؤهل قبل رفع الميزانية.', evidence: failed > 0 ? `${failed} محاولات تسجيل متعثرة؛ لذلك الأولوية الحالية لإصلاح التحويل.` : 'لا توجد إشارة فشل تسجيل حديثة في العينة الحالية.', score: failed > 0 ? 1 : 2 },
-    { channel: 'sector_events', priority: 'متوسطة', audience: 'المطورون والمكاتب والشركات والمقاولون والجهات المهنية', objective: 'فتح علاقات وشراكات وفرص B2B لا يمكن الوصول إليها بالإعلانات وحدها.', message_angle: 'بيتلي كمنظومة هندسية تربط أطراف المشروع في مسار واحد.', offer_cta: 'احجز لقاء تعريفي / شراكة', budget_suggestion: 'حسب الفعالية؛ لا اعتماد قبل تحديد العائد المتوقع.', kpi: 'جهات مستهدفة → لقاءات → فرص مؤهلة → شراكات/مشاريع', cadence: 'بحث شهري + خطة قبل كل فعالية', expected_outcome: 'بناء pipeline للشراكات والصفقات المهنية.', evidence: 'القناة مقترحة كمسار B2B، ولا تُنفذ فعالية قبل اعتمادها وتحديد التكلفة.', score: 2 },
-    { channel: 'referrals', priority: 'متوسطة', audience: 'المستخدمون النشطون والمهندسون والعملاء والمكاتب والشركات', objective: 'تحويل الثقة الحالية إلى إحالات قابلة للقياس.', message_angle: 'مكافأة أو ميزة واضحة مقابل إحالة مستخدم مؤهل.', offer_cta: 'رشّح مهندسًا / رشّح صاحب مشروع', budget_suggestion: 'يُحدد بعد تصميم الحافز وحساب تكلفة الاكتساب.', kpi: 'الإحالات → التسجيلات المكتملة → المشاريع الناتجة → تكلفة الإحالة', cadence: 'مراجعة شهرية', expected_outcome: 'قناة اكتساب منخفضة التكلفة نسبيًا إذا ثبتت جودة الإحالات.', evidence: `حجم المنصة الحالي: ${snapshot.counts.clients || 0} عملاء و${snapshot.counts.engineers || 0} مهندسين و${snapshot.counts.firms || 0} شركات هندسية.`, score: 2 },
+    { channel: 'linkedin', priority: published === 0 ? 'عالية' : 'متوسطة', audience: 'المهندسون والمكاتب والشركات والمطورون والقطاع المهني', objective: 'بناء ثقة مهنية وتحويل الاهتمام إلى زيارات وتسجيلات.', message_angle: 'محتوى مهني مرتبط بمشكلة هندسية واقعية.', offer_cta: 'اكتشف Bytly / أنشئ حسابك', budget_suggestion: 'عضوي أولًا؛ ثم اختبار مدفوع بعد وجود محتوى قابل للقياس.', kpi: 'الوصول → التفاعل → النقرات → التسجيلات', cadence: '3 منشورات أسبوعيًا', expected_outcome: 'تكوين قناة محتوى قابلة للقياس.', evidence: `عدد المنشورات المنشورة: ${published}.`, score: scoreFor('linkedin') },
+    { channel: 'seo_geo', priority: scoreFor('seo_geo') >= 3 ? 'عالية' : 'متوسطة', audience: `أصحاب المشاريع الباحثون عن ${topCategory}`, objective: 'تحويل نية البحث إلى زيارات مؤهلة وتسجيلات.', message_angle: `محتوى متخصص حول ${topCategory}.`, offer_cta: 'ابحث عن الخدمة الهندسية المناسبة عبر Bytly', budget_suggestion: 'ميزانية محتوى/تحسين منخفضة في البداية.', kpi: 'الظهور → النقرات → الزيارات المؤهلة → التسجيلات', cadence: 'مقال/صفحة أسبوعيًا + تحديثات مستمرة', expected_outcome: 'بناء أصل محتوى قابل للتراكم.', evidence: `أعلى فئة ظاهرة في أحدث المشاريع: ${topCategory}.`, score: scoreFor('seo_geo') },
+    { channel: 'paid_ads', priority: 'متوسطة', audience: 'شرائح العملاء والمهندسين حسب الخدمة والموقع', objective: 'اختبار اكتساب مدفوع بعد ضبط مسار التحويل.', message_angle: 'رسالة واحدة لكل شريحة مع صفحة هبوط واضحة.', offer_cta: 'أنشئ حسابك الآن', budget_suggestion: 'اختبار صغير على مراحل، مع سقف إنفاق وموافقة يدوية.', kpi: 'CPC → التسجيل المكتمل → تكلفة التسجيل → المشروع المؤهل', cadence: 'اختبار 7–14 يومًا ثم قرار مبني على البيانات', expected_outcome: 'معرفة الشرائح والرسائل التي تستحق التوسع.', evidence: 'الخطط الإعلانية مقترحة فقط؛ لا يوجد نشر أو إنفاق تلقائي.', score: 1 },
   ];
-  return plans.map(p => ({ ...p, status: 'proposed' }));
+  return plans.map(p => ({ ...p, has_insight: hasInsight(p.channel), status: 'proposed' }));
 }
 
-export async function saveMarketingSuggestions(suggestions, snapshot, channelPlans = buildChannelPlans(snapshot, suggestions)) {
-  const user = (await supabase.auth.getUser()).data?.user;
-  if (!user) throw new Error('يجب تسجيل الدخول لحفظ اقتراحات الوكيل.');
-  const { data: run, error: runError } = await supabase.from('marketing_agent_runs').insert({ status: 'completed', analysis_type: 'platform', data_snapshot: snapshot, insights_count: suggestions.length, completed_at: new Date().toISOString(), created_by: user.id }).select().single();
-  if (runError) throw runError;
-  const rows = suggestions.map(s => ({ run_id: run.id, channel: s.channel, title: s.title, priority: s.priority, audience: s.audience, objective: s.objective, message_angle: s.message_angle, recommendation: s.recommendation, evidence: s.evidence, evidence_snapshot: snapshot.counts, status: 'proposed' }));
-  const { data, error } = await supabase.from('marketing_recommendations').insert(rows).select();
-  if (error) throw error;
-  const planRows = channelPlans.map(p => ({ run_id: run.id, channel: p.channel, priority: p.priority, audience: p.audience, objective: p.objective, message_angle: p.message_angle, offer_cta: p.offer_cta, budget_suggestion: p.budget_suggestion, kpi: p.kpi, cadence: p.cadence, expected_outcome: p.expected_outcome, evidence: p.evidence, evidence_snapshot: snapshot.counts, status: 'proposed' }));
-  const { data: savedPlans, error: planError } = await supabase.from('marketing_channel_plans').insert(planRows).select();
-  if (planError) throw planError;
-  return { run, recommendations: data, channelPlans: savedPlans || [] };
+export async function saveMarketingSuggestions(insights, snapshot, channelPlans) {
+  const recommendations = insights.map((x) => ({ title: x.title, type: x.type, channel: x.channel, priority: x.priority, audience: x.audience, objective: x.objective, message_angle: x.message_angle, evidence: x.evidence, recommendation: x.recommendation, status: 'proposed', source: 'marketing-agent', source_snapshot: snapshot }));
+  const { data: recData, error: recError } = await supabase.from('marketing_recommendations').insert(recommendations).select('*');
+  if (recError) throw new Error(recError.message);
+  const plans = channelPlans.map((x) => ({ ...x, source_snapshot: snapshot }));
+  const { data: planData, error: planError } = await supabase.from('marketing_channel_plans').insert(plans).select('*');
+  if (planError) throw new Error(planError.message);
+  return { recommendations: recData || [], channelPlans: planData || [] };
 }
 
 export async function approveRecommendations(ids) {
-  const user = (await supabase.auth.getUser()).data?.user;
-  if (!user) throw new Error('يجب تسجيل الدخول.');
-  const { data, error } = await supabase.from('marketing_recommendations').update({ status: 'approved', approved_at: new Date().toISOString(), approved_by: user.id, updated_at: new Date().toISOString() }).in('id', ids).eq('status', 'proposed').select();
-  if (error) throw error;
-  return data;
+  const { data, error } = await supabase.from('marketing_recommendations').update({ status: 'approved', approved_at: new Date().toISOString() }).in('id', ids).select('*');
+  if (error) throw new Error(error.message); return data || [];
 }
-
 export async function approveChannelPlans(ids) {
-  const user = (await supabase.auth.getUser()).data?.user;
-  if (!user) throw new Error('يجب تسجيل الدخول.');
-  const { data, error } = await supabase.from('marketing_channel_plans').update({ status: 'approved', approved_at: new Date().toISOString(), approved_by: user.id, updated_at: new Date().toISOString() }).in('id', ids).eq('status', 'proposed').select();
-  if (error) throw error;
-  return data;
+  const { data, error } = await supabase.from('marketing_channel_plans').update({ status: 'approved', approved_at: new Date().toISOString() }).in('id', ids).select('*');
+  if (error) throw new Error(error.message); return data || [];
 }
-
 export async function createTasksFromRecommendations(ids) {
-  const { data: recs, error } = await supabase.from('marketing_recommendations').select('*').in('id', ids).eq('status', 'approved');
-  if (error) throw error;
+  const { data: recs, error: recError } = await supabase.from('marketing_recommendations').select('*').in('id', ids);
+  if (recError) throw new Error(recError.message);
   if (!recs?.length) return [];
-  const user = (await supabase.auth.getUser()).data?.user;
-  const rows = recs.map(r => ({ recommendation_id: r.id, title: r.title, description: r.recommendation, channel: r.channel, priority: r.priority, status: 'pending_approval', source: 'marketing_agent', created_by: user?.id }));
-  const { data: tasks, error: taskError } = await supabase.from('marketing_tasks').insert(rows).select();
-  if (taskError) throw taskError;
-  const { error: updateError } = await supabase.from('marketing_recommendations').update({ status: 'converted_to_task', updated_at: new Date().toISOString() }).in('id', ids);
-  if (updateError) throw updateError;
-  return tasks || [];
+  const tasks = recs.map(r => ({ title: r.title, description: `${r.objective}\n\n${r.recommendation}\n\nالدليل: ${r.evidence}`, status: 'pending_approval', priority: r.priority, source: 'marketing-agent', recommendation_id: r.id }));
+  const { data, error } = await supabase.from('marketing_tasks').insert(tasks).select('*');
+  if (error) throw new Error(error.message); return data || [];
 }
 
 export { CHANNELS };
