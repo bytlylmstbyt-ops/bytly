@@ -11,7 +11,11 @@ const CHANNELS = [
 
 function errorText(value, depth = 0) {
   if (value == null || depth > 8) return '';
-  if (typeof value === 'string') return value.trim();
+  if (typeof value === 'string') {
+    const text = value.trim();
+    if (!text || text === '[object Object]' || text.toLowerCase() === 'object object') return '';
+    return text;
+  }
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   if (value instanceof Error) return errorText(value.message, depth + 1) || errorText(value.cause, depth + 1);
   if (Array.isArray(value)) return value.map((item) => errorText(item, depth + 1)).filter(Boolean).join(' | ');
