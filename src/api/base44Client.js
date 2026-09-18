@@ -186,8 +186,25 @@ legacyBase44.entities.Contract = {
 
 const legacyProject = legacyBase44.entities.Project;
 legacyBase44.entities.Project = { ...legacyProject,
-  filter: async filters => { let q=supabase.from('projects').select('*'); Object.entries(filters||{}).forEach(([k,v])=>{q=v===null?q.is(k,null):Array.isArray(v)?q.in(k,v):q.eq(k,v)}); const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة المشروع'); if(error)throw new Error(error.message); return data||[]; },
-  list: async()=>{const {data,error}=await withHardTimeout(supabase.from('projects').select('*').order('created_at',{ascending:false}),10000,'انتهت مهلة قراءة المشاريع');if(error)throw new Error(error.message);return data||[]},
+  filter: async filters => {
+    const mapped = { ...(filters || {}) };
+    if (mapped.client_id) mapped.client_id = await resolveLegacyId('Client', mapped.client_id);
+    if (mapped.assigned_engineer_id) mapped.assigned_engineer_id = await resolveLegacyId('Engineer', mapped.assigned_engineer_id);
+    try {
+      let q=supabase.from('projects').select('*');
+      Object.entries(filters||{}).forEach(([k,v])=>{q=v===null?q.is(k,null):Array.isArray(v)?q.in(k,v):q.eq(k,v)});
+      const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة المشروع');
+      if(!error && data?.length) return data;
+    } catch {}
+    return legacyProject.filter(mapped);
+  },
+  list: async(sort='-created_date',limit=100)=>{
+    try {
+      const {data,error}=await withHardTimeout(supabase.from('projects').select('*').limit(limit).order('created_at',{ascending:!sort.startsWith('-')}),10000,'انتهت مهلة قراءة المشاريع');
+      if(!error && data?.length) return data;
+    } catch {}
+    return legacyProject.list(sort,limit);
+  },
   update: async(id,payload)=>{const {data,error}=await withHardTimeout(supabase.from('projects').update({...payload,updated_at:new Date().toISOString()}).eq('id',id).select('*').single(),10000,'انتهت مهلة تحديث المشروع');if(error)throw new Error(error.message);return data},
   create: async payload=>{const row={...payload};delete row.id;delete row.created_date;const {data,error}=await withHardTimeout(supabase.from('projects').insert(row).select('*').single(),10000,'انتهت مهلة إنشاء المشروع');if(error)throw new Error(error.message);return data},
   delete: async id=>{const {error}=await withHardTimeout(supabase.from('projects').delete().eq('id',id),10000,'انتهت مهلة حذف المشروع');if(error)throw new Error(error.message);return true},
