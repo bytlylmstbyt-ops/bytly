@@ -44,7 +44,9 @@ export default function RegisterContractor() {
     years_experience: 0,
     team_size: 0,
     established_year: new Date().getFullYear(),
-    website: ""
+    website: "",
+    password: "",
+    confirmPassword: ""
   });
 
   const specializations = [
@@ -171,15 +173,18 @@ export default function RegisterContractor() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.company_name || !formData.email || !formData.specialization) {
+    if (!formData.company_name || !formData.email || !formData.specialization || !formData.password || !formData.confirmPassword) {
       toast.error("يرجى ملء جميع الحقول المطلوبة");
       return;
     }
+    if (new TextEncoder().encode(formData.password).length > 72) { toast.error("كلمة المرور طويلة جدًا. الحد الأقصى 72 بايت."); return; }
+    if (formData.password.length < 8) { toast.error("كلمة المرور يجب أن تكون 8 أحرف على الأقل"); return; }
+    if (formData.password !== formData.confirmPassword) { toast.error("كلمتا المرور غير متطابقتين"); return; }
 
     setLoading(true);
     try {
       const contractor = await saveRegistration({
-        table: "contractors", role: "contractor", fullName: formData.company_name, email: formData.email, phone: formData.phone,
+        table: "contractors", role: "contractor", fullName: formData.company_name, email: formData.email, phone: formData.phone, password: formData.password,
         row: { ...formData, status: "pending" }
       });
       try { base44.functions.invoke("notifyNewUserSignup", { role: "contractor", data: contractor }).catch((err) => console.error("Background notification failed:", err)); }
