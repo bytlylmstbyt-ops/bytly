@@ -12,6 +12,7 @@ import FinancialChartsPanel from "@/components/admin/FinancialChartsPanel";
 import ProjectCompletionTrendPanel from "@/components/admin/ProjectCompletionTrendPanel";
 import EngineerPerformancePanel from "@/components/admin/EngineerPerformancePanel";
 import BIMProjectFilesPanel from "@/components/admin/BIMProjectFilesPanel";
+import RiskDashboard from "@/pages/RiskDashboard";
 
 const PLATFORM_OWNER_EMAIL = "bytlylmstbyt@gmail.com";
 
@@ -231,7 +232,7 @@ export default function AdminControlCenter() {
           ) : activeKey === "risk_management" ? (
             <div id="admin-category-content" className="min-w-0 scroll-mt-6">
               <div className="mb-4"><div className="rounded-2xl bg-white border border-slate-200 shadow-sm px-5 py-4"><h2 className="text-lg font-bold text-[#2F2945]">إدارة المخاطر</h2><p className="text-xs text-slate-500 mt-1">الوصول إلى لوحة إدارة المخاطر الأصلية دون تغيير محتواها أو منطقها.</p></div></div>
-              <Link to={createPageUrl("RiskDashboard")}><Card className="border border-slate-200 border-r-4 border-r-[#6D5CE7] hover:shadow-lg hover:-translate-y-0.5 transition-all group bg-white"><CardContent className="p-5 flex items-start justify-between gap-3"><div><p className="font-semibold text-[#4A3F35]">إدارة المخاطر</p><p className="text-xs text-slate-500 mt-1">فتح لوحة تقييم المخاطر وتحليل المشاريع والمخاطر المحتملة كما هي.</p></div><ArrowUpRight className="w-4 h-4 text-[#C9A66B] shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" /></CardContent></Card></Link>
+              <RiskDashboard />
             </div>
           ) : (
             <div id="admin-category-content" className="min-w-0 scroll-mt-6">
