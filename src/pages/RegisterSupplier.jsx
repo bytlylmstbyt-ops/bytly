@@ -43,7 +43,9 @@ export default function RegisterSupplier() {
     documents: [],
     years_experience: 0,
     established_year: new Date().getFullYear(),
-    website: ""
+    website: "",
+    password: "",
+    confirmPassword: ""
   });
 
   const categories = [
@@ -178,10 +180,14 @@ export default function RegisterSupplier() {
       return;
     }
 
+    if (!formData.password || !formData.confirmPassword) { toast.error("يرجى إدخال كلمة المرور وتأكيدها"); return; }
+    if (new TextEncoder().encode(formData.password).length > 72) { toast.error("كلمة المرور طويلة جدًا. الحد الأقصى 72 بايت."); return; }
+    if (formData.password.length < 8) { toast.error("كلمة المرور يجب أن تكون 8 أحرف على الأقل"); return; }
+    if (formData.password !== formData.confirmPassword) { toast.error("كلمتا المرور غير متطابقتين"); return; }
     setLoading(true);
     try {
       const supplier = await saveRegistration({
-        table: "suppliers", role: "supplier", fullName: formData.company_name, email: formData.email, phone: formData.phone,
+        table: "suppliers", role: "supplier", fullName: formData.company_name, email: formData.email, phone: formData.phone, password: formData.password,
         row: { ...formData, status: "pending" }
       });
       try { base44.functions.invoke("notifyNewUserSignup", { role: "supplier", data: supplier }).catch((err) => console.error("Background notification failed:", err)); }
