@@ -147,6 +147,43 @@ legacyBase44.entities.Engineer = { ...legacyEngineer, create: async payload => {
   return data;
 }};
 
+const resolveLegacyId = async (entity, currentId) => {
+  if (!currentId || !supabase) return currentId;
+  try {
+    const table = entity === 'Engineer' ? 'engineers' : entity === 'Client' ? 'clients' : 'projects';
+    const staging = entity === 'Engineer' ? 'base44_engineer_migration_staging' : entity === 'Client' ? 'base44_client_migration_staging' : 'base44_project_migration_staging';
+    const { data: row } = await supabase.from(table).select('email').eq('id', currentId).maybeSingle();
+    if (!row?.email) return currentId;
+    const { data: legacy } = await supabase.from(staging).select('base44_id').eq('email', row.email).maybeSingle();
+    return legacy?.base44_id || currentId;
+  } catch { return currentId; }
+};
+
+const legacyContract = legacyBase44.entities.Contract;
+legacyBase44.entities.Contract = {
+  ...legacyContract,
+  filter: async filters => {
+    const mapped = { ...(filters || {}) };
+    if (mapped.engineer_id) mapped.engineer_id = await resolveLegacyId('Engineer', mapped.engineer_id);
+    if (mapped.client_id) mapped.client_id = await resolveLegacyId('Client', mapped.client_id);
+    if (mapped.project_id) mapped.project_id = await resolveLegacyId('Project', mapped.project_id);
+    try {
+      let q = supabase.from('project_contracts').select('*');
+      Object.entries(filters || {}).forEach(([k,v]) => { q = v === null ? q.is(k,null) : Array.isArray(v) ? q.in(k,v) : q.eq(k,v); });
+      const { data, error } = await withHardTimeout(q,10000,'انتهت مهلة قراءة العقود');
+      if (!error && data?.length) return data;
+    } catch {}
+    return legacyContract.filter(mapped);
+  },
+  list: async (sort='-created_date', limit=100) => {
+    try {
+      const { data, error } = await withHardTimeout(supabase.from('project_contracts').select('*').limit(limit).order('created_at',{ascending:!sort.startsWith('-')}),10000,'انتهت مهلة قراءة العقود');
+      if (!error && data?.length) return data;
+    } catch {}
+    return legacyContract.list(sort, limit);
+  }
+};
+
 const legacyProject = legacyBase44.entities.Project;
 legacyBase44.entities.Project = { ...legacyProject,
   filter: async filters => { let q=supabase.from('projects').select('*'); Object.entries(filters||{}).forEach(([k,v])=>{q=v===null?q.is(k,null):Array.isArray(v)?q.in(k,v):q.eq(k,v)}); const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة المشروع'); if(error)throw new Error(error.message); return data||[]; },
