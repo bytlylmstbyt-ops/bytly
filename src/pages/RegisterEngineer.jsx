@@ -25,6 +25,8 @@ export default function RegisterEngineer() {
   const [isFileUploading, setIsFileUploading] = useState(false);
   const [notice, setNotice] = useState(null);
   const [freeOffer, setFreeOffer] = useState({ loading: true, isEligible: false, remaining: 0, registeredCount: 0 });
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [portfolioItems, setPortfolioItems] = useState([]);
   const [skippedUploads, setSkippedUploads] = useState(new Set());
   const [formData, setFormData] = useState({
@@ -125,6 +127,10 @@ export default function RegisterEngineer() {
   };
 
   const handleSubmit = async () => {
+    if (new TextEncoder().encode(password).length > 72) { toast.error("كلمة المرور طويلة جداً. الحد الأقصى 72 بايت."); return; }
+    if (password.length < 8) { toast.error("كلمة المرور يجب أن تكون 8 أحرف على الأقل."); return; }
+    if (password !== confirmPassword) { toast.error("كلمتا المرور غير متطابقتين."); return; }
+
     if (isSubmitting || isFileUploading) return;
     if (!isStep3Valid) { setStep(3); const message = "أكمل رقم القيد المهني والوثائق المطلوبة أولاً، ثم تابع لإتمام التسجيل."; setNotice({ type: "error", title: "بيانات الاعتماد غير مكتملة", message }); toast.error(message); return; }
     setIsSubmitting(true);
@@ -136,6 +142,7 @@ export default function RegisterEngineer() {
       const localDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       const engineer = await withTimeout(saveRegistration({
         table: "engineers", role: "engineer", fullName: formData.full_name, email: formData.email, phone: formData.phone,
+        password,
         row: { full_name: formData.full_name, phone: formData.phone, city: formData.city, country: formData.country, specialization: formData.specialization, registration_number: formData.registration_number, bio: formData.bio, graduation_certificate_url: formData.graduation_certificate_url, saudi_engineers_council_certificate_url: formData.saudi_engineers_council_certificate_url, profile_image: formData.profile_image, years_experience: parseInt(formData.years_experience) || 0, completed_projects: parseInt(formData.completed_projects) || 0, status: "pending", is_verified: false, rating: 0, total_reviews: 0, wallet_balance: 0, subscription_type: isFreeEligible ? "free_trial" : "none", is_subscription_active: isFreeEligible, subscription_start_date: isFreeEligible ? localDate(today) : undefined, trial_end_date: isFreeEligible ? localDate(trialEnd) : undefined, is_real: true, source: "supabase" }
       }), 15000);
       const validPortfolioItems = portfolioItems.filter(item => item.title || item.images?.length > 0);
