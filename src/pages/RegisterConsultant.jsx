@@ -35,6 +35,8 @@ export default function RegisterConsultantPage() {
     years_experience: "",
     certificates: []
   });
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
 
   useEffect(() => {
@@ -45,6 +47,10 @@ export default function RegisterConsultantPage() {
   }, []);
 
   const handleSubmit = async (e) => {
+    if (new TextEncoder().encode(password).length > 72) { toast.error("كلمة المرور طويلة جداً. الحد الأقصى 72 بايت."); return; }
+    if (password.length < 8) { toast.error("كلمة المرور يجب أن تكون 8 أحرف على الأقل."); return; }
+    if (password !== confirmPassword) { toast.error("كلمتا المرور غير متطابقتين."); return; }
+
     e.preventDefault();
     
     if (!termsAccepted) {
@@ -58,6 +64,7 @@ export default function RegisterConsultantPage() {
       // saveRegistration creates or reuses the Supabase Auth account on this final step.
       const consultant = await saveRegistration({
         table: "consultants", role: "consultant", fullName: formData.full_name, email: formData.email, phone: formData.phone,
+        password,
         row: { ...formData, years_experience: parseInt(formData.years_experience) || 0, status: "pending", terms_accepted: true, terms_accepted_date: new Date().toISOString() }
       });
       try { base44.functions.invoke("notifyNewUserSignup", { role: "consultant", data: consultant }).catch((err) => console.error("Background notification failed:", err)); }
@@ -131,7 +138,8 @@ export default function RegisterConsultantPage() {
               <CardTitle>بيانات التسجيل</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2"><label>كلمة المرور</label><input type="password" autoComplete="new-password" value={password} onChange={(e)=>setPassword(e.target.value)} required /><label>تأكيد كلمة المرور</label><input type="password" autoComplete="new-password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} required /></div>
+<form onSubmit={handleSubmit} className="space-y-6">
                 {/* Personal Info */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-slate-900">المعلومات الشخصية</h3>
