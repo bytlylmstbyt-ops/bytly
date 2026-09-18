@@ -36,6 +36,8 @@ export default function RegisterClient() {
     client_type: "individual",
     company_name: ""
   });
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   // New registrations always start with empty account fields.
   // Existing users must use the Login flow instead of this registration page.
@@ -76,6 +78,10 @@ export default function RegisterClient() {
   };
 
   const handleSubmit = async (e) => {
+    if (new TextEncoder().encode(password).length > 72) { toast.error("كلمة المرور طويلة جداً. الحد الأقصى 72 بايت."); return; }
+    if (password.length < 8) { toast.error("كلمة المرور يجب أن تكون 8 أحرف على الأقل."); return; }
+    if (password !== confirmPassword) { toast.error("كلمتا المرور غير متطابقتين."); return; }
+
     e.preventDefault();
     if (isLoading) return;
     setIsLoading(true);
@@ -87,6 +93,7 @@ export default function RegisterClient() {
       fullName: formData.full_name,
       email: formData.email,
       phone: formData.phone,
+      password,
       row: { full_name: formData.full_name, phone: formData.phone, city: formData.city, country: formData.country, client_type: formData.client_type, company_name: formData.company_name, is_real: true, wallet_balance: 0, total_projects: 0, source: "supabase" }
     });
 
@@ -147,7 +154,8 @@ export default function RegisterClient() {
             <CardTitle className="text-xl">معلومات الحساب</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2"><label>كلمة المرور</label><input type="password" autoComplete="new-password" value={password} onChange={(e)=>setPassword(e.target.value)} required disabled={isLoading} className="w-full" /><label>تأكيد كلمة المرور</label><input type="password" autoComplete="new-password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} required disabled={isLoading} className="w-full" /></div>
+<form onSubmit={handleSubmit} className="space-y-6">
               {/* Client Type Selection */}
               <div className="space-y-3">
                 <Label>نوع الحساب *</Label>
