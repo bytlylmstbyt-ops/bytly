@@ -221,6 +221,7 @@ Deno.serve(async (req) => {
           }
         }
       }
+
     };
 
     const geminiRes = await fetch(
