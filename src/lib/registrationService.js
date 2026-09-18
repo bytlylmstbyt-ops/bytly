@@ -30,6 +30,7 @@ export async function saveRegistration(payload) {
         fullName,
         email,
         phone,
+        password: payload.password,
         row: payload.row || {}
       }
     }),
