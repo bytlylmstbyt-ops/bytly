@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,11 +28,14 @@ export default function SentEmailsLog() {
   const loadEmails = async () => {
     setLoading(true);
     try {
-      const res = await base44.functions.invoke("gmailService", {
-        action: "listSystemSent",
-        data: { maxResults: 200 },
+      const { data: sessionData } = await supabase.auth.getSession();
+      const providerToken = sessionData?.session?.provider_token;
+      if (!providerToken) throw new Error("لم يتم العثور على صلاحية Gmail. أعد مصادقة Gmail.");
+      const { data: res, error } = await supabase.functions.invoke("gmail-service", {
+        body: { action: "listSystemSent", data: { maxResults: 200 }, providerToken },
       });
-      setEmails(res.data?.emails || []);
+      if (error) throw error;
+      setEmails(res?.emails || []);
     } catch (e) {
       toast.error("فشل تحميل السجلات: " + e.message);
     } finally {
