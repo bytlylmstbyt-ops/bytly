@@ -154,8 +154,7 @@ export default function RegisterClient() {
             <CardTitle className="text-xl">معلومات الحساب</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2"><label>كلمة المرور</label><input type="password" autoComplete="new-password" value={password} onChange={(e)=>setPassword(e.target.value)} required disabled={isLoading} className="w-full" /><label>تأكيد كلمة المرور</label><input type="password" autoComplete="new-password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} required disabled={isLoading} className="w-full" /></div>
-<form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               {/* Client Type Selection */}
               <div className="space-y-3">
                 <Label>نوع الحساب *</Label>
@@ -219,6 +218,11 @@ export default function RegisterClient() {
                   <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <Input id="email" type="email" value={formData.email} onChange={(e) => handleInputChange("email", e.target.value)} className="pr-10" placeholder="example@email.com" required />
                 </div>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2"><Label htmlFor="password">كلمة المرور *</Label><Input id="password" type="password" autoComplete="new-password" value={password} onChange={(e)=>setPassword(e.target.value)} required disabled={isLoading} className="h-12" /></div>
+                <div className="space-y-2"><Label htmlFor="confirm-password">تأكيد كلمة المرور *</Label><Input id="confirm-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} required disabled={isLoading} className="h-12" /></div>
+              </div>
+
               </div>
 
               <div className="space-y-2">
