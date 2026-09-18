@@ -38,6 +38,8 @@ export default function RegisterFirm() {
     specializations: [],
     documents: []
   });
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
     try {
@@ -127,6 +129,10 @@ export default function RegisterFirm() {
   };
 
   const handleSubmit = async (e) => {
+    if (new TextEncoder().encode(password).length > 72) { toast.error("كلمة المرور طويلة جداً. الحد الأقصى 72 بايت."); return; }
+    if (password.length < 8) { toast.error("كلمة المرور يجب أن تكون 8 أحرف على الأقل."); return; }
+    if (password !== confirmPassword) { toast.error("كلمتا المرور غير متطابقتين."); return; }
+
     e.preventDefault();
     
     if (!formData.company_name || !formData.email || !formData.commercial_registration) {
@@ -221,7 +227,8 @@ export default function RegisterFirm() {
           </CardHeader>
 
           <CardContent className="px-5 md:px-8 pb-6 md:pb-8">
-            <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="space-y-2"><label>كلمة المرور</label><input type="password" autoComplete="new-password" value={password} onChange={(e)=>setPassword(e.target.value)} required disabled={loading} className="w-full" /><label>تأكيد كلمة المرور</label><input type="password" autoComplete="new-password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} required disabled={loading} className="w-full" /></div>
+<form onSubmit={handleSubmit} className="space-y-8">
               {/* Company Basic Info */}
               <section>
                 <div className="flex items-center gap-2 mb-4 pb-2 border-b-2 border-[#C9A66B]/30">
