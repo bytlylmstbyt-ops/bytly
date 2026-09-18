@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -79,8 +79,16 @@ export default function GmailManager() {
   const [sendLoading, setSendLoading] = useState(false);
 
   const invoke = async (action, data) => {
-    const res = await base44.functions.invoke('gmailService', { action, data });
-    return res.data;
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !sessionData?.session) throw new Error("انتهت جلسة الدخول.");
+    const providerToken = sessionData.session.provider_token;
+    if (!providerToken) throw new Error("لم يتم العثور على صلاحية Gmail. اضغط «إعادة المصادقة» من تكامل Gmail.");
+    const { data: result, error } = await supabase.functions.invoke("gmail-service", {
+      body: { action, data, providerToken },
+    });
+    if (error) throw error;
+    if (result?.ok === false) throw new Error(result.error || "تعذر تنفيذ عملية Gmail.");
+    return result;
   };
 
   const loadEmails = async () => {
