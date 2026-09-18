@@ -147,7 +147,13 @@ Deno.serve(async (req) => {
 6. معدل استهلاك الميزانية -> توقع تجاوز التكلفة
 7. الأنماط الزمنية -> التوقعات للمستقبل القريب (7 و 14 يوماً)`;
 
-    const analysis = await base44.asServiceRole.integrations.Core.InvokeLLM({
+    // Gemini is the dedicated AI engine for risk analysis. Keep the key server-side only.
+    const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
+    if (!geminiApiKey) {
+      return Response.json({ error: "Gemini API key not configured" }, { status: 500 });
+    }
+
+    const riskSchema = {
       prompt,
       add_context_from_internet: false,
       response_json_schema: {
@@ -220,8 +226,43 @@ Deno.serve(async (req) => {
       }
     });
 
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(geminiApiKey)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.2,
+            responseMimeType: "application/json",
+            responseSchema: riskSchema,
+          },
+        }),
+      }
+    );
+
+    if (!geminiRes.ok) {
+      const errorText = await geminiRes.text();
+      throw new Error(`Gemini API error ${geminiRes.status}: ${errorText.slice(0, 500)}`);
+    }
+
+    const geminiData = await geminiRes.json();
+    const rawAnalysis = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!rawAnalysis) {
+      throw new Error("Gemini returned an empty risk analysis");
+    }
+
+    let analysis;
+    try {
+      analysis = JSON.parse(rawAnalysis);
+    } catch (parseError) {
+      throw new Error(`Gemini returned invalid JSON: ${parseError.message}`);
+    }
+
     return Response.json({
       success: true,
+      model: "gemini-2.5-flash",
       analysis,
       metrics: {
         completion_rate: completionRate,
