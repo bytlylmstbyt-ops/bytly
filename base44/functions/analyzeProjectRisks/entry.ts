@@ -154,10 +154,7 @@ Deno.serve(async (req) => {
     }
 
     const riskSchema = {
-      prompt,
-      add_context_from_internet: false,
-      response_json_schema: {
-        type: "object",
+      type: "object",
         properties: {
           risks: {
             type: "array",
@@ -224,7 +221,7 @@ Deno.serve(async (req) => {
           }
         }
       }
-    });
+    };
 
     const geminiRes = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(geminiApiKey)}`,
