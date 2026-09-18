@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,16 +28,21 @@ export default function EmailSentLogTab({ onRefresh, limit }) {
     setLoading(true);
     try {
       // Fetch from Gmail API, SentEmail entity, and scheduled EmailCampaigns in parallel
+      const { data: sessionData } = await supabase.auth.getSession();
+      const providerToken = sessionData?.session?.provider_token;
+      const gmailPromise = providerToken
+        ? supabase.functions.invoke("gmail-service", {
+            body: { action: "listSystemSent", data: { maxResults: limit || 200 }, providerToken },
+          })
+        : Promise.resolve({ data: { emails: [] }, error: null });
+
       const [gmailRes, sentEmails, campaigns] = await Promise.allSettled([
-        base44.functions.invoke("gmailService", {
-          action: "listSystemSent",
-          data: { maxResults: limit || 200 },
-        }),
+        gmailPromise,
         base44.entities.SentEmail.list("-created_date", limit || 200),
         base44.entities.EmailCampaign.filter({ status: "scheduled" }, "-created_date", 50),
       ]);
 
-      const gmailEmails = (gmailRes.status === "fulfilled" ? gmailRes.value?.data?.emails : []) || [];
+      const gmailEmails = (gmailRes.status === "fulfilled" ? gmailRes.value?.data?.emails || gmailRes.value?.emails : []) || [];
       const dbSent = (sentEmails.status === "fulfilled" ? sentEmails.value : []) || [];
       const scheduled = (campaigns.status === "fulfilled" ? campaigns.value : []) || [];
 
