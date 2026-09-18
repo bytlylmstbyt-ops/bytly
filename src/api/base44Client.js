@@ -137,7 +137,26 @@ legacyBase44.entities.SocialPost = {
 };
 
 const legacyEngineer = legacyBase44.entities.Engineer;
-legacyBase44.entities.Engineer = { ...legacyEngineer, create: async payload => {
+legacyBase44.entities.Engineer = {
+  ...legacyEngineer,
+  filter: async (filters = {}) => {
+    const email = filters?.email?.toLowerCase?.();
+    try {
+      let q = supabase.from('engineers').select('*');
+      Object.entries(filters).forEach(([k,v]) => { if (v != null) q = q.eq(k, v); });
+      const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة بيانات المهندس');
+      if (!error && data?.length) return data;
+    } catch {}
+    try {
+      let q = supabase.from('base44_engineer_migration_staging').select('*');
+      if (email) q = q.ilike('email', email);
+      else Object.entries(filters).forEach(([k,v]) => { if (v != null && ['full_name','phone','city','specialization'].includes(k)) q = q.eq(k,v); });
+      const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة بيانات المهندس القديمة');
+      if (!error && data?.length) return data;
+    } catch {}
+    return [];
+  },
+  create: async payload => {
   const { data: sessionData } = await withHardTimeout(supabase.auth.getSession(), 10000, 'انتهت مهلة جلسة الدخول');
   const authUser = sessionData?.session?.user;
   if (!authUser) throw new Error('يجب تسجيل الدخول أولاً');
@@ -211,7 +230,24 @@ legacyBase44.entities.Project = { ...legacyProject,
 };
 
 const legacyClient = legacyBase44.entities.Client;
-legacyBase44.entities.Client = {...legacyClient,filter:async filters=>{let q=supabase.from('clients').select('*');Object.entries(filters||{}).forEach(([k,v])=>{q=v===null?q.is(k,null):Array.isArray(v)?q.in(k,v):q.eq(k,v)});const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة العميل');if(error)throw new Error(error.message);return data||[]}};
+legacyBase44.entities.Client = {
+  ...legacyClient,
+  filter: async filters => {
+    try {
+      let q = supabase.from('clients').select('*');
+      Object.entries(filters||{}).forEach(([k,v])=>{q=v===null?q.is(k,null):Array.isArray(v)?q.in(k,v):q.eq(k,v)});
+      const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة العميل');
+      if(!error && data?.length) return data;
+    } catch {}
+    try {
+      let q = supabase.from('base44_client_migration_staging').select('*');
+      if (filters?.email) q = q.ilike('email', filters.email);
+      const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة بيانات العميل القديمة');
+      if(!error && data?.length) return data;
+    } catch {}
+    return [];
+  }
+};
 
 const legacyPortfolio = legacyBase44.entities.Portfolio;
 legacyBase44.entities.Portfolio = {...legacyPortfolio,create:async payload=>{const {data,error}=await withHardTimeout(supabase.from('portfolios').insert({engineer_id:payload.engineer_id||null,title:payload.title||'عمل سابق',description:payload.description||null,images:Array.isArray(payload.images)?payload.images:[]}).select('*').single(),10000,'انتهت مهلة حفظ الأعمال السابقة');if(error)throw new Error(error.message);return data}};
