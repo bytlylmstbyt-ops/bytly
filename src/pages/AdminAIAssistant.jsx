@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -349,24 +350,58 @@ export default function AdminAIAssistant() {
       }));
 
   useEffect(() => {
+    let mounted = true;
     (async () => {
       try {
-        const u = await base44.auth.me();
-        setIsAdmin(u?.role === "admin");
-        setCurrentUser(u);
-        if (u?.role === "admin") {
-          const history = await base44.entities.AIAgentConversation.filter({ asked_by_email: u.email }, "-updated_date", 50);
-          setConversations(history || []);
-          if (history?.[0]) {
-            await loadConversation(history[0]);
-          }
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error || !user) throw error || new Error("No authenticated Supabase user");
+        const email = (user.email || "").trim().toLowerCase();
+        let profile = null;
+        const { data } = await supabase
+          .from("profiles")
+          .select("role,email,full_name")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        profile = data || null;
+        const admin = email === PLATFORM_OWNER_EMAIL || profile?.role === "admin";
+        if (!mounted) return;
+        if (!admin) {
+          setIsAdmin(false);
+          setCurrentUser(null);
+          return;
         }
-      } catch {
-        setIsAdmin(false);
+        const u = {
+          ...user,
+          id: user.id,
+          user_id: user.id,
+          email: user.email,
+          full_name: profile?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || "",
+          role: "admin",
+          profile: profile || { role: "admin" },
+          _authProvider: "supabase",
+        };
+        setIsAdmin(true);
+        setCurrentUser(u);
+        try {
+          const history = await base44.entities.AIAgentConversation.filter({ asked_by_email: u.email }, "-updated_date", 50);
+          if (!mounted) return;
+          setConversations(history || []);
+          if (history?.[0]) await loadConversation(history[0]);
+        } catch (historyError) {
+          console.warn("Admin assistant history unavailable; continuing without history.", historyError);
+          if (mounted) setConversations([]);
+        }
+      } catch (error) {
+        console.error("Admin assistant Supabase auth check failed:", error);
+        if (mounted) {
+          setIsAdmin(false);
+          setCurrentUser(null);
+        }
       } finally {
-        setLoadingAuth(false);
+        if (mounted) setLoadingAuth(false);
       }
     })();
+    return () => { mounted = false; };
   }, []);
 
   useEffect(() => {
