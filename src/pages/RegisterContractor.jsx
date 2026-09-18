@@ -236,62 +236,37 @@ export default function RegisterContractor() {
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <Label>اسم الشركة أو المقاول *</Label>
-                    <Input
-                      value={formData.company_name}
-                      onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                      placeholder="مثال: شركة البناء الحديث"
-                      required
-                    />
+                    <Label>نوع الحساب</Label>
+                    <div className="flex gap-3 mt-2">
+                      <button type="button" onClick={() => setFormData({ ...formData, contractor_type: "company" })} className={`flex-1 p-3 rounded-lg border text-sm ${formData.contractor_type === "company" ? "border-[#C9A66B] bg-amber-50 text-[#6B5D4F] font-medium" : "border-slate-200"}`}>شركة</button>
+                      <button type="button" onClick={() => setFormData({ ...formData, contractor_type: "individual" })} className={`flex-1 p-3 rounded-lg border text-sm ${formData.contractor_type === "individual" ? "border-[#C9A66B] bg-amber-50 text-[#6B5D4F] font-medium" : "border-slate-200"}`}>مقاول فردي</button>
+                    </div>
                   </div>
-
                   <div>
-                    <Label>التخصص *</Label>
-                    <Input
-                      value={formData.specialization}
-                      onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                      placeholder="مثال: تشطيبات داخلية"
-                      required
-                    />
+                    <Label>اسم الشركة أو المقاول *</Label>
+                    <Input value={formData.company_name} onChange={(e) => setFormData({ ...formData, company_name: e.target.value })} placeholder="مثال: شركة البناء الحديث" required />
                   </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <Label>رقم التواصل *</Label>
-                    <Input
-                      value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="+966 5XXXXXXXX"
-                    />
+                    <Label>البريد الإلكتروني *</Label>
+                    <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="name@example.com" required />
                   </div>
-
                   <div>
-                    <Label>نوع الحساب</Label>
-                    <div className="flex gap-3 mt-2">
-                      <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, contractor_type: "company" })}
-                        className={`flex-1 p-3 rounded-lg border text-sm transition-all ${
-                          formData.contractor_type === "company"
-                            ? "border-[#C9A66B] bg-amber-50 text-[#6B5D4F] font-medium"
-                            : "border-slate-200 hover:border-slate-300"
-                        }`}
-                      >
-                        شركة
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, contractor_type: "individual" })}
-                        className={`flex-1 p-3 rounded-lg border text-sm transition-all ${
-                          formData.contractor_type === "individual"
-                            ? "border-[#C9A66B] bg-amber-50 text-[#6B5D4F] font-medium"
-                            : "border-slate-200 hover:border-slate-300"
-                        }`}
-                      >
-                        مقاول فردي
-                      </button>
-                    </div>
+                    <Label>كلمة المرور *</Label>
+                    <Input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} minLength={8} required />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>تأكيد كلمة المرور *</Label>
+                    <Input type="password" value={formData.confirmPassword} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} minLength={8} required />
+                  </div>
+                  <div>
+                    <Label>رقم التواصل *</Label>
+                    <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="+966 5XXXXXXXX" required />
                   </div>
                 </div>
 
