@@ -26,6 +26,9 @@ const NEXT_PAGES = {
   supplier: "/RegisterSupplier"
 };
 
+const passwordBytes = (value) => new TextEncoder().encode(value).length;
+const MAX_PASSWORD_BYTES = 72;
+
 export default function RegistrationAuth() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -56,7 +59,7 @@ export default function RegistrationAuth() {
     const cleanName = fullName.trim();
     if (!supabase) return setError("خدمة التسجيل غير مهيأة حالياً.");
     if (password.length < 8) return setError("كلمة المرور يجب أن تكون 8 أحرف على الأقل.");
-    if (password.length > 72) return setError("كلمة المرور طويلة جداً (الحد الأقصى 72 حرفًا). يرجى اختيار كلمة مرور أقصر.");
+    if (passwordBytes(password) > MAX_PASSWORD_BYTES) return setError("كلمة المرور طويلة جداً. الحد الأقصى 72 بايت، وقد يكون عدد الأحرف أقل عند استخدام العربية أو رموز خاصة.");
     if (password !== confirmPassword) return setError("كلمتا المرور غير متطابقتين.");
 
     setLoading(true);
@@ -77,8 +80,8 @@ export default function RegistrationAuth() {
         const msg = String(signUpError.message || "").toLowerCase();
         if (msg.includes("already registered") || msg.includes("already exists") || msg.includes("user already registered")) {
           setError("هذا البريد مسجل بالفعل. يمكنك تسجيل الدخول.");
-        } else if (msg.includes("72 characters") || msg.includes("password") && msg.includes("long")) {
-          setError("كلمة المرور طويلة جداً (الحد الأقصى 72 حرفًا). يرجى اختيار كلمة مرور أقصر.");
+        } else if (msg.includes("72") || (msg.includes("password") && msg.includes("long"))) {
+          setError("كلمة المرور طويلة جداً. الحد الأقصى 72 بايت.");
         } else {
           console.error("Supabase registration error:", signUpError);
           setError("تعذر إنشاء الحساب حالياً. يرجى المحاولة مرة أخرى.");
@@ -132,7 +135,7 @@ export default function RegistrationAuth() {
           </div>
           <div>
             <label className="block mb-1.5 text-sm font-medium">كلمة المرور</label>
-            <input className="w-full h-12 rounded-lg border px-3" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={loading} autoComplete="new-password" maxLength={72} />
+            <input className="w-full h-12 rounded-lg border px-3" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={loading} autoComplete="new-password" />
           </div>
           <div>
             <label className="block mb-1.5 text-sm font-medium">تأكيد كلمة المرور</label>
