@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -49,11 +50,14 @@ export default function ClientDetailPanel({ client, onClose, onEdit }) {
   const loadGmailEmails = async () => {
     setGmailLoading(true);
     try {
-      const res = await base44.functions.invoke("gmailService", {
-        action: "listEmails",
-        data: { query: `from:${client.email} OR to:${client.email}`, maxResults: 10 }
+      const { data: sessionData } = await supabase.auth.getSession();
+      const providerToken = sessionData?.session?.provider_token;
+      if (!providerToken) throw new Error("لم يتم العثور على صلاحية Gmail. أعد مصادقة Gmail.");
+      const { data: res, error } = await supabase.functions.invoke("gmail-service", {
+        body: { action: "listEmails", data: { q: `from:${client.email} OR to:${client.email}`, maxResults: 10 }, providerToken },
       });
-      setGmailEmails(res.data?.emails || []);
+      if (error) throw error;
+      setGmailEmails(res?.emails || []);
     } catch (e) { toast.error("فشل تحميل الرسائل"); }
     finally { setGmailLoading(false); }
   };
