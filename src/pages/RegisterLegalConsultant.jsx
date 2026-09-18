@@ -32,7 +32,9 @@ export default function RegisterLegalConsultantPage() {
     city: "",
     legal_specialization: "",
     bio: "",
-    years_experience: ""
+    years_experience: "",
+    password: "",
+    confirmPassword: ""
   });
 
   useEffect(() => {
@@ -50,12 +52,17 @@ export default function RegisterLegalConsultantPage() {
       return;
     }
 
+    if (!formData.password || !formData.confirmPassword) { alert("يرجى إدخال كلمة المرور وتأكيدها"); return; }
+    if (new TextEncoder().encode(formData.password).length > 72) { alert("كلمة المرور طويلة جدًا. الحد الأقصى 72 بايت."); return; }
+    if (formData.password.length < 8) { alert("كلمة المرور يجب أن تكون 8 أحرف على الأقل"); return; }
+    if (formData.password !== formData.confirmPassword) { alert("كلمتا المرور غير متطابقتين"); return; }
+
     setLoading(true);
 
     try {
       // saveRegistration creates or reuses the Supabase Auth account on this final step.
       const legalConsultant = await saveRegistration({
-        table: "legal_consultants", role: "legal_consultant", fullName: formData.full_name, email: formData.email, phone: formData.phone,
+        table: "legal_consultants", role: "legal_consultant", fullName: formData.full_name, email: formData.email, phone: formData.phone, password: formData.password,
         row: { ...formData, years_experience: parseInt(formData.years_experience) || 0, status: "pending", terms_and_conditions: {
           confidentiality_clause: "تم الموافقة", responsibility_clause: "تم الموافقة", intellectual_property_clause: "تم الموافقة", accepted: true, accepted_date: new Date().toISOString()
         }}
@@ -122,7 +129,7 @@ export default function RegisterLegalConsultantPage() {
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-slate-900">المعلومات الشخصية</h3>
                   
-                  <div className="md:col-span-2 rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-slate-700">
+                  <div className="grid md:grid-cols-2 gap-4">\n                    <div>\n                      <Label>كلمة المرور *</Label>\n                      <Input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} minLength={8} required />\n                    </div>\n                    <div>\n                      <Label>تأكيد كلمة المرور *</Label>\n                      <Input type="password" value={formData.confirmPassword} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} minLength={8} required />\n                    </div>\n                  </div>\n\n                  <div className="md:col-span-2 rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-slate-700">
                     <p className="font-semibold text-[#1a1a2e]">بيانات الحساب</p>
                     <p className="mt-1">{formData.full_name} — {formData.email}</p>
                     <p className="text-xs text-slate-500 mt-1">تم إدخال هذه البيانات في بداية التسجيل ولا تحتاج لإدخالها مرة أخرى.</p>
