@@ -500,6 +500,66 @@ export default function EngineerProfile() {
               </motion.div>
             )}
 
+            {/* Professional Documents */}
+            {(engineer.graduation_certificate_url ||
+              engineer.saudi_engineers_council_certificate_url ||
+              engineer.civil_engineering_license ||
+              engineer.structural_drawings?.length ||
+              engineer.shop_drawings?.length) && (
+              <Card className="border-0 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Award className="w-5 h-5 text-blue-600" />
+                    الشهادات والاعتمادات المهنية
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid sm:grid-cols-2 gap-3">
+                  {engineer.saudi_engineers_council_certificate_url && (
+                    <a href={engineer.saudi_engineers_council_certificate_url} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center justify-between gap-3 rounded-lg border p-4 hover:border-[#C9A66B] transition-colors">
+                      <span className="font-medium">شهادة الهيئة السعودية للمهندسين</span><ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+                  {engineer.graduation_certificate_url && (
+                    <a href={engineer.graduation_certificate_url} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center justify-between gap-3 rounded-lg border p-4 hover:border-[#C9A66B] transition-colors">
+                      <span className="font-medium">شهادة التخرج</span><ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+                  {engineer.civil_engineering_license && (
+                    <div className="rounded-lg border p-4">
+                      <p className="text-sm text-slate-500">الاعتماد الهندسي</p>
+                      <p className="font-semibold mt-1">{engineer.civil_engineering_license}</p>
+                    </div>
+                  )}
+                  {engineer.structural_drawings?.length > 0 && (
+                    <div className="rounded-lg border p-4">
+                      <p className="text-sm text-slate-500 mb-2">المخططات الإنشائية</p>
+                      <div className="space-y-1">
+                        {engineer.structural_drawings.map((url, i) => (
+                          <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-700 hover:underline flex items-center gap-1">
+                            مستند {i + 1}<ExternalLink className="w-3 h-3" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {engineer.shop_drawings?.length > 0 && (
+                    <div className="rounded-lg border p-4">
+                      <p className="text-sm text-slate-500 mb-2">الرسومات التنفيذية</p>
+                      <div className="space-y-1">
+                        {engineer.shop_drawings.map((url, i) => (
+                          <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-700 hover:underline flex items-center gap-1">
+                            مستند {i + 1}<ExternalLink className="w-3 h-3" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Portfolio */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -547,8 +607,30 @@ export default function EngineerProfile() {
                             </div>
                             <Badge variant="secondary">{portfolio.images?.length || 0} صور</Badge>
                           </div>
+                          {portfolio.description && (
+                            <p className="text-sm text-slate-600 leading-relaxed">{portfolio.description}</p>
+                          )}
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs text-slate-500">
+                            {portfolio.category && <span>التصنيف: {portfolio.category}</span>}
+                            {portfolio.project_type && <span>النوع: {portfolio.project_type}</span>}
+                            {portfolio.location && <span>الموقع: {portfolio.location}</span>}
+                            {portfolio.year && <span>السنة: {portfolio.year}</span>}
+                            {portfolio.duration_days && <span>المدة: {portfolio.duration_days} يوم</span>}
+                            {portfolio.team_size && <span>الفريق: {portfolio.team_size}</span>}
+                          </div>
+                          {portfolio.tags?.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {portfolio.tags.map((tag, i) => <Badge key={i} variant="outline">{tag}</Badge>)}
+                            </div>
+                          )}
                           {portfolio.images && portfolio.images.length > 0 && (
                             <ImageGallerySlider images={portfolio.images} portfolio={portfolio} />
+                          )}
+                          {portfolio.certification_url && (
+                            <a href={portfolio.certification_url} target="_blank" rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-sm text-blue-700 hover:underline">
+                              شهادة جودة المشروع <ExternalLink className="w-3 h-3" />
+                            </a>
                           )}
                         </div>
                       ))}
