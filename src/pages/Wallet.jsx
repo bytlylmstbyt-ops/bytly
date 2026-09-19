@@ -105,8 +105,24 @@ export default function WalletPage() {
         }
       }
 
+      // Homeowners do not need an engineer/provider profile to access the wallet.
+      // If authentication is valid but no provider row exists yet, use the authenticated
+      // identity as a minimal client wallet profile instead of blocking on "complete profile".
+      if (!profile) {
+        profile = {
+          id: currentUser.id,
+          user_id: currentUser.id,
+          email: currentUser.email,
+          full_name: currentUser.full_name || currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || '',
+          wallet_balance: 0,
+          client_type: 'individual',
+          profile_image: null,
+          phone: currentUser.phone || currentUser.user_metadata?.phone || null,
+        };
+        type = 'client';
+      }
       setUserProfile(profile);
-      setUserType(type);
+      setUserType(type || 'client');
     } catch (error) {
       console.error("Error loading wallet data:", error);
       setUserProfile(null);
