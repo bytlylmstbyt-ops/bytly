@@ -50,10 +50,11 @@ export default function Dashboard() {
       setApprovedProjects(approved);
     }
 
-    // Check if user is engineer or client
+    // Resolve the authenticated user's profile. A valid homeowner account
+    // does not need a legacy Client row to open the dashboard.
     const [engineerData, clientData] = await Promise.all([
-      Promise.race([base44.entities.Engineer.filter({ email: currentUser.email }), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => []),
-      Promise.race([base44.entities.Client.filter({ email: currentUser.email }), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => [])
+      Promise.race([base44.entities.Engineer.filter({ email: currentUser.email }), new Promise(resolve => setTimeout(() => resolve([]), 5000))]).catch(() => []),
+      Promise.race([base44.entities.Client.filter({ email: currentUser.email }), new Promise(resolve => setTimeout(() => resolve([]), 5000))]).catch(() => [])
     ]);
 
     if (engineerData.length > 0) {
@@ -96,6 +97,26 @@ export default function Dashboard() {
       });
 
       setRecentProjects(projects.slice(0, 5));
+    }
+
+    // Authenticated homeowner/investor with no legacy provider row.
+    // Give the dashboard a valid minimal client profile instead of treating
+    // the account as missing and sending the user back to registration.
+    if (engineerData.length === 0 && clientData.length === 0 && currentUser.role !== 'admin') {
+      const minimalClient = {
+        id: currentUser.id,
+        user_id: currentUser.id,
+        full_name: currentUser.full_name || currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || '',
+        email: currentUser.email,
+        client_type: 'individual',
+        wallet_balance: 0,
+        total_projects: 0,
+        profile_image: null
+      };
+      setUserType("client");
+      setProfile(minimalClient);
+      setStats({ totalProjects: 0, openProjects: 0, inProgressProjects: 0, completedProjects: 0, walletBalance: 0, totalSpent: 0 });
+      setRecentProjects([]);
     }
 
     setIsLoading(false);
