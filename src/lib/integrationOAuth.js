@@ -15,8 +15,6 @@ const PROVIDERS = {
 };
 
 const GOOGLE_SCOPES_BY_TYPE = {
-  // Gmail only asks for the Gmail permissions it actually uses.
-  // Do not request Calendar/Drive/Sheets/Meet/Analytics permissions while connecting Gmail.
   gmail: [
     "openid",
     "email",
@@ -27,14 +25,13 @@ const GOOGLE_SCOPES_BY_TYPE = {
   ].join(" "),
 };
 
-// LinkedIn OIDC is used for identity linking. w_member_social is the
-// self-service permission required when Bytly also needs to publish
-// on behalf of the authenticated LinkedIn member.
-const LINKEDIN_SCOPES = [
+// Keep LinkedIn connection scopes limited to the scopes supported by the
+// LinkedIn OIDC provider. Publishing/marketing permissions are handled
+// separately after the identity connection is established.
+const LINKEDIN_OIDC_SCOPES = [
   "openid",
   "profile",
   "email",
-  "w_member_social",
 ].join(" ");
 
 export function getOAuthProvider(type) {
@@ -54,11 +51,10 @@ export async function startIntegrationOAuth(type) {
   }
 
   const redirectTo = `${window.location.origin}/auth/callback?integration=${encodeURIComponent(type)}`;
+
   try {
     window.sessionStorage.setItem("bytly_pending_integration", type);
-  } catch (_) {
-    // Session storage can be unavailable in hardened/private browser modes.
-  }
+  } catch (_) {}
 
   const options = {
     redirectTo,
@@ -71,7 +67,7 @@ export async function startIntegrationOAuth(type) {
   if (provider === "google" && GOOGLE_SCOPES_BY_TYPE[type]) {
     options.scopes = GOOGLE_SCOPES_BY_TYPE[type];
   } else if (provider === "linkedin_oidc") {
-    options.scopes = LINKEDIN_SCOPES;
+    options.scopes = LINKEDIN_OIDC_SCOPES;
   }
 
   const { data, error } = await supabase.auth.linkIdentity({
@@ -81,12 +77,35 @@ export async function startIntegrationOAuth(type) {
 
   if (error) {
     const message = error.message || "تعذر بدء مصادقة مزود الخدمة.";
-    if (/manual linking|identity linking|linking is disabled/i.test(message)) {
-      throw new Error("ربط الحسابات OAuth غير مفعّل في Supabase. فعّل Enable Manual Linking من إعدادات Authentication ثم أعد المحاولة.");
+    const lower = message.toLowerCase();
+
+    if (/manual linking|identity linking|linking is disabled/.test(lower)) {
+      throw new Error(
+        "ربط الحسابات OAuth غير مفعّل في Supabase. فعّل Enable Manual Linking من إعدادات Authentication ثم أعد المحاولة."
+      );
     }
-    if (/redirect|redirect_to|not allowed/i.test(message)) {
-      throw new Error("عنوان الرجوع OAuth غير مسموح في Supabase. يجب السماح بـ https://mybytly.com/auth/callback في Redirect URLs.");
+
+    if (/provider.*(not enabled|disabled|not found|unsupported)|unsupported.*provider|provider.*configuration/.test(lower)) {
+      if (type === "linkedin") {
+        throw new Error(
+          "مزود LinkedIn (OIDC) غير مفعّل أو بيانات تطبيق LinkedIn غير مكتملة في Supabase. يجب تفعيل LinkedIn (OIDC) وإدخال Client ID وClient Secret ثم حفظ الإعداد."
+        );
+      }
+      throw new Error("مزود OAuth لهذه الخدمة غير مفعّل أو غير مكتمل في Supabase.");
     }
+
+    if (/redirect|redirect_to|not allowed/.test(lower)) {
+      throw new Error(
+        "عنوان الرجوع OAuth غير مسموح في Supabase. يجب السماح بـ https://mybytly.com/auth/callback في Redirect URLs."
+      );
+    }
+
+    if (/scope|invalid.*permission|unauthorized_scope/.test(lower) && type === "linkedin") {
+      throw new Error(
+        "LinkedIn رفض صلاحيات الاتصال المطلوبة. تم فصل صلاحيات تسجيل الدخول عن صلاحيات النشر والإعلانات؛ أعد محاولة ربط LinkedIn."
+      );
+    }
+
     throw new Error(message);
   }
 
