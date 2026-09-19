@@ -41,40 +41,34 @@ export default function IntegrationCard({ integration, onTested }) {
     setTesting(true);
     try {
       let result;
-      if (integration.type === "gmail" || integration.type === "linkedin") {
+      if (integration.type === "linkedin") {
+        // LinkedIn API access is server-managed. Do not depend on a browser
+        // provider token surviving a page refresh.
+        const { data, error } = await supabase.functions.invoke("linkedin-publish", {
+          body: { action: "status" },
+        });
+        if (error) throw error;
+        result = data?.ok === true
+          ? { ok: true, message: `تم الاتصال فعليًا بـ LinkedIn${data?.name ? `: ${data.name}` : ""}.` }
+          : { ok: false, error: data?.error || "تعذر التحقق من اتصال LinkedIn." };
+      } else if (integration.type === "gmail") {
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
         const providerToken =
           sessionData?.session?.provider_token ||
           (() => {
-            try {
-              const key = integration.type === "linkedin"
-                ? "bytly_linkedin_provider_token"
-                : "bytly_google_provider_token";
-              return sessionStorage.getItem(key);
-            } catch (_) { return null; }
+            try { return sessionStorage.getItem("bytly_google_provider_token"); } catch (_) { return null; }
           })();
         if (!providerToken) {
-          result = {
-            ok: false,
-            error: integration.type === "linkedin"
-              ? "لم تتوفر جلسة LinkedIn صالحة. اضغط «إعادة المصادقة» ثم أعد الفحص."
-              : "لم تتوفر جلسة Gmail صالحة. اضغط «إعادة المصادقة» ثم أعد الفحص."
-          };
+          result = { ok: false, error: "لم تتوفر جلسة Gmail صالحة. اضغط «إعادة المصادقة» ثم أعد الفحص." };
         } else {
-          const functionName = integration.type === "linkedin" ? "linkedin-publish" : "gmail-service";
-          const { data, error } = await supabase.functions.invoke(functionName, {
+          const { data, error } = await supabase.functions.invoke("gmail-service", {
             body: { action: "status", providerToken },
           });
           if (error) throw error;
           result = data?.ok === true
-            ? {
-                ok: true,
-                message: integration.type === "linkedin"
-                  ? `تم الاتصال فعليًا بـ LinkedIn${data?.name ? `: ${data.name}` : ""}.`
-                  : (data?.email ? `تم الاتصال فعليًا بـ Gmail: ${data.email}` : "تم الاتصال فعليًا بـ Gmail.")
-              }
-            : { ok: false, error: data?.error || `تعذر التحقق من اتصال ${integration.type === "linkedin" ? "LinkedIn" : "Gmail"}.` };
+            ? { ok: true, message: data?.email ? `تم الاتصال فعليًا بـ Gmail: ${data.email}` : "تم الاتصال فعليًا بـ Gmail." }
+            : { ok: false, error: data?.error || "تعذر التحقق من اتصال Gmail." };
         }
       } else {
         const ok = Boolean(integration.connected);
