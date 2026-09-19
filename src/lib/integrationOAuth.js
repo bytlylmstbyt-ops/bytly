@@ -25,13 +25,13 @@ const GOOGLE_SCOPES_BY_TYPE = {
   ].join(" "),
 };
 
-// Keep LinkedIn connection scopes limited to the scopes supported by the
-// LinkedIn OIDC provider. Publishing/marketing permissions are handled
-// separately after the identity connection is established.
+// LinkedIn OIDC provides identity information. Share on LinkedIn adds the
+// member-posting permission required for publishing posts.
 const LINKEDIN_OIDC_SCOPES = [
   "openid",
   "profile",
   "email",
+  "w_member_social",
 ].join(" ");
 
 export function getOAuthProvider(type) {
@@ -102,7 +102,7 @@ export async function startIntegrationOAuth(type) {
 
     if (/scope|invalid.*permission|unauthorized_scope/.test(lower) && type === "linkedin") {
       throw new Error(
-        "LinkedIn رفض صلاحيات الاتصال المطلوبة. تم فصل صلاحيات تسجيل الدخول عن صلاحيات النشر والإعلانات؛ أعد محاولة ربط LinkedIn."
+        "LinkedIn رفض صلاحية النشر. تأكدي من إضافة منتج «Share on LinkedIn» إلى نفس تطبيق LinkedIn، ثم أعيدي المصادقة."
       );
     }
 
