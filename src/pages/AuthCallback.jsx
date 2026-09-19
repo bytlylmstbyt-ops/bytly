@@ -43,7 +43,17 @@ export default function AuthCallback() {
         // Integration OAuth callback: the Google/GitHub identity has just been linked.
         // Return to the admin integrations center instead of treating this as a registration callback.
         if (integrationType) {
-          try { sessionStorage.removeItem("bytly_pending_integration"); } catch {}
+          // Preserve the provider OAuth tokens returned by the OAuth exchange for
+          // the integration test in this browser session. Do not write them to
+          // GitHub or the database.
+          try {
+            const providerToken = data?.session?.provider_token;
+            const providerRefreshToken = data?.session?.provider_refresh_token;
+            if (providerToken) sessionStorage.setItem("bytly_google_provider_token", providerToken);
+            if (providerRefreshToken) sessionStorage.setItem("bytly_google_provider_refresh_token", providerRefreshToken);
+            sessionStorage.setItem("bytly_connected_integration", integrationType);
+            sessionStorage.removeItem("bytly_pending_integration");
+          } catch (_) {}
           if (active) {
             navigate(`/AdminControlCenter?cat=integrations&oauth=${encodeURIComponent(integrationType)}&connected=1`, { replace: true });
             return;
