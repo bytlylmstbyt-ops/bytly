@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, ShieldAlert, ArrowUpRight, LayoutDashboard, ChevronLeft, KeyRound, PlugZap, ExternalLink, EyeOff, Copy, Check, BriefcaseBusiness } from "lucide-react";
+import { Loader2, ShieldAlert, ArrowUpRight, LayoutDashboard, ChevronLeft, KeyRound, PlugZap, ExternalLink, EyeOff, Copy, Check, BriefcaseBusiness, ClipboardList } from "lucide-react";
 import { ADMIN_CATEGORIES as CATEGORIES } from "@/components/admin/adminSections";
 import { usePermissions } from "@/components/auth/usePermissions";
 import { readAdminFilters, writeAdminFilters } from "@/components/admin/adminFilterPersistence";
