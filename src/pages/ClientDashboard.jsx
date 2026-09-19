@@ -38,7 +38,7 @@ export default function ClientDashboard() {
         const projects = await base44.entities.Project.filter({ client_id: clientData.id });
         
         // Load proposals for all projects
-        const allProposals = await base44.entities.Proposal.filter({});
+        const allProposals = await Promise.race([base44.entities.Proposal.filter({}), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => []);
         const myProposals = allProposals.filter(p => 
           projects.some(proj => proj.id === p.project_id)
         );
