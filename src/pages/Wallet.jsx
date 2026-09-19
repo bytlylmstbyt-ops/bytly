@@ -34,67 +34,83 @@ export default function WalletPage() {
     try {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
+      if (!currentUser?.email) return;
 
-      // Try to identify user type
-      const [engineerData] = await base44.entities.Engineer.filter({ email: currentUser.email });
-      const [clientData] = await base44.entities.Client.filter({ email: currentUser.email });
-      const [firmData] = await base44.entities.EngineeringFirm.filter({ email: currentUser.email });
-
+      const role = String(currentUser.role || currentUser.profile?.role || '').toLowerCase();
       let profile = null;
       let type = null;
 
-      if (engineerData) {
-        profile = engineerData;
-        type = "engineer";
-        
-        // Load transactions for engineer
-        const trans = await base44.entities.Transaction.filter(
-          { user_email: currentUser.email },
-          "-created_date",
-          100
-        );
+      if (role === 'client' || role === 'investor') {
+        const clientData = await Promise.race([
+          base44.entities.Client.filter({ email: currentUser.email }),
+          new Promise(resolve => setTimeout(() => resolve([]), 7000))
+        ]).catch(() => []);
+        if (clientData?.[0]) {
+          profile = clientData[0];
+          type = clientData[0].client_type === 'investor' ? 'investor' : 'client';
+        }
+      } else if (role === 'engineer' || role === 'surveyor') {
+        const engineerData = await Promise.race([
+          base44.entities.Engineer.filter({ email: currentUser.email }),
+          new Promise(resolve => setTimeout(() => resolve([]), 7000))
+        ]).catch(() => []);
+        if (engineerData?.[0]) {
+          profile = engineerData[0];
+          type = 'engineer';
+        }
+      }
+
+      // Legacy users can have a generic profile.role='user'. In that case check
+      // client then engineer, but never block on unrelated provider entities.
+      if (!profile) {
+        const clientData = await Promise.race([
+          base44.entities.Client.filter({ email: currentUser.email }),
+          new Promise(resolve => setTimeout(() => resolve([]), 7000))
+        ]).catch(() => []);
+        if (clientData?.[0]) {
+          profile = clientData[0];
+          type = clientData[0].client_type === 'investor' ? 'investor' : 'client';
+        }
+      }
+      if (!profile) {
+        const engineerData = await Promise.race([
+          base44.entities.Engineer.filter({ email: currentUser.email }),
+          new Promise(resolve => setTimeout(() => resolve([]), 7000))
+        ]).catch(() => []);
+        if (engineerData?.[0]) {
+          profile = engineerData[0];
+          type = 'engineer';
+        }
+      }
+
+      if (profile) {
+        const trans = await Promise.race([
+          base44.entities.Transaction.filter({ user_email: currentUser.email }, '-created_date', 100),
+          new Promise(resolve => setTimeout(() => resolve([]), 5000))
+        ]).catch(() => []);
         setTransactions(trans);
 
-        // Load withdrawal requests
-        const withdrawals = await base44.entities.WithdrawalRequest.filter(
-          { engineer_id: engineerData.id },
-          "-created_date"
-        );
-        setWithdrawalRequests(withdrawals);
-      } else if (clientData) {
-        profile = clientData;
-        type = clientData.client_type === "investor" ? "investor" : "client";
-
-        // Load transactions for client
-        const trans = await base44.entities.Transaction.filter(
-          { user_email: currentUser.email },
-          "-created_date",
-          100
-        );
-        setTransactions(trans);
-
-        // Load projects for investor/client
-        const projectsList = await base44.entities.Project.filter(
-          { client_id: clientData.id },
-          "-created_date"
-        );
-        setProjects(projectsList);
-      } else if (firmData) {
-        profile = firmData;
-        type = "firm";
-
-        const trans = await base44.entities.Transaction.filter(
-          { user_email: currentUser.email },
-          "-created_date",
-          100
-        );
-        setTransactions(trans);
+        if (type === 'client' || type === 'investor') {
+          const projectsList = await Promise.race([
+            base44.entities.Project.filter({ client_id: profile.id }, '-created_date'),
+            new Promise(resolve => setTimeout(() => resolve([]), 7000))
+          ]).catch(() => []);
+          setProjects(projectsList);
+        } else if (type === 'engineer') {
+          const withdrawals = await Promise.race([
+            base44.entities.WithdrawalRequest.filter({ engineer_id: profile.id }, '-created_date'),
+            new Promise(resolve => setTimeout(() => resolve([]), 5000))
+          ]).catch(() => []);
+          setWithdrawalRequests(withdrawals);
+        }
       }
 
       setUserProfile(profile);
       setUserType(type);
     } catch (error) {
       console.error("Error loading wallet data:", error);
+      setUserProfile(null);
+      setUserType(null);
     } finally {
       setIsLoading(false);
     }
