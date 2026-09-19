@@ -527,18 +527,6 @@ export default function Dashboard() {
                     </Card>
                   </Link>
 
-                  <Link to={createPageUrl("AllCertifications")}>
-                    <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-green-200 hover:border-green-400">
-                      <CardContent className="p-6 text-center">
-                        <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
-                          <Award className="w-8 h-8 text-green-600" />
-                        </div>
-                        <h3 className="font-bold text-lg mb-2">{t('dashboard.adminPanel.certifications')}</h3>
-                        <p className="text-sm text-slate-600">{t('dashboard.adminPanel.certificationsDesc')}</p>
-                      </CardContent>
-                    </Card>
-                  </Link>
-
                   <Link to={createPageUrl("AdminWallet")}>
                     <Card className="hover:shadow-lg transition-shadow cursor-pointer border-2 border-purple-200 hover:border-purple-400">
                       <CardContent className="p-6 text-center">
