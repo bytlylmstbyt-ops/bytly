@@ -19,37 +19,45 @@ export default function WalletRecharge() {
   }, []);
 
   const loadUserData = async () => {
-    const currentUser = await base44.auth.me();
-    setUser(currentUser);
+    try {
+      const currentUser = await Promise.race([
+        base44.auth.me(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("انتهت مهلة تحميل المستخدم")), 10000))
+      ]);
+      setUser(currentUser);
+      if (!currentUser?.email) return;
 
-    // Get user profile (client, engineer, or firm)
-    const [clientData] = await base44.entities.Client.filter({ email: currentUser.email });
-    if (clientData) {
-      setProfile({ ...clientData, type: "client" });
-      return;
-    }
+      const clientData = await Promise.race([
+        base44.entities.Client.filter({ email: currentUser.email }),
+        new Promise(resolve => setTimeout(() => resolve([]), 7000))
+      ]).catch(() => []);
+      if (clientData?.[0]) {
+        setProfile({ ...clientData[0], type: "client" });
+        return;
+      }
 
-    const [engineerData] = await base44.entities.Engineer.filter({ email: currentUser.email });
-    if (engineerData) {
-      setProfile({ ...engineerData, type: "engineer" });
-      return;
-    }
+      const engineerData = await Promise.race([
+        base44.entities.Engineer.filter({ email: currentUser.email }),
+        new Promise(resolve => setTimeout(() => resolve([]), 7000))
+      ]).catch(() => []);
+      if (engineerData?.[0]) {
+        setProfile({ ...engineerData[0], type: "engineer" });
+        return;
+      }
 
-    const [firmData] = await base44.entities.EngineeringFirm.filter({ email: currentUser.email });
-    if (firmData) {
-      setProfile({ ...firmData, type: "firm" });
-      return;
-    }
-
-    const [contractorData] = await base44.entities.Contractor.filter({ email: currentUser.email });
-    if (contractorData) {
-      setProfile({ ...contractorData, type: "contractor" });
-      return;
-    }
-
-    const [supplierData] = await base44.entities.Supplier.filter({ email: currentUser.email });
-    if (supplierData) {
-      setProfile({ ...supplierData, type: "supplier" });
+      // A homeowner can charge an authenticated wallet without completing
+      // an engineer/provider profile.
+      setProfile({
+        id: currentUser.id,
+        user_id: currentUser.id,
+        full_name: currentUser.full_name || currentUser.user_metadata?.full_name || '',
+        email: currentUser.email,
+        wallet_balance: 0,
+        type: "client"
+      });
+    } catch (error) {
+      console.error("Error loading wallet recharge profile:", error);
+      setProfile(null);
     }
   };
 
