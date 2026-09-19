@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
   MapPin, Star, CheckCircle, Briefcase, Award, Clock,
@@ -64,15 +65,35 @@ export default function EngineerProfile() {
     const isEmail = engineerId && engineerId.includes('@');
     const engineerQuery = isEmail ? { email: engineerId } : { id: engineerId };
 
-    const [engineerData, portfolioData, reviewData] = await Promise.all([
-      base44.entities.Engineer.filter(engineerQuery),
-      base44.entities.Portfolio.filter({ engineer_id: engineerId }, "-created_date"),
-      base44.entities.Review.filter({ engineer_id: engineerId }, "-created_date")
+    const { data: engineerRows, error: engineerError } = await supabase
+      .from("engineers")
+      .select("*")
+      .eq(isEmail ? "email" : "id", engineerId)
+      .limit(1);
+
+    if (engineerError) throw engineerError;
+
+    const engineerRecord = engineerRows?.[0] || null;
+    setEngineer(engineerRecord);
+
+    if (!engineerRecord) {
+      setPortfolios([]);
+      setReviews([]);
+      setIsLoading(false);
+      return;
+    }
+
+    // Public portfolio/review reads are kept separate so the engineer profile
+    // no longer depends on Base44 for its core display data.
+    const [portfolioResult, reviewResult] = await Promise.all([
+      supabase.from("engineer_portfolios").select("*").eq("engineer_id", engineerRecord.id).order("created_at", { ascending: false }),
+      supabase.from("engineer_reviews").select("*").eq("engineer_id", engineerRecord.id).order("created_at", { ascending: false })
     ]);
-    
-    setEngineer(engineerData[0]);
-    setPortfolios(portfolioData);
-    setReviews(reviewData);
+
+    setPortfolios(portfolioResult.data || []);
+    setReviews(reviewResult.data || []);
+
+    const engineerData = [engineerRecord];
 
     // Resolve the real engineer id (in case an email was passed)
     const realEngineerId = engineerData[0]?.id || engineerId;
