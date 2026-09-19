@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
   FileText, Search, Download, Eye, 
@@ -51,59 +52,76 @@ export default function ContractArchive() {
       ]);
       setCurrentUser(user);
 
-      const [engineerData, clientData] = await Promise.all([
-        Promise.race([base44.entities.Engineer.filter({ email: user.email }), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => []),
-        Promise.race([base44.entities.Client.filter({ email: user.email }), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => [])
-      ]);
-
+      // Contracts in the new Supabase schema are linked directly to the
+      // authenticated user IDs (client_user_id/provider_user_id). Do not
+      // require a legacy Client/Engineer record just to open this page.
+      const authUserId = user?.user_id || user?.id;
       let userContracts = [];
-      if (engineerData.length > 0) {
-        setUserType("engineer");
-        userContracts = await Promise.race([
-          base44.entities.Contract.filter({ engineer_id: engineerData[0].id }),
-          new Promise(resolve => setTimeout(() => resolve([]), 7000))
-        ]).catch(() => []);
-      } else if (clientData.length > 0) {
-        setUserType("client");
-        userContracts = await Promise.race([
-          base44.entities.Contract.filter({ client_id: clientData[0].id }),
-          new Promise(resolve => setTimeout(() => resolve([]), 7000))
-        ]).catch(() => []);
-      } else {
-        // A homeowner can have a valid authenticated account without a legacy
-        // provider row. Contracts are empty until the first project/contract;
-        // the page must still open normally.
-        setUserType("client");
-        userContracts = [];
+
+      if (authUserId) {
+        const { data, error } = await Promise.race([
+          supabase
+            .from("project_contracts")
+            .select("*")
+            .or(`client_user_id.eq.${authUserId},provider_user_id.eq.${authUserId}`)
+            .order("created_at", { ascending: false }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("انتهت مهلة قراءة العقود")), 10000))
+        ]);
+        if (error) throw error;
+        userContracts = data || [];
       }
 
+      // Keep legacy fallback only for migrated accounts that have no new
+      // Supabase contracts. It is bounded so the page can never spin forever.
+      if (userContracts.length === 0 && user?.email) {
+        const [engineerData, clientData] = await Promise.all([
+          Promise.race([base44.entities.Engineer.filter({ email: user.email }), new Promise(resolve => setTimeout(() => resolve([]), 5000))]).catch(() => []),
+          Promise.race([base44.entities.Client.filter({ email: user.email }), new Promise(resolve => setTimeout(() => resolve([]), 5000))]).catch(() => [])
+        ]);
+
+        if (engineerData?.[0]) {
+          setUserType("engineer");
+          userContracts = await Promise.race([
+            base44.entities.Contract.filter({ engineer_id: engineerData[0].id }),
+            new Promise(resolve => setTimeout(() => resolve([]), 7000))
+          ]).catch(() => []);
+        } else if (clientData?.[0]) {
+          setUserType("client");
+          userContracts = await Promise.race([
+            base44.entities.Contract.filter({ client_id: clientData[0].id }),
+            new Promise(resolve => setTimeout(() => resolve([]), 7000))
+          ]).catch(() => []);
+        }
+      }
+
+      if (!userType) setUserType("client");
       setContracts(userContracts);
 
-      const engineerIds = [...new Set(userContracts.map(c => c.engineer_id).filter(Boolean))];
-      const clientIds = [...new Set(userContracts.map(c => c.client_id).filter(Boolean))];
+      // Resolve related records from the current Supabase schema.
       const projectIds = [...new Set(userContracts.map(c => c.project_id).filter(Boolean))];
-
-      const [engineersData, clientsData, projectsData] = await Promise.all([
-        Promise.all(engineerIds.map(id => Promise.race([base44.entities.Engineer.filter({ id }), new Promise(resolve => setTimeout(() => resolve([]), 5000))]).catch(() => []))),
-        Promise.all(clientIds.map(id => Promise.race([base44.entities.Client.filter({ id }), new Promise(resolve => setTimeout(() => resolve([]), 5000))]).catch(() => []))),
-        Promise.all(projectIds.map(id => Promise.race([base44.entities.Project.filter({ id }), new Promise(resolve => setTimeout(() => resolve([]), 5000))]).catch(() => [])))
+      const [projectsData] = await Promise.all([
+        Promise.all(projectIds.map(id =>
+          Promise.race([
+            supabase.from("projects").select("*").eq("id", id).maybeSingle().then(r => r.data ? [r.data] : []),
+            new Promise(resolve => setTimeout(() => resolve([]), 5000))
+          ]).catch(() => [])
+        ))
       ]);
 
-      const engineersMap = {};
-      engineersData.forEach(data => { if (data[0]) engineersMap[data[0].id] = data[0]; });
-      setEngineers(engineersMap);
-
-      const clientsMap = {};
-      clientsData.forEach(data => { if (data[0]) clientsMap[data[0].id] = data[0]; });
-      setClients(clientsMap);
-
       const projectsMap = {};
-      projectsData.forEach(data => { if (data[0]) projectsMap[data[0].id] = data[0]; });
+      projectsData.flat().forEach(data => { if (data?.id) projectsMap[data.id] = data; });
       setProjects(projectsMap);
+
+      // These maps are retained for legacy contract rendering.
+      setEngineers({});
+      setClients({});
     } catch (error) {
       console.error("Error loading contracts:", error);
       setContracts([]);
       setUserType("client");
+      setEngineers({});
+      setClients({});
+      setProjects({});
     } finally {
       setIsLoading(false);
     }
