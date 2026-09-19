@@ -47,76 +47,105 @@ export default function EngineerProfile() {
 
   const loadData = async () => {
     setIsLoading(true);
-    
-    const user = await base44.auth.me();
-    const clientData = await base44.entities.Client.filter({ email: user.email });
-    
-    if (clientData.length > 0) {
-      setCurrentClient(clientData[0]);
-      
-      const favorites = await base44.entities.Favorite.filter({
-        client_id: clientData[0].id,
-        engineer_id: engineerId
-      });
-      setIsFavorited(favorites.length > 0);
-    }
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const isEmail = engineerId && engineerId.includes("@");
 
-    // If engineerId is an email, filter by email; otherwise filter by id
-    const isEmail = engineerId && engineerId.includes('@');
-    const engineerQuery = isEmail ? { email: engineerId } : { id: engineerId };
+      const { data: engineerRows, error: engineerError } = await supabase
+        .from("engineers")
+        .select("*")
+        .eq(isEmail ? "email" : "id", engineerId)
+        .eq("is_real", true)
+        .eq("status", "approved")
+        .limit(1);
 
-    const { data: engineerRows, error: engineerError } = await supabase
-      .from("engineers")
-      .select("*")
-      .eq(isEmail ? "email" : "id", engineerId)
-      .limit(1);
+      if (engineerError) throw engineerError;
 
-    if (engineerError) throw engineerError;
+      const engineerRecord = engineerRows?.[0] || null;
+      setEngineer(engineerRecord);
 
-    const engineerRecord = engineerRows?.[0] || null;
-    setEngineer(engineerRecord);
+      if (!engineerRecord) {
+        setPortfolios([]);
+        setReviews([]);
+        return;
+      }
 
-    if (!engineerRecord) {
+      setIsOwner(Boolean(user?.email && engineerRecord.email === user.email));
+
+      // Supabase's real portfolio table is the primary source.
+      const portfolioResult = await supabase
+        .from("portfolios")
+        .select("*")
+        .eq("engineer_id", engineerRecord.id)
+        .order("created_at", { ascending: false });
+      setPortfolios(portfolioResult.data || []);
+
+      // Reviews use the new project review model when the engineer is linked
+      // to an authenticated user. Keep a bounded Base44 fallback for legacy
+      // real reviews so migration does not hide existing ratings.
+      let reviewRows = [];
+      if (engineerRecord.user_id) {
+        const reviewResult = await supabase
+          .from("project_reviews")
+          .select("*")
+          .eq("reviewee_user_id", engineerRecord.user_id)
+          .order("created_at", { ascending: false });
+        reviewRows = reviewResult.data || [];
+      }
+
+      if (reviewRows.length === 0) {
+        try {
+          const legacyReviews = await Promise.race([
+            base44.entities.Review.filter({ engineer_id: engineerRecord.email }),
+            new Promise(resolve => setTimeout(() => resolve([]), 2500))
+          ]);
+          reviewRows = Array.isArray(legacyReviews) ? legacyReviews : [];
+        } catch {}
+      }
+      setReviews(reviewRows);
+
+      // Client-only enhancements never block the public profile.
+      if (user?.email) {
+        try {
+          const clientData = await Promise.race([
+            base44.entities.Client.filter({ email: user.email }),
+            new Promise(resolve => setTimeout(() => resolve([]), 2000))
+          ]);
+          if (clientData?.length > 0) {
+            setCurrentClient(clientData[0]);
+            try {
+              const favorites = await Promise.race([
+                base44.entities.Favorite.filter({
+                  client_id: clientData[0].id,
+                  engineer_id: engineerId
+                }),
+                new Promise(resolve => setTimeout(() => resolve([]), 1500))
+              ]);
+              setIsFavorited(Array.isArray(favorites) && favorites.length > 0);
+            } catch {}
+            setHasReviewed(reviewRows.some(r =>
+              r.client_id === clientData[0].id || r.reviewer_user_id === user.id
+            ));
+          }
+        } catch {}
+      }
+
+      // Optional social enrichment must never block profile rendering.
+      try {
+        const ttRes = await Promise.race([
+          base44.functions.invoke("tiktokProfile", {}),
+          new Promise(resolve => setTimeout(() => resolve({ data: null }), 1500))
+        ]);
+        if (ttRes?.data && !ttRes.data.error) setTiktokData(ttRes.data);
+      } catch {}
+    } catch (error) {
+      console.error("Engineer profile load failed:", error);
+      setEngineer(null);
       setPortfolios([]);
       setReviews([]);
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    // Public portfolio/review reads are kept separate so the engineer profile
-    // no longer depends on Base44 for its core display data.
-    const [portfolioResult, reviewResult] = await Promise.all([
-      supabase.from("engineer_portfolios").select("*").eq("engineer_id", engineerRecord.id).order("created_at", { ascending: false }),
-      supabase.from("engineer_reviews").select("*").eq("engineer_id", engineerRecord.id).order("created_at", { ascending: false })
-    ]);
-
-    setPortfolios(portfolioResult.data || []);
-    setReviews(reviewResult.data || []);
-
-    const engineerData = [engineerRecord];
-
-    // Resolve the real engineer id (in case an email was passed)
-    const realEngineerId = engineerData[0]?.id || engineerId;
-
-    // Check if current user is the engineer
-    setIsOwner(engineerData[0]?.email === user.email);
-
-    if (clientData.length > 0) {
-      const alreadyReviewed = reviewData.some(r => r.client_id === clientData[0].id);
-      setHasReviewed(alreadyReviewed);
-    }
-
-    // Fetch TikTok verified status (shared connector - platform account)
-    try {
-      const ttRes = await base44.functions.invoke("tiktokProfile", {});
-      if (ttRes.data && !ttRes.data.error) {
-        setTiktokData(ttRes.data);
-      }
-    } catch (e) {
-      console.warn('TikTok profile fetch failed:', e?.message || e);
-    }
-
-    setIsLoading(false);
   };
 
   const toggleFavorite = async () => {
@@ -180,7 +209,7 @@ export default function EngineerProfile() {
     if (aDone && bDone) return bDone - aDone;
     if (aDone && !bDone) return -1;
     if (!aDone && bDone) return 1;
-    return new Date(b.created_date || 0) - new Date(a.created_date || 0);
+    return new Date(b.created_at || b.created_date || 0) - new Date(a.created_at || a.created_date || 0);
   });
 
   return (
@@ -660,7 +689,7 @@ export default function EngineerProfile() {
                     <div>
                       <p className="text-sm text-slate-500">انضم في</p>
                       <p className="font-medium">
-                        {new Date(engineer.created_date).toLocaleDateString("ar", { year: "numeric", month: "long" })}
+                        {new Date(engineer.created_at || engineer.created_date).toLocaleDateString("ar", { year: "numeric", month: "long" })}
                       </p>
                     </div>
                   </div>
