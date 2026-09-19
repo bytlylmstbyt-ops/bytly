@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,9 +26,14 @@ export default function AdminDisputes() {
   }, [searchQuery, statusFilter, priorityFilter, disputes]);
 
   const loadDisputes = async () => {
-    const allDisputes = await base44.entities.Dispute.list("-created_date");
-    setDisputes(allDisputes);
-    setIsLoading(false);
+    try {
+      const { data, error } = await supabase.from("disputes").select("*,projects:project_id(id,title)").order("created_at",{ascending:false});
+      if (error) throw error;
+      setDisputes(data || []);
+    } catch (error) {
+      console.error("AdminDisputes load error:", error);
+      setDisputes([]);
+    } finally { setIsLoading(false); }
   };
 
   const filterDisputes = () => {
@@ -36,8 +41,7 @@ export default function AdminDisputes() {
 
     if (searchQuery) {
       filtered = filtered.filter(d => 
-        d.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        d.description.toLowerCase().includes(searchQuery.toLowerCase())
+        (d.title || "").toLowerCase().includes(searchQuery.toLowerCase()) || (d.description || "").toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -196,9 +200,9 @@ export default function AdminDisputes() {
                       </div>
                       <p className="text-sm text-slate-600 mb-3 line-clamp-2">{dispute.description}</p>
                       <div className="flex items-center gap-4 text-xs text-slate-500">
-                        <span>تاريخ التقديم: {new Date(dispute.created_date).toLocaleDateString('ar-SA')}</span>
+                        <span>تاريخ التقديم: {new Date(dispute.created_at).toLocaleDateString('ar-SA')}</span>
                         <span>•</span>
-                        <span>رفعه: {dispute.raised_by}</span>
+                        <span>رفعه: {dispute.opened_by}</span>
                         {dispute.assigned_admin && (
                           <>
                             <span>•</span>
