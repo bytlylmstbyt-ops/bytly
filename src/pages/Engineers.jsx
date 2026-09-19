@@ -76,7 +76,8 @@ export default function Engineers() {
       // changing or deleting any underlying data.
       const publicEngineers = (data || []).filter((engineer) =>
         engineer.email !== "test-registration@invalid.example" &&
-        engineer.full_name !== "TEST_REGISTRATION_DO_NOT_KEEP"
+        engineer.full_name !== "TEST_REGISTRATION_DO_NOT_KEEP" &&
+        !String(engineer.email || "").endsWith("@bytly.com")
       );
 
       setEngineers(publicEngineers);
