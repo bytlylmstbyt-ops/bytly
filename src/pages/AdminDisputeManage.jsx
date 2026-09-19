@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,54 +33,38 @@ export default function AdminDisputeManage() {
   }, [disputeId]);
 
   const loadData = async () => {
-    const currentUser = await base44.auth.me();
-    setUser(currentUser);
-
-    const disputes = await base44.entities.Dispute.filter({ id: disputeId });
-    if (disputes.length > 0) {
-      const d = disputes[0];
-      setDispute(d);
-      setStatus(d.status);
-      setAssignedAdmin(d.assigned_admin || "");
-      setResolutionSummary(d.resolution_summary || "");
-    }
-    setIsLoading(false);
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      setUser(currentUser);
+      if (!currentUser || !disputeId) { setIsLoading(false); return; }
+      const { data, error } = await supabase.from("disputes").select("*,projects:project_id(id,title)").eq("id", disputeId).single();
+      if (error) throw error;
+      setDispute(data);
+      setStatus(data.status || "submitted");
+      setAssignedAdmin(data.assigned_admin || "");
+      setResolutionSummary(data.resolution_summary || "");
+    } catch (error) {
+      console.error("AdminDisputeManage load error:", error);
+      toast.error("تعذر تحميل النزاع");
+    } finally { setIsLoading(false); }
   };
 
   const handleAddNote = async () => {
     if (!adminNote.trim()) return;
     
-    const notes = dispute.admin_notes || [];
-    notes.push({
-      admin_email: user.email,
-      note: adminNote,
-      timestamp: new Date().toISOString(),
-      action_taken: "إضافة ملاحظة"
-    });
-
-    await base44.entities.Dispute.update(dispute.id, { admin_notes: notes });
-    setAdminNote("");
-    toast.success("تم إضافة الملاحظة");
-    await loadData();
+    const notes = [...(dispute.admin_notes || []), { admin_email: user?.email || "", note: adminNote, timestamp: new Date().toISOString(), action_taken: "إضافة ملاحظة" }];
+    const { error } = await supabase.from("disputes").update({ admin_notes: notes, updated_at: new Date().toISOString() }).eq("id", dispute.id);
+    if (error) { toast.error("تعذر إضافة الملاحظة"); return; }
+    setAdminNote(""); toast.success("تم إضافة الملاحظة"); await loadData();
   };
 
   const handleAddResolutionStep = async () => {
     if (!newStepTitle.trim()) return;
     
-    const steps = dispute.resolution_steps || [];
-    steps.push({
-      step_number: steps.length + 1,
-      step_title: newStepTitle,
-      description: newStepDescription,
-      status: "pending",
-      responsible_party: "both"
-    });
-
-    await base44.entities.Dispute.update(dispute.id, { resolution_steps: steps });
-    setNewStepTitle("");
-    setNewStepDescription("");
-    toast.success("تم إضافة خطوة الحل");
-    await loadData();
+    const steps = [...(dispute.resolution_steps || []), { step_number: (dispute.resolution_steps || []).length + 1, step_title: newStepTitle, description: newStepDescription, status: "pending", responsible_party: "both" }];
+    const { error } = await supabase.from("disputes").update({ resolution_steps: steps, updated_at: new Date().toISOString() }).eq("id", dispute.id);
+    if (error) { toast.error("تعذر إضافة خطوة الحل"); return; }
+    setNewStepTitle(""); setNewStepDescription(""); toast.success("تم إضافة خطوة الحل"); await loadData();
   };
 
   const handleUpdateStepStatus = async (stepIndex, newStatus) => {
@@ -90,25 +74,18 @@ export default function AdminDisputeManage() {
       steps[stepIndex].completion_date = new Date().toISOString();
     }
 
-    await base44.entities.Dispute.update(dispute.id, { resolution_steps: steps });
-    toast.success("تم تحديث حالة الخطوة");
-    await loadData();
+    const { error } = await supabase.from("disputes").update({ resolution_steps: steps, updated_at: new Date().toISOString() }).eq("id", dispute.id);
+    if (error) { toast.error("تعذر تحديث الخطوة"); return; }
+    toast.success("تم تحديث حالة الخطوة"); await loadData();
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     
-    const updates = {
-      status,
-      assigned_admin: assignedAdmin || user.email,
-      resolution_summary: resolutionSummary
-    };
-
-    if (status === 'resolved') {
-      updates.resolution_date = new Date().toISOString();
-    }
-
-    await base44.entities.Dispute.update(dispute.id, updates);
+    const updates = { status, assigned_admin: assignedAdmin || user?.email || null, resolution_summary: resolutionSummary, updated_at: new Date().toISOString() };
+    if (status === "resolved") updates.resolved_at = new Date().toISOString();
+    const { error } = await supabase.from("disputes").update(updates).eq("id", dispute.id);
+    if (error) throw error;
     toast.success("تم حفظ التغييرات");
     setIsSaving(false);
     navigate(createPageUrl("AdminDisputes"));
