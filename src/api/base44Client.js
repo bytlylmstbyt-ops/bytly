@@ -192,14 +192,14 @@ legacyBase44.entities.Contract = {
       const { data, error } = await withHardTimeout(q,10000,'انتهت مهلة قراءة العقود');
       if (!error && data?.length) return data;
     } catch {}
-    return legacyContract.filter(mapped);
+    try { return await withHardTimeout(legacyContract.filter(mapped), 7000, 'انتهت مهلة قراءة العقود القديمة'); } catch { return []; }
   },
   list: async (sort='-created_date', limit=100) => {
     try {
       const { data, error } = await withHardTimeout(supabase.from('project_contracts').select('*').limit(limit).order('created_at',{ascending:!sort.startsWith('-')}),10000,'انتهت مهلة قراءة العقود');
       if (!error && data?.length) return data;
     } catch {}
-    return legacyContract.list(sort, limit);
+    try { return await withHardTimeout(legacyContract.list(sort, limit), 7000, 'انتهت مهلة قائمة العقود القديمة'); } catch { return []; }
   }
 };
 
@@ -215,14 +215,14 @@ legacyBase44.entities.Project = { ...legacyProject,
       const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة المشروع');
       if(!error && data?.length) return data;
     } catch {}
-    return legacyProject.filter(mapped);
+    try { return await withHardTimeout(legacyProject.filter(mapped), 7000, 'انتهت مهلة قراءة المشاريع القديمة'); } catch { return []; }
   },
   list: async(sort='-created_date',limit=100)=>{
     try {
       const {data,error}=await withHardTimeout(supabase.from('projects').select('*').limit(limit).order('created_at',{ascending:!sort.startsWith('-')}),10000,'انتهت مهلة قراءة المشاريع');
       if(!error && data?.length) return data;
     } catch {}
-    return legacyProject.list(sort,limit);
+    try { return await withHardTimeout(legacyProject.list(sort,limit), 7000, 'انتهت مهلة قائمة المشاريع القديمة'); } catch { return []; }
   },
   update: async(id,payload)=>{const {data,error}=await withHardTimeout(supabase.from('projects').update({...payload,updated_at:new Date().toISOString()}).eq('id',id).select('*').single(),10000,'انتهت مهلة تحديث المشروع');if(error)throw new Error(error.message);return data},
   create: async payload=>{const row={...payload};delete row.id;delete row.created_date;const {data,error}=await withHardTimeout(supabase.from('projects').insert(row).select('*').single(),10000,'انتهت مهلة إنشاء المشروع');if(error)throw new Error(error.message);return data},
