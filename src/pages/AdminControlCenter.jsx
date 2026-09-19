@@ -137,7 +137,7 @@ export default function AdminControlCenter() {
   const [activeKey, setActiveKey] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const cat = params.get("cat");
-    const standaloneKeys = ["mcp", "secrets", "investor_center", "risk_management"];
+    const standaloneKeys = ["mcp", "secrets", "investor_center", "risk_management", "sbc"];
     if (cat && (CATEGORIES.find((c) => c.key === cat) || standaloneKeys.includes(cat))) return cat;
     const saved = readAdminFilters("AdminControlCenter");
     if (saved.activeKey && (CATEGORIES.find((c) => c.key === saved.activeKey) || standaloneKeys.includes(saved.activeKey))) return saved.activeKey;
@@ -174,6 +174,23 @@ export default function AdminControlCenter() {
     { key: "mcp", label: "MCP", icon: PlugZap, description: "إعداد وصول MCP للمساعدين الذين يعملون بالذكاء الاصطناعي.", items: [{ page: "__MCP__", label: "MCP", desc: "إعداد وصول مساعدي الذكاء الاصطناعي إلى التطبيق" }] },
     { key: "secrets", label: "الأسرار", icon: KeyRound, description: "إدارة أسماء الأسرار مع إخفاء القيم الحساسة.", items: [{ page: "__SECRETS__", label: "أسرار التطبيق", desc: "إدارة أسماء الأسرار مع إخفاء القيم الحساسة" }] },
     { key: "risk_management", label: "إدارة المخاطر", icon: ShieldAlert, description: "صفحة إدارة وتحليل مخاطر المشاريع الموجودة في المنصة، مع الحفاظ على الصفحة الأصلية كما هي.", items: [{ page: "__RISK_MANAGEMENT__", label: "إدارة المخاطر", desc: "فتح لوحة تقييم المخاطر وتحليل المخاطر والتأخيرات المحتملة" }] },
+    {
+      key: "sbc",
+      label: "الكود السعودي (SBC)",
+      icon: ClipboardList,
+      description: "قسم مستقل يجمع لوحات الامتثال والتقدم والمراجعة والمراجع المرتبطة بالكود السعودي.",
+      items: [
+        { page: "ComplianceDashboard", label: "لوحة معلومات الامتثال", desc: "لوحة تدقيق وامتثال تشمل SBC وPDPL وBalady" },
+        { page: "SBCProgressDashboard", label: "SBC Progress Dashboard", desc: "لوحة تقدم المشاريع ومراحلها وحالة المطابقة للكود السعودي" },
+        { page: "TechnicalReviewPage", label: "المراجعة الفنية — SBC", desc: "مراجعة المطابقة للكود السعودي واعتماد الحالة الفنية للمشروع" },
+        { page: "TechnicalResources", label: "مراجع الكود السعودي", desc: "قائمة معايير SBC ومدقق المطابقة والموارد الفنية" },
+        { page: "BuildingProgress", label: "تقدم المشروع", desc: "متابعة مراحل التنفيذ المرتبطة بتقدم المشروع" },
+        { page: "ConstructionTracker", label: "متابعة التنفيذ", desc: "تتبع مراحل البناء والتنفيذ للمشاريع" },
+        { page: "ConsultantApproval", label: "اعتماد الاستشاري", desc: "اعتماد المراجعات والملاحظات الفنية المرتبطة بالكود السعودي" },
+        { page: "FirmMilestoneControl", label: "تحكم مراحل المكتب", desc: "اعتماد المطابقة الفنية SBC ضمن مراحل المشروع" },
+        { page: "CertificationPage", label: "شهادة الجودة والامتثال", desc: "التقارير وشهادة الجودة والامتثال الفني للمشروع" },
+      ],
+    },
   ];
   const baseVisibleCategories = (isAdmin || permissionsAdmin) ? CATEGORIES : CATEGORIES.filter((cat) => can(categoryResource[cat.key] || cat.key, "view"));
   const visibleCategories = (isAdmin || permissionsAdmin) ? [...baseVisibleCategories, ...standaloneCategories] : baseVisibleCategories;
@@ -233,6 +250,25 @@ export default function AdminControlCenter() {
             <div id="admin-category-content" className="min-w-0 scroll-mt-6">
               <div className="mb-4"><div className="rounded-2xl bg-white border border-slate-200 shadow-sm px-5 py-4"><h2 className="text-lg font-bold text-[#2F2945]">إدارة المخاطر</h2><p className="text-xs text-slate-500 mt-1">الوصول إلى لوحة إدارة المخاطر الأصلية دون تغيير محتواها أو منطقها.</p></div></div>
               <RiskDashboard />
+            </div>
+          ) : activeKey === "sbc" ? (
+            <div id="admin-category-content" className="min-w-0 scroll-mt-6">
+              <div className="mb-4"><div className="rounded-2xl bg-white border border-slate-200 shadow-sm px-5 py-4"><h2 className="text-lg font-bold text-[#2F2945]">الكود السعودي (SBC)</h2><p className="text-xs text-slate-500 mt-1">جميع الصفحات والأدوات المرتبطة بالكود السعودي مجمعة هنا في قسم مستقل.</p></div></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {active.items.map((item) => (
+                  <Link key={item.page} to={createPageUrl(item.page)}>
+                    <Card className="h-full border border-slate-200 border-r-4 border-r-[#C9A66B] hover:shadow-lg hover:-translate-y-0.5 transition-all group bg-white">
+                      <CardContent className="p-4 flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-[#4A3F35] text-sm">{item.label}</p>
+                          <p className="text-xs text-slate-500 mt-1">{item.desc}</p>
+                        </div>
+                        <ArrowUpRight className="w-4 h-4 text-[#C9A66B] shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
             </div>
           ) : (
             <div id="admin-category-content" className="min-w-0 scroll-mt-6">
