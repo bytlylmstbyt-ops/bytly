@@ -69,6 +69,7 @@ export const ADMIN_CATEGORIES = [
   { key: "disputes", label: "النزاعات", icon: Scale, description: "متابعة وإدارة النزاعات بين الأطراف.", items: [
     { page: "AdminDisputes", label: "قائمة النزاعات", desc: "جميع النزاعات المفتوحة والمغلقة" },
     { page: "AdminDisputeManage", label: "إدارة نزاع", desc: "مراجعة واتخاذ قرار بشأن نزاع" },
+    { page: "FileDispute", label: "تقديم النزاع", desc: "نموذج تقديم النزاع مع المشروع والمرحلة والأدلة والمستندات" },
   ] },
   { key: "notifications", label: "الإشعارات", icon: Bell, description: "مركز الإشعارات وسجل الرسائل المرسلة.", items: [
     { page: "NotificationCenter", label: "مركز الإشعارات", desc: "إدارة الإشعارات المرسلة للمستخدمين" },
