@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { Search, Grid3X3, Building2, Home, Store, Factory, Paintbrush, Trees, Layers, SlidersHorizontal, X, Tag, Sparkles, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -164,7 +163,7 @@ export default function Gallery() {
     })
     .sort((a, b) => {
       if (sortBy === "featured") return (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0);
-      if (sortBy === "oldest") return new Date(a.created_date) - new Date(b.created_date);
+      if (sortBy === "oldest") return new Date(a.created_at || a.created_date) - new Date(b.created_at || b.created_date);
       return new Date(b.created_date) - new Date(a.created_date);
     });
 
@@ -202,7 +201,7 @@ export default function Gallery() {
           >
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-6">
               <Sparkles className="w-4 h-4 text-[#C9A66B]" />
-              <span className="text-amber-200 text-sm font-medium">أعمال إبداعية من نخبة المصممين</span>
+              <span className="text-amber-200 text-sm font-medium">أعمال استعراضية وأعمال موثقة من مجتمع Bytly</span>
             </div>
 
             <h1 className="text-3xl md:text-5xl font-bold text-white mb-4">
@@ -253,6 +252,10 @@ export default function Gallery() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 flex items-start gap-2">
+          <Sparkles className="w-4 h-4 mt-0.5 shrink-0" />
+          <span><strong>تنبيه:</strong> بعض الأعمال المعروضة هنا نماذج استعراضية من Bytly لأغراض تعريفية، وليست مشاريع موثقة لمهندسين محددين. الأعمال الحقيقية ستظهر من ملفات المهندسين بعد رفعها واعتمادها.</span>
+        </div>
 
         {/* Smart Design Type Filter */}
         <div className="mb-6">
