@@ -27,6 +27,16 @@ const GOOGLE_SCOPES_BY_TYPE = {
   ].join(" "),
 };
 
+// LinkedIn OIDC is used for identity linking. w_member_social is the
+// self-service permission required when Bytly also needs to publish
+// on behalf of the authenticated LinkedIn member.
+const LINKEDIN_SCOPES = [
+  "openid",
+  "profile",
+  "email",
+  "w_member_social",
+].join(" ");
+
 export function getOAuthProvider(type) {
   return PROVIDERS[type] || null;
 }
@@ -43,7 +53,6 @@ export async function startIntegrationOAuth(type) {
     throw new Error("هذا التكامل لا يملك OAuth مباشرًا مهيأً في Bytly حتى الآن.");
   }
 
-  // Keep the callback on the fixed production admin route so Supabase redirect allow-list can match it exactly.
   const redirectTo = `${window.location.origin}/auth/callback?integration=${encodeURIComponent(type)}`;
   try {
     window.sessionStorage.setItem("bytly_pending_integration", type);
@@ -61,6 +70,8 @@ export async function startIntegrationOAuth(type) {
 
   if (provider === "google" && GOOGLE_SCOPES_BY_TYPE[type]) {
     options.scopes = GOOGLE_SCOPES_BY_TYPE[type];
+  } else if (provider === "linkedin_oidc") {
+    options.scopes = LINKEDIN_SCOPES;
   }
 
   const { data, error } = await supabase.auth.linkIdentity({
