@@ -37,43 +37,31 @@ export default function AuthCallback() {
 
         const { data, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
-        const session = data?.session;
-        const user = session?.user;
+        const user = data?.session?.user;
         if (!user) throw new Error("لم يتم إنشاء جلسة تسجيل الدخول.");
 
+        // Integration OAuth callback: the Google/GitHub identity has just been linked.
+        // Return to the admin integrations center instead of treating this as a registration callback.
         if (integrationType) {
+          // Preserve the provider OAuth tokens returned by the OAuth exchange for
+          // the integration test in this browser session. Do not write them to
+          // GitHub or the database.
           try {
-            const providerToken = session?.provider_token;
-            const providerRefreshToken = session?.provider_refresh_token;
-
-            if (integrationType === "linkedin" && providerToken) {
-              const { data: saved, error: saveError } = await supabase.functions.invoke("linkedin-publish", {
-                body: {
-                  action: "save-connection",
-                  providerToken,
-                  providerRefreshToken: providerRefreshToken || null,
-                },
-              });
-              if (saveError || !saved?.ok) {
-                throw saveError || new Error(saved?.error || "تعذر حفظ اتصال LinkedIn.");
-              }
-            }
-
+            const providerToken = data?.session?.provider_token;
+            const providerRefreshToken = data?.session?.provider_refresh_token;
             if (providerToken) sessionStorage.setItem(`bytly_${integrationType}_provider_token`, providerToken);
             if (providerRefreshToken) sessionStorage.setItem(`bytly_${integrationType}_provider_refresh_token`, providerRefreshToken);
             sessionStorage.setItem("bytly_connected_integration", integrationType);
             sessionStorage.removeItem("bytly_pending_integration");
-          } catch (saveError) {
-            console.error("OAuth connection persistence error:", saveError);
-            throw saveError;
-          }
-
+          } catch (_) {}
           if (active) {
             navigate(`/AdminControlCenter?cat=integrations&oauth=${encodeURIComponent(integrationType)}&connected=1`, { replace: true });
             return;
           }
         }
 
+        // A complete non-engineer form is stored locally before the magic link is
+        // sent. Once the link creates the session, save that form and finish here.
         let pendingRegistration = false;
         try { pendingRegistration = Boolean(localStorage.getItem("bytly_pending_registration")); } catch {}
         if (pendingRegistration) {
