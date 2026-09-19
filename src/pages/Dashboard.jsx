@@ -36,7 +36,8 @@ export default function Dashboard() {
 
   const loadDashboardData = async () => {
     setIsLoading(true);
-    const currentUser = await Promise.race([base44.auth.me(), new Promise((_, reject) => setTimeout(() => reject(new Error("انتهت مهلة تحميل المستخدم")), 10000))]);
+    const currentUser = await Promise.race([base44.auth.me(), new Promise(resolve => setTimeout(() => resolve(null), 10000))]).catch(() => null);
+    if (!currentUser?.email) { setIsLoading(false); return; }
     setUser(currentUser);
     
     // Check if user is Admin
