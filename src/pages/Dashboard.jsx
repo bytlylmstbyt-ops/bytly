@@ -36,7 +36,7 @@ export default function Dashboard() {
 
   const loadDashboardData = async () => {
     setIsLoading(true);
-    const currentUser = await base44.auth.me();
+    const currentUser = await Promise.race([base44.auth.me(), new Promise((_, reject) => setTimeout(() => reject(new Error("انتهت مهلة تحميل المستخدم")), 10000))]);
     setUser(currentUser);
     
     // Check if user is Admin
@@ -51,8 +51,8 @@ export default function Dashboard() {
 
     // Check if user is engineer or client
     const [engineerData, clientData] = await Promise.all([
-      base44.entities.Engineer.filter({ email: currentUser.email }),
-      base44.entities.Client.filter({ email: currentUser.email })
+      Promise.race([base44.entities.Engineer.filter({ email: currentUser.email }), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => []),
+      Promise.race([base44.entities.Client.filter({ email: currentUser.email }), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => [])
     ]);
 
     if (engineerData.length > 0) {
@@ -81,7 +81,7 @@ export default function Dashboard() {
       setProfile(clientData[0]);
 
       // Load client stats
-      const projects = await base44.entities.Project.filter({ client_id: clientData[0].id });
+      const projects = await Promise.race([base44.entities.Project.filter({ client_id: clientData[0].id }), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => []);
 
       const totalSpent = projects.reduce((sum, p) => sum + (p.escrow_amount || 0), 0);
 
