@@ -44,7 +44,9 @@ export default function IntegrationCard({ integration, onTested }) {
       if (integration.type === "gmail") {
         const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
-        const providerToken = sessionData?.session?.provider_token;
+        const providerToken =
+          sessionData?.session?.provider_token ||
+          (() => { try { return sessionStorage.getItem("bytly_google_provider_token"); } catch (_) { return null; } })();
         if (!providerToken) {
           result = { ok: false, error: "لم تتوفر جلسة Gmail صالحة. اضغط «إعادة المصادقة» ثم أعد الفحص." };
         } else {
