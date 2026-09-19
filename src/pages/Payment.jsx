@@ -142,8 +142,9 @@ export default function PaymentPage() {
     const totalAmount = proposal.price;
     const platformCommission = totalAmount * 0.15; // 15% عمولة المنصة
     const technicalConsultantFee = totalAmount * 0.05; // 5% للمستشار الفني
-    const legalConsultantFee = totalAmount * 0.03; // 3% للمستشار القانوني
-    const engineerPayment = totalAmount - platformCommission;
+    const legalConsultantFee = totalAmount * 0.03; // 3% للمستشار القانوني عند استخدامه
+    // صافي المصمم = إجمالي المشروع - عمولة بيتلي - أتعاب المستشار - أتعاب المستشار القانوني (إن وُجد)
+    const engineerPayment = Math.max(0, totalAmount - platformCommission - technicalConsultantFee - legalConsultantFee);
 
     return {
       totalAmount,
