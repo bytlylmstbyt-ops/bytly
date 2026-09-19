@@ -46,7 +46,7 @@ export async function startIntegrationOAuth(type) {
   // Keep the callback on the fixed production admin route so Supabase's
   // Redirect URL allow-list can match it exactly. Preserve the selected
   // integration locally instead of putting it into the redirect URL.
-  const redirectTo = `${window.location.origin}/AdminControlCenter`;
+  const redirectTo = `${window.location.origin}/auth/callback?integration=${encodeURIComponent(type)}`;
   try {
     window.sessionStorage.setItem("bytly_pending_integration", type);
   } catch (_) {
