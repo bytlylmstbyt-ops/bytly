@@ -77,6 +77,7 @@ export const ADMIN_CATEGORIES = [
   ] },
   { key: "quality_certifications", label: "شهادات الجودة والاعتماد", icon: Award, description: "إدارة شهادات الجودة والاعتماد للمشاريع المكتملة، ومراجعة الشهادات التي يحصل عليها العملاء بعد إتمام المشروع والتقييم.", items: [
     { page: "AllCertifications", label: "جميع الشهادات", desc: "عرض ومراجعة جميع المشاريع المعتمدة وشهادات الجودة المرتبطة بها", priority: "high" },
+    { page: "CertificationPage", label: "صفحة شهادة الجودة", desc: "عرض الشهادة التفصيلية للمشروع ومحتواها وتصميمها وإصدار نسخة PDF", priority: "high" },
   ] },
   { key: "reports", label: "التقارير والتحليلات", icon: BarChart3, description: "تقارير الأداء والتحليلات التفصيلية.", items: [
     { page: "AdminReports", label: "تقارير المنصة", desc: "تقارير شاملة عن نشاط المنصة" },
