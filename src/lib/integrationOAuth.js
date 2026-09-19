@@ -76,7 +76,7 @@ export async function startIntegrationOAuth(type) {
       throw new Error("ربط الحسابات OAuth غير مفعّل في Supabase. فعّل Enable Manual Linking من إعدادات Authentication ثم أعد المحاولة.");
     }
     if (/redirect|redirect_to|not allowed/i.test(message)) {
-      throw new Error("عنوان الرجوع OAuth غير مسموح في Supabase. يجب السماح بـ https://mybytly.com/admincontrolcenter في Redirect URLs.");
+      throw new Error("عنوان الرجوع OAuth غير مسموح في Supabase. يجب السماح بـ https://mybytly.com/auth/callback في Redirect URLs.");
     }
     throw new Error(message);
   }
