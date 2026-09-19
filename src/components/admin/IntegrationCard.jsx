@@ -6,6 +6,7 @@ import { Loader2, RefreshCw, CheckCircle2, XCircle, AlertTriangle, Unplug, Zap, 
 import { toast } from "@/components/ui/use-toast";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { startIntegrationOAuth, isDirectOAuthSupported } from "@/lib/integrationOAuth";
+import { supabase } from "@/lib/supabaseClient";
 
 const SERVICE_ICONS = {
   stripe: "💳", google_analytics: "📊", instagram: "📸", tiktok: "🎵", googlecalendar: "📅",
@@ -39,11 +40,35 @@ export default function IntegrationCard({ integration, onTested }) {
   const handleTest = async () => {
     setTesting(true);
     try {
-      const ok = Boolean(integration.connected);
-      const result = ok ? { ok: true } : { ok: false, error: "الخدمة غير مرتبطة بعد. استخدم «ربط الخدمة» من إضافة تكامل جديد." };
-      setTestResult({ ok, message: ok ? "تم التحقق من حالة الاتصال." : result.error });
+      let result;
+      if (integration.type === "gmail") {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+        const providerToken = sessionData?.session?.provider_token;
+        if (!providerToken) {
+          result = { ok: false, error: "لم تتوفر جلسة Gmail صالحة. اضغط «إعادة المصادقة» ثم أعد الفحص." };
+        } else {
+          const { data, error } = await supabase.functions.invoke("gmail-service", {
+            body: { action: "status", providerToken },
+          });
+          if (error) throw error;
+          result = data?.ok === true
+            ? { ok: true, message: data?.email ? `تم الاتصال فعليًا بـ Gmail: ${data.email}` : "تم الاتصال فعليًا بـ Gmail." }
+            : { ok: false, error: data?.error || "تعذر التحقق من اتصال Gmail." };
+        }
+      } else {
+        const ok = Boolean(integration.connected);
+        result = ok ? { ok: true } : { ok: false, error: "الخدمة غير مرتبطة بعد. استخدم «ربط الخدمة»." };
+      }
+      const message = result.ok ? (result.message || "تم التحقق من الاتصال فعليًا.") : result.error;
+      setTestResult({ ok: result.ok, message });
       onTested?.(integration.type, result);
-      toast({ title: ok ? "✅ الاتصال سليم" : "⚠️ الخدمة غير مرتبطة", variant: ok ? "default" : "destructive" });
+      toast({ title: result.ok ? "✅ الاتصال سليم" : "⚠️ تعذر الاتصال", description: message, variant: result.ok ? "default" : "destructive" });
+    } catch (error) {
+      const message = error?.message || "تعذر فحص الاتصال.";
+      setTestResult({ ok: false, message });
+      onTested?.(integration.type, { ok: false, error: message });
+      toast({ title: "⚠️ تعذر فحص الاتصال", description: message, variant: "destructive" });
     } finally {
       setTesting(false);
     }
