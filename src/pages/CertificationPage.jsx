@@ -457,7 +457,7 @@ export default function CertificationPage() {
             </div>
 
             <h1 className="text-4xl font-bold">شهادة اعتماد فني</h1>
-            <p className="text-xl text-[#C9A66B]">منصة بيتلي - لمسة بيت</p>
+            <p className="text-xl text-[#C9A66B]">منصة بيتلي للخدمات والاستشارات الهندسية</p>
             
             <div className="h-px bg-gradient-to-r from-transparent via-[#C9A66B] to-transparent my-6"></div>
 
