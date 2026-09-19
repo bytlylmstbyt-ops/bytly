@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import {
   FileText, CheckCircle, Clock, AlertCircle, Search, Filter,
@@ -442,41 +443,84 @@ export default function MyContracts() {
 
   const loadAll = async () => {
     setIsLoading(true);
-    const user = await base44.auth.me();
-    setCurrentUser(user);
+    try {
+      const user = await Promise.race([
+        base44.auth.me(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("انتهت مهلة تحميل المستخدم")), 10000))
+      ]);
+      setCurrentUser(user);
 
-    const [engData, clientData, projectData] = await Promise.all([
-      base44.entities.Engineer.filter({ email: user.email }),
-      base44.entities.Client.filter({ email: user.email }),
-      base44.entities.Project.list("-created_date", 100),
-    ]);
+      const authUserId = user?.user_id || user?.id;
+      if (!authUserId) {
+        setContracts([]);
+        setProjects([]);
+        setEngineers([]);
+        setClients([]);
+        return;
+      }
 
-    const myEngineer = engData[0];
-    const myClient = clientData[0];
+      // IMPORTANT: MyContracts is a post-login page. Read the new contract
+      // schema directly by the authenticated Supabase user ID. Do not call
+      // legacy list() methods here: they can block while Base44 migration
+      // compatibility is unavailable.
+      const { data: contractRows, error: contractError } = await Promise.race([
+        supabase
+          .from("project_contracts")
+          .select("*")
+          .or(`client_user_id.eq.${authUserId},provider_user_id.eq.${authUserId}`)
+          .order("created_at", { ascending: false }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("انتهت مهلة تحميل العقود")), 8000))
+      ]);
 
-    // Load contracts where user is client or engineer
-    let allContracts = [];
-    if (myClient) {
-      const cc = await base44.entities.Contract.filter({ client_id: myClient.id });
-      allContracts = [...allContracts, ...cc];
+      if (contractError) throw contractError;
+
+      const currentContracts = contractRows || [];
+      setContracts(currentContracts);
+
+      // A valid homeowner account may simply have no contracts yet.
+      // In that case finish loading immediately; never wait for provider
+      // records or legacy Base44 lists.
+      if (currentContracts.length === 0) {
+        setProjects([]);
+        setEngineers([]);
+        setClients([]);
+        return;
+      }
+
+      const projectIds = [...new Set(currentContracts.map(c => c.project_id).filter(Boolean))];
+      const providerIds = [...new Set(currentContracts.map(c => c.provider_user_id).filter(Boolean))];
+      const clientUserIds = [...new Set(currentContracts.map(c => c.client_user_id).filter(Boolean))];
+
+      const [projectResult, profileResult] = await Promise.all([
+        projectIds.length
+          ? supabase.from("projects").select("*").in("id", projectIds)
+          : Promise.resolve({ data: [], error: null }),
+        [...new Set([...providerIds, ...clientUserIds])].length
+          ? supabase.from("profiles").select("id,user_id,full_name,email,role").in("user_id", [...new Set([...providerIds, ...clientUserIds])])
+          : Promise.resolve({ data: [], error: null })
+      ]);
+
+      if (!projectResult.error) setProjects(projectResult.data || []);
+      else setProjects([]);
+
+      const profiles = profileResult?.data || [];
+      const engineerMap = {};
+      const clientMap = {};
+      profiles.forEach(p => {
+        if (p.role === "engineer" || p.role === "provider") engineerMap[p.user_id] = p;
+        else clientMap[p.user_id] = p;
+      });
+      setEngineers(Object.values(engineerMap));
+      setClients(Object.values(clientMap));
+    } catch (error) {
+      console.error("Error loading contracts:", error);
+      setContracts([]);
+      setProjects([]);
+      setEngineers([]);
+      setClients([]);
+    } finally {
+      setIsLoading(false);
     }
-    if (myEngineer) {
-      const ec = await base44.entities.Contract.filter({ engineer_id: myEngineer.id });
-      // Deduplicate
-      ec.forEach(c => { if (!allContracts.find(x => x.id === c.id)) allContracts.push(c); });
-    }
-
-    // Load related entities
-    const [allEngineers, allClients] = await Promise.all([
-      base44.entities.Engineer.list("-created_date", 200),
-      base44.entities.Client.list("-created_date", 200),
-    ]);
-
-    setContracts(allContracts);
-    setProjects(projectData);
-    setEngineers(allEngineers);
-    setClients(allClients);
-    setIsLoading(false);
   };
 
   const getProject  = (id) => projects.find(p => p.id === id);
