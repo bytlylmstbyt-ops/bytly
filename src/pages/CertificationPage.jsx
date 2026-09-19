@@ -242,6 +242,13 @@ export default function CertificationPage() {
     setSubmitting(true);
 
     try {
+      // منع إعادة صرف المشروع إذا اكتملت العملية بالفعل.
+      const latestProject = (await base44.entities.Project.filter({ id: projectId }))[0];
+      if (latestProject?.client_final_approval || latestProject?.status === "completed" || latestProject?.escrow_status === "released") {
+        alert("هذا المشروع تم إتمامه وتسوية مستحقاته مسبقاً.");
+        return;
+      }
+
       // 1. Create review for engineer
       await base44.entities.Review.create({
         engineer_id: project.assigned_engineer_id,
@@ -251,7 +258,16 @@ export default function CertificationPage() {
         comment: ratings.comment,
         quality_rating: ratings.engineerRating,
         communication_rating: ratings.engineerRating,
-        delivery_rating: ratings.engineerRating
+        delivery_rating: ratings.engineerRating,
+        status: "completed"
+      });
+
+      // حفظ تقييم المستشار وتعليق العميل على المشروع حتى يظهر في السجل الإداري.
+      await base44.entities.Project.update(projectId, {
+        client_engineer_rating: ratings.engineerRating,
+        client_consultant_rating: ratings.consultantRating,
+        client_final_comment: ratings.comment || "",
+        quality_certificate_number: `CERT-${projectId.toString().slice(0, 8).toUpperCase()}`
       });
 
       // 2. Update engineer stats
@@ -267,22 +283,28 @@ export default function CertificationPage() {
         completed_projects: (engineer.completed_projects || 0) + 1
       });
 
-      // 3. Release payment to engineer
+      // 3. تسوية الضمان: بيتلي 15% + المستشار 5% + المستشار القانوني (إن وُجد) + الباقي للمصمم.
+      const escrowTotal = Number(project.escrow_amount || 0);
+      const platformCommission = escrowTotal * 0.15;
+      const consultantFee = Number(project.technical_consultant_fee || 0);
+      const legalFee = Number(project.legal_consultant_fee || 0);
+      const engineerNet = Math.max(0, escrowTotal - platformCommission - consultantFee - legalFee);
+
       await base44.entities.Engineer.update(project.assigned_engineer_id, {
-        available_balance: (engineer.available_balance || 0) + project.engineer_payment,
-        wallet_balance: (engineer.wallet_balance || 0) + project.engineer_payment
+        available_balance: (engineer.available_balance || 0) + engineerNet,
+        wallet_balance: (engineer.wallet_balance || 0) + engineerNet
       });
 
       // 4. Pay technical consultant
       if (project.technical_consultant_id && consultant) {
         await base44.entities.Consultant.update(project.technical_consultant_id, {
-          wallet_balance: (consultant.wallet_balance || 0) + project.technical_consultant_fee
+          wallet_balance: (consultant.wallet_balance || 0) + consultantFee
         });
         
         await sendNotification({
           recipientEmail: consultant.email,
           title: "تم إضافة أتعابك",
-          message: `تم إضافة ${project.technical_consultant_fee.toLocaleString('ar-SA')} ريال لمحفظتك من مشروع: ${project.title}`,
+          message: `تم إضافة ${consultantFee.toLocaleString('ar-SA')} ريال لمحفظتك من مشروع: ${project.title}`,
           type: "payment",
           projectId: projectId,
           priority: "high"
@@ -315,6 +337,7 @@ export default function CertificationPage() {
         status: "completed",
         payment_status: "completed",
         escrow_status: "released",
+        escrow_amount: 0,
         client_final_approval: true,
         client_approval_date: new Date().toISOString()
       });
@@ -324,9 +347,9 @@ export default function CertificationPage() {
         user_email: engineer.email,
         user_type: "engineer",
         type: "escrow_release",
-        amount: project.engineer_payment || 0,
+        amount: engineerNet,
         commission_amount: 0,
-        net_amount: project.engineer_payment || 0,
+        net_amount: engineerNet,
         status: "completed",
         description: `تحرير مستحقات المصمم بعد إتمام المشروع: ${project.title}`,
         project_id: projectId,
@@ -339,9 +362,9 @@ export default function CertificationPage() {
           user_email: consultant.email,
           user_type: "consultant",
           type: "consultant_fee",
-          amount: project.technical_consultant_fee,
+          amount: consultantFee,
           commission_amount: 0,
-          net_amount: project.technical_consultant_fee,
+          net_amount: consultantFee,
           status: "completed",
           description: `أتعاب المستشار الفني بعد اعتماد المشروع: ${project.title}`,
           project_id: projectId,
@@ -350,7 +373,6 @@ export default function CertificationPage() {
         });
       }
 
-      const platformCommission = Number(project.platform_commission || 0);
       if (platformCommission > 0) {
         await base44.entities.Transaction.create({
           user_email: "platform@bytly.com",
@@ -369,13 +391,11 @@ export default function CertificationPage() {
         await base44.entities.PlatformRevenue.create({
           source_type: "project_completion",
           project_id: projectId,
-          total_amount: Number(project.engineer_payment || 0) + Number(project.technical_consultant_fee || 0) + platformCommission,
-          commission_rate: project.engineer_payment || project.technical_consultant_fee
-            ? (platformCommission / (Number(project.engineer_payment || 0) + Number(project.technical_consultant_fee || 0) + platformCommission)) * 100
-            : 0,
+          total_amount: escrowTotal,
+          commission_rate: escrowTotal ? 15 : 0,
           commission_amount: platformCommission,
           seller_email: engineer.email,
-          seller_earnings: Number(project.engineer_payment || 0),
+          seller_earnings: engineerNet,
           status: "collected",
           payment_date: new Date().toISOString()
         });
@@ -385,7 +405,7 @@ export default function CertificationPage() {
       await sendNotification({
         recipientEmail: engineer.email,
         title: "تم إتمام المشروع!",
-        message: `تم تحرير ${project.engineer_payment.toLocaleString('ar-SA')} ريال لمحفظتك. تقييم العميل: ${ratings.engineerRating} نجوم`,
+        message: `تم تحرير ${engineerNet.toLocaleString('ar-SA')} ريال لمحفظتك. تقييم العميل: ${ratings.engineerRating} نجوم`,
         type: "payment",
         projectId: projectId,
         priority: "high"
