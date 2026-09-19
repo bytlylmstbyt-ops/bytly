@@ -49,8 +49,8 @@ export default function AuthCallback() {
           try {
             const providerToken = data?.session?.provider_token;
             const providerRefreshToken = data?.session?.provider_refresh_token;
-            if (providerToken) sessionStorage.setItem("bytly_google_provider_token", providerToken);
-            if (providerRefreshToken) sessionStorage.setItem("bytly_google_provider_refresh_token", providerRefreshToken);
+            if (providerToken) sessionStorage.setItem(`bytly_${integrationType}_provider_token`, providerToken);
+            if (providerRefreshToken) sessionStorage.setItem(`bytly_${integrationType}_provider_refresh_token`, providerRefreshToken);
             sessionStorage.setItem("bytly_connected_integration", integrationType);
             sessionStorage.removeItem("bytly_pending_integration");
           } catch (_) {}
