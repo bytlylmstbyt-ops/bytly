@@ -61,9 +61,9 @@ export default function Dashboard() {
 
       // Load engineer stats
       const [portfolios, proposals, reviews] = await Promise.all([
-        base44.entities.Portfolio.filter({ engineer_id: engineerData[0].id }),
-        base44.entities.Proposal.filter({ engineer_id: engineerData[0].id }),
-        base44.entities.Review.filter({ engineer_id: engineerData[0].id })
+        Promise.race([base44.entities.Portfolio.filter({ engineer_id: engineerData[0].id }), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => []),
+        Promise.race([base44.entities.Proposal.filter({ engineer_id: engineerData[0].id }), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => []),
+        Promise.race([base44.entities.Review.filter({ engineer_id: engineerData[0].id }), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => [])
       ]);
 
       setStats({
