@@ -29,6 +29,7 @@ export default function AuthCallback() {
       try {
         const params = new URLSearchParams(window.location.search);
         const code = params.get("code");
+        const integrationType = params.get("integration");
         if (code) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) throw exchangeError;
@@ -38,6 +39,16 @@ export default function AuthCallback() {
         if (sessionError) throw sessionError;
         const user = data?.session?.user;
         if (!user) throw new Error("لم يتم إنشاء جلسة تسجيل الدخول.");
+
+        // Integration OAuth callback: the Google/GitHub identity has just been linked.
+        // Return to the admin integrations center instead of treating this as a registration callback.
+        if (integrationType) {
+          try { sessionStorage.removeItem("bytly_pending_integration"); } catch {}
+          if (active) {
+            navigate(`/AdminControlCenter?cat=integrations&oauth=${encodeURIComponent(integrationType)}&connected=1`, { replace: true });
+            return;
+          }
+        }
 
         // A complete non-engineer form is stored locally before the magic link is
         // sent. Once the link creates the session, save that form and finish here.
