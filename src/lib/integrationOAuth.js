@@ -57,7 +57,7 @@ export async function startIntegrationOAuth(type) {
   const options = {
     redirectTo,
     queryParams: {
-      prompt: "select_account",
+      prompt: "consent",
       access_type: "offline",
     },
   };
