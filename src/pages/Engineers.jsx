@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, MapPin, Star, CheckCircle, 
@@ -57,13 +57,35 @@ export default function Engineers() {
 
   const loadEngineers = async () => {
     setIsLoading(true);
-    const data = await base44.entities.Engineer.filter(
-      { status: "approved" },
-      sortBy,
-      50
-    );
-    setEngineers(data);
-    setIsLoading(false);
+    try {
+      const ascending = !sortBy.startsWith("-");
+      const sortField = sortBy.replace(/^-/, "");
+
+      const { data, error } = await supabase
+        .from("engineers")
+        .select("*")
+        .eq("status", "approved")
+        .eq("is_real", true)
+        .order(sortField in { rating: 1, completed_projects: 1, years_experience: 1, created_at: 1 } ? sortField : "created_at", { ascending })
+        .limit(50);
+
+      if (error) throw error;
+
+      // Keep test/placeholder records out of the public directory without
+      // changing or deleting any underlying data.
+      const publicEngineers = (data || []).filter((engineer) =>
+        engineer.email !== "test-registration@invalid.example" &&
+        engineer.full_name !== "TEST_REGISTRATION_DO_NOT_KEEP"
+      );
+
+      setEngineers(publicEngineers);
+    } catch (error) {
+      console.error("Failed to load public engineers:", error);
+      setEngineers([]);
+      toast.error("تعذر تحميل قائمة المهندسين حالياً");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const filteredEngineers = engineers.filter(eng => {
