@@ -24,23 +24,50 @@ export default function WalletTopup() {
 
   const loadUserData = async () => {
     setIsLoading(true);
-    const currentUser = await base44.auth.me();
-    setUser(currentUser);
+    try {
+      const currentUser = await base44.auth.me();
+      setUser(currentUser);
+      if (!currentUser?.email) return;
 
-    // Check if client or engineer
-    const [clientData] = await base44.entities.Client.filter({ email: currentUser.email });
-    if (clientData) {
-      setUserProfile({ ...clientData, type: 'client' });
+      const role = String(currentUser.role || currentUser.profile?.role || '').toLowerCase();
+      let profile = null;
+
+      if (role === 'client' || role === 'investor') {
+        const data = await Promise.race([
+          base44.entities.Client.filter({ email: currentUser.email }),
+          new Promise(resolve => setTimeout(() => resolve([]), 7000))
+        ]).catch(() => []);
+        if (data?.[0]) profile = { ...data[0], type: 'client' };
+      } else if (role === 'engineer' || role === 'surveyor') {
+        const data = await Promise.race([
+          base44.entities.Engineer.filter({ email: currentUser.email }),
+          new Promise(resolve => setTimeout(() => resolve([]), 7000))
+        ]).catch(() => []);
+        if (data?.[0]) profile = { ...data[0], type: 'engineer' };
+      }
+
+      if (!profile) {
+        const clients = await Promise.race([
+          base44.entities.Client.filter({ email: currentUser.email }),
+          new Promise(resolve => setTimeout(() => resolve([]), 7000))
+        ]).catch(() => []);
+        if (clients?.[0]) profile = { ...clients[0], type: 'client' };
+      }
+      if (!profile) {
+        const engineers = await Promise.race([
+          base44.entities.Engineer.filter({ email: currentUser.email }),
+          new Promise(resolve => setTimeout(() => resolve([]), 7000))
+        ]).catch(() => []);
+        if (engineers?.[0]) profile = { ...engineers[0], type: 'engineer' };
+      }
+
+      setUserProfile(profile);
+    } catch (error) {
+      console.error("Error loading wallet topup profile:", error);
+      setUserProfile(null);
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    const [engineerData] = await base44.entities.Engineer.filter({ email: currentUser.email });
-    if (engineerData) {
-      setUserProfile({ ...engineerData, type: 'engineer' });
-    }
-
-    setIsLoading(false);
   };
 
   const handleTopup = async () => {
