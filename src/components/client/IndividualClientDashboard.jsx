@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
 import { 
   Briefcase, Wallet, Plus, ArrowLeft, Clock, 
-  TrendingUp, Settings, Shield, Unlock
+  TrendingUp, Settings, Shield, Unlock, Scale
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,12 @@ export default function IndividualClientDashboard({ client, stats, recentProject
                 <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
                   <Plus className="w-5 h-5 ml-2" />
                   مشروع جديد
+                </Button>
+              </Link>
+              <Link to={createPageUrl("MyDisputes")}>
+                <Button variant="outline" className="border-amber-300 text-amber-800 hover:bg-amber-50">
+                  <Scale className="w-5 h-5 ml-2" />
+                  النزاعات
                 </Button>
               </Link>
               <Link to={createPageUrl("Settings")}>
@@ -165,6 +171,44 @@ export default function IndividualClientDashboard({ client, stats, recentProject
           className="mb-6"
         >
           <ProjectScheduleCalendar clientId={client.id} />
+        </motion.div>
+
+        {/* Disputes & Support */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <Card className="border-amber-200 bg-gradient-to-l from-amber-50 via-white to-white shadow-lg">
+            <CardContent className="p-5 md:p-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+                    <Scale className="w-6 h-6 text-amber-700" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-[#1a1a2e]">النزاعات وحل المشكلات</h2>
+                    <p className="text-sm text-slate-600 mt-1">
+                      إذا كان لديك اعتراض على مشروع أو مرحلة، يمكنك تقديم نزاع وإرفاق المستندات والأدلة ومتابعة حالته.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                  <Link to={createPageUrl("FileDispute")}>
+                    <Button className="w-full sm:w-auto bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
+                      <Scale className="w-4 h-4 ml-2" />
+                      تقديم نزاع
+                    </Button>
+                  </Link>
+                  <Link to={createPageUrl("MyDisputes")}>
+                    <Button variant="outline" className="w-full sm:w-auto border-amber-300 text-amber-800 hover:bg-amber-50">
+                      متابعة نزاعاتي
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
 
         {/* Recent Projects */}
