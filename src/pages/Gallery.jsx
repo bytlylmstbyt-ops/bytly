@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import { Search, Grid3X3, Building2, Home, Store, Factory, Paintbrush, Trees, Layers, SlidersHorizontal, X, Tag, Sparkles, Filter } from "lucide-react";
@@ -75,16 +76,36 @@ export default function Gallery() {
 
   const loadData = async () => {
     setIsLoading(true);
-    const [portfolioData, engineerData] = await Promise.all([
-      base44.entities.Portfolio.list("-created_date", 200),
-      base44.entities.Engineer.list("-created_date", 200),
-    ]);
+    try {
+      const { data: portfolioData, error: portfolioError } = await supabase
+        .from("portfolios")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200);
 
-    const engineerMap = {};
-    engineerData.forEach(e => { engineerMap[e.id] = e.full_name; });
+      if (portfolioError) throw portfolioError;
 
-    setPortfolios(portfolioData);
-    setEngineers(engineerMap);
+      const { data: engineerData } = await supabase
+        .from("engineers")
+        .select("id,full_name,email")
+        .eq("is_real", true)
+        .eq("status", "approved");
+
+      const engineerMap = {};
+      (engineerData || []).forEach(e => {
+        engineerMap[e.id] = e.full_name;
+      });
+
+      setPortfolios(portfolioData || []);
+      setEngineers(engineerMap);
+    } catch (error) {
+      console.error("Gallery load failed:", error);
+      setPortfolios([]);
+      setEngineers({});
+    } finally {
+      setIsLoading(false);
+    }
+    return;
     setIsLoading(false);
   };
 
