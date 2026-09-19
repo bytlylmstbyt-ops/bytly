@@ -319,15 +319,67 @@ export default function CertificationPage() {
         client_approval_date: new Date().toISOString()
       });
 
-      // 7. Create transactions
+      // 7. Create settlement transactions: engineer, consultant/legal consultant, and Bytly commission
       await base44.entities.Transaction.create({
-        user_id: engineer.email,
+        user_email: engineer.email,
+        user_type: "engineer",
         type: "escrow_release",
-        amount: project.engineer_payment,
+        amount: project.engineer_payment || 0,
+        commission_amount: 0,
+        net_amount: project.engineer_payment || 0,
         status: "completed",
-        description: `استلام دفعة مشروع: ${project.title}`,
-        project_id: projectId
+        description: `تحرير مستحقات المصمم بعد إتمام المشروع: ${project.title}`,
+        project_id: projectId,
+        from_wallet: "escrow",
+        to_wallet: engineer.email
       });
+
+      if (project.technical_consultant_id && consultant && Number(project.technical_consultant_fee || 0) > 0) {
+        await base44.entities.Transaction.create({
+          user_email: consultant.email,
+          user_type: "consultant",
+          type: "consultant_fee",
+          amount: project.technical_consultant_fee,
+          commission_amount: 0,
+          net_amount: project.technical_consultant_fee,
+          status: "completed",
+          description: `أتعاب المستشار الفني بعد اعتماد المشروع: ${project.title}`,
+          project_id: projectId,
+          from_wallet: "escrow",
+          to_wallet: consultant.email
+        });
+      }
+
+      const platformCommission = Number(project.platform_commission || 0);
+      if (platformCommission > 0) {
+        await base44.entities.Transaction.create({
+          user_email: "platform@bytly.com",
+          user_type: "platform",
+          type: "commission",
+          amount: platformCommission,
+          commission_amount: platformCommission,
+          net_amount: platformCommission,
+          status: "completed",
+          description: `عمولة منصة بيتلي عند إتمام المشروع: ${project.title}`,
+          project_id: projectId,
+          from_wallet: "escrow",
+          to_wallet: "platform"
+        });
+
+        await base44.entities.PlatformRevenue.create({
+          source_type: "project_completion",
+          project_id: projectId,
+          total_amount: Number(project.engineer_payment || 0) + Number(project.technical_consultant_fee || 0) + platformCommission,
+          commission_rate: project.engineer_payment || project.technical_consultant_fee
+            ? (platformCommission / (Number(project.engineer_payment || 0) + Number(project.technical_consultant_fee || 0) + platformCommission)) * 100
+            : 0,
+          commission_amount: platformCommission,
+          seller_email: engineer.email,
+          seller_earnings: Number(project.engineer_payment || 0),
+          status: "collected",
+          payment_date: new Date().toISOString()
+        });
+      }
 
       // 8. Notify all parties
       await sendNotification({
