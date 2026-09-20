@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -58,12 +58,12 @@ export default function BuildingProgress() {
 
   const loadData = async () => {
     setIsLoading(true);
-    const u = await base44.auth.me();
+    const { data: { user: u } } = await supabase.auth.getUser();
     setUser(u);
 
     const [engineerData, clientData] = await Promise.all([
-      base44.entities.Engineer.filter({ email: u.email }),
-      base44.entities.Client.filter({ email: u.email }),
+      supabase.from("engineers").select("*").eq("email", u.email),
+      supabase.from("clients").select("*").eq("email", u.email),
     ]);
 
     let role = "client";
@@ -74,7 +74,8 @@ export default function BuildingProgress() {
       ? { engineer_email: u.email }
       : { client_email: u.email };
 
-    const records = await base44.entities.BuildingProgress.filter(filter, "-updated_date");
+    const { data: records, error: recordsError } = await supabase.from("project_milestones").select("*, projects:project_id(id,title,assigned_engineer_id,client_id)").order("updated_at", { ascending: false });
+    if (recordsError) throw recordsError;
     setProgressRecords(records);
 
     if (projectId) {
@@ -106,7 +107,7 @@ export default function BuildingProgress() {
     if (!selectedRecord) return;
     setIsSaving(true);
     const stageData = STAGES.find(s => s.key === updateForm.stage);
-    await base44.entities.BuildingProgress.update(selectedRecord.id, {
+    await supabase.from("project_milestones").update({
       current_stage: updateForm.stage,
       overall_progress: updateForm.progress || stageData?.progress || 0,
       last_update_note: updateForm.note,
@@ -122,7 +123,7 @@ export default function BuildingProgress() {
     if (!createForm.project_id) return;
     setIsSaving(true);
     const project = projects.find(p => p.id === createForm.project_id);
-    await base44.entities.BuildingProgress.create({
+    await supabase.from("project_milestones").insert({
       project_id: createForm.project_id,
       project_title: project?.title || "مشروع جديد",
       client_email: project?.created_by || "",
