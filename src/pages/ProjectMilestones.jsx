@@ -310,16 +310,18 @@ export default function ProjectMilestones() {
 
       // Issue the escrow/advance invoice from the Supabase financial ledger.
       // The invoice is linked to the project and milestone immediately after funds are held.
-      const { data: invoiceId, error: invoiceError } = await supabase.rpc(
-        "create_project_escrow_invoice",
-        {
-          p_project_id: projectId,
-          p_milestone_id: milestone.id,
-          p_buyer_user_id: client.user_id || client.id || user?.id,
-          p_amount: milestone.amount,
-          p_contract_id: project?.contract_id || null
-        }
-      );
+      const { data: authData } = await supabase.auth.getUser();
+      const supabaseBuyerId = authData?.user?.id;
+
+      const { data: invoiceId, error: invoiceError } = supabaseBuyerId
+        ? await supabase.rpc("create_project_escrow_invoice", {
+            p_project_id: projectId,
+            p_milestone_id: milestone.id,
+            p_buyer_user_id: supabaseBuyerId,
+            p_amount: milestone.amount,
+            p_contract_id: project?.contract_id || null
+          })
+        : { data: null, error: new Error("Supabase authenticated user not found") };
       if (invoiceError) {
         console.error("Invoice issuance failed after escrow hold:", invoiceError);
         alert("تم حجز المبلغ في الضمان، لكن تعذر إصدار الفاتورة تلقائياً. سيظل الحجز محفوظاً ويمكن إعادة إصدار الفاتورة من سجل المشروع.");
