@@ -42,6 +42,8 @@ export default function ProjectMilestones() {
   const [selectedMilestone, setSelectedMilestone] = useState(null);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewMilestone, setReviewMilestone] = useState(null);
+  const [vatRate, setVatRate] = useState(15);
+  const [projectCommissionRate, setProjectCommissionRate] = useState(15);
 
   useEffect(() => {
     loadData();
@@ -51,6 +53,16 @@ export default function ProjectMilestones() {
     try {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
+
+      try {
+        const { data: financialSettings } = await supabase.rpc("get_financial_settings");
+        if (financialSettings) {
+          setVatRate(Number(financialSettings.vat_rate ?? 15));
+          setProjectCommissionRate(Number(financialSettings.default_project_commission_rate ?? 15));
+        }
+      } catch (settingsError) {
+        console.warn("Could not load financial settings; using defaults:", settingsError);
+      }
 
       const [projectData] = await base44.entities.Project.filter({ id: projectId });
       setProject(projectData);
@@ -529,7 +541,8 @@ export default function ProjectMilestones() {
                           <ul className="text-xs text-blue-700 space-y-1">
                             <li>• يُحجز المبلغ في نظام الضمان (Escrow)</li>
                             <li>• يُحرّر للمهندس بعد موافقتك على العمل</li>
-                            <li>• عمولة المنصة 15% ثابتة من قيمة المشروع الكلية، موزعة بشكل متناسب</li>
+                            <li>• عمولة بيتلي الحالية {projectCommissionRate}% من قيمة المشروع، وتُسجل على مستوى المشروع</li>
+                            <li>• ضريبة القيمة المضافة {vatRate}% تُحسب بشكل منفصل على المبلغ الخاضع للضريبة</li>
                           </ul>
                         </div>
 
@@ -538,8 +551,16 @@ export default function ProjectMilestones() {
                             <span className="text-slate-600">قيمة المرحلة ({milestone.percentage}%):</span>
                             <span className="font-semibold">{milestone.amount.toLocaleString('ar-SA')} ر.س</span>
                           </div>
+                          <div className="flex justify-between mb-1 text-amber-700">
+                            <span>ضريبة القيمة المضافة ({vatRate}%):</span>
+                            <span className="font-semibold">{(milestone.amount * vatRate / 100).toLocaleString('ar-SA')} ر.س</span>
+                          </div>
+                          <div className="flex justify-between pt-2 border-t border-slate-200 font-bold">
+                            <span>إجمالي ما يدفعه العميل:</span>
+                            <span>{(milestone.amount * (1 + vatRate / 100)).toLocaleString('ar-SA')} ر.س</span>
+                          </div>
                           <p className="text-slate-500 text-xs mt-1">
-                            ✓ المبلغ يشمل حصة متناسبة من العمولة الثابتة (15% من المشروع)
+                            ✓ العمولة محفوظة على مستوى المشروع، وليست عمولة جديدة مستقلة لكل مرحلة.
                           </p>
                         </div>
 
@@ -548,7 +569,7 @@ export default function ProjectMilestones() {
                           className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white"
                         >
                           <DollarSign className="w-4 h-4 ml-2" />
-                          اختر طريقة الدفع ({milestone.amount.toLocaleString('ar-SA')} ريال)
+                          اختر طريقة الدفع ({(milestone.amount * (1 + vatRate / 100)).toLocaleString('ar-SA')} ريال شامل الضريبة)
                         </Button>
                       </div>
                     )}
@@ -645,15 +666,15 @@ export default function ProjectMilestones() {
                             <span className="font-semibold">{milestone.amount.toLocaleString('ar-SA')} ر.س</span>
                           </div>
                           <div className="flex justify-between text-orange-700">
-                            <span>حصة العمولة ({milestone.percentage}% × 15%):</span>
-                            <span className="font-semibold">- {(milestone.amount * 0.15).toLocaleString('ar-SA')} ر.س</span>
+                            <span>عمولة بيتلي ({projectCommissionRate}% من المشروع):</span>
+                            <span className="font-semibold">تُسجل على مستوى المشروع</span>
                           </div>
                           <div className="flex justify-between pt-2 border-t border-blue-300 text-green-700 font-bold">
                             <span>يستلم المهندس:</span>
                             <span>{(milestone.amount * 0.85).toLocaleString('ar-SA')} ر.س</span>
                           </div>
                           <p className="text-xs text-blue-700 mt-2 pt-2 border-t border-blue-200">
-                            ℹ️ العمولة 15% ثابتة من قيمة المشروع الكلية، تُجمع بشكل متناسب مع كل مرحلة
+                            ℹ️ النسبة الحالية لعمولة بيتلي محفوظة مركزيًا ويمكن تغييرها لاحقًا حسب شرائح قيمة/تمويل المشروع.
                           </p>
                         </div>
                         <Button
