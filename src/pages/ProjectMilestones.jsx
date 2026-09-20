@@ -265,75 +265,49 @@ export default function ProjectMilestones() {
 
   const payWithWallet = async () => {
     const milestone = selectedMilestone;
-    
-    if (client.wallet_balance < milestone.amount) {
-      alert("رصيد المحفظة غير كافٍ");
-      return;
-    }
+    if (!milestone) return;
 
     setProcessingPayment(true);
     try {
-      const now = new Date().toISOString();
+      // Supabase performs the wallet deduction, escrow hold, financial milestone
+      // creation, and advance-invoice issuance atomically.
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData?.user?.id) {
+        throw new Error("SUPABASE_AUTH_REQUIRED");
+      }
 
-      // Deduct from wallet and hold in escrow
-      await base44.entities.Client.update(client.id, {
-        wallet_balance: client.wallet_balance - milestone.amount
-      });
+      const { data, error } = await supabase.rpc(
+        "fund_project_milestone_from_wallet",
+        {
+          p_project_id: projectId,
+          p_milestone_id: milestone.id
+        }
+      );
 
-      await base44.entities.ProjectMilestone.update(milestone.id, {
-        status: 'in_progress',
-        start_date: now
-      });
+      if (error) throw error;
 
-      await base44.entities.Project.update(projectId, {
-        escrow_amount: (project.escrow_amount || 0) + milestone.amount,
-        escrow_status: 'held'
-      });
-
-      await base44.entities.Engineer.update(engineer.id, {
-        pending_balance: (engineer.pending_balance || 0) + milestone.amount
-      });
-
-      await base44.entities.Transaction.create({
-        user_email: client.email,
-        user_type: 'client',
-        type: 'escrow_hold',
-        amount: milestone.amount,
-        status: 'held_in_escrow',
-        description: `حجز دفعة (من المحفظة): ${milestone.title}`,
-        project_id: projectId,
-        milestone_id: milestone.id,
-        payment_method: 'wallet',
-        balance_before: client.wallet_balance,
-        balance_after: client.wallet_balance - milestone.amount
-      });
-
-      // Issue the escrow/advance invoice from the Supabase financial ledger.
-      // The invoice is linked to the project and milestone immediately after funds are held.
-      const { data: authData } = await supabase.auth.getUser();
-      const supabaseBuyerId = authData?.user?.id;
-
-      const { data: invoiceId, error: invoiceError } = supabaseBuyerId
-        ? await supabase.rpc("create_project_escrow_invoice", {
-            p_project_id: projectId,
-            p_milestone_id: milestone.id,
-            p_buyer_user_id: supabaseBuyerId,
-            p_amount: milestone.amount,
-            p_contract_id: project?.contract_id || null
-          })
-        : { data: null, error: new Error("Supabase authenticated user not found") };
-      if (invoiceError) {
-        console.error("Invoice issuance failed after escrow hold:", invoiceError);
-        alert("تم حجز المبلغ في الضمان، لكن تعذر إصدار الفاتورة تلقائياً. سيظل الحجز محفوظاً ويمكن إعادة إصدار الفاتورة من سجل المشروع.");
-      } else {
-        console.info("Escrow invoice issued:", invoiceId);
+      if (!data?.ok) {
+        throw new Error("MILESTONE_FUNDING_FAILED");
       }
 
       setShowPaymentDialog(false);
       await loadData();
+
+      if (data.invoice_id) {
+        alert("تم حجز مبلغ المرحلة في الضمان وإصدار الفاتورة بنجاح.");
+      } else {
+        alert("تم حجز مبلغ المرحلة في الضمان بنجاح.");
+      }
     } catch (error) {
-      console.error("Error paying with wallet:", error);
-      alert("حدث خطأ في الدفع");
+      console.error("Error funding milestone from wallet:", error);
+      const message = String(error?.message || "");
+      if (message.includes("INSUFFICIENT_WALLET_BALANCE")) {
+        alert("رصيد المحفظة غير كافٍ");
+      } else if (message.includes("INVALID_MILESTONE_STATUS")) {
+        alert("هذه المرحلة لا يمكن تمويلها حاليًا.");
+      } else {
+        alert("حدث خطأ أثناء حجز المبلغ. لم يتم اعتماد العملية جزئيًا.");
+      }
     } finally {
       setProcessingPayment(false);
     }
