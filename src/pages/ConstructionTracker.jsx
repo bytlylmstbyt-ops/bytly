@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import { jsPDF } from "jspdf";
@@ -80,57 +80,48 @@ export default function ConstructionTracker() {
 
   const loadData = async () => {
     setIsLoading(true);
-    const u = await base44.auth.me();
-    setUser(u);
-
-    const [engs, clients] = await Promise.all([
-      base44.entities.Engineer.filter({ email: u.email }),
-      base44.entities.Client.filter({ email: u.email }),
-    ]);
-
-    let role = null;
-    let list = [];
-    if (engs.length > 0) {
-      role = "engineer";
-      list = await base44.entities.BuildingProgress.filter({ engineer_email: u.email }, "-updated_date");
-    } else {
-      role = "client";
-      list = await base44.entities.BuildingProgress.filter({ client_email: u.email }, "-updated_date");
-    }
-
-    setUserRole(role);
-    setTrackers(list);
-    if (list.length > 0 && !trackerId) setSelectedTracker(list[0]);
-
-    if (role === "engineer") {
-      const projs = await base44.entities.Project.filter({ assigned_engineer_id: engs[0]?.id });
-      setProjects(projs);
-    }
-    setIsLoading(false);
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData?.user) throw authError || new Error("لم يتم العثور على المستخدم");
+      const u = authData.user;
+      const fullName = u.user_metadata?.full_name || u.user_metadata?.name || u.email || "";
+      setUser({ id: u.id, email: u.email, full_name: fullName });
+      const [{ data: engs }] = await Promise.all([
+        supabase.from("engineers").select("id,email,full_name,user_id").eq("email", u.email).limit(1),
+      ]);
+      const isEngineer = (engs || []).length > 0;
+      setUserRole(isEngineer ? "engineer" : "client");
+      let q = supabase.from("construction_trackers").select("*").order("updated_at", { ascending: false });
+      q = isEngineer ? q.eq("engineer_email", u.email) : q.eq("client_email", u.email);
+      const { data: list, error } = await q;
+      if (error) throw error;
+      const normalized = (list || []).map(t => ({ ...t, phases: Array.isArray(t.phases) && t.phases.length ? t.phases : buildDefaultPhases(), updates_log: Array.isArray(t.updates_log) ? t.updates_log : [] }));
+      setTrackers(normalized);
+      if (normalized.length > 0 && !trackerId) setSelectedTracker(normalized[0]);
+      if (isEngineer && engs?.[0]?.id) {
+        const { data: projs } = await supabase.from("projects").select("id,title,assigned_engineer_id,client_user_id,client_id,start_date,deadline").eq("assigned_engineer_id", engs[0].id).order("updated_at", { ascending: false });
+        setProjects(projs || []);
+      } else setProjects([]);
+    } catch (error) { console.error("ConstructionTracker load failed:", error); setTrackers([]); }
+    finally { setIsLoading(false); }
   };
 
   const handleCreateTracker = async () => {
-    if (!newForm.project_title || !newForm.client_email) return;
+    if (!newForm.project_title || !newForm.client_email || !user?.email) return;
     setIsSaving(true);
-    const eng = await base44.entities.Engineer.filter({ email: user.email });
-    const tracker = await base44.entities.BuildingProgress.create({
-      project_title: newForm.project_title,
-      client_email: newForm.client_email,
-      engineer_email: user.email,
-      engineer_name: user.full_name,
-      start_date: newForm.start_date,
-      expected_end_date: newForm.expected_end_date,
-      current_phase: "design",
-      overall_progress: 0,
-      phases: buildDefaultPhases(),
-      updates_log: [],
-      status: "active",
-    });
-    setTrackers(p => [tracker, ...p]);
-    setSelectedTracker(tracker);
-    setShowNewModal(false);
-    setNewForm({ project_title: "", client_email: "", start_date: "", expected_end_date: "" });
-    setIsSaving(false);
+    try {
+      const matchingProject = projects.find(p => p.title === newForm.project_title);
+      const { data: tracker, error } = await supabase.from("construction_trackers").insert({
+        project_id: matchingProject?.id || null, project_title: newForm.project_title, client_email: newForm.client_email,
+        engineer_email: user.email, engineer_name: user.full_name, start_date: newForm.start_date || null,
+        expected_end_date: newForm.expected_end_date || null, current_phase: "design", overall_progress: 0,
+        phases: buildDefaultPhases(), updates_log: [], status: "active", created_by: user.id,
+      }).select("*").single();
+      if (error) throw error;
+      setTrackers(p => [tracker, ...p]); setSelectedTracker(tracker); setShowNewModal(false);
+      setNewForm({ project_title: "", client_email: "", start_date: "", expected_end_date: "" });
+    } catch (error) { console.error("ConstructionTracker create failed:", error); }
+    finally { setIsSaving(false); }
   };
 
   const startEditPhase = (phase) => {
@@ -171,23 +162,20 @@ export default function ConstructionTracker() {
       by: user.full_name,
     };
 
-    const updated = await base44.entities.BuildingProgress.update(selectedTracker.id, {
-      phases: updatedPhases,
-      overall_progress: overall,
-      current_phase: currentPhase,
+    const { data: updated, error: updateError } = await supabase.from("construction_trackers").update({
+      phases: updatedPhases, overall_progress: overall, current_phase: currentPhase,
       updates_log: [...(selectedTracker.updates_log || []), logEntry],
-    });
+    }).eq("id", selectedTracker.id).select("*").single();
+    if (updateError) throw updateError;
 
-    // Notify client
     try {
-      await base44.functions.invoke("notifyPhaseChange", {
-        tracker_id: selectedTracker.id,
-        phase_label: editForm.label,
-        progress: editForm.progress,
-        client_email: selectedTracker.client_email,
-        project_title: selectedTracker.project_title,
+      const { data: clientRow } = await supabase.from("clients").select("user_id").eq("email", selectedTracker.client_email).limit(1).maybeSingle();
+      if (clientRow?.user_id) await supabase.from("notifications").insert({
+        user_id: clientRow.user_id, type: "construction_update", title: "تحديث في تقدم المشروع",
+        body: `تم تحديث مرحلة "${editForm.label}" إلى ${editForm.progress}% في مشروع ${selectedTracker.project_title}`,
+        entity_type: "construction_tracker", entity_id: selectedTracker.id,
       });
-    } catch (e) {}
+    } catch (notifyError) { console.warn("ConstructionTracker notification failed:", notifyError); }
 
     setSelectedTracker({ ...selectedTracker, ...updated });
     setTrackers(p => p.map(t => t.id === updated.id ? { ...t, ...updated } : t));
@@ -336,9 +324,10 @@ export default function ConstructionTracker() {
     if (!logMessage.trim() || !selectedTracker) return;
     setIsSaving(true);
     const logEntry = { date: new Date().toISOString(), message: logMessage, by: user.full_name, phase: selectedTracker.current_phase };
-    const updated = await base44.entities.BuildingProgress.update(selectedTracker.id, {
-      updates_log: [...(selectedTracker.updates_log || []), logEntry],
-    });
+    const { data: updated, error: updateError } = await supabase.from("construction_trackers")
+      .update({ updates_log: [...(selectedTracker.updates_log || []), logEntry] })
+      .eq("id", selectedTracker.id).select("*").single();
+    if (updateError) throw updateError;
     setSelectedTracker({ ...selectedTracker, ...updated });
     setTrackers(p => p.map(t => t.id === updated.id ? { ...t, ...updated } : t));
     setLogMessage("");
