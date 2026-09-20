@@ -55,30 +55,20 @@ export default function PaymentMethodChoice({
         </CardContent>
       </Card>
 
-      {/* Card Payment (Stripe with Apple Pay & Google Pay) */}
-      <Card className="cursor-pointer border-2 border-slate-200 hover:border-purple-600 hover:shadow-lg transition-all">
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-purple-600 flex items-center justify-center">
-                <CreditCard className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="font-semibold text-[#1a1a2e]">بطاقة / محفظة رقمية</p>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  <Badge variant="outline" className="text-xs">مدى</Badge>
-                  <Badge variant="outline" className="text-xs">Visa</Badge>
-                  <Badge variant="outline" className="text-xs">Apple Pay</Badge>
-                  <Badge variant="outline" className="text-xs">Google Pay</Badge>
-                </div>
-              </div>
+      {/* Saudi payment integration — future PIS/bank connector */}
+      <Card className="border-2 border-amber-200 bg-amber-50/40">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-600 flex items-center justify-center shrink-0">
+              <Building className="w-5 h-5 text-white" />
             </div>
-            <Button
-              onClick={onStripePay}
-              variant="outline"
-            >
-              متابعة
-            </Button>
+            <div>
+              <p className="font-semibold text-[#1a1a2e]">الدفع البنكي السعودي</p>
+              <p className="text-sm text-slate-600 mt-1">
+                سيتم ربط الدفع البنكي عبر مزود سعودي متوافق مع متطلبات البنك المركزي السعودي بعد اكتمال الترخيص والحساب البنكي التجاري.
+              </p>
+              <Badge variant="outline" className="mt-2 text-xs">قيد الربط — بدون Stripe</Badge>
+            </div>
           </div>
         </CardContent>
       </Card>
