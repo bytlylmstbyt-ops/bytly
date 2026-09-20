@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -306,6 +307,25 @@ export default function ProjectMilestones() {
         balance_before: client.wallet_balance,
         balance_after: client.wallet_balance - milestone.amount
       });
+
+      // Issue the escrow/advance invoice from the Supabase financial ledger.
+      // The invoice is linked to the project and milestone immediately after funds are held.
+      const { data: invoiceId, error: invoiceError } = await supabase.rpc(
+        "create_project_escrow_invoice",
+        {
+          p_project_id: projectId,
+          p_milestone_id: milestone.id,
+          p_buyer_user_id: client.user_id || client.id || user?.id,
+          p_amount: milestone.amount,
+          p_contract_id: project?.contract_id || null
+        }
+      );
+      if (invoiceError) {
+        console.error("Invoice issuance failed after escrow hold:", invoiceError);
+        alert("تم حجز المبلغ في الضمان، لكن تعذر إصدار الفاتورة تلقائياً. سيظل الحجز محفوظاً ويمكن إعادة إصدار الفاتورة من سجل المشروع.");
+      } else {
+        console.info("Escrow invoice issued:", invoiceId);
+      }
 
       setShowPaymentDialog(false);
       await loadData();
