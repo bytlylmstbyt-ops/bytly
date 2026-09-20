@@ -37,9 +37,9 @@ export default function ConsultantApprovalPage() {
         currentConsultant = { id:user.id, user_id:user.id, full_name:profile.full_name || "المدير العام", email:user.email, type:"admin" };
       } else {
         const { data: firm } = await supabase.from("engineering_firms").select("id, owner_user_id, company_name, email, wallet_balance, total_projects, status").eq("owner_user_id", user.id).maybeSingle();
-        const { data: consultantProfile } = await supabase.from("consultants").select("id, user_id, full_name, email, status").eq("user_id", user.id).maybeSingle();
+        const { data: consultantProfile } = await supabase.from("consultants").select("id, user_id, full_name, email, status, consultant_kind, sce_professional_degree, sce_classification, engineers_society_membership_number, engineering_firm_id, verification_status").eq("user_id", user.id).maybeSingle();
         if (!firm && !consultantProfile) {
-          alert("غير مصرح لك بالوصول لهذه الصفحة. يجب أن تكون شركة هندسية استشارية معتمدة.");
+          alert("غير مصرح لك بالوصول لهذه الصفحة. يجب أن تكون استشاريًا فرديًا أو مكتبًا/شركة استشارية معتمدة.");
           navigate(-1); return;
         }
         currentConsultant = firm ? { ...firm, type:"engineering_firm", full_name:firm.company_name } : { ...consultantProfile, type:"consultant" };
@@ -101,9 +101,10 @@ export default function ConsultantApprovalPage() {
       if (error) throw error;
 
       const fee = Number(data?.consultant_fee || 0).toLocaleString("ar-SA");
+      const consultantLabel = data?.consultant_profile_type === "engineering_firm" ? "المكتب/الشركة الاستشارية" : "الاستشاري الفرد";
       alert(formData.compliance_status === "rejected"
         ? "تم رفض الطلب وإرسال التقرير للمهندس"
-        : "تم اعتماد الطلب بنجاح وإضافة أتعاب المراجعة (" + fee + " ريال) لمحفظتك");
+        : "تم اعتماد الطلب بنجاح وإضافة أتعاب المراجعة (" + fee + " ريال) لمحفظة " + consultantLabel);
       navigate(-1);
     } catch (error) {
       console.error("Error submitting approval:", error);
@@ -127,7 +128,7 @@ export default function ConsultantApprovalPage() {
 
         <motion.div initial={{opacity:0,y:-20}} animate={{opacity:1,y:0}} className="text-center">
           <h1 className="text-3xl font-bold gradient-text mb-2">اعتماد طلب السحب</h1>
-          <p className="text-slate-600">مراجعة واعتماد الطلب من قبل الشركة الهندسية الاستشارية المعتمدة</p>
+          <p className="text-slate-600">مراجعة واعتماد الطلب من قبل استشاري فرد أو مكتب/شركة استشارية هندسية معتمدة</p>
         </motion.div>
 
         <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}}>
