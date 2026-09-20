@@ -149,124 +149,59 @@ export default function ProjectMilestones() {
       return;
     }
 
-    // Optimistic update — mark as approved instantly in UI
-    setMilestones(prev => prev.map(m =>
-      m.id === milestone.id
-        ? { ...m, client_approved: true, payment_released: true, status: "approved" }
-        : m
-    ));
-
     try {
-      const now = new Date().toISOString();
-      
-      // FIXED COMMISSION LOGIC: 15% of total project, distributed proportionally
-      // The milestone amount already includes the proportional commission
-      const commissionRate = 0.15; // Fixed rate for entire project
-      const commissionAmount = milestone.amount * commissionRate; // Proportional share
-      const netAmount = milestone.amount - commissionAmount;
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData?.user?.id) throw new Error("SUPABASE_AUTH_REQUIRED");
 
-      // Update milestone status
-      await base44.entities.ProjectMilestone.update(milestone.id, {
-        client_approved: true,
-        client_approval_date: now,
-        payment_released: true,
-        payment_release_date: now,
-        status: "approved",
-        completion_date: now
+      const { data: financialMilestone, error: financialError } = await supabase
+        .from("project_financial_milestones")
+        .select("id, escrow_status, release_status, dispute_status")
+        .eq("project_id", projectId)
+        .eq("milestone_id", milestone.id)
+        .maybeSingle();
+
+      if (financialError) throw financialError;
+      if (!financialMilestone) {
+        alert("لم يتم العثور على حجز الضمان لهذه المرحلة. يجب تمويل المرحلة أولاً.");
+        return;
+      }
+
+      const { data, error } = await supabase.rpc("release_project_milestone", {
+        p_milestone_id: financialMilestone.id,
+        p_actor_user_id: authData.user.id,
+        p_notes: "اعتماد العميل وتحرير الدفعة"
       });
 
-      // Move from pending to available balance (after commission)
-      const currentPending = engineer.pending_balance || 0;
-      const currentAvailable = engineer.available_balance || 0;
-
-      await base44.entities.Engineer.update(engineer.id, {
-        pending_balance: currentPending - milestone.amount,
-        available_balance: currentAvailable + netAmount
-      });
-
-      // Create escrow release transaction
-      await base44.entities.Transaction.create({
-        user_email: engineer.email,
-        user_type: "engineer",
-        type: "escrow_release",
-        amount: milestone.amount,
-        commission_amount: commissionAmount,
-        net_amount: netAmount,
-        status: "completed",
-        description: `تحرير دفعة: ${milestone.title} (بعد خصم 15% عمولة)`,
-        project_id: projectId,
-        milestone_id: milestone.id,
-        from_wallet: "escrow",
-        to_wallet: engineer.email
-      });
-
-      // Create commission transaction for platform
-      await base44.entities.Transaction.create({
-        user_email: "platform@bytly.com",
-        user_type: "platform",
-        type: "commission",
-        amount: commissionAmount,
-        commission_amount: commissionAmount,
-        status: "completed",
-        description: `عمولة المنصة (حصة متناسبة ${milestone.percentage}% من إجمالي 15%) - ${milestone.title}`,
-        project_id: projectId,
-        milestone_id: milestone.id,
-        from_wallet: engineer.email,
-        to_wallet: "platform"
-      });
-
-      // Create platform revenue record
-      await base44.entities.PlatformRevenue.create({
-        source_type: "project_milestone",
-        project_id: projectId,
-        milestone_id: milestone.id,
-        total_amount: milestone.amount,
-        commission_rate: commissionRate, // Fixed 15% of total project
-        commission_amount: commissionAmount, // Proportional collection
-        seller_email: engineer.email,
-        seller_earnings: netAmount,
-        status: "collected",
-        payment_date: now
-      });
-
-      // Deduct from client's locked funds
-      await base44.entities.Client.update(client.id, {
-        wallet_balance: (client.wallet_balance || 0) - milestone.amount
-      });
-
-      // Update project escrow
-      await base44.entities.Project.update(projectId, {
-        escrow_amount: (project.escrow_amount || 0) - milestone.amount
-      });
-
-      // Notify engineer with net amount breakdown
-      await sendNotification({
-        recipientEmail: engineer.email,
-        title: "تم تحرير دفعة مرحلة",
-        message: `تم تحرير ${netAmount.toLocaleString('ar-SA')} ر.س (${milestone.amount.toLocaleString('ar-SA')} - عمولة 15%) للمرحلة: ${milestone.title}`,
-        type: "payment",
-        projectId: projectId,
-        priority: "high"
-      });
+      if (error) throw error;
+      if (!data?.ok) throw new Error("MILESTONE_RELEASE_FAILED");
 
       await loadData();
 
-      // Check if client already reviewed this milestone — if not, show review modal
-      const existingReviews = await base44.entities.Review.filter({
-        client_id: client.id,
-        milestone_id: milestone.id
-      });
-      if (existingReviews.length === 0) {
-        setReviewMilestone(milestone);
-        setShowReviewModal(true);
+      const releasedProviderAmount = Number(data.provider_amount || 0);
+      if (engineer?.email) {
+        await sendNotification({
+          recipientEmail: engineer.email,
+          title: "تم تحرير دفعة مرحلة",
+          message: `تم تحرير ${releasedProviderAmount.toLocaleString("ar-SA")} ر.س للمرحلة: ${milestone.title} بعد اعتماد العميل.`,
+          type: "payment",
+          projectId,
+          priority: "high"
+        });
       }
+
+      alert("تم اعتماد المرحلة وتحرير مستحقاتها بنجاح.");
     } catch (error) {
-      // Roll back optimistic update on failure
-      setMilestones(prev => prev.map(m =>
-        m.id === milestone.id ? milestone : m
-      ));
-      console.error("Error approving milestone:", error);
-      alert("حدث خطأ في الموافقة");
+      console.error("Error approving/releasing milestone:", error);
+      const message = String(error?.message || "");
+      if (message.includes("MILESTONE_NOT_FUNDED")) {
+        alert("لا يمكن تحرير الدفعة قبل حجز مبلغ المرحلة في الضمان.");
+      } else if (message.includes("MILESTONE_IN_DISPUTE")) {
+        alert("لا يمكن تحرير الدفعة أثناء وجود نزاع مفتوح.");
+      } else if (message.includes("ALREADY_RELEASED")) {
+        alert("تم تحرير هذه الدفعة مسبقًا.");
+      } else {
+        alert("حدث خطأ أثناء اعتماد المرحلة وتحرير الدفعة. لم يتم تنفيذ العملية جزئيًا.");
+      }
     }
   };
 
