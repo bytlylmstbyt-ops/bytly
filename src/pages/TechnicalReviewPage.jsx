@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,37 +44,61 @@ export default function TechnicalReviewPage() {
 
   const loadData = async () => {
     try {
-      const user = await base44.auth.me();
-      
-      // Load Engineering Consulting Firm
-      const firms = await base44.entities.EngineeringFirm.filter({ 
-        email: user.email 
-      });
-      
-      // Fallback to old Consultant entity for backward compatibility
-      const consultants = await base44.entities.Consultant.filter({ 
-        email: user.email 
-      });
-      
-      const consultantData = firms[0] || consultants[0];
-      
-      if (!consultantData) {
-        alert("غير مصرح لك بالوصول. يجب أن تكون شركة هندسية استشارية معتمدة.");
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) {
+        alert("غير مصرح لك بالوصول. يرجى تسجيل الدخول أولاً.");
         return;
       }
-      
+
+      // Load the current consulting firm first; fallback to the Consultant profile.
+      const { data: firms, error: firmError } = await supabase
+        .from("engineering_firms")
+        .select("*")
+        .eq("email", user.email)
+        .limit(1);
+
+      if (firmError) throw firmError;
+
+      const { data: consultantRows, error: consultantError } = await supabase
+        .from("consultants")
+        .select("*")
+        .eq("user_id", user.id)
+        .limit(1);
+
+      if (consultantError) throw consultantError;
+
+      const consultantData = firms?.[0] || consultantRows?.[0];
+
+      if (!consultantData) {
+        alert("غير مصرح لك بالوصول. يجب أن تكون شركة هندسية استشارية أو مستشارًا فنيًا.");
+        return;
+      }
+
       setConsultant(consultantData);
 
-      // Load project
-      const [projectData] = await base44.entities.Project.filter({ id: projectId });
+      // Load project from the migrated Supabase projects table.
+      const { data: projectData, error: projectError } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("id", projectId)
+        .maybeSingle();
+
+      if (projectError) throw projectError;
       setProject(projectData);
 
-      // Check for existing review
-      const reviews = await base44.entities.TechnicalReview.filter({ 
-        project_id: projectId 
-      });
-      
-      if (reviews.length > 0) {
+      if (!projectData) return;
+
+      // TechnicalReview is now a native Supabase table.
+      const { data: reviews, error: reviewError } = await supabase
+        .from("technical_reviews")
+        .select("*")
+        .eq("project_id", projectData.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (reviewError) throw reviewError;
+
+      if (reviews?.length > 0) {
         const review = reviews[0];
         setExistingReview(review);
         setReviewData({
@@ -86,11 +110,11 @@ export default function TechnicalReviewPage() {
           approval_status: review.approval_status || "pending"
         });
         if (review.report_file) setReportFile(review.report_file);
-        if (review.corrected_files) setCorrectedFiles(review.corrected_files);
+        if (Array.isArray(review.corrected_files)) setCorrectedFiles(review.corrected_files);
       }
-
     } catch (error) {
       console.error("Error loading data:", error);
+      alert("تعذر تحميل بيانات المراجعة الفنية.");
     } finally {
       setLoading(false);
     }
@@ -132,17 +156,30 @@ export default function TechnicalReviewPage() {
       };
 
       if (existingReview) {
-        await base44.entities.TechnicalReview.update(existingReview.id, reviewPayload);
+        const { error } = await supabase
+          .from("technical_reviews")
+          .update(reviewPayload)
+          .eq("id", existingReview.id);
+        if (error) throw error;
       } else {
-        await base44.entities.TechnicalReview.create(reviewPayload);
+        const { data: createdReview, error } = await supabase
+          .from("technical_reviews")
+          .insert({ ...reviewPayload, created_by: (await supabase.auth.getUser()).data.user?.id })
+          .select()
+          .single();
+        if (error) throw error;
+        setExistingReview(createdReview);
       }
 
-      // Update project status
-      await base44.entities.Project.update(project.id, {
-        status: "awaiting_technical_review",
-        technical_consultant_id: consultant.id,
-        technical_consultant_type: consultant.company_name ? "engineering_firm" : "consultant"
-      });
+      // Keep project fields aligned with the existing Supabase schema.
+      const { error: projectUpdateError } = await supabase
+        .from("projects")
+        .update({
+          status: "awaiting_technical_review",
+          technical_consultant_id: consultant.id
+        })
+        .eq("id", project.id);
+      if (projectUpdateError) throw projectUpdateError;
 
       alert("تم حفظ المراجعة الفنية بنجاح");
       loadData();
@@ -172,25 +209,39 @@ export default function TechnicalReviewPage() {
       };
 
       if (existingReview) {
-        await base44.entities.TechnicalReview.update(existingReview.id, reviewPayload);
+        const { error } = await supabase
+          .from("technical_reviews")
+          .update(reviewPayload)
+          .eq("id", existingReview.id);
+        if (error) throw error;
       } else {
-        const review = await base44.entities.TechnicalReview.create({
-          project_id: project.id,
-          consultant_id: consultant.id,
-          ...reviewPayload,
-          review_date: new Date().toISOString(),
-          consultant_fee: 500
-        });
+        const { data: review, error } = await supabase
+          .from("technical_reviews")
+          .insert({
+            project_id: project.id,
+            consultant_id: consultant.id,
+            ...reviewPayload,
+            review_date: new Date().toISOString(),
+            consultant_fee: 500,
+            created_by: (await supabase.auth.getUser()).data.user?.id
+          })
+          .select()
+          .single();
+        if (error) throw error;
         setExistingReview(review);
       }
 
-      // Update project
-      await base44.entities.Project.update(project.id, {
-        status: "technical_approved",
-        technical_review_status: "approved",
-        technical_review_date: new Date().toISOString(),
-        technical_report_file: reportFile
-      });
+      // Update project using only columns that exist in Supabase.
+      const { error: projectUpdateError } = await supabase
+        .from("projects")
+        .update({
+          status: "technical_approved",
+          technical_review_status: "approved",
+          technical_review_date: new Date().toISOString(),
+          technical_report_file: reportFile
+        })
+        .eq("id", project.id);
+      if (projectUpdateError) throw projectUpdateError;
 
       alert("تم اعتماد المشروع فنياً بنجاح");
       loadData();
