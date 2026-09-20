@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import {
   BookOpen, Search, ExternalLink, Link2,
@@ -155,40 +155,41 @@ export default function TechnicalResources() {
 
   const loadData = async () => {
     setIsLoading(true);
-    const currentUser = await base44.auth.me();
-    setUser(currentUser);
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      setUser(currentUser || null);
 
-    const [stored, engineers, projectsData] = await Promise.all([
-      base44.entities.TechnicalResource.list("-created_date"),
-      base44.entities.Engineer.filter({ email: currentUser.email }),
-      base44.entities.Project.filter({ assigned_engineer_id: { $exists: true } }),
-    ]);
-
-    if (engineers.length > 0) setEngineerProfile(engineers[0]);
-
-    if (stored.length === 0) {
-      // Seed default resources
-      const created = await base44.entities.TechnicalResource.bulkCreate(DEFAULT_RESOURCES);
-      setResources(created);
-    } else {
+      // Technical resources are currently maintained as a local reference catalog.
+      // This keeps the page independent from Base44 while the dedicated Supabase
+      // technical_resources table is introduced later without changing this UI.
+      const localKey = "bytly_sbc_technical_resources_v1";
+      let stored = [];
+      try { stored = JSON.parse(localStorage.getItem(localKey) || "[]"); } catch {}
+      if (!Array.isArray(stored) || stored.length === 0) {
+        stored = DEFAULT_RESOURCES.map((resource, index) => ({ ...resource, id: `sbc-default-${index + 1}`, linked_project_ids: [] }));
+        localStorage.setItem(localKey, JSON.stringify(stored));
+      }
       setResources(stored);
-    }
 
-    setProjects(projectsData);
-    setIsLoading(false);
+      const { data: projectsData, error } = await supabase
+        .from("projects")
+        .select("id,title,assigned_engineer_id")
+        .not("assigned_engineer_id", "is", null);
+      if (!error) setProjects(projectsData || []);
+    } catch (error) {
+      console.error("Error loading SBC technical resources:", error);
+      setResources(DEFAULT_RESOURCES.map((resource, index) => ({ ...resource, id: `sbc-default-${index + 1}`, linked_project_ids: [] })));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleLinkToProject = async () => {
     if (!selectedProjectId || !linkingResource) return;
     const current = linkingResource.linked_project_ids || [];
     if (current.includes(selectedProjectId)) return;
-    await base44.entities.TechnicalResource.update(linkingResource.id, {
-      linked_project_ids: [...current, selectedProjectId]
-    });
-    setResources(prev => prev.map(r => r.id === linkingResource.id
-      ? { ...r, linked_project_ids: [...current, selectedProjectId] }
-      : r
-    ));
+    const updatedResource = { ...linkingResource, linked_project_ids: [...current, selectedProjectId] };
+    setResources(prev => { const next = prev.map(r => r.id === linkingResource.id ? updatedResource : r); localStorage.setItem("bytly_sbc_technical_resources_v1", JSON.stringify(next)); return next; });
     setShowLinkModal(false);
     setSelectedProjectId("");
     setLinkingResource(null);
@@ -196,14 +197,14 @@ export default function TechnicalResources() {
 
   const handleUnlinkProject = async (resource, projectId) => {
     const updated = (resource.linked_project_ids || []).filter(id => id !== projectId);
-    await base44.entities.TechnicalResource.update(resource.id, { linked_project_ids: updated });
-    setResources(prev => prev.map(r => r.id === resource.id ? { ...r, linked_project_ids: updated } : r));
+    const updatedResource = { ...resource, linked_project_ids: updated };
+    setResources(prev => { const next = prev.map(r => r.id === resource.id ? updatedResource : r); localStorage.setItem("bytly_sbc_technical_resources_v1", JSON.stringify(next)); return next; });
   };
 
   const handleAddResource = async () => {
     if (!newResource.title) return;
-    const created = await base44.entities.TechnicalResource.create(newResource);
-    setResources(prev => [created, ...prev]);
+    const created = { ...newResource, id: `sbc-local-${Date.now()}`, linked_project_ids: [] };
+    setResources(prev => { const next = [created, ...prev]; localStorage.setItem("bytly_sbc_technical_resources_v1", JSON.stringify(next)); return next; });
     setShowAddModal(false);
     setNewResource({ title: "", category: "sbc_general", version: "", issuing_authority: "", summary: "", external_url: "", is_mandatory: false, status: "active" });
   };
