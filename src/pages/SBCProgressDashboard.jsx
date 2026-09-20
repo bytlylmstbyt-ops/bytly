@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import SBCOverviewStats from "@/components/sbc/SBCOverviewStats";
 import SBCProjectProgressChart from "@/components/sbc/SBCProjectProgressChart";
 import SBCComplianceChart from "@/components/sbc/SBCComplianceChart";
@@ -38,12 +38,65 @@ export default function SBCProgressDashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [progressList, reviewList] = await Promise.all([
-        base44.entities.BuildingProgress.list("-updated_date", 100),
-        base44.entities.TechnicalReview.list("-updated_date", 100),
-      ]);
-      setProjects(progressList || []);
-      setReviews(reviewList || []);
+      // بيانات التقدم الحالية تأتي من Supabase. نستخدم المشاريع والمراحل المالية
+      // كمصدر موحد بدل Base44، مع دعم حالة المراجعة الفنية الموجودة على المشروع.
+      const [{ data: projectRows, error: projectError }, { data: milestoneRows, error: milestoneError }] =
+        await Promise.all([
+          supabase
+            .from("projects")
+            .select("id,title,updated_at,phase,phase_progress,status,lifecycle_status,assigned_engineer_id,technical_review_status,technical_review_date")
+            .order("updated_at", { ascending: false })
+            .limit(100),
+          supabase
+            .from("project_milestones")
+            .select("id,project_id,title,sequence_no,status,progress,updated_at")
+            .order("sequence_no", { ascending: true })
+            .limit(500),
+        ]);
+
+      if (projectError) throw projectError;
+      if (milestoneError) throw milestoneError;
+
+      const milestonesByProject = {};
+      (milestoneRows || []).forEach((m) => {
+        if (!milestonesByProject[m.project_id]) milestonesByProject[m.project_id] = [];
+        milestonesByProject[m.project_id].push(m);
+      });
+
+      const progressList = (projectRows || []).map((p) => {
+        const milestones = milestonesByProject[p.id] || [];
+        const overall = Number(p.phase_progress || 0);
+        const currentStage = p.phase || (milestones.find((m) => m.status === "in_progress")?.title) || "design";
+        return {
+          id: p.id,
+          project_id: p.id,
+          project_title: p.title || "مشروع",
+          overall_progress: overall,
+          current_stage: currentStage,
+          stages: milestones.map((m) => ({
+            stage: m.title,
+            name: m.title,
+            progress: Number(m.progress || 0),
+            percentage: Number(m.progress || 0),
+          })),
+          technical_review_status: p.technical_review_status,
+        };
+      });
+
+      const reviewList = (projectRows || [])
+        .filter((p) => p.technical_review_status)
+        .map((p) => ({
+          project_id: p.id,
+          compliance_status:
+            p.technical_review_status === "approved" || p.technical_review_status === "compliant"
+              ? "compliant"
+              : p.technical_review_status === "rejected" || p.technical_review_status === "non_compliant"
+                ? "non_compliant"
+                : "pending",
+        }));
+
+      setProjects(progressList);
+      setReviews(reviewList);
     } catch (error) {
       console.error("Dashboard load error:", error);
     } finally {
