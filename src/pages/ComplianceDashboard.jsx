@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -333,18 +333,77 @@ export default function ComplianceDashboard() {
   async function loadData() {
     setLoading(true);
     try {
-      const [p, c, t, l, m] = await Promise.all([
-        base44.entities.Project.list("-created_date", 100),
-        base44.entities.Contract.list("-created_date", 200),
-        base44.entities.TechnicalReview.list("-created_date", 200),
-        base44.entities.LegalReview.list("-created_date", 200),
-        base44.entities.ProjectMilestone.list("-created_date", 500),
+      const [
+        { data: projectRows, error: projectError },
+        { data: contractRows, error: contractError },
+        { data: milestoneRows, error: milestoneError },
+      ] = await Promise.all([
+        supabase
+          .from("projects")
+          .select("id,title,description,category,status,created_at,assigned_engineer_id,technical_review_status,technical_review_date")
+          .order("created_at", { ascending: false })
+          .limit(100),
+        supabase
+          .from("project_contracts")
+          .select("id,project_id,title,amount,status,signed_at,created_at")
+          .order("created_at", { ascending: false })
+          .limit(200),
+        supabase
+          .from("project_milestones")
+          .select("id,project_id,title,status,progress,created_at,updated_at")
+          .order("created_at", { ascending: false })
+          .limit(500),
       ]);
-      setProjects(p || []);
-      setContracts(c || []);
-      setTechReviews(t || []);
-      setLegalReviews(l || []);
-      setMilestones(m || []);
+
+      if (projectError) throw projectError;
+      if (contractError) throw contractError;
+      if (milestoneError) throw milestoneError;
+
+      const p = (projectRows || []).map((row) => ({
+        ...row,
+        created_date: row.created_at,
+        engineer_id: row.assigned_engineer_id,
+      }));
+
+      const contracts = (contractRows || []).map((row) => ({
+        ...row,
+        total_amount: Number(row.amount || 0),
+        contract_type: row.title || "اتفاقية خدمة",
+        client_signature: !!row.signed_at,
+        engineer_signature: !!row.signed_at,
+        created_date: row.created_at,
+      }));
+
+      const techReviews = (projectRows || [])
+        .filter((row) => row.technical_review_status)
+        .map((row) => ({
+          project_id: row.id,
+          compliance_status:
+            row.technical_review_status === "approved" || row.technical_review_status === "compliant"
+              ? "compliant"
+              : row.technical_review_status === "rejected" || row.technical_review_status === "non_compliant"
+                ? "non_compliant"
+                : "pending",
+          approval_status:
+            row.technical_review_status === "approved" ? "approved" : "pending",
+          review_date: row.technical_review_date,
+          created_date: row.technical_review_date,
+        }));
+
+      // لا يوجد حاليًا جدول LegalReview مستقل في مخطط Supabase؛ لا نخترع بيانات.
+      const legalReviews = [];
+
+      const milestones = (milestoneRows || []).map((row) => ({
+        ...row,
+        created_date: row.created_at,
+        deliverable_files: [],
+      }));
+
+      setProjects(p);
+      setContracts(contracts);
+      setTechReviews(techReviews);
+      setLegalReviews(legalReviews);
+      setMilestones(milestones);
     } catch (e) {
       console.error(e);
     }
