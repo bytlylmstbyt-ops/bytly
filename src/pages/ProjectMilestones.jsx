@@ -325,25 +325,6 @@ export default function ProjectMilestones() {
     }
   };
 
-  const payWithStripe = async () => {
-    setProcessingPayment(true);
-    try {
-      const response = await base44.functions.invoke('createMilestoneCheckout', {
-        milestone_id: selectedMilestone.id,
-        project_id: projectId,
-        success_url: `${window.location.origin}/payment-success?project_id=${projectId}`,
-        cancel_url: `${window.location.origin}/project-milestones?id=${projectId}`
-      });
-
-      if (response.data.url) {
-        window.location.href = response.data.url;
-      }
-    } catch (error) {
-      alert("حدث خطأ في إنشاء الدفع");
-      setProcessingPayment(false);
-    }
-  };
-
   const requestInvoice = async () => {
     const milestone = selectedMilestone;
     
@@ -586,7 +567,6 @@ export default function ProjectMilestones() {
                             walletBalance={client.wallet_balance || 0}
                             showInvoiceOption={client.client_type === "investor"}
                             onWalletPay={payWithWallet}
-                            onStripePay={payWithStripe}
                             onInvoiceRequest={requestInvoice}
                           />
                         )}
