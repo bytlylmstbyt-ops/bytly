@@ -181,7 +181,6 @@ export default function CreateProject() {
       assigned_engineer_id: preselectedEngineerId || null,
       client_user_id: user?.id || null,
       service_scope: { services: formData.service_scope, requested_by_client: true },
-      stage_count: finalPlan?.length || null
     }).select().single();
     if (projectError) throw projectError;
 
@@ -189,6 +188,7 @@ export default function CreateProject() {
     let finalPlan=formData.milestones.length>0?formData.milestones.map((m,i)=>({service_key:m.service_key||formData.service_scope[i]||"custom",title:m.title,description:m.description,percentage:Number(m.percentage)||0,days:Number(m.due_days)||7})):buildStagePlan();
     if(finalPlan.length===0) finalPlan=formData.project_type==="small"?[{service_key:"custom",title:"المرحلة الأولى",description:"بدء وتنفيذ الخدمة المطلوبة",percentage:50,days:7},{service_key:"custom",title:"التسليم النهائي",description:"مراجعة وتسليم المخرجات",percentage:50,days:7}]:[{service_key:"custom",title:"الدراسة والتخطيط",description:"تحديد المتطلبات ونطاق العمل",percentage:15,days:14},{service_key:"custom",title:"التصميم",description:"إعداد التصميم والمخططات",percentage:25,days:21},{service_key:"custom",title:"التنفيذ",description:"تنفيذ الأعمال المتفق عليها",percentage:40,days:60},{service_key:"custom",title:"التسليم النهائي",description:"المراجعة والتسليم",percentage:20,days:14}];
     if((formData.project_type==="small"&&finalPlan.length>3)||(formData.project_type==="large"&&finalPlan.length>8)){alert(formData.project_type==="small"?"المشروع الصغير حدّه الأقصى 3 مراحل.":"المشروع الكبير حدّه الأقصى 8 مراحل رئيسية.");setIsLoading(false);return;}
+    await supabase.from("projects").update({ stage_count: finalPlan.length, service_scope: { services: formData.service_scope, requested_by_client: true } }).eq("id", newProject.id);
     if(Math.abs(finalPlan.reduce((s,m)=>s+Number(m.percentage||0),0)-100)>0.01){alert("يجب أن يساوي مجموع نسب المراحل 100%.");setIsLoading(false);return;}
     for(let i=0;i<finalPlan.length;i++){const m=finalPlan[i];await base44.entities.ProjectMilestone.create({project_id:newProject.id,title:m.title,description:m.description,amount:(projectBudget*m.percentage)/100,percentage:m.percentage,order:i+1,sequence_no:i+1,service_key:m.service_key,status:"pending",due_date:new Date(Date.now()+m.days*86400000).toISOString().split("T")[0]});}
     
