@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,8 +37,8 @@ export default function EmailSentLogTab({ onRefresh, limit }) {
 
       const [gmailRes, sentEmails, campaigns] = await Promise.allSettled([
         gmailPromise,
-        base44.entities.SentEmail.list("-created_date", limit || 200),
-        base44.entities.EmailCampaign.filter({ status: "scheduled" }, "-created_date", 50),
+        supabase.from("email_logs").select("*").order("created_at",{ascending:false}).limit(limit || 200),
+        supabase.from("email_campaigns").select("*").eq("status","scheduled").order("created_at",{ascending:false}).limit(50),
       ]);
 
       const gmailEmails = (gmailRes.status === "fulfilled" ? gmailRes.value?.data?.emails || gmailRes.value?.emails : []) || [];
