@@ -14,7 +14,7 @@ import AIInteriorDesigner from './pages/AIInteriorDesigner';
 import AIMaterialAdvisor from './pages/AIMaterialAdvisor';
 import AIRecommender from './pages/AIRecommender';
 import AIRenovation from './pages/AIRenovation';
-import AdminAIAssistant from './pages/AdminAIAssistantSupabase';
+import AdminAIAssistant from './pages/AdminAIAssistant';
 import AdminAuthenticationSettings from './pages/AdminAuthenticationSettings';
 import AdminBoard from './pages/AdminBoard';
 import AdminCategories from './pages/AdminCategories';
