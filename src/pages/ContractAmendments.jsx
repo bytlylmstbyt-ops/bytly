@@ -131,7 +131,7 @@ export default function ContractAmendments() {
       });
 
       // Send notifications
-      await base44.entities.Notification.create({
+      await supabase.from("notifications").insert({
         recipient_email: client.email,
         title: "طلب تعديل على العقد",
         message: `تم تقديم طلب تعديل على العقد. يرجى المراجعة والموافقة`,
