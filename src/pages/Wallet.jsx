@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { Loader2, Building2, User as UserIcon } from "lucide-react";
 import WithdrawalForm from "../components/wallet/WithdrawalForm";
@@ -32,97 +32,33 @@ export default function WalletPage() {
   const loadWalletData = async () => {
     setIsLoading(true);
     try {
-      const currentUser = await base44.auth.me();
+      const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !currentUser?.email) throw authError || new Error("انتهت جلسة الدخول");
       setUser(currentUser);
-      if (!currentUser?.email) return;
-
-      const role = String(currentUser.role || currentUser.profile?.role || '').toLowerCase();
-      let profile = null;
-      let type = null;
-
-      if (role === 'client' || role === 'investor') {
-        const clientData = await Promise.race([
-          base44.entities.Client.filter({ email: currentUser.email }),
-          new Promise(resolve => setTimeout(() => resolve([]), 7000))
-        ]).catch(() => []);
-        if (clientData?.[0]) {
-          profile = clientData[0];
-          type = clientData[0].client_type === 'investor' ? 'investor' : 'client';
-        }
-      } else if (role === 'engineer' || role === 'surveyor') {
-        const engineerData = await Promise.race([
-          base44.entities.Engineer.filter({ email: currentUser.email }),
-          new Promise(resolve => setTimeout(() => resolve([]), 7000))
-        ]).catch(() => []);
-        if (engineerData?.[0]) {
-          profile = engineerData[0];
-          type = 'engineer';
-        }
+      const { data: profileRow, error: profileError } = await supabase.from("profiles").select("*").eq("user_id", currentUser.id).maybeSingle();
+      if (profileError) throw profileError;
+      let profile = profileRow || {
+        id: currentUser.id, user_id: currentUser.id, email: currentUser.email,
+        full_name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || "",
+        wallet_balance: 0, client_type: "individual", profile_image: null
+      };
+      let type = String(profileRow?.role || "").toLowerCase();
+      if (type === "provider" || type === "surveyor") type = "engineer";
+      if (type !== "engineer" && type !== "investor") type = "client";
+      const { data: wallet } = await supabase.from("wallet_accounts").select("*").eq("user_id", currentUser.id).maybeSingle();
+      profile = { ...profile, wallet_balance: wallet?.available_balance || 0, held_balance: wallet?.held_balance || 0 };
+      const { data: trans, error: transError } = await supabase.from("wallet_transactions").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: false }).limit(100);
+      if (transError) throw transError;
+      setTransactions(trans || []);
+      if (type === "client" || type === "investor") {
+        const { data: projectsList, error: projectsError } = await supabase.from("projects").select("*").eq("client_user_id", currentUser.id).order("created_at", { ascending: false });
+        if (projectsError) throw projectsError;
+        setProjects(projectsList || []);
       }
-
-      // Legacy users can have a generic profile.role='user'. In that case check
-      // client then engineer, but never block on unrelated provider entities.
-      if (!profile) {
-        const clientData = await Promise.race([
-          base44.entities.Client.filter({ email: currentUser.email }),
-          new Promise(resolve => setTimeout(() => resolve([]), 7000))
-        ]).catch(() => []);
-        if (clientData?.[0]) {
-          profile = clientData[0];
-          type = clientData[0].client_type === 'investor' ? 'investor' : 'client';
-        }
-      }
-      if (!profile) {
-        const engineerData = await Promise.race([
-          base44.entities.Engineer.filter({ email: currentUser.email }),
-          new Promise(resolve => setTimeout(() => resolve([]), 7000))
-        ]).catch(() => []);
-        if (engineerData?.[0]) {
-          profile = engineerData[0];
-          type = 'engineer';
-        }
-      }
-
-      if (profile) {
-        const trans = await Promise.race([
-          base44.entities.Transaction.filter({ user_email: currentUser.email }, '-created_date', 100),
-          new Promise(resolve => setTimeout(() => resolve([]), 5000))
-        ]).catch(() => []);
-        setTransactions(trans);
-
-        if (type === 'client' || type === 'investor') {
-          const projectsList = await Promise.race([
-            base44.entities.Project.filter({ client_id: profile.id }, '-created_date'),
-            new Promise(resolve => setTimeout(() => resolve([]), 7000))
-          ]).catch(() => []);
-          setProjects(projectsList);
-        } else if (type === 'engineer') {
-          const withdrawals = await Promise.race([
-            base44.entities.WithdrawalRequest.filter({ engineer_id: profile.id }, '-created_date'),
-            new Promise(resolve => setTimeout(() => resolve([]), 5000))
-          ]).catch(() => []);
-          setWithdrawalRequests(withdrawals);
-        }
-      }
-
-      // Homeowners do not need an engineer/provider profile to access the wallet.
-      // If authentication is valid but no provider row exists yet, use the authenticated
-      // identity as a minimal client wallet profile instead of blocking on "complete profile".
-      if (!profile) {
-        profile = {
-          id: currentUser.id,
-          user_id: currentUser.id,
-          email: currentUser.email,
-          full_name: currentUser.full_name || currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || '',
-          wallet_balance: 0,
-          client_type: 'individual',
-          profile_image: null,
-          phone: currentUser.phone || currentUser.user_metadata?.phone || null,
-        };
-        type = 'client';
-      }
+      const { data: withdrawals } = await supabase.from("withdrawal_requests").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: false }).limit(100);
+      setWithdrawalRequests(withdrawals || []);
       setUserProfile(profile);
-      setUserType(type || 'client');
+      setUserType(type);
     } catch (error) {
       console.error("Error loading wallet data:", error);
       setUserProfile(null);
