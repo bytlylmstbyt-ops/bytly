@@ -94,10 +94,26 @@ export default function PendingApprovals() {
     setSheetLoading(true);
     setSheetError(null);
     try {
-      const res = await base44.functions.invoke("fetchPendingRegistrations", {});
-      setSheetPending(res.data?.pending || []);
-      setSpreadsheetId(res.data?.spreadsheet_id || null);
-      if (res.data?.message && (res.data?.pending || []).length === 0) setSheetError(res.data.message);
+      const { data, error: pendingError } = await supabase
+        .from("pending_registrations")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (pendingError) throw pendingError;
+      const normalized = (data || []).map((row) => ({
+        ...row.row,
+        id: row.id,
+        row_number: row.id,
+        full_name: row.full_name || row.row?.full_name || "",
+        email: row.email || row.row?.email || "",
+        phone: row.phone || row.row?.phone || "",
+        user_type: row.role || row.row?.user_type || row.row?.role || "",
+        city: row.row?.city || "",
+        specialization: row.row?.specialization || "",
+        created_at: row.created_at,
+      }));
+      setSheetPending(normalized);
+      setSpreadsheetId(null);
     } catch (err) {
       setSheetError("تعذّر تحميل بيانات Google Sheets");
     }
@@ -109,23 +125,16 @@ export default function PendingApprovals() {
   const handleSheetAction = async (item, action) => {
     setActing(`sheet-${item.row_number}-${action}`);
     try {
-      await base44.functions.invoke("updateSheetRegistrationStatus", {
-        row_number: item.row_number,
-        status: action,
-        email: item.email,
-        spreadsheet_id: spreadsheetId,
-      });
-      setSheetPending(prev => prev.filter(p => p.row_number !== item.row_number));
+      const { error: statusError } = await supabase
+        .from("pending_registrations")
+        .delete()
+        .eq("id", item.id);
+      if (statusError) throw statusError;
+      setSheetPending(prev => prev.filter(p => p.id !== item.id));
     } catch (err) {
       alert("حدث خطأ في التحديث");
     }
     setActing(null);
-  };
-
-  const entityMap = {
-    engineer: "Engineer",
-    surveyor: "SurveyorProfile",
-    firm: "EngineeringFirm",
   };
 
   const handleAction = async (item, action) => {
