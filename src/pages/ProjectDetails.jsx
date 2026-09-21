@@ -82,7 +82,7 @@ export default function ProjectDetails() {
   const [driveExportResult, setDriveExportResult] = useState(null);
   const [contracts, setContracts] = useState([]);
   const [transactions, setTransactions] = useState([]);
-  const [selectedProposal, setSelectedProposal] = useState(null);
+  const [selectedProposal, setSelectedProposal] = useState(null);\n  const [withdrawals, setWithdrawals] = useState([]);\n  const [withdrawalActionLoading, setWithdrawalActionLoading] = useState(false);
 
   useEffect(() => {
     if (projectId) loadData();
@@ -110,7 +110,7 @@ export default function ProjectDetails() {
     setProject(projectData[0]);
     setProposals(proposalsData);
     setContracts(contractsData);
-    setTransactions(transactionsData);
+    setTransactions(transactionsData);\n    const { data: withdrawalData } = await supabase.from("withdrawal_requests").select("id,amount,status,consultant_approval,owner_approval,request_date,project_id").eq("project_id", projectId).order("request_date", { ascending: false });\n    setWithdrawals(withdrawalData || []);
 
     const engMap = {};
     engineersData.forEach(eng => { engMap[eng.id] = eng; });
@@ -346,7 +346,7 @@ export default function ProjectDetails() {
   const hasSubmittedProposal = userEngineer && proposals.some(p => p.engineer_id === userEngineer.id);
   const canExportDrive = user && (isClient || isEngineer || user.role === 'admin');
 
-  const switchTab = (tabId) => {
+  const approveWithdrawalAsOwner = async (withdrawalId) => {\n    if (!window.confirm("هل تؤكد اعتماد طلب السحب هذا؟ لن يتم التحويل إلا بعد اعتمادك واعتماد الاستشاري ثم تنفيذ الإدارة.")) return;\n    setWithdrawalActionLoading(true);\n    try {\n      const { error } = await supabase.rpc("owner_approve_withdrawal", { p_withdrawal_id: withdrawalId, p_notes: null });\n      if (error) throw error;\n      await loadData();\n      alert("تم اعتماد طلب السحب من مالك المشروع.");\n    } catch (error) {\n      console.error("Owner withdrawal approval error:", error);\n      alert("تعذر اعتماد طلب السحب: " + (error.message || "خطأ غير معروف"));\n    } finally { setWithdrawalActionLoading(false); }\n  };\n\n  const switchTab = (tabId) => {
     setActiveTab(tabId);
     setTimeout(() => {
       const el = document.getElementById(`tab-${tabId}`);
@@ -902,7 +902,7 @@ export default function ProjectDetails() {
               </div>
             )}
 
-            {/* Payments Tab */}
+            {/* Withdrawal approvals */}\n            {isClient && withdrawals.length > 0 && (\n              <Card className="border-amber-200 bg-amber-50/40">\n                <CardHeader><CardTitle className="text-base">اعتماد طلبات السحب للمشروع</CardTitle></CardHeader>\n                <CardContent className="space-y-3">\n                  {withdrawals.map((w) => (\n                    <div key={w.id} className="p-4 rounded-lg border bg-white flex flex-col md:flex-row md:items-center md:justify-between gap-3">\n                      <div>\n                        <p className="font-semibold">{Number(w.amount || 0).toLocaleString("ar-SA")} ر.س</p>\n                        <p className="text-xs text-slate-500 mt-1">\n                          الاستشاري: {w.consultant_approval ? "✓ معتمد" : "⏳ بانتظار الاعتماد"} · مالك المشروع: {w.owner_approval ? "✓ معتمد" : "⏳ بانتظار اعتمادك"}\n                        </p>\n                      </div>\n                      {!w.owner_approval && w.consultant_approval && w.status !== "rejected" && w.status !== "completed" && (\n                        <Button disabled={withdrawalActionLoading} onClick={() => approveWithdrawalAsOwner(w.id)} className="bg-green-600 hover:bg-green-700">\n                          {withdrawalActionLoading ? <Loader2 className="w-4 h-4 ml-2 animate-spin" /> : <CheckCircle className="w-4 h-4 ml-2" />}\n                          اعتماد السحب\n                        </Button>\n                      )}\n                    </div>\n                  ))}\n                </CardContent>\n              </Card>\n            )}\n\n            {/* Payments Tab */}
             {activeTab === "payments" && (
               <div id="tab-payments" className="space-y-6">
                 <ProjectPaymentsSection project={project} transactions={transactions} user={user} userEngineer={userEngineer} onUpdated={loadData} />
