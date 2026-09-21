@@ -50,6 +50,16 @@ export default function WalletPage() {
       const { data: trans, error: transError } = await supabase.from("wallet_transactions").select("*").eq("user_id", currentUser.id).order("created_at", { ascending: false }).limit(100);
       if (transError) throw transError;
       setTransactions(trans || []);
+      if (type === "contractor" || type === "supplier") {
+        const table = type === "contractor" ? "contractors" : "suppliers";
+        const { data: provider } = await supabase.from(table).select("*").eq("user_id", currentUser.id).maybeSingle();
+        if (provider) {
+          profile = { ...profile, ...provider, wallet_balance: wallet?.available_balance || 0, held_balance: wallet?.held_balance || 0 };
+          const assignmentColumn = type === "contractor" ? "assigned_contractor_id" : "assigned_supplier_id";
+          const { data: providerProjects } = await supabase.from("projects").select("*").eq(assignmentColumn, provider.id).order("created_at", { ascending: false });
+          setProjects(providerProjects || []);
+        }
+      }
       if (type === "client" || type === "investor") {
         const { data: projectsList, error: projectsError } = await supabase.from("projects").select("*").eq("client_user_id", currentUser.id).order("created_at", { ascending: false });
         if (projectsError) throw projectsError;
@@ -100,7 +110,7 @@ export default function WalletPage() {
               <h1 className="text-3xl md:text-4xl font-bold gradient-text">
                 {t('wallet.title')}
               </h1>
-            {userType === "engineer" && (
+            {(userType === "engineer" || userType === "contractor" || userType === "supplier") && (
               <div className="flex items-center gap-1 text-sm text-slate-600">
                 <UserIcon className="w-4 h-4" />
                 <span>{t('wallet.userTypes.engineer')}</span>
@@ -128,12 +138,12 @@ export default function WalletPage() {
           <p className="text-slate-600">{t('wallet.subtitle')}</p>
         </motion.div>
 
-        {/* Engineer Wallet View */}
-        {userType === "engineer" && (
+        {/* Provider Wallet View */}
+        {(userType === "engineer" || userType === "contractor" || userType === "supplier") && (
           <>
             <LiveWalletDashboard
               profile={userProfile}
-              userType="engineer"
+              userType={userType}
               userEmail={user?.email}
             />
             <div className="mt-6">
@@ -141,7 +151,9 @@ export default function WalletPage() {
             </div>
             <div className="mt-6 grid md:grid-cols-2 gap-6">
               <WithdrawalForm
-                engineer={userProfile}
+                engineer={userType === "engineer" ? userProfile : undefined}
+                contractor={userType === "contractor" ? userProfile : undefined}
+                supplier={userType === "supplier" ? userProfile : undefined}
                 onSuccess={loadWalletData}
               />
               <DepositPanel
