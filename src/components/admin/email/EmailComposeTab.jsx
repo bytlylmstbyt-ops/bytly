@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,10 +25,12 @@ export default function EmailComposeTab({ onSent }) {
   useEffect(() => {
     (async () => {
       try {
-        const [tmpls, usrs] = await Promise.all([
-          base44.entities.EmailTemplate.list("-created_date", 50),
-          base44.entities.User.list(),
+        const [{ data: tmpls, error: tmplError }, { data: usrs, error: userError }] = await Promise.all([
+          supabase.from("email_templates").select("*").order("created_at", { ascending: false }).limit(50),
+          supabase.from("profiles").select("*"),
         ]);
+        if (tmplError) throw tmplError;
+        if (userError) throw userError;
         setTemplates(tmpls || []);
         setUsers(usrs || []);
       } catch (e) { console.error("Failed to load:", e); }
@@ -82,7 +84,7 @@ export default function EmailComposeTab({ onSent }) {
           setSaving(false);
           return;
         }
-        await base44.entities.EmailCampaign.create({
+        await supabase.from("email_campaigns").insert({
           ...form,
           status: "scheduled",
           total_recipients: recipients.length,
@@ -94,14 +96,19 @@ export default function EmailComposeTab({ onSent }) {
         let sent = 0, failed = 0;
         for (const email of recipients) {
           try {
-            await base44.integrations.Core.SendEmail({
-              to: email, subject: form.subject, body: sanitizeHtml(form.body), from_name: form.from_name,
+            const { data: sendResult, error: sendError } = await supabase.functions.invoke("system-email", {
+              body: { action: "sendEmail", to: email, subject: form.subject, html: sanitizeHtml(form.body) },
             });
+            if (sendError || !sendResult?.ok) throw sendError || new Error(sendResult?.error || "EMAIL_SEND_FAILED");
             sent++;
+            await supabase.from("email_logs").insert({
+              to_email: email, subject: form.subject, body: sanitizeHtml(form.body),
+              source: "AdminEmailCenter", status: "sent", provider_message_id: sendResult.messageId || null
+            });
           } catch { failed++; }
         }
         // Log campaign
-        await base44.entities.EmailCampaign.create({
+        await supabase.from("email_campaigns").insert({
           ...form,
           status: failed === recipients.length ? "failed" : "sent",
           total_recipients: recipients.length,
@@ -126,7 +133,7 @@ export default function EmailComposeTab({ onSent }) {
     }
     setSaving(true);
     try {
-      await base44.entities.EmailCampaign.create({
+      await supabase.from("email_campaigns").insert({
         ...form, status: "draft", total_recipients: getRecipients().length,
         recipients: getRecipients().slice(0, 100),
       });
