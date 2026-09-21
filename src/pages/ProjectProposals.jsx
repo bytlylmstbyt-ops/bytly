@@ -135,33 +135,20 @@ export default function ProjectProposals() {
     setAcceptingId(proposalId);
     try {
       const proposal = proposals.find(p => p.id === proposalId);
-      await base44.entities.Proposal.update(proposalId, { status: "accepted" });
+      const { error: acceptError } = await supabase.from("project_offers").update({ status: "accepted", updated_at: new Date().toISOString() }).eq("id", proposalId);\n      if (acceptError) throw acceptError;
       // Reject others
       const others = proposals.filter(p => p.id !== proposalId);
-      await Promise.all(others.map(p => base44.entities.Proposal.update(p.id, { status: "rejected" })));
+      await Promise.all(others.map(async p => { const { error } = await supabase.from("project_offers").update({ status: "rejected", updated_at: new Date().toISOString() }).eq("id", p.id); if (error) throw error; }));
       // Move project into execution and assign the winning engineer
       if (projectId) {
-        await base44.entities.Project.update(projectId, {
-          status: "in_progress",
-          assigned_engineer_id: proposal?.engineer_id,
-        }).catch((e) => console.error("Project status update failed:", e));
+        const { error } = await supabase.from("projects").update({ status: "in_progress", assigned_engineer_id: proposal?.engineer_id, updated_at: new Date().toISOString() }).eq("id", projectId);\n        if (error) console.error("Project status update failed:", error);
       }
       // Notify the accepted engineer immediately
       const eng = proposal ? engineers[proposal.engineer_id] : null;
       if (eng?.email) {
-        await base44.entities.Notification.create({
-          recipient_email: eng.email,
-          title: "تم اعتماد عرضك! 🎉",
-          message: `تم قبول عرضك للمشروع "${project?.title || ""}" وتمت إضافة المشروع لقائمة مشاريعك تحت التنفيذ. سيتم توليد عقد العمل تلقائياً.`,
-          type: "proposal",
-          related_project_id: projectId,
-          related_entity_id: proposalId,
-          priority: "high",
-          action_url: projectId ? `/ProjectDetails?id=${projectId}` : null,
-        }).catch((e) => console.error("Notification create failed:", e));
+        const { error: notificationError } = await supabase.functions.invoke("send-notification", { body: { recipient_user_id: eng.user_id || null, recipient_email: eng.email, title: "تم اعتماد عرضك! 🎉", message: "تم قبول عرضك للمشروع وتعيينك للمشروع تحت التنفيذ.", type: "proposal", related_project_id: projectId, related_entity_id: proposalId, priority: "high", action_url: projectId ? "/ProjectDetails?id=" + projectId : null } });\n        if (notificationError) console.error("Notification create failed:", notificationError);
       }
-      // Generate digital work contract automatically
-      await base44.functions.invoke("autoGenerateContract", { proposalId });
+      // Contract generation is handled by the Supabase contract lifecycle flow after offer acceptance.
       await loadData();
     } catch (err) {
       console.error("Accept failed:", err);
@@ -175,9 +162,9 @@ export default function ProjectProposals() {
     try {
       const ids = bulk.selectedIds;
       if (action === "delete") {
-        await Promise.all(ids.map(id => base44.entities.Proposal.delete(id)));
+        await Promise.all(ids.map(async id => { const { error } = await supabase.from("project_offers").delete().eq("id", id); if (error) throw error; }));
       } else {
-        await Promise.all(ids.map(id => base44.entities.Proposal.update(id, { status: action })));
+        await Promise.all(ids.map(async id => { const { error } = await supabase.from("project_offers").update({ status: action, updated_at: new Date().toISOString() }).eq("id", id); if (error) throw error; }));
       }
       bulk.clear();
       await loadData(true);
