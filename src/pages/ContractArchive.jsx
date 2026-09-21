@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+
 import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
@@ -46,11 +46,11 @@ export default function ContractArchive() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const user = await Promise.race([
-        base44.auth.me(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("انتهت مهلة تحميل المستخدم")), 10000))
-      ]);
-      setCurrentUser(user);
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw authError || new Error("انتهت جلسة الدخول");
+      const { data: profile } = await supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle();
+      const current = { ...user, ...profile };
+      setCurrentUser(current);
 
       // Contracts in the new Supabase schema are linked directly to the
       // authenticated user IDs (client_user_id/provider_user_id). Do not
@@ -71,28 +71,8 @@ export default function ContractArchive() {
         userContracts = data || [];
       }
 
-      // Keep legacy fallback only for migrated accounts that have no new
-      // Supabase contracts. It is bounded so the page can never spin forever.
-      if (userContracts.length === 0 && user?.email) {
-        const [engineerData, clientData] = await Promise.all([
-          Promise.race([base44.entities.Engineer.filter({ email: user.email }), new Promise(resolve => setTimeout(() => resolve([]), 5000))]).catch(() => []),
-          Promise.race([base44.entities.Client.filter({ email: user.email }), new Promise(resolve => setTimeout(() => resolve([]), 5000))]).catch(() => [])
-        ]);
-
-        if (engineerData?.[0]) {
-          setUserType("engineer");
-          userContracts = await Promise.race([
-            base44.entities.Contract.filter({ engineer_id: engineerData[0].id }),
-            new Promise(resolve => setTimeout(() => resolve([]), 7000))
-          ]).catch(() => []);
-        } else if (clientData?.[0]) {
-          setUserType("client");
-          userContracts = await Promise.race([
-            base44.entities.Contract.filter({ client_id: clientData[0].id }),
-            new Promise(resolve => setTimeout(() => resolve([]), 7000))
-          ]).catch(() => []);
-        }
-      }
+      // Supabase is the single source of truth for contracts.
+      if (!userContracts.length) setUserType(current?.role === "engineer" ? "engineer" : "client");
 
       if (!userType) setUserType("client");
       setContracts(userContracts);
