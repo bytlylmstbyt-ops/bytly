@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,13 +35,14 @@ export default function AdminRefundControl() {
 
   const loadData = async () => {
     try {
-      const [projectsList, milestonesList] = await Promise.all([
-        base44.entities.Project.filter({ status: { $in: ["in_progress", "disputed", "cancelled"] } }),
-        base44.entities.ProjectMilestone.filter({ payment_released: false })
+      const [projectsRes, milestonesRes] = await Promise.all([
+        supabase.from("projects").select("*").in("status", ["in_progress", "disputed", "cancelled"]),
+        supabase.from("project_milestones").select("*").neq("status", "released")
       ]);
-
-      setProjects(projectsList);
-      setMilestones(milestonesList);
+      if (projectsRes.error) throw projectsRes.error;
+      if (milestonesRes.error) throw milestonesRes.error;
+      setProjects(projectsRes.data || []);
+      setMilestones(milestonesRes.data || []);
     } catch (error) {
       console.error("Error loading data:", error);
     } finally {
