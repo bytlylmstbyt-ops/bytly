@@ -46,42 +46,16 @@ export default function WithdrawalForm({ engineer, onSuccess }) {
     try {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError || !user) throw authError || new Error("انتهت جلسة الدخول");
-      const { data: wallet, error: walletError } = await supabase.from("wallet_accounts").select("*").eq("user_id", user.id).maybeSingle();
-      if (walletError) throw walletError;
-      const availableBalance = Number(wallet?.available_balance || engineer?.available_balance || 0);
-      if (amount > availableBalance) throw new Error(`المبلغ المتاح للسحب: ${availableBalance} ريال فقط`);
-
-      // Store banking details only with the withdrawal request; do not expose them in logs or URLs.
-      const { data: request, error: requestError } = await supabase.from("withdrawal_requests").insert({
-        user_id: user.id,
-        engineer_user_id: user.id,
-        amount,
-        iban: formData.iban.replace(/\s+/g, "").toUpperCase(),
-        bank_name: formData.bank_name.trim(),
-        account_holder_name: formData.account_holder_name.trim(),
-        status: "pending",
-        request_date: new Date().toISOString()
-      }).select("id,amount,status,request_date").single();
-      if (requestError) throw requestError;
-
-      const { error: walletError2 } = await supabase.from("wallet_accounts").update({
-        available_balance: availableBalance - amount,
-        held_balance: Number(wallet?.held_balance || 0) + amount,
-        updated_at: new Date().toISOString()
-      }).eq("user_id", user.id).gte("available_balance", amount);
-      if (walletError2) throw walletError2;
-
-      const { error: txError } = await supabase.from("wallet_transactions").insert({
-        user_id: user.id,
-        type: "withdrawal_request",
-        amount,
-        status: "pending",
-        description: "طلب سحب رصيد",
-        withdrawal_request_id: request.id,
-        balance_before: availableBalance,
-        balance_after: availableBalance - amount
+      const { data, error } = await supabase.rpc("request_withdrawal", {
+        p_amount: amount,
+        p_iban: formData.iban.replace(/\s+/g, "").toUpperCase(),
+        p_bank_name: formData.bank_name.trim(),
+        p_account_holder_name: formData.account_holder_name.trim()
       });
-      if (txError) throw txError;
+      if (error) throw error;
+      setSuccess(true);
+      setFormData(prev => ({ ...prev, amount: "", iban: "", bank_name: "", account_holder_name: "" }));
+    }
     } catch (error) {
       console.error("Error creating withdrawal request:", error);
       setError("حدث خطأ أثناء إنشاء طلب السحب. يرجى المحاولة مرة أخرى.");
