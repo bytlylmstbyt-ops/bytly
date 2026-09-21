@@ -147,13 +147,21 @@ export default function AdminEngineersPage() {
         if (error) throw error;
       }
 
-      // Send notification to the engineer (in-app + email)
+      // Send notification to the engineer (in-app + email) through Supabase Edge Function
       try {
-        await base44.functions.invoke("reviewEngineerCertificate", {
-          engineer_id: engineer.id,
-          approved,
-          rejection_reason: approved ? "" : rejectionReason
+        const { error: notificationError } = await supabase.functions.invoke("send-notification", {
+          body: {
+            recipient_user_id: engineer.user_id || engineer.userId || null,
+            recipient_email: engineer.email,
+            title: approved ? "تم اعتماد حسابك الهندسي" : "تم رفض اعتماد حسابك الهندسي",
+            message: approved
+              ? "تم اعتماد بياناتك وشهادتك من إدارة بيتلي."
+              : `تم رفض الاعتماد. السبب: ${rejectionReason || "يرجى مراجعة بيانات الاعتماد والتواصل مع الإدارة."}`,
+            type: "engineer_certification",
+            metadata: { engineer_id: engineer.id, approved, rejection_reason: approved ? "" : rejectionReason }
+          }
         });
+        if (notificationError) console.error("Notification error:", notificationError);
       } catch (notifError) {
         console.error("Notification error:", notifError);
       }
