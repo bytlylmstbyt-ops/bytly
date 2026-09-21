@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,10 +39,10 @@ export default function EmailTemplatesTab({ onRefresh }) {
   const addReadyTemplates = async () => {
     setSeeding(true);
     try {
-      const existing = await base44.entities.EmailTemplate.list("-created_date", 200);
+      const { data: existing, error: existingError } = await supabase.from("email_templates").select("*").order("created_at",{ascending:false}).limit(200); if (existingError) throw existingError;
       let added = 0;
       for (const tmpl of readyTemplates) {
-        if (!(existing || []).some(e => e.name === tmpl.name)) { await base44.entities.EmailTemplate.create({ ...tmpl, is_active:true }); added++; }
+        if (!(existing || []).some(e => e.name === tmpl.name)) { await supabase.from("email_templates").insert({ ...tmpl, is_active:true }); added++; }
       }
       toast({ title: isRTL ? `تمت إضافة ${added} قوالب جاهزة بهوية بيتلي` : `${added} branded templates added` });
       load(); onRefresh?.();
@@ -54,7 +53,7 @@ export default function EmailTemplatesTab({ onRefresh }) {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await base44.entities.EmailTemplate.list("-created_date", 100);
+      const { data: res, error } = await supabase.from("email_templates").select("*").order("created_at",{ascending:false}).limit(100); if (error) throw error;
       setTemplates(res || []);
     } catch (e) {
       toast({ title: isRTL ? "فشل التحميل" : "Failed to load", description: e.message, variant: "destructive" });
@@ -74,9 +73,9 @@ export default function EmailTemplatesTab({ onRefresh }) {
     setSaving(true);
     try {
       if (editing) {
-        await base44.entities.EmailTemplate.update(editing.id, form);
+        await supabase.from("email_templates").update(form);
       } else {
-        await base44.entities.EmailTemplate.create(form);
+        await supabase.from("email_templates").insert(form);
       }
       toast({ title: t("integrations.adminEmail.templates.saveSuccess") });
       setDialogOpen(false);
@@ -90,7 +89,7 @@ export default function EmailTemplatesTab({ onRefresh }) {
   const handleDelete = async (tmpl) => {
     if (!confirm(t("integrations.adminEmail.templates.deleteConfirm"))) return;
     try {
-      await base44.entities.EmailTemplate.delete(tmpl.id);
+      await supabase.from("email_templates").delete().eq("id",tmpl.id);
       toast({ title: t("integrations.adminEmail.templates.deleteSuccess") });
       load();
       onRefresh?.();
