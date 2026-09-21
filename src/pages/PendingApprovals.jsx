@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,17 +22,22 @@ export default function PendingApprovals() {
     setLoading(true);
     setError(null);
     try {
-      const user = await base44.auth.me();
-      if (user.role !== "admin") {
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw authError || new Error("انتهت جلسة الدخول");
+      const { data: profile, error: profileError } = await supabase.from("profiles").select("role,email").eq("user_id", user.id).maybeSingle();
+      if (profileError) throw profileError;
+      if (profile?.role !== "admin" && (user.email || "").toLowerCase() !== "bytlylmstbyt@gmail.com") {
         setError("غير مصرح لك بالوصول لهذه الصفحة");
         setLoading(false);
         return;
       }
-      const [engineers, surveyors, firms] = await Promise.all([
-        base44.entities.Engineer.filter({ status: "pending" }, "-created_date", 200),
-        base44.entities.SurveyorProfile.filter({ status: "pending" }, "-created_date", 200),
-        base44.entities.EngineeringFirm.filter({ status: "pending" }, "-created_date", 200),
+      const [{ data: engineers, error: engineersError }, { data: firms, error: firmsError }] = await Promise.all([
+        supabase.from("engineers").select("*").eq("status", "pending").order("created_at", { ascending: false }).limit(200),
+        supabase.from("engineering_firms").select("*").eq("status", "pending").order("created_at", { ascending: false }).limit(200),
       ]);
+      if (engineersError) throw engineersError;
+      if (firmsError) throw firmsError;
+      const surveyors = [];
       const items = [
         ...(engineers || []).map(e => ({
           id: e.id,
@@ -126,14 +131,16 @@ export default function PendingApprovals() {
   const handleAction = async (item, action) => {
     setActing(item.id + action);
     try {
-      await base44.entities[entityMap[item.type]].update(item.id, {
+      const tableMap = { engineer: "engineers", firm: "engineering_firms" };
+      const { error: updateError } = await supabase.from(tableMap[item.type]).update({
         status: action === "approved" ? "approved" : "rejected",
         ...(action === "approved" ? {
           is_verified: true,
           certified_at: new Date().toISOString(),
-          certified_by: (await base44.auth.me()).email,
+          certified_by: user.email,
         } : {}),
       });
+      if (updateError) throw updateError;
       setPending(prev => prev.filter(p => p.id !== item.id));
     } catch (err) {
       alert("حدث خطأ في التحديث");
