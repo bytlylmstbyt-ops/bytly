@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,18 +35,24 @@ export default function UserRoleAssignment() {
 
   const loadData = async () => {
     try {
-      const userData = await base44.auth.me();
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !authUser) throw authError || new Error("انتهت جلسة الدخول");
+      const { data: userData, error: profileError } = await supabase.from("profiles").select("*").eq("user_id", authUser.id).single();
+      if (profileError) throw profileError;
       if (userData.role !== "admin") {
         toast.error("ليس لديك صلاحية الوصول لهذه الصفحة");
         return;
       }
       setUser(userData);
 
-      const [assignmentsData, rolesData, usersData] = await Promise.all([
-        base44.entities.UserRole.list(),
-        base44.entities.Role.list(),
-        base44.entities.User.list()
+      const [{ data: assignmentsData, error: assignmentsError }, { data: rolesData, error: rolesError }, { data: usersData, error: usersError }] = await Promise.all([
+        supabase.from("user_role_assignments").select("*").order("assigned_date", { ascending: false }),
+        supabase.from("admin_roles").select("*").eq("is_active", true).order("display_name"),
+        supabase.from("profiles").select("*").order("full_name")
       ]);
+      if (assignmentsError) throw assignmentsError;
+      if (rolesError) throw rolesError;
+      if (usersError) throw usersError;
 
       setAssignments(assignmentsData);
       setRoles(rolesData.filter(r => r.is_active));
@@ -77,7 +83,7 @@ export default function UserRoleAssignment() {
     setSaving(true);
     try {
       const role = roles.find(r => r.id === formData.role_id);
-      await base44.entities.UserRole.create({
+      const { error: assignmentError } = await supabase.from("user_role_assignments").insert({
         user_email: formData.user_email,
         role_id: formData.role_id,
         role_name: role.name,
@@ -85,11 +91,13 @@ export default function UserRoleAssignment() {
         assigned_date: new Date().toISOString(),
         notes: formData.notes
       });
+      if (assignmentError) throw assignmentError;
 
       // Update role's assigned users count
-      await base44.entities.Role.update(formData.role_id, {
-        assigned_users_count: (role.assigned_users_count || 0) + 1
-      });
+      await supabase.from("admin_roles").update({
+        assigned_users_count: (role.assigned_users_count || 0) + 1,
+        updated_at: new Date().toISOString()
+      }).eq("id", formData.role_id);
 
       toast.success("تم تعيين الدور بنجاح");
       await loadData();
@@ -107,14 +115,16 @@ export default function UserRoleAssignment() {
     if (!confirm("هل أنت متأكد من إلغاء تعيين هذا الدور؟")) return;
 
     try {
-      await base44.entities.UserRole.delete(assignment.id);
+      const { error: deleteError } = await supabase.from("user_role_assignments").delete().eq("id", assignment.id);
+      if (deleteError) throw deleteError;
       
       // Update role's assigned users count
-      const [role] = await base44.entities.Role.filter({ id: assignment.role_id });
+      const { data: role } = await supabase.from("admin_roles").select("assigned_users_count").eq("id", assignment.role_id).maybeSingle();
       if (role) {
-        await base44.entities.Role.update(assignment.role_id, {
-          assigned_users_count: Math.max((role.assigned_users_count || 1) - 1, 0)
-        });
+        await supabase.from("admin_roles").update({
+          assigned_users_count: Math.max((role.assigned_users_count || 1) - 1, 0),
+          updated_at: new Date().toISOString()
+        }).eq("id", assignment.role_id);
       }
 
       toast.success("تم إلغاء تعيين الدور بنجاح");
