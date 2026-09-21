@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,25 +21,31 @@ export default function AdminReviews() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const userData = await base44.auth.me();
-        setUser(userData);
-
-        if (userData.role !== 'admin') {
+        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+        if (authError || !authUser) throw authError || new Error("انتهت جلسة الدخول");
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles").select("role,email").eq("user_id", authUser.id).maybeSingle();
+        if (profileError) throw profileError;
+        if (profile?.role !== "admin" && (authUser.email || "").toLowerCase() !== "bytlylmstbyt@gmail.com") {
           window.location.href = '/';
           return;
         }
+        setUser({ ...authUser, ...profile });
 
-        const [reviewsData, engineersData, projectsData, clientsData] = await Promise.all([
-          base44.entities.Review.list('-created_date'),
-          base44.entities.Engineer.list(),
-          base44.entities.Project.list(),
-          base44.entities.Client.list()
+        const [{ data: reviewsData, error: reviewsError }, { data: engineersData, error: engineersError }, { data: projectsData, error: projectsError }, { data: clientsData, error: clientsError }] = await Promise.all([
+          supabase.from("project_reviews").select("*").order("created_at", { ascending: false }),
+          supabase.from("engineers").select("*"),
+          supabase.from("projects").select("*"),
+          supabase.from("clients").select("*")
         ]);
-
-        setReviews(reviewsData);
-        setEngineers(engineersData);
-        setProjects(projectsData);
-        setClients(clientsData);
+        if (reviewsError) throw reviewsError;
+        if (engineersError) throw engineersError;
+        if (projectsError) throw projectsError;
+        if (clientsError) throw clientsError;
+        setReviews((reviewsData || []).map(r => ({ ...r, created_date: r.created_at, client_id: r.reviewer_user_id, engineer_id: r.reviewee_user_id })));
+        setEngineers(engineersData || []);
+        setProjects(projectsData || []);
+        setClients(clientsData || []);
       } catch (error) {
         console.error("Error:", error);
       } finally {
@@ -54,8 +60,17 @@ export default function AdminReviews() {
     if (!confirm("هل أنت متأكد من حذف هذا التقييم؟")) return;
 
     try {
-      await base44.entities.Review.delete(reviewId);
-      await base44.functions.invoke("updateEngineerRating", { engineer_id: engineerId });
+      const { error: deleteError } = await supabase.from("project_reviews").delete().eq("id", reviewId);
+      if (deleteError) throw deleteError;
+      const { data: remaining, error: ratingError } = await supabase
+        .from("project_reviews").select("rating").eq("reviewee_user_id", engineerId);
+      if (ratingError) throw ratingError;
+      const count = remaining?.length || 0;
+      const average = count ? remaining.reduce((sum, r) => sum + Number(r.rating || 0), 0) / count : 0;
+      const { error: engineerError } = await supabase.from("engineers")
+        .update({ rating: Number(average.toFixed(2)), total_reviews: count, updated_at: new Date().toISOString() })
+        .eq("id", engineerId);
+      if (engineerError) throw engineerError;
       setReviews(reviews.filter(r => r.id !== reviewId));
     } catch (error) {
       console.error("Error:", error);
