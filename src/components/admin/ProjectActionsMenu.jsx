@@ -48,6 +48,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
   const [showEdit, setShowEdit] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
   const [showAssign, setShowAssign] = useState(false);
+  const [firms, setFirms] = useState([]);
   const [contractors, setContractors] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [assignTab, setAssignTab] = useState("engineer");
@@ -68,11 +69,13 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
     if (!showAssign) return;
     let active = true;
     (async () => {
-      const [{ data: contractorData }, { data: supplierData }] = await Promise.all([
+      const [{ data: firmData }, { data: contractorData }, { data: supplierData }] = await Promise.all([
+        supabase.from("engineering_firms").select("id,company_name,email,status,is_verified").order("company_name"),
         supabase.from("contractors").select("id,company_name,email,status").order("company_name"),
         supabase.from("suppliers").select("id,company_name,email,status").order("company_name"),
       ]);
       if (active) {
+        setFirms((firmData || []).filter(x => !x.status || ["active","approved","verified"].includes(String(x.status).toLowerCase())));
         setContractors((contractorData || []).filter(x => !x.status || ["active","approved","verified"].includes(String(x.status).toLowerCase())));
         setSuppliers((supplierData || []).filter(x => !x.status || ["active","approved","verified"].includes(String(x.status).toLowerCase())));
       }
@@ -160,6 +163,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
         assigned_engineer_id: field === "assigned_engineer_id" ? (value || null) : project.assigned_engineer_id || null,
         assigned_contractor_id: field === "assigned_contractor_id" ? (value || null) : project.assigned_contractor_id || null,
         assigned_supplier_id: field === "assigned_supplier_id" ? (value || null) : project.assigned_supplier_id || null,
+        company_id: field === "company_id" ? (value || null) : project.company_id || null,
       };
       const { error } = await supabase.from("projects").update(patch).eq("id", project.id);
       if (error) throw error;
@@ -301,7 +305,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
         <DialogContent>
           <DialogHeader><DialogTitle>تعيين مقدم الخدمة للمشروع</DialogTitle></DialogHeader>
           <div className="flex gap-2 border-b pb-2 mb-2">
-            {[["engineer","المهندس"],["contractor","المقاول"],["supplier","المورد"]].map(([key,label]) => (
+            {[["engineer","المهندس"],["firm","الشركة الهندسية"],["contractor","المقاول"],["supplier","المورد"]].map(([key,label]) => (
               <button key={key} type="button" onClick={() => setAssignTab(key)} className={`flex-1 py-2 rounded-lg text-sm ${assignTab === key ? "bg-[#4A3F35] text-white" : "bg-slate-100 text-slate-600"}`}>
                 {label}
               </button>
@@ -315,6 +319,16 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
                   <button key={e.id} onClick={() => assignEngineer(e.id)} disabled={loading} className={`w-full text-right p-3 rounded-lg border text-sm transition-colors ${e.id === project.assigned_engineer_id ? "border-[#C9A66B] bg-[#FEF9EE]" : "border-slate-200 hover:bg-slate-50"}`}>
                     {e.full_name} {e.id === project.assigned_engineer_id && <span className="text-xs text-[#C9A66B]">✓ الحالي</span>}
                     <p className="text-xs text-slate-400 mt-0.5">{e.specialization || ""} • {e.city || ""}</p>
+                  </button>
+                ))}
+              </>
+            ) : assignTab === "firm" ? (
+              <>
+                <button onClick={() => assignProvider("company_id","")} disabled={loading} className="w-full text-right p-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm">— بدون شركة هندسية —</button>
+                {firms.map(f => (
+                  <button key={f.id} onClick={() => assignProvider("company_id", f.id)} disabled={loading} className={`w-full text-right p-3 rounded-lg border text-sm ${f.id === project.company_id ? "border-[#C9A66B] bg-[#FEF9EE]" : "border-slate-200 hover:bg-slate-50"}`}>
+                    {f.company_name || f.email} {f.id === project.company_id && <span className="text-xs text-[#C9A66B]">✓ الحالية</span>}
+                    <p className="text-xs text-slate-400 mt-0.5">{f.email || ""}{f.is_verified ? " • موثقة" : ""}</p>
                   </button>
                 ))}
               </>
