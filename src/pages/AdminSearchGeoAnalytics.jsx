@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Search, RefreshCw, ChevronLeft, CheckCircle2, AlertTriangle, XCircle, Tags, SlidersHorizontal, Bot } from "lucide-react";
 
 const auditRows = [
@@ -78,30 +78,7 @@ export default function AdminSearchGeoAnalytics() {
     setAiFixing(true);
     setAiFixResult(null);
     try {
-      const res = await base44.integrations.Core.InvokeLLM({
-        prompt: `أنت خبير في تحسين محركات البحث (SEO) وتحسين ظهور التطبيقات للذكاء الاصطناعي. حلل التطبيق الهندسي "بيتلي - المنظومة الهندسية المتكاملة" بناءً على التحذيرات التالية وقدّم خطة إصلاح عملية ومحددة لكل تحذير:
-1. أنواع البيانات التي لم يتم تصنيفها بعد للبحث
-2. تفتقر بعض أنواع البيانات إلى حقول نصية
-لكل تحذير: اشرح السبب، واقترح إجراءات تصحيحية محددة قابلة للتنفيذ، والحقول/الكيانات المتأثرة. أجب بالعربية بصيغة مختصرة وواضحة.`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            fixes: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  warning: { type: "string" },
-                  cause: { type: "string" },
-                  actions: { type: "array", items: { type: "string" } },
-                },
-              },
-            },
-            summary: { type: "string" },
-          },
-        },
-      });
-      setAiFixResult(res);
+            setAiFixResult(res);
     } catch (_) {
       setAiFixResult({ error: "تعذر تشغيل الإصلاح بالذكاء الاصطناعي حالياً. حاول مرة أخرى." });
     } finally {
