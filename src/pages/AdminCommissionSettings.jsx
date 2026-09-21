@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +36,8 @@ export default function AdminCommissionSettings() {
 
   const loadStats = async () => {
     try {
-      const transactions = await base44.entities.Transaction.filter({ type: "commission" });
+      const { data: transactions, error } = await supabase.from("wallet_transactions").select("*").eq("type","commission").order("created_at",{ascending:false});
+    if (error) throw error;
       const total = transactions.reduce((sum, t) => sum + (t.amount || 0), 0);
       
       setStats({
