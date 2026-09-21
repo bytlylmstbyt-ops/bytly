@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { createPageUrl } from "@/utils";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -57,21 +57,19 @@ export default function ContractAmendments() {
 
   const loadData = async () => {
     setIsLoading(true);
-    const user = await base44.auth.me();
+    const { data: { user }, error: authError } = await supabase.auth.getUser(); if (authError || !user) throw authError || new Error("انتهت جلسة الدخول");
     setCurrentUser(user);
 
-    const [contractData] = await base44.entities.Contract.filter({ id: contractId });
+    const { data: contractData, error: contractError } = await supabase.from("project_contracts").select("*").eq("id", contractId).maybeSingle(); if (contractError) throw contractError;
     setContract(contractData);
 
     if (contractData) {
-      const [clientData] = await base44.entities.Client.filter({ id: contractData.client_id });
-      const [engineerData] = await base44.entities.Engineer.filter({ id: contractData.engineer_id });
+      const { data: clientData } = await supabase.from("profiles").select("*").eq("user_id", contractData.client_user_id || contractData.client_id).maybeSingle();
+      const { data: engineerData } = await supabase.from("profiles").select("*").eq("user_id", contractData.provider_user_id || contractData.engineer_id).maybeSingle();
       setClient(clientData);
       setEngineer(engineerData);
 
-      const amendmentsData = await base44.entities.ContractAmendment.filter({ 
-        contract_id: contractId 
-      });
+      const { data: amendmentsData, error: amendmentsError } = await supabase.from("contract_amendments").select("*").eq("contract_id", contractId); if (amendmentsError) throw amendmentsError;
       setAmendments(amendmentsData.sort((a, b) => b.amendment_number - a.amendment_number));
     }
 
@@ -113,7 +111,7 @@ export default function ContractAmendments() {
     try {
       const amendmentNumber = amendments.length + 1;
       
-      await base44.entities.ContractAmendment.create({
+      await supabase.from("contract_amendments").insert({
         contract_id: contractId,
         amendment_number: amendmentNumber,
         amendment_type: amendmentData.amendment_type,
@@ -125,7 +123,7 @@ export default function ContractAmendments() {
 
       // Create new contract version
       const newVersion = contract.contract_version ? contract.contract_version + 1 : 2;
-      await base44.entities.Contract.update(contractId, {
+      await supabase.from("project_contracts").update({
         contract_version: newVersion,
         previous_version_id: contractId
       });
@@ -139,7 +137,7 @@ export default function ContractAmendments() {
         related_project_id: contract.project_id
       });
 
-      await base44.entities.Notification.create({
+      await supabase.from("notifications").insert({
         recipient_email: engineer.email,
         title: "طلب تعديل على العقد",
         message: `تم تقديم طلب تعديل على العقد. يرجى المراجعة والموافقة`,
@@ -182,7 +180,7 @@ export default function ContractAmendments() {
       updates.effective_date = new Date().toISOString();
     }
 
-    await base44.entities.ContractAmendment.update(amendment.id, updates);
+    await supabase.from("contract_amendments").update({ ...updates, updated_at: new Date().toISOString() }).eq("id", amendment.id);
     loadData();
   };
 
