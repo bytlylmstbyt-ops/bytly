@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +36,10 @@ export default function RoleManagement() {
 
   const loadData = async () => {
     try {
-      const userData = await base44.auth.me();
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !authUser) throw authError || new Error("Unauthenticated");
+      const { data: userData, error: profileError } = await supabase.from("profiles").select("*").eq("user_id", authUser.id).single();
+      if (profileError) throw profileError;
       if (userData.role !== "admin") {
         toast.error("ليس لديك صلاحية الوصول لهذه الصفحة");
         return;
@@ -52,10 +55,12 @@ export default function RoleManagement() {
   };
 
   const loadRoles = async () => {
-    const rolesData = await base44.entities.Role.list();
+    const { data: rolesData, error: rolesError } = await supabase.from("admin_roles").select("*").order("created_at", { ascending: false });
+    if (rolesError) throw rolesError;
     setRoles(rolesData);
     try {
-      const logs = await base44.entities.AdminAuditLog.list("-created_at", 50);
+      const { data: logs, error: logsError } = await supabase.from("admin_audit_logs").select("*").order("created_at", { ascending: false }).limit(50);
+      if (logsError) throw logsError;
       setAuditLogs(logs || []);
     } catch (_) {
       setAuditLogs([]);
@@ -110,16 +115,18 @@ export default function RoleManagement() {
           toast.error("لا يمكن تعديل دور النظام");
           return;
         }
-        await base44.entities.Role.update(editingRole.id, formData);
+        const { error } = await supabase.from("admin_roles").update({ ...formData, updated_at: new Date().toISOString() }).eq("id", editingRole.id);
+        if (error) throw error;
         await writeAudit("update", editingRole, "تم تعديل بيانات وصلاحيات الدور");
         toast.success("تم تحديث الدور بنجاح");
       } else {
-        const created = await base44.entities.Role.create({
+        const { data: created, error: createError } = await supabase.from("admin_roles").insert({
           ...formData,
           is_system_role: false,
           is_active: true,
           assigned_users_count: 0
-        });
+        }).select().single();
+        if (createError) throw createError;
         await writeAudit("create", created, "تم إنشاء دور جديد");
         toast.success("تم إنشاء الدور بنجاح");
       }
@@ -135,14 +142,15 @@ export default function RoleManagement() {
 
   const writeAudit = async (action, role, details) => {
     try {
-      await base44.entities.AdminAuditLog.create({ actor_email: user?.email || "", action, target_type: "role", target_id: role?.id || "", target_name: role?.display_name || "", details, created_at: new Date().toISOString() });
+      await supabase.from("admin_audit_logs").insert({ actor_user_id: user?.user_id || user?.id || null, actor_email: user?.email || "", action, target_type: "role", target_id: role?.id || "", target_name: role?.display_name || "", details });
     } catch (_) {}
   };
 
   const handleDuplicateRole = async (role) => {
     setSaving(true);
     try {
-      const created = await base44.entities.Role.create({ name: `${role.name}_copy`, display_name: `${role.display_name} - نسخة`, description: role.description || "", permissions: JSON.parse(JSON.stringify(role.permissions || getDefaultPermissions())), is_system_role: false, is_active: true, assigned_users_count: 0 });
+      const { data: created, error: createError } = await supabase.from("admin_roles").insert({ name: `${role.name}_copy`, display_name: `${role.display_name} - نسخة`, description: role.description || "", permissions: JSON.parse(JSON.stringify(role.permissions || getDefaultPermissions())), is_system_role: false, is_active: true, assigned_users_count: 0 }).select().single();
+      if (createError) throw createError;
       await writeAudit("duplicate", created, `تم نسخ الدور من ${role.display_name}`);
       toast.success("تم نسخ الدور بنجاح");
       await loadRoles();
@@ -153,7 +161,8 @@ export default function RoleManagement() {
     if (role.is_system_role) { toast.error("لا يمكن تعطيل دور النظام"); return; }
     try {
       const next = !role.is_active;
-      await base44.entities.Role.update(role.id, { is_active: next });
+      const { error } = await supabase.from("admin_roles").update({ is_active: next, updated_at: new Date().toISOString() }).eq("id", role.id);
+      if (error) throw error;
       await writeAudit(next ? "activate" : "deactivate", role, `تم ${next ? "تفعيل" : "تعطيل"} الدور`);
       toast.success(next ? "تم تفعيل الدور" : "تم تعطيل الدور");
       await loadRoles();
@@ -172,7 +181,8 @@ export default function RoleManagement() {
     if (!confirm(`هل أنت متأكد من حذف الدور "${role.display_name}"؟`)) return;
 
     try {
-      await base44.entities.Role.delete(role.id);
+      const { error } = await supabase.from("admin_roles").delete().eq("id", role.id);
+      if (error) throw error;
       await writeAudit("delete", role, "تم حذف الدور");
       toast.success("تم حذف الدور بنجاح");
       await loadRoles();
