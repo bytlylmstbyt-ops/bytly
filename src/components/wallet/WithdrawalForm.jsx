@@ -14,9 +14,9 @@ export default function WithdrawalForm({ engineer, onSuccess, projectId }) {
     bank_name: engineer?.bank_name || "",
     account_holder_name: engineer?.account_holder_name || engineer?.full_name || ""
   });
-  const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState([]);\n  const [projectId, setProjectId] = useState("");\n  const [projectsLoading, setProjectsLoading] = useState(true);\n  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess] = useState(false);\n\n  React.useEffect(() => {\n    let active = true;\n    (async () => {\n      try {\n        if (!engineer?.id) return;\n        const { data, error } = await supabase.from("projects").select("id,title,status,client_final_approval").eq("assigned_engineer_id", engineer.id).order("created_at", { ascending: false });\n        if (error) throw error;\n        if (active) setProjects((data || []).filter(p => p.client_final_approval !== false));\n      } catch (e) {\n        console.error("Error loading withdrawal projects:", e);\n      } finally {\n        if (active) setProjectsLoading(false);\n      }\n    })();\n    return () => { active = false; };\n  }, [engineer?.id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
