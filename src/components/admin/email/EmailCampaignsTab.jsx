@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,8 @@ export default function EmailCampaignsTab({ onRefresh }) {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await base44.entities.EmailCampaign.list("-created_date", 100);
+      const { data: res, error } = await supabase.from("email_campaigns").select("*").order("created_at", { ascending: false }).limit(100);
+      if (error) throw error;
       setCampaigns(res || []);
     } catch (e) {
       toast({ title: isRTL ? "فشل التحميل" : "Failed to load", description: e.message, variant: "destructive" });
@@ -39,7 +40,7 @@ export default function EmailCampaignsTab({ onRefresh }) {
   const handleCancel = async (camp) => {
     if (!confirm(isRTL ? "هل تريد إلغاء هذه الحملة؟" : "Cancel this campaign?")) return;
     try {
-      await base44.entities.EmailCampaign.update(camp.id, { status: "cancelled" });
+      const { error } = await supabase.from("email_campaigns").update({ status: "cancelled" }).eq("id", camp.id); if (error) throw error;
       toast({ title: isRTL ? "تم الإلغاء" : "Cancelled" });
       load(); onRefresh?.();
     } catch (e) { toast({ title: isRTL ? "فشل" : "Failed", description: e.message, variant: "destructive" }); }
@@ -51,13 +52,20 @@ export default function EmailCampaignsTab({ onRefresh }) {
       let sent = 0, failed = 0;
       for (const email of recipients) {
         try {
-          await base44.integrations.Core.SendEmail({ to: email, subject: camp.subject, body: camp.body, from_name: camp.from_name || "Bytly" });
+          const { data: sendResult, error: sendError } = await supabase.functions.invoke("system-email", {
+            body: { action: "sendEmail", to: email, subject: camp.subject, html: camp.body || "" }
+          });
+          if (sendError || !sendResult?.ok) throw sendError || new Error(sendResult?.error || "EMAIL_SEND_FAILED");
+          await supabase.from("email_logs").insert({
+            to_email: email, subject: camp.subject || "", body: camp.body || "",
+            source: "AdminEmailCenter", status: "sent", provider_message_id: sendResult.messageId || null
+          });
           sent++;
         } catch { failed++; }
       }
-      await base44.entities.EmailCampaign.update(camp.id, {
+      const { error: updateError } = await supabase.from("email_campaigns").update({
         status: "sent", sent_count: sent, failed_count: failed, sent_at: new Date().toISOString(),
-      });
+      }).eq("id", camp.id); if (updateError) throw updateError;
       toast({ title: isRTL ? "تم الإرسال" : "Sent", description: `${sent} ${isRTL ? "مرسل" : "sent"}` });
       load(); onRefresh?.();
     } catch (e) { toast({ title: isRTL ? "فشل" : "Failed", description: e.message, variant: "destructive" }); }
