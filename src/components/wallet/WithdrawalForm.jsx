@@ -75,12 +75,12 @@ export default function WithdrawalForm({ engineer, onSuccess }) {
         p_amount: amount,
         p_iban: formData.iban.replace(/\s+/g, "").toUpperCase(),
         p_bank_name: formData.bank_name.trim(),
-        p_account_holder_name: formData.account_holder_name.trim()
+        p_account_holder_name: formData.account_holder_name.trim(),
+        p_project_id: selectedProjectId
       });
       if (error) throw error;
       setSuccess(true);
       setFormData(prev => ({ ...prev, amount: "", iban: "", bank_name: "", account_holder_name: "" }));
-    }
     } catch (error) {
       console.error("Error creating withdrawal request:", error);
       setError("حدث خطأ أثناء إنشاء طلب السحب. يرجى المحاولة مرة أخرى.");
