@@ -19,8 +19,18 @@ export default function ProviderWithdrawalForm({ provider, providerType, onSucce
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [projectId, setProjectId] = useState("");
 
   const availableBalance = provider?.available_balance || provider?.wallet_balance || 0;
+  const loadProjects = async () => {
+    const { data, error } = await supabase.from("projects").select("id,title,client_final_approval,company_id,assigned_contractor_id,assigned_supplier_id").order("created_at", { ascending: false });
+    if (error) throw error;
+    const eligible = (data || []).filter(p => p.client_final_approval !== false && ((providerType === "contractor" && p.assigned_contractor_id === provider?.id) || (providerType === "supplier" && p.assigned_supplier_id === provider?.id) || (providerType === "engineering_firm" && p.company_id === provider?.id)));
+    setProjects(eligible);
+    if (!projectId && eligible[0]) setProjectId(eligible[0].id);
+  };
+  React.useEffect(() => { if (provider?.id && providerType) loadProjects().catch(() => {}); }, [provider?.id, providerType]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,20 +57,7 @@ export default function ProviderWithdrawalForm({ provider, providerType, onSucce
     setLoading(true);
 
     try {
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
-      if (authError || !user) throw authError || new Error("انتهت جلسة الدخول");
-      const { data: projects, error: projectsError } = await supabase
-        .from("projects")
-        .select("id,title,client_final_approval,assigned_engineer_id,company_id,assigned_contractor_id,assigned_supplier_id")
-        .order("created_at", { ascending: false });
-      if (projectsError) throw projectsError;
-      const eligible = (projects || []).filter(p => p.client_final_approval !== false && (
-        (providerType === "contractor" && p.assigned_contractor_id === provider.id) ||
-        (providerType === "supplier" && p.assigned_supplier_id === provider.id) ||
-        (providerType === "engineering_firm" && p.company_id === provider.id)
-      ));
-      const projectId = eligible[0]?.id;
-      if (!projectId) throw new Error("لا يوجد مشروع مرتبط ومؤهل للسحب");
+      if (!projectId) throw new Error("يرجى اختيار المشروع");
       const { error: rpcError } = await supabase.rpc("request_withdrawal", {
         p_amount: amount,
         p_iban: formData.iban,
@@ -109,6 +106,14 @@ export default function ProviderWithdrawalForm({ provider, providerType, onSucce
               </div>
             </Alert>
           )}
+
+          <div>
+            <Label htmlFor="project_id">المشروع المرتبط بالسحب</Label>
+            <select id="project_id" value={projectId} onChange={(e) => setProjectId(e.target.value)} className="mt-1 w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+              <option value="">اختر المشروع</option>
+              {projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
+            </select>
+          </div>
 
           <div>
             <Label htmlFor="amount">المبلغ المطلوب سحبه (ريال)</Label>
