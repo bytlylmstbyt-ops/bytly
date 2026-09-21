@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,9 +54,9 @@ function ContractForm({ projects, onSave, onCancel, editContract = null }) {
     setSaving(true);
     const data = { ...form, total_amount: Number(form.total_amount) };
     if (editContract) {
-      await base44.entities.Contract.update(editContract.id, data);
+      const { error } = await supabase.from("project_contracts").update({ ...data, amount: data.total_amount, updated_at: new Date().toISOString() }).eq("id", editContract.id); if (error) throw error;
     } else {
-      await base44.entities.Contract.create({ ...data, status: "draft" });
+      const { error } = await supabase.from("project_contracts").insert({ ...data, amount: data.total_amount, status: "draft" }); if (error) throw error;
     }
     setSaving(false);
     onSave();
@@ -217,10 +217,10 @@ function ContractDetail({ contract, project, onClose, onRefresh }) {
     if (!file) return;
     setUploading(true);
     const file_url = await uploadScopedFile("contracts", file);
-    await base44.entities.Contract.update(contract.id, {
+    const { error } = await supabase.from("project_contracts").update({
       contract_pdf_url: file_url,
       status: contract.status === "draft" ? "pending_signature" : contract.status,
-    });
+    }).eq("id", contract.id); if (error) throw error;
     setUploading(false);
     onRefresh();
   }
@@ -234,14 +234,14 @@ function ContractDetail({ contract, project, onClose, onRefresh }) {
     const willBothSigned = party === "client" ? contract.engineer_signature : contract.client_signature;
     update.status = willBothSigned ? "signed" : "pending_signature";
 
-    await base44.entities.Contract.update(contract.id, update);
+    const { error } = await supabase.from("project_contracts").update({ ...update, updated_at: new Date().toISOString() }).eq("id", contract.id); if (error) throw error;
     setSignModal(null);
     onRefresh();
   }
 
   async function handleDriveBackup() {
     setBackingUp(true);
-    const res = await base44.functions.invoke('backupContractToDrive', {
+    const res = await supabase.functions.invoke("backup-contract-to-drive", { body: {
       contractId: contract.id,
       contractNumber: contract.contract_number,
       projectTitle: project?.title || '',
@@ -249,17 +249,17 @@ function ContractDetail({ contract, project, onClose, onRefresh }) {
       status: contract.status,
       signedDate: contract.engineer_signature_date || contract.client_signature_date,
       fileUrl: contract.contract_pdf_url || '',
-    });
+    } });
     if (res.data?.driveLink) {
       setDriveLink(res.data.driveLink);
       // حفظ الرابط في كيان العقد
-      await base44.entities.Contract.update(contract.id, { description: (contract.description || '') + ` | Drive: ${res.data.driveLink}` });
+      await supabase.from("project_contracts").update({ drive_backup_link: res.data.driveLink, updated_at: new Date().toISOString() }).eq("id", contract.id);
     }
     setBackingUp(false);
   }
 
   async function updateStatus(newStatus) {
-    await base44.entities.Contract.update(contract.id, { status: newStatus });
+    const { error } = await supabase.from("project_contracts").update({ status: newStatus, updated_at: new Date().toISOString() }).eq("id", contract.id); if (error) throw error;
     onRefresh();
   }
 
@@ -597,8 +597,8 @@ export default function ContractManager() {
   async function loadData() {
     setLoading(true);
     const [c, p] = await Promise.all([
-      base44.entities.Contract.list("-created_date", 200),
-      base44.entities.Project.list("-created_date", 100),
+      supabase.from("project_contracts").select("*").order("created_at", { ascending: false }).limit(200),
+      supabase.from("projects").select("*").order("created_at", { ascending: false }).limit(100),
     ]);
     setContracts(c || []);
     setProjects(p || []);
@@ -811,7 +811,7 @@ export default function ContractManager() {
           onRefresh={() => {
             loadData().then(() => {
               // تحديث العقد المفتوح بالبيانات الجديدة
-              base44.entities.Contract.filter({ id: detailContract.id }).then(res => {
+              supabase.from("project_contracts").select("*").eq("id", detailContract.id).maybeSingle().then(({ data }) => {
                 if (res?.[0]) setDetailContract(res[0]);
               });
             });
