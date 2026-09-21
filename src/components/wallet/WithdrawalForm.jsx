@@ -7,12 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
 import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 
-export default function WithdrawalForm({ engineer, onSuccess }) {
+export default function WithdrawalForm({ engineer, contractor, supplier, onSuccess }) {
+  const provider = engineer || contractor || supplier;
+  const providerType = engineer ? "engineer" : contractor ? "contractor" : supplier ? "supplier" : null;
   const [formData, setFormData] = useState({
     amount: "",
-    iban: engineer?.iban || "",
-    bank_name: engineer?.bank_name || "",
-    account_holder_name: engineer?.account_holder_name || engineer?.full_name || ""
+    iban: "",
+    bank_name: "",
+    account_holder_name: provider?.full_name || provider?.company_name || ""
   });
   const [projects, setProjects] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState("");
@@ -25,8 +27,9 @@ export default function WithdrawalForm({ engineer, onSuccess }) {
     let active = true;
     (async () => {
       try {
-        if (!engineer?.id) return;
-        const { data, error } = await supabase.from("projects").select("id,title,status,client_final_approval").eq("assigned_engineer_id", engineer.id).order("created_at", { ascending: false });
+        if (!provider?.id || !providerType) return;
+        const assignmentColumn = providerType === "engineer" ? "assigned_engineer_id" : providerType === "contractor" ? "assigned_contractor_id" : "assigned_supplier_id";
+        const { data, error } = await supabase.from("projects").select("id,title,status,client_final_approval").eq(assignmentColumn, provider.id).order("created_at", { ascending: false });
         if (error) throw error;
         if (active) setProjects((data || []).filter(p => p.client_final_approval !== false));
       } catch (e) {
@@ -36,7 +39,7 @@ export default function WithdrawalForm({ engineer, onSuccess }) {
       }
     })();
     return () => { active = false; };
-  }, [engineer?.id]);
+  }, [provider?.id, providerType]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -51,8 +54,8 @@ export default function WithdrawalForm({ engineer, onSuccess }) {
       return;
     }
 
-    if (amount > engineer.available_balance) {
-      setError(`المبلغ المتاح للسحب: ${engineer.available_balance} ريال فقط`);
+    if (amount > Number(provider?.available_balance || 0)) {
+      setError(`المبلغ المتاح للسحب: ${provider?.available_balance || 0} ريال فقط`);
       return;
     }
 
@@ -127,7 +130,7 @@ export default function WithdrawalForm({ engineer, onSuccess }) {
               className="mt-1"
             />
             <p className="text-xs text-slate-500 mt-1">
-              الحد الأقصى المتاح: {engineer?.available_balance?.toLocaleString('ar-SA') || 0} ريال
+              الحد الأقصى المتاح: {provider?.available_balance?.toLocaleString('ar-SA') || 0} ريال
             </p>
           </div>
 
