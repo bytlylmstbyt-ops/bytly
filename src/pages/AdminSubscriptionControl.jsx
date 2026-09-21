@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,9 +29,9 @@ export default function AdminSubscriptionControl() {
   const loadData = async () => {
     try {
       const [engineersList, clientsList, firmsList] = await Promise.all([
-        base44.entities.Engineer.filter({}),
-        base44.entities.Client.filter({}),
-        base44.entities.EngineeringFirm.filter({})
+        supabase.from("engineers").select("*"),
+        supabase.from("clients").select("*"),
+        supabase.from("engineering_firms").select("*")
       ]);
 
       setEngineers(engineersList);
@@ -51,11 +51,11 @@ export default function AdminSubscriptionControl() {
       };
 
       if (userType === "engineer") {
-        await base44.entities.Engineer.update(userId, updates);
+        await supabase.from("engineers").update(updates).eq("id", userId);
       } else if (userType === "client") {
-        await base44.entities.Client.update(userId, updates);
+        await supabase.from("clients").update(updates).eq("id", userId);
       } else if (userType === "firm") {
-        await base44.entities.EngineeringFirm.update(userId, updates);
+        await supabase.from("engineering_firms").update(updates).eq("id", userId);
       }
 
       toast.success("تم تحديث حالة الاشتراك");
@@ -84,11 +84,11 @@ export default function AdminSubscriptionControl() {
       };
 
       if (userType === "engineer") {
-        await base44.entities.Engineer.update(userId, updates);
+        await supabase.from("engineers").update(updates).eq("id", userId);
       } else if (userType === "client") {
-        await base44.entities.Client.update(userId, updates);
+        await supabase.from("clients").update(updates).eq("id", userId);
       } else if (userType === "firm") {
-        await base44.entities.EngineeringFirm.update(userId, updates);
+        await supabase.from("engineering_firms").update(updates).eq("id", userId);
       }
 
       toast.success(`تم تحويل المستخدم إلى باقة ${planType === "monthly" ? "شهرية" : "سنوية"}`);
@@ -103,11 +103,11 @@ export default function AdminSubscriptionControl() {
     try {
       let currentUser;
       if (userType === "engineer") {
-        [currentUser] = await base44.entities.Engineer.filter({ id: userId });
+        [currentUser] = await supabase.from("engineers").select("*").eq("id", userId);
       } else if (userType === "client") {
-        [currentUser] = await base44.entities.Client.filter({ id: userId });
+        [currentUser] = await supabase.from("clients").select("*").eq("id", userId);
       } else {
-        [currentUser] = await base44.entities.EngineeringFirm.filter({ id: userId });
+        [currentUser] = await supabase.from("engineering_firms").select("*").eq("id", userId);
       }
 
       const currentEndDate = currentUser.trial_end_date 
@@ -123,11 +123,11 @@ export default function AdminSubscriptionControl() {
       };
 
       if (userType === "engineer") {
-        await base44.entities.Engineer.update(userId, updates);
+        await supabase.from("engineers").update(updates).eq("id", userId);
       } else if (userType === "client") {
-        await base44.entities.Client.update(userId, updates);
+        await supabase.from("clients").update(updates).eq("id", userId);
       } else {
-        await base44.entities.EngineeringFirm.update(userId, updates);
+        await supabase.from("engineering_firms").update(updates).eq("id", userId);
       }
 
       toast.success(`تم تمديد الفترة التجريبية ${daysToAdd} يوم`);
