@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, TrendingUp, MailOpen, MousePointerClick, CheckCircle, XCircle } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageContext";
@@ -15,8 +14,8 @@ export default function EmailAnalyticsTab() {
     (async () => {
       try {
         const [sent, camps] = await Promise.all([
-          base44.entities.SentEmail.list("-created_date", 500),
-          base44.entities.EmailCampaign.list("-created_date", 100),
+          supabase.from("email_logs").select("*").order("created_at",{ascending:false}).limit(500),
+          supabase.from("email_campaigns").select("*").order("created_at",{ascending:false}).limit(100),
         ]);
         setEmails(sent || []);
         setCampaigns(camps || []);
