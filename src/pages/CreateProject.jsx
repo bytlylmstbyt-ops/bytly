@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion } from "framer-motion";
 import { 
@@ -70,11 +71,12 @@ export default function CreateProject() {
   }, [preselectedEngineerId]);
 
   const loadUserData = async () => {
-    const currentUser = await base44.auth.me();
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (!currentUser) return;
     setUser(currentUser);
     
-    const clientData = await base44.entities.Client.filter({ email: currentUser.email });
-    if (clientData.length > 0) {
+    const { data: clientData } = await supabase.from("clients").select("*").eq("user_id", currentUser.id).limit(1);
+    if (clientData?.length > 0) {
       setClient(clientData[0]);
     }
   };
@@ -161,7 +163,7 @@ export default function CreateProject() {
 
     setIsLoading(true);
     
-    const newProject = await base44.entities.Project.create({
+    const { data: newProject, error: projectError } = await supabase.from("projects").insert({
       title: formData.title,
       description: formData.description,
       category: formData.category,
@@ -176,8 +178,12 @@ export default function CreateProject() {
       status: "open",
       total_proposals: 0,
       is_direct_hire: preselectedEngineerId ? true : false,
-      assigned_engineer_id: preselectedEngineerId || null
-    });
+      assigned_engineer_id: preselectedEngineerId || null,
+      client_user_id: user?.id || null,
+      service_scope: { services: formData.service_scope, requested_by_client: true },
+      stage_count: finalPlan?.length || null
+    }).select().single();
+    if (projectError) throw projectError;
 
     const projectBudget=parseFloat(formData.budget_max)||parseFloat(formData.budget_min)||0;
     let finalPlan=formData.milestones.length>0?formData.milestones.map((m,i)=>({service_key:m.service_key||formData.service_scope[i]||"custom",title:m.title,description:m.description,percentage:Number(m.percentage)||0,days:Number(m.due_days)||7})):buildStagePlan();
