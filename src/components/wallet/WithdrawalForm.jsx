@@ -7,16 +7,36 @@ import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
 import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 
-export default function WithdrawalForm({ engineer, onSuccess, projectId }) {
+export default function WithdrawalForm({ engineer, onSuccess }) {
   const [formData, setFormData] = useState({
     amount: "",
     iban: engineer?.iban || "",
     bank_name: engineer?.bank_name || "",
     account_holder_name: engineer?.account_holder_name || engineer?.full_name || ""
   });
-  const [projects, setProjects] = useState([]);\n  const [projectId, setProjectId] = useState("");\n  const [projectsLoading, setProjectsLoading] = useState(true);\n  const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [selectedProjectId, setSelectedProjectId] = useState("");
+  const [projectsLoading, setProjectsLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);\n\n  React.useEffect(() => {\n    let active = true;\n    (async () => {\n      try {\n        if (!engineer?.id) return;\n        const { data, error } = await supabase.from("projects").select("id,title,status,client_final_approval").eq("assigned_engineer_id", engineer.id).order("created_at", { ascending: false });\n        if (error) throw error;\n        if (active) setProjects((data || []).filter(p => p.client_final_approval !== false));\n      } catch (e) {\n        console.error("Error loading withdrawal projects:", e);\n      } finally {\n        if (active) setProjectsLoading(false);\n      }\n    })();\n    return () => { active = false; };\n  }, [engineer?.id]);
+  const [success, setSuccess] = useState(false);
+
+  React.useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        if (!engineer?.id) return;
+        const { data, error } = await supabase.from("projects").select("id,title,status,client_final_approval").eq("assigned_engineer_id", engineer.id).order("created_at", { ascending: false });
+        if (error) throw error;
+        if (active) setProjects((data || []).filter(p => p.client_final_approval !== false));
+      } catch (e) {
+        console.error("Error loading withdrawal projects:", e);
+      } finally {
+        if (active) setProjectsLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [engineer?.id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,7 +56,12 @@ export default function WithdrawalForm({ engineer, onSuccess, projectId }) {
       return;
     }
 
-    if (!projectId) {\n      setError("يجب ربط طلب السحب بمشروع معتمد قبل تقديم الطلب");\n      return;\n    }\n\n    if (!formData.iban || !formData.bank_name || !formData.account_holder_name) {
+    if (!selectedProjectId) {
+      setError("يجب ربط طلب السحب بمشروع معتمد قبل تقديم الطلب");
+      return;
+    }
+
+    if (!formData.iban || !formData.bank_name || !formData.account_holder_name) {
       setError("يرجى إكمال جميع البيانات البنكية");
       return;
     }
