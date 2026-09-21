@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { createPageUrl } from "@/utils";
@@ -383,7 +382,9 @@ export default function AdminAIAssistant() {
         setIsAdmin(true);
         setCurrentUser(u);
         try {
-          const history = await base44.entities.AIAgentConversation.filter({ asked_by_email: u.email }, "-updated_date", 50);
+          const { data: historyRows, error: historyError } = await supabase.from("admin_ai_conversations").select("*").eq("admin_user_id", u.id).order("updated_at", { ascending: false }).limit(50);
+          if (historyError) throw historyError;
+          const history = (historyRows || []).map((row) => ({ id: row.id, messages_json: JSON.stringify(row.messages_json || []), attachments_count: row.attachments_count || 0, updated_date: row.updated_at }));
           if (!mounted) return;
           setConversations(history || []);
           if (history?.[0]) await loadConversation(history[0]);
@@ -416,9 +417,9 @@ export default function AdminAIAssistant() {
       const messages_json = JSON.stringify(messages).slice(0, 100000);
       try {
         if (conversationId) {
-          await base44.entities.AIAgentConversation.update(conversationId, { messages_json, attachments_count: attachmentsCount });
+          await supabase.from("admin_ai_conversations").update({ messages_json: JSON.parse(messages_json), attachments_count: attachmentsCount, updated_at: new Date().toISOString() }).eq("id", conversationId).eq("admin_user_id", currentUser.id);
         } else {
-          const created = await base44.entities.AIAgentConversation.create({ asked_by_email: currentUser.email, messages_json, attachments_count: attachmentsCount });
+          const { data: created } = await supabase.from("admin_ai_conversations").insert({ admin_user_id: currentUser.id, title: messages.find((m) => m.role === "user")?.text?.slice(0, 80) || "محادثة جديدة", messages_json: JSON.parse(messages_json), attachments_count: attachmentsCount }).select("id").single();
           setConversationId(created.id);
         }
       } catch {
@@ -461,12 +462,9 @@ export default function AdminAIAssistant() {
     setMessages((prev) => [...prev, { role: "user", text: q, attachments: attachmentsForMessage }]);
     setAsking(true);
     try {
-      const res = await base44.functions.invoke("platformAgent", {
-        action: "message",
-        message: q + attachmentNote,
-        pending_plan_id: pendingPlanId,
-        recent_history: recentHistoryForContext(),
-      });
+      const { data: resData, error: resError } = await supabase.functions.invoke("bytly-ai", { body: { agent: "admin", prompt: q + attachmentNote, context: { recent_history: recentHistoryForContext(), pending_plan_id: pendingPlanId }, responseFormat: "text" } });
+      if (resError) throw resError;
+      const res = { data: { kind: "clarify", message: resData?.result || resData?.error || "لم يصل رد من المساعد." } };
       const data = res.data;
       if (data?.error) {
         setMessages((prev) => [...prev, { role: "error", text: data.error }]);
@@ -496,7 +494,7 @@ export default function AdminAIAssistant() {
   const handleDecision = async (id, action) => {
     setDecidingId(`${id}:${action}`);
     try {
-      const res = await base44.functions.invoke("platformAgent", { action, id, execute: action === "execute" });
+      const res = { data: { status: "unsupported", note: "تنفيذ تغييرات المنصة من المساعد لم يُنقل بعد إلى Supabase. لم يتم تنفيذ أي تغيير." } };
       if (res.data?.status) {
         setMessages((prev) => prev.map((m) => (m.role === "plan" && m.id === id ? { ...m, plan: { ...m.plan, status: res.data.status, execution_result: res.data.result || res.data.note } } : m)));
         if (id === pendingPlanId && res.data.status === "executed") setPendingPlanId(null);
@@ -513,7 +511,7 @@ export default function AdminAIAssistant() {
   const refreshIndexStatus = async () => {
     setRefreshingIndex(true);
     try {
-      const res = await base44.functions.invoke("platformAgent", { action: "refresh_index_status" });
+      const res = { data: { live_total_indexed: 0, note: "فهرس المنصة التشغيلي لم يُنقل بعد إلى Supabase." } };
       const data = res.data;
       const meta = data?.meta;
       const text = meta
