@@ -190,12 +190,10 @@ export default function CreateProject() {
     if((formData.project_type==="small"&&finalPlan.length>3)||(formData.project_type==="large"&&finalPlan.length>8)){alert(formData.project_type==="small"?"المشروع الصغير حدّه الأقصى 3 مراحل.":"المشروع الكبير حدّه الأقصى 8 مراحل رئيسية.");setIsLoading(false);return;}
     await supabase.from("projects").update({ stage_count: finalPlan.length, service_scope: { services: formData.service_scope, requested_by_client: true } }).eq("id", newProject.id);
     if(Math.abs(finalPlan.reduce((s,m)=>s+Number(m.percentage||0),0)-100)>0.01){alert("يجب أن يساوي مجموع نسب المراحل 100%.");setIsLoading(false);return;}
-    for(let i=0;i<finalPlan.length;i++){const m=finalPlan[i];await base44.entities.ProjectMilestone.create({project_id:newProject.id,title:m.title,description:m.description,amount:(projectBudget*m.percentage)/100,percentage:m.percentage,order:i+1,sequence_no:i+1,service_key:m.service_key,status:"pending",due_date:new Date(Date.now()+m.days*86400000).toISOString().split("T")[0]});}
+    for(let i=0;i<finalPlan.length;i++){const m=finalPlan[i];const stageAmount=(projectBudget*Number(m.percentage||0))/100;const {error:stageError}=await supabase.from("project_milestones").insert({project_id:newProject.id,title:m.title,description:m.description,amount:stageAmount,percentage:m.percentage,sequence_no:i+1,service_key:m.service_key||null,status:"pending",due_date:new Date(Date.now()+Number(m.days||7)*86400000).toISOString().split("T")[0]});if(stageError) throw stageError;}
     
     // Update client's total projects
-    await base44.entities.Client.update(client.id, {
-      total_projects: (client.total_projects || 0) + 1
-    });
+    await supabase.from("clients").update({total_projects:(client.total_projects||0)+1}).eq("id",client.id);
 
     // If direct hire, notify only the selected engineer
     if (preselectedEngineerId && preselectedEngineer) {
