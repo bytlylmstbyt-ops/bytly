@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "@/lib/supabaseClient";
+import { base44 } from "@/api/base44Client";
 import { motion } from "framer-motion";
 import {
   ArrowRight, Star, Clock, CheckCircle,
@@ -35,13 +35,13 @@ export default function CompareProposals() {
     setIsLoading(true);
     try {
       const proposalResults = await Promise.all(
-        proposalIds.map(id => supabase.from("project_offers").select("*").eq("id", id))
+        proposalIds.map(id => base44.entities.Proposal.filter({ id }))
       );
       const validProposals = proposalResults.map(r => r[0]).filter(Boolean);
       setProposals(validProposals);
 
       if (projectId) {
-        const proj = await supabase.from("projects").select("*").eq("id", projectId);
+        const proj = await base44.entities.Project.filter({ id: projectId });
         setProject(proj[0] || null);
       }
 
@@ -49,7 +49,7 @@ export default function CompareProposals() {
       const engineerMap = {};
       await Promise.all(
         engineerIds.map(async (id) => {
-          const data = await supabase.from("engineers").select("*").eq("id", id);
+          const data = await base44.entities.Engineer.filter({ id });
           if (data[0]) engineerMap[id] = data[0];
         })
       );
@@ -64,10 +64,10 @@ export default function CompareProposals() {
   const handleAccept = async (proposalId) => {
     setAcceptingId(proposalId);
     try {
-      await supabase.from("project_offers").update({ status: "accepted", updated_at: new Date().toISOString() }).eq("id", proposalId);
+      await base44.entities.Proposal.update(proposalId, { status: "accepted" });
       const others = proposals.filter(p => p.id !== proposalId);
-      await Promise.all(others.map(p => supabase.from("project_offers").update({ status: "rejected", updated_at: new Date().toISOString() }).eq("id", p.id)));
-      // Contract generation is handled by the Supabase contract lifecycle flow.
+      await Promise.all(others.map(p => base44.entities.Proposal.update(p.id, { status: "rejected" })));
+      await base44.functions.invoke("autoGenerateContract", { proposalId });
       navigate(`/ProjectProposals?project_id=${projectId}`);
     } catch (err) {
       console.error("Accept failed:", err);
