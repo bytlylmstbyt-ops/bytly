@@ -30,7 +30,7 @@ export default function SupplierDashboard() {
       if (supplierError) throw supplierError;
 
       if (supplierData) {
-        setsupplier(supplierData);
+        setSupplier(supplierData);
         const [{ data: myProjects, error: myProjectsError }, { data: openProjects, error: openProjectsError }] = await Promise.all([
           supabase.from("projects").select("*").eq("assigned_supplier_id", supplierData.id).order("created_at", { ascending: false }),
           supabase.from("projects").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(20)
