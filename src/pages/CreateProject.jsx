@@ -390,6 +390,21 @@ export default function CreateProject() {
                 />
               </div>
 
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">نطاق الخدمات المطلوبة *</Label>
+                <p className="text-xs text-slate-500">اختاري الخدمات؛ سيتم بناء المراحل تلقائياً وفق النطاق. ويمكن تعديلها لاحقاً.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {serviceOptions.map(service => (
+                    <Button key={service.value} type="button" variant={formData.service_scope.includes(service.value) ? "default" : "outline"} onClick={() => toggleService(service.value)} className="justify-start">
+                      {formData.service_scope.includes(service.value) ? "✓ " : ""}{service.label}
+                    </Button>
+                  ))}
+                </div>
+                <div className="p-3 rounded-lg bg-slate-50 text-sm text-slate-700">
+                  {formData.project_type === "small" ? "المشروع الصغير: من 1 إلى 3 مراحل كحد أقصى." : "المشروع الكبير: حتى 8 مراحل رئيسية، والعدد الفعلي يتحدد من نطاق الخدمات."}
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="budget_min">الميزانية من (ر.س)</Label>
