@@ -33,7 +33,8 @@ export default function CreateProject() {
     title: "",
     description: "",
     category: "",
-    project_type: "express_service",
+    project_type: "small",
+    service_scope: [],
     budget_min: "",
     budget_max: "",
     location: "",
@@ -140,6 +141,11 @@ export default function CreateProject() {
   };
 
   const totalPercentage = formData.milestones.reduce((sum, m) => sum + (parseFloat(m.percentage) || 0), 0);
+  const serviceOptions=[{value:"architectural_design",label:"التصميم المعماري"},{value:"executive_design",label:"التصميم التنفيذي"},{value:"structural_design",label:"التصميم الإنشائي"},{value:"interior_design",label:"التصميم الداخلي"},{value:"permits",label:"الرخص والاعتمادات"},{value:"construction",label:"التنفيذ"},{value:"supervision",label:"الإشراف الهندسي"}];
+  const toggleService=(value)=>setFormData(prev=>({...prev,service_scope:prev.service_scope.includes(value)?prev.service_scope.filter(v=>v!==value):[...prev.service_scope,value]}));
+  const buildStagePlan=()=>{const selected=formData.service_scope,stages=[];const add=(k,t,d,days)=>stages.push({service_key:k,title:t,description:d,percentage:0,days});
+    if(formData.project_type==="small"){if(selected.includes("architectural_design"))add("architectural_design","التصميم المعماري","إعداد وتسليم التصميم المعماري",14);if(selected.includes("executive_design"))add("executive_design","التصميم التنفيذي","إعداد المخططات التنفيذية",14);if(selected.includes("structural_design"))add("structural_design","التصميم الإنشائي","إعداد المخططات والحسابات الإنشائية",14);if(selected.includes("interior_design"))add("interior_design","التصميم الداخلي","التصميم الداخلي والمخرجات",14);if(selected.includes("permits"))add("permits","الرخص والاعتمادات","استكمال الاعتمادات المطلوبة",21);if(selected.includes("construction"))add("construction","التنفيذ","تنفيذ الأعمال المتفق عليها",30);if(selected.includes("supervision"))add("supervision","الإشراف الهندسي","المتابعة والإشراف",14);return stages.slice(0,3);}
+    [["architectural_design","الدراسة والتصميم المعماري","الدراسة والفكرة والتصميم المعماري",14],["structural_design","التصميم الإنشائي","المخططات والحسابات الإنشائية",14],["executive_design","المخططات التنفيذية والتخصصية","التنسيق والمخططات التنفيذية",21],["permits","الرخص والاعتمادات","استكمال الرخص والاعتمادات",21],["construction","التنفيذ","تنفيذ الأعمال",60],["supervision","الإشراف الهندسي","الإشراف والمتابعة",30],["interior_design","التصميم الداخلي","التصميم الداخلي والتشطيبات",21]].forEach(([k,t,d,days])=>{if(selected.includes(k))add(k,t,d,days);});return stages.slice(0,8);};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -148,7 +154,7 @@ export default function CreateProject() {
       return;
     }
 
-    if (formData.project_type === "express_service" && showMilestones && totalPercentage !== 100) {
+    if (formData.project_type === "small" && showMilestones && formData.milestones.length > 0 && totalPercentage !== 100) {
       alert("يجب أن يكون مجموع نسب المراحل 100%");
       return;
     }
@@ -160,6 +166,7 @@ export default function CreateProject() {
       description: formData.description,
       category: formData.category,
       project_type: formData.project_type,
+      service_scope: formData.service_scope,
       budget_min: parseFloat(formData.budget_min) || 0,
       budget_max: parseFloat(formData.budget_max) || 0,
       location: formData.location,
@@ -172,80 +179,13 @@ export default function CreateProject() {
       assigned_engineer_id: preselectedEngineerId || null
     });
 
-    // Create milestones based on project type
-    if (formData.project_type === "full_construction") {
-      // Predefined 6-stage milestones for full construction
-      const projectBudget = parseFloat(formData.budget_max) || parseFloat(formData.budget_min) || 0;
-      const fullConstructionMilestones = [
-        { title: "توقيع العقد", description: "بدء التعاقد الرسمي في المنصة", percentage: 25, days: 3 },
-        { title: "المخطط المعماري - الفكرة التصميمية", description: "التصميم المعماري المبدئي", percentage: 20, days: 14 },
-        { title: "تطوير التصميم", description: "التفاصيل المعمارية الإضافية وتنسيق المخططات", percentage: 15, days: 14 },
-        { title: "استخراج رخصة البناء واعتماد بلدي", description: "إرفاق رقم الرخصة الرسمي", percentage: 10, days: 21 },
-        { title: "المخططات التنفيذية النهائية", description: "المخططات التفصيلية (إنشائية، كهربائية، سباكة، دفاع مدني)", percentage: 20, days: 21 },
-        { title: "التسليم النهائي", description: "استلام جميع الملفات مختومة وجاهزة للتنفيذ", percentage: 10, days: 7 }
-      ];
-
-      for (let i = 0; i < fullConstructionMilestones.length; i++) {
-        const milestone = fullConstructionMilestones[i];
-        const milestoneAmount = (projectBudget * milestone.percentage) / 100;
-        
-        await base44.entities.ProjectMilestone.create({
-          project_id: newProject.id,
-          title: milestone.title,
-          description: milestone.description,
-          amount: milestoneAmount,
-          percentage: milestone.percentage,
-          order: i + 1,
-          status: "pending",
-          due_date: new Date(Date.now() + milestone.days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-        });
-      }
-    } else if (formData.project_type === "express_service") {
-      // Create milestones for express service (either custom or default 2-stage)
-      if (showMilestones && formData.milestones.length > 0) {
-        const projectBudget = parseFloat(formData.budget_max) || parseFloat(formData.budget_min) || 0;
-        
-        for (let i = 0; i < formData.milestones.length; i++) {
-          const milestone = formData.milestones[i];
-          const milestoneAmount = (projectBudget * parseFloat(milestone.percentage)) / 100;
-          
-          await base44.entities.ProjectMilestone.create({
-            project_id: newProject.id,
-            title: milestone.title,
-            description: milestone.description,
-            amount: milestoneAmount,
-            percentage: parseFloat(milestone.percentage),
-            order: i + 1,
-            status: "pending",
-            due_date: new Date(Date.now() + milestone.due_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-          });
-        }
-      } else {
-        // Default 2-stage for express service
-        const projectBudget = parseFloat(formData.budget_max) || parseFloat(formData.budget_min) || 0;
-        const expressMilestones = [
-          { title: "دفعة مقدمة", description: "50% عند البدء", percentage: 50, days: 1 },
-          { title: "التسليم النهائي", description: "50% عند الاستلام", percentage: 50, days: 7 }
-        ];
-
-        for (let i = 0; i < expressMilestones.length; i++) {
-          const milestone = expressMilestones[i];
-          const milestoneAmount = (projectBudget * milestone.percentage) / 100;
-          
-          await base44.entities.ProjectMilestone.create({
-            project_id: newProject.id,
-            title: milestone.title,
-            description: milestone.description,
-            amount: milestoneAmount,
-            percentage: milestone.percentage,
-            order: i + 1,
-            status: "pending",
-            due_date: new Date(Date.now() + milestone.days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-          });
-        }
-      }
-    }
-
+    const projectBudget=parseFloat(formData.budget_max)||parseFloat(formData.budget_min)||0;
+    let finalPlan=formData.milestones.length>0?formData.milestones.map((m,i)=>({service_key:m.service_key||formData.service_scope[i]||"custom",title:m.title,description:m.description,percentage:Number(m.percentage)||0,days:Number(m.due_days)||7})):buildStagePlan();
+    if(finalPlan.length===0) finalPlan=formData.project_type==="small"?[{service_key:"custom",title:"المرحلة الأولى",description:"بدء وتنفيذ الخدمة المطلوبة",percentage:50,days:7},{service_key:"custom",title:"التسليم النهائي",description:"مراجعة وتسليم المخرجات",percentage:50,days:7}]:[{service_key:"custom",title:"الدراسة والتخطيط",description:"تحديد المتطلبات ونطاق العمل",percentage:15,days:14},{service_key:"custom",title:"التصميم",description:"إعداد التصميم والمخططات",percentage:25,days:21},{service_key:"custom",title:"التنفيذ",description:"تنفيذ الأعمال المتفق عليها",percentage:40,days:60},{service_key:"custom",title:"التسليم النهائي",description:"المراجعة والتسليم",percentage:20,days:14}];
+    if((formData.project_type==="small"&&finalPlan.length>3)||(formData.project_type==="large"&&finalPlan.length>8)){alert(formData.project_type==="small"?"المشروع الصغير حدّه الأقصى 3 مراحل.":"المشروع الكبير حدّه الأقصى 8 مراحل رئيسية.");setIsLoading(false);return;}
+    if(Math.abs(finalPlan.reduce((s,m)=>s+Number(m.percentage||0),0)-100)>0.01){alert("يجب أن يساوي مجموع نسب المراحل 100%.");setIsLoading(false);return;}
+    for(let i=0;i<finalPlan.length;i++){const m=finalPlan[i];await base44.entities.ProjectMilestone.create({project_id:newProject.id,title:m.title,description:m.description,amount:(projectBudget*m.percentage)/100,percentage:m.percentage,order:i+1,sequence_no:i+1,service_key:m.service_key,status:"pending",due_date:new Date(Date.now()+m.days*86400000).toISOString().split("T")[0]});}
+    
     // Update client's total projects
     await base44.entities.Client.update(client.id, {
       total_projects: (client.total_projects || 0) + 1
@@ -364,9 +304,9 @@ export default function CreateProject() {
                   className="grid grid-cols-1 md:grid-cols-2 gap-4"
                 >
                   <div>
-                    <RadioGroupItem value="full_construction" id="full_construction" className="peer sr-only" />
+                    <RadioGroupItem value="large" id="large" className="peer sr-only" />
                     <Label
-                      htmlFor="full_construction"
+                      htmlFor="large"
                       className="flex flex-col rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-[#C9A66B] peer-data-[state=checked]:bg-[#C9A66B]/5 cursor-pointer transition-all"
                     >
                       <div className="flex items-center gap-3 mb-3">
@@ -386,9 +326,9 @@ export default function CreateProject() {
                     </Label>
                   </div>
                   <div>
-                    <RadioGroupItem value="express_service" id="express_service" className="peer sr-only" />
+                    <RadioGroupItem value="small" id="small" className="peer sr-only" />
                     <Label
-                      htmlFor="express_service"
+                      htmlFor="small"
                       className="flex flex-col rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-[#C9A66B] peer-data-[state=checked]:bg-[#C9A66B]/5 cursor-pointer transition-all"
                     >
                       <div className="flex items-center gap-3 mb-3">
@@ -409,7 +349,7 @@ export default function CreateProject() {
                   </div>
                 </RadioGroup>
                 
-                {formData.project_type === "full_construction" && (
+                {formData.project_type === "large" && (
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
                     💡 المشاريع الكاملة تتطلب موافقة شركة هندسية استشارية قبل تحرير الدفعات
                   </div>
@@ -591,7 +531,7 @@ export default function CreateProject() {
                   </>
                 )}
 
-                {showMilestones && formData.project_type === "express_service" && (
+                {showMilestones && formData.project_type === "small" && (
                   <div className="space-y-3">
                     {formData.milestones.map((milestone, index) => (
                       <Card key={index} className="p-4 border-[#C9A66B]/30">
