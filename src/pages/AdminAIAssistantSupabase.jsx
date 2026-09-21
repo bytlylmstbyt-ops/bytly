@@ -64,19 +64,32 @@ export default function AdminAIAssistantSupabase() {
       // Fallback: verify the live Supabase session directly. This prevents a
       // stale/early AuthContext state from incorrectly denying the platform owner.
       try {
-        const { data, error } = await supabase.auth.getUser();
-        if (error) throw error;
-        const authUser = data?.user;
+        let authUser = null;
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (!userError) authUser = userData?.user || null;
+        // Fallback to the active session when getUser is temporarily unable to refresh/read the token.
+        if (!authUser) {
+          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+          if (sessionError) throw sessionError;
+          authUser = sessionData?.session?.user || null;
+        }
         if (!authUser) throw new Error("No authenticated Supabase user");
 
         const email = (authUser.email || "").trim().toLowerCase();
         let profile = null;
         try {
-          const result = await supabase
+          let result = await supabase
             .from("profiles")
             .select("role,email,full_name")
             .eq("user_id", authUser.id)
             .maybeSingle();
+          if (!result.data && result.error) {
+            result = await supabase
+              .from("profiles")
+              .select("role,email,full_name")
+              .eq("id", authUser.id)
+              .maybeSingle();
+          }
           profile = result.data || null;
         } catch {}
 
