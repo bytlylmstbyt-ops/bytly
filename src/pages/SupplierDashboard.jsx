@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import {
   Package, ShoppingCart, CheckCircle, DollarSign,
@@ -24,19 +24,21 @@ export default function SupplierDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const user = await base44.auth.me();
-      const [supplierData] = await base44.entities.Supplier.filter({ email: user.email });
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw authError || new Error("انتهت جلسة الدخول");
+      const { data: supplierData, error: supplierError } = await supabase.from("suppliers").select("*").eq("user_id", user.id).maybeSingle();
+      if (supplierError) throw supplierError;
 
       if (supplierData) {
-        setSupplier(supplierData);
-
-        const [myProjects, openProjects] = await Promise.all([
-          base44.entities.Project.filter({ assigned_engineer_id: supplierData.id }),
-          base44.entities.Project.filter({ status: "open" }, "-created_date", 20)
+        setsupplier(supplierData);
+        const [{ data: myProjects, error: myProjectsError }, { data: openProjects, error: openProjectsError }] = await Promise.all([
+          supabase.from("projects").select("*").eq("assigned_supplier_id", supplierData.id).order("created_at", { ascending: false }),
+          supabase.from("projects").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(20)
         ]);
-
-        setProjects(myProjects);
-        setAvailableProjects(openProjects);
+        if (myProjectsError) throw myProjectsError;
+        if (openProjectsError) throw openProjectsError;
+        setProjects(myProjects || []);
+        setAvailableProjects(openProjects || []);
       }
     } catch (error) {
       console.error("Error loading dashboard:", error);
