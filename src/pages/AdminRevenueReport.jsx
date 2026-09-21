@@ -26,7 +26,7 @@ export default function AdminRevenueReport() {
     if (authError || !currentUser) throw authError || new Error("انتهت جلسة الدخول");
     const { data: profile } = await supabase.from("profiles").select("role").eq("user_id", currentUser.id).maybeSingle();
     if (profile?.role !== "admin") { alert("غير مصرح لك بالدخول"); window.location.href="/"; return; }
-    const { data: revenuesData, error } = await supabase.from("platform_revenue").select("*").eq("status","collected").order("payment_date",{ascending:false});
+    const { data: revenuesData, error } = await supabase.from("revenue_ledger").select("*").eq("status","collected").order("created_at",{ascending:false});
     if (error) throw error;    setRevenues(revenuesData);
     setIsLoading(false);
   };
