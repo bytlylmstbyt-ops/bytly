@@ -296,17 +296,6 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
                 {v} {k === project.status && <span className="text-xs text-[#C9A66B]">✓ الحالية</span>}
               </button>
             ))}
-            </> : assignTab === "contractor" ? <>
-              <button onClick={() => assignProvider("assigned_contractor_id","")} disabled={loading} className="w-full text-right p-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm">— بدون مقاول —</button>
-              {contractors.map(c => <button key={c.id} onClick={() => assignProvider("assigned_contractor_id", c.id)} disabled={loading} className={`w-full text-right p-3 rounded-lg border text-sm ${c.id === project.assigned_contractor_id ? "border-[#C9A66B] bg-[#FEF9EE]" : "border-slate-200 hover:bg-slate-50"}`}>{c.company_name || c.email} {c.id === project.assigned_contractor_id && <span className="text-xs text-[#C9A66B]">✓ الحالي</span>}<p className="text-xs text-slate-400 mt-0.5">{c.email || ""}</p></button>)}
-            </> : <>
-              <button onClick={() => assignProvider("assigned_supplier_id","")} disabled={loading} className="w-full text-right p-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm">— بدون مورد —</button>
-              {suppliers.map(s => <button key={s.id} onClick={() => assignProvider("assigned_supplier_id", s.id)} disabled={loading} className={`w-full text-right p-3 rounded-lg border text-sm ${s.id === project.assigned_supplier_id ? "border-[#C9A66B] bg-[#FEF9EE]" : "border-slate-200 hover:bg-slate-50"}`}>{s.company_name || s.email} {s.id === project.assigned_supplier_id && <span className="text-xs text-[#C9A66B]">✓ الحالي</span>}<p className="text-xs text-slate-400 mt-0.5">{s.email || ""}</p></button>)}
-            </>}
-          </div>
-        </DialogContent>
-      </Dialog>
-
       {/* Assign engineer dialog */}
       <Dialog open={showAssign} onOpenChange={setShowAssign}>
         <DialogContent>
