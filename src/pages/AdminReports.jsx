@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,29 +25,20 @@ export default function AdminReportsPage() {
 
   const loadReports = async () => {
     try {
-      const user = await base44.auth.me();
-      
-      if (user.role !== "admin") {
-        alert("غير مصرح لك بالوصول لهذه الصفحة");
-        return;
-      }
-
-      // Load all data
-      const [
-        engineers,
-        clients,
-        projects,
-        transactions,
-        withdrawalRequests,
-        reviews
-      ] = await Promise.all([
-        base44.entities.Engineer.list(),
-        base44.entities.Client.list(),
-        base44.entities.Project.list(),
-        base44.entities.Transaction.list(),
-        base44.entities.WithdrawalRequest.list(),
-        base44.entities.Review.list()
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw authError || new Error("انتهت جلسة الدخول");
+      const { data: profile } = await supabase.from("profiles").select("role").eq("user_id", user.id).maybeSingle();
+      if (profile?.role !== "admin") { alert("غير مصرح لك بالوصول لهذه الصفحة"); return; }
+      const [engineersRes, clientsRes, projectsRes, transactionsRes, withdrawalRes, reviewsRes] = await Promise.all([
+        supabase.from("engineers").select("*"),
+        supabase.from("clients").select("*"),
+        supabase.from("projects").select("*"),
+        supabase.from("wallet_transactions").select("*"),
+        supabase.from("withdrawal_requests").select("id,amount,status,created_at"),
+        supabase.from("reviews").select("*")
       ]);
+      for (const r of [engineersRes,clientsRes,projectsRes,transactionsRes,withdrawalRes,reviewsRes]) if (r.error) throw r.error;
+      const engineers=engineersRes.data||[], clients=clientsRes.data||[], projects=projectsRes.data||[], transactions=transactionsRes.data||[], withdrawalRequests=withdrawalRes.data||[], reviews=reviewsRes.data||[];
 
       // Calculate engineer statistics
       const engineersStats = engineers.map(engineer => {
