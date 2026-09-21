@@ -30,7 +30,7 @@ export default function ContractorDashboard() {
       if (contractorError) throw contractorError;
 
       if (contractorData) {
-        setcontractor(contractorData);
+        setContractor(contractorData);
         const [{ data: myProjects, error: myProjectsError }, { data: openProjects, error: openProjectsError }] = await Promise.all([
           supabase.from("projects").select("*").eq("assigned_contractor_id", contractorData.id).order("created_at", { ascending: false }),
           supabase.from("projects").select("*").eq("status", "open").order("created_at", { ascending: false }).limit(20)
