@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -25,7 +25,7 @@ export default function AdminAuthenticationSettings() {
   const [emailEnabled, setEmailEnabled] = useState(true);
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {}).finally(() => setLoading(false));
+    supabase.auth.getUser().then(async ({ data }) => { if (!data?.user) return; const { data: profile } = await supabase.from("profiles").select("*").eq("user_id", data.user.id).maybeSingle(); setUser({ ...data.user, ...profile }); }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   return (
@@ -105,7 +105,7 @@ export default function AdminAuthenticationSettings() {
         <CardHeader><CardTitle className="text-lg text-[#2F2945]">حالة جلسة المدير</CardTitle></CardHeader>
         <CardContent className="flex flex-wrap gap-3 text-sm">
           <Badge variant="outline">{loading ? "جاري التحقق..." : user ? `مسجل كـ ${user.email || "مدير"}` : "غير متاح"}</Badge>
-          <Badge variant="outline">المصادقة الحالية: Base44 Auth</Badge>
+          <Badge variant="outline">المصادقة الحالية: Supabase Auth</Badge>
           <Badge variant="outline">الهدف التالي: Supabase Auth</Badge>
         </CardContent>
       </Card>
