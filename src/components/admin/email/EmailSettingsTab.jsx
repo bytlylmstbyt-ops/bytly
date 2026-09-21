@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,8 +19,9 @@ export default function EmailSettingsTab() {
   const handleTestConnection = async () => {
     setTesting(true);
     try {
-      const res = await base44.functions.invoke("testIntegration", { integration_type: "gmail" });
-      setConnectionStatus(res.ok ? "connected" : "disconnected");
+      const { data: res, error } = await supabase.functions.invoke("system-email", { body: { action: "status" } });
+      if (error) throw error;
+      setConnectionStatus(res?.configured ? "connected" : "disconnected");
       toast({ title: res.ok ? t("integrations.adminEmail.settings.connected") : t("integrations.adminEmail.settings.notConnected"), variant: res.ok ? "default" : "destructive" });
     } catch (e) {
       setConnectionStatus("disconnected");
@@ -35,12 +36,10 @@ export default function EmailSettingsTab() {
     }
     setSending(true);
     try {
-      await base44.integrations.Core.SendEmail({
-        to: testEmail,
-        subject: isRTL ? "رسالة اختبار من بيتلي" : "Test Email from Bytly",
-        body: `<div style="font-family: Arial; padding: 20px;"><h2>${isRTL ? "اختبار البريد" : "Email Test"}</h2><p>${isRTL ? "هذه رسالة اختبار من نظام البريد في بيتلي." : "This is a test email from Bytly email system."}</p><p>${isRTL ? "الوقت" : "Time"}: ${new Date().toLocaleString(isRTL ? "ar-SA" : "en-US")}</p></div>`,
-        from_name: "Bytly",
-      });
+      const html = `<div style="font-family: Arial; padding: 20px;"><h2>${isRTL ? "اختبار البريد" : "Email Test"}</h2><p>${isRTL ? "هذه رسالة اختبار من نظام البريد في بيتلي." : "This is a test email from Bytly email system."}</p><p>${isRTL ? "الوقت" : "Time"}: ${new Date().toLocaleString(isRTL ? "ar-SA" : "en-US")}</p></div>`;
+      const { data: result, error } = await supabase.functions.invoke("system-email", { body: { action: "sendEmail", to: testEmail, subject: isRTL ? "رسالة اختبار من بيتلي" : "Test Email from Bytly", html } });
+      if (error || !result?.ok) throw error || new Error(result?.error || "EMAIL_SEND_FAILED");
+      await supabase.from("email_logs").insert({ to_email: testEmail, subject: isRTL ? "رسالة اختبار من بيتلي" : "Test Email from Bytly", body: html, source: "AdminEmailCenter/Test", status: "sent", provider_message_id: result.messageId || null });
       toast({ title: t("integrations.adminEmail.settings.testSent") });
       setTestEmail("");
     } catch (e) {
@@ -78,7 +77,7 @@ export default function EmailSettingsTab() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><label className="text-xs text-slate-500 mb-1 block">{t("integrations.adminEmail.settings.senderName")}</label><Input defaultValue="Bytly" readOnly className="bg-slate-50 text-sm" /></div>
-            <div><label className="text-xs text-slate-500 mb-1 block">{t("integrations.adminEmail.settings.senderEmail")}</label><Input defaultValue="noreply@bytly.com" readOnly className="bg-slate-50 text-sm" /></div>
+            <div><label className="text-xs text-slate-500 mb-1 block">{t("integrations.adminEmail.settings.senderEmail")}</label><Input defaultValue="info@mybytly.com" readOnly className="bg-slate-50 text-sm" /></div>
           </div>
         </CardContent>
       </Card>
