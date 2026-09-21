@@ -34,7 +34,7 @@ export default function AdminWalletPage() {
         supabase.from("engineers").select("*").order("created_at", { ascending: false }).limit(500),
         supabase.from("clients").select("*").order("created_at", { ascending: false }).limit(500),
         supabase.from("wallet_transactions").select("*").order("created_at", { ascending: false }).limit(100),
-        supabase.from("withdrawal_requests").select("*").in("status", ["pending", "processing"]).order("created_at", { ascending: false })
+        supabase.from("withdrawal_requests").select("id,project_id,engineer_id,contractor_id,supplier_id,provider_type,amount,status,consultant_approval,consultant_user_id,consultant_profile_id,consultant_profile_type,consultant_approval_date,owner_approval,owner_user_id,owner_approval_date,request_date,processing_date,completion_date,rejection_reason,admin_notes,transaction_reference,description,created_at,updated_at").in("status", ["pending", "processing"]).order("created_at", { ascending: false })
       ]);
       setEngineers(engineersData || []); setClients(clientsData || []); setTransactions(transactionsData || []); setWithdrawalRequests(withdrawalsData || []);
       const { data: wallets } = await supabase.from("wallet_accounts").select("*");
