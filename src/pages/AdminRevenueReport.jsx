@@ -26,7 +26,7 @@ export default function AdminRevenueReport() {
     if (authError || !currentUser) throw authError || new Error("انتهت جلسة الدخول");
     const { data: profile } = await supabase.from("profiles").select("role").eq("user_id", currentUser.id).maybeSingle();
     if (profile?.role !== "admin") { alert("غير مصرح لك بالدخول"); window.location.href="/"; return; }
-    const { data: revenuesData, error } = await supabase.from("revenue_ledger").select("*").eq("status","collected").order("created_at",{ascending:false});
+    const { data: revenuesData, error } = await supabase.from("revenue_ledger").select("*").eq("status","recognized").order("created_at",{ascending:false});
     if (error) throw error;    setRevenues(revenuesData);
     setIsLoading(false);
   };
@@ -38,15 +38,15 @@ export default function AdminRevenueReport() {
 
   const totalRevenue = filteredRevenues.reduce((sum, rev) => sum + (rev.commission_amount || 0), 0);
   const projectRevenue = filteredRevenues
-    .filter(r => r.source_type === "project_milestone")
+    .filter(r => r.source_type === "project_commission")
     .reduce((sum, rev) => sum + (rev.commission_amount || 0), 0);
   const designRevenue = filteredRevenues
-    .filter(r => r.source_type === "design_purchase")
+    .filter(r => r.source_type === "ready_project_sale")
     .reduce((sum, rev) => sum + (rev.commission_amount || 0), 0);
 
   const sourceLabels = {
-    project_milestone: "مشاريع",
-    design_purchase: "متجر التصاميم",
+    project_commission: "مشاريع",\n    ready_project_sale: "متجر التصاميم",
+    
     subscription: "اشتراكات"
   };
 
@@ -132,8 +132,8 @@ export default function AdminRevenueReport() {
               label="مصدر الإيراد"
               options={[
                 { value: "", label: "جميع المصادر" },
-                { value: "project_milestone", label: "مشاريع فقط" },
-                { value: "design_purchase", label: "متجر التصاميم فقط" },
+                { value: "project_commission", label: "مشاريع فقط" },
+                { value: "ready_project_sale", label: "متجر التصاميم فقط" },
               ]}
               triggerClassName="w-[200px] bg-white"
             />
@@ -170,7 +170,7 @@ export default function AdminRevenueReport() {
                             </Badge>
                           </div>
                           <p className="text-sm text-slate-600">
-                            بائع: {revenue.seller_email}
+                            المستفيد: {revenue.provider_user_id || revenue.buyer_user_id || "غير محدد"}
                           </p>
                           <p className="text-xs text-slate-500 mt-1">
                             {new Date(revenue.payment_date).toLocaleDateString('ar-SA', {
