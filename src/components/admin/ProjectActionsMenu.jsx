@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
 import { logProjectChange, logProjectDeletion } from "@/components/admin/logProjectChange";
 import {
@@ -47,6 +48,9 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
   const [showEdit, setShowEdit] = useState(false);
   const [showStatus, setShowStatus] = useState(false);
   const [showAssign, setShowAssign] = useState(false);
+  const [contractors, setContractors] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [assignTab, setAssignTab] = useState("engineer");
   const [showActivity, setShowActivity] = useState(false);
   const [showContract, setShowContract] = useState(false);
   const [showPayments, setShowPayments] = useState(false);
@@ -59,6 +63,22 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
   const hasEngineer = !!project?.assigned_engineer_id;
   const hasClient = !!project?.client_id;
   const hasEscrow = (project?.escrow_amount || 0) > 0 || (project?.budget_max || 0) > 0;
+
+  React.useEffect(() => {
+    if (!showAssign) return;
+    let active = true;
+    (async () => {
+      const [{ data: contractorData }, { data: supplierData }] = await Promise.all([
+        supabase.from("contractors").select("id,company_name,email,status").order("company_name"),
+        supabase.from("suppliers").select("id,company_name,email,status").order("company_name"),
+      ]);
+      if (active) {
+        setContractors((contractorData || []).filter(x => !x.status || ["active","approved","verified"].includes(String(x.status).toLowerCase())));
+        setSuppliers((supplierData || []).filter(x => !x.status || ["active","approved","verified"].includes(String(x.status).toLowerCase())));
+      }
+    })();
+    return () => { active = false; };
+  }, [showAssign]);
 
   const execUpdate = async (data, actionLabel) => {
     setLoading(true);
@@ -133,19 +153,26 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
     }
   };
 
-  const assignEngineer = async (engId) => {
+  const assignProvider = async (field, value) => {
     setLoading(true);
     try {
-      await base44.entities.Project.update(project.id, { assigned_engineer_id: engId || null });
-      await logProjectChange(project, { assigned_engineer_id: engId || null }, user);
+      const patch = {
+        assigned_engineer_id: field === "assigned_engineer_id" ? (value || null) : project.assigned_engineer_id || null,
+        assigned_contractor_id: field === "assigned_contractor_id" ? (value || null) : project.assigned_contractor_id || null,
+        assigned_supplier_id: field === "assigned_supplier_id" ? (value || null) : project.assigned_supplier_id || null,
+      };
+      const { error } = await supabase.from("projects").update(patch).eq("id", project.id);
+      if (error) throw error;
       await onUpdated();
       setShowAssign(false);
     } catch (err) {
-      alert("فشل التعيين");
+      alert(`فشل التعيين: ${err.message || "تعذر تحديث المشروع"}`);
     } finally {
       setLoading(false);
     }
   };
+
+  const assignEngineer = (engId) => assignProvider("assigned_engineer_id", engId);
 
   const openFinance = () => {
     setFinanceForm({
@@ -269,6 +296,13 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
                 {v} {k === project.status && <span className="text-xs text-[#C9A66B]">✓ الحالية</span>}
               </button>
             ))}
+            </> : assignTab === "contractor" ? <>
+              <button onClick={() => assignProvider("assigned_contractor_id","")} disabled={loading} className="w-full text-right p-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm">— بدون مقاول —</button>
+              {contractors.map(c => <button key={c.id} onClick={() => assignProvider("assigned_contractor_id", c.id)} disabled={loading} className={`w-full text-right p-3 rounded-lg border text-sm ${c.id === project.assigned_contractor_id ? "border-[#C9A66B] bg-[#FEF9EE]" : "border-slate-200 hover:bg-slate-50"}`}>{c.company_name || c.email} {c.id === project.assigned_contractor_id && <span className="text-xs text-[#C9A66B]">✓ الحالي</span>}<p className="text-xs text-slate-400 mt-0.5">{c.email || ""}</p></button>)}
+            </> : <>
+              <button onClick={() => assignProvider("assigned_supplier_id","")} disabled={loading} className="w-full text-right p-3 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm">— بدون مورد —</button>
+              {suppliers.map(s => <button key={s.id} onClick={() => assignProvider("assigned_supplier_id", s.id)} disabled={loading} className={`w-full text-right p-3 rounded-lg border text-sm ${s.id === project.assigned_supplier_id ? "border-[#C9A66B] bg-[#FEF9EE]" : "border-slate-200 hover:bg-slate-50"}`}>{s.company_name || s.email} {s.id === project.assigned_supplier_id && <span className="text-xs text-[#C9A66B]">✓ الحالي</span>}<p className="text-xs text-slate-400 mt-0.5">{s.email || ""}</p></button>)}
+            </>}
           </div>
         </DialogContent>
       </Dialog>
@@ -277,7 +311,15 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
       <Dialog open={showAssign} onOpenChange={setShowAssign}>
         <DialogContent>
           <DialogHeader><DialogTitle>تعيين / تغيير المهندس المسؤول</DialogTitle></DialogHeader>
+          <div className="flex gap-2 border-b pb-2 mb-2">
+            {[["engineer","المهندس"],["contractor","المقاول"],["supplier","المورد"]].map(([key,label]) => (
+              <button key={key} type="button" onClick={() => setAssignTab(key)} className={`flex-1 py-2 rounded-lg text-sm ${assignTab === key ? "bg-[#4A3F35] text-white" : "bg-slate-100 text-slate-600"}`}>
+                {label}
+              </button>
+            ))}
+          </div>
           <div className="space-y-2 py-2 max-h-80 overflow-y-auto">
+            {assignTab === "engineer" ? <>
             <button
               onClick={() => assignEngineer("")}
               disabled={loading}
