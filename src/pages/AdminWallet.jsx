@@ -30,122 +30,45 @@ export default function AdminWalletPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-
-      // Load engineers
-      const engineersData = await base44.entities.Engineer.list("-created_date", 500);
-      setEngineers(engineersData);
-
-      // Load clients
-      const clientsData = await base44.entities.Client.list("-created_date", 500);
-      setClients(clientsData);
-
-      // Load transactions
-      const transactionsData = await base44.entities.Transaction.list("-created_date", 100);
-      setTransactions(transactionsData);
-
-      // Load withdrawal requests
-      const withdrawalsData = await base44.entities.WithdrawalRequest.filter(
-        { status: "pending" },
-        "-created_date"
-      );
-      setWithdrawalRequests(withdrawalsData);
-
-      // Calculate stats
-      const engineersBalance = engineersData.reduce(
-        (sum, eng) => sum + (eng.available_balance || 0) + (eng.pending_balance || 0),
-        0
-      );
-
-      const clientsBalance = clientsData.reduce(
-        (sum, client) => sum + (client.wallet_balance || 0),
-        0
-      );
-
-      const platformCommissions = transactionsData
-        .filter(t => t.type === "commission" && t.status === "completed")
-        .reduce((sum, t) => sum + t.amount, 0);
-
-      const pendingWithdrawalsTotal = withdrawalsData.reduce(
-        (sum, w) => sum + w.amount,
-        0
-      );
-
-      setStats({
-        totalPlatformBalance: platformCommissions,
-        totalEngineersBalance: engineersBalance,
-        totalClientBalance: clientsBalance,
-        pendingWithdrawals: pendingWithdrawalsTotal
-      });
-
-    } catch (error) {
-      console.error("Error loading data:", error);
-    } finally {
-      setLoading(false);
-    }
+      const [{ data: engineersData }, { data: clientsData }, { data: transactionsData }, { data: withdrawalsData }] = await Promise.all([
+        supabase.from("engineers").select("*").order("created_at", { ascending: false }).limit(500),
+        supabase.from("clients").select("*").order("created_at", { ascending: false }).limit(500),
+        supabase.from("wallet_transactions").select("*").order("created_at", { ascending: false }).limit(100),
+        supabase.from("withdrawal_requests").select("*").eq("status", "pending").order("created_at", { ascending: false })
+      ]);
+      setEngineers(engineersData || []); setClients(clientsData || []); setTransactions(transactionsData || []); setWithdrawalRequests(withdrawalsData || []);
+      const { data: wallets } = await supabase.from("wallet_accounts").select("*");
+      const engIds=new Set((engineersData||[]).map(e=>e.user_id).filter(Boolean)), cliIds=new Set((clientsData||[]).map(c=>c.user_id).filter(Boolean));
+      const engBal=(wallets||[]).filter(w=>engIds.has(w.user_id)).reduce((s,w)=>s+Number(w.available_balance||0)+Number(w.held_balance||0),0);
+      const cliBal=(wallets||[]).filter(w=>cliIds.has(w.user_id)).reduce((s,w)=>s+Number(w.available_balance||0)+Number(w.held_balance||0),0);
+      const fees=(transactionsData||[]).filter(t=>["commission","platform_fee"].includes(t.type)&&t.status==="completed").reduce((s,t)=>s+Number(t.amount||0),0);
+      const pending=(withdrawalsData||[]).reduce((s,w)=>s+Number(w.amount||0),0);
+      setStats({totalPlatformBalance:fees,totalEngineersBalance:engBal,totalClientBalance:cliBal,pendingWithdrawals:pending});
+    } catch(error){ console.error("Error loading data:",error); } finally{setLoading(false);}
   };
 
   const handleApproveWithdrawal = async (request) => {
-    // Check consultant approval
-    if (!request.consultant_approval) {
-      alert("⚠️ يجب اعتماد المستشار الفني أولاً قبل الموافقة على طلب السحب");
-      return;
-    }
-
-    if (!confirm(`هل تريد الموافقة على طلب السحب بمبلغ ${request.amount} ريال؟`)) {
-      return;
-    }
-
+    if (!request.consultant_approval) { alert("⚠️ يجب اعتماد المستشار الفني أولاً قبل الموافقة على طلب السحب"); return; }
+    if (!confirm(`هل تريد الموافقة على طلب السحب بمبلغ ${request.amount} ريال؟`)) return;
     try {
-      // Update withdrawal request status
-      await base44.entities.WithdrawalRequest.update(request.id, {
-        status: "completed",
-        completion_date: new Date().toISOString()
-      });
-
-      // Create completion transaction
-      await base44.entities.Transaction.create({
-        user_id: request.engineer_id,
-        type: "withdrawal_completed",
-        amount: request.amount,
-        status: "completed",
-        description: "تم تحويل المبلغ إلى الحساب البنكي",
-        withdrawal_request_id: request.id
-      });
-
-      alert("تم الموافقة على طلب السحب بنجاح");
-      loadData();
-    } catch (error) {
-      console.error("Error approving withdrawal:", error);
-      alert("حدث خطأ أثناء معالجة الطلب");
-    }
+      const { error } = await supabase.from("withdrawal_requests").update({status:"completed",completion_date:new Date().toISOString()}).eq("id",request.id);
+      if(error) throw error;
+      const { error: txError } = await supabase.from("wallet_transactions").insert({user_id:request.engineer_user_id||request.user_id,type:"withdrawal_completed",amount:request.amount,status:"completed",description:"تم تحويل المبلغ إلى الحساب البنكي",payment_id:request.id});
+      if(txError) throw txError;
+      alert("تم الموافقة على طلب السحب بنجاح"); loadData();
+    } catch(error){console.error(error);alert("حدث خطأ أثناء معالجة الطلب");}
   };
 
   const handleRejectWithdrawal = async (request) => {
-    const reason = prompt("يرجى إدخال سبب الرفض:");
-    if (!reason) return;
-
+    const reason=prompt("يرجى إدخال سبب الرفض:"); if(!reason) return;
     try {
-      // Update withdrawal request status
-      await base44.entities.WithdrawalRequest.update(request.id, {
-        status: "rejected",
-        rejection_reason: reason,
-        completion_date: new Date().toISOString()
-      });
-
-      // Return amount to engineer's available balance
-      const engineer = engineers.find(e => e.id === request.engineer_id);
-      if (engineer) {
-        await base44.entities.Engineer.update(engineer.id, {
-          available_balance: (engineer.available_balance || 0) + request.amount
-        });
-      }
-
-      alert("تم رفض طلب السحب");
-      loadData();
-    } catch (error) {
-      console.error("Error rejecting withdrawal:", error);
-      alert("حدث خطأ أثناء معالجة الطلب");
-    }
+      const { error } = await supabase.from("withdrawal_requests").update({status:"rejected",rejection_reason:reason,completion_date:new Date().toISOString()}).eq("id",request.id);
+      if(error) throw error;
+      const userId=request.engineer_user_id||request.user_id;
+      const { data: wallet }=await supabase.from("wallet_accounts").select("available_balance").eq("user_id",userId).maybeSingle();
+      if(wallet){const {error:e}=await supabase.from("wallet_accounts").update({available_balance:Number(wallet.available_balance||0)+Number(request.amount||0),updated_at:new Date().toISOString()}).eq("user_id",userId);if(e)throw e;}
+      alert("تم رفض طلب السحب"); loadData();
+    }catch(error){console.error(error);alert("حدث خطأ أثناء معالجة الطلب");}
   };
 
   if (loading) {
