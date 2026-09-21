@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,46 +44,44 @@ export default function WithdrawalForm({ engineer, onSuccess }) {
     setLoading(true);
 
     try {
-      // Create withdrawal request
-      const request = await base44.entities.WithdrawalRequest.create({
-        engineer_id: engineer.id,
-        amount: amount,
-        iban: formData.iban,
-        bank_name: formData.bank_name,
-        account_holder_name: formData.account_holder_name,
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw authError || new Error("انتهت جلسة الدخول");
+      const { data: wallet, error: walletError } = await supabase.from("wallet_accounts").select("*").eq("user_id", user.id).maybeSingle();
+      if (walletError) throw walletError;
+      const availableBalance = Number(wallet?.available_balance || engineer?.available_balance || 0);
+      if (amount > availableBalance) throw new Error(`المبلغ المتاح للسحب: ${availableBalance} ريال فقط`);
+
+      // Store banking details only with the withdrawal request; do not expose them in logs or URLs.
+      const { data: request, error: requestError } = await supabase.from("withdrawal_requests").insert({
+        user_id: user.id,
+        engineer_user_id: user.id,
+        amount,
+        iban: formData.iban.replace(/\s+/g, "").toUpperCase(),
+        bank_name: formData.bank_name.trim(),
+        account_holder_name: formData.account_holder_name.trim(),
         status: "pending",
         request_date: new Date().toISOString()
-      });
+      }).select("id,amount,status,request_date").single();
+      if (requestError) throw requestError;
 
-      // Update engineer's available balance
-      await base44.entities.Engineer.update(engineer.id, {
-        available_balance: engineer.available_balance - amount,
-        iban: formData.iban,
-        bank_name: formData.bank_name,
-        account_holder_name: formData.account_holder_name
-      });
+      const { error: walletError2 } = await supabase.from("wallet_accounts").update({
+        available_balance: availableBalance - amount,
+        held_balance: Number(wallet?.held_balance || 0) + amount,
+        updated_at: new Date().toISOString()
+      }).eq("user_id", user.id).gte("available_balance", amount);
+      if (walletError2) throw walletError2;
 
-      // Create transaction record
-      await base44.entities.Transaction.create({
-        user_id: engineer.id,
+      const { error: txError } = await supabase.from("wallet_transactions").insert({
+        user_id: user.id,
         type: "withdrawal_request",
-        amount: amount,
+        amount,
         status: "pending",
         description: "طلب سحب رصيد",
         withdrawal_request_id: request.id,
-        balance_before: engineer.available_balance,
-        balance_after: engineer.available_balance - amount
+        balance_before: availableBalance,
+        balance_after: availableBalance - amount
       });
-
-      setSuccess(true);
-      setFormData({ ...formData, amount: "" });
-      
-      if (onSuccess) onSuccess();
-
-      setTimeout(() => {
-        setSuccess(false);
-      }, 5000);
-
+      if (txError) throw txError;
     } catch (error) {
       console.error("Error creating withdrawal request:", error);
       setError("حدث خطأ أثناء إنشاء طلب السحب. يرجى المحاولة مرة أخرى.");
