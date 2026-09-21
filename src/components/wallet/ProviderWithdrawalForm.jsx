@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,9 +8,7 @@ import { Alert } from "@/components/ui/alert";
 import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 
 export default function ProviderWithdrawalForm({ provider, providerType, onSuccess }) {
-  const entityName = providerType === "contractor" ? "Contractor" : "Supplier";
-  const idField = providerType === "contractor" ? "contractor_id" : "supplier_id";
-  const providerLabel = providerType === "contractor" ? "المقاول" : "المورد";
+  const providerLabel = providerType === "contractor" ? "المقاول" : providerType === "supplier" ? "المورد" : "الشركة الهندسية";
 
   const [formData, setFormData] = useState({
     amount: "",
@@ -49,37 +47,28 @@ export default function ProviderWithdrawalForm({ provider, providerType, onSucce
     setLoading(true);
 
     try {
-      // Create withdrawal request
-      const request = await base44.entities.WithdrawalRequest.create({
-        [idField]: provider.id,
-        provider_type: providerType,
-        amount: amount,
-        iban: formData.iban,
-        bank_name: formData.bank_name,
-        account_holder_name: formData.account_holder_name,
-        status: "pending",
-        request_date: new Date().toISOString()
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw authError || new Error("انتهت جلسة الدخول");
+      const { data: projects, error: projectsError } = await supabase
+        .from("projects")
+        .select("id,title,client_final_approval,assigned_engineer_id,company_id,assigned_contractor_id,assigned_supplier_id")
+        .order("created_at", { ascending: false });
+      if (projectsError) throw projectsError;
+      const eligible = (projects || []).filter(p => p.client_final_approval !== false && (
+        (providerType === "contractor" && p.assigned_contractor_id === provider.id) ||
+        (providerType === "supplier" && p.assigned_supplier_id === provider.id) ||
+        (providerType === "engineering_firm" && p.company_id === provider.id)
+      ));
+      const projectId = eligible[0]?.id;
+      if (!projectId) throw new Error("لا يوجد مشروع مرتبط ومؤهل للسحب");
+      const { error: rpcError } = await supabase.rpc("request_withdrawal", {
+        p_amount: amount,
+        p_iban: formData.iban,
+        p_bank_name: formData.bank_name,
+        p_account_holder_name: formData.account_holder_name,
+        p_project_id: projectId
       });
-
-      // Update provider's available balance
-      await base44.entities[entityName].update(provider.id, {
-        available_balance: availableBalance - amount,
-        iban: formData.iban,
-        bank_name: formData.bank_name,
-        account_holder_name: formData.account_holder_name
-      });
-
-      // Create transaction record
-      await base44.entities.Transaction.create({
-        user_email: provider.email,
-        user_type: providerType,
-        type: "withdrawal_request",
-        amount: amount,
-        status: "pending",
-        description: `طلب سحب رصيد — ${providerLabel}`,
-        balance_before: availableBalance,
-        balance_after: availableBalance - amount
-      });
+      if (rpcError) throw rpcError;
 
       setSuccess(true);
       setFormData({ ...formData, amount: "" });
