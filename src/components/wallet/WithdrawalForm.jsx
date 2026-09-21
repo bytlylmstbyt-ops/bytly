@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
 import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 
-export default function WithdrawalForm({ engineer, onSuccess }) {
+export default function WithdrawalForm({ engineer, onSuccess, projectId }) {
   const [formData, setFormData] = useState({
     amount: "",
     iban: engineer?.iban || "",
@@ -36,7 +36,7 @@ export default function WithdrawalForm({ engineer, onSuccess }) {
       return;
     }
 
-    if (!formData.iban || !formData.bank_name || !formData.account_holder_name) {
+    if (!projectId) {\n      setError("يجب ربط طلب السحب بمشروع معتمد قبل تقديم الطلب");\n      return;\n    }\n\n    if (!formData.iban || !formData.bank_name || !formData.account_holder_name) {
       setError("يرجى إكمال جميع البيانات البنكية");
       return;
     }
@@ -69,7 +69,7 @@ export default function WithdrawalForm({ engineer, onSuccess }) {
       <CardHeader>
         <CardTitle>طلب سحب رصيد</CardTitle>
         <CardDescription>
-          سيتم معالجة طلبك خلال 3 أيام عمل. يرجى التأكد من صحة البيانات البنكية.
+          لا يتم صرف السحب إلا بعد اعتماد المستشار الفني ومالك المشروع ثم تنفيذ الإدارة.
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
