@@ -13,6 +13,8 @@ import {
   Plus, MessageSquare, PanelLeftClose, PanelLeftOpen, ChevronRight, History,
 } from "lucide-react";
 
+const PLATFORM_OWNER_EMAIL = "bytlylmstbyt@gmail.com";
+
 const EXAMPLE_PROMPTS = [
   "إيش المشاريع اللي تحتاج متابعة؟",
   "كم دخلنا هذا الشهر مقارنة بالشهر الماضي؟",
