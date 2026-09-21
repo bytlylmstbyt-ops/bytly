@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -25,22 +25,21 @@ export default function AdminWalletDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      // Load all transactions
-      const transactions = await base44.entities.Transaction.filter({}, "-created_date", 500);
-      setAllTransactions(transactions);
-
-      // Filter platform commission transactions
-      const commissions = transactions.filter(t => t.type === "commission" && t.user_type === "platform");
-      setPlatformTransactions(commissions);
-
-      // Load user data
-      const engineersList = await base44.entities.Engineer.filter({});
-      const clientsList = await base44.entities.Client.filter({});
-      const firmsList = await base44.entities.EngineeringFirm.filter({});
-
-      setEngineers(engineersList);
-      setClients(clientsList);
-      setFirms(firmsList);
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw authError || new Error("انتهت جلسة الدخول");
+      const { data: profile } = await supabase.from("profiles").select("role").eq("user_id", user.id).maybeSingle();
+      if (profile?.role !== "admin") throw new Error("غير مصرح");
+      const { data: transactions, error: txError } = await supabase.from("wallet_transactions").select("*").order("created_at",{ascending:false}).limit(500);
+      if (txError) throw txError;
+      setAllTransactions(transactions || []);
+      setPlatformTransactions((transactions || []).filter(t => t.type === "commission"));
+      const [engRes, clientRes, firmRes] = await Promise.all([
+        supabase.from("engineers").select("id,user_id,available_balance,pending_balance"),
+        supabase.from("clients").select("id,user_id,wallet_balance"),
+        supabase.from("engineering_firms").select("id,owner_user_id,wallet_balance")
+      ]);
+      if (engRes.error || clientRes.error || firmRes.error) throw engRes.error || clientRes.error || firmRes.error;
+      setEngineers(engRes.data || []); setClients(clientRes.data || []); setFirms(firmRes.data || []);
     } catch (error) {
       console.error("Error loading dashboard:", error);
     } finally {
