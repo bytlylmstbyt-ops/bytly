@@ -144,8 +144,8 @@ export default function CreateProject() {
   const serviceOptions=[{value:"architectural_design",label:"التصميم المعماري"},{value:"executive_design",label:"التصميم التنفيذي"},{value:"structural_design",label:"التصميم الإنشائي"},{value:"interior_design",label:"التصميم الداخلي"},{value:"permits",label:"الرخص والاعتمادات"},{value:"construction",label:"التنفيذ"},{value:"supervision",label:"الإشراف الهندسي"}];
   const toggleService=(value)=>setFormData(prev=>({...prev,service_scope:prev.service_scope.includes(value)?prev.service_scope.filter(v=>v!==value):[...prev.service_scope,value]}));
   const buildStagePlan=()=>{const selected=formData.service_scope,stages=[];const add=(k,t,d,days)=>stages.push({service_key:k,title:t,description:d,percentage:0,days});
-    if(formData.project_type==="small"){if(selected.includes("architectural_design"))add("architectural_design","التصميم المعماري","إعداد وتسليم التصميم المعماري",14);if(selected.includes("executive_design"))add("executive_design","التصميم التنفيذي","إعداد المخططات التنفيذية",14);if(selected.includes("structural_design"))add("structural_design","التصميم الإنشائي","إعداد المخططات والحسابات الإنشائية",14);if(selected.includes("interior_design"))add("interior_design","التصميم الداخلي","التصميم الداخلي والمخرجات",14);if(selected.includes("permits"))add("permits","الرخص والاعتمادات","استكمال الاعتمادات المطلوبة",21);if(selected.includes("construction"))add("construction","التنفيذ","تنفيذ الأعمال المتفق عليها",30);if(selected.includes("supervision"))add("supervision","الإشراف الهندسي","المتابعة والإشراف",14);return stages.slice(0,3);}
-    [["architectural_design","الدراسة والتصميم المعماري","الدراسة والفكرة والتصميم المعماري",14],["structural_design","التصميم الإنشائي","المخططات والحسابات الإنشائية",14],["executive_design","المخططات التنفيذية والتخصصية","التنسيق والمخططات التنفيذية",21],["permits","الرخص والاعتمادات","استكمال الرخص والاعتمادات",21],["construction","التنفيذ","تنفيذ الأعمال",60],["supervision","الإشراف الهندسي","الإشراف والمتابعة",30],["interior_design","التصميم الداخلي","التصميم الداخلي والتشطيبات",21]].forEach(([k,t,d,days])=>{if(selected.includes(k))add(k,t,d,days);});return stages.slice(0,8);};
+    if(formData.project_type==="small"){if(selected.includes("architectural_design"))add("architectural_design","التصميم المعماري","إعداد وتسليم التصميم المعماري",14);if(selected.includes("executive_design"))add("executive_design","التصميم التنفيذي","إعداد المخططات التنفيذية",14);if(selected.includes("structural_design"))add("structural_design","التصميم الإنشائي","إعداد المخططات والحسابات الإنشائية",14);if(selected.includes("interior_design"))add("interior_design","التصميم الداخلي","التصميم الداخلي والمخرجات",14);if(selected.includes("permits"))add("permits","الرخص والاعتمادات","استكمال الاعتمادات المطلوبة",21);if(selected.includes("construction"))add("construction","التنفيذ","تنفيذ الأعمال المتفق عليها",30);if(selected.includes("supervision"))add("supervision","الإشراف الهندسي","المتابعة والإشراف",14);const plan=stages.slice(0,3);const base=plan.length?Math.floor(100/plan.length):0;plan.forEach((s,i)=>s.percentage=i===plan.length-1?100-base*(plan.length-1):base);return plan;}
+    [["architectural_design","الدراسة والتصميم المعماري","الدراسة والفكرة والتصميم المعماري",14],["structural_design","التصميم الإنشائي","المخططات والحسابات الإنشائية",14],["executive_design","المخططات التنفيذية والتخصصية","التنسيق والمخططات التنفيذية",21],["permits","الرخص والاعتمادات","استكمال الرخص والاعتمادات",21],["construction","التنفيذ","تنفيذ الأعمال",60],["supervision","الإشراف الهندسي","الإشراف والمتابعة",30],["interior_design","التصميم الداخلي","التصميم الداخلي والتشطيبات",21]].forEach(([k,t,d,days])=>{if(selected.includes(k))add(k,t,d,days);});const plan=stages.slice(0,8);const base=plan.length?Math.floor(100/plan.length):0;plan.forEach((s,i)=>s.percentage=i===plan.length-1?100-base*(plan.length-1):base);return plan;};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -299,7 +299,7 @@ export default function CreateProject() {
                   value={formData.project_type}
                   onValueChange={(value) => {
                     handleInputChange("project_type", value);
-                    setShowMilestones(value === "full_construction");
+                    setShowMilestones(value === "large");
                   }}
                   className="grid grid-cols-1 md:grid-cols-2 gap-4"
                 >
@@ -312,9 +312,9 @@ export default function CreateProject() {
                       <div className="flex items-center gap-3 mb-3">
                         <Building className="h-6 w-6 text-slate-700" />
                         <div className="flex-1">
-                          <p className="font-semibold text-slate-900">مشروع بناء كامل</p>
+                          <p className="font-semibold text-slate-900">مشروع كبير / كامل</p>
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            6 مراحل + مراجعة استشارية
+                            حتى 8 مراحل رئيسية حسب نطاق الخدمات
                           </p>
                         </div>
                       </div>
@@ -334,9 +334,9 @@ export default function CreateProject() {
                       <div className="flex items-center gap-3 mb-3">
                         <Zap className="h-6 w-6 text-amber-600" />
                         <div className="flex-1">
-                          <p className="font-semibold text-slate-900">خدمة سريعة</p>
+                          <p className="font-semibold text-slate-900">مشروع صغير / خدمة محددة</p>
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            مرحلتين فقط (50% + 50%)
+                            من 1 إلى 3 مراحل حسب الخدمة المطلوبة
                           </p>
                         </div>
                       </div>
@@ -351,7 +351,7 @@ export default function CreateProject() {
                 
                 {formData.project_type === "large" && (
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
-                    💡 المشاريع الكاملة تتطلب موافقة شركة هندسية استشارية قبل تحرير الدفعات
+                    💡 المشاريع الكبيرة قد تضم عدة جهات ومقدمي خدمات، وتُحرر كل دفعة حسب المرحلة وموافقتها
                   </div>
                 )}
               </div>
@@ -510,9 +510,9 @@ export default function CreateProject() {
 
               {/* Milestones Section */}
               <div className="space-y-3 border-t pt-6">
-                {formData.project_type === "full_construction" ? (
+                {formData.project_type === "large" ? (
                   <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <Label className="font-semibold text-blue-900">المراحل الستة (تلقائياً)</Label>
+                    <Label className="font-semibold text-blue-900">مراحل المشروع (تلقائياً حسب نطاق الخدمات)</Label>
                     <div className="mt-3 space-y-2 text-sm text-blue-800">
                       <div className="flex justify-between"><span>1. توقيع العقد</span><span className="font-semibold">25%</span></div>
                       <div className="flex justify-between"><span>2. المخطط المعماري</span><span className="font-semibold">20%</span></div>
