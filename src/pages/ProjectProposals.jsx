@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import {
   ArrowRight, Star, Clock, DollarSign, User, CheckCircle,
@@ -51,38 +51,49 @@ export default function ProjectProposals() {
   const loadData = async (silent = false) => {
     if (!silent) setIsLoading(true);
     let me = null;
-    try { me = await base44.auth.me(); } catch {}
-    setIsAdmin(me?.role === "admin");
+    try { const { data } = await supabase.auth.getUser(); me = data?.user || null; } catch {}
+    const { data: profile } = me ? await supabase.from("profiles").select("role").eq("user_id", me.id).maybeSingle() : { data: null };
+    setIsAdmin(profile?.role === "admin" || (me?.email || "").toLowerCase() === "bytlylmstbyt@gmail.com");
     let projectData = [];
     let proposalsData = [];
 
     if (projectId) {
-      [projectData, proposalsData] = await Promise.all([
-        base44.entities.Project.filter({ id: projectId }),
-        base44.entities.Proposal.filter({ project_id: projectId })
+      const [{ data: project, error: projectError }, { data: offers, error: offersError }] = await Promise.all([
+        supabase.from("projects").select("*").eq("id", projectId).maybeSingle(),
+        supabase.from("project_offers").select("*").eq("project_id", projectId).order("created_at", { ascending: false })
       ]);
+      if (projectError) throw projectError;
+      if (offersError) throw offersError;
+      projectData = project ? [project] : [];
+      proposalsData = (offers || []).map(o => ({
+        ...o, engineer_id: o.engineer_user_id, price: o.amount, delivery_days: o.duration_days,
+        cover_letter: o.proposal, created_date: o.created_at
+      }));
     } else {
-      // Admin overview — load all proposals and related projects
-      proposalsData = await base44.entities.Proposal.list("-created_date", 200);
+      const { data: offers, error: offersError } = await supabase.from("project_offers").select("*").order("created_at", { ascending: false }).limit(200);
+      if (offersError) throw offersError;
+      proposalsData = (offers || []).map(o => ({
+        ...o, engineer_id: o.engineer_user_id, price: o.amount, delivery_days: o.duration_days,
+        cover_letter: o.proposal, created_date: o.created_at
+      }));
       const projectIds = [...new Set(proposalsData.map(p => p.project_id).filter(Boolean))];
       if (projectIds.length) {
-        const projectsMap = await base44.entities.Project.list("-created_date", 200);
-        projectData = projectsMap.filter(pr => projectIds.includes(pr.id));
+        const { data: projectsMap, error: projectsError } = await supabase.from("projects").select("*").in("id", projectIds);
+        if (projectsError) throw projectsError;
+        projectData = projectsMap || [];
       }
     }
 
     setProject(projectData[0] || null);
     setProposals(proposalsData);
 
-    // Load engineer profiles
     const engineerIds = [...new Set(proposalsData.map(p => p.engineer_id).filter(Boolean))];
     const engineerMap = {};
-    await Promise.all(
-      engineerIds.map(async (id) => {
-        const data = await base44.entities.Engineer.filter({ id });
-        if (data[0]) engineerMap[id] = data[0];
-      })
-    );
+    if (engineerIds.length) {
+      const { data: engineersData, error: engineersError } = await supabase.from("engineers").select("*").in("id", engineerIds);
+      if (engineersError) throw engineersError;
+      (engineersData || []).forEach(e => { engineerMap[e.id] = e; });
+    }
 
     setEngineers(engineerMap);
     setIsLoading(false);
