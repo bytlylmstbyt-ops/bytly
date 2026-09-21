@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
   FileText, Plus, Edit, Trash2, 
@@ -57,8 +57,9 @@ export default function ContractTemplates() {
 
   const loadTemplates = async () => {
     setIsLoading(true);
-    const data = await base44.entities.ContractTemplate.list();
-    setTemplates(data);
+    const { data, error } = await supabase.from("contract_templates").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    setTemplates(data || []);
     setIsLoading(false);
   };
 
@@ -103,9 +104,10 @@ export default function ContractTemplates() {
 
     try {
       if (editingTemplate) {
-        await base44.entities.ContractTemplate.update(editingTemplate.id, templateData);
+        const { error } = await supabase.from("contract_templates").update({ ...templateData, updated_at: new Date().toISOString() }).eq("id", editingTemplate.id); if (error) throw error;
       } else {
-        await base44.entities.ContractTemplate.create(templateData);
+        const { data: { user } } = await supabase.auth.getUser();
+        const { error } = await supabase.from("contract_templates").insert({ ...templateData, created_by: user?.id || null }); if (error) throw error;
       }
 
       setIsDialogOpen(false);
@@ -137,7 +139,7 @@ export default function ContractTemplates() {
     if (!confirm("هل أنت متأكد من حذف هذا القالب؟")) return;
 
     try {
-      await base44.entities.ContractTemplate.delete(id);
+      const { error } = await supabase.from("contract_templates").delete().eq("id", id); if (error) throw error;
       loadTemplates();
     } catch (error) {
       console.error("Error deleting template:", error);
