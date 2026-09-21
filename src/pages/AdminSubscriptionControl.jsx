@@ -28,7 +28,7 @@ export default function AdminSubscriptionControl() {
 
   const loadData = async () => {
     try {
-      const [engineersList, clientsList, firmsList] = await Promise.all([
+      const [engineersRes, clientsRes, firmsRes] = await Promise.all([
         supabase.from("engineers").select("*"),
         supabase.from("clients").select("*"),
         supabase.from("engineering_firms").select("*")
@@ -103,11 +103,11 @@ export default function AdminSubscriptionControl() {
     try {
       let currentUser;
       if (userType === "engineer") {
-        [currentUser] = await supabase.from("engineers").select("*").eq("id", userId);
+        const { data } = await supabase.from("engineers").select("*").eq("id", userId).maybeSingle(); currentUser = data;
       } else if (userType === "client") {
-        [currentUser] = await supabase.from("clients").select("*").eq("id", userId);
+        const { data } = await supabase.from("clients").select("*").eq("id", userId).maybeSingle(); currentUser = data;
       } else {
-        [currentUser] = await supabase.from("engineering_firms").select("*").eq("id", userId);
+        const { data } = await supabase.from("engineering_firms").select("*").eq("id", userId).maybeSingle(); currentUser = data;
       }
 
       const currentEndDate = currentUser.trial_end_date 
