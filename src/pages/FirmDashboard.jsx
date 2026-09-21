@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
   Building2, Users, Briefcase, CheckCircle, DollarSign, Plus, Settings, Star, Award, Eye
@@ -25,21 +25,23 @@ export default function FirmDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const user = await base44.auth.me();
-      const [firmData] = await base44.entities.EngineeringFirm.filter({ email: user.email });
-      
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw authError || new Error("انتهت جلسة الدخول");
+      const { data: firmData, error: firmError } = await supabase.from("engineering_firms").select("*").eq("owner_user_id", user.id).maybeSingle();
+      if (firmError) throw firmError;
       if (firmData) {
         setFirm(firmData);
-        
-        const [members, projectsData, engineersData] = await Promise.all([
-          base44.entities.FirmTeamMember.filter({ firm_id: firmData.id }),
-          base44.entities.Project.filter({ client_id: firmData.id }),
-          base44.entities.Engineer.filter({ status: "approved" }, "-created_date", 20)
+        const [membersRes, projectsRes, engineersRes] = await Promise.all([
+          supabase.from("firm_team_members").select("*").eq("firm_id", firmData.id),
+          supabase.from("projects").select("*").eq("company_id", firmData.id).order("created_at", { ascending: false }),
+          supabase.from("engineers").select("*").eq("status", "approved").order("created_at", { ascending: false }).limit(20)
         ]);
-
-        setTeamMembers(members);
-        setProjects(projectsData);
-        setEngineers(engineersData);
+        if (membersRes.error) throw membersRes.error;
+        if (projectsRes.error) throw projectsRes.error;
+        if (engineersRes.error) throw engineersRes.error;
+        setTeamMembers(membersRes.data || []);
+        setProjects(projectsRes.data || []);
+        setEngineers(engineersRes.data || []);
       }
     } catch (error) {
       console.error("Error loading dashboard:", error);
@@ -61,9 +63,9 @@ export default function FirmDashboard() {
       <div className="min-h-screen flex items-center justify-center">
         <Card className="max-w-md">
           <CardContent className="pt-6 text-center">
-            <p className="text-slate-600 mb-4">لم يتم العثور على حساب الشركة الاستشارية</p>
+            <p className="text-slate-600 mb-4">لم يتم العثور على حساب الشركة الهندسية</p>
             <Link to={createPageUrl("RegisterFirm")}>
-              <Button>إنشاء حساب شركة استشارية</Button>
+              <Button>إنشاء حساب شركة هندسية</Button>
             </Link>
           </CardContent>
         </Card>
