@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
   DollarSign, TrendingUp, ShoppingCart, Briefcase, Download, Filter
@@ -22,21 +22,12 @@ export default function AdminRevenueReport() {
   const loadData = async () => {
     setIsLoading(true);
     
-    const currentUser = await base44.auth.me();
-    setUser(currentUser);
-
-    // Only admins can view
-    if (currentUser.role !== "admin") {
-      alert("غير مصرح لك بالدخول");
-      window.location.href = "/";
-      return;
-    }
-
-    const revenuesData = await base44.entities.PlatformRevenue.filter(
-      { status: "collected" },
-      "-payment_date"
-    );
-    setRevenues(revenuesData);
+    const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+    if (authError || !currentUser) throw authError || new Error("انتهت جلسة الدخول");
+    const { data: profile } = await supabase.from("profiles").select("role").eq("user_id", currentUser.id).maybeSingle();
+    if (profile?.role !== "admin") { alert("غير مصرح لك بالدخول"); window.location.href="/"; return; }
+    const { data: revenuesData, error } = await supabase.from("platform_revenue").select("*").eq("status","collected").order("payment_date",{ascending:false});
+    if (error) throw error;    setRevenues(revenuesData);
     setIsLoading(false);
   };
 
