@@ -17,7 +17,7 @@ export const ADMIN_CATEGORIES = [
     { page: "Messages", label: "محادثات المستخدمين", desc: "واجهة المحادثات والرسائل للمستخدمين" },
     { page: "ProjectChat", label: "محادثات المشاريع", desc: "غرف محادثات المشاريع والمشاركين" },
   ] },
-  { key: "assistant", label: "مساعد الإدارة المركزي", icon: Sparkles, description: "وكيل ذكاء اصطناعي موحّد — أسئلة عن البيانات أو طلبات تعديل، بدون اختيار نوع الطلب مسبقًا.", items: [{ page: "AdminAIAssistant", label: "مساعد الإدارة المركزي", desc: "اكتب طلبك مباشرة — سؤال بيانات (قراءة فقط) أو طلب تعديل (خطة + معاينة قبل أي تنفيذ) — يفهم الوكيل نوع طلبك تلقائيًا" }] },
+  { key: "assistant", label: "مساعد الإدارة المركزي", icon: Sparkles, description: "وكيل ذكاء اصطناعي موحّد — أسئلة عن البيانات أو طلبات تعديل، بدون اختيار نوع الطلب مسبقًا.", items: [{ page: "AdminAIAssistantSupabase", label: "مساعد الإدارة المركزي", desc: "اكتب طلبك مباشرة — سؤال بيانات (قراءة فقط) أو طلب تعديل (خطة + معاينة قبل أي تنفيذ) — يفهم الوكيل نوع طلبك تلقائيًا" }] },
   { key: "projects", label: "إدارة المشاريع", icon: FolderKanban, description: "كل ما يخص المشاريع وإدارتها من لوحة واحدة.", items: [
     { page: "AdminOperationsDashboard", label: "لوحة مدير العمليات", desc: "ملخص المشاريع والعروض والعقود والتنفيذ" },
     { page: "AdminProjects", label: "لوحة إدارة المشاريع", desc: "نظرة شاملة وإدارة كل مشاريع المنصة", permission: ["projects", "view"], priority: "critical" },
@@ -33,7 +33,7 @@ export const ADMIN_CATEGORIES = [
     { page: "AdminEngineers", label: "إدارة المهندسين", desc: "مراجعة واعتماد ملفات المهندسين", priority: "critical" },
     { page: "AdminClients", label: "إدارة العملاء", desc: "قائمة العملاء وبياناتهم", priority: "critical" },
     { page: "AdminReviews", label: "تقييمات العملاء", desc: "مراجعة تقييمات العملاء وملاحظاتهم" },
-    { page: "AdminClients", label: "علاقات العملاء CRM", desc: "متابعة علاقات العملاء والتواصل" },
+    { page: "CRMDashboard", label: "علاقات العملاء CRM", desc: "متابعة علاقات العملاء والتواصل" },
     { page: "AdminProviders", label: "الشركات ومقدمو الخدمة", desc: "الشركات والمقاولون والاستشاريون والموردون", priority: "critical" },
     { page: "AdminMarketEntities", label: "إدارة كيانات السوق", desc: "الشركات والموردون في السوق" },
     { page: "RoleManagement", label: "إدارة الأدوار", desc: "تعريف أدوار المستخدمين وصلاحياتها" },
@@ -106,7 +106,7 @@ export const ADMIN_CATEGORIES = [
   { key: "ads", label: "مركز الإعلانات", icon: Megaphone, description: "إدارة الإعلانات والمعلنين وطلبات الإعلان من مركز واحد.", items: [
     { page: "AdManager", label: "مدير الإعلانات", desc: "إنشاء وتعديل ومتابعة الإعلانات" },
     { page: "AdvertiseWithUs", label: "أعلن معنا", desc: "واجهة التعريف بالإعلان والباقات وبدء طلب الإعلان" },
-    { page: "AdvertiserDirectory", label: "المعلنون", desc: "قائمة المعلنين وإجمالي إعلاناتهم وظهورهم ونقراتهم" },
+    { page: "AdvertisersDirectory", label: "المعلنون", desc: "قائمة المعلنين وإجمالي إعلاناتهم وظهورهم ونقراتهم" },
     { page: "AdvertiserGateway", label: "بوابة المعلن", desc: "لوحة الإعلانات وتقرير الأداء والمشاهدات والنقرات" },
   ] },
   { key: "marketing", label: "إدارة التسويق", icon: Megaphone, description: "إدارة التسويق والعلاقات والقنوات والمحتوى والتحليلات.", items: [
