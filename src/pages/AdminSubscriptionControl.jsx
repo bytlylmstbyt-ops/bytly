@@ -1,374 +1,259 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import React, { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Users, Building2, UserCircle, Search, 
-  Calendar, Gift, Crown, Loader2
-} from "lucide-react";
+import { Users, Building2, UserCircle, Search, Calendar, Gift, Crown, Loader2, RefreshCw, CreditCard } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { differenceInDays } from "date-fns";
 
+const CATEGORY = {
+  engineer: { label: "المهندسين", accountType: "professional", icon: Users },
+  company: { label: "الشركات الهندسية", accountType: "company", icon: Building2 },
+  contractor: { label: "المقاولين", accountType: "contractor", icon: Building2 },
+  supplier: { label: "الموردين", accountType: "supplier", icon: Building2 },
+};
+
+const ROLE_TO_CATEGORY = {
+  engineer: "engineer",
+  firm: "company",
+  company: "company",
+  engineering_company: "company",
+  contractor: "contractor",
+  supplier: "supplier",
+};
+
 export default function AdminSubscriptionControl() {
   const [loading, setLoading] = useState(true);
-  const [engineers, setEngineers] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [records, setRecords] = useState([]);
   const [clients, setClients] = useState([]);
-  const [firms, setFirms] = useState([]);
+  const [plans, setPlans] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [globalFreeMode, setGlobalFreeMode] = useState(true);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     try {
-      const [engineersList, clientsList, firmsList] = await Promise.all([
-        base44.entities.Engineer.filter({}),
-        base44.entities.Client.filter({}),
-        base44.entities.EngineeringFirm.filter({})
+      setRefreshing(true);
+      const [subsRes, profilesRes, plansRes, clientsRes] = await Promise.all([
+        supabase.from("subscriptions").select("*").order("created_at", { ascending: false }),
+        supabase.from("profiles").select("user_id,full_name,email,role"),
+        supabase.from("subscription_plans").select("*").eq("is_active", true).order("price"),
+        supabase.from("clients").select("user_id,full_name,email,status"),
       ]);
+      if (subsRes.error) throw subsRes.error;
+      if (profilesRes.error) throw profilesRes.error;
+      if (plansRes.error) throw plansRes.error;
+      if (clientsRes.error) console.warn("Clients query:", clientsRes.error);
 
-      setEngineers(engineersList);
-      setClients(clientsList);
-      setFirms(firmsList);
+      const profileMap = new Map((profilesRes.data || []).map(p => [p.user_id, p]));
+      setPlans(plansRes.data || []);
+      setClients(clientsRes.data || []);
+      setRecords((subsRes.data || []).map(s => ({
+        ...s,
+        profile: profileMap.get(s.user_id) || null,
+      })));
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error("Error loading subscriptions:", error);
+      toast.error("تعذر تحميل بيانات الاشتراكات");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const toggleUserSubscription = async (userId, userType, currentStatus) => {
+  const providerRecords = useMemo(() => records.filter(r => ROLE_TO_CATEGORY[r.profile?.role]), [records]);
+
+  const stats = useMemo(() => ({
+    trial: providerRecords.filter(r => r.status === "trial" && r.trial_end_at && new Date(r.trial_end_at) > new Date()).length,
+    paid: providerRecords.filter(r => r.status === "active").length,
+    expired: providerRecords.filter(r => r.status === "expired" || (r.status === "trial" && r.trial_end_at && new Date(r.trial_end_at) <= new Date())).length,
+    revenue: providerRecords.filter(r => r.status === "active").reduce((sum, r) => sum + Number(r.price || 0), 0),
+  }), [providerRecords]);
+
+  const getCategoryRecords = (category) => providerRecords.filter(r => ROLE_TO_CATEGORY[r.profile?.role] === category);
+
+  const matchesSearch = (r) => {
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return true;
+    return [r.profile?.full_name, r.profile?.email].some(v => v?.toLowerCase().includes(q));
+  };
+
+  const updateSubscription = async (id, patch, successMessage) => {
     try {
-      const updates = {
-        is_subscription_active: !currentStatus
-      };
-
-      if (userType === "engineer") {
-        await base44.entities.Engineer.update(userId, updates);
-      } else if (userType === "client") {
-        await base44.entities.Client.update(userId, updates);
-      } else if (userType === "firm") {
-        await base44.entities.EngineeringFirm.update(userId, updates);
-      }
-
-      toast.success("تم تحديث حالة الاشتراك");
+      const { error } = await supabase.from("subscriptions").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id);
+      if (error) throw error;
+      toast.success(successMessage);
       await loadData();
     } catch (error) {
-      console.error("Error toggling subscription:", error);
-      toast.error("حدث خطأ في التحديث");
+      console.error(error);
+      toast.error("حدث خطأ أثناء تحديث الاشتراك");
     }
   };
 
-  const convertToPayingUser = async (userId, userType, planType) => {
-    try {
-      const startDate = new Date();
-      const endDate = new Date();
-      if (planType === "monthly") {
-        endDate.setMonth(endDate.getMonth() + 1);
-      } else {
-        endDate.setFullYear(endDate.getFullYear() + 1);
-      }
-
-      const updates = {
-        subscription_type: planType,
-        subscription_start_date: startDate.toISOString().split("T")[0],
-        subscription_end_date: endDate.toISOString().split("T")[0],
-        is_subscription_active: true
-      };
-
-      if (userType === "engineer") {
-        await base44.entities.Engineer.update(userId, updates);
-      } else if (userType === "client") {
-        await base44.entities.Client.update(userId, updates);
-      } else if (userType === "firm") {
-        await base44.entities.EngineeringFirm.update(userId, updates);
-      }
-
-      toast.success(`تم تحويل المستخدم إلى باقة ${planType === "monthly" ? "شهرية" : "سنوية"}`);
-      await loadData();
-    } catch (error) {
-      console.error("Error converting user:", error);
-      toast.error("حدث خطأ في التحويل");
-    }
+  const extendTrial = async (record, days = 30) => {
+    const base = record.trial_end_at && new Date(record.trial_end_at) > new Date() ? new Date(record.trial_end_at) : new Date();
+    base.setDate(base.getDate() + days);
+    await updateSubscription(record.id, {
+      status: "trial",
+      price: 0,
+      trial_end_at: base.toISOString(),
+      current_period_start: new Date().toISOString(),
+      current_period_end: base.toISOString(),
+    }, `تم تمديد التجربة ${days} يوم`);
   };
 
-  const extendTrial = async (userId, userType, daysToAdd) => {
-    try {
-      let currentUser;
-      if (userType === "engineer") {
-        [currentUser] = await base44.entities.Engineer.filter({ id: userId });
-      } else if (userType === "client") {
-        [currentUser] = await base44.entities.Client.filter({ id: userId });
-      } else {
-        [currentUser] = await base44.entities.EngineeringFirm.filter({ id: userId });
-      }
-
-      const currentEndDate = currentUser.trial_end_date 
-        ? new Date(currentUser.trial_end_date)
-        : new Date();
-      
-      const newEndDate = new Date(currentEndDate);
-      newEndDate.setDate(newEndDate.getDate() + daysToAdd);
-
-      const updates = {
-        trial_end_date: newEndDate.toISOString().split("T")[0],
-        notification_sent_15_days: false
-      };
-
-      if (userType === "engineer") {
-        await base44.entities.Engineer.update(userId, updates);
-      } else if (userType === "client") {
-        await base44.entities.Client.update(userId, updates);
-      } else {
-        await base44.entities.EngineeringFirm.update(userId, updates);
-      }
-
-      toast.success(`تم تمديد الفترة التجريبية ${daysToAdd} يوم`);
-      await loadData();
-    } catch (error) {
-      console.error("Error extending trial:", error);
-      toast.error("حدث خطأ في التمديد");
+  const convertToPaid = async (record, cycle) => {
+    const plan = plans.find(p => p.account_type === record.account_type && p.billing_cycle === cycle);
+    if (!plan) {
+      toast.error("لا توجد خطة مفعلة لهذا النوع");
+      return;
     }
+    const start = new Date();
+    const end = new Date(start);
+    if (cycle === "monthly") end.setMonth(end.getMonth() + 1);
+    else end.setFullYear(end.getFullYear() + 1);
+    await updateSubscription(record.id, {
+      status: "active",
+      plan_code: plan.code,
+      billing_cycle: cycle,
+      price: plan.price,
+      started_at: start.toISOString(),
+      current_period_start: start.toISOString(),
+      current_period_end: end.toISOString(),
+      trial_end_at: null,
+      payment_status: "completed",
+      auto_renew: true,
+    }, `تم تحويل الاشتراك إلى ${cycle === "monthly" ? "شهري" : "سنوي"}`);
   };
 
-  const renderUserRow = (user, userType) => {
-    const daysLeft = user.trial_end_date 
-      ? differenceInDays(new Date(user.trial_end_date), new Date())
-      : null;
+  const toggleActive = async (record) => {
+    const nextStatus = record.status === "active" ? "cancelled" : "active";
+    await updateSubscription(record.id, { status: nextStatus }, nextStatus === "active" ? "تم تفعيل الاشتراك" : "تم إيقاف الاشتراك");
+  };
 
-    const isFreeTrial = user.subscription_type === "free_trial";
-    const displayName = user.full_name || user.company_name;
+  const renderUserRow = (record) => {
+    const isTrial = record.status === "trial";
+    const isActive = record.status === "active";
+    const daysLeft = record.trial_end_at ? differenceInDays(new Date(record.trial_end_at), new Date()) : null;
+    const name = record.profile?.full_name || "مستخدم بدون اسم";
+    const email = record.profile?.email || "";
+    const cycleLabel = record.billing_cycle === "yearly" ? "سنوي" : record.billing_cycle === "monthly" ? "شهري" : "تجريبي مجاني";
 
     return (
-      <div
-        key={user.id}
-        className="flex items-center justify-between p-4 bg-white rounded-lg border hover:shadow-md transition-shadow"
-      >
+      <div key={record.id} className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 bg-white rounded-lg border hover:shadow-md transition-shadow">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <p className="font-medium text-slate-900">{displayName}</p>
-            <Badge className={
-              isFreeTrial 
-                ? "bg-green-100 text-green-700"
-                : user.subscription_type === "yearly"
-                ? "bg-amber-100 text-amber-700"
-                : "bg-blue-100 text-blue-700"
-            }>
-              {isFreeTrial && <Gift className="w-3 h-3 ml-1" />}
-              {isFreeTrial ? "تجريبي مجاني" : user.subscription_type === "yearly" ? "سنوي" : "شهري"}
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <p className="font-medium text-slate-900">{name}</p>
+            <Badge className={isTrial ? "bg-green-100 text-green-700" : isActive ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700"}>
+              {isTrial && <Gift className="w-3 h-3 ml-1" />}
+              {record.status === "expired" ? "منتهي" : record.status === "cancelled" ? "ملغى" : cycleLabel}
             </Badge>
-            {!user.is_subscription_active && (
-              <Badge variant="outline" className="text-red-600 border-red-300">
-                معطل
-              </Badge>
-            )}
+            {isActive && <Badge variant="outline" className="text-emerald-700 border-emerald-300">نشط</Badge>}
           </div>
-          <p className="text-sm text-slate-600">{user.email}</p>
-          {daysLeft !== null && isFreeTrial && (
+          <p className="text-sm text-slate-600">{email}</p>
+          {isTrial && record.trial_end_at && (
             <p className="text-xs text-slate-500 mt-1">
               <Calendar className="w-3 h-3 inline ml-1" />
-              {daysLeft > 0 ? `${daysLeft} يوم متبقي` : "انتهت الفترة التجريبية"}
+              {daysLeft > 0 ? `${daysLeft} يوم متبقي من التجربة` : "انتهت الفترة التجريبية"}
             </p>
           )}
+          {isActive && <p className="text-xs text-slate-500 mt-1">القيمة: {Number(record.price || 0).toLocaleString("ar-SA")} ريال</p>}
         </div>
-
-        <div className="flex items-center gap-2">
-          <Switch
-            checked={user.is_subscription_active}
-            onCheckedChange={() => toggleUserSubscription(user.id, userType, user.is_subscription_active)}
-          />
-          <div className="flex gap-1">
-            {isFreeTrial && (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => extendTrial(user.id, userType, 30)}
-                  className="text-xs"
-                >
-                  +30 يوم
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => convertToPayingUser(user.id, userType, "monthly")}
-                  className="text-xs"
-                >
-                  → شهري
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => convertToPayingUser(user.id, userType, "yearly")}
-                  className="text-xs"
-                >
-                  → سنوي
-                </Button>
-              </>
-            )}
-          </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Switch checked={isActive || isTrial} onCheckedChange={() => toggleActive(record)} />
+          {isTrial && (
+            <>
+              <Button size="sm" variant="outline" onClick={() => extendTrial(record, 30)} className="text-xs">+30 يوم</Button>
+              <Button size="sm" variant="outline" onClick={() => convertToPaid(record, "monthly")} className="text-xs">→ شهري</Button>
+              <Button size="sm" variant="outline" onClick={() => convertToPaid(record, "yearly")} className="text-xs">→ سنوي</Button>
+            </>
+          )}
         </div>
       </div>
     );
   };
 
-  if (loading) {
+  const renderCategory = (category) => {
+    const config = CATEGORY[category];
+    const rows = getCategoryRecords(category).filter(matchesSearch);
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-12 h-12 animate-spin text-purple-600" />
-      </div>
+      <TabsContent value={category} className="mt-6">
+        <Card>
+          <CardHeader><CardTitle>{config.label} — إدارة الاشتراكات</CardTitle></CardHeader>
+          <CardContent>
+            {rows.length ? <div className="space-y-3">{rows.map(renderUserRow)}</div> : <p className="text-center text-slate-500 py-10">لا توجد اشتراكات مسجلة حاليًا</p>}
+          </CardContent>
+        </Card>
+      </TabsContent>
     );
-  }
+  };
 
-  const filteredEngineers = engineers.filter(e => 
-    e.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredClients = clients.filter(c =>
-    c.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredFirms = firms.filter(f =>
-    f.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    f.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const freeTrialCount = [...engineers, ...clients, ...firms].filter(u => u.subscription_type === "free_trial").length;
-  const paidCount = [...engineers, ...clients, ...firms].filter(u => u.subscription_type !== "free_trial").length;
+  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-12 h-12 animate-spin text-purple-600" /></div>;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30 py-8" dir="rtl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-3xl md:text-4xl font-bold gradient-text mb-2">
-            إدارة الاشتراكات
-          </h1>
-          <p className="text-slate-600 mb-8">التحكم في الاشتراكات والفترات التجريبية</p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold gradient-text mb-2">إدارة الاشتراكات</h1>
+              <p className="text-slate-600 mb-8">التحكم في الاشتراكات والفترات التجريبية والخطط المهنية</p>
+            </div>
+            <Button variant="outline" onClick={loadData} disabled={refreshing}><RefreshCw className={`w-4 h-4 ml-2 ${refreshing ? "animate-spin" : ""}`} /> تحديث</Button>
+          </div>
         </motion.div>
 
-        {/* Stats */}
         <div className="grid md:grid-cols-4 gap-4 mb-8">
-          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-0">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <Gift className="w-8 h-8 text-green-600" />
-              </div>
-              <p className="text-sm text-slate-600 mb-1">مستخدمين في الفترة المجانية</p>
-              <p className="text-3xl font-bold text-green-900">{freeTrialCount}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-0">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <Crown className="w-8 h-8 text-purple-600" />
-              </div>
-              <p className="text-sm text-slate-600 mb-1">مشتركين مدفوعين</p>
-              <p className="text-3xl font-bold text-purple-900">{paidCount}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-0">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <Users className="w-8 h-8 text-blue-600" />
-              </div>
-              <p className="text-sm text-slate-600 mb-1">إجمالي المهندسين</p>
-              <p className="text-3xl font-bold text-blue-900">{engineers.length}</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-0">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <Building2 className="w-8 h-8 text-amber-600" />
-              </div>
-              <p className="text-sm text-slate-600 mb-1">الشركات الاستشارية</p>
-              <p className="text-3xl font-bold text-amber-900">{firms.length}</p>
-            </CardContent>
-          </Card>
+          <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-0"><CardContent className="pt-6"><Gift className="w-8 h-8 text-green-600 mb-2" /><p className="text-sm text-slate-600 mb-1">في الفترة المجانية</p><p className="text-3xl font-bold text-green-900">{stats.trial}</p><p className="text-xs text-slate-500">3 أشهر لكل محترف جديد</p></CardContent></Card>
+          <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-0"><CardContent className="pt-6"><Crown className="w-8 h-8 text-purple-600 mb-2" /><p className="text-sm text-slate-600 mb-1">مشتركين مدفوعين</p><p className="text-3xl font-bold text-purple-900">{stats.paid}</p></CardContent></Card>
+          <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-0"><CardContent className="pt-6"><Users className="w-8 h-8 text-blue-600 mb-2" /><p className="text-sm text-slate-600 mb-1">منتهية / ملغاة</p><p className="text-3xl font-bold text-blue-900">{stats.expired}</p></CardContent></Card>
+          <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-0"><CardContent className="pt-6"><CreditCard className="w-8 h-8 text-amber-600 mb-2" /><p className="text-sm text-slate-600 mb-1">قيمة الاشتراكات النشطة</p><p className="text-3xl font-bold text-amber-900">{stats.revenue.toLocaleString("ar-SA")} <span className="text-sm">ريال</span></p></CardContent></Card>
         </div>
 
-        {/* Search */}
         <Card className="mb-6">
           <CardContent className="pt-6">
-            <div className="relative">
-              <Search className="absolute right-3 top-3 w-5 h-5 text-slate-400" />
-              <Input
-                placeholder="بحث بالاسم أو البريد الإلكتروني..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pr-12"
-              />
+            <div className="relative"><Search className="absolute right-3 top-3 w-5 h-5 text-slate-400" /><Input placeholder="بحث بالاسم أو البريد الإلكتروني..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pr-12" /></div>
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader><CardTitle>خطط الاشتراك المعتمدة</CardTitle></CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {plans.map(plan => (
+                <div key={plan.code} className="rounded-lg border p-4 bg-white">
+                  <p className="font-semibold text-slate-900">{plan.name}</p>
+                  <p className="text-2xl font-bold mt-2">{Number(plan.price).toLocaleString("ar-SA")} <span className="text-sm font-normal">ريال</span></p>
+                  <p className="text-xs text-slate-500 mt-1">{plan.billing_cycle === "yearly" ? "سنوي" : "شهري"} · تجربة أولى 3 أشهر</p>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Users List */}
-        <Tabs defaultValue="engineers">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="engineers">
-              <Users className="w-4 h-4 ml-2" />
-              المهندسين ({filteredEngineers.length})
-            </TabsTrigger>
-            <TabsTrigger value="clients">
-              <UserCircle className="w-4 h-4 ml-2" />
-              العملاء ({filteredClients.length})
-            </TabsTrigger>
-            <TabsTrigger value="firms">
-              <Building2 className="w-4 h-4 ml-2" />
-              الشركات ({filteredFirms.length})
-            </TabsTrigger>
+        <Tabs defaultValue="engineer">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="engineer"><Users className="w-4 h-4 ml-2" />المهندسين ({getCategoryRecords("engineer").length})</TabsTrigger>
+            <TabsTrigger value="company"><Building2 className="w-4 h-4 ml-2" />الشركات الهندسية ({getCategoryRecords("company").length})</TabsTrigger>
+            <TabsTrigger value="contractor"><Building2 className="w-4 h-4 ml-2" />المقاولين ({getCategoryRecords("contractor").length})</TabsTrigger>
+            <TabsTrigger value="supplier"><Building2 className="w-4 h-4 ml-2" />الموردين ({getCategoryRecords("supplier").length})</TabsTrigger>
           </TabsList>
-
-          <TabsContent value="engineers" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>اشتراكات المهندسين</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {filteredEngineers.map(engineer => renderUserRow(engineer, "engineer"))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="clients" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>اشتراكات العملاء</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {filteredClients.map(client => renderUserRow(client, "client"))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="firms" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>اشتراكات الشركات الاستشارية</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {filteredFirms.map(firm => renderUserRow(firm, "firm"))}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          {renderCategory("engineer")}
+          {renderCategory("company")}
+          {renderCategory("contractor")}
+          {renderCategory("supplier")}
         </Tabs>
+
+        <Card className="mt-6">
+          <CardHeader><CardTitle><UserCircle className="w-5 h-5 inline ml-2" /> العملاء</CardTitle></CardHeader>
+          <CardContent><p className="text-sm text-slate-600">العميل/مالك المشروع لا يحتاج اشتراكًا مهنيًا. عدد العملاء المسجلين حاليًا: <strong>{clients.length}</strong>.</p></CardContent>
+        </Card>
       </div>
     </div>
   );
