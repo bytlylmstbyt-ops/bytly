@@ -56,12 +56,30 @@ Deno.serve(async (req: Request) => {
   try {
     const body = await req.json();
     const providerToken = String(body?.providerToken || "").trim();
+    const action = String(body?.action || "").trim();
     const to = String(body?.to || "").trim();
     const subject = String(body?.subject || "").trim();
     const text = String(body?.text || "").trim();
     const html = typeof body?.html === "string" ? body.html : undefined;
 
     if (!providerToken) return jsonResponse({ success: false, error: "Gmail provider token is missing." }, 400);
+
+    if (action === "status") {
+      const profileResponse = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/profile", {
+        headers: { Authorization: `Bearer ${providerToken}` },
+      });
+      const profile = await profileResponse.json().catch(() => ({}));
+      if (!profileResponse.ok) {
+        return jsonResponse({
+          ok: false,
+          error: profile?.error?.message || "Gmail authentication failed.",
+          code: profile?.error?.code || profileResponse.status,
+          reauthorize: profileResponse.status === 401,
+        }, profileResponse.status === 401 ? 401 : 502);
+      }
+      return jsonResponse({ ok: true, email: profile?.emailAddress || null, http_status: profileResponse.status });
+    }
+
     if (!to || !subject || !text) return jsonResponse({ success: false, error: "to, subject and text are required." }, 400);
 
     const raw = buildRawMessage(to, subject, text, html);
