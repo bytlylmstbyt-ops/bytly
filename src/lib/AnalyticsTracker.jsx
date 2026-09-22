@@ -29,7 +29,7 @@ export default function AnalyticsTracker(){
    routeWatcher=setInterval(()=>{const p=path();if(p!==lastPath){lastPath=p;lastSection="";track("page_view",{title:document.title})}},1000);
    const onClick=e=>{const el=e.target?.closest?.("button,a,[role=button]");if(!el)return;const label=(el.innerText||el.getAttribute("aria-label")||el.getAttribute("title")||"").trim().slice(0,120);track("click",{label,tag:el.tagName.toLowerCase(),screen_x:e.clientX,screen_y:e.clientY},el.dataset?.analyticsSection||null)};
    const onScroll=()=>{const pct=Math.round(window.scrollY/(Math.max(document.body.scrollHeight-window.innerHeight,1))*100);if(pct>maxScrollRef.current)maxScrollRef.current=Math.min(100,pct);if(pct-(window.__bytlyLastScroll||0)>=20){window.__bytlyLastScroll=pct;track("scroll",{percent:Math.min(100,pct)})}};
-   const getSections=()=>Array.from(document.querySelectorAll("[data-analytics-section]")).filter(el=>el.dataset.analyticsSection);
+   const getSections=()=>{const marked=Array.from(document.querySelectorAll("[data-analytics-section]")).filter(el=>el.dataset.analyticsSection);if(marked.length)return marked;return Array.from(document.querySelectorAll("main h1,main h2,main h3,section h1,section h2,section h3")).filter(el=>el.textContent?.trim()).map(el=>{el.dataset.analyticsSection=el.textContent.trim().slice(0,100);return el})};
    observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting&&entry.intersectionRatio>=0.5){const name=entry.target.dataset.analyticsSection;if(name&&name!==lastSection){lastSection=name;track("section_view",{title:name},name)}}}),{threshold:[0.5]});
    getSections().forEach(el=>observer.observe(el));
    const onVisibility=()=>{if(document.visibilityState==="hidden")updateSession()};
