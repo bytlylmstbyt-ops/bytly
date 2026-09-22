@@ -117,7 +117,7 @@ export default function PlatformDashboard() {
       const failed=[p,e,prof,sess,events].find(x=>x.error);
       if(failed?.error) throw failed.error;
       const projectData=p.data||[], engineerData=e.data||[], profileData=prof.data||[], sessionData=sess.data||[], eventData=events.data||[];
-      const contractorData=contractorRes.data||[], companyData=companyRes.data||[], advertiserData=advertiserRes.data||[], supplierData=supplierRes.data||[];
+      const contractorData=contractorRes?.data||[], companyData=companyRes?.data||[], advertiserData=advertiserRes?.data||[], supplierData=supplierRes?.data||[];
       const subscriptionData=engineerData.filter(x=>x.is_subscription_active).map(x=>({id:x.id,status:"active",created_at:x.subscription_start_date||x.created_at}));
       const reviewData=engineerData.filter(x=>Number(x.rating)>0).map(x=>({id:x.id,rating:Number(x.rating),created_at:x.updated_at||x.created_at}));
       const revenueData=projectData.map(x=>({id:x.id,commission_amount:Number(x.project_commission_amount??x.platform_commission??0),created_at:x.created_at}));
