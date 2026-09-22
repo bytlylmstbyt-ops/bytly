@@ -216,23 +216,59 @@ export default function AdminSubscriptionControl() {
           <Card className="bg-gradient-to-br from-amber-50 to-orange-50 border-0"><CardContent className="pt-6"><CreditCard className="w-8 h-8 text-amber-600 mb-2" /><p className="text-sm text-slate-600 mb-1">قيمة الاشتراكات النشطة</p><p className="text-3xl font-bold text-amber-900">{stats.revenue.toLocaleString("ar-SA")} <span className="text-sm">ريال</span></p></CardContent></Card>
         </div>
 
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="relative"><Search className="absolute right-3 top-3 w-5 h-5 text-slate-400" /><Input placeholder="بحث بالاسم أو البريد الإلكتروني..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pr-12" /></div>
-          </CardContent>
-        </Card>
-
-        <Card className="mb-6">
-          <CardHeader><CardTitle>خطط الاشتراك المعتمدة</CardTitle></CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {plans.map(plan => (
-                <div key={plan.code} className="rounded-lg border p-4 bg-white">
-                  <p className="font-semibold text-slate-900">{plan.name}</p>
-                  <p className="text-2xl font-bold mt-2">{Number(plan.price).toLocaleString("ar-SA")} <span className="text-sm font-normal">ريال</span></p>
-                  <p className="text-xs text-slate-500 mt-1">{plan.billing_cycle === "yearly" ? "سنوي" : "شهري"} · تجربة أولى 3 أشهر</p>
-                </div>
-              ))}
+        <Card className="mb-6 overflow-hidden border-0 shadow-lg">
+          <CardHeader className="bg-gradient-to-l from-slate-900 via-slate-800 to-slate-900 text-white">
+            <CardTitle className="text-xl">خطط الاشتراك المعتمدة</CardTitle>
+            <p className="text-sm text-slate-300">تصميم واضح يميز الاشتراك الشهري عن السنوي ويهيئ المستخدم لاختيار الخطة ثم إتمام الدفع.</p>
+          </CardHeader>
+          <CardContent className="p-5">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+              {plans.map(plan => {
+                const yearly = plan.billing_cycle === "yearly";
+                const professional = plan.account_type === "professional";
+                return (
+                  <div
+                    key={plan.code}
+                    className={`group relative overflow-hidden rounded-2xl border-2 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer ${
+                      yearly
+                        ? "border-amber-300 bg-gradient-to-br from-amber-50 via-white to-yellow-50"
+                        : "border-blue-200 bg-gradient-to-br from-blue-50 via-white to-sky-50"
+                    }`}
+                  >
+                    {yearly && (
+                      <div className="absolute left-0 top-0 rounded-br-2xl bg-gradient-to-r from-amber-500 to-yellow-400 px-3 py-1 text-xs font-bold text-white shadow-sm">
+                        ⭐ الأكثر توفيرًا
+                      </div>
+                    )}
+                    <div className={`mb-4 mt-2 inline-flex rounded-xl p-3 ${yearly ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
+                      <CreditCard className="h-6 w-6" />
+                    </div>
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="font-bold text-slate-900">{plan.name}</p>
+                        <p className="mt-1 text-xs text-slate-500">{professional ? "للمهندسين والمحترفين" : plan.account_type === "company" ? "للشركات الهندسية" : plan.account_type === "contractor" ? "للمقاولين" : "للموردين"}</p>
+                      </div>
+                      <Badge className={yearly ? "bg-amber-100 text-amber-800 border-amber-200" : "bg-blue-100 text-blue-800 border-blue-200"}>
+                        {yearly ? "سنوي" : "شهري"}
+                      </Badge>
+                    </div>
+                    <div className="mt-5">
+                      <span className="text-3xl font-extrabold text-slate-900">{Number(plan.price).toLocaleString("ar-SA")}</span>
+                      <span className="mr-2 text-sm text-slate-500">ريال / {yearly ? "سنة" : "شهر"}</span>
+                    </div>
+                    <div className={`mt-4 rounded-xl px-3 py-2 text-xs font-medium ${yearly ? "bg-amber-100/70 text-amber-800" : "bg-blue-100/70 text-blue-800"}`}>
+                      تجربة مجانية 3 أشهر للمستخدم المهني الجديد
+                    </div>
+                    <Button
+                      type="button"
+                      className={`mt-5 w-full rounded-xl font-bold shadow-sm ${yearly ? "bg-amber-500 hover:bg-amber-600 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
+                      onClick={() => toast.info("اختيار الخطة والدفع سيتم ربطه ببوابة الدفع عند تفعيلها.")}
+                    >
+                      اختيار {yearly ? "الخطة السنوية" : "الخطة الشهرية"}
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
