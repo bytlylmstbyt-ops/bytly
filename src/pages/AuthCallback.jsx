@@ -64,10 +64,6 @@ export default function AuthCallback() {
             });
             if (metadataError) console.warn("Could not persist Gmail connection flag:", metadataError);
           }
-          try {
-            sessionStorage.setItem("bytly_connected_integration", integrationType);
-            sessionStorage.removeItem("bytly_pending_integration");
-          } catch (_) {}
           if (active) {
             navigate(`/AdminControlCenter?cat=integrations&oauth=${encodeURIComponent(integrationType)}&connected=1`, { replace: true });
             return;
