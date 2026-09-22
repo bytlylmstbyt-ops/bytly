@@ -68,7 +68,6 @@ const PendingApprovals = React.lazy(() => import('./pages/PendingApprovals'));
 const LaunchPerformanceDashboard = React.lazy(() => import('./pages/LaunchPerformanceDashboard'));
 const CommissionManager = React.lazy(() => import('./pages/CommissionManager'));
 const NotificationCenter = React.lazy(() => import('./pages/NotificationCenter'));
-const AdminAnalytics = React.lazy(() => import('./pages/AdminAnalytics'));
 const EngineerCalendar = React.lazy(() => import('./pages/EngineerCalendar'));
 const About = React.lazy(() => import('./pages/About'));
 const RegisterContractor = React.lazy(() => import('./pages/RegisterContractor'));
@@ -112,7 +111,6 @@ const AuthenticatedApp = () => {
     <Route path="/register" element={<Register />} />
     <Route path="/register-auth" element={<Navigate to="/register" replace />} />
     <Route path="/auth/callback" element={<AuthCallback />} />
-    <Route path="/AdminAnalytics" element={protectedRoute(AdminAnalytics,"AdminAnalytics")} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
     <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/" element={<PublicHomeRoute />} />
