@@ -54,6 +54,20 @@ export default function AuthCallback() {
             sessionStorage.setItem("bytly_connected_integration", integrationType);
             sessionStorage.removeItem("bytly_pending_integration");
           } catch (_) {}
+          // Persist the non-secret connection flag in Supabase user metadata so
+          // the Admin Integrations page can distinguish Gmail integration from
+          // an ordinary Google login after a page refresh.
+          if (integrationType === "gmail") {
+            const existing = data?.session?.user?.user_metadata?.bytly_integrations || {};
+            const { error: metadataError } = await supabase.auth.updateUser({
+              data: { bytly_integrations: { ...existing, gmail: true } },
+            });
+            if (metadataError) console.warn("Could not persist Gmail connection flag:", metadataError);
+          }
+          try {
+            sessionStorage.setItem("bytly_connected_integration", integrationType);
+            sessionStorage.removeItem("bytly_pending_integration");
+          } catch (_) {}
           if (active) {
             navigate(`/AdminControlCenter?cat=integrations&oauth=${encodeURIComponent(integrationType)}&connected=1`, { replace: true });
             return;
