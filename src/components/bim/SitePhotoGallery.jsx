@@ -96,7 +96,7 @@ function UploadForm({ bimModelId, elementDbId, elementName, onUploaded, onCancel
     const handleSubmit = async () => {
         if (!file) return;
         setUploading(true);
-        const file_url = await uploadScopedFile(`bim/site-photos/${projectId || "general"}`, file);
+        const file_url = await uploadScopedFile(`bim/site-photos/general`, file);
         const user = await base44.auth.me();
         await base44.entities.SitePhoto.create({
             bim_model_id: bimModelId,

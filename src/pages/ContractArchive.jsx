@@ -39,6 +39,21 @@ export default function ContractArchive() {
     loadData();
   }, []);
 
+  const filterContracts = () => {
+    let result = contracts;
+    if (statusFilter !== "all") {
+      result = result.filter(c => c.status === statusFilter);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      result = result.filter(c =>
+        (c.contract_number || "").toLowerCase().includes(q) ||
+        (c.title || "").toLowerCase().includes(q)
+      );
+    }
+    setFilteredContracts(result);
+  };
+
   useEffect(() => {
     filterContracts();
   }, [contracts, searchQuery, statusFilter]);

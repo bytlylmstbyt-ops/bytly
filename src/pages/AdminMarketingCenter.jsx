@@ -14,6 +14,7 @@ import CampaignReports from "@/components/admin/marketing/CampaignReports";
 import GoogleAnalyticsPanel from "@/components/admin/marketing/GoogleAnalyticsPanel";
 import AdminSearchGeoAnalytics from "@/pages/AdminSearchGeoAnalytics";
 import AddPlatformDialog from "@/components/admin/marketing/AddPlatformDialog";
+import MarketingCharts from "@/components/admin/marketing/MarketingCharts";
 import { listSyncStates, listSocialPosts, testMarketingConnection, getMarketingAnalytics } from "@/lib/marketingService";
 
 const PLATFORMS = [

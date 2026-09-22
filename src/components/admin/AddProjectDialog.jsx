@@ -94,7 +94,7 @@ export default function AddProjectDialog({ open, onOpenChange, onCreated, onUpda
     try {
       const urls = [];
       for (const file of files) {
-        const file_url = await uploadScopedFile(`admin-projects/${projectId || "new"}`, file);
+        const file_url = await uploadScopedFile(`admin-projects/new`, file);
         if (file_url) urls.push(file_url);
       }
       setForm((p) => ({ ...p, attachments: [...(p.attachments || []), ...urls] }));

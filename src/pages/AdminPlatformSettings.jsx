@@ -7,10 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { Pencil, Image as ImageIcon, Trash2, Maximize2, Copy, Check, Code2, ShieldCheck, Loader2, Save, X } from "lucide-react";
+import { appParams } from "@/lib/app-params";
 
 export default function AdminPlatformSettings() {
   const { toast } = useToast();
   const projectUrl = import.meta.env.VITE_SUPABASE_URL || "—";
+  const appId = appParams.appId || "—";
 
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);

@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Upload, Loader2, CheckCircle, FileText } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 
 export default function RegisterConsultantPage() {
   const navigate = useNavigate();
