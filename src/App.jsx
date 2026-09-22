@@ -4,7 +4,6 @@ import { Toaster as SonnerToaster } from "sonner"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import NavigationTracker from '@/lib/NavigationTracker'
-import AnalyticsTracker from '@/lib/AnalyticsTracker'
 import RouteTitleManager from '@/lib/RouteTitleManager'
 import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
@@ -131,4 +130,4 @@ const AuthenticatedApp = () => {
   </Routes>;
 };
 
-export default function App() { return <QueryClientProvider client={queryClientInstance}><Router><AuthProvider><AnalyticsTracker /><NavigationTracker /><RouteTitleManager /><AuthenticatedApp /><Toaster /><HotToastToaster position="top-center" toastOptions={{ duration: 5000 }} /><SonnerToaster position="top-center" richColors /></AuthProvider></Router></QueryClientProvider>; }
+export default function App() { return <QueryClientProvider client={queryClientInstance}><Router><AuthProvider><NavigationTracker /><RouteTitleManager /><AuthenticatedApp /><Toaster /><HotToastToaster position="top-center" toastOptions={{ duration: 5000 }} /><SonnerToaster position="top-center" richColors /></AuthProvider></Router></QueryClientProvider>; }
