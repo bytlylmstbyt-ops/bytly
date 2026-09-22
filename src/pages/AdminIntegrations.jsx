@@ -127,7 +127,14 @@ export default function AdminIntegrations() {
       if (!prev) return prev;
       return {
         ...prev,
-        integrations: prev.integrations.map((i) => i.type === type ? {\n          ...i,\n          // A failed test must not silently disconnect the integration.\n          // Connection state is managed by OAuth; the test only reports health.\n          connected: result.ok === true ? true : i.connected,\n          error: result.ok ? null : result.error,\n          needs_reauth: result.reauthorize === true || i.needs_reauth === true,\n        } : i),
+        integrations: prev.integrations.map((i) => i.type === type ? {
+          ...i,
+          // A failed test must not silently disconnect the integration.
+          // Connection state is managed by OAuth; the test only reports health.
+          connected: result.ok === true ? true : i.connected,
+          error: result.ok ? null : result.error,
+          needs_reauth: result.reauthorize === true || i.needs_reauth === true,
+        } : i),
       };
     });
   };
