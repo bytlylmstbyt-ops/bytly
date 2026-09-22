@@ -12,6 +12,8 @@ export default function AnalyticsTracker(){
  const sessionRef=useRef(null),visitorRef=useRef(null),userRef=useRef(null),maxScrollRef=useRef(0);
  useEffect(()=>{if(!supabase)return;let mounted=true,heartbeat,routeWatcher,visibilityTimer,observer;
  const started=Date.now();let eventCount=0,pageCount=0,lastPath="",lastSection="";
+ const recorderKey="bytly_replay_enabled";
+ const replayEnabled=localStorage.getItem(recorderKey)!=="false";
  const start=async()=>{
   try{
    visitorRef.current=getVisitorId();
