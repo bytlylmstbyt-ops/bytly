@@ -56,15 +56,9 @@ const PLAN_TIERS = {
     },
   ],
   company: [
-    {
-      id: "business",
-      name: "الأعمال",
-      icon: "👑",
-      accent: "dark",
-      popular: true,
-      description: "للشركات الهندسية والمكاتب التي تدير مشاريع وفريقًا.",
-      features: ["ملف شركة موثق", "إدارة الفريق", "أولوية الظهور", "تحليلات متقدمة", "دعم مخصص"],
-    },
+    { id: "basic", name: "الأساسية", icon: "🥉", accent: "slate", description: "لشركة هندسية جديدة تريد بناء حضورها وتجربة بيتلي.", features: ["ملف شركة", "ظهور في البحث", "معرض الأعمال", "دعم أساسي"] },
+    { id: "professional", name: "الاحترافية", icon: "⭐", accent: "gold", popular: true, description: "للشركات التي تريد ظهورًا أقوى وإدارة أفضل.", features: ["أولوية الظهور", "إدارة الفريق", "تحليلات الأداء", "شارة شركة احترافية", "دعم متقدم"] },
+    { id: "business", name: "الأعمال", icon: "👑", accent: "dark", description: "للشركات والمكاتب ذات العمليات والفرق الأكبر.", features: ["كل مزايا الاحترافية", "فرق متعددة", "تقارير متقدمة", "تكاملات مخصصة", "دعم مخصص"] },
   ],
   contractor: [
     {
@@ -319,6 +313,15 @@ export default function AdminSubscriptionControl() {
             </p>
           </CardHeader>
           <CardContent className="p-5 space-y-6">
+            <div className="rounded-2xl border-2 border-emerald-200 bg-gradient-to-l from-emerald-50 via-white to-green-50 p-5">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-2"><span className="text-2xl">🆓</span><h3 className="font-extrabold text-xl text-emerald-900">الخطة المجانية — تجربة بيتلي</h3><Badge className="bg-emerald-100 text-emerald-800">3 أشهر</Badge></div>
+                  <p className="text-sm text-slate-600">كل مستخدم مهني جديد يبدأ مجانًا لمدة 90 يومًا. يجرب المنصة ويستفيد من الفرص، ثم يختار خطة مدفوعة عند انتهاء التجربة.</p>
+                </div>
+                <div className="text-left"><div className="text-3xl font-black text-emerald-700">0 ريال</div><div className="text-xs text-slate-500">لمدة 3 أشهر</div></div>
+              </div>
+            </div>
             {["professional", "company", "contractor", "supplier"].map(accountType => {
               const accountPlans = plans.filter(p => p.account_type === accountType);
               const tiers = PLAN_TIERS[accountType] || [];
@@ -339,8 +342,8 @@ export default function AdminSubscriptionControl() {
 
                   <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
                     {tiers.map(tier => {
-                      const monthly = accountPlans.find(p => p.billing_cycle === "monthly");
-                      const yearly = accountPlans.find(p => p.billing_cycle === "yearly");
+                      const monthly = accountPlans.find(p => p.tier === tier.id && p.billing_cycle === "monthly");
+                      const yearly = accountPlans.find(p => p.tier === tier.id && p.billing_cycle === "yearly");
                       const monthlyPrice = monthly ? Number(monthly.price) : null;
                       const yearlyPrice = yearly ? Number(yearly.price) : null;
                       const yearlySavings = monthlyPrice && yearlyPrice ? Math.max(0, monthlyPrice * 12 - yearlyPrice) : 0;
