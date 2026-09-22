@@ -88,6 +88,7 @@ export default function PlatformDashboard() {
   const [engineeringCompanies, setEngineeringCompanies] = useState([]);
   const [advertisers, setAdvertisers] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
+  const [providerSubscriptions, setProviderSubscriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [showTop, setShowTop] = useState(false);
@@ -124,6 +125,7 @@ export default function PlatformDashboard() {
       setProjects(projectData); setEngineers(engineerData); setSubscriptions(subscriptionData); setReviews(reviewData); setRevenues(revenueData);
       setCustomers(profileData.filter(x => x.role === "client"));
       setContractors(contractorData); setEngineeringCompanies(companyData); setAdvertisers(advertiserData); setSuppliers(supplierData);
+      setProviderSubscriptions([...contractorData, ...companyData, ...advertiserData, ...supplierData].filter(x => x.is_subscription_active || x.subscription_status === 'active' || x.status === 'active'));
       setLastRefresh(new Date());
     } catch(e) { console.error("PlatformDashboard load error",e); }
     setLoading(false);
@@ -168,6 +170,9 @@ export default function PlatformDashboard() {
     const totalEngineeringCompanies = engineeringCompanies.length;
     const totalAdvertisers = advertisers.length;
     const totalSuppliers = suppliers.length;
+    const activeProviderSubscriptions = providerSubscriptions.length;
+    const providerSubscriptionRevenue = providerSubscriptions.reduce((sum,x) => sum + Number(x.subscription_amount || x.subscription_price || x.plan_price || x.amount || 0), 0);
+    const providerCAC = (contractors.length + engineeringCompanies.length + advertisers.length + suppliers.length) > 0 ? Math.round(estimatedMarketingCost / (contractors.length + engineeringCompanies.length + advertisers.length + suppliers.length)) : 0;
     const thisMonthCustomers = customers.filter(x => x.created_at && moment(x.created_at).month() === thisMonth && moment(x.created_at).year() === thisYear).length;
     const lastMonthCustomers = customers.filter(x => x.created_at && moment(x.created_at).month() === lastMonth.month() && moment(x.created_at).year() === lastMonth.year()).length;
     const customerGrowth = lastMonthCustomers > 0 ? Math.round(((thisMonthCustomers - lastMonthCustomers) / lastMonthCustomers) * 100) : 0;
@@ -199,11 +204,14 @@ export default function PlatformDashboard() {
       totalEngineeringCompanies,
       totalAdvertisers,
       totalSuppliers,
+      activeProviderSubscriptions,
+      providerSubscriptionRevenue,
+      providerCAC,
       pendingEngineers: pendingEngineers.length,
       cac,
       statusCounts,
     };
-  }, [projects, engineers, subscriptions, reviews, revenues, customers, contractors, engineeringCompanies, advertisers, suppliers]);
+  }, [projects, engineers, subscriptions, reviews, revenues, customers, contractors, engineeringCompanies, advertisers, suppliers, providerSubscriptions]);
 
   // بيانات الرسم البياني للإيرادات (آخر 6 أشهر)
   const revenueChart = useMemo(() => {
@@ -321,7 +329,17 @@ export default function PlatformDashboard() {
           </div>
         </div>
 
-        {/* KPIs Row 5 – المعلنون والموردون */}
+        {/* KPIs Row 5 – اشتراكات مقدمي الخدمة والإضافات */}
+        <div>
+          <SectionTitle>اشتراكات مقدمي الخدمة والإضافات</SectionTitle>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+            <KpiCard title="اشتراكات مقدمي الخدمة" value={fmt(kpis.activeProviderSubscriptions)} sub="اشتراكات نشطة" icon={CreditCard} color="border-indigo-400" loading={loading} />
+            <KpiCard title="إيرادات اشتراكات مقدمي الخدمة" value={formatSAR(kpis.providerSubscriptionRevenue)} sub="الإيرادات المسجلة" icon={DollarSign} color="border-emerald-400" loading={loading} />
+            <KpiCard title="متوسط CAC لمقدمي الخدمة" value={formatSAR(kpis.providerCAC)} sub="تكلفة اكتساب تقديرية" icon={Target} color="border-amber-400" loading={loading} />
+          </div>
+        </div>
+
+        {/* KPIs Row 6 – المعلنون والموردون */}
         <div>
           <SectionTitle>المعلنون والموردون</SectionTitle>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
