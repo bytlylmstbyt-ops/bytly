@@ -84,6 +84,10 @@ export default function PlatformDashboard() {
   const [revenues, setRevenues] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [customers, setCustomers] = useState([]);
+  const [contractors, setContractors] = useState([]);
+  const [engineeringCompanies, setEngineeringCompanies] = useState([]);
+  const [advertisers, setAdvertisers] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [showTop, setShowTop] = useState(false);
