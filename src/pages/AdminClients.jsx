@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,7 @@ export default function AdminClientsPage() {
   const [selectedClient, setSelectedClient] = useState(null);
   const [clientDetails, setClientDetails] = useState({ projects: [], contracts: [], invoices: [], interactions: [] });
   const [detailsLoading, setDetailsLoading] = useState(false);
+  const [searchParams] = useSearchParams();
 
   const loadData = useCallback(async () => {
     setRefreshing(true);
@@ -81,6 +83,13 @@ export default function AdminClientsPage() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  useEffect(() => {
+    const userId = searchParams.get("userId");
+    if (!userId || !clients.length) return;
+    const target = clients.find(c => c.user_id === userId || c.id === userId);
+    if (target) openClientDetails(target);
+  }, [clients, searchParams]);
 
   const stats = useMemo(() => ({
     clients: clients.length,
