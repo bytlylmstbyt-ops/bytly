@@ -18,9 +18,12 @@ export default function AnalyticsTracker(){
    const{data:{user}}=await supabase.auth.getUser();userRef.current=user?.id||null;
    let country="Unknown";
    try{const r=await fetch("https://ipapi.co/json/",{headers:{Accept:"application/json"}});if(r.ok){const j=await r.json();country=j.country_name||j.country||"Unknown"}}catch{}
-   const{data:session,error}=await supabase.from("analytics_sessions").insert({user_id:userRef.current,visitor_id:visitorRef.current,entry_page:path(),browser:browser(),operating_system:os(),device_type:device(),country}).select("id").single();
-   if(error||!session)return;
-   sessionRef.current=session.id;
+   // Do not use .select() after INSERT: analytics_sessions SELECT is admin-only by RLS.
+   // Generate the UUID client-side so the INSERT can succeed without requiring SELECT.
+   const sessionId=crypto.randomUUID();
+   const{error}=await supabase.from("analytics_sessions").insert({id:sessionId,user_id:userRef.current,visitor_id:visitorRef.current,entry_page:path(),browser:browser(),operating_system:os(),device_type:device(),country});
+   if(error){console.warn("Analytics session insert failed",error);return}
+   sessionRef.current=sessionId;
    if(localStorage.getItem("bytly_replay_enabled")!=="false"){
     let replaySeq=0,lastReplay="";
     const maskReplay=el=>{if(!el||el.nodeType!==1)return null;if(el.matches("input,textarea,select,[contenteditable=true],[data-analytics-private],input[type=password]"))return{tag:el.tagName.toLowerCase(),masked:true};return{tag:el.tagName.toLowerCase(),id:el.id||"",text:(el.innerText||"").replace(/\\s+/g," ").trim().slice(0,100)}};
