@@ -27,6 +27,101 @@ const ROLE_TO_CATEGORY = {
   supplier: "supplier",
 };
 
+const PLAN_TIERS = {
+  professional: [
+    {
+      id: "basic",
+      name: "الأساسية",
+      icon: "🥉",
+      accent: "slate",
+      description: "للبداية وبناء حضور مهني داخل بيتلي.",
+      features: ["ملف مهني وظهور في البحث", "معرض أعمال", "تقديم العروض الأساسية", "دعم أساسي"],
+    },
+    {
+      id: "professional",
+      name: "الاحترافية",
+      icon: "⭐",
+      accent: "gold",
+      popular: true,
+      description: "للمهندس الذي يريد ظهورًا أقوى وفرصًا أكثر.",
+      features: ["أولوية في نتائج البحث", "عروض موسعة", "شارة محترف", "إحصائيات الأداء", "دعم متقدم"],
+    },
+    {
+      id: "business",
+      name: "الأعمال",
+      icon: "👑",
+      accent: "dark",
+      description: "للشركات والفرق التي تحتاج إدارة ونموًا أكبر.",
+      features: ["كل مزايا الاحترافية", "إدارة فريق", "تحليلات متقدمة", "أولوية أعلى للظهور", "دعم مخصص"],
+    },
+  ],
+  company: [
+    {
+      id: "business",
+      name: "الأعمال",
+      icon: "👑",
+      accent: "dark",
+      popular: true,
+      description: "للشركات الهندسية والمكاتب التي تدير مشاريع وفريقًا.",
+      features: ["ملف شركة موثق", "إدارة الفريق", "أولوية الظهور", "تحليلات متقدمة", "دعم مخصص"],
+    },
+  ],
+  contractor: [
+    {
+      id: "basic",
+      name: "الأساسية",
+      icon: "🥉",
+      accent: "slate",
+      description: "للمقاول الذي يبدأ استخدام بيتلي.",
+      features: ["ملف مقدم خدمة", "ظهور في البحث", "إدارة العروض", "دعم أساسي"],
+    },
+    {
+      id: "professional",
+      name: "الاحترافية",
+      icon: "⭐",
+      accent: "gold",
+      popular: true,
+      description: "للمقاول الذي يريد فرصًا ومشاريع أكثر.",
+      features: ["أولوية في البحث", "مشاريع وعروض موسعة", "تحليلات الأداء", "إدارة الفريق", "دعم متقدم"],
+    },
+    {
+      id: "business",
+      name: "الأعمال",
+      icon: "👑",
+      accent: "dark",
+      description: "للشركات والمقاولين ذوي العمليات الأكبر.",
+      features: ["كل مزايا الاحترافية", "فرق متعددة", "تقارير متقدمة", "تكاملات مخصصة", "دعم مخصص"],
+    },
+  ],
+  supplier: [
+    {
+      id: "basic",
+      name: "الأساسية",
+      icon: "🥉",
+      accent: "slate",
+      description: "لبناء حضور المورد وإدارة المنتجات الأساسية.",
+      features: ["ملف مورد", "عرض المنتجات", "استقبال الطلبات", "تقارير أساسية"],
+    },
+    {
+      id: "professional",
+      name: "الاحترافية",
+      icon: "⭐",
+      accent: "gold",
+      popular: true,
+      description: "للمورد الذي يريد انتشارًا وتحليلات أكبر.",
+      features: ["منتجات موسعة", "أولوية في البحث", "تحليلات المبيعات", "عروض وخصومات", "دعم متقدم"],
+    },
+    {
+      id: "business",
+      name: "الأعمال",
+      icon: "👑",
+      accent: "dark",
+      description: "للموردين والشركات متعددة الفرق والفروع.",
+      features: ["كل مزايا الاحترافية", "فرق وفروع متعددة", "تقارير سوق متقدمة", "تكاملات مخصصة", "دعم مخصص"],
+    },
+  ],
+};
+
 export default function AdminSubscriptionControl() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -217,59 +312,104 @@ export default function AdminSubscriptionControl() {
         </div>
 
         <Card className="mb-6 overflow-hidden border-0 shadow-lg">
-          <CardHeader className="bg-gradient-to-l from-slate-900 via-slate-800 to-slate-900 text-white">
+          <CardHeader className="bg-gradient-to-l from-slate-950 via-slate-900 to-slate-800 text-white">
             <CardTitle className="text-xl">خطط الاشتراك المعتمدة</CardTitle>
-            <p className="text-sm text-slate-300">تصميم واضح يميز الاشتراك الشهري عن السنوي ويهيئ المستخدم لاختيار الخطة ثم إتمام الدفع.</p>
+            <p className="text-sm text-slate-300 mt-1">
+              نفس فلسفة باقات بيتلي القديمة: مستويات واضحة، مزايا مختلفة، واختيار شهري أو سنوي داخل الخطة.
+            </p>
           </CardHeader>
-          <CardContent className="p-5">
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-              {plans.map(plan => {
-                const yearly = plan.billing_cycle === "yearly";
-                const professional = plan.account_type === "professional";
-                return (
-                  <div
-                    key={plan.code}
-                    className={`group relative overflow-hidden rounded-2xl border-2 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer ${
-                      yearly
-                        ? "border-amber-300 bg-gradient-to-br from-amber-50 via-white to-yellow-50"
-                        : "border-blue-200 bg-gradient-to-br from-blue-50 via-white to-sky-50"
-                    }`}
-                  >
-                    {yearly && (
-                      <div className="absolute left-0 top-0 rounded-br-2xl bg-gradient-to-r from-amber-500 to-yellow-400 px-3 py-1 text-xs font-bold text-white shadow-sm">
-                        ⭐ الأكثر توفيرًا
-                      </div>
-                    )}
-                    <div className={`mb-4 mt-2 inline-flex rounded-xl p-3 ${yearly ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>
-                      <CreditCard className="h-6 w-6" />
+          <CardContent className="p-5 space-y-6">
+            {["professional", "company", "contractor", "supplier"].map(accountType => {
+              const accountPlans = plans.filter(p => p.account_type === accountType);
+              const tiers = PLAN_TIERS[accountType] || [];
+              if (!tiers.length) return null;
+              const label = accountType === "professional" ? "المهندسون والمحترفون" :
+                accountType === "company" ? "الشركات الهندسية" :
+                accountType === "contractor" ? "المقاولون" : "الموردون";
+
+              return (
+                <div key={accountType} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                  <div className="flex items-center justify-between gap-3 mb-4">
+                    <div>
+                      <h3 className="font-bold text-lg text-slate-900">{label}</h3>
+                      <p className="text-xs text-slate-500">اختر المستوى المناسب، ثم حدد دورة الدفع.</p>
                     </div>
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="font-bold text-slate-900">{plan.name}</p>
-                        <p className="mt-1 text-xs text-slate-500">{professional ? "للمهندسين والمحترفين" : plan.account_type === "company" ? "للشركات الهندسية" : plan.account_type === "contractor" ? "للمقاولين" : "للموردين"}</p>
-                      </div>
-                      <Badge className={yearly ? "bg-amber-100 text-amber-800 border-amber-200" : "bg-blue-100 text-blue-800 border-blue-200"}>
-                        {yearly ? "سنوي" : "شهري"}
-                      </Badge>
-                    </div>
-                    <div className="mt-5">
-                      <span className="text-3xl font-extrabold text-slate-900">{Number(plan.price).toLocaleString("ar-SA")}</span>
-                      <span className="mr-2 text-sm text-slate-500">ريال / {yearly ? "سنة" : "شهر"}</span>
-                    </div>
-                    <div className={`mt-4 rounded-xl px-3 py-2 text-xs font-medium ${yearly ? "bg-amber-100/70 text-amber-800" : "bg-blue-100/70 text-blue-800"}`}>
-                      تجربة مجانية 3 أشهر للمستخدم المهني الجديد
-                    </div>
-                    <Button
-                      type="button"
-                      className={`mt-5 w-full rounded-xl font-bold shadow-sm ${yearly ? "bg-amber-500 hover:bg-amber-600 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
-                      onClick={() => toast.info("اختيار الخطة والدفع سيتم ربطه ببوابة الدفع عند تفعيلها.")}
-                    >
-                      اختيار {yearly ? "الخطة السنوية" : "الخطة الشهرية"}
-                    </Button>
+                    <Badge variant="outline" className="bg-white">تجربة مجانية 3 أشهر للمستخدم الجديد</Badge>
                   </div>
-                );
-              })}
-            </div>
+
+                  <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-5">
+                    {tiers.map(tier => {
+                      const monthly = accountPlans.find(p => p.billing_cycle === "monthly");
+                      const yearly = accountPlans.find(p => p.billing_cycle === "yearly");
+                      const monthlyPrice = monthly ? Number(monthly.price) : null;
+                      const yearlyPrice = yearly ? Number(yearly.price) : null;
+                      const yearlySavings = monthlyPrice && yearlyPrice ? Math.max(0, monthlyPrice * 12 - yearlyPrice) : 0;
+                      const colors = tier.accent === "gold"
+                        ? { card: "border-amber-300 bg-gradient-to-br from-amber-50 via-white to-yellow-50", icon: "bg-amber-100 text-amber-700", button: "bg-amber-500 hover:bg-amber-600", badge: "bg-amber-100 text-amber-800" }
+                        : tier.accent === "dark"
+                        ? { card: "border-slate-700 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 text-white", icon: "bg-amber-400/15 text-amber-300", button: "bg-amber-500 hover:bg-amber-400 text-slate-950", badge: "bg-white/10 text-amber-200" }
+                        : { card: "border-slate-200 bg-white", icon: "bg-slate-100 text-slate-700", button: "bg-slate-800 hover:bg-slate-900", badge: "bg-slate-100 text-slate-700" };
+
+                      return (
+                        <div key={tier.id} className={`relative overflow-hidden rounded-2xl border-2 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${colors.card}`}>
+                          {tier.popular && (
+                            <div className="absolute top-0 left-0 rounded-br-2xl bg-gradient-to-r from-amber-500 to-yellow-400 px-3 py-1 text-xs font-bold text-white">
+                              ⭐ الأكثر شيوعًا
+                            </div>
+                          )}
+                          <div className="flex items-start justify-between gap-3 mb-4">
+                            <div className={`rounded-xl p-3 ${colors.icon}`}>
+                              <span className="text-2xl">{tier.icon}</span>
+                            </div>
+                            <Badge className={colors.badge}>{tier.name}</Badge>
+                          </div>
+
+                          <h4 className={`text-xl font-extrabold ${tier.accent === "dark" ? "text-white" : "text-slate-900"}`}>{tier.name}</h4>
+                          <p className={`text-sm mt-1 min-h-10 ${tier.accent === "dark" ? "text-slate-300" : "text-slate-500"}`}>{tier.description}</p>
+
+                          <div className="mt-4 space-y-2">
+                            {tier.features.map(feature => (
+                              <div key={feature} className={`flex items-start gap-2 text-sm ${tier.accent === "dark" ? "text-slate-200" : "text-slate-700"}`}>
+                                <span className="text-emerald-500 font-bold">✓</span>
+                                <span>{feature}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className={`mt-5 rounded-xl p-3 ${tier.accent === "dark" ? "bg-white/5" : "bg-slate-50"}`}>
+                            <div className="grid grid-cols-2 gap-2">
+                              <button
+                                type="button"
+                                disabled={!monthly}
+                                onClick={() => monthly && toast.info(`تم اختيار ${tier.name} — شهري. الدفع سيتم ربطه ببوابة الدفع عند تفعيلها.`)}
+                                className="rounded-xl border border-blue-200 bg-blue-50 px-3 py-3 text-right hover:bg-blue-100 disabled:opacity-50"
+                              >
+                                <span className="block text-xs text-blue-700">شهري</span>
+                                <strong className="block text-lg text-slate-900">{monthlyPrice !== null ? `${monthlyPrice.toLocaleString("ar-SA")} ريال` : "غير متاح"}</strong>
+                              </button>
+                              <button
+                                type="button"
+                                disabled={!yearly}
+                                onClick={() => yearly && toast.info(`تم اختيار ${tier.name} — سنوي. الدفع سيتم ربطه ببوابة الدفع عند تفعيلها.`)}
+                                className="relative rounded-xl border-2 border-amber-300 bg-amber-50 px-3 py-3 text-right hover:bg-amber-100 disabled:opacity-50"
+                              >
+                                {yearlySavings > 0 && <span className="absolute -top-2 left-2 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">وفر {yearlySavings.toLocaleString("ar-SA")} ريال</span>}
+                                <span className="block text-xs text-amber-700">سنوي</span>
+                                <strong className="block text-lg text-slate-900">{yearlyPrice !== null ? `${yearlyPrice.toLocaleString("ar-SA")} ريال` : "غير متاح"}</strong>
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className={`mt-3 text-xs ${tier.accent === "dark" ? "text-slate-400" : "text-slate-500"}`}>
+                            ملاحظة: المستويات الإضافية تعرض مزاياها الآن، وسيتم ربط سعر مستقل لكل مستوى عند اعتماد الباقات التجارية النهائية.
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
 
