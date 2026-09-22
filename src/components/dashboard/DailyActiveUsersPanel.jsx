@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
@@ -17,7 +17,7 @@ export default function DailyActiveUsersPanel() {
     setLoading(true);
     setError(null);
     try {
-      const records = await base44.entities.AnalyticsDailyActiveUser.list("-date", 90);
+      const { data: sessions, error: sessionError } = await supabase.from("analytics_sessions").select("started_at,user_id,visitor_id,duration_seconds").order("started_at",{ascending:false}).limit(2000); if(sessionError) throw sessionError; const byDay={}; (sessions||[]).forEach(s=>{const d=new Date(s.started_at).toISOString().slice(0,10); byDay[d]??={date:d,active_users:new Set(),new_users:new Set(),sessions:0}; byDay[d].active_users.add(s.user_id||s.visitor_id); byDay[d].new_users.add(s.user_id||s.visitor_id); byDay[d].sessions++;}); const records=Object.values(byDay).map(x=>({...x,active_users:x.active_users.size,new_users:x.new_users.size}));
       const sorted = (records || []).sort((a, b) => new Date(a.date) - new Date(b.date));
       setData(sorted);
     } catch (e) {
@@ -28,18 +28,7 @@ export default function DailyActiveUsersPanel() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleSync = async () => {
-    setSyncing(true);
-    setSyncResult(null);
-    try {
-      const res = await base44.functions.invoke("fetchDailyActiveUsers", { days: 30 });
-      setSyncResult(res.data);
-      await fetchData();
-    } catch (e) {
-      setError(e.response?.data?.error || e.message);
-    }
-    setSyncing(false);
-  };
+  const handleSync = async () => { await fetchData(); setSyncResult({message:"تم تحديث بيانات الجلسات من Supabase"}); };
 
   const chartData = data.map(d => ({
     name: moment(d.date).format("DD/MM"),
