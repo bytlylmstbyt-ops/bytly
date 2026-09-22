@@ -99,21 +99,27 @@ export default function PlatformDashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [p,e,prof,sess,events] = await Promise.all([
+      const [p,e,prof,sess,events,contractorRes,companyRes,advertiserRes,supplierRes] = await Promise.all([
         supabase.from("projects").select("*").order("created_at",{ascending:false}).limit(1000),
         supabase.from("engineers").select("*").order("created_at",{ascending:false}).limit(1000),
         supabase.from("profiles").select("*").limit(2000),
         supabase.from("analytics_sessions").select("*").order("last_seen_at",{ascending:false}).limit(2000),
-        supabase.from("analytics_events").select("*").order("occurred_at",{ascending:false}).limit(5000)
+        supabase.from("analytics_events").select("*").order("occurred_at",{ascending:false}).limit(5000),
+        supabase.from("contractors").select("*").limit(1000),
+        supabase.from("companies").select("*").limit(1000),
+        supabase.from("advertisers").select("*").limit(1000),
+        supabase.from("suppliers").select("*").limit(1000)
       ]);
       const failed=[p,e,prof,sess,events].find(x=>x.error);
       if(failed?.error) throw failed.error;
       const projectData=p.data||[], engineerData=e.data||[], profileData=prof.data||[], sessionData=sess.data||[], eventData=events.data||[];
+      const contractorData=contractorRes.data||[], companyData=companyRes.data||[], advertiserData=advertiserRes.data||[], supplierData=supplierRes.data||[];
       const subscriptionData=engineerData.filter(x=>x.is_subscription_active).map(x=>({id:x.id,status:"active",created_at:x.subscription_start_date||x.created_at}));
       const reviewData=engineerData.filter(x=>Number(x.rating)>0).map(x=>({id:x.id,rating:Number(x.rating),created_at:x.updated_at||x.created_at}));
       const revenueData=projectData.map(x=>({id:x.id,commission_amount:Number(x.project_commission_amount??x.platform_commission??0),created_at:x.created_at}));
       setProjects(projectData); setEngineers(engineerData); setSubscriptions(subscriptionData); setReviews(reviewData); setRevenues(revenueData);
       setCustomers(profileData.filter(x => x.role === "client"));
+      setContractors(contractorData); setEngineeringCompanies(companyData); setAdvertisers(advertiserData); setSuppliers(supplierData);
       setLastRefresh(new Date());
     } catch(e) { console.error("PlatformDashboard load error",e); }
     setLoading(false);
@@ -154,6 +160,10 @@ export default function PlatformDashboard() {
 
     // العملاء
     const totalCustomers = customers.length;
+    const totalContractors = contractors.length;
+    const totalEngineeringCompanies = engineeringCompanies.length;
+    const totalAdvertisers = advertisers.length;
+    const totalSuppliers = suppliers.length;
     const thisMonthCustomers = customers.filter(x => x.created_at && moment(x.created_at).month() === thisMonth && moment(x.created_at).year() === thisYear).length;
     const lastMonthCustomers = customers.filter(x => x.created_at && moment(x.created_at).month() === lastMonth.month() && moment(x.created_at).year() === lastMonth.year()).length;
     const customerGrowth = lastMonthCustomers > 0 ? Math.round(((thisMonthCustomers - lastMonthCustomers) / lastMonthCustomers) * 100) : 0;
@@ -181,11 +191,15 @@ export default function PlatformDashboard() {
       totalCustomers,
       thisMonthCustomers,
       customerGrowth,
+      totalContractors,
+      totalEngineeringCompanies,
+      totalAdvertisers,
+      totalSuppliers,
       pendingEngineers: pendingEngineers.length,
       cac,
       statusCounts,
     };
-  }, [projects, engineers, subscriptions, reviews, revenues, customers]);
+  }, [projects, engineers, subscriptions, reviews, revenues, customers, contractors, engineeringCompanies, advertisers, suppliers]);
 
   // بيانات الرسم البياني للإيرادات (آخر 6 أشهر)
   const revenueChart = useMemo(() => {
@@ -294,7 +308,25 @@ export default function PlatformDashboard() {
           </div>
         </div>
 
-        {/* KPIs Row 4 – الجودة */}
+        {/* KPIs Row 4 – المقاولون والشركات الهندسية */}
+        <div>
+          <SectionTitle>المقاولون والشركات الهندسية</SectionTitle>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+            <KpiCard title="إجمالي المقاولين" value={fmt(kpis.totalContractors)} sub="المقاولون المسجلون" icon={Briefcase} color="border-orange-400" loading={loading} />
+            <KpiCard title="الشركات الهندسية" value={fmt(kpis.totalEngineeringCompanies)} sub="المكاتب والشركات الهندسية" icon={Layers} color="border-purple-400" loading={loading} />
+          </div>
+        </div>
+
+        {/* KPIs Row 5 – المعلنون والموردون */}
+        <div>
+          <SectionTitle>المعلنون والموردون</SectionTitle>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+            <KpiCard title="المعلنون" value={fmt(kpis.totalAdvertisers)} sub="الحسابات الإعلانية المسجلة" icon={Target} color="border-blue-400" loading={loading} />
+            <KpiCard title="الموردون" value={fmt(kpis.totalSuppliers)} sub="الموردون المسجلون" icon={Users} color="border-green-400" loading={loading} />
+          </div>
+        </div>
+
+        {/* KPIs Row 6 – الجودة */}
         <div>
           <SectionTitle>جودة الخدمة</SectionTitle>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3">
