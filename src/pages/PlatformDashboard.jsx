@@ -98,14 +98,16 @@ export default function PlatformDashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [p,e,prof] = await Promise.all([
-        supabase.from("projects").select("*").order("created_at",{ascending:false}).limit(500),
-        supabase.from("engineers").select("*").order("created_at",{ascending:false}).limit(500),
-        supabase.from("profiles").select("*").limit(1000)
+      const [p,e,prof,sess,events] = await Promise.all([
+        supabase.from("projects").select("*").order("created_at",{ascending:false}).limit(1000),
+        supabase.from("engineers").select("*").order("created_at",{ascending:false}).limit(1000),
+        supabase.from("profiles").select("*").limit(2000),
+        supabase.from("analytics_sessions").select("*").order("last_seen_at",{ascending:false}).limit(2000),
+        supabase.from("analytics_events").select("*").order("occurred_at",{ascending:false}).limit(5000)
       ]);
-      if(p.error) throw p.error;
-      if(e.error) throw e.error;
-      const projectData=p.data||[], engineerData=e.data||[], profileData=prof.data||[];
+      const failed=[p,e,prof,sess,events].find(x=>x.error);
+      if(failed?.error) throw failed.error;
+      const projectData=p.data||[], engineerData=e.data||[], profileData=prof.data||[], sessionData=sess.data||[], eventData=events.data||[];
       const subscriptionData=engineerData.filter(x=>x.is_subscription_active).map(x=>({id:x.id,status:"active",created_at:x.subscription_start_date||x.created_at}));
       const reviewData=engineerData.filter(x=>Number(x.rating)>0).map(x=>({id:x.id,rating:Number(x.rating),created_at:x.updated_at||x.created_at}));
       const revenueData=projectData.map(x=>({id:x.id,commission_amount:Number(x.project_commission_amount??x.platform_commission??0),created_at:x.created_at}));
@@ -114,8 +116,7 @@ export default function PlatformDashboard() {
     } catch(e) { console.error("PlatformDashboard load error",e); }
     setLoading(false);
   };
-
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); const t=setInterval(loadData,30000); return()=>clearInterval(t); }, []);
 
   const kpis = useMemo(() => {
     const now = moment();
@@ -126,8 +127,8 @@ export default function PlatformDashboard() {
     // مشاريع
     const activeProjects = projects.filter(p => ["open", "in_progress", "awaiting_technical_review", "technical_approved", "pending_client_approval"].includes(p.status));
     const completedProjects = projects.filter(p => p.status === "completed");
-    const thisMonthProjects = projects.filter(p => moment(p.created_date).month() === thisMonth && moment(p.created_date).year() === thisYear);
-    const lastMonthProjects = projects.filter(p => moment(p.created_date).month() === lastMonth.month() && moment(p.created_date).year() === lastMonth.year());
+    const thisMonthProjects = projects.filter(p => moment(p.created_at).month() === thisMonth && moment(p.created_at).year() === thisYear);
+    const lastMonthProjects = projects.filter(p => moment(p.created_at).month() === lastMonth.month() && moment(p.created_at).year() === lastMonth.year());
     const projectGrowth = lastMonthProjects.length > 0 ? Math.round(((thisMonthProjects.length - lastMonthProjects.length) / lastMonthProjects.length) * 100) : 0;
 
     // اشتراكات
@@ -138,8 +139,8 @@ export default function PlatformDashboard() {
 
     // إيرادات
     const totalRevenue = revenues.reduce((s, r) => s + (r.commission_amount || 0), 0);
-    const thisMonthRevenue = revenues.filter(r => moment(r.created_date).month() === thisMonth && moment(r.created_date).year() === thisYear).reduce((s, r) => s + (r.commission_amount || 0), 0);
-    const lastMonthRevenue = revenues.filter(r => moment(r.created_date).month() === lastMonth.month() && moment(r.created_date).year() === lastMonth.year()).reduce((s, r) => s + (r.commission_amount || 0), 0);
+    const thisMonthRevenue = revenues.filter(r => moment(r.created_at).month() === thisMonth && moment(r.created_at).year() === thisYear).reduce((s, r) => s + (r.commission_amount || 0), 0);
+    const lastMonthRevenue = revenues.filter(r => moment(r.created_at).month() === lastMonth.month() && moment(r.created_at).year() === lastMonth.year()).reduce((s, r) => s + (r.commission_amount || 0), 0);
     const revenueGrowth = lastMonthRevenue > 0 ? Math.round(((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100) : 0;
 
     // تقييمات
@@ -181,9 +182,9 @@ export default function PlatformDashboard() {
     for (let i = 5; i >= 0; i--) {
       const m = moment().subtract(i, "months");
       const rev = revenues
-        .filter(r => moment(r.created_date).month() === m.month() && moment(r.created_date).year() === m.year())
+        .filter(r => moment(r.created_at).month() === m.month() && moment(r.created_at).year() === m.year())
         .reduce((s, r) => s + (r.commission_amount || 0), 0);
-      const proj = projects.filter(p => moment(p.created_date).month() === m.month() && moment(p.created_date).year() === m.year()).length;
+      const proj = projects.filter(p => moment(p.created_at).month() === m.month() && moment(p.created_at).year() === m.year()).length;
       months.push({ name: m.format("MMM"), إيرادات: Math.round(rev), مشاريع: proj });
     }
     return months;
@@ -202,7 +203,7 @@ export default function PlatformDashboard() {
 
   // آخر المشاريع
   const recentProjects = useMemo(() =>
-    [...projects].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)).slice(0, 5),
+    [...projects].sort((a, b) => new Date(b.created_at) - new Date(a.created_date)).slice(0, 5),
     [projects]
   );
 
@@ -371,7 +372,7 @@ export default function PlatformDashboard() {
                       <div key={p.id} className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 transition-colors">
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-[#4A3F35] truncate">{p.title || "مشروع بدون عنوان"}</p>
-                          <p className="text-xs text-slate-400">{moment(p.created_date).fromNow()}</p>
+                          <p className="text-xs text-slate-400">{moment(p.created_at).fromNow()}</p>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
                           {p.budget_max && <span className="text-xs font-semibold text-[#C9A66B]">{formatSAR(p.budget_max)}</span>}
