@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { supabase } from "@/lib/supabaseClient";
 import { Bell, CheckCircle } from "lucide-react";
@@ -14,7 +14,6 @@ export default function NotificationBell() {
   const [notifications,setNotifications]=useState([]);
   const [unreadCount,setUnreadCount]=useState(0);
   const [isOpen,setIsOpen]=useState(false);
-  const navigate = useNavigate();
   const openNotification = async (n) => {
     let role = n.entity_type, userId = n.entity_id;
     if (!["client","engineer","contractor","supplier","consultant","firm","investor","developer"].includes(role) && userId) {
@@ -24,7 +23,7 @@ export default function NotificationBell() {
     const routes={client:"AdminClients",engineer:"AdminEngineers",contractor:"AdminProviders",supplier:"AdminProviders",consultant:"AdminProviders",firm:"AdminProviders",investor:"AdminClients",developer:"AdminProviders"};
     const page=routes[role]||"AdminUserManagementCenter"; const params=userId?`?userId=${encodeURIComponent(userId)}`:"";
     if(n.id&&!n.read_at){await supabase.from("notifications").update({read_at:new Date().toISOString()}).eq("id",n.id);setUnreadCount(x=>Math.max(0,x-1));setNotifications(p=>p.map(x=>x.id===n.id?{...x,read_at:new Date().toISOString()}:x));}
-    setIsOpen(false);navigate(`${createPageUrl(page)}${params}`);
+    setIsOpen(false);
   };
 
   useEffect(()=>{
