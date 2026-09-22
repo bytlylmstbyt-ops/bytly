@@ -50,24 +50,22 @@ export default function AdminClientsPage() {
   const loadData = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [{ data: clientsData, error: clientsError }, { data: interactionsData, error: interactionsError }, { data: projectsData, error: projectsError }] = await Promise.all([
-        supabase.from("clients").select("*").order("created_at", { ascending: false }).limit(500),
-        supabase.from("client_interactions").select("*").order("created_at", { ascending: false }).limit(500),
-        supabase.from("projects").select("id,title,status,client_user_id,created_at").limit(1000),
-      ]);
+      // تحميل العملاء هو المصدر الأساسي للصفحة. لا نجعل أي جدول CRM ثانوي يمنع ظهور العملاء.
+      const { data: clientsData, error: clientsError } = await supabase
+        .from("clients")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (clientsError) throw clientsError;
 
-      // العملاء المسجلون رسميًا يجب أن يظهروا هنا حتى لو لم تكن هناك بيانات CRM إضافية بعد.
-      let baseClients = clientsData || [];
-      if (clientsError) console.error("Clients load error:", clientsError);
-
-      // حماية إضافية: أي profile بدور client يظهر في إدارة العملاء حتى لو تأخر مزامنة جدول clients.
       const { data: clientProfiles, error: profilesError } = await supabase
         .from("profiles")
         .select("user_id,full_name,email,phone,created_at")
         .eq("role", "client");
-      if (profilesError) console.error("Client profiles load error:", profilesError);
 
-      if (clientProfiles?.length) {
+      // بعض الحسابات القديمة قد تكون موجودة في profiles ولم تتم مزامنتها بعد إلى clients.
+      let baseClients = clientsData || [];
+      if (!profilesError && clientProfiles?.length) {
         const existing = new Set(baseClients.map(c => c.user_id).filter(Boolean));
         const missing = clientProfiles
           .filter(p => p.user_id && !existing.has(p.user_id))
@@ -86,20 +84,22 @@ export default function AdminClientsPage() {
         baseClients = [...baseClients, ...missing];
       }
 
-      const safeInteractions = interactionsData || [];
-      const safeProjects = projectsData || [];
+      // التفاعلات تُحمّل بشكل مستقل؛ فشلها لا يمنع إدارة العملاء من العمل.
+      const { data: interactionsData, error: interactionsError } = await supabase
+        .from("client_interactions")
+        .select("*")
+        .order("interaction_date", { ascending: false })
+        .limit(500);
 
+      const safeInteractions = interactionsError ? [] : (interactionsData || []);
       const enriched = baseClients.map(c => ({
         ...c,
         interactionsCount: safeInteractions.filter(i => i.client_email === c.email).length,
-        projectsCount: safeProjects.filter(p => p.client_user_id && p.client_user_id === c.user_id).length,
+        projectsCount: 0,
       }));
 
       setClients(enriched.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)));
       setInteractions(safeInteractions);
-
-      if (interactionsError) console.error("Interactions load error:", interactionsError);
-      if (projectsError) console.error("Projects load error:", projectsError);
     } catch (error) {
       console.error("Error loading client management:", error);
       setClients([]);
