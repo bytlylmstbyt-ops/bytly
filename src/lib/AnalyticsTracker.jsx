@@ -33,6 +33,7 @@ export default function AnalyticsTracker(){
    observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting&&entry.intersectionRatio>=0.5){const name=entry.target.dataset.analyticsSection;if(name&&name!==lastSection){lastSection=name;track("section_view",{title:name},name)}}}),{threshold:[0.5]});
    getSections().forEach(el=>observer.observe(el));
    const onVisibility=()=>{if(document.visibilityState==="hidden")updateSession()};
+   const onBeforeUnload=()=>{if(sessionRef.current){navigator.sendBeacon?.("/api/analytics-beacon",JSON.stringify({session_id:sessionRef.current,visitor_id:visitorRef.current,at:new Date().toISOString()}));updateSession()}};
    document.addEventListener("click",onClick,true);window.addEventListener("scroll",onScroll,{passive:true});document.addEventListener("visibilitychange",onVisibility);
    return()=>{mounted=false;clearInterval(heartbeat);clearInterval(routeWatcher);clearTimeout(visibilityTimer);observer?.disconnect();document.removeEventListener("click",onClick,true);window.removeEventListener("scroll",onScroll);document.removeEventListener("visibilitychange",onVisibility);updateSession()};
   }catch(e){console.warn("Analytics tracker skipped",e)}
