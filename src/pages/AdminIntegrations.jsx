@@ -28,8 +28,20 @@ const INTEGRATIONS = [
   { type: "supabase", kind: "connector" },
 ];
 
-function providerIsLinked(identities, type) {
+function providerIsLinked(identities, type, session) {
   const provider = getOAuthProvider(type);
+  if (type === "gmail") {
+    // Gmail is a service integration, not merely a Google login identity.
+    // Keep the connection state separate from the result of a one-off test.
+    const metadataConnected = session?.user?.user_metadata?.bytly_integrations?.gmail === true;
+    let browserConnected = false;
+    try {
+      browserConnected =
+        sessionStorage.getItem("bytly_connected_integration") === "gmail" ||
+        Boolean(sessionStorage.getItem("bytly_gmail_provider_token"));
+    } catch (_) {}
+    return metadataConnected || browserConnected;
+  }
   return provider ? identities.some((identity) => identity.provider === provider) : false;
 }
 
@@ -52,7 +64,7 @@ export default function AdminIntegrations() {
     const identities = await getLinkedOAuthProviders();
     const now = new Date().toISOString();
     const results = INTEGRATIONS.map((integ) => {
-      const connected = providerIsLinked(identities, integ.type);
+      const connected = providerIsLinked(identities, integ.type, sessionData.session);
       return {
         type: integ.type,
         kind: integ.kind,
@@ -115,7 +127,7 @@ export default function AdminIntegrations() {
       if (!prev) return prev;
       return {
         ...prev,
-        integrations: prev.integrations.map((i) => i.type === type ? { ...i, connected: result.ok === true, error: result.ok ? null : result.error } : i),
+        integrations: prev.integrations.map((i) => i.type === type ? {\n          ...i,\n          // A failed test must not silently disconnect the integration.\n          // Connection state is managed by OAuth; the test only reports health.\n          connected: result.ok === true ? true : i.connected,\n          error: result.ok ? null : result.error,\n          needs_reauth: result.reauthorize === true || i.needs_reauth === true,\n        } : i),
       };
     });
   };
