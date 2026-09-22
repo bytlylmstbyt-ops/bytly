@@ -17,8 +17,7 @@ export default function LiveVisitorsPanel() {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await base44.functions.invoke("fetchRealtimeVisitors", {});
-      setData(res.data);
+      const { data: sessions, error } = await supabase.from("analytics_sessions").select("id,user_id,visitor_id,last_seen_at,entry_page,duration_seconds,device_type,operating_system,browser,country").order("last_seen_at",{ascending:false}).limit(100); if (error) throw error; const active=(sessions||[]).filter(s=>Date.now()-new Date(s.last_seen_at).getTime()<=90000); setData({ga:{active_users:active.length,pages:[],sources:[],cities:[]},logged_in_users:active.filter(s=>s.user_id)});
       setError(null);
     } catch (e) {
       setError(e.response?.data?.error || e.message);
