@@ -14,6 +14,12 @@ export default function AnalyticsTracker(){
  const started=Date.now();let eventCount=0,pageCount=0,lastPath="",lastSection="";
  const recorderKey="bytly_replay_enabled";
  const replayEnabled=localStorage.getItem(recorderKey)!=="false";
+ const replaySnapshot=async(type,seq)=>{
+  if(!replayEnabled||!sessionRef.current)return;
+  const clean=(el)=>{if(!el||el.nodeType!==1)return null;if(el.matches("input,textarea,[contenteditable=true],[data-analytics-private]"))return {tag:el.tagName.toLowerCase(),masked:true};const out={tag:el.tagName.toLowerCase(),id:el.id||"",cls:String(el.className||"").slice(0,120),text:(el.innerText||"").trim().slice(0,120)};return out};
+  const payload={url:path(),title:document.title,scroll:Math.round(window.scrollY/(Math.max(document.body.scrollHeight-window.innerHeight,1))*100),active:clean(document.activeElement)};
+  await supabase.from("analytics_replay_snapshots").insert({session_id:sessionRef.current,visitor_id:visitorRef.current,snapshot_type:type,sequence_no:seq,payload});
+ };
  const start=async()=>{
   try{
    visitorRef.current=getVisitorId();
@@ -25,7 +31,7 @@ export default function AnalyticsTracker(){
    sessionRef.current=session.id;
    const updateSession=async()=>{if(!sessionRef.current)return;await supabase.from("analytics_sessions").update({event_count:eventCount,page_count:pageCount,last_seen_at:new Date().toISOString(),duration_seconds:Math.floor((Date.now()-started)/1000),exit_page:path(),max_scroll_percent:maxScrollRef.current}).eq("id",sessionRef.current).eq("visitor_id",visitorRef.current)};
    const track=async(event_name,metadata={},section_name=null)=>{if(!sessionRef.current||!mounted)return;const{error}=await supabase.from("analytics_events").insert({session_id:sessionRef.current,user_id:userRef.current,visitor_id:visitorRef.current,event_name,page_path:path(),metadata,section_name,screen_x:metadata.screen_x||null,screen_y:metadata.screen_y||null});if(!error){eventCount++;if(event_name==="page_view")pageCount++;await updateSession()}};
-   await track("page_view",{title:document.title});
+   await track("page_view",{title:document.title});\n   let replaySeq=0; await replaySnapshot("initial",replaySeq);
    heartbeat=setInterval(updateSession,30000);
    lastPath=path();
    routeWatcher=setInterval(()=>{const p=path();if(p!==lastPath){lastPath=p;lastSection="";track("page_view",{title:document.title})}},1000);
@@ -34,7 +40,7 @@ export default function AnalyticsTracker(){
    const getSections=()=>{const marked=Array.from(document.querySelectorAll("[data-analytics-section]")).filter(el=>el.dataset.analyticsSection);if(marked.length)return marked;return Array.from(document.querySelectorAll("main h1,main h2,main h3,section h1,section h2,section h3")).filter(el=>el.textContent?.trim()).map(el=>{el.dataset.analyticsSection=el.textContent.trim().slice(0,100);return el})};
    observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting&&entry.intersectionRatio>=0.5){const name=entry.target.dataset.analyticsSection;if(name&&name!==lastSection){lastSection=name;track("section_view",{title:name},name)}}}),{threshold:[0.5]});
    getSections().forEach(el=>observer.observe(el));
-   const onVisibility=()=>{if(document.visibilityState==="hidden")updateSession()};
+   const onVisibility=()=>{if(document.visibilityState==="hidden"){updateSession();replaySnapshot("visibility",++replaySeq)}};
    const onBeforeUnload=()=>{if(sessionRef.current){navigator.sendBeacon?.("/api/analytics-beacon",JSON.stringify({session_id:sessionRef.current,visitor_id:visitorRef.current,at:new Date().toISOString()}));updateSession()}};
    document.addEventListener("click",onClick,true);window.addEventListener("scroll",onScroll,{passive:true});document.addEventListener("visibilitychange",onVisibility);
    return()=>{mounted=false;clearInterval(heartbeat);clearInterval(routeWatcher);clearTimeout(visibilityTimer);observer?.disconnect();document.removeEventListener("click",onClick,true);window.removeEventListener("scroll",onScroll);document.removeEventListener("visibilitychange",onVisibility);updateSession()};
