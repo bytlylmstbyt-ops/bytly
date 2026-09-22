@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     isMounted.current = true;
     let unsubscribe = null;
+    let heartbeatTimer = null;
 
     const initialize = async () => {
       if (!isMounted.current) return;
@@ -38,7 +39,7 @@ export const AuthProvider = ({ children }) => {
           const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
             if (!isMounted.current) return;
             if (session?.user) {
-              await setSupabaseUser(session.user);
+              await setSupabaseUser(session.user, _event === 'SIGNED_IN');
             } else if (_event === 'SIGNED_OUT') {
               setUser(null);
               setIsAuthenticated(false);
@@ -46,6 +47,15 @@ export const AuthProvider = ({ children }) => {
             }
           });
           unsubscribe = listener?.subscription;
+
+          // Keep a lightweight, real database presence heartbeat.
+          const updatePresence = async () => {
+            const { data: { user: currentUser } } = await supabase.auth.getUser();
+            if (!currentUser) return;
+            await supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('user_id', currentUser.id);
+          };
+          await updatePresence();
+          heartbeatTimer = window.setInterval(updatePresence, 60000);
         } catch (error) {
           console.warn('Supabase auth initialization skipped:', error?.message || error);
           if (isMounted.current) setAuthError(error);
@@ -61,10 +71,11 @@ export const AuthProvider = ({ children }) => {
     return () => {
       isMounted.current = false;
       unsubscribe?.unsubscribe?.();
+      if (heartbeatTimer) window.clearInterval(heartbeatTimer);
     };
   }, []);
 
-  const setSupabaseUser = async (authUser) => {
+  const setSupabaseUser = async (authUser, recordLogin = false) => {
     if (!authUser || !isMounted.current) return;
     let profile = null;
     if (supabase) {
@@ -75,7 +86,6 @@ export const AuthProvider = ({ children }) => {
           .eq('user_id', authUser.id)
           .maybeSingle();
 
-        // Backward compatibility with older profile schemas that used id.
         if (result.error && /user_id/i.test(result.error.message || '')) {
           result = await supabase
             .from('profiles')
@@ -85,8 +95,13 @@ export const AuthProvider = ({ children }) => {
         }
         if (result.error) throw result.error;
         profile = result.data || null;
+
+        const patch = { last_seen_at: new Date().toISOString() };
+        if (recordLogin) patch.last_login_at = new Date().toISOString();
+        await supabase.from('profiles').update(patch).eq('user_id', authUser.id);
+        if (profile) profile = { ...profile, ...patch };
       } catch (error) {
-        console.warn('Supabase profile lookup skipped:', error?.message || error);
+        console.warn('Supabase profile lookup/activity update skipped:', error?.message || error);
       }
     }
     if (isMounted.current) {
@@ -113,7 +128,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async (shouldRedirect = true) => {
     if (isSupabaseConfigured && supabase) {
-      try { await supabase.auth.signOut(); } catch (error) {
+      try { await supabase.signOut(); } catch (error) {
         console.warn('Supabase logout skipped:', error?.message || error);
       }
     }
@@ -129,17 +144,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      isAuthenticated,
-      isLoadingAuth,
-      isLoadingPublicSettings,
-      authError,
-      appPublicSettings,
-      logout,
-      navigateToLogin,
-      checkAppState
-    }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, isLoadingAuth, isLoadingPublicSettings, authError, appPublicSettings, logout, navigateToLogin, checkAppState }}>
       {children}
     </AuthContext.Provider>
   );
