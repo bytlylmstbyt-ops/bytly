@@ -83,6 +83,7 @@ export default function PlatformDashboard() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [revenues, setRevenues] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
   const [showTop, setShowTop] = useState(false);
@@ -112,6 +113,7 @@ export default function PlatformDashboard() {
       const reviewData=engineerData.filter(x=>Number(x.rating)>0).map(x=>({id:x.id,rating:Number(x.rating),created_at:x.updated_at||x.created_at}));
       const revenueData=projectData.map(x=>({id:x.id,commission_amount:Number(x.project_commission_amount??x.platform_commission??0),created_at:x.created_at}));
       setProjects(projectData); setEngineers(engineerData); setSubscriptions(subscriptionData); setReviews(reviewData); setRevenues(revenueData);
+      setCustomers(profileData.filter(x => x.role === "client"));
       setLastRefresh(new Date());
     } catch(e) { console.error("PlatformDashboard load error",e); }
     setLoading(false);
@@ -150,6 +152,12 @@ export default function PlatformDashboard() {
     const approvedEngineers = engineers.filter(e => e.status === "approved" || e.is_approved);
     const pendingEngineers = engineers.filter(e => e.status === "pending" || (!e.is_approved && !e.status));
 
+    // العملاء
+    const totalCustomers = customers.length;
+    const thisMonthCustomers = customers.filter(x => x.created_at && moment(x.created_at).month() === thisMonth && moment(x.created_at).year() === thisYear).length;
+    const lastMonthCustomers = customers.filter(x => x.created_at && moment(x.created_at).month() === lastMonth.month() && moment(x.created_at).year() === lastMonth.year()).length;
+    const customerGrowth = lastMonthCustomers > 0 ? Math.round(((thisMonthCustomers - lastMonthCustomers) / lastMonthCustomers) * 100) : 0;
+
     // متوسط تكلفة الاستحواذ: الإجمالي التسويقي / عدد المهندسين (تقديري)
     const estimatedMarketingCost = 10000;
     const cac = approvedEngineers.length > 0 ? Math.round(estimatedMarketingCost / approvedEngineers.length) : 0;
@@ -170,11 +178,14 @@ export default function PlatformDashboard() {
       revenueGrowth,
       avgRating,
       approvedEngineers: approvedEngineers.length,
+      totalCustomers,
+      thisMonthCustomers,
+      customerGrowth,
       pendingEngineers: pendingEngineers.length,
       cac,
       statusCounts,
     };
-  }, [projects, engineers, subscriptions, reviews, revenues]);
+  }, [projects, engineers, subscriptions, reviews, revenues, customers]);
 
   // بيانات الرسم البياني للإيرادات (آخر 6 أشهر)
   const revenueChart = useMemo(() => {
@@ -274,7 +285,16 @@ export default function PlatformDashboard() {
           </div>
         </div>
 
-        {/* KPIs Row 3 – الجودة */}
+        {/* KPIs Row 3 – العملاء */}
+        <div>
+          <SectionTitle>العملاء</SectionTitle>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+            <KpiCard title="إجمالي العملاء" value={fmt(kpis.totalCustomers)} sub="العملاء المسجلون في المنصة" icon={Users} color="border-amber-400" loading={loading} />
+            <KpiCard title="عملاء جدد هذا الشهر" value={fmt(kpis.thisMonthCustomers)} sub="مسجلون خلال الشهر الحالي" icon={TrendingUp} color="border-green-400" trend={kpis.customerGrowth >= 0 ? "up" : "down"} trendVal={Math.abs(kpis.customerGrowth)} loading={loading} />
+          </div>
+        </div>
+
+        {/* KPIs Row 4 – الجودة */}
         <div>
           <SectionTitle>جودة الخدمة</SectionTitle>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3">
