@@ -15,9 +15,9 @@ export default function AdminAnalytics(){
  const stats=useMemo(()=>({sessions:sessions.length,visitors:new Set(sessions.map(x=>x.visitor_id)).size,users:new Set(sessions.filter(x=>x.user_id).map(x=>x.user_id)).size,events:events.length,avg:sessions.length?sessions.reduce((a,x)=>a+(x.duration_seconds||0),0)/sessions.length:0,scroll:sessions.length?sessions.reduce((a,x)=>a+(x.max_scroll_percent||0),0)/sessions.length:0}),[sessions,events]);
  const countries=countBy(sessions,x=>x.country), browsers=countBy(sessions,x=>x.browser), systems=countBy(sessions,x=>x.operating_system), devices=countBy(sessions,x=>x.device_type);
  const pages=countBy(events.filter(x=>x.event_name==="page_view"),x=>x.page_path);
- const actions=countBy(events.filter(x=>x.event_name!=="page_view"),x=>x.event_name);
+ const actions=countBy(events.filter(x=>x.event_name==="click"),x=>x.metadata?.label||"نقر غير مسمى");
  const sections=countBy(events.filter(x=>x.event_name==="section_view"),x=>x.section_name||x.metadata?.title);
- const loginCount=events.filter(x=>/login|sign_in|تسجيل|دخول/i.test(x.event_name||"")).length;
+ const loginCount=events.filter(x=>x.event_name==="click"&&/login|sign_in|تسجيل|دخول/i.test(x.metadata?.label||"")).length;
  const replay=selected?events.filter(x=>x.session_id===selected.id).sort((a,b)=>new Date(a.occurred_at)-new Date(b.occurred_at)):[];
  return <div dir="rtl" className="max-w-7xl mx-auto px-4 py-8 space-y-6">
   <div className="flex items-center justify-between flex-wrap gap-3"><div><p className="text-xs text-[#C9A66B]">مجلس الإدارة / المستخدمون</p><h1 className="text-2xl font-bold text-[#4A3F35]">تحليلات المستخدمين والجلسات</h1><p className="text-sm text-slate-500">بيانات حقيقية من Supabase.</p></div><div className="flex gap-2"><select value={range} onChange={e=>setRange(Number(e.target.value))} className="border rounded-lg px-3 py-2"><option value="1">اليوم</option><option value="7">7 أيام</option><option value="30">30 يوم</option></select><button onClick={load} className="border rounded-lg px-3 py-2"><RefreshCw className="w-4 h-4"/></button></div></div>
