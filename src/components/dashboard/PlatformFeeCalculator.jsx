@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -35,7 +35,7 @@ export default function PlatformFeeCalculator() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const data = await base44.entities.Project.list("-created_date", 500);
+      const { data, error } = await supabase.from("projects").select("*").order("created_at",{ascending:false}).limit(500); if(error) throw error;
       setProjects(data || []);
     } catch (e) {
       console.error("load error", e);
@@ -69,7 +69,7 @@ export default function PlatformFeeCalculator() {
         commission,
         consultantFee,
         netToEngineer,
-        created_date: p.created_date,
+        created_date: p.created_at,
         engineer_payment: p.engineer_payment,
         platform_commission: p.platform_commission,
         technical_consultant_fee: p.technical_consultant_fee,
