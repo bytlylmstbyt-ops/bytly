@@ -4,6 +4,7 @@ import { Toaster as SonnerToaster } from "sonner"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import NavigationTracker from '@/lib/NavigationTracker'
+import AnalyticsTracker from '@/lib/AnalyticsTracker'
 import RouteTitleManager from '@/lib/RouteTitleManager'
 import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
@@ -68,6 +69,7 @@ const PendingApprovals = React.lazy(() => import('./pages/PendingApprovals'));
 const LaunchPerformanceDashboard = React.lazy(() => import('./pages/LaunchPerformanceDashboard'));
 const CommissionManager = React.lazy(() => import('./pages/CommissionManager'));
 const NotificationCenter = React.lazy(() => import('./pages/NotificationCenter'));
+const AdminAnalytics = React.lazy(() => import('./pages/AdminAnalytics'));
 const EngineerCalendar = React.lazy(() => import('./pages/EngineerCalendar'));
 const About = React.lazy(() => import('./pages/About'));
 const RegisterContractor = React.lazy(() => import('./pages/RegisterContractor'));
@@ -111,6 +113,7 @@ const AuthenticatedApp = () => {
     <Route path="/register" element={<Register />} />
     <Route path="/register-auth" element={<Navigate to="/register" replace />} />
     <Route path="/auth/callback" element={<AuthCallback />} />
+    <Route path="/AdminAnalytics" element={protectedRoute(AdminAnalytics,"AdminAnalytics")} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
     <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/" element={<PublicHomeRoute />} />
@@ -128,4 +131,4 @@ const AuthenticatedApp = () => {
   </Routes>;
 };
 
-export default function App() { return <QueryClientProvider client={queryClientInstance}><Router><AuthProvider><NavigationTracker /><RouteTitleManager /><AuthenticatedApp /><Toaster /><HotToastToaster position="top-center" toastOptions={{ duration: 5000 }} /><SonnerToaster position="top-center" richColors /></AuthProvider></Router></QueryClientProvider>; }
+export default function App() { return <QueryClientProvider client={queryClientInstance}><Router><AuthProvider><AnalyticsTracker /><NavigationTracker /><RouteTitleManager /><AuthenticatedApp /><Toaster /><HotToastToaster position="top-center" toastOptions={{ duration: 5000 }} /><SonnerToaster position="top-center" richColors /></AuthProvider></Router></QueryClientProvider>; }
