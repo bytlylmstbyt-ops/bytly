@@ -46,7 +46,10 @@ export default function IntegrationCard({ integration, onTested }) {
         if (sessionError) throw sessionError;
         const providerToken =
           sessionData?.session?.provider_token ||
-          (() => { try { return sessionStorage.getItem("bytly_google_provider_token"); } catch (_) { return null; } })();
+          (() => { try {
+            return sessionStorage.getItem("bytly_gmail_provider_token") ||
+              sessionStorage.getItem("bytly_google_provider_token");
+          } catch (_) { return null; } })();
         if (!providerToken) {
           result = { ok: false, error: "لم تتوفر جلسة Gmail صالحة. اضغط «إعادة المصادقة» ثم أعد الفحص." };
         } else {
