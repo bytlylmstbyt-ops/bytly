@@ -100,13 +100,17 @@ export async function testMarketingConnection(platformId) {
       body: { action: "status" },
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
     });
-    if (error) throw error;
-    if (!data?.ok) {
+    if (error) {
+      const details = error?.context?.body || error?.message || "تعذر إرسال طلب فحص LinkedIn.";
+      throw new Error(typeof details === "string" ? details : JSON.stringify(details));
+    }
+    if (data?.ok !== true) {
       return {
         ok: false,
         connected: false,
         platform: platformId,
-        message: data?.error || "تعذر التحقق من اتصال LinkedIn.",
+        statusCode: 200,
+        message: data?.error || "تم الوصول إلى الخدمة، لكن اتصال LinkedIn يحتاج إعدادًا.",
       };
     }
 
