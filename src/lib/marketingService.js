@@ -90,48 +90,55 @@ export async function getMarketingAnalytics(posts) {
 export async function testMarketingConnection(platformId) {
   const user = await getActor();
 
-  // LinkedIn is verified through the real Supabase Edge Function, not a local
-  // sync flag. The Edge Function uses the managed LinkedIn connection/token.
+  // LinkedIn uses the same central integration configured in Admin Integrations.
+  // Do not create or require a second OAuth connection in Marketing Center.
   if (platformId === "linkedin") {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData?.session?.access_token;
-    if (!accessToken) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى ثم أعد اختبار LinkedIn.");
-    const { data, error } = await supabase.functions.invoke("linkedin-publish", {
-      body: { action: "status" },
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
-    });
-    if (error) {
-      const details = error?.context?.body || error?.message || "تعذر إرسال طلب فحص LinkedIn.";
-      throw new Error(typeof details === "string" ? details : JSON.stringify(details));
-    }
-    if (data?.ok !== true) {
+    const { data: identities, error: identityError } = await supabase.auth.getUserIdentities();
+    if (identityError) throw identityError;
+
+    const linked = (identities || []).some((identity) =>
+      identity.provider === "linkedin_oidc" || identity.provider === "linkedin"
+    );
+
+    const { data: sync } = await supabase
+      .from("sync_states")
+      .select("service,last_sync,sync_token,description")
+      .eq("service", "linkedin")
+      .maybeSingle();
+
+    const connected = linked || Boolean(sync?.sync_token) || sync?.description?.includes("LinkedIn متصل");
+
+    if (!connected) {
       return {
         ok: false,
         connected: false,
         platform: platformId,
-        statusCode: 200,
-        message: data?.error || "تم الوصول إلى الخدمة، لكن اتصال LinkedIn يحتاج إعدادًا.",
+        message: "LinkedIn غير متصل في مركز التكاملات.",
       };
     }
 
+    const now = new Date().toISOString();
     await supabase.from("sync_states").upsert({
       service: "linkedin",
-      sync_token: "server-managed",
-      last_sync: new Date().toISOString(),
-      description: data?.name ? `LinkedIn متصل: ${data.name}` : "LinkedIn متصل عبر الاتصال المُدار",
+      sync_token: sync?.sync_token || "server-managed",
+      last_sync: now,
+      description: "LinkedIn متصل عبر التكامل المركزي",
       created_by: user.id,
-      updated_at: new Date().toISOString(),
+      updated_at: now,
     }, { onConflict: "service" });
 
     return {
       ok: true,
       connected: true,
       platform: platformId,
-      message: data?.name ? `تم الاتصال فعليًا بـ LinkedIn: ${data.name}` : "تم الاتصال فعليًا بـ LinkedIn.",
-      memberId: data?.memberId || null,
-      authorUrn: data?.authorUrn || null,
+      message: "تم التحقق من اتصال LinkedIn المركزي.",
     };
   }
+
+  const sync = (await supabase.from("sync_states").select("service,last_sync,sync_token").eq("service", platformId).maybeSingle()).data;
+  if (!sync) return { ok: false, connected: false, platform: platformId, message: "المنصة غير متصلة بعد" };
+  return { ok: Boolean(sync.sync_token), connected: Boolean(sync.sync_token), platform: platformId, message: sync.sync_token ? "الاتصال مسجل" : "المنصة تحتاج إعداد الاتصال" };
+}
 
   const sync = (await supabase.from("sync_states").select("service,last_sync,sync_token").eq("service", platformId).maybeSingle()).data;
   if (!sync) return { ok: false, connected: false, platform: platformId, message: "المنصة غير متصلة بعد" };
