@@ -2,19 +2,32 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, XCircle, RefreshCw, ExternalLink, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, RefreshCw, ExternalLink, Loader2, Link2 } from "lucide-react";
+import { startIntegrationOAuth } from "@/lib/integrationOAuth";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import moment from "moment";
 
 export default function MarketingPlatformCard({ platform, connected, lastSync, onTest }) {
   const { t, isRTL } = useLanguage();
   const [testing, setTesting] = React.useState(false);
+  const [connecting, setConnecting] = React.useState(false);
   const Icon = platform.icon;
 
   const handleTest = async () => {
     setTesting(true);
-    await onTest?.();
-    setTesting(false);
+    try { await onTest?.(); } finally { setTesting(false); }
+  };
+
+  const handleConnect = async () => {
+    setConnecting(true);
+    try {
+      await startIntegrationOAuth(platform.id);
+    } catch (error) {
+      console.error(error);
+      alert(error?.message || "تعذر بدء ربط LinkedIn.");
+    } finally {
+      setConnecting(false);
+    }
   };
 
   const formatLastSync = (iso) => {
@@ -50,6 +63,12 @@ export default function MarketingPlatformCard({ platform, connected, lastSync, o
 
         {/* Actions */}
         <div className="flex gap-1 pt-1">
+          {!connected && platform.id === "linkedin" && (
+            <Button size="sm" variant="outline" className="h-8 text-xs flex-1 text-blue-700 border-blue-200" onClick={handleConnect} disabled={connecting}>
+              {connecting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Link2 className="w-3 h-3" />}
+              {connecting ? "جاري الربط..." : "ربط LinkedIn"}
+            </Button>
+          )}
           <Button size="sm" variant="outline" className="h-8 text-xs flex-1" onClick={handleTest} disabled={testing}>
             {testing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
             {t("integrations.adminMarketing.platform.testConnection")}
