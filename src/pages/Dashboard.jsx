@@ -13,6 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import IndividualClientDashboard from "@/components/client/IndividualClientDashboard";
+import ClientDashboard from "@/pages/ClientDashboard";
+import EngineerDashboard from "@/pages/EngineerDashboard";
 import DailyFollowUpTasks from "@/components/dashboard/DailyFollowUpTasks";
 import ProviderRatingsReport from "@/components/dashboard/ProviderRatingsReport";
 import { useLanguage } from "@/components/i18n/LanguageContext";
@@ -152,6 +154,16 @@ export default function Dashboard() {
   if (userType === "client" && profile?.client_type === "investor" && !isAdmin) {
     window.location.href = createPageUrl("InvestorHub");
     return null;
+  }
+
+  // Passport4 role dashboards: preserve the original role-specific UI exactly.
+  // The dashboard pages themselves now read through Bytly's Supabase-backed compatibility layer.
+  if (userType === "engineer") {
+    return <EngineerDashboard />;
+  }
+
+  if (userType === "client") {
+    return <ClientDashboard />;
   }
 
   // Render specialized dashboard for individual clients
