@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
   Briefcase, Wallet, Star, 
@@ -39,14 +40,58 @@ export default function Dashboard() {
 
   const loadDashboardData = async () => {
     setIsLoading(true);
-    const currentUser = await Promise.race([base44.auth.me(), new Promise(resolve => setTimeout(() => resolve(null), 10000))]).catch(() => null);
-    if (!currentUser?.email) { setIsLoading(false); return; }
+
+    // Supabase is the source of truth for the current Bytly account.
+    // Do not depend on the legacy Base44 session for normal users.
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const authUser = authData?.user;
+    if (authError || !authUser?.id || !authUser.email) {
+      setIsLoading(false);
+      return;
+    }
+
+    const email = authUser.email.trim().toLowerCase();
+    const { data: supabaseProfile } = await supabase
+      .from("profiles")
+      .select("id,user_id,email,full_name,phone,role")
+      .eq("user_id", authUser.id)
+      .maybeSingle();
+
+    const role = String(
+      supabaseProfile?.role ||
+      authUser.app_metadata?.role ||
+      authUser.user_metadata?.role ||
+      authUser.user_metadata?.account_type ||
+      ""
+    ).trim().toLowerCase();
+
+    const normalizedRole = ["engineering_firm","engineeringfirm"].includes(role)
+      ? "firm"
+      : ["legalconsultant","legal-consultant","lawyer"].includes(role)
+        ? "legal_consultant"
+        : role;
+
+    const currentUser = {
+      id: authUser.id,
+      email,
+      full_name: supabaseProfile?.full_name || authUser.user_metadata?.full_name || authUser.user_metadata?.name || "",
+      phone: supabaseProfile?.phone || authUser.phone || "",
+      role: normalizedRole
+    };
     setUser(currentUser);
 
-    // All non-admin users use the original role-specific dashboard UI.
-    // The role router resolves the account directly from Supabase.
-    if (currentUser.role !== 'admin') {
+    // Every non-admin account goes directly to the original role dashboard.
+    // A valid Supabase account must never be sent to "create a new account"
+    // just because a legacy Base44 profile row is missing.
+    if (normalizedRole !== "admin") {
       setIsAdmin(false);
+      setProfile({
+        id: supabaseProfile?.id || authUser.id,
+        user_id: authUser.id,
+        full_name: currentUser.full_name,
+        email,
+        role: normalizedRole
+      });
       setIsLoading(false);
       return;
     }
