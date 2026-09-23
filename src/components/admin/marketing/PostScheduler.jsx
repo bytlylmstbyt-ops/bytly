@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
+import { publishLinkedInPost } from "@/lib/linkedinSupabaseService";
+import { updateSocialPost } from "@/lib/marketingService";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Facebook, Instagram, Calendar, Send, Loader2, Clock, Trash2 } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Calendar, Send, Loader2, Clock, Trash2 } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useToast } from "@/components/ui/use-toast";
 import moment from "moment";
 
 const SCHEDULABLE_PLATFORMS = [
+  { id: "linkedin", label: "LinkedIn", icon: Linkedin, color: "#0077B5", fn: "linkedin-publish" },
   { id: "facebook", label: "Facebook", icon: Facebook, color: "#1877F2", fn: "facebookService" },
   { id: "instagram", label: "Instagram", icon: Instagram, color: "#E1306C", fn: "instagramService" },
 ];
@@ -27,6 +31,18 @@ export default function PostScheduler({ onPublished }) {
 
   const loadScheduled = async () => {
     try {
+      if (platform.id === "linkedin") {
+        const { data, error } = await supabase
+          .from("social_posts")
+          .select("*")
+          .eq("status", "scheduled")
+          .eq("platform", "linkedin")
+          .order("scheduled_at", { ascending: true })
+          .limit(50);
+        if (error) throw error;
+        setScheduledPosts(data || []);
+        return;
+      }
       const posts = await base44.entities.SocialPost.filter(
         { status: "scheduled", platform: platform.id },
         "-scheduled_at", 50
@@ -50,14 +66,26 @@ export default function PostScheduler({ onPublished }) {
     }
     setLoading(true);
     try {
-      await base44.entities.SocialPost.create({
-        platform: platform.id,
-        content: content.trim(),
-        status: "scheduled",
-        scheduled_at: new Date(scheduledAt).toISOString(),
-        media_urls: imageUrl ? [imageUrl] : [],
-        post_type: imageUrl ? "image" : "text",
-      });
+      if (platform.id === "linkedin") {
+        const { error } = await supabase.from("social_posts").insert({
+          platform: "linkedin",
+          content: content.trim(),
+          status: "scheduled",
+          scheduled_at: new Date(scheduledAt).toISOString(),
+          media_urls: imageUrl ? [imageUrl] : [],
+          post_type: imageUrl ? "image" : "text",
+        });
+        if (error) throw error;
+      } else {
+        await base44.entities.SocialPost.create({
+          platform: platform.id,
+          content: content.trim(),
+          status: "scheduled",
+          scheduled_at: new Date(scheduledAt).toISOString(),
+          media_urls: imageUrl ? [imageUrl] : [],
+          post_type: imageUrl ? "image" : "text",
+        });
+      }
       toast({ title: isRTL ? "تمت جدولة المنشور بنجاح" : "Post scheduled successfully" });
       setContent("");
       setImageUrl("");
@@ -74,25 +102,37 @@ export default function PostScheduler({ onPublished }) {
   const handlePublishNow = async (post) => {
     setLoading(true);
     try {
-      const payload = { action: "shareDesignWork", ...JSON.parse(post.content || "{}") };
-      if (post.media_urls?.length) payload.imageUrl = post.media_urls[0];
-      const res = await base44.functions.invoke(platform.fn, payload);
-      const d = res.data;
-      const success = d?.success;
-      if (success) {
-        await base44.entities.SocialPost.update(post.id, {
+      if (platform.id === "linkedin") {
+        const result = await publishLinkedInPost(post.content || "");
+        await updateSocialPost(post.id, {
           status: "published",
           published_at: new Date().toISOString(),
-          post_url: d?.post_url || d?.tweet_url || null,
-          post_id: d?.postId || null,
+          post_id: result.postId || null,
+          error_message: null,
+          metadata: { linkedin: result },
         });
-        toast({ title: isRTL ? "تم النشر" : "Published" });
+        toast({ title: "تم النشر على LinkedIn ✅" });
       } else {
-        await base44.entities.SocialPost.update(post.id, {
-          status: "failed",
-          error_message: d?.error || d?.note || "Unknown error",
-        });
-        toast({ title: isRTL ? "فشل النشر" : "Publish failed", description: d?.error || d?.note, variant: "destructive" });
+        const payload = { action: "shareDesignWork", ...JSON.parse(post.content || "{}") };
+        if (post.media_urls?.length) payload.imageUrl = post.media_urls[0];
+        const res = await base44.functions.invoke(platform.fn, payload);
+        const d = res.data;
+        const success = d?.success;
+        if (success) {
+          await base44.entities.SocialPost.update(post.id, {
+            status: "published",
+            published_at: new Date().toISOString(),
+            post_url: d?.post_url || d?.tweet_url || null,
+            post_id: d?.postId || null,
+          });
+          toast({ title: isRTL ? "تم النشر" : "Published" });
+        } else {
+          await base44.entities.SocialPost.update(post.id, {
+            status: "failed",
+            error_message: d?.error || d?.note || "Unknown error",
+          });
+          toast({ title: isRTL ? "فشل النشر" : "Publish failed", description: d?.error || d?.note, variant: "destructive" });
+        }
       }
       loadScheduled();
       onPublished?.();
@@ -105,7 +145,12 @@ export default function PostScheduler({ onPublished }) {
 
   const handleDelete = async (postId) => {
     try {
-      await base44.entities.SocialPost.delete(postId);
+      if (platform.id === "linkedin") {
+        const { error } = await supabase.from("social_posts").delete().eq("id", postId);
+        if (error) throw error;
+      } else {
+        await base44.entities.SocialPost.delete(postId);
+      }
       loadScheduled();
       toast({ title: isRTL ? "تم الحذف" : "Deleted" });
     } catch (e) {
@@ -122,7 +167,7 @@ export default function PostScheduler({ onPublished }) {
         <CardContent className="p-4 sm:p-6 space-y-4">
           <h3 className="text-sm font-semibold text-[#4A3F35] flex items-center gap-2">
             <Calendar className="w-4 h-4 text-[#C9A66B]" />
-            {isRTL ? "جدولة منشورات فيسبوك وإنستغرام" : "Schedule Facebook & Instagram Posts"}
+            {isRTL ? "جدولة منشورات LinkedIn والمنصات المرتبطة" : "Schedule LinkedIn and connected platforms"}
           </h3>
 
           {/* Platform selector */}
