@@ -39,9 +39,35 @@ export default function AdminMarketingCenter() {
 
   const loadData = useCallback(async () => {
     try {
-      const [syncs, socialPosts] = await Promise.all([listSyncStates(), listSocialPosts(100)]);
+      const [syncs, socialPosts, linkedinCheck] = await Promise.all([
+        listSyncStates(),
+        listSocialPosts(100),
+        testMarketingConnection("linkedin").catch((error) => ({
+          ok: false,
+          connected: false,
+          platform: "linkedin",
+          message: error?.message || "تعذر فحص LinkedIn.",
+        })),
+      ]);
       const syncMap = {};
       (syncs || []).forEach((s) => { syncMap[s.service] = s; });
+      if (linkedinCheck?.ok) {
+        syncMap.linkedin = {
+          ...(syncMap.linkedin || {}),
+          service: "linkedin",
+          sync_token: "server-managed",
+          last_sync: new Date().toISOString(),
+          description: linkedinCheck.message,
+        };
+      } else if (!syncMap.linkedin?.sync_token) {
+        syncMap.linkedin = {
+          ...(syncMap.linkedin || {}),
+          service: "linkedin",
+          sync_token: null,
+          last_sync: null,
+          description: linkedinCheck?.message || "LinkedIn غير متصل",
+        };
+      }
       setSyncStates(syncMap);
       setPosts(socialPosts || []);
     } catch (e) {
