@@ -95,6 +95,7 @@ export async function testMarketingConnection(platformId) {
   if (platformId === "linkedin") {
     const { data, error } = await supabase.functions.invoke("linkedin-publish", {
       body: { action: "status" },
+      headers: { "Content-Type": "application/json" },
     });
     if (error) throw error;
     if (!data?.ok) {
