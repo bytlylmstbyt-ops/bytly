@@ -83,6 +83,23 @@ export default function AdminWorkflowAutomation() {
       if (existing?.length) throw new Error("سير العمل موجود بالفعل.");
       const { error } = await supabase.from("automation_rules").insert(payload);
       if (error) throw error;
+      // Keep marketing automation connected to the existing Marketing Center.
+      // Campaign/channel actions are stored as approved drafts/tasks; external publishing remains approval-gated.
+      const marketingActions = (payload.actions || []).filter((a) => ["create_campaign","marketing_analysis","social_post","send_email","send_whatsapp"].includes(a.action_type));
+      if (marketingActions.length && payload.category === "marketing") {
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        const taskRows = marketingActions.map((a) => ({
+          title: `${payload.name} — ${a.action_type}`,
+          description: payload.description || "مهمة أنشأها سير عمل بيتلي.",
+          channel: a.config?.channel || "internal",
+          priority: "متوسطة",
+          status: "pending_approval",
+          source: "workflow-automation",
+          created_by: currentUser?.id || null,
+        }));
+        const { error: taskError } = await supabase.from("marketing_tasks").insert(taskRows);
+        if (taskError) throw taskError;
+      }
       setSuggested((items) => items.filter((x) => x.id !== template.id));
       setAiSuggestions((items) => items.filter((x) => x.id !== template.id));
       await loadData();
