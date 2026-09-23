@@ -17,32 +17,15 @@ export default function NotificationBell() {
   const [isOpen,setIsOpen]=useState(false);
   const navigate = useNavigate();
 
-  const getNotificationTarget = async (n) => {
-    const type = String(n.entity_type || n.type || "").toLowerCase();
-    const id = n.entity_id;
-    const routes = { project:"ProjectDetails", dispute:"DisputeDetails", contract:"Contract", message:"MessagesUser", messages:"MessagesUser", proposal:"ProjectProposals", milestone:"ProjectMilestones", review:"ServiceReviews", complaint:"Complaints", payment:"Wallet", withdrawal:"ProviderWallet", engineer:"EngineerProfile", client:"ClientProfile" };
-    if (routes[type]) return id ? createPageUrl(routes[type]) + "?id=" + encodeURIComponent(id) : createPageUrl(routes[type]);
-    if (["system","notification"].includes(type)) return createPageUrl("NotificationCenter");
-    if (id) {
-      const { data } = await supabase.from("profiles").select("id,user_id,role").or("id.eq." + id + ",user_id.eq." + id).maybeSingle();
-      if (data?.role) {
-        const roleRoutes = { client:"AdminClients", engineer:"AdminEngineers", contractor:"AdminProviders", supplier:"AdminProviders", consultant:"AdminProviders", firm:"AdminProviders", investor:"AdminDeveloperInvestorManagement", developer:"AdminDeveloperInvestorManagement" };
-        const page = roleRoutes[data.role] || "AdminUserManagementCenter";
-        return createPageUrl(page) + "?userId=" + encodeURIComponent(data.user_id || data.id);
-      }
-    }
-    return createPageUrl("NotificationCenter");
-  };
   const openNotification = async (n) => {
-    let role = n.entity_type, userId = n.entity_id;
-    if (!["client","engineer","contractor","supplier","consultant","firm","investor","developer"].includes(role) && userId) {
-      const {data} = await supabase.from("profiles").select("id,user_id,role").or(`id.eq.${userId},user_id.eq.${userId}`).maybeSingle();
-      if (data) { role = data.role; userId = data.user_id || data.id; }
+    if(n.id&&!n.read_at){
+      const now=new Date().toISOString();
+      await supabase.from("notifications").update({read_at:now}).eq("id",n.id);
+      setUnreadCount(x=>Math.max(0,x-1));
+      setNotifications(p=>p.map(x=>x.id===n.id?{...x,read_at:now}:x));
     }
-    const routes={client:"AdminClients",engineer:"AdminEngineers",contractor:"AdminProviders",supplier:"AdminProviders",consultant:"AdminProviders",firm:"AdminProviders",investor:"AdminClients",developer:"AdminProviders"};
-    const page=routes[role]||"AdminUserManagementCenter"; const params=userId?`?userId=${encodeURIComponent(userId)}`:"";
-    if(n.id&&!n.read_at){await supabase.from("notifications").update({read_at:new Date().toISOString()}).eq("id",n.id);setUnreadCount(x=>Math.max(0,x-1));setNotifications(p=>p.map(x=>x.id===n.id?{...x,read_at:new Date().toISOString()}:x));}
     setIsOpen(false);
+    navigate(createPageUrl("NotificationCenter") + "?notificationId=" + encodeURIComponent(n.id));
   };
 
   useEffect(()=>{
