@@ -16,16 +16,11 @@ export default function MarketingPlatformCard({ platform, connected, lastSync, o
     try { await onTest?.(); } finally { setTesting(false); }
   };
 
-
-  const formatLastSync = (iso) => {
-    if (!iso) return isRTL ? "—" : "—";
-    return moment(iso).fromNow();
-  };
+  const formatLastSync = (iso) => iso ? moment(iso).fromNow() : "—";
 
   return (
     <Card className={`border-2 ${connected ? "border-green-200" : "border-slate-200"} hover:shadow-md transition-shadow`}>
       <CardContent className="p-4 space-y-3">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: platform.color }}>
@@ -42,19 +37,12 @@ export default function MarketingPlatformCard({ platform, connected, lastSync, o
           </Badge>
         </div>
 
-        {/* Last sync */}
         <div className="flex items-center justify-between text-xs text-slate-500">
           <span>{t("integrations.adminMarketing.platform.lastSync")}</span>
           <span className="font-medium">{formatLastSync(lastSync)}</span>
         </div>
 
-        {/* Actions */}
         <div className="flex gap-1 pt-1">
-          <Button size="sm" variant="outline" className="h-8 text-xs flex-1 text-blue-700 border-blue-200" onClick={handleConnect} disabled={connecting}>
-              {connecting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Link2 className="w-3 h-3" />}
-              {connecting ? "جاري الربط..." : "ربط LinkedIn"}
-            </Button>
-          )}
           <Button size="sm" variant="outline" className="h-8 text-xs flex-1" onClick={handleTest} disabled={testing}>
             {testing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
             {t("integrations.adminMarketing.platform.testConnection")}
