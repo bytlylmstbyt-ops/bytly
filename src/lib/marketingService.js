@@ -93,9 +93,12 @@ export async function testMarketingConnection(platformId) {
   // LinkedIn is verified through the real Supabase Edge Function, not a local
   // sync flag. The Edge Function uses the managed LinkedIn connection/token.
   if (platformId === "linkedin") {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData?.session?.access_token;
+    if (!accessToken) throw new Error("انتهت جلسة الدخول. سجّل الدخول مرة أخرى ثم أعد اختبار LinkedIn.");
     const { data, error } = await supabase.functions.invoke("linkedin-publish", {
       body: { action: "status" },
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
     });
     if (error) throw error;
     if (!data?.ok) {
