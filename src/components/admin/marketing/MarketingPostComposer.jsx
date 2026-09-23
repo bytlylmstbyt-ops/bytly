@@ -6,7 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send, Loader2, Calendar, FileText, Linkedin, Twitter, Facebook, Instagram, Sparkles } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { useToast } from "@/components/ui/use-toast";
-import { createSocialPost } from "@/lib/marketingService";
+import { createSocialPost, updateSocialPost } from "@/lib/marketingService";
+import { publishLinkedInPost } from "@/lib/linkedinSupabaseService";
 
 const PLATFORMS = [
   { id: "linkedin", label: "LinkedIn", icon: Linkedin, color: "#0077B5" },
@@ -62,17 +63,48 @@ export default function MarketingPostComposer({ onPublished }) {
         await savePost("scheduled");
         toast({ title: t("integrations.adminMarketing.compose.scheduleSuccess") });
       } else {
-        // Publishing requires a native platform OAuth/Edge Function connection.
-        // Never call the legacy Base44 integration here. Store the attempt as failed until that connection exists.
-        await createSocialPost({
-          platform: selectedPlatform.id,
-          content: JSON.stringify(formData),
-          status: "failed",
-          error_message: "لم يتم ربط منصة النشر الأصلية بعد؛ تم حفظ المنشور دون إرساله.",
-          action_type: selectedAction.id,
-          media_urls: imageUrl ? [imageUrl] : [],
-        });
-        toast({ title: isRTL ? "لم يتم النشر" : "Not published", description: isRTL ? "اربط المنصة من التكاملات أولاً. تم حفظ المحاولة في مركز التسويق." : "Connect the platform first. The attempt was saved in the marketing center.", variant: "destructive" });
+        if (selectedPlatform.id !== "linkedin") {
+          await createSocialPost({
+            platform: selectedPlatform.id,
+            content: JSON.stringify(formData),
+            status: "failed",
+            error_message: "النشر المباشر لهذه المنصة لم يُربط بعد.",
+            action_type: selectedAction.id,
+            media_urls: imageUrl ? [imageUrl] : [],
+          });
+          toast({
+            title: isRTL ? "لم يتم النشر" : "Not published",
+            description: isRTL ? "النشر المباشر متاح حاليًا لـ LinkedIn بعد التحقق من التكامل." : "Direct publishing is currently available for LinkedIn after integration verification.",
+            variant: "destructive"
+          });
+        } else {
+          const text = [formData.title, formData.description, formData.purpose].filter(Boolean).join("\n\n").trim();
+          const saved = await createSocialPost({
+            platform: "linkedin",
+            content: text,
+            status: "publishing",
+            published_at: null,
+            action_type: selectedAction.id,
+            media_urls: imageUrl ? [imageUrl] : [],
+          });
+          try {
+            const result = await publishLinkedInPost(text);
+            await updateSocialPost(saved.id, {
+              status: "published",
+              published_at: new Date().toISOString(),
+              post_id: result.postId || null,
+              metadata: { linkedin: result, action_type: selectedAction.id },
+              error_message: null,
+            });
+            toast({ title: "تم النشر على LinkedIn ✅", description: result.postId ? `Post ID: ${result.postId}` : "تم نشر المنشور بنجاح." });
+          } catch (publishError) {
+            await updateSocialPost(saved.id, {
+              status: "failed",
+              error_message: publishError?.message || "تعذر النشر على LinkedIn.",
+            }).catch(() => {});
+            throw publishError;
+          }
+        }
       }
       setFormData({}); setImageUrl(""); setScheduledAt(""); onPublished?.();
     } catch (e) {
