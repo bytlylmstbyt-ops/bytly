@@ -43,6 +43,14 @@ export default function Dashboard() {
     if (!currentUser?.email) { setIsLoading(false); return; }
     setUser(currentUser);
 
+    // All non-admin users use the original role-specific dashboard UI.
+    // The role router resolves the account directly from Supabase.
+    if (currentUser.role !== 'admin') {
+      setIsAdmin(false);
+      setIsLoading(false);
+      return;
+    }
+
     // Check if user is Admin
     if (currentUser.role === 'admin') {
       setIsAdmin(true);
