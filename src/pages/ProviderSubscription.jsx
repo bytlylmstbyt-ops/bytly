@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { CheckCircle2, X, Zap, Building2, Star, Loader2, AlertCircle, Crown, ShieldCheck, HardHat, Package } from "lucide-react";
@@ -27,8 +27,8 @@ const CONTRACTOR_PLANS = [
   {
     name: "الباقة الاحترافية",
     subtitle: "Pro",
-    monthly_price: 249,
-    yearly_price: 1790,
+    monthly_price: 199,
+    yearly_price: 1990,
     monthly_price_id: "price_1TtaI4B6BI8uC0AuEky91mYl",
     yearly_price_id: "price_1TtaOgB6BI8uC0AuPYrWJL0T",
     Icon: Zap,
@@ -48,8 +48,8 @@ const CONTRACTOR_PLANS = [
   {
     name: "باقة الشركات",
     subtitle: "Enterprise",
-    monthly_price: 599,
-    yearly_price: 4290,
+    monthly_price: 399,
+    yearly_price: 3990,
     monthly_price_id: "price_1TtaI4B6BI8uC0Au3YdkJTlY",
     yearly_price_id: "price_1TtaOgB6BI8uC0AuwtKVNleN",
     Icon: Building2,
@@ -139,7 +139,7 @@ const TRUST = [
 ];
 
 export default function ProviderSubscription() {
-  const [loadingId, setLoadingId] = useState(null);
+  const [loadingId, setLoadingId] = useState(null);\n  const [selectedPayment, setSelectedPayment] = useState(null);
   const [user, setUser] = useState(null);
   const [banner, setBanner] = useState(null);
   const [providerType, setProviderType] = useState("contractor");
@@ -151,7 +151,7 @@ export default function ProviderSubscription() {
     if (type === "supplier" || type === "contractor") {
       setProviderType(type);
     }
-    base44.auth.me().then(setUser).catch(() => {});
+    supabase.auth.getUser().then(({ data }) => setUser(data.user || null)).catch(() => {});
     if (params.get("success")) setBanner("success");
     else if (params.get("canceled")) setBanner("canceled");
   }, []);
@@ -161,7 +161,21 @@ export default function ProviderSubscription() {
     ? { label: "الموردين", Icon: Package, desc: "أدوات احترافية لإدارة المخزون والطلبات والمنتجات بكفاءة عالية" }
     : { label: "المقاولين", Icon: HardHat, desc: "أدوات احترافية لإدارة مشاريع البناء والتنفيذ بكفاءة عالية — من العقد حتى التسليم" };
 
-  const handleSubscribe = async (plan) => {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentId = params.get('id');
+    if (!paymentId) return;
+    const orderId = localStorage.getItem('bytly_moyasar_order_id');
+    if (!orderId) return;
+    supabase.functions.invoke('verify-moyasar-payment', {
+      body: { payment_id: paymentId, payment_order_id: orderId }
+    }).then(({ data, error }) => {
+      localStorage.removeItem('bytly_moyasar_order_id');
+      window.history.replaceState({}, '', window.location.pathname + window.location.search.replace(/([?&])id=[^&]*/, '').replace(/[?&]$/, ''));
+      if (!error && data?.paid) setBanner('success');
+      else setBanner('canceled');
+    });
+  }, []);\n  useEffect(() => {\n    if (!selectedPayment || !window.Moyasar) return;\n    const el = document.querySelector(".bytly-moyasar-form");\n    if (!el) return;\n    el.innerHTML = "";\n    window.Moyasar.init({ element: ".bytly-moyasar-form", amount: Number(selectedPayment.amount) * 100, currency: "SAR", description: `Bytly ${providerType} ${selectedPayment.subtitle}`, publishable_api_key: "pk_test_YHSpbq6pYYX7XdkBfWeJcpnqTYHn5ZWDN16bhTiW", callback_url: `${window.location.origin}${window.location.pathname}${window.location.search ? window.location.search.split("&")[0] : ""}`, supported_networks: ["visa","mastercard","mada","unionpay"], methods: ["creditcard"] });\n  }, [selectedPayment, providerType]);\n\n  const handleSubscribe = async (plan) => {
     if (window.self !== window.top) {
       alert("الدفع يعمل فقط من التطبيق المنشور. يرجى فتح التطبيق في تبويب مستقل.");
       return;
@@ -171,15 +185,20 @@ export default function ProviderSubscription() {
       window.location.href = '/login';
       return;
     }
-    const price_id = billingCycle === "yearly" ? plan.yearly_price_id : plan.monthly_price_id;
-    setLoadingId(price_id);
-    const res = await base44.functions.invoke("createSubscriptionCheckout", {
-      price_id,
-      plan_name: plan.name,
-      provider_type: providerType,
+    const tier = plan.name.includes("الأساسية") ? "basic" : plan.name.includes("الاحترافية") ? "professional" : "business";
+    const accountType = providerType === "supplier" ? "supplier" : "contractor";
+    const code = `${accountType}_${tier}_${billingCycle}`;
+    setLoadingId(code);
+    const { data: fn, error } = await supabase.functions.invoke('create-moyasar-payment-order', {
+      body: { plan_code: code, account_type: accountType, billing_cycle: billingCycle, tier }
     });
     setLoadingId(null);
-    if (res.data?.url) window.location.href = res.data.url;
+    if (error || !fn?.payment_order_id) {
+      alert(error?.message || 'تعذر إنشاء طلب الدفع.');
+      return;
+    }
+    localStorage.setItem('bytly_moyasar_order_id', fn.payment_order_id);
+    setSelectedPayment({ ...plan, tier, orderId: fn.payment_order_id, amount: billingCycle === "yearly" ? plan.yearly_price : plan.monthly_price });
   };
 
   return (
@@ -241,7 +260,7 @@ export default function ProviderSubscription() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
           {PLANS.map((plan) => (
             <div
-              key={plan.price_id}
+              key={plan.subtitle}
               className={`relative rounded-2xl bg-white overflow-hidden transition-all hover:shadow-xl
                 ${plan.popular ? "ring-2 ring-[#C9A66B] shadow-xl md:scale-[1.03]" : "shadow-md"}`}
             >
@@ -298,7 +317,7 @@ export default function ProviderSubscription() {
                   onClick={() => handleSubscribe(plan)}
                   disabled={!!loadingId}
                 >
-                  {loadingId === (billingCycle === "yearly" ? plan.yearly_price_id : plan.monthly_price_id)
+                  {loadingId === `${providerType}_${plan.name.includes("الأساسية") ? "basic" : plan.name.includes("الاحترافية") ? "professional" : "business"}_${billingCycle}`
                     ? <><Loader2 className="w-4 h-4 animate-spin" /> جارٍ التحميل...</>
                     : `اشترك الآن — ${billingCycle === "yearly" ? plan.yearly_price + " ريال/سنة" : plan.monthly_price + " ريال/شهر"}`}
                 </Button>
@@ -307,7 +326,19 @@ export default function ProviderSubscription() {
           ))}
         </div>
 
-        {/* Trust badges */}
+        {selectedPayment && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" dir="rtl">
+            <div className="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <div><h3 className="font-bold text-lg">إتمام الدفع</h3><p className="text-sm text-slate-500">{selectedPayment.name} — {selectedPayment.amount} ريال</p></div>
+                <button onClick={() => setSelectedPayment(null)} className="text-slate-500">✕</button>
+              </div>
+              <div className="bytly-moyasar-form"></div>
+              <p className="text-xs text-slate-400 mt-3 text-center">بيئة اختبار Moyasar — لن يتم خصم مبلغ حقيقي.</p>
+            </div>
+          </div>
+        )}
+        {/* Trust badges */
         <div className="mt-12 flex flex-wrap justify-center gap-6 text-sm text-slate-500">
           {TRUST.map(({ Icon, text }) => (
             <div key={text} className="flex items-center gap-2">
