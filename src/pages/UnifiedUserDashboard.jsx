@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Briefcase, Wallet, Star, Bell, FileText, ShieldAlert, Settings,
   Plus, CheckCircle2, Clock3, MapPin, Mail, Phone, Award, Image as ImageIcon,
-  CalendarDays, ArrowLeft
+  ArrowLeft
 } from "lucide-react";
 
 const ROLE_LABELS = {
@@ -246,7 +246,8 @@ export default function UnifiedUserDashboard() {
             <CardContent>
               {portfolio.length === 0 ? <p className="text-sm text-slate-500">لم تتم إضافة أعمال بعد.</p> : <div className="grid grid-cols-2 md:grid-cols-4 gap-4">{portfolio.map(item => {
                 const imgs = Array.isArray(item.images) ? item.images : [];
-                const src = imgs[0] || (typeof imgs[0] === "object" ? imgs[0]?.url : "") || "";
+                const firstImage = imgs[0];
+                const src = typeof firstImage === "string" ? firstImage : (firstImage?.url || "");
                 return <div key={item.id} className="rounded-xl overflow-hidden border bg-slate-50"><div className="aspect-video bg-slate-100 flex items-center justify-center">{src ? <img src={src} alt={item.title || "عمل"} className="w-full h-full object-cover" /> : <ImageIcon className="w-8 h-8 text-slate-300" />}</div><p className="p-3 text-sm font-medium truncate">{safe(item.title)}</p></div>;
               })}</div>}
             </CardContent>
