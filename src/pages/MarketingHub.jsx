@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { publishLinkedInPost } from "@/lib/linkedinSupabaseService";
+import { supabase } from "@/lib/supabaseClient";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -106,15 +108,37 @@ export default function MarketingHub() {
     try {
       let response;
       if (selectedPlatform.id === "linkedin") {
-        response = await base44.functions.invoke("linkedinService", {
-          action: selectedAction.id,
-          data: formData
+        // LinkedIn publishing is handled by the official Supabase Edge Function.
+        // The old Base44 bridge is no longer used for publishing.
+        const generatedText = [
+          formData.title,
+          formData.description,
+          formData.purpose,
+          formData.industry ? `القطاع: ${formData.industry}` : "",
+          formData.location ? `الموقع: ${formData.location}` : "",
+          formData.projectType ? `نوع المشروع: ${formData.projectType}` : "",
+          formData.engineerSpecialization ? `التخصص: ${formData.engineerSpecialization}` : "",
+          formData.engineerCity ? `المدينة: ${formData.engineerCity}` : "",
+        ].filter(Boolean).join("\n\n").trim();
+        if (!generatedText) throw new Error("اكتبي محتوى المنشور أولاً.");
+        const linkedin = await publishLinkedInPost(generatedText);
+        const { data: userData } = await supabase.auth.getUser();
+        await supabase.from("social_posts").insert({
+          platform: "linkedin",
+          content: generatedText,
+          status: "published",
+          published_at: new Date().toISOString(),
+          post_id: linkedin.postId || null,
+          action_type: selectedAction.id,
+          created_by: userData?.user?.id || null,
+          metadata: { source: "MarketingHub", linkedin },
         });
+        response = { data: { success: true, content: generatedText, postId: linkedin.postId || null } };
         setResult(response.data);
         toast({
-          title: response.data.success ? "تم النشر على LinkedIn ✅" : "حدث خطأ",
-          description: response.data.message || response.data.error,
-          variant: response.data.success ? "default" : "destructive"
+          title: "تم النشر على LinkedIn ✅",
+          description: linkedin.postId ? `Post ID: ${linkedin.postId}` : "تم نشر المنشور بنجاح.",
+          variant: "default"
         });
       } else if (selectedPlatform.id === "twitter") {
         response = await base44.functions.invoke("twitterService", {
