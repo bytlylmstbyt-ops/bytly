@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { Bell, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,24 @@ export default function NotificationBell() {
   const [notifications,setNotifications]=useState([]);
   const [unreadCount,setUnreadCount]=useState(0);
   const [isOpen,setIsOpen]=useState(false);
+  const navigate = useNavigate();
+
+  const getNotificationTarget = async (n) => {
+    const type = String(n.entity_type || n.type || "").toLowerCase();
+    const id = n.entity_id;
+    const routes = { project:"ProjectDetails", dispute:"DisputeDetails", contract:"Contract", message:"MessagesUser", messages:"MessagesUser", proposal:"ProjectProposals", milestone:"ProjectMilestones", review:"ServiceReviews", complaint:"Complaints", payment:"Wallet", withdrawal:"ProviderWallet", engineer:"EngineerProfile", client:"ClientProfile" };
+    if (routes[type]) return id ? createPageUrl(routes[type]) + "?id=" + encodeURIComponent(id) : createPageUrl(routes[type]);
+    if (["system","notification"].includes(type)) return createPageUrl("NotificationCenter");
+    if (id) {
+      const { data } = await supabase.from("profiles").select("id,user_id,role").or("id.eq." + id + ",user_id.eq." + id).maybeSingle();
+      if (data?.role) {
+        const roleRoutes = { client:"AdminClients", engineer:"AdminEngineers", contractor:"AdminProviders", supplier:"AdminProviders", consultant:"AdminProviders", firm:"AdminProviders", investor:"AdminDeveloperInvestorManagement", developer:"AdminDeveloperInvestorManagement" };
+        const page = roleRoutes[data.role] || "AdminUserManagementCenter";
+        return createPageUrl(page) + "?userId=" + encodeURIComponent(data.user_id || data.id);
+      }
+    }
+    return createPageUrl("NotificationCenter");
+  };
   const openNotification = async (n) => {
     let role = n.entity_type, userId = n.entity_id;
     if (!["client","engineer","contractor","supplier","consultant","firm","investor","developer"].includes(role) && userId) {
