@@ -81,7 +81,7 @@ export default function AdminMarketingCenter() {
   const handleRefresh = () => { setRefreshing(true); loadData(); };
   const getConnectionStatus = (platform) => {
     if (platform.id === "linkedin") {
-      return Boolean(syncStates.linkedin?.sync_token) || syncStates.linkedin?.connection_status === "connected";
+      return Boolean(syncStates.linkedin?.connection_status === "connected" || syncStates.linkedin?.sync_token);
     }
     return Boolean(syncStates[platform.id]?.sync_token);
   };
