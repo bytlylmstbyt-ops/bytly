@@ -18,7 +18,6 @@ const INTEGRATIONS = [
   { type: "tiktok", kind: "connector" },
   { type: "googlecalendar", kind: "connector" },
   { type: "gmail", kind: "connector" },
-  { type: "linkedin", kind: "connector" },
   { type: "googledrive", kind: "connector" },
   { type: "googlesheets", kind: "connector" },
   { type: "googlemeet", kind: "connector" },
