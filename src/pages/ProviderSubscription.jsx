@@ -139,7 +139,8 @@ const TRUST = [
 ];
 
 export default function ProviderSubscription() {
-  const [loadingId, setLoadingId] = useState(null);\n  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [loadingId, setLoadingId] = useState(null);
+  const [selectedPayment, setSelectedPayment] = useState(null);
   const [user, setUser] = useState(null);
   const [banner, setBanner] = useState(null);
   const [providerType, setProviderType] = useState("contractor");
@@ -175,7 +176,16 @@ export default function ProviderSubscription() {
       if (!error && data?.paid) setBanner('success');
       else setBanner('canceled');
     });
-  }, []);\n  useEffect(() => {\n    if (!selectedPayment || !window.Moyasar) return;\n    const el = document.querySelector(".bytly-moyasar-form");\n    if (!el) return;\n    el.innerHTML = "";\n    window.Moyasar.init({ element: ".bytly-moyasar-form", amount: Number(selectedPayment.amount) * 100, currency: "SAR", description: `Bytly ${providerType} ${selectedPayment.subtitle}`, publishable_api_key: "pk_test_YHSpbq6pYYX7XdkBfWeJcpnqTYHn5ZWDN16bhTiW", callback_url: `${window.location.origin}${window.location.pathname}${window.location.search ? window.location.search.split("&")[0] : ""}`, supported_networks: ["visa","mastercard","mada","unionpay"], methods: ["creditcard"] });\n  }, [selectedPayment, providerType]);\n\n  const handleSubscribe = async (plan) => {
+  }, []);
+  useEffect(() => {
+    if (!selectedPayment || !window.Moyasar) return;
+    const el = document.querySelector(".bytly-moyasar-form");
+    if (!el) return;
+    el.innerHTML = "";
+    window.Moyasar.init({ element: ".bytly-moyasar-form", amount: Number(selectedPayment.amount) * 100, currency: "SAR", description: `Bytly ${providerType} ${selectedPayment.subtitle}`, publishable_api_key: "pk_test_YHSpbq6pYYX7XdkBfWeJcpnqTYHn5ZWDN16bhTiW", callback_url: `${window.location.origin}${window.location.pathname}${window.location.search ? window.location.search.split("&")[0] : ""}`, supported_networks: ["visa","mastercard","mada","unionpay"], methods: ["creditcard"] });
+  }, [selectedPayment, providerType]);
+
+  const handleSubscribe = async (plan) => {
     if (window.self !== window.top) {
       alert("الدفع يعمل فقط من التطبيق المنشور. يرجى فتح التطبيق في تبويب مستقل.");
       return;
