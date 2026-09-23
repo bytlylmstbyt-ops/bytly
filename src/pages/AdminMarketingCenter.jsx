@@ -51,11 +51,12 @@ export default function AdminMarketingCenter() {
       ]);
       const syncMap = {};
       (syncs || []).forEach((s) => { syncMap[s.service] = s; });
-      if (linkedinCheck?.ok) {
+      if (linkedinCheck?.ok && linkedinCheck?.connected) {
         syncMap.linkedin = {
           ...(syncMap.linkedin || {}),
           service: "linkedin",
           sync_token: "server-managed",
+          connection_status: "connected",
           last_sync: new Date().toISOString(),
           description: linkedinCheck.message,
         };
@@ -78,7 +79,12 @@ export default function AdminMarketingCenter() {
 
   useEffect(() => { loadData(); }, [loadData]);
   const handleRefresh = () => { setRefreshing(true); loadData(); };
-  const getConnectionStatus = (platform) => Boolean(syncStates[platform.id]?.sync_token);
+  const getConnectionStatus = (platform) => {
+    if (platform.id === "linkedin") {
+      return Boolean(syncStates.linkedin?.sync_token) || syncStates.linkedin?.connection_status === "connected";
+    }
+    return Boolean(syncStates[platform.id]?.sync_token);
+  };
   const getLastSync = (platformId) => syncStates[platformId]?.last_sync || null;
   const handleAddPlatform = (platform) => { setExtraPlatforms((prev) => [...prev, platform]); setShowAddDialog(false); toast({ title: isRTL ? `تمت إضافة ${platform.label}` : `${platform.label} added` }); };
   const handleTestConnection = async (platformId) => {
