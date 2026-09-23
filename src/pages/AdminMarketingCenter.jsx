@@ -87,7 +87,12 @@ export default function AdminMarketingCenter() {
       toast({ title: res.ok ? (isRTL ? "الاتصال مسجل" : "Connection recorded") : (isRTL ? "المنصة غير متصلة" : "Platform not connected"), description: res.message, variant: res.ok ? "default" : "destructive" });
       return res.ok;
     } catch (e) {
-      toast({ title: isRTL ? "فشل فحص الاتصال" : "Connection check failed", description: e.message, variant: "destructive" });
+      console.error("Marketing connection check failed:", e);
+      toast({
+        title: isRTL ? "فشل فحص الاتصال" : "Connection check failed",
+        description: isRTL ? "تعذر إكمال فحص الاتصال. تحقق من إعدادات التكامل ثم أعد المحاولة." : "The connection check could not be completed. Check the integration settings and try again.",
+        variant: "destructive",
+      });
       return false;
     }
   };
