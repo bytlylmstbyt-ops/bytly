@@ -32,6 +32,7 @@ const AVAILABLE_CONNECTORS = [
   { type: "dropbox", name: "Dropbox", icon: "📦", kind: "connector" },
   { type: "linear", name: "Linear", icon: "📐", kind: "connector" },
   { type: "clickup", name: "ClickUp", icon: "👆", kind: "connector" },
+  { type: "moyasar", name: "Moyasar / ميسر (بوابة الدفع)", icon: "💳", kind: "payment" },
   { type: "stripe", name: "Stripe (API Key)", icon: "💳", kind: "secret" },
   { type: "square", name: "Square (OAuth)", icon: "🔷", kind: "connector" },
 ];
@@ -153,7 +154,20 @@ export default function AddIntegrationDialog({ open, onOpenChange, connectedType
               {isConnected(selected.type) && <Badge className="bg-green-100 text-green-700 shrink-0"><CheckCircle2 className="w-3 h-3 ml-1" />متصل</Badge>}
             </div>
 
-            {selected.kind === "connector" ? (
+            {selected.kind === "payment" ? (
+              <div className="space-y-3 text-sm text-slate-600">
+                <div className="rounded-md bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 text-xs">Moyasar جاهز داخل Bytly كتكامل بوابة دفع. الحساب الحالي يمكن أن يبقى في بيئة الاختبار إلى أن يتم التفعيل التجاري.</div>
+                <p className="font-medium text-slate-700">ما يتم إدارته من هنا:</p>
+                <ul className="list-disc list-inside space-y-1.5">
+                  <li>بيئة Test / Live</li>
+                  <li>المفتاح العام فقط</li>
+                  <li>حالة Webhook</li>
+                  <li>اختبار إعداد التكامل</li>
+                </ul>
+                <p className="text-xs text-slate-500">المفتاح السري محفوظ في Supabase Secrets ولا يُعرض في لوحة الإدارة.</p>
+                <Button variant="outline" className="w-full" onClick={handleRefresh} disabled={refreshing || !onRefresh}><RefreshCw className="w-4 h-4" /> تحديث الحالة</Button>
+              </div>
+            ) : selected.kind === "connector" ? (
               <div className="space-y-3 text-sm text-slate-600">
                 <p className="font-medium text-slate-700">خطوات الربط:</p>
                 <ol className="list-decimal list-inside space-y-1.5">
