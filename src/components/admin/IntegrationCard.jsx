@@ -11,7 +11,7 @@ import { supabase } from "@/lib/supabaseClient";
 const SERVICE_ICONS = {
   stripe: "💳", google_analytics: "📊", instagram: "📸", tiktok: "🎵", googlecalendar: "📅",
   gmail: "✉️", linkedin: "💼", googledrive: "📁", googlesheets: "📈", googlemeet: "🎥",
-  square: "🔷", supabase: "🗄️", github: "🐙", notion: "📝", slack: "💬", discord: "🎮",
+  square: "🔷", moyasar: "💳", supabase: "🗄️", github: "🐙", notion: "📝", slack: "💬", discord: "🎮",
 };
 
 function formatRelative(isoString, t) {
@@ -35,9 +35,26 @@ export default function IntegrationCard({ integration, onTested }) {
   const serviceName = t(`integrations.services.${integration.type}`) || integration.type;
   const icon = SERVICE_ICONS[integration.type] || "🔌";
   const connected = integration.connected;
+  const isMoyasar = integration.type === "moyasar";
   const canOAuth = isDirectOAuthSupported(integration.type);
 
   const handleTest = async () => {
+    if (isMoyasar) {
+      setTesting(true);
+      try {
+        const configured = Boolean(integration.publishable_key);
+        const webhookReady = Boolean(integration.webhook_url);
+        const ok = configured && webhookReady;
+        const message = ok
+          ? `تم فحص إعداد ميسر: المفتاح العام وWebhook موجودان. البيئة: ${integration.environment === "live" ? "Live" : "Test"}.`
+          : "إعداد ميسر غير مكتمل: تأكدي من وجود المفتاح العام وWebhook.";
+        const result = { ok, message, error: ok ? null : message };
+        setTestResult({ ok, message });
+        onTested?.("moyasar", result);
+        toast({ title: ok ? "✅ إعداد ميسر جاهز" : "⚠️ إعداد ميسر غير مكتمل", description: message, variant: ok ? "default" : "destructive" });
+      } finally { setTesting(false); }
+      return;
+    }
     setTesting(true);
     try {
       let result;
@@ -108,8 +125,16 @@ export default function IntegrationCard({ integration, onTested }) {
         </div>
 
         <div className="flex items-center gap-1.5 text-xs text-slate-500 mb-2"><RefreshCw className="w-3 h-3" /><span>{formatRelative(integration.last_sync, t)}</span></div>
+        {isMoyasar && (
+          <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-1.5 text-xs">
+            <div className="flex justify-between gap-3"><span className="text-slate-500">البيئة</span><span className="font-semibold">{integration.environment === "live" ? "Live" : "Test"}</span></div>
+            <div className="flex justify-between gap-3"><span className="text-slate-500">Publishable Key</span><span className="font-mono">{integration.publishable_key ? `${integration.publishable_key.slice(0, 8)}••••••` : "غير مُعد"}</span></div>
+            <div className="flex justify-between gap-3"><span className="text-slate-500">Webhook</span><span className={integration.webhook_url ? "text-green-700 font-semibold" : "text-amber-700"}>{integration.webhook_url ? "مُعد" : "غير مُعد"}</span></div>
+            <p className="text-[11px] text-slate-400 pt-1">المفتاح السري لا يُعرض داخل Bytly.</p>
+          </div>
+        )}
 
-        {!connected && integration.type !== "stripe" && (
+        {!connected && integration.type !== "stripe" && !isMoyasar && (
           <div className="flex items-start gap-1.5 text-xs text-amber-700 bg-amber-50 rounded-md p-2 mb-3"><AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" /><span>{canOAuth ? "الخدمة جاهزة للربط المباشر عبر OAuth." : "هذا التكامل يحتاج إعداد OAuth/API مباشر قبل تفعيله."}</span></div>
         )}
 
@@ -117,9 +142,9 @@ export default function IntegrationCard({ integration, onTested }) {
 
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="outline" onClick={handleTest} disabled={testing} className="h-8 text-xs">{testing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}{testing ? "جاري الفحص" : "فحص الاتصال"}</Button>
-          {(!connected && canOAuth) && <Button size="sm" variant="outline" onClick={handleReconnect} disabled={connecting} className="h-8 text-xs text-blue-600 border-blue-200 hover:bg-blue-50">{connecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Link2 className="w-3.5 h-3.5" />}ربط الخدمة</Button>}
-          {connected && canOAuth && <Button size="sm" variant="ghost" onClick={handleReconnect} disabled={connecting} className="h-8 text-xs text-blue-600">{connecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}إعادة المصادقة</Button>}
-          {connected && <Button size="sm" variant="ghost" onClick={() => toast({ title: "إدارة الفصل", description: "سيتم تفعيل فصل الحساب مباشرة من Bytly بعد إضافة إدارة الهوية." })} className="h-8 text-xs text-red-600"><Unplug className="w-3.5 h-3.5" />فصل</Button>}
+          {!isMoyasar && (!connected && canOAuth) && <Button size="sm" variant="outline" onClick={handleReconnect} disabled={connecting} className="h-8 text-xs text-blue-600 border-blue-200 hover:bg-blue-50">{connecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Link2 className="w-3.5 h-3.5" />}ربط الخدمة</Button>}
+          {!isMoyasar && connected && canOAuth && <Button size="sm" variant="ghost" onClick={handleReconnect} disabled={connecting} className="h-8 text-xs text-blue-600">{connecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}إعادة المصادقة</Button>}
+          {connected && !isMoyasar && <Button size="sm" variant="ghost" onClick={() => toast({ title: "إدارة الفصل", description: "سيتم تفعيل فصل الحساب مباشرة من Bytly بعد إضافة إدارة الهوية." })} className="h-8 text-xs text-red-600"><Unplug className="w-3.5 h-3.5" />فصل</Button>}
         </div>
       </CardContent>
     </Card>
