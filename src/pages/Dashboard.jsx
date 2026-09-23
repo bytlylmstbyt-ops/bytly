@@ -15,6 +15,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import IndividualClientDashboard from "@/components/client/IndividualClientDashboard";
 import ClientDashboard from "@/pages/ClientDashboard";
 import EngineerDashboard from "@/pages/EngineerDashboard";
+import RoleDashboardRouter from "@/pages/RoleDashboardRouter";
 import DailyFollowUpTasks from "@/components/dashboard/DailyFollowUpTasks";
 import ProviderRatingsReport from "@/components/dashboard/ProviderRatingsReport";
 import { useLanguage } from "@/components/i18n/LanguageContext";
@@ -41,6 +42,14 @@ export default function Dashboard() {
     const currentUser = await Promise.race([base44.auth.me(), new Promise(resolve => setTimeout(() => resolve(null), 10000))]).catch(() => null);
     if (!currentUser?.email) { setIsLoading(false); return; }
     setUser(currentUser);
+
+    // Non-admin accounts use the original Passport4 role-specific dashboard router.
+    // Admins stay on the existing admin dashboard below.
+    if (currentUser.role !== 'admin') {
+      setIsLoading(false);
+      setProfile({ __roleRouter: true });
+      return;
+    }
     
     // Check if user is Admin
     if (currentUser.role === 'admin') {
@@ -131,6 +140,8 @@ export default function Dashboard() {
       </div>
     );
   }
+
+  if (profile?.__roleRouter) return <RoleDashboardRouter />;
 
   if (!profile) {
     return (
