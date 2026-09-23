@@ -10,11 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Workflow, Plus, Loader2, Play, Trash2, Pencil, CheckCircle2, ShieldAlert, Sparkles } from "lucide-react";
+import { Workflow, Plus, Loader2, Play, Trash2, Pencil, CheckCircle2, ShieldAlert, Sparkles, RefreshCw, Megaphone } from "lucide-react";
+import { callGemini } from "@/lib/geminiClient";
 
 const TRIGGER_LABELS = { event: "عند حدوث حدث", schedule: "مجدول", manual: "يدوي" };
-const CATEGORY_LABELS = { projects: "المشاريع", payments: "المدفوعات", engineers: "المهندسون", disputes: "النزاعات", contracts: "العقود", notifications: "الإشعارات", other: "أخرى" };
-const ACTION_LABELS = { send_notification: "إرسال إشعار", send_email: "إرسال بريد إلكتروني", update_status: "تحديث حالة", create_task: "إنشاء مهمة", assign_to_admin: "تعيين لمشرف", webhook_call: "استدعاء Webhook", create_contract: "إنشاء عقد", generate_invoice: "إصدار فاتورة" };
+const CATEGORY_LABELS = { projects: "المشاريع", payments: "المدفوعات", engineers: "المهندسون", disputes: "النزاعات", contracts: "العقود", notifications: "الإشعارات", marketing: "التسويق والحملات", other: "أخرى" };
+const ACTION_LABELS = { send_notification: "إرسال إشعار", send_email: "إرسال بريد إلكتروني", update_status: "تحديث حالة", create_task: "إنشاء مهمة", assign_to_admin: "تعيين لمشرف", webhook_call: "استدعاء Webhook", create_contract: "إنشاء عقد", generate_invoice: "إصدار فاتورة", create_campaign: "إنشاء حملة تسويقية", social_post: "إنشاء محتوى اجتماعي", send_whatsapp: "رسالة واتساب", marketing_analysis: "تحليل تسويقي" };
 const emptyRule = { name: "", description: "", is_active: true, trigger_type: "event", trigger_event: "project_created", schedule_cron: "", schedule_timezone: "UTC", integration_trigger: "none", category: "other", actions: [{ action_type: "send_notification", config: {} }], conditions: [] };
 const SUGGESTED = [
   { id: "project-alerts", name: "تنبيهات المشاريع", description: "تنبيه تلقائي عند تغيّر حالة المشروع.", category: "notifications", trigger_type: "event", trigger_event: "project_status_changed", actions: [{ action_type: "send_notification", config: {} }] },
@@ -26,7 +27,7 @@ function isLegacySync(rule) { return String(rule?.name || "").toLowerCase().incl
 function AccessDenied() { return <div className="min-h-[60vh] flex items-center justify-center px-4"><Card className="max-w-md w-full border-r-4 border-red-400"><CardContent className="p-8 text-center"><ShieldAlert className="w-10 h-10 text-red-500 mx-auto mb-3" /><h2 className="text-lg font-bold text-[#4A3F35] mb-2">هذه الصفحة مخصصة للمشرفين فقط</h2><p className="text-sm text-slate-500">غير مصرح لك بالوصول إلى سير العمل والأتمتة.</p></CardContent></Card></div>; }
 
 export default function AdminWorkflowAutomation() {
-  const [loading, setLoading] = useState(true), [isAdmin, setIsAdmin] = useState(false), [rules, setRules] = useState([]), [runs, setRuns] = useState([]), [activeTab, setActiveTab] = useState("workflows"), [search, setSearch] = useState(""), [workflowFilter, setWorkflowFilter] = useState("all"), [statusFilter, setStatusFilter] = useState("all"), [selected, setSelected] = useState(null), [dialogOpen, setDialogOpen] = useState(false), [editing, setEditing] = useState(null), [form, setForm] = useState(emptyRule), [saving, setSaving] = useState(false), [runningId, setRunningId] = useState(null), [suggested, setSuggested] = useState(SUGGESTED);
+  const [loading, setLoading] = useState(true), [isAdmin, setIsAdmin] = useState(false), [rules, setRules] = useState([]), [runs, setRuns] = useState([]), [activeTab, setActiveTab] = useState("workflows"), [search, setSearch] = useState(""), [workflowFilter, setWorkflowFilter] = useState("all"), [statusFilter, setStatusFilter] = useState("all"), [selected, setSelected] = useState(null), [dialogOpen, setDialogOpen] = useState(false), [editing, setEditing] = useState(null), [form, setForm] = useState(emptyRule), [saving, setSaving] = useState(false), [runningId, setRunningId] = useState(null), [suggested, setSuggested] = useState(SUGGESTED), [aiSuggestions, setAiSuggestions] = useState([]), [aiLoading, setAiLoading] = useState(false), [refreshing, setRefreshing] = useState(false);
 
   const loadData = async () => {
     const [{ data: dbRules, error: rulesError }, { data: dbRuns, error: runsError }] = await Promise.all([
@@ -52,18 +53,97 @@ export default function AdminWorkflowAutomation() {
   const deleteRule = async (rule) => { if (rule.is_source_workflow || !window.confirm(`حذف قاعدة «${rule.name}»؟`)) return; const { error } = await supabase.from("automation_rules").delete().eq("id", rule.id); if (error) alert(error.message); else await loadData(); };
   const toggleRule = async (rule) => { if (rule.is_source_workflow) return; const { error } = await supabase.from("automation_rules").update({ is_active: !rule.is_active, updated_at: new Date().toISOString() }).eq("id", rule.id); if (error) alert(error.message); else await loadData(); };
   const runTest = async (rule) => { setRunningId(rule.id); try { const { data: { user } } = await supabase.auth.getUser(); const started = new Date(); const details = { mode: "manual_test", dry_run: true, user_id: user?.id || null, actions: (rule.actions || []).map((a) => ({ action_type: a.action_type, status: "success", message: "تشغيل تجريبي بدون تنفيذ فعلي" })) }; const { error } = await supabase.from("automation_run_logs").insert({ workflow_id: typeof rule.id === "string" && rule.id.includes("source:") ? null : rule.id, workflow_name: rule.name, status: "success", triggered_by: "manual_test", trigger_event: rule.trigger_event || null, started_at: started.toISOString(), finished_at: new Date().toISOString(), duration_ms: Date.now() - started.getTime(), details }); if (error) throw error; if (!rule.is_source_workflow) await supabase.from("automation_rules").update({ run_count: (rule.run_count || 0) + 1, last_run_status: "success", updated_at: new Date().toISOString() }).eq("id", rule.id); await loadData(); setActiveTab("activity"); } catch (e) { console.error(e); alert(e?.message || "تعذر تشغيل الاختبار"); } finally { setRunningId(null); } };
-  const addSuggested = async (template) => { setSaving(true); try { const { data: { user } } = await supabase.auth.getUser(); const { error } = await supabase.from("automation_rules").insert({ ...template, schedule_timezone: "UTC", integration_trigger: "none", conditions: [], is_active: false, is_source_workflow: false, source_file: null, source_entity: null, source_functions: [], run_count: 0, last_run_status: "never_run", created_by: user?.id || null }); if (error) throw error; setSuggested((items) => items.filter((x) => x.id !== template.id)); await loadData(); } catch (e) { alert(e?.message || "تعذر إضافة سير العمل"); } finally { setSaving(false); } };
+  const addSuggested = async (template) => {
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { id: _templateId, ...templateData } = template;
+      const payload = {
+        name: String(templateData.name || "").trim(),
+        description: templateData.description || null,
+        is_active: false,
+        trigger_type: templateData.trigger_type || "event",
+        trigger_event: templateData.trigger_event || null,
+        schedule_cron: templateData.schedule_cron || null,
+        schedule_timezone: templateData.schedule_timezone || "Asia/Riyadh",
+        integration_trigger: templateData.integration_trigger || "none",
+        category: templateData.category || "other",
+        actions: Array.isArray(templateData.actions) ? templateData.actions : [],
+        conditions: Array.isArray(templateData.conditions) ? templateData.conditions : [],
+        is_source_workflow: false,
+        source_file: null,
+        source_entity: null,
+        source_functions: [],
+        run_count: 0,
+        last_run_status: "never_run",
+        created_by: user?.id || null,
+      };
+      if (!payload.name) throw new Error("اسم سير العمل مطلوب");
+      const { data: existing } = await supabase.from("automation_rules").select("id,name").ilike("name", payload.name).limit(1);
+      if (existing?.length) throw new Error("سير العمل موجود بالفعل.");
+      const { error } = await supabase.from("automation_rules").insert(payload);
+      if (error) throw error;
+      setSuggested((items) => items.filter((x) => x.id !== template.id));
+      setAiSuggestions((items) => items.filter((x) => x.id !== template.id));
+      await loadData();
+    } catch (e) { alert(e?.message || "تعذر إضافة سير العمل"); } finally { setSaving(false); }
+  };
+
+  const generateAiSuggestions = async () => {
+    setAiLoading(true);
+    try {
+      const existing = rules.map((r) => ({
+        name: r.name, description: r.description, trigger_type: r.trigger_type,
+        trigger_event: r.trigger_event, category: r.category,
+        actions: (r.actions || []).map((a) => a.action_type),
+      }));
+      const prompt = `أنت وكيل الأتمتة في منصة بيتلي. حلّل سير العمل الموجود أدناه أولاً، ثم اقترح 5 سير عمل جديدة فقط غير مكررة أو متقاربة معه.
+المطلوب أن تكون الاقتراحات قابلة للحفظ في جدول automation_rules، وأن تتضمن على الأقل اقتراحات تخدم مركز التسويق والحملات.
+مهم: لا تقترح إرسالاً خارجياً تلقائياً أو إنفاقاً إعلانياً. اجعل أي خطوة إرسال/نشر/واتساب في حالة "approval_required" داخل config، بينما يمكن إنشاء مسودة حملة أو محتوى وتحليل النتائج تلقائياً.
+أعد JSON فقط بالشكل:
+{"workflows":[{"name":"...","description":"...","category":"marketing|projects|payments|engineers|disputes|contracts|notifications|other","trigger_type":"event|schedule|manual","trigger_event":"...","schedule_cron":"...","actions":[{"action_type":"create_campaign|marketing_analysis|social_post|send_email|send_whatsapp|send_notification|create_task","config":{"approval_required":true,"channel":"linkedin|instagram|tiktok|gmail|whatsapp|internal","campaign_center":true}}]}]}
+السير الحالية:
+${JSON.stringify(existing)}`;
+      const raw = await callGemini({ agent: "automation", prompt, context: { existing_workflows: existing, marketing_center: true }, responseFormat: "json" });
+      let parsed = raw;
+      if (typeof parsed === "string") {
+        try { parsed = JSON.parse(parsed); } catch { const m = parsed.match(/\{[\s\S]*\}/); parsed = m ? JSON.parse(m[0]) : null; }
+      }
+      const candidates = Array.isArray(parsed?.workflows) ? parsed.workflows : [];
+      const normalize = (v) => String(v || "").trim().toLowerCase().replace(/[\s_\-]+/g, "");
+      const existingKeys = new Set(existing.map((r) => normalize(r.name)));
+      const unique = candidates.filter((w) => w?.name && !existingKeys.has(normalize(w.name))).map((w, i) => ({
+        id: `ai-${Date.now()}-${i}`,
+        name: String(w.name).trim(),
+        description: String(w.description || "اقتراح مولد من وكيل الأتمتة."),
+        category: w.category || "marketing",
+        trigger_type: w.trigger_type || "manual",
+        trigger_event: w.trigger_event || null,
+        schedule_cron: w.schedule_cron || null,
+        actions: Array.isArray(w.actions) && w.actions.length ? w.actions : [{ action_type: "marketing_analysis", config: { campaign_center: true, approval_required: true } }],
+      }));
+      setAiSuggestions(unique);
+      if (!unique.length) throw new Error("لم يجد الوكيل سير عمل جديداً غير مكرر حالياً.");
+    } catch (e) {
+      alert(e?.message || "تعذر توليد اقتراحات Gemini");
+    } finally { setAiLoading(false); }
+  };
+
+  const refreshData = async (filter = workflowFilter) => {
+    setRefreshing(true);
+    try { await loadData(); setWorkflowFilter(filter); } catch (e) { alert(e?.message || "تعذر تحديث البيانات"); } finally { setRefreshing(false); }
+  };
   const filteredRules = useMemo(() => rules.filter((r) => { const q = search.trim().toLowerCase(); const text = `${r.name || ""} ${r.description || ""} ${r.category || ""}`.toLowerCase(); return (!q || text.includes(q)) && (workflowFilter === "all" || (workflowFilter === "active" ? r.is_active !== false : r.is_active === false)); }), [rules, search, workflowFilter]);
   const filteredRuns = statusFilter === "all" ? runs : runs.filter((r) => r.status === statusFilter);
 
   if (loading) return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="w-8 h-8 text-[#C9A66B] animate-spin" /></div>;
   if (!isAdmin) return <AccessDenied />;
 
-  return <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10"><div className="mb-6 flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-bold text-[#4A3F35] flex items-center gap-2"><Workflow className="w-6 h-6 text-[#C9A66B]" />سير العمل والأتمتة</h1><p className="text-sm text-slate-500 mt-1">إدارة الأتمتة وسجل التشغيل مباشرة عبر Supabase.</p></div><Button onClick={openCreate} className="gap-2 bg-[#4A3F35]"><Plus className="w-4 h-4" />سير عمل جديد</Button></div>
+  return <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10"><div className="mb-6 flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-bold text-[#4A3F35] flex items-center gap-2"><Workflow className="w-6 h-6 text-[#C9A66B]" />سير العمل والأتمتة</h1><p className="text-sm text-slate-500 mt-1">إدارة الأتمتة وسجل التشغيل مباشرة عبر Supabase.</p></div><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => refreshData()} disabled={refreshing} className="gap-2"><RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />تحديث</Button><Button variant="outline" onClick={generateAiSuggestions} disabled={aiLoading} className="gap-2"><Sparkles className="w-4 h-4" />{aiLoading ? "جاري تحليل سير العمل..." : "اقتراحات Gemini"}</Button><Button onClick={openCreate} className="gap-2 bg-[#4A3F35]"><Plus className="w-4 h-4" />سير عمل جديد</Button></div></div>
     <Tabs value={activeTab} onValueChange={setActiveTab}><TabsList className="mb-6"><TabsTrigger value="workflows">سير العمل</TabsTrigger><TabsTrigger value="activity">النشاط</TabsTrigger></TabsList>
       <TabsContent value="workflows">{suggested.length > 0 && <section className="mb-6"><h2 className="font-bold text-[#4A3F35] flex items-center gap-2 mb-3"><Sparkles className="w-4 h-4 text-[#C9A66B]" />سير العمل المقترح</h2><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">{suggested.map((t) => <Card key={t.id} className="border-dashed"><CardContent className="p-4"><div className="font-semibold text-sm">{t.name}</div><p className="text-xs text-slate-500 mt-1">{t.description}</p><Button size="sm" variant="outline" className="mt-3" disabled={saving} onClick={() => addSuggested(t)}>إضافة</Button></CardContent></Card>)}</div></section>}
-        <div className="flex flex-wrap gap-2 mb-4"><Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="بحث في سير العمل..." className="max-w-sm" /><Select value={workflowFilter} onValueChange={setWorkflowFilter}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">الكل</SelectItem><SelectItem value="active">مفعّل</SelectItem><SelectItem value="inactive">غير مفعّل</SelectItem></SelectContent></Select></div>
-        <div className="grid gap-3">{filteredRules.map((rule) => <Card key={rule.id}><CardContent className="p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold text-[#4A3F35]">{rule.name}</h3>{rule.is_source_workflow && <Badge variant="outline">مصدر حقيقي</Badge>}<Badge variant="outline">{TRIGGER_LABELS[rule.trigger_type] || rule.trigger_type}</Badge><Badge variant="outline">{CATEGORY_LABELS[rule.category] || rule.category}</Badge></div><p className="text-sm text-slate-500 mt-1">{rule.description || "بدون وصف"}</p><div className="flex flex-wrap gap-2 mt-2 text-xs text-slate-500"><span>{(rule.actions || []).length} إجراءات</span>{rule.schedule_cron && <span>• {rule.schedule_cron}</span>}{rule.source_functions?.length > 0 && <span>• {rule.source_functions.join(", ")}</span>}</div></div><div className="flex items-center gap-2"><Switch checked={rule.is_active !== false} disabled={rule.is_source_workflow} onCheckedChange={() => toggleRule(rule)} /><Button size="sm" variant="outline" onClick={() => setSelected(rule)}>التفاصيل</Button>{!rule.is_source_workflow && <><Button size="icon" variant="ghost" onClick={() => openEdit(rule)}><Pencil className="w-4 h-4" /></Button><Button size="icon" variant="ghost" onClick={() => deleteRule(rule)}><Trash2 className="w-4 h-4" /></Button></>}</div></div><div className="mt-3 pt-3 border-t flex flex-wrap gap-2"><Button size="sm" variant="outline" disabled={runningId === rule.id} onClick={() => runTest(rule)}><Play className="w-3.5 h-3.5 mr-1" />{runningId === rule.id ? "جارٍ الاختبار..." : "اختبار تجريبي"}</Button><span className="text-xs text-slate-400 self-center">آخر حالة: {rule.last_run_status || "never_run"} • مرات التشغيل: {rule.run_count || 0}</span></div></CardContent></Card>)}</div></TabsContent>
+        <div className="flex flex-wrap gap-2 mb-4"><Button size="sm" variant={workflowFilter === "all" ? "default" : "outline"} onClick={() => refreshData("all")}>الكل ({rules.length})</Button><Button size="sm" variant={workflowFilter === "active" ? "default" : "outline"} onClick={() => refreshData("active")}>نشط ({rules.filter(r => r.is_active !== false).length})</Button><Button size="sm" variant={workflowFilter === "inactive" ? "default" : "outline"} onClick={() => refreshData("inactive")}>غير نشط ({rules.filter(r => r.is_active === false).length})</Button><Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="بحث في سير العمل..." className="max-w-sm" /><Select value={workflowFilter} onValueChange={(v) => refreshData(v)}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">الكل</SelectItem><SelectItem value="active">مفعّل</SelectItem><SelectItem value="inactive">غير مفعّل</SelectItem></SelectContent></Select></div>
+        {(aiSuggestions.length > 0) && <section className="mb-6"><h2 className="font-bold text-[#4A3F35] flex items-center gap-2 mb-3"><Sparkles className="w-4 h-4 text-[#C9A66B]" />اقتراحات Gemini بعد تحليل الموجود</h2><div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">{aiSuggestions.map((t) => <Card key={t.id} className="border-[#C9A66B]/30"><CardContent className="p-4"><div className="flex items-center gap-2"><div className="font-semibold text-sm flex-1">{t.name}</div><Badge variant="outline">{CATEGORY_LABELS[t.category] || t.category}</Badge></div><p className="text-xs text-slate-500 mt-1">{t.description}</p><div className="text-xs text-slate-400 mt-2">{(t.actions || []).length} إجراءات {t.actions?.some(a => a.config?.approval_required) ? "• يتطلب موافقة قبل الإرسال" : ""}</div><div className="flex gap-2 mt-3"><Button size="sm" onClick={() => addSuggested(t)} disabled={saving}>إضافة إلى سير العمل</Button></div></CardContent></Card>)}</div></section>}<div className="grid gap-3">{filteredRules.map((rule) => <Card key={rule.id}><CardContent className="p-4"><div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold text-[#4A3F35]">{rule.name}</h3>{rule.is_source_workflow && <Badge variant="outline">مصدر حقيقي</Badge>}<Badge variant="outline">{TRIGGER_LABELS[rule.trigger_type] || rule.trigger_type}</Badge><Badge variant="outline">{CATEGORY_LABELS[rule.category] || rule.category}</Badge></div><p className="text-sm text-slate-500 mt-1">{rule.description || "بدون وصف"}</p><div className="flex flex-wrap gap-2 mt-2 text-xs text-slate-500"><span>{(rule.actions || []).length} إجراءات</span>{rule.schedule_cron && <span>• {rule.schedule_cron}</span>}{rule.source_functions?.length > 0 && <span>• {rule.source_functions.join(", ")}</span>}</div></div><div className="flex items-center gap-2"><Switch checked={rule.is_active !== false} disabled={rule.is_source_workflow} onCheckedChange={() => toggleRule(rule)} /><Button size="sm" variant="outline" onClick={() => setSelected(rule)}>التفاصيل</Button>{!rule.is_source_workflow && <><Button size="icon" variant="ghost" onClick={() => openEdit(rule)}><Pencil className="w-4 h-4" /></Button><Button size="icon" variant="ghost" onClick={() => deleteRule(rule)}><Trash2 className="w-4 h-4" /></Button></>}</div></div><div className="mt-3 pt-3 border-t flex flex-wrap gap-2"><Button size="sm" variant="outline" disabled={runningId === rule.id} onClick={() => runTest(rule)}><Play className="w-3.5 h-3.5 mr-1" />{runningId === rule.id ? "جارٍ الاختبار..." : "اختبار تجريبي"}</Button><span className="text-xs text-slate-400 self-center">آخر حالة: {rule.last_run_status || "never_run"} • مرات التشغيل: {rule.run_count || 0}</span></div></CardContent></Card>)}</div></TabsContent>
       <TabsContent value="activity"><div className="flex gap-2 mb-4"><Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">كل الحالات</SelectItem><SelectItem value="success">ناجح</SelectItem><SelectItem value="failed">فشل</SelectItem><SelectItem value="running">قيد التنفيذ</SelectItem></SelectContent></Select></div><div className="grid gap-3">{filteredRuns.map((run) => <Card key={run.id}><CardContent className="p-4 flex flex-wrap justify-between gap-3"><div><div className="font-semibold">{run.workflow_name || "سير عمل"}</div><div className="text-xs text-slate-500 mt-1">{run.triggered_by || "system_event"} • {run.started_at ? new Date(run.started_at).toLocaleString("ar-SA") : ""}</div>{run.error_message && <div className="text-sm text-red-600 mt-1">{run.error_message}</div>}</div><Badge>{run.status === "success" ? "ناجح" : run.status === "failed" ? "فشل" : run.status}</Badge></CardContent></Card>)}{filteredRuns.length === 0 && <Card><CardContent className="p-8 text-center text-slate-500">لا توجد سجلات تشغيل حتى الآن.</CardContent></Card>}</div></TabsContent>
     </Tabs>
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}><DialogContent><DialogHeader><DialogTitle>{editing ? "تعديل سير العمل" : "إنشاء سير عمل"}</DialogTitle></DialogHeader><div className="space-y-3"><Input placeholder="اسم سير العمل" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /><Textarea placeholder="الوصف" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /><Select value={form.trigger_type} onValueChange={(v) => setForm({ ...form, trigger_type: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="event">عند حدوث حدث</SelectItem><SelectItem value="schedule">مجدول</SelectItem><SelectItem value="manual">يدوي</SelectItem></SelectContent></Select>{form.trigger_type === "event" && <Input placeholder="اسم الحدث" value={form.trigger_event || ""} onChange={(e) => setForm({ ...form, trigger_event: e.target.value })} />}{form.trigger_type === "schedule" && <Input placeholder="Cron مثل 0 9 * * *" value={form.schedule_cron || ""} onChange={(e) => setForm({ ...form, schedule_cron: e.target.value })} />}<Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(CATEGORY_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent></Select><div className="flex items-center justify-between border rounded-lg p-3"><span className="text-sm">تفعيل سير العمل</span><Switch checked={!!form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} /></div></div><DialogFooter><Button variant="outline" onClick={() => setDialogOpen(false)}>إلغاء</Button><Button onClick={saveRule} disabled={saving}>{saving ? "جارٍ الحفظ..." : "حفظ"}</Button></DialogFooter></DialogContent></Dialog>
