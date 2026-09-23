@@ -88,7 +88,43 @@ export async function getMarketingAnalytics(posts) {
 }
 
 export async function testMarketingConnection(platformId) {
-  await getActor();
+  const user = await getActor();
+
+  // LinkedIn is verified through the real Supabase Edge Function, not a local
+  // sync flag. The Edge Function uses the managed LinkedIn connection/token.
+  if (platformId === "linkedin") {
+    const { data, error } = await supabase.functions.invoke("linkedin-publish", {
+      body: { action: "status" },
+    });
+    if (error) throw error;
+    if (!data?.ok) {
+      return {
+        ok: false,
+        connected: false,
+        platform: platformId,
+        message: data?.error || "تعذر التحقق من اتصال LinkedIn.",
+      };
+    }
+
+    await supabase.from("sync_states").upsert({
+      service: "linkedin",
+      sync_token: "server-managed",
+      last_sync: new Date().toISOString(),
+      description: data?.name ? `LinkedIn متصل: ${data.name}` : "LinkedIn متصل عبر الاتصال المُدار",
+      created_by: user.id,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "service" });
+
+    return {
+      ok: true,
+      connected: true,
+      platform: platformId,
+      message: data?.name ? `تم الاتصال فعليًا بـ LinkedIn: ${data.name}` : "تم الاتصال فعليًا بـ LinkedIn.",
+      memberId: data?.memberId || null,
+      authorUrn: data?.authorUrn || null,
+    };
+  }
+
   const sync = (await supabase.from("sync_states").select("service,last_sync,sync_token").eq("service", platformId).maybeSingle()).data;
   if (!sync) return { ok: false, connected: false, platform: platformId, message: "المنصة غير متصلة بعد" };
   return { ok: Boolean(sync.sync_token), connected: Boolean(sync.sync_token), platform: platformId, message: sync.sync_token ? "الاتصال مسجل" : "المنصة تحتاج إعداد الاتصال" };
