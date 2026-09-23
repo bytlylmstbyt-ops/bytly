@@ -10,6 +10,7 @@ import IntegrationCard from "@/components/admin/IntegrationCard";
 import AddIntegrationDialog from "@/components/admin/AddIntegrationDialog";
 
 const INTEGRATIONS = [
+  { type: "moyasar", kind: "payment" },
   { type: "stripe", kind: "secret" },
   { type: "square", kind: "connector" },
   { type: "google_analytics", kind: "connector" },
@@ -63,16 +64,34 @@ export default function AdminIntegrations() {
 
     const identities = await getLinkedOAuthProviders();
     const now = new Date().toISOString();
+    let moyasarConfig = null;
+    if (supabase) {
+      const { data: paymentConfig, error: paymentConfigError } = await supabase
+        .from("payment_provider_config")
+        .select("provider,environment,enabled,publishable_key,webhook_url,configured_at,updated_at")
+        .eq("provider", "moyasar")
+        .maybeSingle();
+      if (paymentConfigError) console.warn("Moyasar config load failed:", paymentConfigError);
+      moyasarConfig = paymentConfig || null;
+    }
     const results = INTEGRATIONS.map((integ) => {
+      if (integ.type === "moyasar") {
+        const connected = Boolean(moyasarConfig?.enabled);
+        return {
+          type: "moyasar", kind: "payment", connected,
+          needs_reauth: false, error: null,
+          last_sync: moyasarConfig?.updated_at || moyasarConfig?.configured_at || null,
+          http_status: null, environment: moyasarConfig?.environment || "sandbox",
+          publishable_key: moyasarConfig?.publishable_key || null,
+          webhook_url: moyasarConfig?.webhook_url || null,
+          configured_at: moyasarConfig?.configured_at || null,
+        };
+      }
       const connected = providerIsLinked(identities, integ.type, sessionData.session);
       return {
-        type: integ.type,
-        kind: integ.kind,
-        connected,
-        needs_reauth: false,
-        error: connected ? null : null,
-        last_sync: connected ? now : null,
-        http_status: null,
+        type: integ.type, kind: integ.kind, connected,
+        needs_reauth: false, error: connected ? null : null,
+        last_sync: connected ? now : null, http_status: null,
       };
     });
 
