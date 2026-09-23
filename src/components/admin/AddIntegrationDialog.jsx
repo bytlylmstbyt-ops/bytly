@@ -18,6 +18,7 @@ const AVAILABLE_CONNECTORS = [
   { type: "google_analytics", name: "Google Analytics", icon: "📊", kind: "connector" },
   { type: "instagram", name: "Instagram", icon: "📸", kind: "connector" },
   { type: "tiktok", name: "TikTok", icon: "🎵", kind: "connector" },
+  { type: "linkedin", name: "LinkedIn", icon: "💼", kind: "connector" },
   { type: "slack", name: "Slack", icon: "💬", kind: "connector" },
   { type: "notion", name: "Notion", icon: "📝", kind: "connector" },
   { type: "github", name: "GitHub", icon: "🐙", kind: "connector" },
