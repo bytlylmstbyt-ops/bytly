@@ -82,7 +82,7 @@ import Copyright from './pages/Copyright';
 import CostEstimator from './pages/CostEstimator';
 import CreateMeetLink from './pages/CreateMeetLink';
 import CreateProject from './pages/CreateProject';
-import Dashboard from './pages/Dashboard';
+import Dashboard from './pages/UnifiedUserDashboard';
 import DataClassification from './pages/DataClassification';
 import DesignDetails from './pages/DesignDetails';
 import DesignMarketplace from './pages/DesignMarketplace';
