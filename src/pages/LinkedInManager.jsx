@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { publishLinkedInPost, getLinkedInStatus } from "@/lib/linkedinSupabaseService";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -271,14 +273,26 @@ export default function LinkedInManager() {
     setLoading(true);
     setResult(null);
     try {
-      const res = await base44.functions.invoke("linkedinService", {
-        action: "shareDesignWork",
-        data: { ...shareForm, customCaption: previewText },
-      });
-      setResult(res.data);
-      if (res.data.success) toast.success("تم النشر على LinkedIn ✓");
+      const res = await publishLinkedInPost(previewText);
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id || null;
+      const { data: savedPost } = await supabase.from("social_posts").insert({
+        platform: "linkedin",
+        content: previewText,
+        status: "published",
+        published_at: new Date().toISOString(),
+        post_id: res.postId || null,
+        action_type: "shareDesignWork",
+        created_by: userId,
+        metadata: { source: "LinkedInManager", linkedin: res, project: shareForm },
+      }).select().maybeSingle();
+      const output = { success: true, postId: res.postId || null, savedPost };
+      setResult(output);
+      toast.success("تم النشر على LinkedIn ✓");
     } catch (e) {
-      toast.error("حدث خطأ: " + e.message);
+      const message = e?.message || "تعذر النشر على LinkedIn";
+      setResult({ success: false, error: message });
+      toast.error("تعذر النشر: " + message);
     } finally {
       setLoading(false);
     }
