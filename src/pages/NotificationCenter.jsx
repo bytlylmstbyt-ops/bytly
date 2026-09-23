@@ -12,17 +12,57 @@ export default function NotificationCenter(){
  const notificationId=searchParams.get("notificationId");
 
  const getTarget=async(x)=>{
-  const type=String(x.entity_type||x.type||"").toLowerCase(),id=x.entity_id;
-  const routes={project:"ProjectDetails",dispute:"DisputeDetails",contract:"Contract",message:"MessagesUser",messages:"MessagesUser",proposal:"ProjectProposals",milestone:"ProjectMilestones",review:"ServiceReviews",complaint:"Complaints",payment:"Wallet",withdrawal:"ProviderWallet",engineer:"EngineerProfile",client:"ClientProfile"};
-  if(routes[type])return createPageUrl(routes[type])+(id?"?id="+encodeURIComponent(id):"");
+  const rawType=String(x.entity_type||"").toLowerCase();
+  const notificationType=String(x.type||"").toLowerCase();
+  const id=x.entity_id;
+
+  // User-registration/admin notifications: resolve the actual profile role first.
+  // This prevents "new user" notifications from falling back to the generic user page.
   if(id){
-   const{data}=await supabase.from("profiles").select("id,user_id,role").or("id.eq."+id+",user_id.eq."+id).maybeSingle();
-   if(data?.role){
-    const roleRoutes={client:"AdminClients",engineer:"AdminEngineers",contractor:"AdminProviders",supplier:"AdminProviders",consultant:"AdminProviders",firm:"AdminProviders",investor:"AdminDeveloperInvestorManagement",developer:"AdminDeveloperInvestorManagement"};
-    return createPageUrl(roleRoutes[data.role]||"AdminUserManagementCenter")+"?userId="+encodeURIComponent(data.user_id||data.id);
+   const{data:profile}=await supabase.from("profiles").select("id,user_id,role,full_name,email").or("id.eq."+id+",user_id.eq."+id).maybeSingle();
+   if(profile?.role){
+    const role=String(profile.role).toLowerCase();
+    const roleRoutes={
+      client:"AdminClients",
+      engineer:"AdminEngineers",
+      contractor:"AdminProviders",
+      supplier:"AdminProviders",
+      consultant:"AdminProviders",
+      firm:"AdminProviders",
+      company:"AdminProviders",
+      engineering_company:"AdminProviders",
+      investor:"AdminDeveloperInvestorManagement",
+      developer:"AdminDeveloperInvestorManagement",
+      advertiser:"AdminAdvertisers",
+      admin:"AdminUserManagementCenter"
+    };
+    const page=roleRoutes[role];
+    if(page)return createPageUrl(page)+"?userId="+encodeURIComponent(profile.user_id||profile.id);
    }
   }
-  return null;
+
+  // Non-user notifications keep their entity-specific destination.
+  const routes={
+   project:"ProjectDetails",dispute:"DisputeDetails",contract:"Contract",
+   message:"MessagesUser",messages:"MessagesUser",proposal:"ProjectProposals",
+   milestone:"ProjectMilestones",review:"ServiceReviews",complaint:"Complaints",
+   payment:"Wallet",withdrawal:"ProviderWallet"
+  };
+  const entityKey=rawType.replace(/-/g,"_");
+  if(routes[entityKey])return createPageUrl(routes[entityKey])+(id?"?id="+encodeURIComponent(id):"");
+
+  // If the notification type itself identifies a user category, use it as a fallback.
+  const roleRoutes={
+   client:"AdminClients",engineer:"AdminEngineers",contractor:"AdminProviders",
+   supplier:"AdminProviders",consultant:"AdminProviders",firm:"AdminProviders",
+   company:"AdminProviders",engineering_company:"AdminProviders",
+   investor:"AdminDeveloperInvestorManagement",developer:"AdminDeveloperInvestorManagement",
+   advertiser:"AdminAdvertisers"
+  };
+  if(id&&roleRoutes[entityKey])return createPageUrl(roleRoutes[entityKey])+"?userId="+encodeURIComponent(id);
+  if(id&&roleRoutes[notificationType])return createPageUrl(roleRoutes[notificationType])+"?userId="+encodeURIComponent(id);
+
+  return createPageUrl("NotificationCenter");
  };
 
  const selectNotification=async(x)=>{
