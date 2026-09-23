@@ -9,10 +9,9 @@ const corsHeaders = {
 const AGENT_PROMPTS: Record<string, string> = {
   assistant: `أنت المساعد الذكي العام داخل منصة Bytly (بيتلي)، المنظومة الهندسية المتكاملة في السعودية. أجب بالعربية الواضحة والمباشرة. ساعد المستخدم في فهم خدمات المنصة والمشاريع والخدمات الهندسية، ولا تخترع بيانات غير موجودة في السياق. إذا كانت المعلومة غير متاحة قل ذلك بوضوح.`,
   marketing: `أنت وكيل التسويق الذكي لمنصة Bytly في السوق السعودي. حلل بيانات التسويق المتاحة، واقترح محتوى وحملات ورسائل وSEO/GEO وأفكار اكتساب مستخدمين. فرّق دائمًا بين الأرقام الفعلية والافتراضات والاقتراحات، ولا تخترع نتائج أو إحصاءات.`,
-  platform: `أنت وكيل المنصة والتطوير التشغيلي لمنصة Bytly. ساعد في تحليل صحة المنصة، مسارات المستخدمين، التسجيل، المشاريع، المحادثات، التكاملات، الأخطاء، والصلاحيات. لا تقترح حذف بيانات أو تغيير صلاحيات حساسة دون طلب صريح. عندما لا تتوفر سجلات تقنية كافية، اطلب أو اقترح الفحص المناسب بدل التخمين.`,
+  platform: `أنت وكيل المنصة والتطوير التشغيلي لمنصة Bytly. ساعد في تحليل صحة المنصة، مسارات المستخدمين، التسجيل، المشاريع، المحادثات، التكاملات، الأخطاء، والصلاحيات. لا تقترح حذف بيانات أو تغيير صلاحيات حساسة دون طلب صريح.`,
   admin: `أنت المساعد الإداري المركزي لمنصة Bytly. اجمع بين فهم التشغيل والبيانات والتسويق والتطوير. قدّم ملخصات تنفيذية دقيقة، وحدد ما هو رقم فعلي وما هو استنتاج وما هو اقتراح. لا تنفذ عمليات حساسة أو تغييرات في البيانات من تلقاء نفسك.`,
-  automation: `أنت وكيل الأتمتة وسير العمل في منصة Bytly. حلّل سير العمل الحالي أولاً واكتشف التكرار قبل اقتراح أي قاعدة جديدة. اربط الأتمتة بمركز التسويق والحملات وقنوات LinkedIn وInstagram وTikTok وGmail وWhatsApp. لا ترسل رسائل خارجية ولا تنشر ولا تنفق ميزانية تلقائياً؛ أي خطوة خارجية يجب أن تحمل approval_required=true حتى تعتمدها الإدارة.`,
-  automation: `أنت وكيل الأتمتة وسير العمل في منصة Bytly. حلّل سير العمل الحالي أولاً، واكتشف التكرار قبل اقتراح أي قاعدة جديدة. اقترح أتمتة قابلة للتخزين والتنفيذ عبر Supabase، ويمكنك ربطها بمركز التسويق والحملات وقنوات LinkedIn وInstagram وTikTok وGmail وWhatsApp. لا ترسل رسائل خارجية ولا تنشر ولا تنفق ميزانية تلقائياً؛ أي خطوة خارجية يجب أن تحمل approval_required=true حتى تعتمدها الإدارة.`
+  automation: `أنت وكيل الأتمتة وسير العمل في منصة Bytly. حلّل سير العمل الحالي أولاً واكتشف التكرار قبل اقتراح أي قاعدة جديدة. اربط الأتمتة بمركز التسويق والحملات وقنوات LinkedIn وInstagram وTikTok وGmail وWhatsApp. يمكن إنشاء مسودات وتحليلات ومهام بانتظار الموافقة، لكن لا ترسل رسائل خارجية ولا تنشر ولا تنفق ميزانية تلقائياً. أي خطوة خارجية يجب أن تحمل approval_required=true.`
 };
 
 function jsonResponse(body: unknown, status = 200) {
@@ -28,13 +27,16 @@ Deno.serve(async (req: Request) => {
     if (!apiKey) return jsonResponse({ success: false, error: "لم يتم إعداد GEMINI_API_KEY في Supabase بعد." }, 503);
 
     const body = await req.json();
-    const agent = String(body?.agent || "assistant");
+    const requestedAgent = String(body?.agent || "assistant").trim().toLowerCase();
+    const agentAliases: Record<string, string> = { workflow: "automation", workflows: "automation", "workflow-automation": "automation", gmail: "automation", "marketing-automation": "automation" };
+    const agent = agentAliases[requestedAgent] || requestedAgent;
     const prompt = String(body?.prompt || "").trim();
     const context = body?.context || {};
     const responseFormat = body?.responseFormat || "text";
     if (!prompt) return jsonResponse({ success: false, error: "الطلب فارغ" }, 400);
 
-    const systemInstruction = AGENT_PROMPTS[agent] || AGENT_PROMPTS.assistant;
+    const supportedAgents = new Set(Object.keys(AGENT_PROMPTS));
+    const systemInstruction = supportedAgents.has(agent) ? AGENT_PROMPTS[agent] : AGENT_PROMPTS.assistant;
     const contextText = JSON.stringify(context).slice(0, 30000);
     const contents = [{ role: "user", parts: [{ text: `${systemInstruction}\n\nسياق المنصة المتاح:\n${contextText}\n\nطلب المستخدم:\n${prompt}` }] }];
 
