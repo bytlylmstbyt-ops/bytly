@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { CheckCircle2, X, Zap, Building2, Star, Loader2, AlertCircle, Crown, ShieldCheck } from "lucide-react";
@@ -9,7 +9,7 @@ const PLANS = [
     name: "الباقة الأساسية",
     subtitle: "Basic",
     price: 99,
-    price_id: "price_1TbQh4B6BI8uC0Au89E4VzRL",
+    tier: "basic",
     Icon: Star,
     headerClass: "from-slate-600 to-slate-800",
     popular: false,
@@ -25,8 +25,8 @@ const PLANS = [
   {
     name: "الباقة الاحترافية",
     subtitle: "Pro",
-    price: 249,
-    price_id: "price_1TbQh4B6BI8uC0AupdL39tcG",
+    price: 199,
+    tier: "professional",
     Icon: Zap,
     headerClass: "from-[#C9A66B] to-[#8B6914]",
     popular: true,
@@ -44,8 +44,8 @@ const PLANS = [
   {
     name: "باقة الشركات",
     subtitle: "Enterprise",
-    price: 599,
-    price_id: "price_1TbQh4B6BI8uC0Au7VTp4rPf",
+    price: 299,
+    tier: "business",
     Icon: Building2,
     headerClass: "from-[#4a3c31] to-[#2a1e14]",
     popular: false,
@@ -69,34 +69,50 @@ const TRUST = [
 ];
 
 export default function SubscriptionPage() {
-  const [loadingId, setLoadingId] = useState(null);
+  const [loadingId, setLoadingId] = useState(null);\n  const [selectedPayment, setSelectedPayment] = useState(null);
   const [user, setUser] = useState(null);
   const [banner, setBanner] = useState(null); // 'success' | 'canceled'
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    supabase.auth.getUser().then(({ data }) => setUser(data.user || null)).catch(() => {});
     const p = new URLSearchParams(window.location.search);
     if (p.get("success")) setBanner("success");
     else if (p.get("canceled")) setBanner("canceled");
   }, []);
 
-  const handleSubscribe = async (plan) => {
-    if (window.self !== window.top) {
-      alert("الدفع يعمل فقط من التطبيق المنشور. يرجى فتح التطبيق في تبويب مستقل.");
-      return;
-    }
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentId = params.get('id');
+    if (!paymentId) return;
+    const orderId = localStorage.getItem('bytly_moyasar_order_id');
+    if (!orderId) return;
+    supabase.functions.invoke('verify-moyasar-payment', {
+      body: { payment_id: paymentId, payment_order_id: orderId }
+    }).then(({ data, error }) => {
+      localStorage.removeItem('bytly_moyasar_order_id');
+      localStorage.removeItem('bytly_moyasar_tier');
+      window.history.replaceState({}, '', window.location.pathname);
+      if (!error && data?.paid) setBanner('success');
+      else setBanner('canceled');
+    });
+  }, []);\n  useEffect(() => {\n    if (!selectedPayment || !window.Moyasar) return;\n    const el = document.querySelector(".bytly-moyasar-form");\n    if (!el) return;\n    el.innerHTML = "";\n    window.Moyasar.init({ element: ".bytly-moyasar-form", amount: Number(selectedPayment.price) * 100, currency: "SAR", description: `Bytly ${selectedPayment.subtitle}`, publishable_api_key: "pk_test_YHSpbq6pYYX7XdkBfWeJcpnqTYHn5ZWDN16bhTiW", callback_url: `${window.location.origin}${window.location.pathname}`, supported_networks: ["visa","mastercard","mada","unionpay"], methods: ["creditcard"] });\n  }, [selectedPayment]);\n\n  const handleSubscribe = async (plan) => {
     if (!user) {
       sessionStorage.setItem('loginReturnUrl', window.location.pathname);
       window.location.href = '/login';
       return;
     }
-    setLoadingId(plan.price_id);
-    const res = await base44.functions.invoke("createSubscriptionCheckout", {
-      price_id: plan.price_id,
-      plan_name: plan.name,
+    setLoadingId(plan.tier);
+    const { data: fn, error } = await supabase.functions.invoke('create-moyasar-payment-order', {
+      body: { plan_code: `professional_${plan.tier}_monthly`, account_type: 'professional', billing_cycle: 'monthly', tier: plan.tier }
     });
     setLoadingId(null);
-    if (res.data?.url) window.location.href = res.data.url;
+    if (error || !fn?.payment_order_id) {
+      alert(error?.message || 'تعذر إنشاء طلب الدفع.');
+      return;
+    }
+    localStorage.setItem('bytly_moyasar_order_id', fn.payment_order_id);
+    localStorage.setItem('bytly_moyasar_tier', plan.tier);
+    setSelectedPayment({ ...plan, orderId: fn.payment_order_id });
   };
 
   return (
@@ -135,7 +151,7 @@ export default function SubscriptionPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
           {PLANS.map((plan) => (
             <div
-              key={plan.price_id}
+              key={plan.tier}
               className={`relative rounded-2xl bg-white overflow-hidden transition-all hover:shadow-xl
                 ${plan.popular ? "ring-2 ring-[#C9A66B] shadow-xl md:scale-[1.03]" : "shadow-md"}`}
             >
@@ -185,7 +201,7 @@ export default function SubscriptionPage() {
                   onClick={() => handleSubscribe(plan)}
                   disabled={!!loadingId}
                 >
-                  {loadingId === plan.price_id
+                  {loadingId === plan.tier
                     ? <><Loader2 className="w-4 h-4 animate-spin" /> جارٍ التحميل...</>
                     : `اشترك الآن — ${plan.price} ريال/شهر`}
                 </Button>
@@ -194,7 +210,19 @@ export default function SubscriptionPage() {
           ))}
         </div>
 
-        {/* Trust badges */}
+        {selectedPayment && (
+          <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" dir="rtl">
+            <div className="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <div><h3 className="font-bold text-lg">إتمام الدفع</h3><p className="text-sm text-slate-500">{selectedPayment.name} — {selectedPayment.price} ريال</p></div>
+                <button onClick={() => setSelectedPayment(null)} className="text-slate-500">✕</button>
+              </div>
+              <div className="bytly-moyasar-form"></div>
+              <p className="text-xs text-slate-400 mt-3 text-center">بيئة اختبار Moyasar — لن يتم خصم مبلغ حقيقي.</p>
+            </div>
+          </div>
+        )}
+        {/* Trust badges */
         <div className="mt-12 flex flex-wrap justify-center gap-6 text-sm text-slate-500">
           {TRUST.map(({ Icon, text }) => (
             <div key={text} className="flex items-center gap-2">
