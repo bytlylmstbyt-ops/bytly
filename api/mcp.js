@@ -5,7 +5,7 @@ const SUPABASE_KEY =
   process.env.SUPABASE_ANON_KEY ||
   process.env.VITE_SUPABASE_ANON_KEY ||
   "sb_publishable_8dsKwVbalFlUNA65FJaWlA_1ch0TKfw";
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const MCP_GATEWAY_URL = "https://wbqtgdkubrocnqnykhlt.supabase.co/functions/v1/mcp-gateway";
 
 const SERVER = {
   name: "Bytly MCP",
