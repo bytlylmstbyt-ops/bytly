@@ -383,6 +383,40 @@ function LayoutContent({ children, currentPageName }) {
                   {label}
                 </Link>
               ))}
+              {isAuthenticated && user && (
+                <div className="border-t border-slate-200 mt-2 pt-2">
+                  <Link
+                    to={createPageUrl("Dashboard")}
+                    className="flex items-center px-4 rounded-lg hover:bg-slate-100 text-slate-700 text-[14px] font-medium"
+                    style={{ minHeight: 44 }}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <User className="w-4 h-4 ml-2" />
+                    {t('nav.dashboard')}
+                  </Link>
+                  <Link
+                    to={createPageUrl("Settings")}
+                    className="flex items-center px-4 rounded-lg hover:bg-slate-100 text-slate-700 text-[14px]"
+                    style={{ minHeight: 44 }}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Settings className="w-4 h-4 ml-2" />
+                    {t('nav.settings')}
+                  </Link>
+                  <button
+                    type="button"
+                    className="w-full flex items-center px-4 rounded-lg hover:bg-red-50 text-red-600 text-[14px] font-medium text-right"
+                    style={{ minHeight: 44 }}
+                    onClick={async () => {
+                      setIsMenuOpen(false);
+                      await handleLogout();
+                    }}
+                  >
+                    <LogOut className="w-4 h-4 ml-2" />
+                    {t('nav.logout')}
+                  </button>
+                </div>
+              )}
               {/* Bytly Sections group */}
               <div className="pt-2 pb-1 px-4 text-xs font-semibold text-[#C9A66B] uppercase tracking-wide">{t('nav.bytlySections')}</div>
               {[
