@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/.well-known/oauth-protected-resource", "destination": "/api/mcp-protected-resource" },
     { "source": "/((?!assets/|favicon\\.ico|manifest\\.json|robots\\.txt|sitemap\\.xml).*)", "destination": "/index.html" }
   ],
   "headers": [
