@@ -35,7 +35,7 @@ export default function CertificationPage(){
    // Keep the original certificate page intact: if the project cannot be read,
    // do not replace the certificate with a generic error screen.
    if(!p){
-    setProject({id:projectId,title:"شهادة اعتماد فني",status:"technical_approved"});
+    p={id:projectId,title:"شهادة اعتماد فني",status:"technical_approved"};
    }
    setProject(p);
 
