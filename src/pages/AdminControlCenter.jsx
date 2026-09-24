@@ -34,7 +34,9 @@ function AdminMCPPage() {
   const [status, setStatus] = useState("idle");
   const [message, setMessage] = useState("");
   const [serverInfo, setServerInfo] = useState(null);
-  const mcpUrl = "https://mybytly.com/api/mcp";
+  const [clients, setClients] = useState({});
+  const [checkingClients, setCheckingClients] = useState(false);
+  const mcpUrl = "https://www.mybytly.com/api/mcp";
 
   const testMCP = async () => {
     setStatus("testing"); setMessage("");
@@ -48,6 +50,24 @@ function AdminMCPPage() {
     }
   };
 
+  const checkClients = async () => {
+    setCheckingClients(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await fetch("/api/admin-mcp-status", {
+        headers: { Authorization: "Bearer " + (session?.access_token || "") },
+        cache: "no-store"
+      });
+      const data = await res.json();
+      if (!res.ok || data.status !== "ok") throw new Error(data?.error || "تعذر فحص العملاء");
+      const map = {};
+      (data.clients || []).forEach(item => { map[item.client] = item; });
+      setClients(map);
+    } catch (e) {
+      setMessage(e?.message || "تعذر فحص حالة العملاء.");
+    } finally { setCheckingClients(false); }
+  };
+
   const copyUrl = async () => {
     try {
       await navigator.clipboard.writeText(mcpUrl);
@@ -56,49 +76,75 @@ function AdminMCPPage() {
     } catch {}
   };
 
-  useEffect(() => { testMCP(); }, []);
+  useEffect(() => { testMCP(); checkClients(); }, []);
+
+  const clientCards = [
+    { key: "chatgpt", name: "ChatGPT", icon: "✦", url: "https://chatgpt.com/", note: "يحتاج دعم Custom MCP في خطة الحساب." },
+    { key: "claude", name: "Claude", icon: "✺", url: "https://claude.ai/", note: "تم اختبار OAuth والاتصال بنجاح." },
+    { key: "gemini", name: "Gemini", icon: "◎", url: "https://gemini.google.com/", note: "جاهز عند توفر عميل MCP يدعم OAuth." }
+  ];
 
   return (
     <div className="space-y-6" dir="rtl">
       <Card className="border-slate-200 shadow-sm overflow-hidden">
         <CardContent className="p-0">
           <div className="px-6 py-5 border-b border-slate-200 bg-white">
-            <h3 className="text-2xl font-bold text-[#25213A]">MCP</h3>
-            <p className="text-sm text-slate-500 mt-1">خادم MCP فعلي لربط أدوات وبيانات Bytly بمساعدات الذكاء الاصطناعي التي تدعم MCP.</p>
+            <h3 className="text-2xl font-bold text-[#25213A]">MCP — ربط المساعدين الذكيين ببيتلي</h3>
+            <p className="text-sm text-slate-500 mt-1">من هنا تتابعين حالة خادم بيتلي واتصالات ChatGPT وClaude وGemini.</p>
           </div>
-          <div className="p-8 bg-white text-center">
-            <div className="flex justify-center gap-2 mb-8">
-              <div className="w-12 h-12 rounded-xl border border-slate-200 flex items-center justify-center text-xl">✦</div>
-              <div className="w-12 h-12 rounded-xl border border-slate-200 flex items-center justify-center text-xl">✺</div>
-              <div className="w-12 h-12 rounded-xl border border-slate-200 flex items-center justify-center text-xl">◎</div>
-            </div>
-            <h4 className="text-lg font-bold text-[#25213A] mb-2">خادم MCP الخاص ببيتلي</h4>
-            <p className="max-w-2xl mx-auto text-sm text-slate-500 leading-7">
-              تم تحويل القسم من زر تجريبي إلى نقطة اتصال حقيقية. الخادم يعمل بدون تجاوز لصلاحيات Supabase، وأدوات البيانات تتطلب رمز وصول للمستخدم.
-            </p>
 
-            <div className="mt-6 max-w-2xl mx-auto rounded-xl border border-slate-200 bg-slate-50 p-4 text-right">
-              <div className="text-xs font-semibold text-slate-500 mb-2">رابط خادم MCP</div>
+          <div className="p-6 bg-white">
+            <div className="grid md:grid-cols-3 gap-4 mb-6">
+              {clientCards.map(client => {
+                const item = clients[client.key];
+                const connected = item?.connected;
+                const registered = item?.registered;
+                return (
+                  <Card key={client.key} className={connected ? "border-emerald-300 bg-emerald-50/40" : "border-slate-200"}>
+                    <CardContent className="p-5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="w-11 h-11 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-xl">{client.icon}</div>
+                        <span className={connected ? "text-xs font-bold text-emerald-700" : registered ? "text-xs font-bold text-amber-700" : "text-xs font-bold text-slate-500"}>
+                          {connected ? "● متصل" : registered ? "● مسجل ولم يبدأ اتصال نشط" : "○ غير متصل"}
+                        </span>
+                      </div>
+                      <h4 className="mt-4 font-bold text-[#25213A]">{client.name}</h4>
+                      <p className="text-xs text-slate-500 mt-1 leading-5">{client.note}</p>
+                      {item?.activeConnections > 0 && <p className="text-xs text-emerald-700 mt-3">الاتصالات النشطة: {item.activeConnections}</p>}
+                      <a href={client.url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center justify-center w-full rounded-lg bg-[#343A46] text-white px-4 py-2.5 text-xs font-semibold hover:opacity-90">
+                        فتح {client.name}
+                      </a>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="text-xs font-semibold text-slate-500 mb-2">رابط خادم MCP الموحد</div>
               <div className="flex gap-2">
                 <code className="flex-1 min-w-0 rounded-lg bg-white border border-slate-200 px-3 py-2 text-xs text-slate-700 overflow-x-auto" dir="ltr">{mcpUrl}</code>
-                <button type="button" onClick={copyUrl} className="shrink-0 rounded-lg bg-[#343A46] text-white px-4 py-2 text-xs font-semibold">
-                  نسخ الرابط
-                </button>
+                <button type="button" onClick={copyUrl} className="shrink-0 rounded-lg bg-[#343A46] text-white px-4 py-2 text-xs font-semibold">نسخ الرابط</button>
               </div>
             </div>
 
-            <button type="button" onClick={testMCP} disabled={status === "testing"} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[#343A46] text-white px-6 py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-50">
-              <PlugZap className="w-4 h-4" />{status === "testing" ? "جاري اختبار الاتصال..." : "اختبار اتصال MCP"}
-            </button>
+            <div className="flex flex-wrap gap-3 justify-center mt-5">
+              <button type="button" onClick={testMCP} disabled={status === "testing"} className="inline-flex items-center gap-2 rounded-lg bg-[#343A46] text-white px-5 py-3 text-sm font-semibold disabled:opacity-50">
+                <PlugZap className="w-4 h-4" />{status === "testing" ? "جاري اختبار الخادم..." : "اختبار خادم MCP"}
+              </button>
+              <button type="button" onClick={checkClients} disabled={checkingClients} className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white text-[#343A46] px-5 py-3 text-sm font-semibold disabled:opacity-50">
+                {checkingClients ? "جاري فحص العملاء..." : "تحديث حالة العملاء"}
+              </button>
+            </div>
 
-            <div className="mt-5 text-sm">
-              {status === "connected" && <span className="text-emerald-700 font-semibold">● متصل — {message}</span>}
-              {status === "error" && <span className="text-red-600 font-semibold">● غير متصل — {message}</span>}
-              {status === "testing" && <span className="text-slate-500">جاري الفحص...</span>}
+            <div className="mt-5 text-center text-sm">
+              {status === "connected" && <span className="text-emerald-700 font-semibold">● خادم بيتلي متصل — {message}</span>}
+              {status === "error" && <span className="text-red-600 font-semibold">● خادم بيتلي غير متصل — {message}</span>}
+              {status === "testing" && <span className="text-slate-500">جاري فحص خادم MCP...</span>}
             </div>
             {serverInfo && (
-              <div className="mt-4 text-xs text-slate-500">
-                الخادم: {serverInfo.server?.name || "Bytly MCP"} • الإصدار: {serverInfo.server?.version || "—"} • النقل: {serverInfo.transport || "—"} • الأدوات: {serverInfo.tools?.length || 0}
+              <div className="mt-3 text-center text-xs text-slate-500">
+                {serverInfo.server?.name || "Bytly MCP"} • الإصدار {serverInfo.server?.version || "—"} • {serverInfo.transport || "—"} • {serverInfo.tools?.length || 0} أدوات
               </div>
             )}
           </div>
@@ -107,14 +153,14 @@ function AdminMCPPage() {
 
       <Card className="border-slate-200 shadow-sm">
         <CardContent className="p-6">
-          <h4 className="font-bold text-[#25213A] mb-3">الأدوات المتاحة</h4>
-          <ul className="space-y-2 text-sm text-slate-600">
-            <li>• جلب الحساب الحالي وصلاحياته.</li>
-            <li>• قراءة المشاريع وفق سياسات Supabase RLS.</li>
-            <li>• قراءة إشعارات المستخدم.</li>
+          <h4 className="font-bold text-[#25213A] mb-3">كيف نقرأ الحالة؟</h4>
+          <ul className="space-y-2 text-sm text-slate-600 leading-6">
+            <li><b className="text-emerald-700">● متصل:</b> بيتلي لديه OAuth access token نشط لهذا العميل.</li>
+            <li><b className="text-amber-700">● مسجل:</b> العميل سجل نفسه في OAuth لكن لا يوجد اتصال نشط حاليًا.</li>
+            <li><b className="text-slate-500">○ غير متصل:</b> لم يتم تسجيل العميل بعد.</li>
           </ul>
           <div className="mt-4 rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800 leading-6">
-            ملاحظة: MCP لا يستدعي Claude أو Gemini أو ChatGPT من تلقاء نفسه؛ هو طبقة اتصال تجعل هذه العملاء قادرة على استخدام أدوات Bytly. كل عميل يحتاج إعداد الاتصال من جهته.
+            ملاحظة: زر «فتح» يفتح منصة المساعد. الاتصال نفسه يتم من داخل المنصة الخارجية؛ لا نستطيع إنشاء جلسة ChatGPT أو Claude نيابةً عنك، لكن لوحة بيتلي تعرض حالة الاتصال الحقيقية عندما يسجل العميل ويصدر OAuth token.
           </div>
         </CardContent>
       </Card>
