@@ -34,6 +34,7 @@ function AdminMCPPage() {
   const [status, setStatus] = useState("idle");
   const [message, setMessage] = useState("");
   const [serverInfo, setServerInfo] = useState(null);
+  const mcpUrl = "https://mybytly.com/api/mcp";
 
   const testMCP = async () => {
     setStatus("testing"); setMessage("");
@@ -41,10 +42,18 @@ function AdminMCPPage() {
       const res = await fetch("/api/mcp", { method: "GET", cache: "no-store" });
       const data = await res.json();
       if (!res.ok || data.status !== "ok") throw new Error(data?.error || "فشل اتصال MCP");
-      setServerInfo(data); setStatus("connected"); setMessage("اتصال MCP يعمل فعليًا.");
+      setServerInfo(data); setStatus("connected"); setMessage("الخادم متاح ويستجيب عبر Streamable HTTP.");
     } catch (e) {
       setStatus("error"); setMessage(e?.message || "تعذر الاتصال بخادم MCP.");
     }
+  };
+
+  const copyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(mcpUrl);
+      setMessage("تم نسخ رابط MCP.");
+      setTimeout(() => setMessage(""), 1800);
+    } catch {}
   };
 
   useEffect(() => { testMCP(); }, []);
@@ -55,7 +64,7 @@ function AdminMCPPage() {
         <CardContent className="p-0">
           <div className="px-6 py-5 border-b border-slate-200 bg-white">
             <h3 className="text-2xl font-bold text-[#25213A]">MCP</h3>
-            <p className="text-sm text-slate-500 mt-1">اتصال فعلي بين مساعدي الذكاء الاصطناعي وBytly مع حماية بيانات المستخدم.</p>
+            <p className="text-sm text-slate-500 mt-1">خادم MCP فعلي لربط أدوات وبيانات Bytly بمساعدات الذكاء الاصطناعي التي تدعم MCP.</p>
           </div>
           <div className="p-8 bg-white text-center">
             <div className="flex justify-center gap-2 mb-8">
@@ -63,28 +72,50 @@ function AdminMCPPage() {
               <div className="w-12 h-12 rounded-xl border border-slate-200 flex items-center justify-center text-xl">✺</div>
               <div className="w-12 h-12 rounded-xl border border-slate-200 flex items-center justify-center text-xl">◎</div>
             </div>
-            <h4 className="text-lg font-bold text-[#25213A] mb-2">MCP الخاص ببيتلي</h4>
-            <p className="max-w-2xl mx-auto text-sm text-slate-500 leading-7">الخادم أصبح مرتبطًا بمسار API فعلي. لا يتم اعتبار MCP مفعّلًا إلا بعد نجاح اختبار الاتصال.</p>
+            <h4 className="text-lg font-bold text-[#25213A] mb-2">خادم MCP الخاص ببيتلي</h4>
+            <p className="max-w-2xl mx-auto text-sm text-slate-500 leading-7">
+              تم تحويل القسم من زر تجريبي إلى نقطة اتصال حقيقية. الخادم يعمل بدون تجاوز لصلاحيات Supabase، وأدوات البيانات تتطلب رمز وصول للمستخدم.
+            </p>
+
+            <div className="mt-6 max-w-2xl mx-auto rounded-xl border border-slate-200 bg-slate-50 p-4 text-right">
+              <div className="text-xs font-semibold text-slate-500 mb-2">رابط خادم MCP</div>
+              <div className="flex gap-2">
+                <code className="flex-1 min-w-0 rounded-lg bg-white border border-slate-200 px-3 py-2 text-xs text-slate-700 overflow-x-auto" dir="ltr">{mcpUrl}</code>
+                <button type="button" onClick={copyUrl} className="shrink-0 rounded-lg bg-[#343A46] text-white px-4 py-2 text-xs font-semibold">
+                  نسخ الرابط
+                </button>
+              </div>
+            </div>
+
             <button type="button" onClick={testMCP} disabled={status === "testing"} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[#343A46] text-white px-6 py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-50">
               <PlugZap className="w-4 h-4" />{status === "testing" ? "جاري اختبار الاتصال..." : "اختبار اتصال MCP"}
             </button>
+
             <div className="mt-5 text-sm">
               {status === "connected" && <span className="text-emerald-700 font-semibold">● متصل — {message}</span>}
               {status === "error" && <span className="text-red-600 font-semibold">● غير متصل — {message}</span>}
               {status === "testing" && <span className="text-slate-500">جاري الفحص...</span>}
             </div>
-            {serverInfo && <div className="mt-4 text-xs text-slate-500">الخادم: {serverInfo.name} • الإصدار: {serverInfo.version} • الأدوات: {serverInfo.tools}</div>}
+            {serverInfo && (
+              <div className="mt-4 text-xs text-slate-500">
+                الخادم: {serverInfo.server?.name || "Bytly MCP"} • الإصدار: {serverInfo.server?.version || "—"} • النقل: {serverInfo.transport || "—"} • الأدوات: {serverInfo.tools?.length || 0}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
+
       <Card className="border-slate-200 shadow-sm">
         <CardContent className="p-6">
-          <h4 className="font-bold text-[#25213A] mb-3">أدوات MCP المفعلة</h4>
+          <h4 className="font-bold text-[#25213A] mb-3">الأدوات المتاحة</h4>
           <ul className="space-y-2 text-sm text-slate-600">
             <li>• جلب الحساب الحالي وصلاحياته.</li>
-            <li>• قراءة المشاريع وفق صلاحيات جلسة المستخدم.</li>
+            <li>• قراءة المشاريع وفق سياسات Supabase RLS.</li>
             <li>• قراءة إشعارات المستخدم.</li>
           </ul>
+          <div className="mt-4 rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800 leading-6">
+            ملاحظة: MCP لا يستدعي Claude أو Gemini أو ChatGPT من تلقاء نفسه؛ هو طبقة اتصال تجعل هذه العملاء قادرة على استخدام أدوات Bytly. كل عميل يحتاج إعداد الاتصال من جهته.
+          </div>
         </CardContent>
       </Card>
     </div>
