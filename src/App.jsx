@@ -115,6 +115,7 @@ const AuthenticatedApp = () => {
     <Route path="/register-auth" element={<Navigate to="/register" replace />} />
     <Route path="/auth/callback" element={<AuthCallback />} />
     <Route path="/oauth/authorize" element={<MCPConsent />} />
+    <Route path="/mcp/consent" element={<MCPConsent />} />
     <Route path="/AdminAnalytics" element={protectedRoute(AdminAnalytics,"AdminAnalytics")} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
     <Route path="/reset-password" element={<ResetPassword />} />
