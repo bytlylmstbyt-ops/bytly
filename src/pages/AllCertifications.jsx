@@ -29,11 +29,11 @@ export default function AllCertificationsPage() {
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
       if (!user) { alert("يرجى تسجيل الدخول للوصول إلى شهادات الجودة والاعتماد"); return; }
-      const { data: profile } = await supabase.from("profiles").select("role").or("id.eq." + user.id + ",user_id.eq." + user.id).maybeSingle();
-      if (profile?.role && profile.role !== "admin" && user.email?.toLowerCase() !== "bytlylmstbyt@gmail.com") {
-        alert("غير مصرح لك بالوصول لهذه الصفحة"); return;
-      }
-      const { data: allProjects, error: projectsError } = await supabase.from("projects").select("*").eq("status", "technical_approved").order("updated_at", { ascending: false });
+      const { data: profile, error: profileError } = await supabase.from("profiles").select("role").eq("user_id", user.id).maybeSingle();
+      if (profileError) console.warn("Profile lookup:", profileError);
+      const isAdmin = profile?.role === "admin" || user.email?.toLowerCase() === "bytlylmstbyt@gmail.com";
+      if (!isAdmin) { alert("غير مصرح لك بالوصول لهذه الصفحة"); return; }
+      const { data: allProjects, error: projectsError } = await supabase.from("projects").select("*").in("status", ["technical_approved", "pending_client_approval", "completed"]).order("updated_at", { ascending: false });
       if (projectsError) throw projectsError;
       setProjects(allProjects || []);
       const engineerIds = [...new Set((allProjects || []).map(p => p.assigned_engineer_id).filter(Boolean))];
