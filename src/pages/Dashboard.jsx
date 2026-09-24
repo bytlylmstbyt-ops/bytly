@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import IndividualClientDashboard from "@/components/client/IndividualClientDashboard";
+import MyContracts from "@/pages/MyContracts";
 import ClientDashboard from "@/pages/ClientDashboard";
 import EngineerDashboard from "@/pages/EngineerDashboard";
 import RoleDashboardRouter from "@/pages/RoleDashboardRouter";
@@ -260,7 +261,7 @@ export default function Dashboard() {
                   </Button>
                 </Link>
               )}
-              <Link to={createPageUrl("ContractArchive")}>
+              <Link to={createPageUrl("MyContracts")}>
                 <Button variant="outline">
                   <FileText className="w-5 h-5 ml-2" />
                   {t('dashboard.buttons.contracts')}
