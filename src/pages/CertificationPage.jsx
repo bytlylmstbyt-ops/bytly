@@ -16,29 +16,46 @@ export default function CertificationPage(){
  const [project,setProject]=useState(null),[engineer,setEngineer]=useState(null),[client,setClient]=useState(null),[consultant,setConsultant]=useState(null),[technicalReview,setTechnicalReview]=useState(null);
  const [ratings,setRatings]=useState({engineerRating:0,consultantRating:0,comment:""});
  useEffect(()=>{loadData()},[projectId]);
+ const [loadError,setLoadError]=useState("");
  const loadData=async()=>{
+  setLoading(true); setLoadError("");
   try{
-   const {data:{user}}=await supabase.auth.getUser(); if(!user) throw new Error("AUTH");
-   const {data:p,error:pe}=await supabase.from("projects").select("*").eq("id",projectId).maybeSingle(); if(pe)throw pe;if(!p)throw new Error("NOT_FOUND");
+   if(!projectId) throw new Error("MISSING_ID");
+   const {data:{user},error:authError}=await supabase.auth.getUser();
+   if(authError) throw authError;
+   if(!user) throw new Error("AUTH");
+   const {data:p,error:pe}=await supabase.from("projects").select("*").eq("id",projectId).maybeSingle();
+   if(pe) throw pe;
+   if(!p) throw new Error("NOT_FOUND");
    setProject(p);
-   const engineerResult = p.assigned_engineer_id ? await supabase.from("engineers").select("*").eq("id",p.assigned_engineer_id).maybeSingle() : {data:null,error:null};
-   const clientResult = p.client_id ? await supabase.from("clients").select("*").eq("id",p.client_id).maybeSingle() : {data:null,error:null};
-   const reviewResult = await supabase.from("technical_reviews").select("*").eq("project_id",projectId).order("created_at",{ascending:false}).limit(1).maybeSingle();
-   if (engineerResult.error) console.warn("Certification engineer lookup failed:", engineerResult.error);
-   if (clientResult.error) console.warn("Certification client lookup failed:", clientResult.error);
-   if (reviewResult.error) console.warn("Certification technical review lookup failed:", reviewResult.error);
-   setEngineer(engineerResult.data || null); setClient(clientResult.data || null); setTechnicalReview(reviewResult.data || null);
+
+   const [engineerResult,clientResult,reviewResult]=await Promise.all([
+    p.assigned_engineer_id ? supabase.from("engineers").select("*").eq("id",p.assigned_engineer_id).maybeSingle() : Promise.resolve({data:null,error:null}),
+    p.client_id ? supabase.from("clients").select("*").eq("id",p.client_id).maybeSingle() : Promise.resolve({data:null,error:null}),
+    supabase.from("technical_reviews").select("*").eq("project_id",projectId).order("created_at",{ascending:false}).limit(1).maybeSingle()
+   ]);
+   if(engineerResult.error) console.warn("Certification engineer lookup failed:",engineerResult.error);
+   if(clientResult.error) console.warn("Certification client lookup failed:",clientResult.error);
+   if(reviewResult.error) console.warn("Certification technical review lookup failed:",reviewResult.error);
+   setEngineer(engineerResult.data||null);
+   setClient(clientResult.data||null);
+   setTechnicalReview(reviewResult.data||null);
+
    if(p.technical_consultant_id){
-    const {data:x,error:consultantError}=await supabase.from("consultants").select("*").eq("id",p.technical_consultant_id).maybeSingle();
-    if(consultantError) console.warn("Certification consultant lookup failed:", consultantError);
-    setConsultant(x || null);
+    const {data:x,error:e}=await supabase.from("consultants").select("*").eq("id",p.technical_consultant_id).maybeSingle();
+    if(e) console.warn("Certification consultant lookup failed:",e);
+    setConsultant(x||null);
    }
-   const {data:adminProfile,error:adminProfileError}=await supabase.from("profiles").select("role").eq("user_id",user.id).maybeSingle();
-   if(adminProfileError) console.warn("Certification admin profile lookup failed:",adminProfileError);
+
+   const {data:adminProfile}=await supabase.from("profiles").select("role").eq("user_id",user.id).maybeSingle();
    const isAdmin=adminProfile?.role==="admin" || user.email?.toLowerCase()==="bytlylmstbyt@gmail.com";
-   if(!isAdmin && !["technical_approved","pending_client_approval","completed"].includes(p.status)) throw new Error("NOT_APPROVED");
-  }catch(err){console.error(err);alert(err.message==="NOT_APPROVED"?"المشروع لم يتم اعتماده بعد":"حدث خطأ في تحميل البيانات");navigate(-1)}
-  finally{setLoading(false)}
+   if(!isAdmin && !["technical_approved","pending_client_approval","completed"].includes(p.status)){
+    throw new Error("NOT_APPROVED");
+   }
+  }catch(err){
+   console.error("CertificationPage load error:",err);
+   setLoadError(err.message==="AUTH"?"يرجى تسجيل الدخول للوصول إلى الشهادة":err.message==="NOT_FOUND"?"لم يتم العثور على المشروع":err.message==="NOT_APPROVED"?"هذه الشهادة لم تعتمد بعد":"تعذر تحميل بيانات الشهادة. يمكنك المحاولة مرة أخرى.");
+  }finally{setLoading(false);}
  };
  const pdf=async()=>{
   setDownloading(true);
@@ -62,6 +79,7 @@ export default function CertificationPage(){
   finally{setSubmitting(false)}
  };
  if(loading)return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-12 h-12 animate-spin text-[#C9A66B]"/></div>;
+ if(loadError)return <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6" dir="rtl"><Card className="max-w-lg w-full"><CardContent className="p-8 text-center"><Award className="w-16 h-16 mx-auto text-[#C9A66B] mb-4"/><h2 className="text-xl font-bold mb-3">تعذر تحميل الشهادة</h2><p className="text-slate-600 mb-6">{loadError}</p><div className="flex gap-3 justify-center"><Button onClick={loadData} className="bg-[#1a1a2e]">إعادة المحاولة</Button><Button variant="outline" onClick={()=>navigate("/AllCertifications")}>العودة إلى جميع الشهادات</Button></div></CardContent></Card></div>;
  return <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-green-50/30 py-8 px-4" dir="rtl"><div className="max-w-5xl mx-auto space-y-6">
   <motion.div initial={{opacity:0}} animate={{opacity:1}} className="bg-gradient-to-br from-[#1a1a2e] to-[#16213e] rounded-2xl p-8 text-white shadow-2xl border-4 border-[#C9A66B] text-center">
    <Home className="w-12 h-12 mx-auto text-[#C9A66B]"/><h1 className="text-4xl font-bold mt-3">شهادة اعتماد فني</h1><p className="text-xl text-[#C9A66B]">منصة بيتلي للخدمات والاستشارات الهندسية</p>
