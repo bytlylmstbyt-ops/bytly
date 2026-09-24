@@ -5,6 +5,7 @@ const SUPABASE_KEY =
   process.env.SUPABASE_ANON_KEY ||
   process.env.VITE_SUPABASE_ANON_KEY ||
   "sb_publishable_8dsKwVbalFlUNA65FJaWlA_1ch0TKfw";
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const SERVER = {
   name: "Bytly MCP",
@@ -76,8 +77,26 @@ async function requireUser(req) {
   });
 
   const { data, error } = await supabase.auth.getUser(token);
-  if (error || !data?.user) return { error: "Invalid or expired authentication" };
-  return { supabase, user: data.user };
+  if (!error && data?.user) return { supabase, user: data.user };
+
+  if (!SERVICE_KEY) return { error: "Invalid or expired authentication" };
+  const admin = createClient(SUPABASE_URL, SERVICE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+  const hash = crypto.createHash("sha256").update(token).digest("hex");
+  const { data: oauthToken, error: oauthError } = await admin
+    .from("mcp_oauth_tokens")
+    .select("user_id,scope,expires_at,revoked_at")
+    .eq("access_token_hash", hash)
+    .is("revoked_at", null)
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle();
+  if (oauthError || !oauthToken?.user_id) return { error: "Invalid or expired authentication" };
+
+  const { data: userData, error: userError } = await admin.auth.admin.getUserById(oauthToken.user_id);
+  if (userError || !userData?.user) return { error: "Invalid or expired authentication" };
+
+  return { supabase: admin, user: userData.user };
 }
 
 async function callTool(name, args, req) {
