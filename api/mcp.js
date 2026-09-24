@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL=process.env.VITE_SUPABASE_URL||"https://wbqtgdkubrocnqnykhlt.supabase.co";
@@ -13,6 +14,13 @@ function send(res,status,body,type="application/json"){res.status(status);res.se
 const rpc=(id,result)=>({jsonrpc:"2.0",id,result});
 const rpcError=(id,code,message)=>({jsonrpc:"2.0",id,error:{code,message}});
 const tokenOf=req=>String(req.headers.authorization||"").replace(/^Bearer\s+/i,"").trim();
+async function mcpOAuthUser(token){
+ const key=process.env.SUPABASE_SERVICE_ROLE_KEY;
+ if(!key||!token)return null;
+ const s=createClient(SUPABASE_URL,key,{auth:{autoRefreshToken:false,persistSession:false}});
+ const {data,error}=await s.from("mcp_oauth_tokens").select("user_id,scope,expires_at").eq("access_token_hash",crypto.createHash("sha256").update(token).digest("hex")).is("revoked_at",null).gt("expires_at",new Date().toISOString()).maybeSingle();
+ return error||!data?null:{supabase:s,user:{id:data.user_id},scope:data.scope};
+}
 async function gateway(token,tool,args){
  const r=await fetch(GATEWAY,{method:"POST",headers:{"Authorization":"Bearer "+token,"Content-Type":"application/json"},body:JSON.stringify({tool,...(args||{})})});
  let body=null;try{body=await r.json()}catch{}
@@ -25,7 +33,7 @@ async function supabaseUser(token){
 }
 async function callTool(name,args,req){
  const token=tokenOf(req);if(!token)return {status:401,body:rpcError(null,-32001,"Authentication required")};
- const jwt=await supabaseUser(token);
+ const jwt=await supabaseUser(token) || await mcpOAuthUser(token);
  if(jwt){
    const s=jwt.supabase,u=jwt.user;
    if(name==="get_current_user"){
@@ -67,7 +75,7 @@ export default async function handler(req,res){
  if(method==="tools/list")return send(res,200,rpc(id,{tools}));
  if(method==="tools/call"){
    const result=await callTool(body?.params?.name,body?.params?.arguments||{},req);
-   if(result.status===401)res.setHeader("WWW-Authenticate",'Bearer resource_metadata="https://mybytly.com/.well-known/oauth-protected-resource"');
+   if(result.status===401)res.setHeader("WWW-Authenticate",'Bearer resource_metadata="https://www.mybytly.com/.well-known/oauth-protected-resource"');
    if(result.body){if(result.body.id===null)result.body.id=id;return send(res,result.status,result.body)}
    return send(res,result.status||200,rpc(id,{content:[{type:"text",text:JSON.stringify(result.value??null)}]}));
  }
