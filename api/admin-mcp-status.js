@@ -17,11 +17,11 @@ export default async function handler(req,res){
  const email=String(user.email||"").toLowerCase();
  const {data:profile}=await s.from("profiles").select("role").eq("user_id",user.id).maybeSingle();
  if(email!=="bytlylmstbyt@gmail.com"&&profile?.role!=="admin")return send(res,403,{error:"admin_only"});
- const {data:clients,error:cErr}=await s.from("mcp_oauth_clients").select("client_id,client_name,client_type,created_at,revoked_at").is("revoked_at",null).order("created_at",{ascending:false});
+ const {data:clients,error:cErr}=await s.from("mcp_oauth_clients").select("client_id,client_name,client_type,redirect_uris,created_at,revoked_at").is("revoked_at",null).order("created_at",{ascending:false});
  if(cErr)return send(res,500,{error:"clients_query_failed"});
  const {data:tokens,error:tErr}=await s.from("mcp_oauth_tokens").select("client_id,user_id,scope,expires_at,created_at").is("revoked_at",null).gt("expires_at",new Date().toISOString());
  if(tErr)return send(res,500,{error:"tokens_query_failed"});
- const classify=name=>{const n=String(name||"").toLowerCase();if(n.includes("claude")||n.includes("anthropic"))return"claude";if(n.includes("chatgpt")||n.includes("openai"))return"chatgpt";if(n.includes("gemini")||n.includes("google"))return"gemini";return"other"};
- const result=["chatgpt","claude","gemini"].map(key=>{const matches=(clients||[]).filter(c=>classify(c.client_name)===key);const ids=new Set(matches.map(c=>c.client_id));const active=(tokens||[]).filter(t=>ids.has(t.client_id));const latest=active.slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];return{client:key,registered:matches.length>0,connected:active.length>0,activeConnections:active.length,lastConnectedAt:latest?.created_at||null}});
+ const classify=client=>{const n=String(client?.client_name||"").toLowerCase();const uris=Array.isArray(client?.redirect_uris)?client.redirect_uris.map(x=>String(x).toLowerCase()):[];const hay=[n,...uris].join(" ");if(hay.includes("claude")||hay.includes("anthropic"))return"claude";if(hay.includes("chatgpt")||hay.includes("openai"))return"chatgpt";if(hay.includes("gemini")||hay.includes("google"))return"gemini";return"other"};
+ const result=["chatgpt","claude","gemini"].map(key=>{const matches=(clients||[]).filter(c=>classify(c)===key);const ids=new Set(matches.map(c=>c.client_id));const active=(tokens||[]).filter(t=>ids.has(t.client_id));const latest=active.slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at))[0];return{client:key,registered:matches.length>0,connected:active.length>0,activeConnections:active.length,lastConnectedAt:latest?.created_at||null}});
  return send(res,200,{status:"ok",server:"Bytly MCP",clients:result,registeredClients:(clients||[]).length,activeTokens:(tokens||[]).length,checkedAt:new Date().toISOString()});
 }
