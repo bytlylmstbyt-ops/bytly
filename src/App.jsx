@@ -27,6 +27,7 @@ import AuthCallback from './pages/AuthCallback';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import PublicLanding from './pages/PublicLanding';
+import MCPConsent from './pages/MCPConsent';
 
 const TechnicalResources = React.lazy(() => import('./pages/TechnicalResources'));
 const AdManager = React.lazy(() => import('./pages/AdManager'));
@@ -113,6 +114,7 @@ const AuthenticatedApp = () => {
     <Route path="/register" element={<Register />} />
     <Route path="/register-auth" element={<Navigate to="/register" replace />} />
     <Route path="/auth/callback" element={<AuthCallback />} />
+    <Route path="/oauth/authorize" element={<MCPConsent />} />
     <Route path="/AdminAnalytics" element={protectedRoute(AdminAnalytics,"AdminAnalytics")} />
     <Route path="/forgot-password" element={<ForgotPassword />} />
     <Route path="/reset-password" element={<ResetPassword />} />
