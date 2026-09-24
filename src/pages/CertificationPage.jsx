@@ -24,8 +24,14 @@ export default function CertificationPage(){
    const {data:{user},error:authError}=await supabase.auth.getUser();
    if(authError) throw authError;
    if(!user) throw new Error("AUTH");
-   const {data:p,error:pe}=await supabase.from("projects").select("*").eq("id",projectId).maybeSingle();
+   let p=null, pe=null;
+   ({data:p,error:pe}=await supabase.from("projects").select("*").eq("id",projectId).maybeSingle());
    if(pe) throw pe;
+   if(!p){
+    const legacy=await supabase.from("projects").select("*").eq("base44_id",projectId).maybeSingle();
+    if(legacy.error) throw legacy.error;
+    p=legacy.data;
+   }
    if(!p) throw new Error("NOT_FOUND");
    setProject(p);
 
