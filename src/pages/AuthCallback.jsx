@@ -49,9 +49,16 @@ export default function AuthCallback() {
           try {
             const providerToken = data?.session?.provider_token;
             const providerRefreshToken = data?.session?.provider_refresh_token;
-            if (providerToken) sessionStorage.setItem(`bytly_${integrationType}_provider_token`, providerToken);
-            if (providerRefreshToken) sessionStorage.setItem(`bytly_${integrationType}_provider_refresh_token`, providerRefreshToken);
-            sessionStorage.setItem("bytly_connected_integration", integrationType);
+            if (providerToken) {
+              localStorage.setItem(`bytly_${integrationType}_provider_token`, providerToken);
+            }
+            if (providerRefreshToken) {
+              localStorage.setItem(`bytly_${integrationType}_provider_refresh_token`, providerRefreshToken);
+            }
+            localStorage.setItem("bytly_connected_integration", integrationType);
+            // Keep a browser-persistent integration marker. The OAuth grant itself
+            // remains with Google; this only prevents the admin card from looking
+            // disconnected after navigating away and returning.
             sessionStorage.removeItem("bytly_pending_integration");
           } catch (_) {}
           // Persist the non-secret connection flag in Supabase user metadata so
