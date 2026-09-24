@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,41 +26,26 @@ export default function AllCertificationsPage() {
 
   const loadData = async () => {
     try {
-      const user = await base44.auth.me();
-      
-      // Check admin access
-      if (user.role !== "admin") {
-        alert("غير مصرح لك بالوصول لهذه الصفحة");
-        return;
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!user) { alert("يرجى تسجيل الدخول للوصول إلى شهادات الجودة والاعتماد"); return; }
+      const { data: profile } = await supabase.from("profiles").select("role").or("id.eq." + user.id + ",user_id.eq." + user.id).maybeSingle();
+      if (profile?.role && profile.role !== "admin" && user.email?.toLowerCase() !== "bytlylmstbyt@gmail.com") {
+        alert("غير مصرح لك بالوصول لهذه الصفحة"); return;
       }
-
-      // Load all certified projects
-      const allProjects = await base44.entities.Project.filter({
-        status: "technical_approved"
-      }, "-updated_date");
-      
-      setProjects(allProjects);
-
-      // Load engineers and clients
-      const engineerIds = [...new Set(allProjects.map(p => p.assigned_engineer_id).filter(Boolean))];
-      const clientIds = [...new Set(allProjects.map(p => p.client_id).filter(Boolean))];
-
-      const [engineersData, clientsData] = await Promise.all([
-        Promise.all(engineerIds.map(id => base44.entities.Engineer.filter({ id }))),
-        Promise.all(clientIds.map(id => base44.entities.Client.filter({ id })))
+      const { data: allProjects, error: projectsError } = await supabase.from("projects").select("*").eq("status", "technical_approved").order("updated_at", { ascending: false });
+      if (projectsError) throw projectsError;
+      setProjects(allProjects || []);
+      const engineerIds = [...new Set((allProjects || []).map(p => p.assigned_engineer_id).filter(Boolean))];
+      const clientIds = [...new Set((allProjects || []).map(p => p.client_id).filter(Boolean))];
+      const [engineersResult, clientsResult] = await Promise.all([
+        engineerIds.length ? supabase.from("engineers").select("*").in("id", engineerIds) : Promise.resolve({data:[],error:null}),
+        clientIds.length ? supabase.from("clients").select("*").in("id", clientIds) : Promise.resolve({data:[],error:null})
       ]);
-
-      const engineersMap = {};
-      engineersData.forEach(data => {
-        if (data.length > 0) engineersMap[data[0].id] = data[0];
-      });
-      setEngineers(engineersMap);
-
-      const clientsMap = {};
-      clientsData.forEach(data => {
-        if (data.length > 0) clientsMap[data[0].id] = data[0];
-      });
-      setClients(clientsMap);
+      if (engineersResult.error) throw engineersResult.error;
+      if (clientsResult.error) throw clientsResult.error;
+      setEngineers(Object.fromEntries((engineersResult.data || []).map(e => [e.id, e])));
+      setClients(Object.fromEntries((clientsResult.data || []).map(c => [c.id, c])));
 
     } catch (error) {
       console.error("Error loading data:", error);
