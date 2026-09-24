@@ -43,6 +43,7 @@ function send(res, status, body, contentType = "application/json") {
   res.setHeader("Content-Type", contentType);
   res.setHeader("Cache-Control", "no-store");
   res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Expose-Headers", "WWW-Authenticate, MCP-Protocol-Version");
   res.setHeader(
     "Access-Control-Allow-Headers",
     "Authorization, Content-Type, MCP-Protocol-Version, Accept, Last-Event-ID"
@@ -200,6 +201,10 @@ export default async function handler(req, res) {
     const name = body?.params?.name;
     const args = body?.params?.arguments || {};
     const result = await callTool(name, args, req);
+
+      if (result.status === 401) {
+      res.setHeader("WWW-Authenticate", 'Bearer resource_metadata="https://mybytly.com/.well-known/oauth-protected-resource"');
+    }
 
     if (result.body) {
       if (result.body.id === null) result.body.id = id;
