@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import IndividualClientDashboard from "@/components/client/IndividualClientDashboard";
 import InvestorClientDashboard from "@/components/client/InvestorClientDashboard";
 import SmartAlertsDashboard from "@/components/client/SmartAlertsDashboard";
@@ -29,47 +29,27 @@ export default function ClientDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const user = await base44.auth.me();
-      const [clientData] = await base44.entities.Client.filter({ email: user.email });
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const currentUser = authData?.user;
+      if (!currentUser?.id) return;
+      const { data: clientData } = await supabase.from("clients").select("*").eq("user_id", currentUser.id).maybeSingle();
       setClient(clientData);
-
-      if (clientData) {
-        // Load projects
-        const projects = await base44.entities.Project.filter({ client_id: clientData.id });
-        
-        // Load proposals for all projects
-        const allProposals = await Promise.race([base44.entities.Proposal.filter({}), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => []);
-        const myProposals = allProposals.filter(p => 
-          projects.some(proj => proj.id === p.project_id)
-        );
-
-        // Calculate stats
-        const openProjects = projects.filter(p => p.status === "open");
-        const inProgressProjects = projects.filter(p => p.status === "in_progress");
-        const completedProjects = projects.filter(p => p.status === "completed");
-        const totalSpent = completedProjects.reduce((sum, p) => sum + (p.escrow_amount || 0), 0);
-        const activeProposals = myProposals.filter(p => p.status === "pending").length;
-
-        setStats({
-          totalProjects: projects.length,
-          openProjects: openProjects.length,
-          inProgressProjects: inProgressProjects.length,
-          completedProjects: completedProjects.length,
-          totalSpent,
-          activeProposals
-        });
-
-        // Get recent projects
-        setRecentProjects(projects.slice(0, 5));
-
-        // Get recent proposals
-        setRecentProposals(myProposals.slice(0, 5));
+      if (!clientData) return;
+      const { data: projects = [] } = await supabase.from("projects").select("*").eq("client_id", clientData.id).order("created_at",{ascending:false});
+      const projectIds=projects.map(p=>p.id);
+      let myProposals=[];
+      if(projectIds.length){
+        const {data: proposals=[]}=await supabase.from("project_offers").select("*").in("project_id",projectIds);
+        myProposals=proposals;
       }
-    } catch (error) {
-      console.error("Error loading dashboard:", error);
-    } finally {
-      setLoading(false);
-    }
+      const openProjects=projects.filter(p=>p.status==="open");
+      const inProgressProjects=projects.filter(p=>p.status==="in_progress");
+      const completedProjects=projects.filter(p=>p.status==="completed");
+      const totalSpent=completedProjects.reduce((sum,p)=>sum+Number(p.escrow_amount||p.budget_max||0),0);
+      setStats({totalProjects:projects.length,openProjects:openProjects.length,inProgressProjects:inProgressProjects.length,completedProjects:completedProjects.length,totalSpent,activeProposals:myProposals.filter(p=>p.status==="pending").length});
+      setRecentProjects(projects.slice(0,5)); setRecentProposals(myProposals.slice(0,5));
+    } catch(error){ console.error("Error loading dashboard:",error); } finally { setLoading(false); }
   };
 
   if (loading) {
