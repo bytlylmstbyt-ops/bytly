@@ -9,7 +9,7 @@ import {
   TrendingUp, Users, Briefcase, DollarSign,
   Activity, Star, AlertCircle, CheckCircle, Clock, RefreshCw,
   BarChart2, Target, Layers, ArrowUpRight, ArrowDownRight,
-  ArrowUp, Download
+  ArrowUp, Download, CreditCard
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import moment from "moment";
@@ -147,7 +147,7 @@ export default function PlatformDashboard() {
 
     // اشتراكات
     const activeSubs = subscriptions.filter(s => s.status === "active");
-    const thisMonthSubs = subscriptions.filter(s => moment(s.created_date).month() === thisMonth && moment(s.created_date).year() === thisYear);
+    const thisMonthSubs = subscriptions.filter(s => moment(s.created_at).month() === thisMonth && moment(s.created_at).year() === thisYear);
     const lastMonthSubs = subscriptions.filter(s => moment(s.created_date).month() === lastMonth.month() && moment(s.created_date).year() === lastMonth.year());
     const subGrowth = lastMonthSubs.length > 0 ? Math.round(((thisMonthSubs.length - lastMonthSubs.length) / lastMonthSubs.length) * 100) : 0;
 
@@ -171,6 +171,8 @@ export default function PlatformDashboard() {
     const totalAdvertisers = advertisers.length;
     const totalSuppliers = suppliers.length;
     const activeProviderSubscriptions = providerSubscriptions.length;
+    // تقدير تكلفة التسويق المستخدمة لحساب CAC — يجب تعريفها قبل providerCAC
+    const estimatedMarketingCost = 10000;
     const providerSubscriptionRevenue = providerSubscriptions.reduce((sum,x) => sum + Number(x.subscription_amount || x.subscription_price || x.plan_price || x.amount || 0), 0);
     const providerCAC = (contractors.length + engineeringCompanies.length + advertisers.length + suppliers.length) > 0 ? Math.round(estimatedMarketingCost / (contractors.length + engineeringCompanies.length + advertisers.length + suppliers.length)) : 0;
     const thisMonthCustomers = customers.filter(x => x.created_at && moment(x.created_at).month() === thisMonth && moment(x.created_at).year() === thisYear).length;
@@ -178,7 +180,6 @@ export default function PlatformDashboard() {
     const customerGrowth = lastMonthCustomers > 0 ? Math.round(((thisMonthCustomers - lastMonthCustomers) / lastMonthCustomers) * 100) : 0;
 
     // متوسط تكلفة الاستحواذ: الإجمالي التسويقي / عدد المهندسين (تقديري)
-    const estimatedMarketingCost = 10000;
     const cac = approvedEngineers.length > 0 ? Math.round(estimatedMarketingCost / approvedEngineers.length) : 0;
 
     // توزيع حالات المشاريع
@@ -240,7 +241,7 @@ export default function PlatformDashboard() {
 
   // آخر المشاريع
   const recentProjects = useMemo(() =>
-    [...projects].sort((a, b) => new Date(b.created_at) - new Date(a.created_date)).slice(0, 5),
+    [...projects].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5),
     [projects]
   );
 
