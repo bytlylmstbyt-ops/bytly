@@ -31,14 +31,31 @@ function AccessDenied() {
 }
 
 function AdminMCPPage() {
-  const [configured, setConfigured] = useState(false);
+  const [status, setStatus] = useState("idle");
+  const [message, setMessage] = useState("");
+  const [serverInfo, setServerInfo] = useState(null);
+
+  const testMCP = async () => {
+    setStatus("testing"); setMessage("");
+    try {
+      const res = await fetch("/api/mcp", { method: "GET", cache: "no-store" });
+      const data = await res.json();
+      if (!res.ok || data.status !== "ok") throw new Error(data?.error || "فشل اتصال MCP");
+      setServerInfo(data); setStatus("connected"); setMessage("اتصال MCP يعمل فعليًا.");
+    } catch (e) {
+      setStatus("error"); setMessage(e?.message || "تعذر الاتصال بخادم MCP.");
+    }
+  };
+
+  useEffect(() => { testMCP(); }, []);
+
   return (
     <div className="space-y-6" dir="rtl">
       <Card className="border-slate-200 shadow-sm overflow-hidden">
         <CardContent className="p-0">
           <div className="px-6 py-5 border-b border-slate-200 bg-white">
             <h3 className="text-2xl font-bold text-[#25213A]">MCP</h3>
-            <p className="text-sm text-slate-500 mt-1">إعداد وصول MCP للمساعدين الذين يعملون بالذكاء الاصطناعي.</p>
+            <p className="text-sm text-slate-500 mt-1">اتصال فعلي بين مساعدي الذكاء الاصطناعي وBytly مع حماية بيانات المستخدم.</p>
           </div>
           <div className="p-8 bg-white text-center">
             <div className="flex justify-center gap-2 mb-8">
@@ -46,21 +63,27 @@ function AdminMCPPage() {
               <div className="w-12 h-12 rounded-xl border border-slate-200 flex items-center justify-center text-xl">✺</div>
               <div className="w-12 h-12 rounded-xl border border-slate-200 flex items-center justify-center text-xl">◎</div>
             </div>
-            <h4 className="text-lg font-bold text-[#25213A] mb-2">اسمح لمساعدي الذكاء الاصطناعي باستخدام تطبيقك</h4>
-            <p className="max-w-2xl mx-auto text-sm text-slate-500 leading-7">يمكن لمساعدي الذكاء الاصطناعي المصرح لهم الوصول الآمن إلى بيانات تطبيقك وقدراته عند تفعيل MCP.</p>
-            <button type="button" onClick={() => setConfigured((v) => !v)} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[#343A46] text-white px-6 py-3 text-sm font-semibold hover:opacity-90">
-              <PlugZap className="w-4 h-4" />{configured ? "تم إعداد الوصول" : "إعداد الوصول"}
+            <h4 className="text-lg font-bold text-[#25213A] mb-2">MCP الخاص ببيتلي</h4>
+            <p className="max-w-2xl mx-auto text-sm text-slate-500 leading-7">الخادم أصبح مرتبطًا بمسار API فعلي. لا يتم اعتبار MCP مفعّلًا إلا بعد نجاح اختبار الاتصال.</p>
+            <button type="button" onClick={testMCP} disabled={status === "testing"} className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[#343A46] text-white px-6 py-3 text-sm font-semibold hover:opacity-90 disabled:opacity-50">
+              <PlugZap className="w-4 h-4" />{status === "testing" ? "جاري اختبار الاتصال..." : "اختبار اتصال MCP"}
             </button>
+            <div className="mt-5 text-sm">
+              {status === "connected" && <span className="text-emerald-700 font-semibold">● متصل — {message}</span>}
+              {status === "error" && <span className="text-red-600 font-semibold">● غير متصل — {message}</span>}
+              {status === "testing" && <span className="text-slate-500">جاري الفحص...</span>}
+            </div>
+            {serverInfo && <div className="mt-4 text-xs text-slate-500">الخادم: {serverInfo.name} • الإصدار: {serverInfo.version} • الأدوات: {serverInfo.tools}</div>}
           </div>
         </CardContent>
       </Card>
       <Card className="border-slate-200 shadow-sm">
         <CardContent className="p-6">
-          <h4 className="font-bold text-[#25213A] mb-3">ما الذي يمكن لمساعد الذكاء الاصطناعي فعله بتطبيقك؟</h4>
+          <h4 className="font-bold text-[#25213A] mb-3">أدوات MCP المفعلة</h4>
           <ul className="space-y-2 text-sm text-slate-600">
-            <li>• البحث عن المعلومات واسترجاع البيانات من تطبيقك.</li>
-            <li>• اتخاذ إجراءات وإنشاء أو تحديث أو إدارة الأشياء نيابة عن المستخدم.</li>
-            <li>• طرح أسئلة على بيانات تطبيقك وتنفيذ المهام المصرح بها.</li>
+            <li>• جلب الحساب الحالي وصلاحياته.</li>
+            <li>• قراءة المشاريع وفق صلاحيات جلسة المستخدم.</li>
+            <li>• قراءة إشعارات المستخدم.</li>
           </ul>
         </CardContent>
       </Card>
