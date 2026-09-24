@@ -127,14 +127,34 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async (shouldRedirect = true) => {
+    let logoutError = null;
     if (isSupabaseConfigured && supabase) {
-      try { await supabase.signOut(); } catch (error) {
-        console.warn('Supabase logout skipped:', error?.message || error);
+      try {
+        // Explicit local scope prevents the old session from surviving in this browser.
+        const { error } = await supabase.auth.signOut({ scope: 'local' });
+        if (error) logoutError = error;
+      } catch (error) {
+        logoutError = error;
       }
     }
+
+    // Defensive cleanup for sessions left behind by older auth builds.
+    try {
+      const legacyKey = 'sb-wbqtgdkubrocnqnykhlt-auth-token';
+      window.localStorage.removeItem(legacyKey);
+      window.sessionStorage.removeItem(legacyKey);
+    } catch {}
+
     setUser(null);
     setIsAuthenticated(false);
-    if (shouldRedirect) window.location.href = '/login';
+    setAuthError(logoutError);
+
+    if (shouldRedirect) {
+      // Replace the history entry so Back cannot reopen a protected page.
+      window.location.replace('/login?logged_out=1');
+    }
+
+    return !logoutError;
   };
 
   const navigateToLogin = () => {
