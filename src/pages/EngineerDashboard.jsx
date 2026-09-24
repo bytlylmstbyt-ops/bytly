@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,39 +35,21 @@ export default function EngineerDashboard() {
   }, []);
 
   const loadData = async () => {
-    const currentUser = await base44.auth.me();
-    setUser(currentUser);
-
-    const engineerData = await base44.entities.Engineer.filter({ email: currentUser.email });
-
-    if (engineerData && engineerData.length > 0) {
-      const eng = engineerData[0];
-      setEngineer(eng);
-
-      const [projectsData, portfolioData, reviewsData, disputesData, notificationsData, proposalsData, appointmentsData] = await Promise.all([
-        base44.entities.Project.filter({ assigned_engineer_id: eng.id }),
-        base44.entities.Portfolio.filter({ engineer_id: eng.id }),
-        base44.entities.Review.filter({ engineer_id: eng.id }),
-        base44.entities.Dispute.list("-created_date"),
-        base44.entities.Notification.filter({ recipient_email: currentUser.email }, "-created_date", 5),
-        base44.entities.Proposal.filter({ engineer_id: eng.id }),
-        base44.entities.ConsultationAppointment.filter({ target_email: currentUser.email })
+    try {
+      const {data:authData,error:authError}=await supabase.auth.getUser(); if(authError) throw authError;
+      const currentUser=authData?.user; if(!currentUser?.id){setIsLoading(false);return;} setUser(currentUser);
+      const {data:eng}=await supabase.from("engineers").select("*").eq("user_id",currentUser.id).maybeSingle();
+      if(!eng){setIsLoading(false);return;} setEngineer(eng);
+      const [p,port,rev,disp,notifs,props]=await Promise.all([
+        supabase.from("projects").select("*").eq("assigned_engineer_id",eng.id),
+        supabase.from("portfolios").select("*").eq("engineer_id",eng.id),
+        supabase.from("project_reviews").select("*").eq("engineer_id",eng.id),
+        supabase.from("disputes").select("*").or("raised_by.eq."+currentUser.id+",raised_against.eq."+currentUser.id),
+        supabase.from("notifications").select("*").eq("recipient_user_id",currentUser.id).order("created_at",{ascending:false}).limit(5),
+        supabase.from("project_offers").select("*").eq("provider_user_id",currentUser.id)
       ]);
-
-      setProjects(projectsData);
-      setPortfolio(portfolioData.slice(0, 6));
-      setReviews(reviewsData);
-      setProposals(proposalsData);
-      setAppointments(appointmentsData);
-      
-      const engineerDisputes = disputesData.filter(
-        d => d.raised_by === currentUser.email || d.raised_against === currentUser.email
-      );
-      setDisputes(engineerDisputes);
-      setNotifications(notificationsData);
-    }
-    
-    setIsLoading(false);
+      setProjects(p.data||[]);setPortfolio((port.data||[]).slice(0,6));setReviews(rev.data||[]);setProposals(props.data||[]);setDisputes(disp.data||[]);setNotifications(notifs.data||[]);
+    }catch(error){console.error("Error loading engineer dashboard:",error);}finally{setIsLoading(false);}
   };
 
   const activeProjects = projects.filter(p => p.status === 'in_progress');
