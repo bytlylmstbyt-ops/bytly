@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import {
   FileText, CheckCircle, Loader2,
@@ -27,12 +27,45 @@ export default function InvoiceManager() {
 
   const loadData = async () => {
     setIsLoading(true);
-    const currentUser = await base44.auth.me();
-    setUser(currentUser);
-    const filter = currentUser.role === "admin" ? {} : { client_email: currentUser.email };
-    const data = await base44.entities.Invoice.filter(filter, "-created_date");
-    setInvoices(data);
-    setIsLoading(false);
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const currentUser = authData?.user;
+      if (!currentUser?.id) {
+        setInvoices([]);
+        setUser(null);
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role,email,full_name")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+
+      const role = String(profile?.role || currentUser.user_metadata?.role || "").toLowerCase();
+      const isAdminUser = role === "admin" || currentUser.email?.toLowerCase() === "bytlylmstbyt@gmail.com";
+
+      let query = supabase.from("invoices").select("*").order("created_at", { ascending: false });
+      if (!isAdminUser) {
+        query = query.or(`buyer_user_id.eq.${currentUser.id},issuer_user_id.eq.${currentUser.id},created_by.eq.${currentUser.id}`);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      setUser({
+        id: currentUser.id,
+        email: currentUser.email,
+        role: isAdminUser ? "admin" : role
+      });
+      setInvoices(data || []);
+    } catch (error) {
+      console.error("Error loading invoices:", error);
+      setInvoices([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Stripe direct payment
@@ -146,19 +179,19 @@ export default function InvoiceManager() {
                           </div>
 
                           <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-slate-500">
-                            {invoice.client_email && <span>📧 {invoice.client_email}</span>}
-                            {invoice.issue_date  && <span>📅 الإصدار: {invoice.issue_date}</span>}
-                            {invoice.due_date    && <span>⏰ الاستحقاق: {invoice.due_date}</span>}
+                            {invoice.buyer_email && <span>📧 {invoice.client_email}</span>}
+                            {invoice.issue_date  && <span>📅 الإصدار: {new Date(invoice.issue_date).toLocaleDateString('ar-SA')}</span>}
+                            {invoice.due_date    && <span>⏰ الاستحقاق: {new Date(invoice.due_date).toLocaleDateString('ar-SA')}</span>}
                           </div>
 
                           {/* Amounts */}
                           <div className="flex items-center gap-4 mt-3 flex-wrap">
                             <div className="text-xs text-slate-400">
-                              قبل الضريبة: <span className="text-slate-600 font-medium">{(invoice.amount || 0).toLocaleString('ar-SA')} ر.س</span>
+                              قبل الضريبة: <span className="text-slate-600 font-medium">{(invoice.subtotal || invoice.total_amount || 0).toLocaleString('ar-SA')} ر.س</span>
                             </div>
-                            {invoice.tax_amount > 0 && (
+                            {invoice.vat_amount > 0 && (
                               <div className="text-xs text-slate-400">
-                                VAT 15%: <span className="text-slate-600 font-medium">{invoice.tax_amount.toLocaleString('ar-SA')} ر.س</span>
+                                VAT 15%: <span className="text-slate-600 font-medium">{invoice.vat_amount.toLocaleString('ar-SA')} ر.س</span>
                               </div>
                             )}
                             <div className="text-base font-bold text-[#C9A66B]">
