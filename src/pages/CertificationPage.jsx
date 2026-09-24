@@ -21,13 +21,18 @@ export default function CertificationPage(){
    const {data:{user}}=await supabase.auth.getUser(); if(!user) throw new Error("AUTH");
    const {data:p,error:pe}=await supabase.from("projects").select("*").eq("id",projectId).maybeSingle(); if(pe)throw pe;if(!p)throw new Error("NOT_FOUND");
    setProject(p);
-   const [{data:e},{data:c},{data:t}]=await Promise.all([
-    supabase.from("engineers").select("*").eq("id",p.assigned_engineer_id).maybeSingle(),
-    supabase.from("clients").select("*").eq("id",p.client_id).maybeSingle(),
-    supabase.from("technical_reviews").select("*").eq("project_id",projectId).order("created_at",{ascending:false}).limit(1).maybeSingle()
-   ]);
-   setEngineer(e);setClient(c);setTechnicalReview(t);
-   if(p.technical_consultant_id){const {data:x}=await supabase.from("consultants").select("*").eq("id",p.technical_consultant_id).maybeSingle();setConsultant(x)}
+   const engineerResult = p.assigned_engineer_id ? await supabase.from("engineers").select("*").eq("id",p.assigned_engineer_id).maybeSingle() : {data:null,error:null};
+   const clientResult = p.client_id ? await supabase.from("clients").select("*").eq("id",p.client_id).maybeSingle() : {data:null,error:null};
+   const reviewResult = await supabase.from("technical_reviews").select("*").eq("project_id",projectId).order("created_at",{ascending:false}).limit(1).maybeSingle();
+   if (engineerResult.error) console.warn("Certification engineer lookup failed:", engineerResult.error);
+   if (clientResult.error) console.warn("Certification client lookup failed:", clientResult.error);
+   if (reviewResult.error) console.warn("Certification technical review lookup failed:", reviewResult.error);
+   setEngineer(engineerResult.data || null); setClient(clientResult.data || null); setTechnicalReview(reviewResult.data || null);
+   if(p.technical_consultant_id){
+    const {data:x,error:consultantError}=await supabase.from("consultants").select("*").eq("id",p.technical_consultant_id).maybeSingle();
+    if(consultantError) console.warn("Certification consultant lookup failed:", consultantError);
+    setConsultant(x || null);
+   }
    const admin=await supabase.from("profiles").select("role").eq("id",user.id).maybeSingle();
    if(admin.data?.role!=="admin" && !["technical_approved","pending_client_approval","completed"].includes(p.status)) throw new Error("NOT_APPROVED");
   }catch(err){console.error(err);alert(err.message==="NOT_APPROVED"?"المشروع لم يتم اعتماده بعد":"حدث خطأ في تحميل البيانات");navigate(-1)}
