@@ -444,10 +444,22 @@ export default function MyContracts() {
   const loadAll = async () => {
     setIsLoading(true);
     try {
-      const user = await Promise.race([
-        base44.auth.me(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("انتهت مهلة تحميل المستخدم")), 10000))
-      ]);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const authUser = authData?.user;
+      if (!authUser?.id || !authUser.email) throw new Error("لا توجد جلسة مستخدم نشطة");
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id,user_id,email,full_name,role")
+        .eq("user_id", authUser.id)
+        .maybeSingle();
+      const user = {
+        id: authUser.id,
+        user_id: authUser.id,
+        email: authUser.email.trim().toLowerCase(),
+        full_name: profileData?.full_name || authUser.user_metadata?.full_name || "",
+        role: profileData?.role || authUser.user_metadata?.role || "client"
+      };
       setCurrentUser(user);
 
       const authUserId = user?.user_id || user?.id;
