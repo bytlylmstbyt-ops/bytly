@@ -38,8 +38,9 @@ function providerIsLinked(identities, type, session) {
     let browserConnected = false;
     try {
       browserConnected =
-        sessionStorage.getItem("bytly_connected_integration") === "gmail" ||
-        Boolean(sessionStorage.getItem("bytly_gmail_provider_token"));
+        localStorage.getItem("bytly_connected_integration") === "gmail" ||
+        Boolean(localStorage.getItem("bytly_gmail_provider_token")) ||
+        Boolean(localStorage.getItem("bytly_gmail_provider_refresh_token"));
     } catch (_) {}
     return metadataConnected || browserConnected;
   }
