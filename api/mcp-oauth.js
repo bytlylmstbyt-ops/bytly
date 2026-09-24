@@ -1,12 +1,12 @@
 import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 
-const URL=process.env.VITE_SUPABASE_URL||"https://wbqtgdkubrocnqnykhlt.supabase.co";
+const SUPABASE_URL=process.env.VITE_SUPABASE_URL||"https://wbqtgdkubrocnqnykhlt.supabase.co";
 const KEY=process.env.SUPABASE_SERVICE_ROLE_KEY;
 const BASE="https://www.mybytly.com";
 const sha=s=>crypto.createHash("sha256").update(s).digest("hex");
 const rand=()=>crypto.randomBytes(32).toString("base64url");
-const db=()=>createClient(URL,KEY,{auth:{autoRefreshToken:false,persistSession:false}});
+const db=()=>createClient(SUPABASE_URL,KEY,{auth:{autoRefreshToken:false,persistSession:false}});
 const json=(res,status,b)=>{res.status(status);res.setHeader("Content-Type","application/json; charset=utf-8");res.setHeader("Cache-Control","no-store");res.setHeader("Access-Control-Allow-Origin","*");res.setHeader("Access-Control-Allow-Headers","Content-Type,Authorization");res.setHeader("Access-Control-Allow-Methods","GET,POST,OPTIONS");return res.end(JSON.stringify(b));};
 const bodyOf=req=>{if(req.body&&typeof req.body==="object")return req.body;const raw=typeof req.body==="string"?req.body:"";if(!raw)return{};try{return JSON.parse(raw)}catch{try{return Object.fromEntries(new URLSearchParams(raw).entries())}catch{return{}}}};
 const allowed=(uris,uri)=>Array.isArray(uris)&&uris.includes(uri);
