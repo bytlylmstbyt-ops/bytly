@@ -99,18 +99,19 @@ function AdminMCPPage() {
                 const item = clients[client.key];
                 const connected = item?.connected;
                 const registered = item?.registered;
+                const serverConnected = status === "connected";
                 return (
-                  <Card key={client.key} className={connected ? "border-emerald-300 bg-emerald-50/40" : "border-slate-200"}>
+                  <Card key={client.key} className={serverConnected ? "border-emerald-300 bg-emerald-50/40" : "border-slate-200"}>
                     <CardContent className="p-5">
                       <div className="flex items-start justify-between gap-3">
                         <div className="w-11 h-11 rounded-xl border border-slate-200 bg-white flex items-center justify-center text-xl">{client.icon}</div>
                         <span className={connected ? "text-xs font-bold text-emerald-700" : registered ? "text-xs font-bold text-amber-700" : "text-xs font-bold text-slate-500"}>
-                          {connected ? "● متصل" : registered ? "● مسجل ولم يبدأ اتصال نشط" : "○ غير متصل"}
+                          {serverConnected ? "● متصل" : "○ غير متصل"}
                         </span>
                       </div>
                       <h4 className="mt-4 font-bold text-[#25213A]">{client.name}</h4>
                       <p className="text-xs text-slate-500 mt-1 leading-5">{client.note}</p>
-                      {item?.activeConnections > 0 && <p className="text-xs text-emerald-700 mt-3">الاتصالات النشطة: {item.activeConnections}</p>}
+                      <p className={"text-xs mt-3 " + (connected ? "text-emerald-700" : registered ? "text-amber-700" : "text-slate-500")}>{connected ? "جلسة المساعد: متصلة" : registered ? "جلسة المساعد: مسجلة وتحتاج جلسة نشطة" : "جلسة المساعد: لم تُسجل بعد"}</p>{item?.activeConnections > 0 && <p className="text-xs text-emerald-700 mt-1">الاتصالات النشطة: {item.activeConnections}</p>}
                       <a href={client.url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center justify-center w-full rounded-lg bg-[#343A46] text-white px-4 py-2.5 text-xs font-semibold hover:opacity-90">
                         فتح {client.name}
                       </a>
@@ -155,9 +156,9 @@ function AdminMCPPage() {
         <CardContent className="p-6">
           <h4 className="font-bold text-[#25213A] mb-3">كيف نقرأ الحالة؟</h4>
           <ul className="space-y-2 text-sm text-slate-600 leading-6">
-            <li><b className="text-emerald-700">● متصل:</b> بيتلي لديه OAuth access token نشط لهذا العميل.</li>
-            <li><b className="text-amber-700">● مسجل:</b> العميل سجل نفسه في OAuth لكن لا يوجد اتصال نشط حاليًا.</li>
-            <li><b className="text-slate-500">○ غير متصل:</b> لم يتم تسجيل العميل بعد.</li>
+            <li><b className="text-emerald-700">● متصل:</b> خادم MCP في بيتلي متصل ويعمل. حالة جلسة المساعد تظهر أسفلها بشكل مستقل.</li>
+            <li><b className="text-amber-700">جلسة مسجلة:</b> العميل سجل نفسه في OAuth لكن لا توجد جلسة نشطة حاليًا.</li>
+            <li><b className="text-slate-500">○ غير متصل:</b> خادم MCP نفسه غير متصل أو لم ينجح الاختبار.</li>
           </ul>
           <div className="mt-4 rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800 leading-6">
             ملاحظة: زر «فتح» يفتح منصة المساعد. الاتصال نفسه يتم من داخل المنصة الخارجية؛ لا نستطيع إنشاء جلسة ChatGPT أو Claude نيابةً عنك، لكن لوحة بيتلي تعرض حالة الاتصال الحقيقية عندما يسجل العميل ويصدر OAuth token.
