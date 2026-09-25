@@ -14,7 +14,7 @@ import {
   Plus, MessageSquare, PanelLeftClose, PanelLeftOpen, ChevronRight, History,
 } from "lucide-react";
 
-const PLATFORM_OWNER_EMAIL = "info@mybytly.com";
+const PLATFORM_OWNER_EMAIL = "bytlylmstbyt@gmail.com";
 
 const EXAMPLE_PROMPTS = [
   "إيش المشاريع اللي تحتاج متابعة؟",
@@ -463,7 +463,7 @@ export default function AdminAIAssistant() {
     setMessages((prev) => [...prev, { role: "user", text: q, attachments: attachmentsForMessage }]);
     setAsking(true);
     try {
-      const res = await base44.functions.invoke("platformAgent", {
+      const res = await supabase.functions.invoke("admin-ai", {
         action: "message",
         message: q + attachmentNote,
         pending_plan_id: pendingPlanId,
@@ -498,7 +498,7 @@ export default function AdminAIAssistant() {
   const handleDecision = async (id, action) => {
     setDecidingId(`${id}:${action}`);
     try {
-      const res = await base44.functions.invoke("platformAgent", { action, id, execute: action === "execute" });
+      const res = await supabase.functions.invoke("admin-ai", { action, id, execute: action === "execute" });
       if (res.data?.status) {
         setMessages((prev) => prev.map((m) => (m.role === "plan" && m.id === id ? { ...m, plan: { ...m.plan, status: res.data.status, execution_result: res.data.result || res.data.note } } : m)));
         if (id === pendingPlanId && res.data.status === "executed") setPendingPlanId(null);
@@ -515,7 +515,7 @@ export default function AdminAIAssistant() {
   const refreshIndexStatus = async () => {
     setRefreshingIndex(true);
     try {
-      const res = await base44.functions.invoke("platformAgent", { action: "refresh_index_status" });
+      const res = await supabase.functions.invoke("admin-ai", { action: "refresh_index_status" });
       const data = res.data;
       const meta = data?.meta;
       const text = meta
