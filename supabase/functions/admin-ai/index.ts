@@ -136,17 +136,23 @@ Deno.serve(async (req: Request) => {
     const body = await req.json();
     const action = String(body?.action || "message");
 
-    if (action === "approve" || action === "reject") {
+    if (action === "approve" || action === "reject" || action === "execute") {
       const id = String(body?.id || "");
       if (!id) return json({ error: "معرف الخطة غير موجود." }, 400);
       return json({
         kind: "decision",
-        status: action === "approve" ? "approved" : "rejected",
+        status: action === "execute" || action === "approve" ? "approved" : "rejected",
         id,
-        note: action === "approve"
-          ? "تم اعتماد الخطة. التطبيق الفعلي على ملفات الكود يحتاج جلسة تطوير/محرر؛ لم يتم تنفيذ أي تغيير تلقائي على الإنتاج."
-          : "تم إلغاء الخطة.",
+        note: action === "execute"
+          ? "تمت الموافقة على التنفيذ. لم يتم تعديل ملفات الإنتاج تلقائيًا؛ التنفيذ البرمجي الفعلي يحتاج جلسة التطوير المرتبطة بالمستودع."
+          : action === "approve"
+            ? "تم اعتماد الخطة. التطبيق الفعلي على ملفات الكود يحتاج جلسة تطوير/محرر؛ لم يتم تنفيذ أي تغيير تلقائي على الإنتاج."
+            : "تم إلغاء الخطة.",
       });
+    }
+
+    if (action === "refresh_index_status") {
+      return json({ kind: "index_status", live_total_indexed: 0, meta: null, note: "تم توصيل المساعد بـSupabase. فهرس المشروع البرمجي التفصيلي يحتاج تكامل GitHub مستقلًا ولم يتم حذفه من الواجهة." });
     }
 
     const message = String(body?.message || "").trim();
