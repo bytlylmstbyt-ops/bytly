@@ -464,10 +464,11 @@ export default function AdminAIAssistant() {
     setAsking(true);
     try {
       const res = await supabase.functions.invoke("admin-ai", {
-        action: "message",
+        body: { action: "message",
         message: q + attachmentNote,
         pending_plan_id: pendingPlanId,
         recent_history: recentHistoryForContext(),
+        },
       });
       const data = res.data;
       if (data?.error) {
@@ -498,7 +499,7 @@ export default function AdminAIAssistant() {
   const handleDecision = async (id, action) => {
     setDecidingId(`${id}:${action}`);
     try {
-      const res = await supabase.functions.invoke("admin-ai", { action, id, execute: action === "execute" });
+      const res = await supabase.functions.invoke("admin-ai", { body: { action, id, execute: action === "execute" } });
       if (res.data?.status) {
         setMessages((prev) => prev.map((m) => (m.role === "plan" && m.id === id ? { ...m, plan: { ...m.plan, status: res.data.status, execution_result: res.data.result || res.data.note } } : m)));
         if (id === pendingPlanId && res.data.status === "executed") setPendingPlanId(null);
@@ -515,7 +516,7 @@ export default function AdminAIAssistant() {
   const refreshIndexStatus = async () => {
     setRefreshingIndex(true);
     try {
-      const res = await supabase.functions.invoke("admin-ai", { action: "refresh_index_status" });
+      const res = await supabase.functions.invoke("admin-ai", { body: { action: "refresh_index_status" } });
       const data = res.data;
       const meta = data?.meta;
       const text = meta
