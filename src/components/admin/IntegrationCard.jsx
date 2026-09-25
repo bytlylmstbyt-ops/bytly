@@ -56,24 +56,22 @@ export default function IntegrationCard({ integration, onTested }) {
       }
       let result;
       if (integration.type === "gmail") {
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
-        const providerToken =
-          sessionData?.session?.provider_token ||
-          (() => { try {
-            return localStorage.getItem("bytly_gmail_provider_token") ||
-              localStorage.getItem("bytly_google_provider_token");
-          } catch (_) { return null; } })();
-        if (!providerToken) {
-          result = { ok: false, error: "لم تتوفر جلسة Gmail صالحة. اضغط «إعادة المصادقة» ثم أعد الفحص." };
+        // Gmail is validated server-side. The browser must never provide or
+        // retain a Google provider token after OAuth callback.
+        const { data, error } = await supabase.functions.invoke("gmail-service", {
+          body: { action: "status" },
+        });
+        if (error) {
+          const message = error?.context?.error || error?.message || "تعذر التحقق من اتصال Gmail.";
+          result = { ok: false, error: message };
         } else {
-          const { data, error } = await supabase.functions.invoke("gmail-service", {
-            body: { action: "status", providerToken },
-          });
-          if (error) throw error;
           result = data?.ok === true
             ? { ok: true, message: data?.email ? `تم الاتصال فعليًا بـ Gmail: ${data.email}` : "تم الاتصال فعليًا بـ Gmail." }
-            : { ok: false, error: data?.error || "تعذر التحقق من اتصال Gmail." };
+            : {
+                ok: false,
+                error: data?.error || "تعذر التحقق من اتصال Gmail.",
+                reauthorize: data?.needs_reauth === true,
+              };
         }
       } else {
         const ok = Boolean(integration.connected);
