@@ -55,17 +55,11 @@ export default function AuthCallback() {
               }
 
               const { data: storeResult, error: storeError } = await supabase.functions.invoke("gmail-service", {
-                body: {
-                  action: "storeProviderTokens",
-                  providerToken,
-                  providerRefreshToken,
-                },
+                body: { action: "storeProviderTokens", providerToken, providerRefreshToken },
               });
 
               if (storeError) throw storeError;
-              if (!storeResult?.ok) {
-                throw new Error(storeResult?.error || "تعذر حفظ اتصال Gmail.");
-              }
+              if (!storeResult?.ok) throw new Error(storeResult?.error || "تعذر حفظ اتصال Gmail.");
 
               try { localStorage.removeItem("bytly_gmail_provider_token"); } catch (_) {}
               try { localStorage.removeItem("bytly_gmail_provider_refresh_token"); } catch (_) {}
@@ -93,7 +87,6 @@ export default function AuthCallback() {
             return;
           }
         }
-
         // A complete non-engineer form is stored locally before the magic link is
         // sent. Once the link creates the session, save that form and finish here.
         let pendingRegistration = false;
