@@ -81,18 +81,13 @@ export default function GmailManager() {
   const invoke = async (action, data) => {
     const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
     if (sessionError || !sessionData?.session) throw new Error("انتهت جلسة الدخول.");
-    const providerToken =
-      sessionData.session.provider_token ||
-      (() => { try {
-        return localStorage.getItem("bytly_gmail_provider_token") ||
-          localStorage.getItem("bytly_google_provider_token");
-      } catch (_) { return null; } })();
-    if (!providerToken) throw new Error("لم يتم العثور على صلاحية Gmail. اضغط «إعادة المصادقة» من تكامل Gmail.");
     const { data: result, error } = await supabase.functions.invoke("gmail-service", {
-      body: { action, data, providerToken },
+      body: { action, data },
     });
     if (error) throw error;
-    if (result?.ok === false) throw new Error(result.error || "تعذر تنفيذ عملية Gmail.");
+    if (result?.ok === false || result?.success === false) {
+      throw new Error(result.error || "تعذر تنفيذ عملية Gmail.");
+    }
     return result;
   };
 
