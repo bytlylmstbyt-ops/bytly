@@ -43,34 +43,51 @@ export default function AuthCallback() {
         // Integration OAuth callback: the Google/GitHub identity has just been linked.
         // Return to the admin integrations center instead of treating this as a registration callback.
         if (integrationType) {
-          // Preserve the provider OAuth tokens returned by the OAuth exchange for
-          // the integration test in this browser session. Do not write them to
-          // GitHub or the database.
           try {
-            const providerToken = data?.session?.provider_token;
-            const providerRefreshToken = data?.session?.provider_refresh_token;
-            if (providerToken) {
-              localStorage.setItem(`bytly_${integrationType}_provider_token`, providerToken);
-            }
-            if (providerRefreshToken) {
-              localStorage.setItem(`bytly_${integrationType}_provider_refresh_token`, providerRefreshToken);
-            }
-            localStorage.setItem("bytly_connected_integration", integrationType);
-            // Keep a browser-persistent integration marker. The OAuth grant itself
-            // remains with Google; this only prevents the admin card from looking
-            // disconnected after navigating away and returning.
             sessionStorage.removeItem("bytly_pending_integration");
-          } catch (_) {}
-          // Persist the non-secret connection flag in Supabase user metadata so
-          // the Admin Integrations page can distinguish Gmail integration from
-          // an ordinary Google login after a page refresh.
-          if (integrationType === "gmail") {
-            const existing = data?.session?.user?.user_metadata?.bytly_integrations || {};
-            const { error: metadataError } = await supabase.auth.updateUser({
-              data: { bytly_integrations: { ...existing, gmail: true } },
-            });
-            if (metadataError) console.warn("Could not persist Gmail connection flag:", metadataError);
+
+            if (integrationType === "gmail") {
+              const providerToken = data?.session?.provider_token;
+              const providerRefreshToken = data?.session?.provider_refresh_token;
+
+              if (!providerToken || !providerRefreshToken) {
+                throw new Error("لم تُرجع Google رمز تحديث Gmail. أعيدي ربط Gmail مع السماح بالوصول بلا اتصال.");
+              }
+
+              const { data: storeResult, error: storeError } = await supabase.functions.invoke("gmail-service", {
+                body: {
+                  action: "storeProviderTokens",
+                  providerToken,
+                  providerRefreshToken,
+                },
+              });
+
+              if (storeError) throw storeError;
+              if (!storeResult?.ok) {
+                throw new Error(storeResult?.error || "تعذر حفظ اتصال Gmail.");
+              }
+
+              try { localStorage.removeItem("bytly_gmail_provider_token"); } catch (_) {}
+              try { localStorage.removeItem("bytly_gmail_provider_refresh_token"); } catch (_) {}
+              try { localStorage.removeItem("bytly_google_provider_token"); } catch (_) {}
+              try { localStorage.removeItem("bytly_connected_integration"); } catch (_) {}
+
+              const existing = data?.session?.user?.user_metadata?.bytly_integrations || {};
+              const { error: metadataError } = await supabase.auth.updateUser({
+                data: { bytly_integrations: { ...existing, gmail: true } },
+              });
+              if (metadataError) console.warn("Could not persist Gmail connection flag:", metadataError);
+            } else {
+              try { localStorage.setItem("bytly_connected_integration", integrationType); } catch (_) {}
+            }
+          } catch (integrationError) {
+            console.error("Integration OAuth callback error:", integrationError);
+            if (active) {
+              setError(integrationError?.message || "تعذر حفظ اتصال التكامل.");
+              return;
+            }
           }
+
           if (active) {
             navigate(`/AdminControlCenter?cat=integrations&oauth=${encodeURIComponent(integrationType)}&connected=1`, { replace: true });
             return;
