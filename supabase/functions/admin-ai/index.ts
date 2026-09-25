@@ -71,7 +71,16 @@ async function collectContext(service: ReturnType<typeof createClient>, message:
   };
 
   if (wants(["مشروع","المشاريع","project","projects"])) add("projects", "projects");
-  if (wants(["مهندس","المهندسين","engineer","engineers"])) add("engineers", "engineers");
+  if (wants(["مهندس","المهندسين","engineer","engineers","معالج","المعالجين","تقييم","تقييماً","تقييمًا","rating","rated"])) {
+    jobs.push((async () => {
+      const { data, error } = await service.from("engineers")
+        .select("id,full_name,specialization,city,is_verified,is_real,status,rating,total_reviews,completed_projects")
+        .order("rating", { ascending: false, nullsFirst: false })
+        .order("total_reviews", { ascending: false, nullsFirst: false })
+        .limit(10);
+      context.engineers = error ? { error: error.message } : { count: data?.length || 0, rows: data || [] };
+    })());
+  }
   if (wants(["عميل","العملاء","customer","client","clients"])) add("clients", "clients");
   if (wants(["مستخدم","المستخدمين","users","profiles"])) add("profiles", "profiles", "id,full_name,email,role,last_login_at,last_seen_at");
   if (wants(["إشعار","الإشعارات","notification"])) add("notifications", "notifications");
@@ -152,7 +161,46 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "refresh_index_status") {
-      return json({ kind: "index_status", live_total_indexed: 0, meta: null, note: "تم توصيل المساعد بـSupabase. فهرس المشروع البرمجي التفصيلي يحتاج تكامل GitHub مستقلًا ولم يتم حذفه من الواجهة." });
+      const repository = "bytlylmstbyt-ops/bytly";
+      const treeRes = await fetch(`https://api.github.com/repos/${repository}/git/trees/HEAD?recursive=1`, {
+        headers: { Accept: "application/vnd.github+json", "User-Agent": "Bytly-Admin-AI" },
+      });
+      const tree = await treeRes.json();
+      if (!treeRes.ok) throw new Error(tree?.message || "تعذر قراءة شجرة مستودع GitHub.");
+      const items = Array.isArray(tree?.tree) ? tree.tree.filter((x: { type?: string }) => x.type === "blob") : [];
+      const paths = items.map((x: { path: string }) => x.path);
+      const pages = paths.filter((p: string) => /^src\\/pages\\//.test(p));
+      const entities = paths.filter((p: string) => /^src\\/(entities|models)\\//.test(p));
+      const functions = paths.filter((p: string) => /^supabase\\/functions\\//.test(p));
+      const sourceFiles = paths.filter((p: string) => /\\.(js|jsx|ts|tsx|sql|json|css|md)$/.test(p));
+      const meta = {
+        repository,
+        tree_sha: tree?.sha || null,
+        total_count: items.length,
+        pages_count: pages.length,
+        entities_count: entities.length,
+        functions_count: functions.length,
+        source_files_count: sourceFiles.length,
+        last_indexed_at: new Date().toISOString(),
+      };
+      const { error: indexError } = await service.from("admin_ai_project_index").insert({
+        repository,
+        tree_sha: meta.tree_sha,
+        total_count: meta.total_count,
+        pages_count: meta.pages_count,
+        entities_count: meta.entities_count,
+        functions_count: meta.functions_count,
+        source_files_count: meta.source_files_count,
+        files: items.map((x: { path: string; size?: number; sha?: string }) => ({ path: x.path, size: x.size || 0, sha: x.sha || null })),
+        last_indexed_at: meta.last_indexed_at,
+      });
+      if (indexError) throw new Error(`تعذر حفظ فهرس المشروع: ${indexError.message}`);
+      return json({
+        kind: "index_status",
+        live_total_indexed: meta.total_count,
+        meta,
+        note: `تم تحديث فهرس مستودع GitHub بنجاح من ${repository}.`,
+      });
     }
 
     const message = String(body?.message || "").trim();
