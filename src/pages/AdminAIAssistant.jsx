@@ -464,8 +464,9 @@ export default function AdminAIAssistant() {
     setAsking(true);
     try {
       const res = await supabase.functions.invoke("admin-ai", {
-        body: { action: "message",
-        message: q + attachmentNote,
+        body: {
+          action: "message",
+          message: q + attachmentNote,
         pending_plan_id: pendingPlanId,
         recent_history: recentHistoryForContext(),
         },
