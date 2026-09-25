@@ -109,7 +109,7 @@ ${JSON.stringify(context).slice(0, 28000)}
 ${prompt}`;
   const generationConfig: Record<string, unknown> = { temperature: 0.2, maxOutputTokens: 1800 };
   if (format === "json") generationConfig.responseMimeType = "application/json";
-  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + encodeURIComponent(key), {
+  const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=" + encodeURIComponent(key), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
