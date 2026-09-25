@@ -72,11 +72,52 @@ legacyBase44.integrations.Core.InvokeLLM = async ({ prompt, response_json_schema
 
 try {
   const legacyAgentConversation = legacyBase44.entities.AIAgentConversation;
-  if (legacyAgentConversation?.filter) {
-    const legacyAgentFilter = legacyAgentConversation.filter.bind(legacyAgentConversation);
-    legacyAgentConversation.filter = async (...args) => { try { return await legacyAgentFilter(...args); } catch { return []; } };
+  if (legacyAgentConversation) {
+    legacyBase44.entities.AIAgentConversation = {
+      ...legacyAgentConversation,
+      filter: async (filters = {}, sort = "-updated_at", limit = 50) => {
+        const email = filters?.asked_by_email || null;
+        let q = supabase.from("admin_ai_conversations").select("id,admin_user_id,title,messages_json,attachments_count,created_at,updated_at");
+        if (email) {
+          const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
+          if (!authData?.user || (authData.user.email || "").toLowerCase() !== String(email).toLowerCase()) return [];
+          q = q.eq("admin_user_id", authData.user.id);
+        }
+        q = q.limit(limit).order("updated_at", { ascending: !String(sort).startsWith("-") });
+        const { data, error } = await withHardTimeout(q, 10000, "انتهت مهلة قراءة سجل المحادثات");
+        if (error) throw error;
+        return data || [];
+      },
+      create: async (payload = {}) => {
+        const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
+        const user = authData?.user;
+        if (!user) throw new Error("يجب تسجيل الدخول أولاً");
+        const row = {
+          admin_user_id: user.id,
+          title: payload.title || "محادثة جديدة",
+          messages_json: typeof payload.messages_json === "string" ? JSON.parse(payload.messages_json || "[]") : (payload.messages_json || []),
+          attachments_count: Number(payload.attachments_count || 0),
+        };
+        const { data, error } = await withHardTimeout(supabase.from("admin_ai_conversations").insert(row).select("*").single(), 10000);
+        if (error) throw error;
+        return data;
+      },
+      update: async (id, payload = {}) => {
+        const patch = {
+          ...(payload.title !== undefined ? { title: payload.title } : {}),
+          ...(payload.messages_json !== undefined ? { messages_json: typeof payload.messages_json === "string" ? JSON.parse(payload.messages_json || "[]") : payload.messages_json } : {}),
+          ...(payload.attachments_count !== undefined ? { attachments_count: Number(payload.attachments_count || 0) } : {}),
+          updated_at: new Date().toISOString(),
+        };
+        const { data, error } = await withHardTimeout(supabase.from("admin_ai_conversations").update(patch).eq("id", id).select("*").single(), 10000);
+        if (error) throw error;
+        return data;
+      },
+    };
   }
-} catch {}
+} catch (conversationBridgeError) {
+  console.warn("Admin conversation Supabase bridge unavailable.", conversationBridgeError);
+}
 
 legacyBase44.integrations.Core.UploadFile = async ({ file }) => {
   if (!supabase) throw new Error('Supabase غير مهيأ');
