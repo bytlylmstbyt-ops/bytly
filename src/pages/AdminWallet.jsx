@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -32,27 +32,24 @@ export default function AdminWalletPage() {
       setLoading(true);
 
       // Load engineers
-      const engineersData = await base44.entities.Engineer.list("-created_date", 500);
+      const { data: engineersData, error: e1 } = await supabase.from("engineers").select("*").order("created_at", { ascending: false }).limit(500); if (e1) throw e1;
       setEngineers(engineersData);
 
       // Load clients
-      const clientsData = await base44.entities.Client.list("-created_date", 500);
+      const { data: clientsData, error: e2 } = await supabase.from("clients").select("*").order("created_at", { ascending: false }).limit(500); if (e2) throw e2;
       setClients(clientsData);
 
       // Load transactions
-      const transactionsData = await base44.entities.Transaction.list("-created_date", 100);
+      const { data: transactionsData, error: e3 } = await supabase.from("wallet_transactions").select("*").order("created_at", { ascending: false }).limit(100); if (e3) throw e3;
       setTransactions(transactionsData);
 
       // Load withdrawal requests
-      const withdrawalsData = await base44.entities.WithdrawalRequest.filter(
-        { status: "pending" },
-        "-created_date"
-      );
+      const { data: withdrawalsData, error: e4 } = await supabase.from("withdrawal_requests").select("*").eq("status", "pending").order("created_at", { ascending: false }); if (e4) throw e4;
       setWithdrawalRequests(withdrawalsData);
 
       // Calculate stats
       const engineersBalance = engineersData.reduce(
-        (sum, eng) => sum + (eng.available_balance || 0) + (eng.pending_balance || 0),
+        (sum, eng) => sum + (eng.wallet_balance || 0),
         0
       );
 
@@ -97,13 +94,13 @@ export default function AdminWalletPage() {
 
     try {
       // Update withdrawal request status
-      await base44.entities.WithdrawalRequest.update(request.id, {
+      await supabase.from("withdrawal_requests").update({
         status: "completed",
         completion_date: new Date().toISOString()
-      });
+      }).eq("id", request.id);
 
       // Create completion transaction
-      await base44.entities.Transaction.create({
+      await supabase.from("wallet_transactions").insert({
         user_id: request.engineer_id,
         type: "withdrawal_completed",
         amount: request.amount,
@@ -126,16 +123,16 @@ export default function AdminWalletPage() {
 
     try {
       // Update withdrawal request status
-      await base44.entities.WithdrawalRequest.update(request.id, {
+      await supabase.from("withdrawal_requests").update({
         status: "rejected",
         rejection_reason: reason,
         completion_date: new Date().toISOString()
-      });
+      }).eq("id", request.id);
 
       // Return amount to engineer's available balance
       const engineer = engineers.find(e => e.id === request.engineer_id);
       if (engineer) {
-        await base44.entities.Engineer.update(engineer.id, {
+        await supabase.from("engineers").update({
           available_balance: (engineer.available_balance || 0) + request.amount
         });
       }
