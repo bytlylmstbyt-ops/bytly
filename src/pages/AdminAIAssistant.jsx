@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { createPageUrl } from "@/utils";
@@ -324,7 +323,7 @@ export default function AdminAIAssistant() {
   const loadConversation = async (conv) => {
     if (!conv) return;
     try {
-      const parsed = conv.messages_json ? JSON.parse(conv.messages_json) : [];
+      const parsed = Array.isArray(conv.messages_json) ? conv.messages_json : (typeof conv.messages_json === "string" ? JSON.parse(conv.messages_json) : []);
       setMessages(Array.isArray(parsed) ? parsed : []);
     } catch {
       setMessages([]);
@@ -385,7 +384,8 @@ export default function AdminAIAssistant() {
         setIsAdmin(true);
         setCurrentUser(u);
         try {
-          const history = await base44.entities.AIAgentConversation.filter({ asked_by_email: u.email }, "-updated_date", 50);
+          const { data: history, error: historyError } = await supabase.from("admin_ai_conversations").select("*").eq("admin_user_id", u.id).order("updated_at", { ascending: false }).limit(50);
+          if (historyError) throw historyError;
           if (!mounted) return;
           setConversations(history || []);
           if (history?.[0]) await loadConversation(history[0]);
@@ -418,9 +418,10 @@ export default function AdminAIAssistant() {
       const messages_json = JSON.stringify(messages).slice(0, 100000);
       try {
         if (conversationId) {
-          await base44.entities.AIAgentConversation.update(conversationId, { messages_json, attachments_count: attachmentsCount });
+          await supabase.from("admin_ai_conversations").update({ messages_json: messages, attachments_count: attachmentsCount, updated_at: new Date().toISOString() }).eq("id", conversationId).eq("admin_user_id", currentUser.id);
         } else {
-          const created = await base44.entities.AIAgentConversation.create({ asked_by_email: currentUser.email, messages_json, attachments_count: attachmentsCount });
+          const { data: created, error: createError } = await supabase.from("admin_ai_conversations").insert({ admin_user_id: currentUser.id, title: messages.find((m) => m.role === "user")?.text?.slice(0, 100) || "محادثة جديدة", messages_json: messages, attachments_count: attachmentsCount }).select("id").single();
+          if (createError) throw createError;
           setConversationId(created.id);
         }
       } catch {
