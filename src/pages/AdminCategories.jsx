@@ -81,7 +81,7 @@ export default function AdminCategoriesPage() {
     setCategories(next); setEditingCategory(null); await saveAll(next, projectTypes);
   };
 
-  const addProjectType = () => {
+  const addProjectType = async () => {
     if (newProjectType.trim() && !projectTypes.includes(newProjectType.trim())) {
       const next=[...projectTypes,newProjectType.trim()]; setProjectTypes(next); setNewProjectType(""); await saveAll(categories,next);
     }
@@ -115,7 +115,7 @@ export default function AdminCategoriesPage() {
     });
   };
 
-  const addCategory = () => {
+  const addCategory = async () => {
     const trimmed = newCategory.trim();
     if (!trimmed) return;
     const id = trimmed.toLowerCase().replace(/\s+/g, "_");
