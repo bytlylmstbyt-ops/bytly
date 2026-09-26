@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,10 +16,11 @@ const configs = {
 export default function AdminStrategicChange() {
   const [active, setActive] = useState("goals"); const [rows,setRows]=useState([]); const [open,setOpen]=useState(false); const [editing,setEditing]=useState(null); const [form,setForm]=useState({});
   const cfg=configs[active];
-  const load=async()=>{ try{setRows(await base44.entities[cfg.entity].list("-created_date",100)||[])}catch(e){setRows([])} };
+  const tableMap={StrategicGoal:"strategic_goals",StrategicInitiative:"strategic_initiatives",StrategicDecision:"strategic_decisions"};
+  const load=async()=>{ try{const {data,error}=await supabase.from(tableMap[cfg.entity]).select("*").order("created_at",{ascending:false}).limit(100); if(error) throw error; setRows(data||[])}catch(e){console.error(e);setRows([])} };
   useEffect(()=>{load()},[active]);
-  const save=async()=>{ if(!form.title?.trim()) return; const payload={...form}; if(active!=="decisions") payload.progress=Number(form.progress||0); if(editing) await base44.entities[cfg.entity].update(editing.id,payload); else await base44.entities[cfg.entity].create(payload); setOpen(false);setEditing(null);setForm({});load(); };
-  const remove=async(id)=>{if(confirm("هل تريد حذف هذا السجل؟")){await base44.entities[cfg.entity].delete(id);load()}};
+  const save=async()=>{ if(!form.title?.trim()) return; const payload={...form}; if(active!=="decisions") payload.progress=Number(form.progress||0); const table=tableMap[cfg.entity]; if(editing){const {error}=await supabase.from(table).update({...payload,updated_at:new Date().toISOString()}).eq("id",editing.id); if(error) throw error;} else {const {error}=await supabase.from(table).insert(payload); if(error) throw error;} setOpen(false);setEditing(null);setForm({});load(); };
+  const remove=async(id)=>{if(confirm("هل تريد حذف هذا السجل؟")){await supabase.from(tableMap[cfg.entity]).delete().eq("id",id);load()}};
   return <div className="max-w-7xl mx-auto px-4 py-8" dir="rtl">
     <div className="flex items-start justify-between mb-7"><div><p className="text-xs text-[#C9A66B] font-medium">مجلس الإدارة</p><h1 className="text-2xl font-bold text-[#4A3F35] mt-1">التخطيط والتغيير الاستراتيجي</h1><p className="text-sm text-slate-500 mt-1">إدارة الأهداف والمبادرات والقرارات من مكان واحد.</p></div><Button onClick={()=>{setEditing(null);setForm({status:cfg.status[0],progress:0});setOpen(true)}}><Plus className="w-4 h-4 ml-2"/>إضافة {active==="goals"?"هدف":active==="initiatives"?"مبادرة":"قرار"}</Button></div>
     <div className="grid md:grid-cols-3 gap-4 mb-6">{Object.entries(configs).map(([key,c])=><Card key={key} onClick={()=>setActive(key)} className={`cursor-pointer transition-shadow ${active===key?"ring-2 ring-[#C9A66B]":"hover:shadow-md"}`}><CardContent className="p-5"><c.icon className="w-6 h-6 text-[#C9A66B] mb-3"/><h2 className="font-bold">{c.title}</h2><p className="text-sm text-slate-500 mt-1">{key==="goals"?"حدد الهدف والمؤشر والموعد ونسبة الإنجاز.":key==="initiatives"?"سجل المبادرات ومراحل التغيير ومسؤولي التنفيذ.":"سجل القرارات العليا ومواعيد المتابعة وحالة التنفيذ."}</p></CardContent></Card>)}</div>
