@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Loader2, Mail, Send, FileText, Calendar, TrendingUp, Inbox, AlertCircle } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageContext";
@@ -21,11 +21,12 @@ export default function AdminEmailCenter() {
 
   const loadStats = useCallback(async () => {
     try {
-      const [sentEmails, campaigns, templates] = await Promise.all([
-        base44.entities.SentEmail.list("-created_date", 500),
-        base44.entities.EmailCampaign.list("-created_date", 100),
-        base44.entities.EmailTemplate.list("-created_date", 100),
+      const [{ data: sentEmails, error: e1 }, { data: campaigns, error: e2 }, { data: templates, error: e3 }] = await Promise.all([
+        supabase.from("email_logs").select("*"),
+        supabase.from("email_campaigns").select("*"),
+        supabase.from("email_templates").select("*")
       ]);
+      if (e1 || e2 || e3) throw e1 || e2 || e3;
 
       const sent = sentEmails || [];
       const camps = campaigns || [];
