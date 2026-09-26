@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
 import { logProjectChange, logProjectDeletion } from "@/components/admin/logProjectChange";
 import {
@@ -63,7 +63,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
   const execUpdate = async (data, actionLabel) => {
     setLoading(true);
     try {
-      await base44.entities.Project.update(project.id, data);
+      await supabase.from("projects").update(data).eq("id", project.id);
       await logProjectChange(project, data, user);
       await onUpdated();
       setConfirmAction(null);
@@ -89,7 +89,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
   const handleDelete = async () => {
     setLoading(true);
     try {
-      await base44.entities.Project.delete(project.id);
+      await supabase.from("projects").delete().eq("id", project.id);
       await logProjectDeletion(project, user);
       await onDeleted();
       setConfirmAction(null);
@@ -108,7 +108,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
   const saveEdit = async () => {
     setLoading(true);
     try {
-      await base44.entities.Project.update(project.id, editForm);
+      await supabase.from("projects").update(editForm).eq("id", project.id);
       await logProjectChange(project, editForm, user);
       await onUpdated();
       setShowEdit(false);
@@ -122,7 +122,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
   const changeStatus = async (status) => {
     setLoading(true);
     try {
-      await base44.entities.Project.update(project.id, { status });
+      await supabase.from("projects").update({ status }).eq("id", project.id);
       await logProjectChange(project, { status }, user);
       await onUpdated();
       setShowStatus(false);
@@ -136,7 +136,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
   const assignEngineer = async (engId) => {
     setLoading(true);
     try {
-      await base44.entities.Project.update(project.id, { assigned_engineer_id: engId || null });
+      await supabase.from("projects").update({ assigned_engineer_id: engId || null }).eq("id", project.id);
       await logProjectChange(project, { assigned_engineer_id: engId || null }, user);
       await onUpdated();
       setShowAssign(false);
@@ -166,7 +166,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
       const numericForm = Object.fromEntries(
         Object.entries(financeForm).map(([k, v]) => [k, Number(v) || 0])
       );
-      await base44.entities.Project.update(project.id, numericForm);
+      await supabase.from("projects").update(numericForm).eq("id", project.id);
       await logProjectChange(project, numericForm, user);
       await onUpdated();
       setShowFinance(false);
