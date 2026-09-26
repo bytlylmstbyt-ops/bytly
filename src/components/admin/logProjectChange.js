@@ -1,6 +1,6 @@
 // Shared helper: detect status / financial changes on a Project and log them
 // to the TaskActivityLog entity for transparent admin audit.
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 
 const STATUS_FIELDS = { status: "الحالة", technical_review_status: "حالة المراجعة الفنية", payment_status: "حالة الدفع", escrow_status: "حالة الضمان" };
 
@@ -89,12 +89,22 @@ export async function logProjectChange(projectBefore, newData, actor) {
     });
   }
 
-  await Promise.all(entries.map((e) => base44.entities.TaskActivityLog.create(e).catch(() => {})));
+  await Promise.all(entries.map((e) => supabase.from("project_activity").insert({
+    project_id: e.project_id,
+    actor_user_id: actor?.id || actor?.user_id || null,
+    action: e.action_type || "updated",
+    entity_type: "project",
+    entity_id: e.project_id,
+    metadata: e,
+  }).then(() => null).catch(() => null)));
 }
 
 export async function logProjectFlagChange(project, actor, field, oldV, newV, summary) {
   if (!project?.id || !actor) return;
-  await base44.entities.TaskActivityLog.create({
+  await supabase.from("project_activity").insert({
+    project_id: project?.id || projectBefore?.id,
+    actor_user_id: actor?.id || actor?.user_id || null,
+    action: "
     project_id: project.id,
     task_id: project.id,
     task_title: project.title || "",
@@ -105,12 +115,19 @@ export async function logProjectFlagChange(project, actor, field, oldV, newV, su
     old_value: oldV == null ? "" : String(oldV),
     new_value: newV == null ? "" : String(newV),
     summary,
-  }).catch(() => {});
+  ",
+    entity_type: "project",
+    entity_id: project?.id || projectBefore?.id,
+    metadata: { field, old_value: oldV, new_value: newV, summary },
+  }).then(() => null).catch(() => null);
 }
 
 export async function logProjectDeletion(projectBefore, actor) {
   if (!projectBefore?.id || !actor) return;
-  await base44.entities.TaskActivityLog.create({
+  await supabase.from("project_activity").insert({
+    project_id: project?.id || projectBefore?.id,
+    actor_user_id: actor?.id || actor?.user_id || null,
+    action: "
     project_id: projectBefore.id,
     task_id: projectBefore.id,
     task_title: projectBefore.title || "",
@@ -121,5 +138,9 @@ export async function logProjectDeletion(projectBefore, actor) {
     old_value: projectBefore.status || "",
     new_value: "",
     summary: `تم حذف المشروع «${projectBefore.title || ""}» نهائيًا`,
-  }).catch(() => {});
+  ",
+    entity_type: "project",
+    entity_id: project?.id || projectBefore?.id,
+    metadata: { field, old_value: oldV, new_value: newV, summary },
+  }).then(() => null).catch(() => null);
 }
