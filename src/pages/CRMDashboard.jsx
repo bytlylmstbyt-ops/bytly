@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,35 +42,48 @@ export default function CRMDashboard() {
   const loadAll = async () => {
     setLoading(true);
     try {
-      const [cls, ints, fups] = await Promise.all([
-        base44.entities.Client.list('-created_date', 100),
-        base44.entities.ClientInteraction.list('-interaction_date', 100),
-        base44.entities.FollowUpMeeting.filter({ status: 'scheduled' }).catch(() => []),
+      const [{ data: cls, error: ce }, { data: ints, error: ie }] = await Promise.all([
+        supabase.from("clients").select("*").order("created_at", { ascending: false }).limit(100),
+        supabase.from("client_interactions").select("*").order("interaction_date", { ascending: false }).limit(100),
       ]);
-      setClients(cls);
-      setInteractions(ints);
-      setFollowUps(fups);
-    } catch (e) { toast.error("فشل التحميل"); }
-    finally { setLoading(false); }
+      if (ce) throw ce;
+      if (ie) throw ie;
+      setClients(cls || []);
+      setInteractions(ints || []);
+      setFollowUps((ints || []).filter(i => i.follow_up_required));
+    } catch (e) {
+      console.error("CRM Supabase load error:", e);
+      toast.error("فشل تحميل بيانات العملاء");
+    } finally { setLoading(false); }
   };
 
   const saveClient = async (form) => {
     setActionLoading(true);
     try {
+      const payload = {
+        full_name: form.full_name || form.name || "",
+        email: form.email || "",
+        phone: form.phone || null,
+        city: form.city || null,
+        country: form.country || null,
+        client_type: form.client_type || null,
+        company_name: form.company_name || form.company || null,
+        status: form.crm_status || form.status || "lead",
+        updated_at: new Date().toISOString(),
+      };
       if (editingClient) {
-        await base44.entities.Client.update(editingClient.id, form);
+        const { error } = await supabase.from("clients").update(payload).eq("id", editingClient.id);
+        if (error) throw error;
         toast.success("تم التحديث ✓");
-        if (selectedClient?.id === editingClient.id) {
-          setSelectedClient({ ...editingClient, ...form });
-        }
       } else {
-        await base44.entities.Client.create(form);
+        const { error } = await supabase.from("clients").insert({ ...payload, created_at: new Date().toISOString(), is_real: true });
+        if (error) throw error;
         toast.success("تم إضافة العميل ✓");
       }
       setClientModal(false);
       setEditingClient(null);
-      loadAll();
-    } catch (e) { toast.error("فشل الحفظ: " + e.message); }
+      await loadAll();
+    } catch (e) { toast.error("فشل الحفظ: " + (e?.message || "خطأ غير معروف")); }
     finally { setActionLoading(false); }
   };
 
