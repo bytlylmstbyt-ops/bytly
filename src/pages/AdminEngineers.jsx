@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { base44 } from "@/api/base44Client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -150,14 +149,15 @@ export default function AdminEngineersPage() {
 
       // Send notification to the engineer (in-app + email)
       try {
-        await base44.functions.invoke("reviewEngineerCertificate", {
-          engineer_id: engineer.id,
-          approved,
-          rejection_reason: approved ? "" : rejectionReason
+        await supabase.from("notifications").insert({
+          user_id: engineer.user_id,
+          type: approved ? "engineer_approved" : "engineer_rejected",
+          title: approved ? "تم اعتماد حسابك" : "تم رفض الاعتماد",
+          message: approved ? "تم اعتماد حسابك كمهندس في بيتلي." : `تم رفض الاعتماد. السبب: ${rejectionReason || "لم يتم تحديد سبب"}`,
+          is_read: false,
+          created_at: new Date().toISOString()
         });
-      } catch (notifError) {
-        console.error("Notification error:", notifError);
-      }
+      } catch (notifError) { console.error("Notification error:", notifError); }
 
       alert(approved ? "تم اعتماد المهندس وإرسال تنبيه له بنجاح" : "تم رفض الاعتماد وإرسال تنبيه للمهندس");
       setReviewEngineer(null);
