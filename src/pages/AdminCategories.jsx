@@ -32,6 +32,22 @@ export default function AdminCategoriesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingType, setEditingType] = useState(null);
   const [editingTypeValue, setEditingTypeValue] = useState("");
+  const saveAll = async (nextCategories = categories, nextProjectTypes = projectTypes) => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user?.user) throw new Error("جلسة المشرف غير صالحة");
+      const { error: ce } = await supabase.from("platform_categories").upsert(nextCategories.map((c,i)=>({id:c.id,label:c.label,active:c.active,sort_order:i,updated_at:new Date().toISOString()})));
+      if (ce) throw ce;
+      const { data: existing, error: pe } = await supabase.from("project_types").select("id,name");
+      if (pe) throw pe;
+      const existingByName = new Map((existing||[]).map(x=>[x.name,x.id]));
+      const rows = nextProjectTypes.map((name,i)=>({id:existingByName.get(name),name,active:true,sort_order:i,updated_at:new Date().toISOString()}));
+      const { error: ue } = await supabase.from("project_types").upsert(rows.filter(r=>r.id), {onConflict:"id"});
+      if (ue) throw ue;
+      const inserts = rows.filter(r=>!r.id).map(({id,...r})=>r);
+      if (inserts.length) { const {error:ie}=await supabase.from("project_types").insert(inserts); if(ie) throw ie; }
+    } catch (e) { console.error(e); alert("تعذر حفظ التغييرات"); }
+  };
 
   useEffect(() => {
     checkAdmin();
@@ -45,6 +61,9 @@ export default function AdminCategoriesPage() {
         alert("غير مصرح لك بالوصول لهذه الصفحة");
         return;
       }
+      const [{ data: cats }, { data: types }] = await Promise.all([supabase.from("platform_categories").select("*").order("sort_order"), supabase.from("project_types").select("*").order("sort_order")]);
+      if (cats?.length) setCategories(cats.map(c=>({id:c.id,label:c.label,active:c.active})));
+      if (types?.length) setProjectTypes(types.map(t=>t.name));
       setLoading(false);
     } catch (error) {
       alert("حدث خطأ في التحقق من الصلاحيات");
@@ -394,7 +413,7 @@ export default function AdminCategoriesPage() {
             </Card>
             <Card>
               <CardContent className="p-6 space-y-2">
-                <Button className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
+                <Button onClick={() => saveAll()} className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
                   <Save className="w-4 h-4 ml-2" />
                   حفظ التغييرات
                 </Button>
