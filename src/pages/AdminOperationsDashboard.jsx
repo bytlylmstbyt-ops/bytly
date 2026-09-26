@@ -8,7 +8,7 @@ const cards = [
   { title: "إدارة المشاريع", desc: "متابعة جميع المشاريع وحالات التنفيذ", icon: FolderKanban, page: "AdminProjects" },
   { title: "إدارة العروض", desc: "متابعة عروض المشاريع ومراحل التقديم", icon: GitCompare, page: "ProjectProposals" },
   { title: "مقارنة العروض", desc: "مقارنة العروض واتخاذ قرارات تشغيلية", icon: ClipboardList, page: "CompareProposals" },
-  { title: "إدارة العقود", desc: "العقود والقوالب والتعديلات والأرشيف", icon: FileText, page: "ContractManager" },
+  { title: "إدارة العقود", desc: "العقود والقوالب والتعديلات والأرشيف", icon: FileText, page: "ContractArchive" },
   { title: "تقارير التشغيل", desc: "تقارير المشاريع والمهام والأداء", icon: BarChart3, page: "TaskReports" },
 ];
 
