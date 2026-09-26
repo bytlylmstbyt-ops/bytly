@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { base44 } from "@/api/base44Client";
+
 import { Search, RefreshCw, ChevronLeft, CheckCircle2, AlertTriangle, XCircle, Tags, SlidersHorizontal, Bot } from "lucide-react";
 
 const auditRows = [
