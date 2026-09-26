@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,20 +21,16 @@ export default function AdminReviews() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const userData = await base44.auth.me();
-        setUser(userData);
-
-        if (userData.role !== 'admin') {
-          window.location.href = '/';
-          return;
-        }
-
-        const [reviewsData, engineersData, projectsData, clientsData] = await Promise.all([
-          base44.entities.Review.list('-created_date'),
-          base44.entities.Engineer.list(),
-          base44.entities.Project.list(),
-          base44.entities.Client.list()
+        const { data: authData } = await supabase.auth.getUser();
+        const { data: userData } = await supabase.from("profiles").select("*").eq("user_id", authData.user?.id).maybeSingle();
+        setUser(userData || authData.user);
+        if (userData?.role && !["admin","super_admin"].includes(userData.role)) { window.location.href = "/"; return; }
+        const [reviewsResult, engineersResult, projectsResult, clientsResult] = await Promise.all([
+          supabase.from("project_reviews").select("*").order("created_at", { ascending: false }),
+          supabase.from("engineers").select("*"), supabase.from("projects").select("*"), supabase.from("clients").select("*")
         ]);
+        if (reviewsResult.error) throw reviewsResult.error;
+        const reviewsData = reviewsResult.data || [], engineersData = engineersResult.data || [], projectsData = projectsResult.data || [], clientsData = clientsResult.data || [];
 
         setReviews(reviewsData);
         setEngineers(engineersData);
@@ -54,8 +50,8 @@ export default function AdminReviews() {
     if (!confirm("هل أنت متأكد من حذف هذا التقييم؟")) return;
 
     try {
-      await base44.entities.Review.delete(reviewId);
-      await base44.functions.invoke("updateEngineerRating", { engineer_id: engineerId });
+      await supabase.from("project_reviews").delete().eq("id", reviewId);
+      if (engineerId) { const engineer = engineers.find(e => e.id === engineerId); if (engineer) { const remaining = reviews.filter(r => r.reviewee_user_id === engineer.user_id && r.id !== reviewId); const rating = remaining.length ? remaining.reduce((s,r)=>s+(r.rating||0),0)/remaining.length : 0; await supabase.from("engineers").update({ rating, total_reviews: remaining.length, updated_at: new Date().toISOString() }).eq("id", engineerId); } }
       setReviews(reviews.filter(r => r.id !== reviewId));
     } catch (error) {
       console.error("Error:", error);
@@ -79,7 +75,7 @@ export default function AdminReviews() {
 
   const filteredReviews = reviews.filter(review => {
     const matchesSearch = 
-      getEngineerName(review.engineer_id).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      getEngineerName(review.reviewee_user_id).toLowerCase().includes(searchQuery.toLowerCase()) ||
       getProjectTitle(review.project_id).toLowerCase().includes(searchQuery.toLowerCase()) ||
       review.comment?.toLowerCase().includes(searchQuery.toLowerCase());
 
@@ -294,7 +290,7 @@ export default function AdminReviews() {
                         </div>
                         <div className="flex items-center gap-2">
                           <MessageSquare className="w-4 h-4" />
-                          <span>{getClientName(review.client_id)}</span>
+                          <span>{getClientName(review.reviewer_user_id)}</span>
                         </div>
                       </div>
 
