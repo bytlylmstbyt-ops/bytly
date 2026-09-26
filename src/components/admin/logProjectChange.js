@@ -102,22 +102,11 @@ export async function logProjectChange(projectBefore, newData, actor) {
 export async function logProjectFlagChange(project, actor, field, oldV, newV, summary) {
   if (!project?.id || !actor) return;
   await supabase.from("project_activity").insert({
-    project_id: project?.id || projectBefore?.id,
-    actor_user_id: actor?.id || actor?.user_id || null,
-    action: "
     project_id: project.id,
-    task_id: project.id,
-    task_title: project.title || "",
-    actor_email: actor.email || "",
-    actor_name: actor.full_name || actor.email || "",
-    action_type: "updated",
-    field_name: field,
-    old_value: oldV == null ? "" : String(oldV),
-    new_value: newV == null ? "" : String(newV),
-    summary,
-  ",
+    actor_user_id: actor?.id || actor?.user_id || null,
+    action: "updated",
     entity_type: "project",
-    entity_id: project?.id || projectBefore?.id,
+    entity_id: project.id,
     metadata: { field, old_value: oldV, new_value: newV, summary },
   }).then(() => null).catch(() => null);
 }
@@ -125,22 +114,15 @@ export async function logProjectFlagChange(project, actor, field, oldV, newV, su
 export async function logProjectDeletion(projectBefore, actor) {
   if (!projectBefore?.id || !actor) return;
   await supabase.from("project_activity").insert({
-    project_id: project?.id || projectBefore?.id,
-    actor_user_id: actor?.id || actor?.user_id || null,
-    action: "
     project_id: projectBefore.id,
-    task_id: projectBefore.id,
-    task_title: projectBefore.title || "",
-    actor_email: actor.email || "",
-    actor_name: actor.full_name || actor.email || "",
-    action_type: "deleted",
-    field_name: "project",
-    old_value: projectBefore.status || "",
-    new_value: "",
-    summary: `تم حذف المشروع «${projectBefore.title || ""}» نهائيًا`,
-  ",
+    actor_user_id: actor?.id || actor?.user_id || null,
+    action: "deleted",
     entity_type: "project",
-    entity_id: project?.id || projectBefore?.id,
-    metadata: { field, old_value: oldV, new_value: newV, summary },
+    entity_id: projectBefore.id,
+    metadata: {
+      title: projectBefore.title || "",
+      old_status: projectBefore.status || "",
+      summary: `تم حذف المشروع «${projectBefore.title || ""}» نهائيًا`,
+    },
   }).then(() => null).catch(() => null);
 }
