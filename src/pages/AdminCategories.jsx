@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,8 +39,9 @@ export default function AdminCategoriesPage() {
 
   const checkAdmin = async () => {
     try {
-      const user = await base44.auth.me();
-      if (user.role !== "admin") {
+      const { data: authData } = await supabase.auth.getUser();
+      const { data: user } = await supabase.from("profiles").select("*").eq("user_id", authData.user?.id).maybeSingle();
+      if (user?.role && !["admin","super_admin"].includes(user.role)) {
         alert("غير مصرح لك بالوصول لهذه الصفحة");
         return;
       }
