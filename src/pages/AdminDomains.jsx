@@ -23,7 +23,7 @@ export default function AdminDomains() {
   const dnsRecords = {
     standard: [
       { type: "A", host: "@", value: "216.24.57.1" },
-      { type: "CNAME", host: "www", value: "base44.onrender.com" },
+      { type: "CNAME", host: "www", value: "vercel.app" },
     ],
     alias: [
       { type: "CNAME", host: "em", value: "u108699198.wl199.sendgrid.net" },
@@ -44,7 +44,7 @@ export default function AdminDomains() {
   };
 
   const copyFreeUrl = async () => {
-    try { await navigator.clipboard.writeText("mybytly.base44.app"); } catch (_) {}
+    try { await navigator.clipboard.writeText("mybytly.com"); } catch (_) {}
     setCopied(true);
     setTimeout(() => setCopied(false), 1600);
   };
@@ -105,7 +105,7 @@ export default function AdminDomains() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium text-sm">{DOMAIN}</span>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[11px]"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />نشط</span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 text-[11px]">نطاق Base44</span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 text-[11px]">نطاق Bytly</span>
                   </div>
                   <p className="text-[11px] text-slate-400 mt-1">تنتهي صلاحيتها خلال 167 يوماً</p>
                 </div>
