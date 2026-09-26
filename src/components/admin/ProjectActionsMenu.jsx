@@ -63,7 +63,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
   const execUpdate = async (data, actionLabel) => {
     setLoading(true);
     try {
-      await supabase.from("projects").update(data).eq("id", project.id);
+      const { error: updateError } = await supabase.from("projects").update(data).eq("id", project.id); if (updateError) throw updateError;
       await logProjectChange(project, data, user);
       await onUpdated();
       setConfirmAction(null);
@@ -89,7 +89,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
   const handleDelete = async () => {
     setLoading(true);
     try {
-      await supabase.from("projects").delete().eq("id", project.id);
+      const { error: deleteError } = await supabase.from("projects").delete().eq("id", project.id); if (deleteError) throw deleteError;
       await logProjectDeletion(project, user);
       await onDeleted();
       setConfirmAction(null);
@@ -108,7 +108,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
   const saveEdit = async () => {
     setLoading(true);
     try {
-      await supabase.from("projects").update(editForm).eq("id", project.id);
+      const { error: editError } = await supabase.from("projects").update(editForm).eq("id", project.id); if (editError) throw editError;
       await logProjectChange(project, editForm, user);
       await onUpdated();
       setShowEdit(false);
@@ -122,7 +122,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
   const changeStatus = async (status) => {
     setLoading(true);
     try {
-      await supabase.from("projects").update({ status }).eq("id", project.id);
+      const { error: statusError } = await supabase.from("projects").update({ status }).eq("id", project.id); if (statusError) throw statusError;
       await logProjectChange(project, { status }, user);
       await onUpdated();
       setShowStatus(false);
@@ -136,7 +136,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
   const assignEngineer = async (engId) => {
     setLoading(true);
     try {
-      await supabase.from("projects").update({ assigned_engineer_id: engId || null }).eq("id", project.id);
+      const { error: assignError } = await supabase.from("projects").update({ assigned_engineer_id: engId || null }).eq("id", project.id); if (assignError) throw assignError;
       await logProjectChange(project, { assigned_engineer_id: engId || null }, user);
       await onUpdated();
       setShowAssign(false);
@@ -166,7 +166,7 @@ export default function ProjectActionsMenu({ project, engineers, onView, onUpdat
       const numericForm = Object.fromEntries(
         Object.entries(financeForm).map(([k, v]) => [k, Number(v) || 0])
       );
-      await supabase.from("projects").update(numericForm).eq("id", project.id);
+      const { error: financeError } = await supabase.from("projects").update(numericForm).eq("id", project.id); if (financeError) throw financeError;
       await logProjectChange(project, numericForm, user);
       await onUpdated();
       setShowFinance(false);
