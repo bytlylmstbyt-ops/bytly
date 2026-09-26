@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,11 +28,12 @@ export default function AdminSubscriptionControl() {
 
   const loadData = async () => {
     try {
-      const [engineersList, clientsList, firmsList] = await Promise.all([
-        base44.entities.Engineer.filter({}),
-        base44.entities.Client.filter({}),
-        base44.entities.EngineeringFirm.filter({})
+      const [{ data: engineersList, error: e1 }, { data: clientsList, error: e2 }, { data: firmsList, error: e3 }] = await Promise.all([
+        supabase.from("engineers").select("*"),
+        supabase.from("clients").select("*"),
+        supabase.from("engineering_firms").select("*")
       ]);
+      if (e1 || e2 || e3) throw e1 || e2 || e3;
 
       setEngineers(engineersList);
       setClients(clientsList);
@@ -51,11 +52,11 @@ export default function AdminSubscriptionControl() {
       };
 
       if (userType === "engineer") {
-        await base44.entities.Engineer.update(userId, updates);
+        await supabase.from("engineers").update(updates).eq("id", userId);
       } else if (userType === "client") {
-        await base44.entities.Client.update(userId, updates);
+        await supabase.from("clients").update(updates).eq("id", userId);
       } else if (userType === "firm") {
-        await base44.entities.EngineeringFirm.update(userId, updates);
+        await supabase.from("engineering_firms").update(updates).eq("id", userId);
       }
 
       toast.success("تم تحديث حالة الاشتراك");
@@ -103,11 +104,11 @@ export default function AdminSubscriptionControl() {
     try {
       let currentUser;
       if (userType === "engineer") {
-        [currentUser] = await base44.entities.Engineer.filter({ id: userId });
+        const { data } = await supabase.from("engineers").select("*").eq("id", userId).limit(1); currentUser = data?.[0];
       } else if (userType === "client") {
-        [currentUser] = await base44.entities.Client.filter({ id: userId });
+        const { data } = await supabase.from("clients").select("*").eq("id", userId).limit(1); currentUser = data?.[0];
       } else {
-        [currentUser] = await base44.entities.EngineeringFirm.filter({ id: userId });
+        const { data } = await supabase.from("engineering_firms").select("*").eq("id", userId).limit(1); currentUser = data?.[0];
       }
 
       const currentEndDate = currentUser.trial_end_date 
