@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
   DollarSign, TrendingUp, ShoppingCart, Briefcase, Download, Filter
@@ -22,20 +22,12 @@ export default function AdminRevenueReport() {
   const loadData = async () => {
     setIsLoading(true);
     
-    const currentUser = await base44.auth.me();
-    setUser(currentUser);
-
-    // Only admins can view
-    if (currentUser.role !== "admin") {
-      alert("غير مصرح لك بالدخول");
-      window.location.href = "/";
-      return;
-    }
-
-    const revenuesData = await base44.entities.PlatformRevenue.filter(
-      { status: "collected" },
-      "-payment_date"
-    );
+    const { data: currentUser } = await supabase.auth.getUser();
+    const { data: profile } = await supabase.from("profiles").select("*").eq("user_id", currentUser.user?.id).maybeSingle();
+    setUser(profile || currentUser.user);
+    if (profile?.role && !["admin","super_admin"].includes(profile.role)) { window.location.href = "/"; return; }
+    const { data: revenuesData, error } = await supabase.from("revenue_ledger").select("*").eq("status", "collected").order("recognized_at", { ascending: false });
+    if (error) throw error;
     setRevenues(revenuesData);
     setIsLoading(false);
   };
@@ -45,7 +37,7 @@ export default function AdminRevenueReport() {
     return rev.source_type === filterSource;
   });
 
-  const totalRevenue = filteredRevenues.reduce((sum, rev) => sum + (rev.commission_amount || 0), 0);
+  const totalRevenue = filteredRevenues.reduce((sum, rev) => sum + (rev.platform_revenue_amount || 0), 0);
   const projectRevenue = filteredRevenues
     .filter(r => r.source_type === "project_milestone")
     .reduce((sum, rev) => sum + (rev.commission_amount || 0), 0);
