@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,16 +19,32 @@ export default function AdminConversationsCenter() {
   const load = async () => {
     setLoading(true); setError("");
     try {
-      const currentUser = await base44.auth.me();
-      setUser(currentUser);
-      const [convs, msgs] = await Promise.all([
-        base44.entities.Conversation.list("-last_message_date", 500),
-        base44.entities.Message.list("-created_date", 500),
+      const [{ data: authData, error: authError }, { data: convs, error: convError }, { data: msgs, error: msgError }] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase.from("conversations").select("*").order("created_at", { ascending: false }).limit(500),
+        supabase.from("messages").select("*").order("created_at", { ascending: false }).limit(500),
       ]);
-      setConversations(convs || []); setMessages(msgs || []);
+      if (authError) throw authError;
+      if (convError) throw convError;
+      if (msgError) throw msgError;
+      const latestByConversation = {};
+      (msgs || []).forEach(m => {
+        if (!latestByConversation[m.conversation_id]) latestByConversation[m.conversation_id] = m;
+      });
+      const enriched = (convs || []).map(c => ({
+        ...c,
+        name: c.title || "محادثة بدون اسم",
+        type: c.status || "active",
+        last_message: latestByConversation[c.id]?.body || "",
+        last_message_date: latestByConversation[c.id]?.created_at || c.created_at,
+        participants: [],
+      }));
+      setUser(authData?.user || null);
+      setConversations(enriched);
+      setMessages(msgs || []);
     } catch (e) {
-      console.error("Admin conversations load error:", e);
-      setError("تعذر تحميل مركز المحادثات. تأكدي من صلاحية الحساب ثم حاولي مرة أخرى.");
+      console.error("Admin conversations Supabase load error:", e);
+      setError("تعذر تحميل مركز المحادثات من قاعدة البيانات. تحققي من صلاحيات المشرف ثم حاولي مرة أخرى.");
     } finally { setLoading(false); }
   };
 
@@ -38,7 +54,7 @@ export default function AdminConversationsCenter() {
     const map = {}; messages.forEach(m => { map[m.conversation_id] = (map[m.conversation_id] || 0) + 1; }); return map;
   }, [messages]);
 
-  const unreadCount = useMemo(() => messages.filter(m => !m.is_read && m.sender_email !== user?.email).length, [messages, user]);
+  const unreadCount = useMemo(() => messages.filter(m => m.sender_user_id !== user?.id).length, [messages, user]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase(); if (!q) return conversations;
