@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,36 +25,22 @@ export default function AdminReportsPage() {
 
   const loadReports = async () => {
     try {
-      const user = await base44.auth.me();
-      
-      if (user.role !== "admin") {
-        alert("غير مصرح لك بالوصول لهذه الصفحة");
-        return;
-      }
-
-      // Load all data
-      const [
-        engineers,
-        clients,
-        projects,
-        transactions,
-        withdrawalRequests,
-        reviews
-      ] = await Promise.all([
-        base44.entities.Engineer.list(),
-        base44.entities.Client.list(),
-        base44.entities.Project.list(),
-        base44.entities.Transaction.list(),
-        base44.entities.WithdrawalRequest.list(),
-        base44.entities.Review.list()
+      const { data: authData } = await supabase.auth.getUser();
+      const { data: user } = await supabase.from("profiles").select("*").eq("user_id", authData.user?.id).maybeSingle();
+      if (user?.role && !["admin","super_admin"].includes(user.role)) { alert("غير مصرح لك بالوصول لهذه الصفحة"); return; }
+      const [engineersR, clientsR, projectsR, transactionsR, withdrawalR, reviewsR] = await Promise.all([
+        supabase.from("engineers").select("*"), supabase.from("clients").select("*"), supabase.from("projects").select("*"),
+        supabase.from("wallet_transactions").select("*"), supabase.from("withdrawal_requests").select("*"), supabase.from("project_reviews").select("*")
       ]);
+      [engineersR, clientsR, projectsR, transactionsR, withdrawalR, reviewsR].forEach(r => { if (r.error) throw r.error; });
+      const engineers=engineersR.data||[], clients=clientsR.data||[], projects=projectsR.data||[], transactions=transactionsR.data||[], withdrawalRequests=withdrawalR.data||[], reviews=reviewsR.data||[];
 
       // Calculate engineer statistics
       const engineersStats = engineers.map(engineer => {
         const engineerProjects = projects.filter(
-          p => p.assigned_engineer_id === engineer.id && p.status === "completed"
+          p => p.assigned_engineer_id === engineer.id && ((p.status === "completed" || p.lifecycle_status === "completed") || p.lifecycle_status === "completed")
         );
-        const engineerReviews = reviews.filter(r => r.engineer_id === engineer.id);
+        const engineerReviews = reviews.filter(r => r.reviewee_user_id === engineer.user_id);
         const avgRating = engineerReviews.length > 0
           ? engineerReviews.reduce((sum, r) => sum + r.rating, 0) / engineerReviews.length
           : 0;
@@ -73,7 +59,7 @@ export default function AdminReportsPage() {
 
       // Calculate client statistics
       const clientsStats = clients.map(client => {
-        const clientProjects = projects.filter(p => p.client_id === client.id);
+        const clientProjects = projects.filter(p => (p.client_id === client.id || p.client_user_id === client.user_id));
         const totalSpent = clientProjects.reduce(
           (sum, p) => sum + (p.escrow_amount || 0), 0
         );
@@ -128,7 +114,7 @@ export default function AdminReportsPage() {
         approvedAmount: approvedWithdrawals.reduce((sum, w) => sum + w.amount, 0),
         rejectedAmount: rejectedWithdrawals.reduce((sum, w) => sum + w.amount, 0),
         pendingAmount: pendingWithdrawals.reduce((sum, w) => sum + w.amount, 0),
-        totalRevenue: transactions.filter(t => t.type === "commission" && t.status === "completed")
+        totalRevenue: transactions.filter(t => t.type === "commission" && (t.status === "completed" || t.status === "posted"))
           .reduce((sum, t) => sum + t.amount, 0)
       };
 
