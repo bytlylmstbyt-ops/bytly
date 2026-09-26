@@ -85,11 +85,11 @@ export default function AdminSubscriptionControl() {
       };
 
       if (userType === "engineer") {
-        await base44.entities.Engineer.update(userId, updates);
+        await await supabase.from("engineers").update(updates).eq("id", userId);
       } else if (userType === "client") {
-        await base44.entities.Client.update(userId, updates);
+        await await supabase.from("clients").update(updates).eq("id", userId);
       } else if (userType === "firm") {
-        await base44.entities.EngineeringFirm.update(userId, updates);
+        await await supabase.from("engineering_firms").update(updates).eq("id", userId);
       }
 
       toast.success(`تم تحويل المستخدم إلى باقة ${planType === "monthly" ? "شهرية" : "سنوية"}`);
