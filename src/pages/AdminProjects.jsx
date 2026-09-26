@@ -82,7 +82,7 @@ export default function AdminProjects() {
   const handleExport = async () => {
     setExporting(true);
     try {
-      // التصدير مستقل عن Base44: يقرأ البيانات الحالية مباشرة من Supabase ثم يطبق نفس الفلاتر.
+      // التصدير مستقل عن Supabase: يقرأ البيانات الحالية مباشرة من قاعدة البيانات ثم يطبق نفس الفلاتر.
       const [{ data: supabaseProjects, error: projectsError }, { data: supabaseClients, error: clientsError }, { data: supabaseEngineers, error: engineersError }] = await Promise.all([
         supabase.from("projects").select("*"),
         supabase.from("clients").select("id,full_name"),
