@@ -87,7 +87,7 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const removeProjectType = (type) => {
+  const removeProjectType = async (type) => {
     const next=projectTypes.filter(t => t !== type); setProjectTypes(next); await saveAll(categories,next);
   };
 
@@ -96,7 +96,7 @@ export default function AdminCategoriesPage() {
     setEditingTypeValue(oldType);
   };
 
-  const saveProjectType = (oldType) => {
+  const saveProjectType = async (oldType) => {
     const trimmed = editingTypeValue.trim();
     if (trimmed && !projectTypes.includes(trimmed)) {
       const next=projectTypes.map(t => t === oldType ? trimmed : t); setProjectTypes(next); await saveAll(categories,next);
@@ -126,13 +126,13 @@ export default function AdminCategoriesPage() {
     const next=[...categories,{id,label:trimmed,active:true}]; setCategories(next); setNewCategory(""); await saveAll(next,projectTypes);
   };
 
-  const deleteCategory = (categoryId) => {
+  const deleteCategory = async (categoryId) => {
     if (confirm("هل أنت متأكد من حذف هذا التصنيف؟")) {
       const next=categories.filter(c => c.id !== categoryId); setCategories(next); await saveAll(next,projectTypes);
     }
   };
 
-  const toggleAllCategories = (active) => {
+  const toggleAllCategories = async (active) => {
     const next=categories.map(c => ({ ...c, active })); setCategories(next); await saveAll(next,projectTypes);
   };
 
