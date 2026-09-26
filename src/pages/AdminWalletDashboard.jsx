@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,8 @@ export default function AdminWalletDashboard() {
   const loadDashboardData = async () => {
     try {
       // Load all transactions
-      const transactions = await base44.entities.Transaction.filter({}, "-created_date", 500);
+      const { data: transactions, error: txError } = await supabase.from("wallet_transactions").select("*").order("created_at", { ascending: false }).limit(500);
+      if (txError) throw txError;
       setAllTransactions(transactions);
 
       // Filter platform commission transactions
@@ -34,9 +35,7 @@ export default function AdminWalletDashboard() {
       setPlatformTransactions(commissions);
 
       // Load user data
-      const engineersList = await base44.entities.Engineer.filter({});
-      const clientsList = await base44.entities.Client.filter({});
-      const firmsList = await base44.entities.EngineeringFirm.filter({});
+      const [{ data: engineersList }, { data: clientsList }, { data: firmsList }] = await Promise.all([supabase.from("engineers").select("*"), supabase.from("clients").select("*"), supabase.from("engineering_firms").select("*")]);
 
       setEngineers(engineersList);
       setClients(clientsList);
@@ -53,7 +52,7 @@ export default function AdminWalletDashboard() {
   
   // Calculate total wallet balances
   const totalEngineerBalances = engineers.reduce((sum, e) => 
-    sum + (e.available_balance || 0) + (e.pending_balance || 0), 0
+    sum + (e.wallet_balance || 0), 0
   );
   const totalClientBalances = clients.reduce((sum, c) => sum + (c.wallet_balance || 0), 0);
   const totalFirmBalances = firms.reduce((sum, f) => sum + (f.wallet_balance || 0), 0);
@@ -74,7 +73,7 @@ export default function AdminWalletDashboard() {
   const filteredTransactions = allTransactions.filter(t => {
     const matchesSearch = 
       t.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.user_email?.toLowerCase().includes(searchTerm.toLowerCase());
+      t.user_id?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === "all" || t.type === filterType;
     return matchesSearch && matchesType;
   });
