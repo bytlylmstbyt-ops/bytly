@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,10 +35,11 @@ export default function AdminRefundControl() {
 
   const loadData = async () => {
     try {
-      const [projectsList, milestonesList] = await Promise.all([
-        base44.entities.Project.filter({ status: { $in: ["in_progress", "disputed", "cancelled"] } }),
-        base44.entities.ProjectMilestone.filter({ payment_released: false })
+      const [{ data: projectsList, error: pError }, { data: milestonesList, error: mError }] = await Promise.all([
+        supabase.from("projects").select("*").in("status", ["in_progress", "disputed", "cancelled"]),
+        supabase.from("project_milestones").select("*").eq("payment_released", false)
       ]);
+      if (pError || mError) throw pError || mError;
 
       setProjects(projectsList);
       setMilestones(milestonesList);
@@ -64,15 +65,17 @@ export default function AdminRefundControl() {
 
     setProcessing(true);
     try {
-      const response = await base44.functions.invoke('processRefund', {
-        milestone_id: selectedMilestone.id,
-        project_id: selectedMilestone.project_id,
-        refund_type: refundType,
-        refund_amount: refundType === "full" ? selectedMilestone.amount : parseFloat(refundAmount),
-        reason: refundReason
+      const { data: response, error: refundError } = await supabase.functions.invoke("financial-operations", {
+        body: {
+          action: "resolve",
+          milestone_id: selectedMilestone.id,
+          resolution: refundType === "full" ? "refund_full" : "refund_partial",
+          refund_amount: refundType === "full" ? selectedMilestone.amount : parseFloat(refundAmount),
+          notes: refundReason
+        }
       });
-
-      if (response.data.success) {
+      if (refundError) throw refundError;
+      if (response && !response.error) {
         toast.success("تم استرجاع المبلغ بنجاح");
         setSelectedMilestone(null);
         setRefundAmount("");
