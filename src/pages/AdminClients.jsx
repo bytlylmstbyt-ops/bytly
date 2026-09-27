@@ -84,6 +84,11 @@ export default function AdminClientsPage() {
         baseClients = [...baseClients, ...missing];
       }
 
+      const { data: projectsIndex, error: projectsIndexError } = await supabase
+        .from("projects")
+        .select("id,client_user_id")
+        .limit(2000);
+
       // التفاعلات تُحمّل بشكل مستقل؛ فشلها لا يمنع إدارة العملاء من العمل.
       const { data: interactionsData, error: interactionsError } = await supabase
         .from("client_interactions")
@@ -95,7 +100,7 @@ export default function AdminClientsPage() {
       const enriched = baseClients.map(c => ({
         ...c,
         interactionsCount: safeInteractions.filter(i => i.client_email === c.email).length,
-        projectsCount: c.user_id ? undefined : 0,
+        projectsCount: (projectsIndexError ? [] : (projectsIndex || [])).filter(p => p.client_user_id === c.user_id).length,
       }));
 
       setClients(enriched.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)));
