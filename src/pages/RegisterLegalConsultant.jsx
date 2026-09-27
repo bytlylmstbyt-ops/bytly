@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
 import { saveRegistration } from "@/lib/registrationService";
 import EmailConfirmationPending from "@/components/registration/EmailConfirmationPending";
@@ -67,11 +66,6 @@ export default function RegisterLegalConsultantPage() {
           confidentiality_clause: "تم الموافقة", responsibility_clause: "تم الموافقة", intellectual_property_clause: "تم الموافقة", accepted: true, accepted_date: new Date().toISOString()
         }}
       });
-      try { base44.functions.invoke("notifyNewUserSignup", { role: "legal_consultant", data: legalConsultant }).catch((err) => console.error("Background notification failed:", err)); }
-      catch (notifyErr) { console.error("notifyNewUserSignup legal consultant failed:", notifyErr); }
-      try { base44.functions.invoke("sendWelcomeEmail", { role: "legal_consultant", id: legalConsultant.id }).catch((err) => console.error("Background notification failed:", err)); }
-      catch (welcomeErr) { console.error("sendWelcomeEmail legal consultant failed:", welcomeErr); }
-
       alert("تم تقديم طلب التسجيل بنجاح! سيتم مراجعته من قبل الإدارة.");
       navigate(createPageUrl("RegistrationSuccess"));
     } catch (error) {
