@@ -221,7 +221,6 @@ export default function RegisterFirm() {
           </CardHeader>
 
           <CardContent className="px-5 md:px-8 pb-6 md:pb-8">
-            <div className="space-y-2"><label>كلمة المرور</label><input type="password" autoComplete="new-password" value={password} onChange={(e)=>setPassword(e.target.value)} required disabled={loading} className="w-full" /><label>تأكيد كلمة المرور</label><input type="password" autoComplete="new-password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} required disabled={loading} className="w-full" /></div>
 <form onSubmit={handleSubmit} className="space-y-8">
               {/* Company Basic Info */}
               <section>
@@ -230,8 +229,24 @@ export default function RegisterFirm() {
                   <h3 className="text-base md:text-lg font-semibold text-[#4A3F35]">معلومات الشركة الأساسية</h3>
                 </div>
 
+                <div className="grid md:grid-cols-2 gap-5">
+                  <div>
+                    <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">البريد الإلكتروني <span className="text-red-500">*</span></Label>
+                    <Input type="email" value={formData.email} onChange={(e)=>setFormData({ ...formData, email: e.target.value })} required autoComplete="email" className="h-12 text-base" />
+                  </div>
+                  <div>
+                    <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">كلمة المرور <span className="text-red-500">*</span></Label>
+                    <Input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} required minLength={8} autoComplete="new-password" disabled={loading} className="h-12 text-base" />
+                  </div>
+                  <div>
+                    <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">إعادة كلمة المرور <span className="text-red-500">*</span></Label>
+                    <Input type="password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} required minLength={8} autoComplete="new-password" disabled={loading} className="h-12 text-base" />
+                  </div>
+                </div>
+
                 <div className="space-y-5">
                   <div>
+                    <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">                  <div>
                     <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">
                       اسم الشركة <span className="text-red-500">*</span>
                     </Label>
