@@ -229,121 +229,63 @@ export default function RegisterFirm() {
                   <h3 className="text-base md:text-lg font-semibold text-[#4A3F35]">معلومات الشركة الأساسية</h3>
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-5">
-                  <div>
-                    <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">البريد الإلكتروني <span className="text-red-500">*</span></Label>
-                    <Input type="email" value={formData.email} onChange={(e)=>setFormData({ ...formData, email: e.target.value })} required autoComplete="email" className="h-12 text-base" />
-                  </div>
-                  <div>
-                    <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">كلمة المرور <span className="text-red-500">*</span></Label>
-                    <Input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} required minLength={8} autoComplete="new-password" disabled={loading} className="h-12 text-base" />
-                  </div>
-                  <div>
-                    <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">إعادة كلمة المرور <span className="text-red-500">*</span></Label>
-                    <Input type="password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} required minLength={8} autoComplete="new-password" disabled={loading} className="h-12 text-base" />
-                  </div>
-                </div>
-
                 <div className="space-y-5">
                   <div>
-                    <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">                  <div>
-                    <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">
-                      اسم الشركة <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      value={formData.company_name}
-                      onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                      placeholder="مثال: شركة التصميم الحديث"
-                      required
-                      className="h-12 text-base"
-                    />
+                    <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">اسم الشركة <span className="text-red-500">*</span></Label>
+                    <Input value={formData.company_name} onChange={(e) => setFormData({ ...formData, company_name: e.target.value })} placeholder="مثال: شركة التصميم الحديث" required className="h-12 text-base" />
                   </div>
 
                   <div>
-                    <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">
-                      رقم السجل التجاري <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      value={formData.commercial_registration}
-                      onChange={(e) => setFormData({ ...formData, commercial_registration: e.target.value })}
-                      placeholder="1234567890"
-                      required
-                      inputMode="numeric"
-                      className="h-12 text-base"
-                    />
+                    <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">رقم السجل التجاري <span className="text-red-500">*</span></Label>
+                    <Input value={formData.commercial_registration} onChange={(e) => setFormData({ ...formData, commercial_registration: e.target.value })} placeholder="1234567890" required inputMode="numeric" className="h-12 text-base" />
+                  </div>
+
+                  <div>
+                    <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">البريد الإلكتروني <span className="text-red-500">*</span></Label>
+                    <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required autoComplete="email" className="h-12 text-base" />
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-5">
                     <div>
-                      <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">
-                        رقم الهاتف
-                      </Label>
-                      <Input
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="+966 5XXXXXXXX"
-                        inputMode="tel"
-                        className="h-12 text-base"
-                      />
+                      <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">كلمة المرور <span className="text-red-500">*</span></Label>
+                      <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} autoComplete="new-password" disabled={loading} className="h-12 text-base" />
                     </div>
-
                     <div>
-                      <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">
-                        الموقع الإلكتروني
-                      </Label>
-                      <Input
-                        value={formData.website}
-                        onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                        placeholder="https://example.com"
-                        inputMode="url"
-                        className="h-12 text-base"
-                      />
+                      <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">إعادة كلمة المرور <span className="text-red-500">*</span></Label>
+                      <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={8} autoComplete="new-password" disabled={loading} className="h-12 text-base" />
                     </div>
+                  </div>
+
+                  <div>
+                    <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">رقم الهاتف</Label>
+                    <Input value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} placeholder="+966 5XXXXXXXX" inputMode="tel" className="h-12 text-base" />
+                  </div>
+
+                  <div>
+                    <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">الموقع الإلكتروني</Label>
+                    <Input value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} placeholder="https://example.com" inputMode="url" className="h-12 text-base" />
                   </div>
 
                   <div className="grid md:grid-cols-3 gap-5">
                     <div>
                       <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">المدينة</Label>
-                      <Input
-                        value={formData.city}
-                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                        placeholder="الرياض"
-                        className="h-12 text-base"
-                      />
+                      <Input value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} placeholder="الرياض" className="h-12 text-base" />
                     </div>
-
                     <div>
                       <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">الدولة</Label>
-                      <Input
-                        value={formData.country}
-                        onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                        className="h-12 text-base"
-                      />
+                      <Input value={formData.country} onChange={(e) => setFormData({ ...formData, country: e.target.value })} className="h-12 text-base" />
                     </div>
-
                     <div>
                       <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">سنة التأسيس</Label>
-                      <Input
-                        type="number"
-                        value={formData.established_year}
-                        onChange={(e) => setFormData({ ...formData, established_year: parseInt(e.target.value) })}
-                        className="h-12 text-base"
-                      />
+                      <Input type="number" value={formData.established_year} onChange={(e) => setFormData({ ...formData, established_year: parseInt(e.target.value) })} className="h-12 text-base" />
                     </div>
                   </div>
 
                   <div>
                     <Label className="block mb-1.5 text-sm font-medium text-[#4A3F35]">نبذة عن الشركة</Label>
-                    <Textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="اكتب نبذة تعريفية عن الشركة وخدماتها..."
-                      rows={4}
-                      className="text-base"
-                    />
+                    <Textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="اكتب نبذة تعريفية عن الشركة وخدماتها..." rows={4} className="text-base" />
                   </div>
-                </div>
-              </section>
+                </div>              </section>
 
               {/* Specializations */}
               <section>
