@@ -140,6 +140,10 @@ export default function RegisterConsultantPage() {
                   
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
+                      <Label htmlFor="full_name">الاسم الكامل *</Label>
+                      <Input id="full_name" value={formData.full_name} onChange={(e) => setFormData({ ...formData, full_name: e.target.value })} required autoComplete="name" />
+                    </div>
+                    <div>
                       <Label htmlFor="email">البريد الإلكتروني *</Label>
                       <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required autoComplete="email" />
                     </div>
@@ -156,7 +160,7 @@ export default function RegisterConsultantPage() {
                   <div className="md:col-span-2 rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-slate-700">
                     <p className="font-semibold text-[#1a1a2e]">بيانات الحساب</p>
                     <p className="mt-1">{formData.full_name} — {formData.email}</p>
-                    <p className="text-xs text-slate-500 mt-1">تم إدخال هذه البيانات في بداية التسجيل ولا تحتاج لإدخالها مرة أخرى.</p>
+                    <p className="text-xs text-slate-500 mt-1">يمكنك تعديل الاسم والبريد الإلكتروني قبل إرسال الطلب.</p>
                   </div>
 
                   <div>
