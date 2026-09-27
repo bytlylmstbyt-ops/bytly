@@ -142,8 +142,7 @@ export default function RegisterLegalConsultantPage() {
                     </div>
                   </div>\n\n                  <div className="md:col-span-2 rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-slate-700">
                     <p className="font-semibold text-[#1a1a2e]">بيانات الحساب</p>
-                    <p className="mt-1">{formData.full_name} — {formData.email}</p>
-                    <p className="text-xs text-slate-500 mt-1">أدخل بيانات حسابك الأساسية قبل استكمال البيانات المهنية.</p>
+                    <p className="mt-1">أدخل بيانات حسابك الأساسية قبل استكمال البيانات المهنية.</p>
                   </div>
 
                   <div>
