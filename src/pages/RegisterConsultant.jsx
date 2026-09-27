@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { saveRegistration } from "@/lib/registrationService";
@@ -68,11 +67,6 @@ export default function RegisterConsultantPage() {
         password,
         row: { ...formData, years_experience: parseInt(formData.years_experience) || 0, status: "pending", terms_accepted: true, terms_accepted_date: new Date().toISOString() }
       });
-      try { base44.functions.invoke("notifyNewUserSignup", { role: "consultant", data: consultant }).catch((err) => console.error("Background notification failed:", err)); }
-      catch (notifyErr) { console.error("notifyNewUserSignup consultant failed:", notifyErr); }
-      try { base44.functions.invoke("sendWelcomeEmail", { role: "consultant", id: consultant.id }).catch((err) => console.error("Background notification failed:", err)); }
-      catch (welcomeErr) { console.error("sendWelcomeEmail consultant failed:", welcomeErr); }
-
       alert("تم تقديم طلب التسجيل بنجاح! سيتم مراجعته من قبل الإدارة.");
       navigate(createPageUrl("RegistrationSuccess"));
     } catch (error) {
@@ -139,12 +133,26 @@ export default function RegisterConsultantPage() {
               <CardTitle>بيانات التسجيل</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2"><label>كلمة المرور</label><input type="password" autoComplete="new-password" value={password} onChange={(e)=>setPassword(e.target.value)} required /><label>تأكيد كلمة المرور</label><input type="password" autoComplete="new-password" value={confirmPassword} onChange={(e)=>setConfirmPassword(e.target.value)} required /></div>
 <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Personal Info */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-slate-900">المعلومات الشخصية</h3>
                   
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="email">البريد الإلكتروني *</Label>
+                      <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required autoComplete="email" />
+                    </div>
+                    <div>
+                      <Label htmlFor="password">كلمة المرور *</Label>
+                      <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} autoComplete="new-password" />
+                    </div>
+                    <div>
+                      <Label htmlFor="confirmPassword">إعادة كلمة المرور *</Label>
+                      <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={8} autoComplete="new-password" />
+                    </div>
+                  </div>
+
                   <div className="md:col-span-2 rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-slate-700">
                     <p className="font-semibold text-[#1a1a2e]">بيانات الحساب</p>
                     <p className="mt-1">{formData.full_name} — {formData.email}</p>
