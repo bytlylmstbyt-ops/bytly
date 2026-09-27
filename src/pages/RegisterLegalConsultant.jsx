@@ -123,10 +123,27 @@ export default function RegisterLegalConsultantPage() {
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-slate-900">المعلومات الشخصية</h3>
                   
-                  <div className="grid md:grid-cols-2 gap-4">\n                    <div>\n                      <Label>كلمة المرور *</Label>\n                      <Input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} minLength={8} required />\n                    </div>\n                    <div>\n                      <Label>تأكيد كلمة المرور *</Label>\n                      <Input type="password" value={formData.confirmPassword} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} minLength={8} required />\n                    </div>\n                  </div>\n\n                  <div className="md:col-span-2 rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-slate-700">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="full_name">الاسم الكامل *</Label>
+                      <Input id="full_name" value={formData.full_name} onChange={(e) => setFormData({ ...formData, full_name: e.target.value })} required autoComplete="name" />
+                    </div>
+                    <div>
+                      <Label htmlFor="email">البريد الإلكتروني *</Label>
+                      <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required autoComplete="email" />
+                    </div>
+                    <div>
+                      <Label htmlFor="password">كلمة المرور *</Label>
+                      <Input id="password" type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} minLength={8} required autoComplete="new-password" />
+                    </div>
+                    <div>
+                      <Label htmlFor="confirmPassword">إعادة كلمة المرور *</Label>
+                      <Input id="confirmPassword" type="password" value={formData.confirmPassword} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} minLength={8} required autoComplete="new-password" />
+                    </div>
+                  </div>\n\n                  <div className="md:col-span-2 rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-slate-700">
                     <p className="font-semibold text-[#1a1a2e]">بيانات الحساب</p>
                     <p className="mt-1">{formData.full_name} — {formData.email}</p>
-                    <p className="text-xs text-slate-500 mt-1">تم إدخال هذه البيانات في بداية التسجيل ولا تحتاج لإدخالها مرة أخرى.</p>
+                    <p className="text-xs text-slate-500 mt-1">أدخل بيانات حسابك الأساسية قبل استكمال البيانات المهنية.</p>
                   </div>
 
                   <div>
