@@ -16,6 +16,25 @@ export default function NotificationCenter(){
   const notificationType=String(x.type||"").toLowerCase();
   const id=x.entity_id;
 
+  // Registration notifications are platform-admin events. Resolve the
+  // registered account type from the notification body when entity_id points
+  // to the role table row rather than the profile.
+  if(notificationType==="new_registration" || rawType==="registration"){
+   const body=String(x.body||"").toLowerCase();
+   const registrationRoutes=[
+    {key:"legal",route:"AdminProviders"},
+    {key:"consultant",route:"AdminProviders"},
+    {key:"firm",route:"AdminProviders"},
+    {key:"engineer",route:"AdminEngineers"},
+    {key:"contractor",route:"AdminProviders"},
+    {key:"supplier",route:"AdminProviders"},
+    {key:"client",route:"AdminClients"},
+    {key:"investor",route:"AdminDeveloperInvestorManagement"}
+   ];
+   const match=registrationRoutes.find(item=>body.includes("— "+item.key+" —") || body.endsWith("— "+item.key));
+   if(match)return createPageUrl(match.route)+(id?"?userId="+encodeURIComponent(id):"");
+  }
+
   // User-registration/admin notifications: resolve the actual profile role first.
   // This prevents "new user" notifications from falling back to the generic user page.
   if(id){
