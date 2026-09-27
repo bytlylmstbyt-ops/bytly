@@ -1,5 +1,4 @@
-// Shared helper: detect status / financial changes on a Project and log them
-// to the TaskActivityLog entity for transparent admin audit.
+// Shared helper: detect project changes and write an admin audit record to Supabase.
 import { supabase } from "@/lib/supabaseClient";
 
 const STATUS_FIELDS = { status: "الحالة", technical_review_status: "حالة المراجعة الفنية", payment_status: "حالة الدفع", escrow_status: "حالة الضمان" };
@@ -30,7 +29,7 @@ function buildSummary(field, oldV, newV) {
 
 /**
  * Compare the project record before update with the new data patch,
- * and create one TaskActivityLog entry per detected status / financial change.
+ * and create one project_activity entry per detected status / financial change.
  * Safe to call after any Project.update — silently skips if nothing relevant changed.
  */
 export async function logProjectChange(projectBefore, newData, actor) {
@@ -89,31 +88,35 @@ export async function logProjectChange(projectBefore, newData, actor) {
     });
   }
 
-  await Promise.all(entries.map((e) => supabase.from("project_activity").insert({
-    project_id: e.project_id,
-    actor_user_id: actor?.id || actor?.user_id || null,
-    action: e.action_type || "updated",
-    entity_type: "project",
-    entity_id: e.project_id,
-    metadata: e,
-  }).then(() => null).catch(() => null)));
+  await Promise.all(entries.map(async (e) => {
+    const { error } = await supabase.from("project_activity").insert({
+      project_id: e.project_id,
+      actor_user_id: actor?.id || actor?.user_id || null,
+      action: e.action_type || "updated",
+      entity_type: "project",
+      entity_id: e.project_id,
+      metadata: e,
+    });
+    if (error) console.error("Project activity log failed:", error);
+  }));
 }
 
 export async function logProjectFlagChange(project, actor, field, oldV, newV, summary) {
   if (!project?.id || !actor) return;
-  await supabase.from("project_activity").insert({
+  const { error } = await supabase.from("project_activity").insert({
     project_id: project.id,
     actor_user_id: actor?.id || actor?.user_id || null,
     action: "updated",
     entity_type: "project",
     entity_id: project.id,
     metadata: { field, old_value: oldV, new_value: newV, summary },
-  }).then(() => null).catch(() => null);
+  });
+  if (error) console.error("Project flag activity log failed:", error);
 }
 
 export async function logProjectDeletion(projectBefore, actor) {
   if (!projectBefore?.id || !actor) return;
-  await supabase.from("project_activity").insert({
+  const { error } = await supabase.from("project_activity").insert({
     project_id: projectBefore.id,
     actor_user_id: actor?.id || actor?.user_id || null,
     action: "deleted",
@@ -124,5 +127,6 @@ export async function logProjectDeletion(projectBefore, actor) {
       old_status: projectBefore.status || "",
       summary: `تم حذف المشروع «${projectBefore.title || ""}» نهائيًا`,
     },
-  }).then(() => null).catch(() => null);
+  });
+  if (error) console.error("Project deletion activity log failed:", error);
 }
