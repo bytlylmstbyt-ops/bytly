@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-const TYPE_ICONS = { approval:"✅", project_update:"📊", payment:"💰", withdrawal:"💵", new_message:"💬", review:"📝", milestone:"🎯", proposal:"📋", contract:"📜", project_status:"🏗️", complaint:"⚠️", new_user:"👤", system:"🔔" };
+const TYPE_ICONS = { approval:"✅", project_update:"📊", payment:"💰", withdrawal:"💵", new_message:"💬", review:"📝", milestone:"🎯", proposal:"📋", contract:"📜", project_status:"🏗️", complaint:"⚠️", new_user:"👤", system:"🔔", new_registration:"👤" };
 
 export default function NotificationBell() {
   const [notifications,setNotifications]=useState([]);
