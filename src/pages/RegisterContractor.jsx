@@ -186,10 +186,6 @@ export default function RegisterContractor() {
         table: "contractors", role: "contractor", fullName: formData.company_name, email: formData.email, phone: formData.phone, password: formData.password,
         row: { ...formData, status: "pending" }
       });
-      try { base44.functions.invoke("notifyNewUserSignup", { role: "contractor", data: contractor }).catch((err) => console.error("Background notification failed:", err)); }
-      catch (notifyErr) { console.error("notifyNewUserSignup contractor failed:", notifyErr); }
-      try { base44.functions.invoke("sendWelcomeEmail", { role: "contractor", id: contractor.id }).catch((err) => console.error("Background notification failed:", err)); }
-      catch (welcomeErr) { console.error("sendWelcomeEmail contractor failed:", welcomeErr); }
 
       toast.success("تم تسجيل المقاول بنجاح! في انتظار الموافقة من الإدارة");
       navigate(createPageUrl("RegistrationSuccess"));
