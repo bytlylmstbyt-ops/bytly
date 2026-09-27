@@ -121,6 +121,11 @@ export default function RegisterLegalConsultantPage() {
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-4">
+                  <div className="md:col-span-2 rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-slate-700">
+                    <p className="font-semibold text-[#1a1a2e]">بيانات الحساب</p>
+                    <p className="mt-1">أدخل بيانات حسابك الأساسية قبل استكمال البيانات المهنية.</p>
+                  </div>
+
                   <h3 className="text-lg font-semibold text-slate-900">المعلومات الشخصية</h3>
                   
                   <div className="grid md:grid-cols-2 gap-4">
@@ -140,12 +145,7 @@ export default function RegisterLegalConsultantPage() {
                       <Label htmlFor="confirmPassword">إعادة كلمة المرور *</Label>
                       <Input id="confirmPassword" type="password" value={formData.confirmPassword} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} minLength={8} required autoComplete="new-password" />
                     </div>
-                  </div>\n\n                  <div className="md:col-span-2 rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-slate-700">
-                    <p className="font-semibold text-[#1a1a2e]">بيانات الحساب</p>
-                    <p className="mt-1">أدخل بيانات حسابك الأساسية قبل استكمال البيانات المهنية.</p>
-                  </div>
-
-                  <div>
+                  </div>\n\n                  <div>
                     <Label htmlFor="phone">رقم الهاتف *</Label>
                     <Input
                       id="phone"
