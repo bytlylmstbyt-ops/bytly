@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { saveRegistration } from "@/lib/registrationService";
@@ -190,11 +189,6 @@ export default function RegisterSupplier() {
         table: "suppliers", role: "supplier", fullName: formData.company_name, email: formData.email, phone: formData.phone, password: formData.password,
         row: { ...formData, status: "pending" }
       });
-      try { base44.functions.invoke("notifyNewUserSignup", { role: "supplier", data: supplier }).catch((err) => console.error("Background notification failed:", err)); }
-      catch (notifyErr) { console.error("notifyNewUserSignup supplier failed:", notifyErr); }
-      try { base44.functions.invoke("sendWelcomeEmail", { role: "supplier", id: supplier.id }).catch((err) => console.error("Background notification failed:", err)); }
-      catch (welcomeErr) { console.error("sendWelcomeEmail supplier failed:", welcomeErr); }
-
       toast.success("تم تسجيل المورد بنجاح! في انتظار الموافقة من الإدارة");
       navigate(createPageUrl("RegistrationSuccess"));
     } catch (error) {
@@ -260,6 +254,21 @@ export default function RegisterSupplier() {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>البريد الإلكتروني *</Label>
+                    <Input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} placeholder="name@example.com" autoComplete="email" required />
+                  </div>
+                  <div>
+                    <Label>كلمة المرور *</Label>
+                    <Input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} minLength={8} autoComplete="new-password" required />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>إعادة كلمة المرور *</Label>
+                    <Input type="password" value={formData.confirmPassword} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} minLength={8} autoComplete="new-password" required />
+                  </div>
                   <div>
                     <Label>رقم التواصل *</Label>
                     <Input
