@@ -54,7 +54,7 @@ export default function AdminProviders() {
       const ids = bulk.selectedIds;
       if (action === "delete") await Promise.all(ids.map(id => deleteProvider(activeKey, id)));
       else {
-        const patch = action === "activate" ? { status: "approved", is_available: true } : action === "suspend" ? { status: "rejected" } : action === "pause" ? { is_available: false } : null;
+        const patch = action === "activate" ? { status: "approved" } : action === "suspend" || action === "pause" ? { status: "rejected" } : null;
         if (patch) await Promise.all(ids.map(id => updateProvider(activeKey, id, patch)));
       }
       await loadAll(); bulk.clear();
