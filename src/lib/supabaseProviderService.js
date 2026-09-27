@@ -12,10 +12,23 @@ export function providerTable(providerKey) {
   return TABLES[providerKey] || null;
 }
 
+export function providerFilter(providerKey) {
+  if (providerKey === "EngineeringFirm") return { column: "entity_type", value: "engineering_company" };
+  if (providerKey === "ConsultingFirm") return { column: "entity_type", value: "consulting_firm" };
+  return null;
+}
+
+export function providerHasAvailability(providerKey) {
+  return ["Consultant"].includes(providerKey);
+}
+
 export async function listProviders(providerKey) {
   const table = providerTable(providerKey);
   if (!table) throw new Error(`Unsupported provider type: ${providerKey}`);
-  const { data, error } = await supabase.from(table).select("*").order("created_at", { ascending: false });
+  let query = supabase.from(table).select("*").order("created_at", { ascending: false });
+  const filter = providerFilter(providerKey);
+  if (filter) query = query.eq(filter.column, filter.value);
+  const { data, error } = await query;
   if (error) throw error;
   return data || [];
 }
