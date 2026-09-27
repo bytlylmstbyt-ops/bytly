@@ -61,7 +61,7 @@ export default function RegisterLegalConsultantPage() {
     try {
       // saveRegistration creates or reuses the Supabase Auth account on this final step.
       const legalConsultant = await saveRegistration({
-        table: "legal_consultants", role: "legal_consultant", fullName: formData.full_name, email: formData.email, phone: formData.phone, password: formData.password,
+        table: "legal_consultants", role: "legal", fullName: formData.full_name, email: formData.email, phone: formData.phone, password: formData.password,
         row: { ...formData, years_experience: parseInt(formData.years_experience) || 0, status: "pending", terms_and_conditions: {
           confidentiality_clause: "تم الموافقة", responsibility_clause: "تم الموافقة", intellectual_property_clause: "تم الموافقة", accepted: true, accepted_date: new Date().toISOString()
         }}
