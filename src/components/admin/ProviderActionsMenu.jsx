@@ -52,7 +52,7 @@ export default function ProviderActionsMenu({
   };
 
   const activate = () => patchAndToast(
-    { status: "approved", verification_date: new Date().toISOString(), ...(hasAvailable ? { is_available: true } : {}) },
+    { status: "approved", ...(hasAvailable ? { is_available: true } : {}) },
     "تم تفعيل الحساب"
   );
   const deactivate = () => patchAndToast({ status: "rejected" }, "تم إيقاف الحساب");
@@ -65,7 +65,7 @@ export default function ProviderActionsMenu({
     "تمت إعادة التفعيل"
   );
   const verify = (val) => patchAndToast(
-    { is_verified: val, verification_date: val ? new Date().toISOString() : null },
+    { is_verified: val },
     val ? "تم اعتماد التحقق" : "تم رفض التحقق"
   );
 
