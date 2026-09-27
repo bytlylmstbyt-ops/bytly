@@ -135,7 +135,12 @@ export default function RegisterConsultantPage() {
             <CardContent>
 <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Personal Info */}
-                <div className="space-y-4">
+                                <div className="space-y-4">
+                  <div className="md:col-span-2 rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-slate-700">
+                    <p className="font-semibold text-[#1a1a2e]">بيانات الحساب</p>
+                    <p className="mt-1">أدخل بيانات حسابك الأساسية قبل استكمال البيانات المهنية.</p>
+                  </div>
+
                   <h3 className="text-lg font-semibold text-slate-900">المعلومات الشخصية</h3>
                   
                   <div className="grid md:grid-cols-2 gap-4">
@@ -155,11 +160,6 @@ export default function RegisterConsultantPage() {
                       <Label htmlFor="confirmPassword">إعادة كلمة المرور *</Label>
                       <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={8} autoComplete="new-password" />
                     </div>
-                  </div>
-
-                  <div className="md:col-span-2 rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-slate-700">
-                    <p className="font-semibold text-[#1a1a2e]">بيانات الحساب</p>
-                    <p className="mt-1">أدخل بيانات حسابك الأساسية قبل استكمال البيانات المهنية.</p>
                   </div>
 
                   <div>
