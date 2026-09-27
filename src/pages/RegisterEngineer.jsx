@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
 import { saveRegistration } from "@/lib/registrationService";
 import { motion } from "framer-motion";
@@ -65,9 +64,11 @@ export default function RegisterEngineer() {
   useEffect(() => {
     const checkEligibility = async () => {
       try {
-        const result = await Promise.resolve(base44.functions.invoke("checkFreeRegistrationEligibility", {}));
-        const data = result?.data || result || {};
-        setFreeOffer({ loading: false, isEligible: !!data.is_eligible, remaining: data.remaining_free_slots || 0, registeredCount: data.registered_count || 0 });
+        const { count, error } = await supabase.from("engineers").select("id", { count: "exact", head: true }).eq("is_real", true);
+        if (error) throw error;
+        const registeredCount = count || 0;
+        const remaining = Math.max(0, 100 - registeredCount);
+        setFreeOffer({ loading: false, isEligible: remaining > 0, remaining, registeredCount });
       } catch {
         setFreeOffer({ loading: false, isEligible: true, remaining: 100, registeredCount: 0 });
       }
@@ -146,14 +147,31 @@ export default function RegisterEngineer() {
         row: { full_name: formData.full_name, phone: formData.phone, city: formData.city, country: formData.country, specialization: formData.specialization, registration_number: formData.registration_number, bio: formData.bio, graduation_certificate_url: formData.graduation_certificate_url, saudi_engineers_council_certificate_url: formData.saudi_engineers_council_certificate_url, profile_image: formData.profile_image, years_experience: parseInt(formData.years_experience) || 0, completed_projects: parseInt(formData.completed_projects) || 0, status: "pending", is_verified: false, rating: 0, total_reviews: 0, wallet_balance: 0, subscription_type: isFreeEligible ? "free_trial" : "none", is_subscription_active: isFreeEligible, subscription_start_date: isFreeEligible ? localDate(today) : undefined, trial_end_date: isFreeEligible ? localDate(trialEnd) : undefined, is_real: true, source: "supabase" }
       }), 15000);
       const validPortfolioItems = portfolioItems.filter(item => item.title || item.images?.length > 0);
-      if (validPortfolioItems.length > 0) void Promise.allSettled(validPortfolioItems.map(item => base44.entities.Portfolio.create({ engineer_id: engineer.id, title: item.title || "عمل سابق", description: item.description || "", images: item.images || [] }))).catch(() => {});
-      const notificationPayload = { full_name: formData.full_name, email: formData.email, user_type: formData.user_type, specialization: formData.specialization };
-      [
-        () => base44.functions.invoke("notifyNewUserSignup", { role: formData.user_type === "surveyor" ? "surveyor" : "engineer", data: engineer }),
-        () => base44.functions.invoke("sendWelcomeEmail", { role: formData.user_type === "surveyor" ? "surveyor" : "engineer", id: engineer.id }),
-        () => base44.functions.invoke("notifyNewEngineer", { engineer_id: engineer.id }),
-        () => base44.functions.invoke("notifyNewRegistration", { eventType: "engineer_registered", data: notificationPayload })
-      ].forEach(call => { try { void Promise.resolve(call()).catch(() => {}); } catch {} });
+      if (validPortfolioItems.length > 0 && engineer?.id) {
+        const portfolioRows = validPortfolioItems.map(item => ({
+          engineer_id: engineer.id,
+          title: item.title || "عمل سابق",
+          description: item.description || "",
+          images: item.images || []
+        }));
+        const { error: portfolioError } = await supabase.from("portfolios").insert(portfolioRows);
+        if (portfolioError) console.error("Portfolio save failed:", portfolioError);
+      }
+      if (engineer?.user_id) {
+        const { data: admins } = await supabase.from("profiles").select("user_id").in("role", ["admin", "super_admin"]);
+        if (admins?.length) {
+          const rows = admins.map(admin => ({
+            user_id: admin.user_id,
+            type: "new_registration",
+            title: "تسجيل مهندس جديد",
+            body: formData.full_name + " — " + formData.email,
+            entity_type: "engineer",
+            entity_id: engineer.id
+          }));
+          const { error: notificationError } = await supabase.from("notifications").insert(rows);
+          if (notificationError) console.error("Admin registration notification failed:", notificationError);
+        }
+      }
       try { localStorage.removeItem(STORAGE_KEY); } catch {}
       navigate(createPageUrl("RegistrationSuccess"));
     } catch (error) {
