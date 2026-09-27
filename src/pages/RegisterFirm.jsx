@@ -147,6 +147,8 @@ export default function RegisterFirm() {
         fullName: formData.company_name,
         email: formData.email,
         phone: formData.phone,
+        password,
+
         userIdField: "owner_user_id",
         row: {
           company_name: formData.company_name,
