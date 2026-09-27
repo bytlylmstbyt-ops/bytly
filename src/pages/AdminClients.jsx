@@ -95,7 +95,7 @@ export default function AdminClientsPage() {
       const enriched = baseClients.map(c => ({
         ...c,
         interactionsCount: safeInteractions.filter(i => i.client_email === c.email).length,
-        projectsCount: 0,
+        projectsCount: c.user_id ? undefined : 0,
       }));
 
       setClients(enriched.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)));
@@ -165,13 +165,24 @@ export default function AdminClientsPage() {
     setSelectedClient(client);
     setDetailsLoading(true);
     try {
-      const [{ data: projects, error: projectsError }, { data: clientInteractions, error: interactionsError }] = await Promise.all([
-        supabase.from("projects").select("*").eq("client_user_id", client.user_id).order("created_at", { ascending: false }),
-        supabase.from("client_interactions").select("*").eq("client_email", client.email).order("interaction_date", { ascending: false }),
+      const projectQuery = client.user_id
+        ? supabase.from("projects").select("*").eq("client_user_id", client.user_id).order("created_at", { ascending: false })
+        : Promise.resolve({ data: [], error: null });
+      const contractQuery = client.user_id
+        ? supabase.from("project_contracts").select("*").eq("client_user_id", client.user_id).order("created_at", { ascending: false })
+        : Promise.resolve({ data: [], error: null });
+      const invoiceQuery = client.user_id
+        ? supabase.from("invoices").select("*").eq("buyer_user_id", client.user_id).order("created_at", { ascending: false })
+        : Promise.resolve({ data: [], error: null });
+      const interactionQuery = supabase.from("client_interactions").select("*").eq("client_email", client.email).order("interaction_date", { ascending: false });
+      const [{ data: projects, error: projectsError }, { data: contracts, error: contractsError }, { data: invoices, error: invoicesError }, { data: clientInteractions, error: interactionsError }] = await Promise.all([
+        projectQuery, contractQuery, invoiceQuery, interactionQuery
       ]);
       if (projectsError) throw projectsError;
+      if (contractsError) throw contractsError;
+      if (invoicesError) throw invoicesError;
       if (interactionsError) throw interactionsError;
-      setClientDetails({ projects: projects || [], contracts: [], invoices: [], interactions: clientInteractions || [] });
+      setClientDetails({ projects: projects || [], contracts: contracts || [], invoices: invoices || [], interactions: clientInteractions || [] });
     } finally { setDetailsLoading(false); }
   };
 
