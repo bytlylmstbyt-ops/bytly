@@ -59,7 +59,25 @@ export async function saveRegistration(payload) {
     throw new Error(data?.error || "تعذر إكمال التسجيل.");
   }
 
-  return data;
+  // The Edge Function creates and confirms the Auth user server-side.
+  // Start the browser session immediately so protected routes recognize the
+  // newly registered user instead of sending them back to registration.
+  const signInResult = await withTimeout(
+    supabase.auth.signInWithPassword({
+      email,
+      password: String(payload?.password || "")
+    }),
+    20000,
+    "انتهت مهلة تسجيل الدخول بعد إنشاء الحساب."
+  );
+
+  if (signInResult.error || !signInResult.data?.session?.user) {
+    throw new Error(
+      signInResult.error?.message || "تم إنشاء الحساب لكن تعذر بدء جلسة الدخول."
+    );
+  }
+
+  return { ...data, session_started: true };
 }
 
 /**
