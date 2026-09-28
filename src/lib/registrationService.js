@@ -5,6 +5,35 @@ const withTimeout = (promise, ms, label) => Promise.race([
   new Promise((_, reject) => setTimeout(() => reject(new Error(label || "انتهت مهلة العملية. تحقق من الاتصال وحاول مرة أخرى.")), ms))
 ]);
 
+async function notifyEmailAgent(data, payload) {
+  try {
+    const user = {
+      id: data?.user?.id || data?.user_id || data?.id || data?.profile?.user_id || data?.profile?.id || payload?.id || payload?.userId || payload?.email,
+      fullName: payload?.fullName,
+      email: payload?.email,
+      phone: payload?.phone,
+      role: payload?.role || payload?.table,
+    };
+
+    const response = await fetch("/api/email-agent", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${(await supabase.auth.getSession()).data?.session?.access_token || ""}`,
+      },
+      body: JSON.stringify({ action: "new_user", user }),
+    });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      console.warn("Bytly email agent notification failed:", body?.error || response.statusText);
+    }
+  } catch (error) {
+    // Email delivery must never turn a successful account creation into a failed registration.
+    console.warn("Bytly email agent notification skipped:", error?.message || error);
+  }
+}
+
 /**
  * Create a brand-new Bytly account in one submission.
  *
@@ -41,8 +70,6 @@ export async function saveRegistration(payload) {
   if (response.error) {
     let message = response.error.message || "تعذر إكمال التسجيل.";
 
-    // Supabase may wrap an Edge Function's JSON error in FunctionsHttpError.
-    // Prefer the server's Arabic/validation message when it is available.
     try {
       const context = response.error.context;
       if (context && typeof context.json === "function") {
@@ -59,6 +86,7 @@ export async function saveRegistration(payload) {
     throw new Error(data?.error || "تعذر إكمال التسجيل.");
   }
 
+  await notifyEmailAgent(data, payload);
   return data;
 }
 
