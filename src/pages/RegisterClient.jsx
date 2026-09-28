@@ -26,6 +26,7 @@ export default function RegisterClient() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [confirmationEmail, setConfirmationEmail] = useState(null);
+  const initialType = new URLSearchParams(window.location.search).get("type") === "investor" ? "investor" : "individual";
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
@@ -33,7 +34,7 @@ export default function RegisterClient() {
     city: "",
     country: "",
     profile_image: "",
-    client_type: "individual",
+    client_type: initialType,
     company_name: ""
   });
   const [password, setPassword] = useState("");
@@ -143,7 +144,7 @@ export default function RegisterClient() {
             <Briefcase className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e] mb-2">
-            التسجيل كصاحب مشروع
+            التسجيل كـ {formData.client_type === "individual" ? "صاحب منزل" : formData.client_type === "investor" ? "مستثمر" : "مطور عقاري"}
           </h1>
           <p className="text-slate-600">أنشئ حسابك وابدأ في طرح مشاريعك</p>
         </motion.div>
@@ -158,41 +159,30 @@ export default function RegisterClient() {
               {/* Client Type Selection */}
               <div className="space-y-3">
                 <Label>نوع الحساب *</Label>
-                <RadioGroup
-                  value={formData.client_type}
-                  onValueChange={(value) => handleInputChange("client_type", value)}
-                  className="grid grid-cols-2 gap-4"
-                >
-                  <div>
-                    <RadioGroupItem value="individual" id="individual" className="peer sr-only" />
-                    <Label
-                      htmlFor="individual"
-                      className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-[#C9A66B] peer-data-[state=checked]:bg-[#C9A66B]/5 cursor-pointer"
-                    >
-                      <Home className="mb-3 h-8 w-8" />
-                      <div className="text-center">
-                        <p className="font-semibold">صاحب منزل</p>
-                        <p className="text-xs text-muted-foreground mt-1">مشروع شخصي واحد</p>
-                      </div>
-                    </Label>
+                {initialType === "individual" ? (
+                  <div className="rounded-xl border-2 border-[#C9A66B] bg-[#C9A66B]/5 p-4 flex items-center gap-3">
+                    <Home className="h-7 w-7" />
+                    <div><p className="font-semibold">صاحب منزل</p><p className="text-xs text-muted-foreground mt-1">حساب فردي لمشروع واحد</p></div>
                   </div>
-                  <div>
-                    <RadioGroupItem value="investor" id="investor" className="peer sr-only" />
-                    <Label
-                      htmlFor="investor"
-                      className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-[#C9A66B] peer-data-[state=checked]:bg-[#C9A66B]/5 cursor-pointer"
-                    >
-                      <Building2 className="mb-3 h-8 w-8" />
-                      <div className="text-center">
-                        <p className="font-semibold">مستثمر/مطور</p>
-                        <p className="text-xs text-muted-foreground mt-1">مشاريع متعددة</p>
-                      </div>
-                    </Label>
-                  </div>
-                </RadioGroup>
+                ) : (
+                  <RadioGroup value={formData.client_type} onValueChange={(value) => handleInputChange("client_type", value)} className="grid grid-cols-2 gap-4">
+                    <div>
+                      <RadioGroupItem value="investor" id="investor" className="peer sr-only" />
+                      <Label htmlFor="investor" className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-4 cursor-pointer">
+                        <Briefcase className="mb-3 h-8 w-8" /><div className="text-center"><p className="font-semibold">مستثمر</p><p className="text-xs text-muted-foreground mt-1">إدارة الاستثمارات العقارية</p></div>
+                      </Label>
+                    </div>
+                    <div>
+                      <RadioGroupItem value="developer" id="developer" className="peer sr-only" />
+                      <Label htmlFor="developer" className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-4 cursor-pointer">
+                        <Building2 className="mb-3 h-8 w-8" /><div className="text-center"><p className="font-semibold">مطور عقاري</p><p className="text-xs text-muted-foreground mt-1">تطوير وإدارة مشاريع عقارية</p></div>
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                )}
               </div>
 
-              {formData.client_type === "investor" && (
+              {(formData.client_type === "investor" || formData.client_type === "developer") && (
                 <div className="space-y-2">
                   <Label htmlFor="company_name">اسم الشركة</Label>
                   <Input
