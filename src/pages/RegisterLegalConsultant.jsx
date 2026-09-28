@@ -145,7 +145,9 @@ export default function RegisterLegalConsultantPage() {
                       <Label htmlFor="confirmPassword">إعادة كلمة المرور *</Label>
                       <Input id="confirmPassword" type="password" value={formData.confirmPassword} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} minLength={8} required autoComplete="new-password" />
                     </div>
-                  </div>\n\n                  <div>
+                  </div>
+
+                  <div>
                     <Label htmlFor="phone">رقم الهاتف *</Label>
                     <Input
                       id="phone"
