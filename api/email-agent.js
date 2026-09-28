@@ -2,6 +2,7 @@ const FROM = process.env.BYTLY_EMAIL_FROM || "Bytly <info@mybytly.com>";
 const ADMIN_EMAIL = process.env.BYTLY_ADMIN_EMAIL;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const EMAIL_AGENT_SECRET = process.env.BYTLY_EMAIL_AGENT_SECRET;
 
 function json(res, status, body) {
   res.status(status).setHeader("Content-Type", "application/json");
@@ -144,7 +145,11 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return json(res, 405, { ok: false, error: "Method not allowed." });
 
   try {
-    const body = req.body || {};
+    if (!EMAIL_AGENT_SECRET) return json(res, 503, { ok: false, error: "BYTLY_EMAIL_AGENT_SECRET is not configured." });
+  const providedSecret = String(req.headers["x-bytly-email-agent-secret"] || "");
+  if (providedSecret !== EMAIL_AGENT_SECRET) return json(res, 401, { ok: false, error: "Unauthorized." });
+
+  const body = req.body || {};
     const action = String(body.action || "").trim();
 
     if (action === "new_user") {
