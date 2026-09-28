@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "react-hot-toast";
 
 const ROLE_ROUTES = {
-  investor: "/RegisterClient?type=investor",
+  investor: "/RegisterClient?type=investor", developer: "/RegisterClient?type=investor",
   client: "/RegisterClient?type=individual",
   engineer: "/RegisterEngineer?type=engineer",
   surveyor: "/RegisterEngineer?type=surveyor",
@@ -21,7 +21,7 @@ const ROLE_ROUTES = {
 };
 
 const ROLE_LABELS = {
-  investor: "مستثمر / مطور", client: "صاحب منزل / مشروع", engineer: "مهندس", surveyor: "مهندس مساحة",
+  investor: "مستثمر / مطور عقاري", developer: "مطور عقاري", client: "صاحب منزل", engineer: "مهندس", surveyor: "مهندس مساحة",
   firm: "مكتب هندسي", legal: "مستشار قانوني", consultant: "مستشار", contractor: "مقاول", supplier: "مورد",
 };
 
