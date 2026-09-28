@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -119,20 +120,52 @@ export default function PaymentPage() {
 
   const loadData = async () => {
     try {
-      const user = await base44.auth.me();
-      
-      const [projectData] = await base44.entities.Project.filter({ id: projectId });
-      const [proposalData] = await base44.entities.Proposal.filter({ id: proposalId });
-      const [engineerData] = await base44.entities.Engineer.filter({ id: proposalData.engineer_id });
-      const [clientData] = await base44.entities.Client.filter({ email: user.email });
+      if (!supabase) throw new Error("Supabase غير مهيأ");
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError || !user) throw new Error("يجب تسجيل الدخول أولاً");
+
+      const { data: projectData, error: projectError } = await supabase
+        .from("projects").select("*").eq("id", projectId).single();
+      if (projectError) throw projectError;
+      if (projectData.client_user_id && projectData.client_user_id !== user.id) {
+        throw new Error("غير مصرح لك بالوصول إلى هذا المشروع");
+      }
+
+      const { data: proposalData, error: proposalError } = await supabase
+        .from("project_offers").select("*").eq("id", proposalId).eq("project_id", projectId).single();
+      if (proposalError) throw proposalError;
+
+      const { data: engineerData, error: engineerError } = await supabase
+        .from("profiles").select("*").eq("id", proposalData.engineer_user_id).single();
+      if (engineerError) throw engineerError;
+
+      const { data: clientData, error: clientError } = await supabase
+        .from("profiles").select("*").eq("id", user.id).single();
+      if (clientError) throw clientError;
+
+      const { data: wallet } = await supabase
+        .from("wallet_accounts").select("available_balance, held_balance").eq("user_id", user.id).maybeSingle();
 
       setProject(projectData);
-      setProposal(proposalData);
-      setEngineer(engineerData);
-      setClient(clientData);
+      setProposal({
+        ...proposalData,
+        price: Number(proposalData.amount || 0),
+        delivery_days: proposalData.duration_days || 0,
+        engineer_id: proposalData.engineer_user_id
+      });
+      setEngineer({
+        ...engineerData,
+        full_name: engineerData.full_name || engineerData.name || "مقدم الخدمة",
+        specialization: engineerData.specialization || engineerData.professional_specialization || ""
+      });
+      setClient({
+        ...clientData,
+        full_name: clientData.full_name || clientData.name || "",
+        wallet_balance: Number(wallet?.available_balance || 0)
+      });
     } catch (error) {
       console.error("Error loading data:", error);
-      alert("حدث خطأ في تحميل البيانات");
+      alert(error?.message || "حدث خطأ في تحميل البيانات");
     } finally {
       setLoading(false);
     }
