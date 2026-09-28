@@ -118,7 +118,7 @@ export default function RegisterClient() {
     formData.email &&
     formData.phone &&
     formData.client_type &&
-    (formData.client_type !== "investor" || formData.company_name?.trim())
+    ((formData.client_type !== "investor" && formData.client_type !== "developer") || formData.company_name?.trim())
   );
 
   if (confirmationEmail) {
