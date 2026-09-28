@@ -390,9 +390,6 @@ export default function PaymentPage() {
         balance_after: (client.wallet_balance || 0) - fees.totalAmount
       });
     }
-
-    await assignConsultantsAndContract();
-
     alert("تم الدفع بنجاح! المبلغ محجوز في حساب الضمان.");
     navigate(createPageUrl("Dashboard"));
 
