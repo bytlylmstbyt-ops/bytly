@@ -190,7 +190,7 @@ export default function RegisterSupplier() {
         row: { ...formData, status: "pending" }
       });
       toast.success("تم تسجيل المورد بنجاح! في انتظار الموافقة من الإدارة");
-      navigate(createPageUrl("RegistrationSuccess"));
+      navigate(createPageUrl("Home"), { replace: true });
     } catch (error) {
       if (error?.message === "EMAIL_CONFIRMATION_REQUIRED") {
         setConfirmationEmail(formData.email);
