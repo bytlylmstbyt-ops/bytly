@@ -68,7 +68,7 @@ export default function RegisterConsultantPage() {
         row: { ...formData, years_experience: parseInt(formData.years_experience) || 0, status: "pending", terms_accepted: true, terms_accepted_date: new Date().toISOString() }
       });
       alert("تم تقديم طلب التسجيل بنجاح! سيتم مراجعته من قبل الإدارة.");
-      navigate(createPageUrl("RegistrationSuccess"));
+      navigate(createPageUrl("Home"), { replace: true });
     } catch (error) {
       if (error?.message === "EMAIL_CONFIRMATION_REQUIRED") {
         setConfirmationEmail(formData.email);
