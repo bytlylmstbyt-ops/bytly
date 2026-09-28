@@ -2,7 +2,8 @@ const FROM = process.env.BYTLY_EMAIL_FROM || "Bytly <info@mybytly.com>";
 const ADMIN_EMAIL = process.env.BYTLY_ADMIN_EMAIL;
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const EMAIL_AGENT_SECRET = process.env.BYTLY_EMAIL_AGENT_SECRET;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
 function json(res, status, body) {
   res.status(status).setHeader("Content-Type", "application/json");
@@ -145,9 +146,18 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return json(res, 405, { ok: false, error: "Method not allowed." });
 
   try {
-    if (!EMAIL_AGENT_SECRET) return json(res, 503, { ok: false, error: "BYTLY_EMAIL_AGENT_SECRET is not configured." });
-  const providedSecret = String(req.headers["x-bytly-email-agent-secret"] || "");
-  if (providedSecret !== EMAIL_AGENT_SECRET) return json(res, 401, { ok: false, error: "Unauthorized." });
+    const authorization = String(req.headers.authorization || "");
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !authorization.startsWith("Bearer ")) {
+    return json(res, 401, { ok: false, error: "Unauthorized." });
+  }
+  const userResponse = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    headers: {
+      Authorization: authorization,
+      apikey: SUPABASE_ANON_KEY,
+    },
+  });
+  const authUser = await userResponse.json().catch(() => ({}));
+  if (!userResponse.ok || !authUser?.id) return json(res, 401, { ok: false, error: "Invalid session." });
 
   const body = req.body || {};
     const action = String(body.action || "").trim();
