@@ -19,7 +19,7 @@ async function notifyEmailAgent(data, payload) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-bytly-email-agent-secret": import.meta.env.VITE_BYTLY_EMAIL_AGENT_SECRET || "",
+        Authorization: `Bearer ${(await supabase.auth.getSession()).data?.session?.access_token || ""}`,
       },
       body: JSON.stringify({ action: "new_user", user }),
     });
