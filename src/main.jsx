@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import ReactDOM from 'react-dom/client'
 import '@/index.css'
-import AnalyticsTracker from '@/lib/AnalyticsTracker'
 
 class StartupErrorBoundary extends Component {
   constructor(props) {
@@ -86,7 +85,6 @@ async function mountApp() {
     ReactDOM.createRoot(rootElement).render(
       <StartupErrorBoundary>
         <AuthProvider>
-          <AnalyticsTracker />
           <BrowserRouter>
             <Routes>
               <Route path="/login" element={<Login />} />
