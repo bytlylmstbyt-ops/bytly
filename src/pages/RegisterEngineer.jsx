@@ -146,7 +146,7 @@ export default function RegisterEngineer() {
         password,
         row: { full_name: formData.full_name, phone: formData.phone, city: formData.city, country: formData.country, specialization: formData.specialization, registration_number: formData.registration_number, bio: formData.bio, graduation_certificate_url: formData.graduation_certificate_url, saudi_engineers_council_certificate_url: formData.saudi_engineers_council_certificate_url, profile_image: formData.profile_image, years_experience: parseInt(formData.years_experience) || 0, completed_projects: parseInt(formData.completed_projects) || 0, status: "pending", is_verified: false, rating: 0, total_reviews: 0, wallet_balance: 0, subscription_type: isFreeEligible ? "free_trial" : "none", is_subscription_active: isFreeEligible, subscription_start_date: isFreeEligible ? localDate(today) : undefined, trial_end_date: isFreeEligible ? localDate(trialEnd) : undefined, is_real: true, source: "supabase" }
       }), 15000);
-      const validPortfolioItems = portfolioItems.filter(item => item.title || item.images?.length > 0);
+      // نجاح إنشاء الحساب = الانتقال فورًا للصفحة الرئيسية. أي حفظ إضافي للأعمال/الإشعارات لا يوقف دخول المستخدم.\n      try { localStorage.removeItem(STORAGE_KEY); } catch {}\n      navigate(createPageUrl("Home"), { replace: true });\n\n      const validPortfolioItems = portfolioItems.filter(item => item.title || item.images?.length > 0);
       if (validPortfolioItems.length > 0 && engineer?.id) {
         const portfolioRows = validPortfolioItems.map(item => ({
           engineer_id: engineer.id,
