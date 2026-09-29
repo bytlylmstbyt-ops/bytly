@@ -4,6 +4,23 @@ import{supabase}from"@/lib/supabaseClient";
 const visitorKey="bytly_analytics_visitor_id";
 const getVisitorId=()=>{let id=localStorage.getItem(visitorKey);if(!id){id=crypto.randomUUID();localStorage.setItem(visitorKey,id)}return id};
 const path=()=>window.location.pathname+window.location.search;
+const getAttribution=()=>{
+ const u=new URL(window.location.href),q=u.searchParams;
+ const ref=document.referrer||"";
+ const host=(()=>{try{return ref?new URL(ref).hostname:""}catch{return""}})();
+ let source=q.get("utm_source")||q.get("source")||"";
+ let medium=q.get("utm_medium")||"";
+ let campaign=q.get("utm_campaign")||"";
+ let content=q.get("utm_content")||"";
+ let term=q.get("utm_term")||"";
+ let clickId=q.get("fbclid")?"facebook":q.get("gclid")?"google":q.get("msclkid")?"microsoft":"";
+ if(!source&&clickId)source=clickId;
+ if(!medium&&clickId)medium="paid";
+ if(!source&&host){if(/facebook|instagram|fb\.com/i.test(host))source="facebook";else if(/linkedin/i.test(host))source="linkedin";else if(/t\.co|twitter|x\.com/i.test(host))source="x";else if(/whatsapp/i.test(host))source="whatsapp";else if(/google/i.test(host))source="google";else source=host}
+ if(!source)source="direct";
+ const label=source==="facebook"?"فيسبوك":source==="instagram"?"إنستغرام":source==="linkedin"?"لينكدإن":source==="whatsapp"?"واتساب":source==="google"?"جوجل":source==="direct"?"مباشر":source;
+ return {source,medium,campaign,content,term,referrer:ref,label};
+};
 const device=()=>/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?"mobile":"desktop";
 const os=()=>/iPhone|iPad|iPod/i.test(navigator.userAgent)?"iOS":/Android/i.test(navigator.userAgent)?"Android":/Windows/i.test(navigator.userAgent)?"Windows":/Mac OS X/i.test(navigator.userAgent)?"macOS":/Linux/i.test(navigator.userAgent)?"Linux":"Unknown";
 const browser=()=>/Edg\//.test(navigator.userAgent)?"Edge":/Chrome\//.test(navigator.userAgent)?"Chrome":/Safari\//.test(navigator.userAgent)&&!/Chrome\//.test(navigator.userAgent)?"Safari":/Firefox\//.test(navigator.userAgent)?"Firefox":"Other";
@@ -19,7 +36,8 @@ export default function AnalyticsTracker(){
    let country="Unknown";
    try{const r=await fetch("https://ipapi.co/json/",{headers:{Accept:"application/json"}});if(r.ok){const j=await r.json();country=j.country_name||j.country||"Unknown"}}catch{}
    const sessionId=crypto.randomUUID();
-   const{error}=await supabase.from("analytics_sessions").insert({id:sessionId,user_id:userRef.current,visitor_id:visitorRef.current,entry_page:path(),browser:browser(),operating_system:os(),device_type:device(),country});
+   const attribution=getAttribution();
+   const{error}=await supabase.from("analytics_sessions").insert({id:sessionId,user_id:userRef.current,visitor_id:visitorRef.current,entry_page:path(),browser:browser(),operating_system:os(),device_type:device(),country,traffic_source:attribution.source,traffic_medium:attribution.medium||null,traffic_campaign:attribution.campaign||null,traffic_content:attribution.content||null,traffic_term:attribution.term||null,referrer_url:attribution.referrer||null,attribution_type:attribution.medium==="paid"?"paid":attribution.source==="direct"?"direct":"referral",attribution_label:attribution.label});
    if(error){console.warn("Analytics session insert failed",error);return}
    sessionRef.current=sessionId;
 
@@ -27,7 +45,7 @@ export default function AnalyticsTracker(){
     if(!sessionRef.current||!authUser?.id)return;
     userRef.current=authUser.id;
     await supabase.from("analytics_sessions").update({user_id:authUser.id,last_seen_at:new Date().toISOString()}).eq("id",sessionRef.current).eq("visitor_id",visitorRef.current);
-    await supabase.from("analytics_events").insert({session_id:sessionRef.current,user_id:authUser.id,visitor_id:visitorRef.current,event_name:"login",page_path:path(),metadata:{provider:authUser.app_metadata?.provider||"password",email:authUser.email||null}});
+    await supabase.from("analytics_events").insert({session_id:sessionRef.current,user_id:authUser.id,visitor_id:visitorRef.current,event_name:"login",page_path:path(),metadata:{provider:authUser.app_metadata?.provider||"password",email:authUser.email||null,attribution}});
    };
 
    const{data:authListener}=supabase.auth.onAuthStateChange(async(event,session)=>{
