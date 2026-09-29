@@ -128,13 +128,11 @@ export default function RegisterFirm() {
   };
 
   const handleSubmit = async (e) => {
+    e.preventDefault();
     if (new TextEncoder().encode(password).length > 72) { toast.error("كلمة المرور طويلة جداً. الحد الأقصى 72 بايت."); return; }
     if (password.length < 8) { toast.error("كلمة المرور يجب أن تكون 8 أحرف على الأقل."); return; }
     if (password !== confirmPassword) { toast.error("كلمتا المرور غير متطابقتين."); return; }
-
-    e.preventDefault();
-    
-    if (!formData.company_name || !formData.email || !formData.commercial_registration) {
+    if (!formData.company_name || !formData.email || !formData.phone || !formData.commercial_registration) {
       toast.error("يرجى ملء جميع الحقول المطلوبة");
       return;
     }
@@ -180,7 +178,7 @@ export default function RegisterFirm() {
         window.location.href = "/login";
         return;
       }
-      toast.error("حدث خطأ أثناء التسجيل");
+      toast.error(error?.message || "تعذر إكمال التسجيل. حاول مرة أخرى.");
     } finally {
       setLoading(false);
     }
