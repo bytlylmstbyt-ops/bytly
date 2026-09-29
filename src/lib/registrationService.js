@@ -17,6 +17,8 @@ export async function saveRegistration(payload) {
   const email = String(payload?.email || "").trim().toLowerCase();
   const fullName = String(payload?.fullName || "").trim();
   const phone = String(payload?.phone || "").trim();
+  let attribution = null;
+  try { attribution = JSON.parse(localStorage.getItem("bytly_acquisition_attribution") || "null"); } catch {}
 
   if (!email || !fullName || !phone) {
     throw new Error("الاسم والبريد الإلكتروني ورقم الهاتف مطلوبة.");
@@ -31,7 +33,8 @@ export async function saveRegistration(payload) {
         email,
         phone,
         password: payload.password,
-        row: payload.row || {}
+        row: payload.row || {},
+        attribution
       }
     }),
     30000,
