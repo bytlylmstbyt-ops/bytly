@@ -19,6 +19,9 @@ const getAttribution=()=>{
  if(!source&&host){if(/facebook|instagram|fb\.com/i.test(host))source="facebook";else if(/linkedin/i.test(host))source="linkedin";else if(/t\.co|twitter|x\.com/i.test(host))source="x";else if(/whatsapp/i.test(host))source="whatsapp";else if(/google/i.test(host))source="google";else source=host}
  if(!source)source="direct";
  const label=source==="facebook"?"فيسبوك":source==="instagram"?"إنستغرام":source==="linkedin"?"لينكدإن":source==="whatsapp"?"واتساب":source==="google"?"جوجل":source==="direct"?"مباشر":source;
+ const current={source,medium,campaign,content,term,referrer:ref,label};
+ try{const existing=JSON.parse(localStorage.getItem("bytly_acquisition_attribution")||"null");if(existing?.source&&existing.source!=="direct")return existing;localStorage.setItem("bytly_acquisition_attribution",JSON.stringify(current));}catch{}
+ return current;
  return {source,medium,campaign,content,term,referrer:ref,label};
 };
 const device=()=>/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?"mobile":"desktop";
