@@ -172,8 +172,8 @@ export default function RegisterContractor() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.company_name || !formData.email || !formData.specialization || !formData.password || !formData.confirmPassword) {
-      toast.error("يرجى ملء جميع الحقول المطلوبة");
+    if (!formData.company_name || !formData.email || !formData.phone || !formData.specialization || !formData.password || !formData.confirmPassword) {
+      toast.error("يرجى ملء الاسم والبريد ورقم الهاتف والتخصص وكلمة المرور وتأكيدها");
       return;
     }
     if (new TextEncoder().encode(formData.password).length > 72) { toast.error("كلمة المرور طويلة جدًا. الحد الأقصى 72 بايت."); return; }
