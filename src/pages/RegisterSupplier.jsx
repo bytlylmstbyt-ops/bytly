@@ -174,8 +174,8 @@ export default function RegisterSupplier() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.company_name || !formData.email || !formData.specialization) {
-      toast.error("يرجى ملء جميع الحقول المطلوبة");
+    if (!formData.company_name || !formData.email || !formData.phone || !formData.specialization) {
+      toast.error("يرجى ملء الاسم والبريد ورقم الهاتف والتخصص والحقول المطلوبة");
       return;
     }
 
@@ -274,7 +274,7 @@ export default function RegisterSupplier() {
                     <Input
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="+966 5XXXXXXXX"
+                      placeholder="+966 5XXXXXXXX" required
                     />
                   </div>
 
