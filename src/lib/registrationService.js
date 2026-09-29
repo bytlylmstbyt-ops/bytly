@@ -1,5 +1,4 @@
 import { supabase } from "@/lib/supabaseClient";
-import { getAcquisitionAttribution, trackAnalyticsEvent } from "@/lib/analyticsService";
 
 const withTimeout = (promise, ms, label) => Promise.race([
   promise,
@@ -18,18 +17,10 @@ export async function saveRegistration(payload) {
   const email = String(payload?.email || "").trim().toLowerCase();
   const fullName = String(payload?.fullName || "").trim();
   const phone = String(payload?.phone || "").trim();
-  const attribution = getAcquisitionAttribution();
-  await trackAnalyticsEvent("registration_started", {
-    role: payload?.role || null,
-    table: payload?.table || null,
-    attribution: attribution || null
-  });
+  let attribution = null;
+  try { attribution = JSON.parse(localStorage.getItem("bytly_acquisition_attribution") || "null"); } catch {}
 
   if (!email || !fullName || !phone) {
-    await trackAnalyticsEvent("registration_failed", {
-      role: payload?.role || null, table: payload?.table || null,
-      stage: "client_validation", error: "الاسم والبريد الإلكتروني ورقم الهاتف مطلوبة."
-    });
     throw new Error("الاسم والبريد الإلكتروني ورقم الهاتف مطلوبة.");
   }
 
@@ -63,21 +54,12 @@ export async function saveRegistration(payload) {
       }
     } catch {}
 
-    await trackAnalyticsEvent("registration_failed", {
-      role: payload?.role || null, table: payload?.table || null,
-      stage: "complete_registration", error: message
-    });
     throw new Error(message);
   }
 
   const data = response.data;
   if (!data?.ok) {
-    const message = data?.error || "تعذر إكمال التسجيل.";
-    await trackAnalyticsEvent("registration_failed", {
-      role: payload?.role || null, table: payload?.table || null,
-      stage: "complete_registration_response", error: message
-    });
-    throw new Error(message);
+    throw new Error(data?.error || "تعذر إكمال التسجيل.");
   }
 
   // The Edge Function creates and confirms the Auth user server-side.
@@ -93,20 +75,10 @@ export async function saveRegistration(payload) {
   );
 
   if (signInResult.error || !signInResult.data?.session?.user) {
-    const message = signInResult.error?.message || "تم إنشاء الحساب لكن تعذر بدء جلسة الدخول.";
-    await trackAnalyticsEvent("registration_failed", {
-      role: payload?.role || null, table: payload?.table || null,
-      stage: "post_registration_login", error: message
-    });
-    throw new Error(message);
+    throw new Error(
+      signInResult.error?.message || "تم إنشاء الحساب لكن تعذر بدء جلسة الدخول."
+    );
   }
-
-  await trackAnalyticsEvent("registration_succeeded", {
-    role: payload?.role || null, table: payload?.table || null,
-    user_id: data.user_id || signInResult.data.session.user.id || null,
-    record_id: data.record_id || null,
-    attribution: attribution || null
-  });
 
   return { ...data, session_started: true };
 }
