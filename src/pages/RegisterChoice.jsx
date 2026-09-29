@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
-import { Building2, Briefcase, ArrowLeft, CheckCircle, Star, Scale, MapPin, HardHat, Package, Compass } from "lucide-react";
+import { Building2, Briefcase, ArrowLeft, CheckCircle, Star, Scale, HardHat, Package, Compass } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/i18n/LanguageContext";
@@ -14,7 +14,6 @@ export default function RegisterChoice() {
     { id: "investor", icon: Building2, title: "مستثمر / مطور عقاري", description: "حساب مخصص للمستثمرين والمطورين العقاريين والمشاريع المتعددة.", features: ["اختر مستثمر أو مطور عقاري", "إدارة مشاريع واستثمارات متعددة"], color: "from-purple-600 to-indigo-600", link: `${createPageUrl("RegisterClient")}?type=investor`, featured: true },
     { id: "client", icon: Briefcase, title: "صاحب منزل", description: "حساب فردي لمشروع أو منزل شخصي.", features: ["مشروع شخصي واحد", "طلب الخدمات الهندسية للمشروع"], color: "from-amber-500 to-orange-500", link: `${createPageUrl("RegisterClient")}?type=individual` },
     { id: "engineer", icon: Building2, title: t('registerChoice.roles.engineer.title'), description: t('registerChoice.roles.engineer.description'), features: t('registerChoice.roles.engineer.features'), color: "from-blue-500 to-cyan-500", link: `${createPageUrl("RegisterEngineer")}?type=engineer` },
-    { id: "surveyor", icon: MapPin, title: t('registerChoice.roles.surveyor.title'), description: t('registerChoice.roles.surveyor.description'), features: t('registerChoice.roles.surveyor.features'), color: "from-green-500 to-emerald-600", link: `${createPageUrl("RegisterEngineer")}?type=surveyor` },
     { id: "firm", icon: Building2, title: t('registerChoice.roles.firm.title'), description: t('registerChoice.roles.firm.description'), features: t('registerChoice.roles.firm.features'), color: "from-teal-600 to-cyan-600", link: createPageUrl("RegisterFirm") },
     { id: "legal", icon: Scale, title: t('registerChoice.roles.legal.title'), description: t('registerChoice.roles.legal.description'), features: t('registerChoice.roles.legal.features'), color: "from-slate-600 to-gray-700", link: createPageUrl("RegisterLegalConsultant") },
     { id: "consultant", icon: Compass, title: t('registerChoice.roles.consultant.title'), description: t('registerChoice.roles.consultant.description'), features: t('registerChoice.roles.consultant.features'), color: "from-amber-600 to-yellow-600", link: createPageUrl("RegisterConsultant") },
