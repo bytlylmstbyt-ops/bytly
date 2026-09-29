@@ -79,11 +79,11 @@ export default function RegisterClient() {
   };
 
   const handleSubmit = async (e) => {
+    e.preventDefault();
     if (new TextEncoder().encode(password).length > 72) { toast.error("كلمة المرور طويلة جداً. الحد الأقصى 72 بايت."); return; }
     if (password.length < 8) { toast.error("كلمة المرور يجب أن تكون 8 أحرف على الأقل."); return; }
     if (password !== confirmPassword) { toast.error("كلمتا المرور غير متطابقتين."); return; }
 
-    e.preventDefault();
     if (isLoading) return;
     setIsLoading(true);
     try {
@@ -118,6 +118,8 @@ export default function RegisterClient() {
     formData.full_name &&
     formData.email &&
     formData.phone &&
+    password.length >= 8 &&
+    password === confirmPassword &&
     formData.client_type &&
     ((formData.client_type !== "investor" && formData.client_type !== "developer") || formData.company_name?.trim())
   );
