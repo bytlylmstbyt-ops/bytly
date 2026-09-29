@@ -96,7 +96,17 @@ const ContractorsLanding = React.lazy(() => import('./pages/audiences/Contractor
 const ConsultingTeamsLanding = React.lazy(() => import('./pages/audiences/ConsultingTeamsLanding'));
 
 function PageSpinner() { return <div className="fixed inset-0 flex items-center justify-center bg-white/60"><div className="w-8 h-8 border-4 border-slate-200 border-t-[#C9A66B] rounded-full animate-spin" /></div>; }
-function PublicHomeRoute() { const { isAuthenticated, isLoadingPublicSettings } = useAuth(); if (isLoadingPublicSettings) return <PageSpinner />; if (isAuthenticated) return <Navigate to="/Home" replace />; return <PublicLanding />; }
+function PublicHomeRoute() {
+  const { isAuthenticated, isLoadingPublicSettings } = useAuth();
+  if (isLoadingPublicSettings) return <PageSpinner />;
+  if (isAuthenticated) return <Navigate to="/Home" replace />;
+  // Returning users who have already created/logged into an account should
+  // start from the login form when their session is no longer active.
+  try {
+    if (localStorage.getItem("bytly_has_account") === "1") return <Navigate to="/login" replace />;
+  } catch {}
+  return <PublicLanding />;
+}
 const { Pages, Layout } = pagesConfig;
 const LayoutWrapper = ({ children, currentPageName }) => Layout ? <Layout currentPageName={currentPageName}>{children}</Layout> : <>{children}</>;
 const lazyRoute = (Component, name) => <LayoutWrapper currentPageName={name}><Suspense fallback={<PageSpinner />}><Component /></Suspense></LayoutWrapper>;
