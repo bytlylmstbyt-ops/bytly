@@ -98,7 +98,11 @@ export const AuthProvider = ({ children }) => {
 
         const patch = { last_seen_at: new Date().toISOString() };
         if (recordLogin) patch.last_login_at = new Date().toISOString();
-        await supabase.from('profiles').update(patch).eq('user_id', authUser.id);
+        let activityUpdate = await supabase.from('profiles').update(patch).eq('user_id', authUser.id);
+        if (activityUpdate.error) throw activityUpdate.error;
+        if (activityUpdate.data?.length === 0) {
+          await supabase.from('profiles').update(patch).eq('id', authUser.id);
+        }
         if (profile) profile = { ...profile, ...patch };
       } catch (error) {
         console.warn('Supabase profile lookup/activity update skipped:', error?.message || error);
