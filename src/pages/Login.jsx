@@ -81,6 +81,7 @@ export default function Login() {
       );
 
       if (!authError) {
+        try { localStorage.setItem("bytly_has_account", "1"); } catch {}
         await redirectAfterSuccessfulLogin();
         return;
       }
@@ -114,6 +115,7 @@ export default function Login() {
           throw migrateError;
         }
         if (migrated?.session) {
+          try { localStorage.setItem("bytly_has_account", "1"); } catch {}
           await redirectAfterSuccessfulLogin();
           return;
         }
