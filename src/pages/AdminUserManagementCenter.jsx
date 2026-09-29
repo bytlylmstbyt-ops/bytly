@@ -25,6 +25,7 @@ export default function AdminUserManagementCenter(){
  const activeSessions=sessions.filter(s=>s.last_seen_at&&now-new Date(s.last_seen_at).getTime()<=300000);
  const newToday=users.filter(u=>new Date(u.created_at)>=todayStart),newWeek=users.filter(u=>now-new Date(u.created_at).getTime()<=604800000);
  const profileByUser=useMemo(()=>Object.fromEntries(users.map(u=>[u.user_id,u])),[users]);
+ const acquisitionByUser=useMemo(()=>{const m={};for(const s of sessions){if(s.user_id&&!m[s.user_id])m[s.user_id]=s;}return m;},[sessions]);
  const registeredSessions=sessions.filter(s=>s.user_id),anonymousSessions=sessions.filter(s=>!s.user_id);
  const filtered=useMemo(()=>filter==="new"?newWeek:filter==="active"?activeSessions.map(s=>profileByUser[s.user_id]).filter(Boolean):filter==="engineer"?users.filter(u=>u.role==="engineer"):filter==="client"?users.filter(u=>u.role==="client"):users,[users,filter,activeSessions,profileByUser,newWeek]);
  return <div className="max-w-7xl mx-auto px-4 py-8 space-y-7"dir="rtl">
