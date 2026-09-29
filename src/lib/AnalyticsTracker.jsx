@@ -4,26 +4,7 @@ import{supabase}from"@/lib/supabaseClient";
 const visitorKey="bytly_analytics_visitor_id";
 const getVisitorId=()=>{let id=localStorage.getItem(visitorKey);if(!id){id=crypto.randomUUID();localStorage.setItem(visitorKey,id)}return id};
 const path=()=>window.location.pathname+window.location.search;
-const getAttribution=()=>{
- const u=new URL(window.location.href),q=u.searchParams;
- const ref=document.referrer||"";
- const host=(()=>{try{return ref?new URL(ref).hostname:""}catch{return""}})();
- let source=q.get("utm_source")||q.get("source")||"";
- let medium=q.get("utm_medium")||"";
- let campaign=q.get("utm_campaign")||"";
- let content=q.get("utm_content")||"";
- let term=q.get("utm_term")||"";
- let clickId=q.get("fbclid")?"facebook":q.get("gclid")?"google":q.get("msclkid")?"microsoft":"";
- if(!source&&clickId)source=clickId;
- if(!medium&&clickId)medium="paid";
- if(!source&&host){if(/facebook|instagram|fb\.com/i.test(host))source="facebook";else if(/linkedin/i.test(host))source="linkedin";else if(/t\.co|twitter|x\.com/i.test(host))source="x";else if(/whatsapp/i.test(host))source="whatsapp";else if(/google/i.test(host))source="google";else source=host}
- if(!source)source="direct";
- const label=source==="facebook"?"فيسبوك":source==="instagram"?"إنستغرام":source==="linkedin"?"لينكدإن":source==="whatsapp"?"واتساب":source==="google"?"جوجل":source==="direct"?"مباشر":source;
- const current={source,medium,campaign,content,term,referrer:ref,label};
- try{const existing=JSON.parse(localStorage.getItem("bytly_acquisition_attribution")||"null");if(existing?.source&&existing.source!=="direct")return existing;localStorage.setItem("bytly_acquisition_attribution",JSON.stringify(current));}catch{}
- return current;
- return {source,medium,campaign,content,term,referrer:ref,label};
-};
+const INTERNAL_HOSTS=["mybytly.com","www.mybytly.com"];\nconst isInternalHost=host=>{const h=(host||"").toLowerCase();return INTERNAL_HOSTS.includes(h)||/\\.vercel\\.app$/i.test(h)};\nconst normalizeSource=(source,medium,clickId)=>{const s=(source||"").toLowerCase().trim(),m=(medium||"").toLowerCase(),paid=!!clickId||/paid|cpc|ppc|ads|paid_social|display/i.test(m);const map={facebook:"فيسبوك",instagram:"إنستغرام",linkedin:"لينكدإن",whatsapp:"واتساب",google:"جوجل",x:"X",twitter:"X"};if(s==="direct")return{source:"direct",label:"مباشر",type:"direct"};if(isInternalHost(s))return{source:"internal",label:"داخل المنصة",type:"internal"};if(map[s])return{source:s,label:paid?map[s]+" – إعلان":map[s],type:paid?"paid":"referral"};return{source:"other",label:"إحالة أخرى",type:"referral"};};\nconst getAttribution=()=>{const u=new URL(window.location.href),q=u.searchParams,ref=document.referrer||"",host=(()=>{try{return ref?new URL(ref).hostname:""}catch{return""}})();let source=q.get("utm_source")||q.get("source")||"",medium=q.get("utm_medium")||"";const campaign=q.get("utm_campaign")||"",content=q.get("utm_content")||"",term=q.get("utm_term")||"",clickId=q.get("fbclid")?"facebook":q.get("gclid")?"google":q.get("msclkid")?"microsoft":"";if(!source&&clickId)source=clickId;if(!medium&&clickId)medium="paid";if(!source&&host&&!isInternalHost(host)){if(/facebook|fb\\.com/i.test(host))source="facebook";else if(/instagram/i.test(host))source="instagram";else if(/linkedin/i.test(host))source="linkedin";else if(/whatsapp/i.test(host))source="whatsapp";else if(/t\\.co|twitter|x\\.com/i.test(host))source="x";else if(/google/i.test(host))source="google";else source=host;}if(!source)source="direct";const n=normalizeSource(source,medium,clickId),current={source:n.source,medium,campaign,content,term,referrer:ref,label:n.label,type:n.type};try{const existing=JSON.parse(localStorage.getItem("bytly_acquisition_attribution")||"null");if(existing?.source&&existing.source!=="direct"&&existing.source!=="internal")return existing;localStorage.setItem("bytly_acquisition_attribution",JSON.stringify(current))}catch{}return current;};
 const device=()=>/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?"mobile":"desktop";
 const os=()=>/iPhone|iPad|iPod/i.test(navigator.userAgent)?"iOS":/Android/i.test(navigator.userAgent)?"Android":/Windows/i.test(navigator.userAgent)?"Windows":/Mac OS X/i.test(navigator.userAgent)?"macOS":/Linux/i.test(navigator.userAgent)?"Linux":"Unknown";
 const browser=()=>/Edg\//.test(navigator.userAgent)?"Edge":/Chrome\//.test(navigator.userAgent)?"Chrome":/Safari\//.test(navigator.userAgent)&&!/Chrome\//.test(navigator.userAgent)?"Safari":/Firefox\//.test(navigator.userAgent)?"Firefox":"Other";
@@ -31,59 +12,11 @@ const browser=()=>/Edg\//.test(navigator.userAgent)?"Edge":/Chrome\//.test(navig
 export default function AnalyticsTracker(){
  const sessionRef=useRef(null),visitorRef=useRef(null),userRef=useRef(null),maxScrollRef=useRef(0);
  useEffect(()=>{if(!supabase)return;let mounted=true,heartbeat,routeWatcher,observer,authSubscription;
- const started=Date.now();let eventCount=0,pageCount=0,lastPath="",lastSection="";
+ let started=Date.now(),eventCount=0,pageCount=0,lastPath="",lastSection="";
  const start=async()=>{
   try{
    visitorRef.current=getVisitorId();
    const{data:{user}}=await supabase.auth.getUser();userRef.current=user?.id||null;
    let country="Unknown";
    try{const r=await fetch("https://ipapi.co/json/",{headers:{Accept:"application/json"}});if(r.ok){const j=await r.json();country=j.country_name||j.country||"Unknown"}}catch{}
-   const sessionId=crypto.randomUUID();
-   const attribution=getAttribution();
-   const{error}=await supabase.from("analytics_sessions").insert({id:sessionId,user_id:userRef.current,visitor_id:visitorRef.current,entry_page:path(),browser:browser(),operating_system:os(),device_type:device(),country,traffic_source:attribution.source,traffic_medium:attribution.medium||null,traffic_campaign:attribution.campaign||null,traffic_content:attribution.content||null,traffic_term:attribution.term||null,referrer_url:attribution.referrer||null,attribution_type:attribution.medium==="paid"?"paid":attribution.source==="direct"?"direct":"referral",attribution_label:attribution.label});
-   if(error){console.warn("Analytics session insert failed",error);return}
-   sessionRef.current=sessionId;
-
-   const linkAuthenticatedUser=async(authUser)=>{
-    if(!sessionRef.current||!authUser?.id)return;
-    userRef.current=authUser.id;
-    await supabase.from("analytics_sessions").update({user_id:authUser.id,last_seen_at:new Date().toISOString()}).eq("id",sessionRef.current).eq("visitor_id",visitorRef.current);
-    await supabase.from("analytics_events").insert({session_id:sessionRef.current,user_id:authUser.id,visitor_id:visitorRef.current,event_name:"login",page_path:path(),metadata:{provider:authUser.app_metadata?.provider||"password",email:authUser.email||null,attribution}});
-   };
-
-   const{data:authListener}=supabase.auth.onAuthStateChange(async(event,session)=>{
-    if(event==="SIGNED_IN"&&session?.user)await linkAuthenticatedUser(session.user);
-    if(event==="TOKEN_REFRESHED"&&session?.user){userRef.current=session.user.id;await supabase.from("analytics_sessions").update({user_id:session.user.id,last_seen_at:new Date().toISOString()}).eq("id",sessionRef.current).eq("visitor_id",visitorRef.current)}
-    if(event==="SIGNED_OUT")userRef.current=null;
-   });
-   authSubscription=authListener?.subscription;
-
-   if(localStorage.getItem("bytly_replay_enabled")!=="false"){
-    let replaySeq=0,lastReplay="";
-    const maskReplay=el=>{if(!el||el.nodeType!==1)return null;if(el.matches("input,textarea,select,[contenteditable=true],[data-analytics-private],input[type=password]"))return{tag:el.tagName.toLowerCase(),masked:true};return{tag:el.tagName.toLowerCase(),id:el.id||"",text:(el.innerText||"").replace(/\s+/g," ").trim().slice(0,100)}};
-    const saveReplay=async type=>{const payload={url:path(),title:document.title,scroll:Math.round(window.scrollY/Math.max(document.body.scrollHeight-window.innerHeight,1)*100),active:maskReplay(document.activeElement)};const key=JSON.stringify(payload);if(key===lastReplay&&type==="mutation")return;lastReplay=key;await supabase.from("analytics_replay_snapshots").insert({session_id:sessionRef.current,visitor_id:visitorRef.current,snapshot_type:type,sequence_no:replaySeq++,payload})};
-    await saveReplay("initial");
-    const replayObserver=new MutationObserver(()=>saveReplay("mutation"));replayObserver.observe(document.body,{subtree:true,childList:true,attributes:true});
-    window.addEventListener("scroll",()=>saveReplay("scroll"),{passive:true});
-    window.__bytlyReplayCleanup=()=>replayObserver.disconnect();
-   }
-   const updateSession=async()=>{if(!sessionRef.current)return;await supabase.from("analytics_sessions").update({user_id:userRef.current,event_count:eventCount,page_count:pageCount,last_seen_at:new Date().toISOString(),duration_seconds:Math.floor((Date.now()-started)/1000),exit_page:path(),max_scroll_percent:maxScrollRef.current}).eq("id",sessionRef.current).eq("visitor_id",visitorRef.current)};
-   const track=async(event_name,metadata={},section_name=null)=>{if(!sessionRef.current||!mounted)return;const{error}=await supabase.from("analytics_events").insert({session_id:sessionRef.current,user_id:userRef.current,visitor_id:visitorRef.current,event_name,page_path:path(),metadata,section_name,screen_x:metadata.screen_x||null,screen_y:metadata.screen_y||null});if(!error){eventCount++;if(event_name==="page_view")pageCount++;await updateSession()}};
-   await track("page_view",{title:document.title});
-   heartbeat=setInterval(updateSession,30000);
-   lastPath=path();
-   routeWatcher=setInterval(()=>{const p=path();if(p!==lastPath){lastPath=p;lastSection="";track("page_view",{title:document.title})}},1000);
-   const isSensitive=el=>el.matches?.("input[type=password],textarea,[data-analytics-private]")||el.closest?.("[data-analytics-private]");const onClick=e=>{const el=e.target?.closest?.("button,a,[role=button]");if(!el||isSensitive(el))return;const label=(el.innerText||el.getAttribute("aria-label")||el.getAttribute("title")||"").trim().slice(0,120);track("click",{label,tag:el.tagName.toLowerCase(),screen_x:e.clientX,screen_y:e.clientY},el.dataset?.analyticsSection||null)};
-   const onScroll=()=>{const pct=Math.round(window.scrollY/(Math.max(document.body.scrollHeight-window.innerHeight,1))*100);if(pct>maxScrollRef.current)maxScrollRef.current=Math.min(100,pct);if(pct-(window.__bytlyLastScroll||0)>=20){window.__bytlyLastScroll=pct;track("scroll",{percent:Math.min(100,pct)})}};
-   const getSections=()=>{const marked=Array.from(document.querySelectorAll("[data-analytics-section]")).filter(el=>el.dataset.analyticsSection);if(marked.length)return marked;return Array.from(document.querySelectorAll("main h1,main h2,main h3,section h1,section h2,section h3")).filter(el=>el.textContent?.trim()).map(el=>{el.dataset.analyticsSection=el.textContent.trim().slice(0,100);return el})};
-   observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting&&entry.intersectionRatio>=0.5){const name=entry.target.dataset.analyticsSection;if(name&&name!==lastSection){lastSection=name;track("section_view",{title:name},name)}}}),{threshold:[0.5]});
-   getSections().forEach(el=>observer.observe(el));
-   const onVisibility=()=>{if(document.visibilityState==="hidden")updateSession()};
-   document.addEventListener("click",onClick,true);window.addEventListener("scroll",onScroll,{passive:true});document.addEventListener("visibilitychange",onVisibility);
-   return()=>{mounted=false;window.__bytlyReplayCleanup?.();clearInterval(heartbeat);clearInterval(routeWatcher);observer?.disconnect();authSubscription?.unsubscribe?.();document.removeEventListener("click",onClick,true);window.removeEventListener("scroll",onScroll);document.removeEventListener("visibilitychange",onVisibility);updateSession()};
-  }catch(e){console.warn("Analytics tracker skipped",e)}
- };
- start();
- },[]);
- return null
-}
+   const attribution=getAttribution();\n   const storageKey="bytly_analytics_session";\n   let persisted=null;try{persisted=JSON.parse(sessionStorage.getItem(storageKey)||"null")}catch{}\n   const persistedAge=persisted?.startedAt?Date.now()-Number(persisted.startedAt):Infinity;\n   let sessionId=persisted?.id;let sessionStartedAt=persisted?.startedAt||Date.now();\n   if(!sessionId||persistedAge>30*60*1000){sessionId=crypto.randomUUID();sessionStartedAt=Date.now();try{sessionStorage.setItem(storageKey,JSON.stringify({id:sessionId,startedAt:sessionStartedAt}))}catch{}\n    const{error}=await supabase.from("analytics_sessions").insert({id:sessionId,user_id:userRef.current,visitor_id:visitorRef.current,entry_page:path(),browser:browser(),operating_system:os(),device_type:device(),country,traffic_source:attribution.source,traffic_medium:attribution.medium||null,traffic_campaign:attribution.campaign||null,traffic_content:attribution.content||null,traffic_term:attribution.term||null,referrer_url:attribution.referrer||null,attribution_type:attribution.type,attribution_label:attribution.label});\n    if(error){console.warn("Analytics session insert failed",error);return}\n   }\n   sessionRef.current=sessionId;started=sessionStartedAt;
