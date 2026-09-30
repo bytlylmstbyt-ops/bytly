@@ -219,6 +219,43 @@ const resolveLegacyId = async (entity, currentId) => {
   } catch { return currentId; }
 };
 
+const legacyPermitApplication = legacyBase44.entities.PermitApplication;
+legacyBase44.entities.PermitApplication = {
+  ...legacyPermitApplication,
+  filter: async (filters = {}, sort = "-created_date", limit = 100) => {
+    let q = supabase.from("permit_applications").select("*").limit(limit);
+    Object.entries(filters || {}).forEach(([k, v]) => {
+      if (v === null) q = q.is(k, null);
+      else if (Array.isArray(v)) q = q.in(k, v);
+      else q = q.eq(k, v);
+    });
+    const sortColumn = String(sort || "").replace(/^-/, "") || "created_at";
+    const { data, error } = await withHardTimeout(
+      q.order(sortColumn === "created_date" ? "created_at" : sortColumn, { ascending: !String(sort).startsWith("-") }),
+      10000,
+      "انتهت مهلة قراءة طلبات رخص البناء"
+    );
+    if (error) throw new Error(error.message || "تعذر قراءة طلبات رخص البناء");
+    return (data || []).map(row => ({ ...row, created_date: row.created_at }));
+  },
+  create: async payload => {
+    const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000, "انتهت مهلة جلسة الدخول");
+    const user = authData?.user;
+    if (!user) throw new Error("يجب تسجيل الدخول أولاً");
+    const row = { ...payload, created_by: user.id, client_email: payload.client_email || user.email, drawings_files: Array.isArray(payload.drawings_files) ? payload.drawings_files : [] };
+    delete row.id; delete row.created_date;
+    const { data, error } = await withHardTimeout(supabase.from("permit_applications").insert(row).select("*").single(), 15000, "انتهت مهلة حفظ طلب رخصة البناء");
+    if (error) throw new Error(error.message || "تعذر حفظ طلب رخصة البناء");
+    return { ...data, created_date: data.created_at };
+  },
+  update: async (id, payload) => {
+    const patch = { ...payload }; delete patch.id; delete patch.created_date;
+    const { data, error } = await withHardTimeout(supabase.from("permit_applications").update(patch).eq("id", id).select("*").single(), 10000, "انتهت مهلة تحديث طلب رخصة البناء");
+    if (error) throw new Error(error.message || "تعذر تحديث طلب رخصة البناء");
+    return { ...data, created_date: data.created_at };
+  },
+};
+
 const legacyContract = legacyBase44.entities.Contract;
 legacyBase44.entities.Contract = {
   ...legacyContract,
