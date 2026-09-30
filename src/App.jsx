@@ -94,7 +94,6 @@ const GithubIssuesDashboard = React.lazy(() => import('./pages/GithubIssuesDashb
 const AdminPlatformSettings = React.lazy(() => import('./pages/AdminPlatformSettings'));
 const ContractorsLanding = React.lazy(() => import('./pages/audiences/ContractorsLanding'));
 const ConsultingTeamsLanding = React.lazy(() => import('./pages/audiences/ConsultingTeamsLanding'));
-const StoreDoctor = React.lazy(() => import('./pages/StoreDoctor'));
 
 function PageSpinner() { return <div className="fixed inset-0 flex items-center justify-center bg-white/60"><div className="w-8 h-8 border-4 border-slate-200 border-t-[#C9A66B] rounded-full animate-spin" /></div>; }
 function PublicHomeRoute() {
