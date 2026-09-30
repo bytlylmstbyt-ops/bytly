@@ -21,7 +21,9 @@ export default function AdminGrowthAgent() {
   const [dailyLimit, setDailyLimit] = useState(20);
   const [message, setMessage] = useState('');
   const [campaignName, setCampaignName] = useState('استقطاب بيتلي');
-  const [autoSend, setAutoSend] = useState(false);\n  const [searchCount, setSearchCount] = useState(10);\n  const [searching, setSearching] = useState(false);
+  const [autoSend, setAutoSend] = useState(false);
+  const [searchCount, setSearchCount] = useState(10);
+  const [searching, setSearching] = useState(false);
 
   const load = async () => {
     if (!supabase) return;
@@ -37,7 +39,23 @@ export default function AdminGrowthAgent() {
 
   useEffect(() => { load(); }, []);
 
-  const discoverProspects = async () => {\n    setMessage('جاري البحث والتأهيل…'); setSearching(true);\n    try {\n      const { data: sessionData } = await supabase.auth.getSession();\n      const token = sessionData?.session?.access_token;\n      if (!token) throw new Error('انتهت جلسة الإدارة، سجلي الدخول من جديد.');\n      const { data, error } = await supabase.functions.invoke('marketing-agent', {\n        body: { mode: 'discover', category, city: city || 'السعودية', count: searchCount, prompt: `ابحث عن ${searchCount} جهات ${category} مناسبة لبيتلي في ${city || 'السعودية'}. أعطني معلومات مهنية عامة ومصادرها.` }\n      });\n      if (error) throw error;\n      if (!data?.success) throw new Error(data?.error || 'تعذر تنفيذ البحث.');\n      setMessage(`تم اكتشاف ${data.count || 0} فرصة وحفظها. راجعيها قبل التواصل.`);\n      await load();\n    } catch (e) { setMessage(e?.message || 'تعذر تنفيذ البحث.'); } finally { setSearching(false); }\n  };\n\n  const createCampaign = async () => {
+  const discoverProspects = async () => {
+    setMessage('جاري البحث والتأهيل…'); setSearching(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      if (!token) throw new Error('انتهت جلسة الإدارة، سجلي الدخول من جديد.');
+      const { data, error } = await supabase.functions.invoke('marketing-agent', {
+        body: { mode: 'discover', category, city: city || 'السعودية', count: searchCount, prompt: `ابحث عن ${searchCount} جهات ${category} مناسبة لبيتلي في ${city || 'السعودية'}. أعطني معلومات مهنية عامة ومصادرها.` }
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'تعذر تنفيذ البحث.');
+      setMessage(`تم اكتشاف ${data.count || 0} فرصة وحفظها. راجعيها قبل التواصل.`);
+      await load();
+    } catch (e) { setMessage(e?.message || 'تعذر تنفيذ البحث.'); } finally { setSearching(false); }
+  };
+
+  const createCampaign = async () => {
     setMessage('');
     const { error } = await supabase.from('growth_campaigns').insert({
       name: campaignName,
@@ -92,13 +110,17 @@ export default function AdminGrowthAgent() {
               {categories.map(([v,l]) => <option key={v} value={v}>{l}</option>)}
             </select>
             <input value={city} onChange={e=>setCity(e.target.value)} placeholder="المدينة (اختياري)" className="border rounded-xl p-3" />
-            <input type="number" min="1" max="200" value={dailyLimit} onChange={e=>setDailyLimit(Number(e.target.value))} className="border rounded-xl p-3" />\n            <input type="number" min="1" max="30" value={searchCount} onChange={e=>setSearchCount(Number(e.target.value))} placeholder="عدد نتائج البحث" className="border rounded-xl p-3" />
+            <input type="number" min="1" max="200" value={dailyLimit} onChange={e=>setDailyLimit(Number(e.target.value))} className="border rounded-xl p-3" />
+            <input type="number" min="1" max="30" value={searchCount} onChange={e=>setSearchCount(Number(e.target.value))} placeholder="عدد نتائج البحث" className="border rounded-xl p-3" />
           </div>
           <div className="mt-4 flex items-center gap-3">
             <input type="checkbox" checked={autoSend} onChange={e=>setAutoSend(e.target.checked)} disabled />
             <span className="text-sm opacity-70">الإرسال التلقائي (مقفول حاليًا حتى تتم مراجعة القنوات والموافقات).</span>
           </div>
-          <div className="mt-4 flex flex-wrap gap-3">\n            <button onClick={discoverProspects} disabled={searching} className="px-5 py-3 rounded-xl bg-[#2d241d] text-white">{searching ? "جاري البحث…" : "🔎 ابدأ البحث والتأهيل"}</button>\n            <button onClick={createCampaign} className="px-5 py-3 rounded-xl bg-[#9b7a3c] text-white">إنشاء الحملة للمراجعة</button>\n          </div>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button onClick={discoverProspects} disabled={searching} className="px-5 py-3 rounded-xl bg-[#2d241d] text-white">{searching ? "جاري البحث…" : "🔎 ابدأ البحث والتأهيل"}</button>
+            <button onClick={createCampaign} className="px-5 py-3 rounded-xl bg-[#9b7a3c] text-white">إنشاء الحملة للمراجعة</button>
+          </div>
           {message && <p className="mt-3 text-sm">{message}</p>}
         </div>
 
