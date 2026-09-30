@@ -94,6 +94,7 @@ const GithubIssuesDashboard = React.lazy(() => import('./pages/GithubIssuesDashb
 const AdminPlatformSettings = React.lazy(() => import('./pages/AdminPlatformSettings'));
 const ContractorsLanding = React.lazy(() => import('./pages/audiences/ContractorsLanding'));
 const ConsultingTeamsLanding = React.lazy(() => import('./pages/audiences/ConsultingTeamsLanding'));
+const StoreDoctor = React.lazy(() => import('./pages/StoreDoctor'));
 
 function PageSpinner() { return <div className="fixed inset-0 flex items-center justify-center bg-white/60"><div className="w-8 h-8 border-4 border-slate-200 border-t-[#C9A66B] rounded-full animate-spin" /></div>; }
 function PublicHomeRoute() {
@@ -118,30 +119,3 @@ const AuthenticatedApp = () => {
   const publicPages = [
     'ContactUs','Terms','Privacy','Copyright','Complaints','Support','RegisterChoice','RegisterAccount','RegistrationSuccess','About',
     'RegisterClient','RegisterEngineer','RegisterFirm','RegisterLegalConsultant','RegisterConsultant','RegisterContractor','RegisterSupplier'
-  ];
-  return <Routes>
-    <Route path="/login" element={<Login />} />
-    <Route path="/register" element={<Register />} />
-    <Route path="/register-auth" element={<Navigate to="/register" replace />} />
-    <Route path="/auth/callback" element={<AuthCallback />} />
-    <Route path="/oauth/authorize" element={<MCPConsent />} />
-    <Route path="/mcp/consent" element={<MCPConsent />} />
-    <Route path="/AdminAnalytics" element={protectedRoute(AdminAnalytics,"AdminAnalytics")} />
-    <Route path="/forgot-password" element={<ForgotPassword />} />
-    <Route path="/reset-password" element={<ResetPassword />} />
-    <Route path="/" element={<PublicHomeRoute />} />
-    <Route path="/About" element={lazyRoute(About, "About")} />
-    <Route path="/AdvertiseWithUs" element={lazyRoute(AdvertiseWithUs, "AdvertiseWithUs")} />
-    <Route path="/landing" element={lazyRoute(React.lazy(() => import('./pages/Landing')), "Landing")} />
-    <Route path="/FAQ" element={lazyRoute(React.lazy(() => import('./pages/FAQ')), "FAQ")} />
-    <Route path="/Solutions" element={lazyRoute(Solutions, "Solutions")} />
-    <Route path="/CaseStudies" element={lazyRoute(CaseStudies, "CaseStudies")} />
-    <Route path="/Resources" element={lazyRoute(Resources, "Resources")} />
-    <Route path="/audiences/engineering-firms" element={lazyRoute(EngineeringFirmsLanding, "EngineeringFirmsLanding")} />
-    <Route path="/audiences/contractors" element={lazyRoute(ContractorsLanding, "ContractorsLanding")} />
-    {Object.entries(Pages).map(([name, Component]) => <Route key={name} path={`/${name}`} element={publicPages.includes(name) ? lazyRoute(Component, name) : protectedRoute(Component, name)} />)}
-    <Route path="*" element={<NotFoundError />} />
-  </Routes>;
-};
-
-export default function App() { return <QueryClientProvider client={queryClientInstance}><Router><AuthProvider><AnalyticsTracker /><NavigationTracker /><RouteTitleManager /><AuthenticatedApp /><Toaster /><HotToastToaster position="top-center" toastOptions={{ duration: 5000 }} /><SonnerToaster position="top-center" richColors /></AuthProvider></Router></QueryClientProvider>; }
