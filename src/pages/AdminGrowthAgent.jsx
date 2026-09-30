@@ -46,11 +46,55 @@ export default function AdminGrowthAgent() {
       const token = sessionData?.session?.access_token;
       if (!token) throw new Error('انتهت جلسة الإدارة، سجلي الدخول من جديد.');
       const { data, error } = await supabase.functions.invoke('marketing-agent', {
-        body: { category, city: city || 'السعودية', count: searchCount, prompt: `ابحث عن ${searchCount} جهات ${category} مناسبة لبيتلي في ${city || 'السعودية'}. أعطني معلومات مهنية عامة ومصادرها.` }
+        body: {
+          category,
+          city: city || 'السعودية',
+          count: searchCount,
+          prompt: `استخدم البحث على الويب لاكتشاف ${searchCount} جهات مهنية مناسبة لبيتلي في فئة "${category}" داخل "${city || 'السعودية'}".
+أعد النتيجة بصيغة JSON فقط كمصفوفة، بدون Markdown أو شرح:
+[{"name":"","company_name":"","category":"","city":"","website":"","linkedin_url":"","public_contact":"","source":"","source_url":"","fit_score":0,"notes":""}]
+استخدم معلومات مهنية عامة منشورة فقط. لا تخمن ولا تخترع أي بريد أو هاتف أو رابط. لا تكرر الجهات. لا تتواصل مع أي جهة.`
+        }
       });
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || 'تعذر تنفيذ البحث.');
-      setMessage(`تم اكتشاف ${data.count || 0} فرصة وحفظها. راجعيها قبل التواصل.`);
+
+      const raw = String(data.result || '').trim().replace(/^\`\`\`(?:json)?/i, '').replace(/\`\`\`$/i, '').trim();
+      let parsed = null;
+      try { parsed = JSON.parse(raw); } catch {
+        const match = raw.match(/\\[[\\s\\S]*\\]/);
+        if (match) { try { parsed = JSON.parse(match[0]); } catch {} }
+      }
+      if (!Array.isArray(parsed) || !parsed.length) {
+        throw new Error('تم البحث، لكن لم تُرجع النتائج بصيغة قابلة للحفظ.');
+      }
+
+      const rows = parsed.slice(0, searchCount).map((p) => {
+        const score = Math.max(0, Math.min(100, Number(p?.fit_score) || 0));
+        return {
+          name: String(p?.name || '').trim() || null,
+          company_name: String(p?.company_name || '').trim() || null,
+          category: String(p?.category || category).trim() || category,
+          city: String(p?.city || city || 'السعودية').trim(),
+          country: 'Saudi Arabia',
+          website: String(p?.website || '').trim() || null,
+          linkedin_url: String(p?.linkedin_url || '').trim() || null,
+          public_contact: String(p?.public_contact || '').trim() || null,
+          source: String(p?.source || 'Google Search').trim(),
+          source_url: String(p?.source_url || '').trim() || null,
+          fit_score: score,
+          status: score >= 70 ? 'qualified' : 'new',
+          notes: String(p?.notes || '').trim() || null,
+          metadata: { discovered_by: 'marketing-agent', citations: data.citations || [] }
+        };
+      }).filter((p) => p.name || p.company_name);
+
+      if (!rows.length) throw new Error('لم نجد جهات قابلة للحفظ في النتائج.');
+
+      const { error: insertError } = await supabase.from('growth_prospects').insert(rows);
+      if (insertError) throw insertError;
+
+      setMessage(`تم اكتشاف وحفظ ${rows.length} فرصة. راجعيها قبل أي تواصل.`);
       await load();
     } catch (e) { setMessage(e?.message || 'تعذر تنفيذ البحث.'); } finally { setSearching(false); }
   };
