@@ -46,7 +46,7 @@ export default function AdminGrowthAgent() {
       const token = sessionData?.session?.access_token;
       if (!token) throw new Error('انتهت جلسة الإدارة، سجلي الدخول من جديد.');
       const { data, error } = await supabase.functions.invoke('marketing-agent', {
-        body: { mode: 'discover', category, city: city || 'السعودية', count: searchCount, prompt: `ابحث عن ${searchCount} جهات ${category} مناسبة لبيتلي في ${city || 'السعودية'}. أعطني معلومات مهنية عامة ومصادرها.` }
+        body: { category, city: city || 'السعودية', count: searchCount, prompt: `ابحث عن ${searchCount} جهات ${category} مناسبة لبيتلي في ${city || 'السعودية'}. أعطني معلومات مهنية عامة ومصادرها.` }
       });
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || 'تعذر تنفيذ البحث.');
