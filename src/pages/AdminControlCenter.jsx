@@ -13,6 +13,7 @@ import ProjectCompletionTrendPanel from "@/components/admin/ProjectCompletionTre
 import EngineerPerformancePanel from "@/components/admin/EngineerPerformancePanel";
 import BIMProjectFilesPanel from "@/components/admin/BIMProjectFilesPanel";
 import RiskDashboard from "@/pages/RiskDashboard";
+import AdminGrowthAgent from "@/pages/AdminGrowthAgent";
 
 const PLATFORM_OWNER_EMAIL = "bytlylmstbyt@gmail.com";
 
@@ -238,7 +239,7 @@ export default function AdminControlCenter() {
   const [activeKey, setActiveKey] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const cat = params.get("cat");
-    const standaloneKeys = ["mcp", "secrets", "investor_center", "risk_management", "sbc"];
+    const standaloneKeys = ["mcp", "secrets", "investor_center", "risk_management", "sbc", "growth_agent"];
     if (cat && (CATEGORIES.find((c) => c.key === cat) || standaloneKeys.includes(cat))) return cat;
     const saved = readAdminFilters("AdminControlCenter");
     if (saved.activeKey && (CATEGORIES.find((c) => c.key === saved.activeKey) || standaloneKeys.includes(saved.activeKey))) return saved.activeKey;
@@ -274,6 +275,7 @@ export default function AdminControlCenter() {
     { key: "investor_center", label: "مركز المستثمر", icon: BriefcaseBusiness, description: "مركز المستثمر مستقل داخل مركز إدارة المنصة.", items: [{ page: "__INVESTOR__", label: "مركز المستثمر", desc: "فتح مركز المستثمر الحالي من داخل مركز الإدارة" }] },
     { key: "mcp", label: "MCP", icon: PlugZap, description: "إعداد وصول MCP للمساعدين الذين يعملون بالذكاء الاصطناعي.", items: [{ page: "__MCP__", label: "MCP", desc: "إعداد وصول مساعدي الذكاء الاصطناعي إلى التطبيق" }] },
     { key: "secrets", label: "الأسرار", icon: KeyRound, description: "إدارة أسماء الأسرار مع إخفاء القيم الحساسة.", items: [{ page: "__SECRETS__", label: "أسرار التطبيق", desc: "إدارة أسماء الأسرار مع إخفاء القيم الحساسة" }] },
+    { key: "growth_agent", label: "🚀 وكيل النمو والاستقطاب", icon: ArrowUpRight, description: "محرك استقطاب بيتلي: البحث عن جهات مناسبة، تأهيلها، وإدارة حملات التسجيل مع مراجعة بشرية قبل التواصل.", items: [{ page: "__GROWTH_AGENT__", label: "وكيل النمو والاستقطاب", desc: "البحث والتأهيل وقياس التحويلات إلى تسجيلات بيتلي" }] },
     { key: "risk_management", label: "إدارة المخاطر", icon: ShieldAlert, description: "صفحة إدارة وتحليل مخاطر المشاريع الموجودة في المنصة، مع الحفاظ على الصفحة الأصلية كما هي.", items: [{ page: "__RISK_MANAGEMENT__", label: "إدارة المخاطر", desc: "فتح لوحة تقييم المخاطر وتحليل المخاطر والتأخيرات المحتملة" }] },
     {
       key: "sbc",
@@ -336,6 +338,11 @@ export default function AdminControlCenter() {
             <div id="admin-category-content" className="min-w-0 scroll-mt-6">
               <div className="mb-4"><div className="rounded-2xl bg-white border border-slate-200 shadow-sm px-5 py-4"><h2 className="text-lg font-bold text-[#2F2945]">مركز المستثمر</h2><p className="text-xs text-slate-500 mt-1">مركز مستقل داخل مركز إدارة المنصة.</p></div></div>
               <AdminInvestorPage />
+            </div>
+          ) : activeKey === "growth_agent" ? (
+            <div id="admin-category-content" className="min-w-0 scroll-mt-6">
+              <div className="mb-4"><div className="rounded-2xl bg-white border border-slate-200 shadow-sm px-5 py-4"><h2 className="text-lg font-bold text-[#2F2945]">🚀 وكيل النمو والاستقطاب</h2><p className="text-xs text-slate-500 mt-1">استقطاب المستخدمين المحتملين لبيتلي، مع مراجعة بشرية قبل أي تواصل خارجي.</p></div></div>
+              <AdminGrowthAgent />
             </div>
           ) : activeKey === "mcp" ? (
             <div id="admin-category-content" className="min-w-0 scroll-mt-6">
