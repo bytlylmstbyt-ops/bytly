@@ -27,6 +27,18 @@ Deno.serve(async(req:Request)=>{
   ]);
   const err=[s,e,pr,c].find(x=>x.error)?.error;
   if(err)return json({error:"تعذر قراءة بيانات التحليلات: "+err.message},500);
-  return json({kind:"analytics",range,since,sessions:s.data||[],events:e.data||[],profiles:pr.data||[],clients:c.data||[]});
+  const events=e.data||[];
+  const eventsBySession=new Map<string,any[]>();
+  for(const event of events){const list=eventsBySession.get(event.session_id)||[];list.push(event);eventsBySession.set(event.session_id,list)}
+  const sessions=(s.data||[]).map((session:any)=>{
+   const list=(eventsBySession.get(session.id)||[]).slice().sort((a,b)=>new Date(a.occurred_at).getTime()-new Date(b.occurred_at).getTime());
+   const first=list[0]?.occurred_at||session.started_at;
+   const last=list[list.length-1]?.occurred_at||session.last_seen_at||session.started_at;
+   const duration=Math.max(0,Math.floor((new Date(last).getTime()-new Date(first).getTime())/1000));
+   const pageCount=list.filter(e=>e.event_name==="page_view").length;
+   const scroll=Math.max(0,...list.filter(e=>e.event_name==="scroll").map(e=>Number(e.metadata?.percent)||0));
+   return {...session,duration_seconds:Math.max(Number(session.duration_seconds)||0,duration),page_count:Math.max(Number(session.page_count)||0,pageCount),event_count:Math.max(Number(session.event_count)||0,list.length),last_seen_at:last,exit_page:session.exit_page||list[list.length-1]?.page_path||null,max_scroll_percent:Math.max(Number(session.max_scroll_percent)||0,scroll)};
+  });
+  return json({kind:"analytics",range,since,sessions,events,profiles:pr.data||[],clients:c.data||[]});
  }catch(error){return json({error:error instanceof Error?error.message:String(error)},500);}
 });
