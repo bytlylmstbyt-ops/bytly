@@ -119,5 +119,19 @@ const AuthenticatedApp = () => {
     'ContactUs','Terms','Privacy','Copyright','Complaints','Support','RegisterChoice','RegisterAccount','RegistrationSuccess','About',
     'RegisterClient','RegisterEngineer','RegisterFirm','RegisterLegalConsultant','RegisterConsultant','RegisterContractor','RegisterSupplier'
   ];
-  return null;
+  return <Routes>
+    <Route path="/" element={<PublicHomeRoute />} />
+    <Route path="/login" element={<Login />} />
+    <Route path="/register" element={<Register />} />
+    <Route path="/auth/callback" element={<AuthCallback />} />
+    <Route path="/forgot-password" element={<ForgotPassword />} />
+    <Route path="/reset-password" element={<ResetPassword />} />
+    <Route path="/mcp-consent" element={<MCPConsent />} />
+    {Object.entries(Pages).map(([name, Component]) => <Route key={name} path={`/${name}`} element={publicPages.includes(name) ? lazyRoute(Component, name) : protectedRoute(Component, name)} />)}
+    <Route path="*" element={<NotFoundError />} />
+  </Routes>;
 };
+
+export default function App() {
+  return <QueryClientProvider client={queryClientInstance}><Router><AuthProvider><NavigationTracker /><AnalyticsTracker /><RouteTitleManager /><AuthenticatedApp /><Toaster /><HotToastToaster /><SonnerToaster /></AuthProvider></Router></QueryClientProvider>;
+}
