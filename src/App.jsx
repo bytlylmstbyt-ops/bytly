@@ -118,3 +118,6 @@ const AuthenticatedApp = () => {
   const publicPages = [
     'ContactUs','Terms','Privacy','Copyright','Complaints','Support','RegisterChoice','RegisterAccount','RegistrationSuccess','About',
     'RegisterClient','RegisterEngineer','RegisterFirm','RegisterLegalConsultant','RegisterConsultant','RegisterContractor','RegisterSupplier'
+  ];
+  return null;
+};
