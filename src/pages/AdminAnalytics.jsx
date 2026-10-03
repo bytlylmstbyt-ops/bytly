@@ -16,7 +16,7 @@ const eventLabel=(e)=>{
  return {title:e.event_name||"حدث",icon:"•"};
 };
 const sessionInsight=(session,events)=>{
- const clicks=events.filter(e=>e.event_name==="click"),pages=events.filter(e=>e.event_name==="page_view"),sections=events.filter(e=>e.event_name==="section_view"),scrolls=events.filter(e=>e.event_name==="scroll");
+ const clicks=events.filter(e=>e.event_name==="click"),pages=events.filter(e=>e.event_name==="page_view"),sections=events.filter(e=>e.event_name==="section_view");
  const last=events[events.length-1];
  const registered=!!session.user_id||events.some(e=>e.event_name==="login");
  const signals=[];
