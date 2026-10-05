@@ -129,7 +129,16 @@ export default function AuthCallback() {
           if (role && ROLE_ROUTES[role]) navigate(ROLE_ROUTES[role], { replace: true });
           else {
             try { sessionStorage.removeItem("bytly_registration_draft"); } catch {}
-            navigate(fromUrl ? decodeURIComponent(fromUrl) : "/Home", { replace: true });
+            let returnPath = "/Home";
+            if (fromUrl) {
+              try {
+                const target = new URL(fromUrl, window.location.origin);
+                if (target.origin === window.location.origin && !["/login", "/register", "/forgot-password", "/reset-password", "/auth/callback"].includes(target.pathname)) {
+                  returnPath = target.pathname + target.search + target.hash;
+                }
+              } catch {}
+            }
+            navigate(returnPath, { replace: true });
           }
         }
       } catch (err) {
