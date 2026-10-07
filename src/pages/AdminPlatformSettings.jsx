@@ -245,52 +245,68 @@ const supabase = createClient(
             </Card>
           </TabsContent>
 
-          {/* ── Tab: API Documentation ── */}
+          {/* ── Tab: Bytly API Documentation ── */}
           <TabsContent value="api" className="space-y-4 mt-4">
             <Card className="border border-slate-200 shadow-sm">
-              <CardContent className="p-5">
-                <h3 className="font-bold text-[#333] mb-1">وثائق واجهة برمجة التطبيقات</h3>
-                <p className="text-sm text-[#666] mb-5">مرجع كامل لواجهة برمجة التطبيقات (API) لتطبيقك. استخدم مواصفات OpenAPI مع أي عميل لواجهة برمجة التطبيقات أو أداة توثيق.</p>
-
-                {/* App ID badge */}
-                <div className="flex items-center gap-2 mb-5 p-3 rounded-lg bg-slate-50 border border-slate-200">
-                  <span className="text-xs font-medium text-slate-500">معرّف التطبيق:</span>
-                  <code className="text-xs text-[#5142A4] font-mono" dir="ltr">{appId}</code>
-                  <button onClick={() => copyToClipboard(appId, "appid")} className="text-slate-400 hover:text-[#5142A4]">
-                    {copied === "appid" ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
-
-                {/* Install command */}
-                <div className="mb-5">
-                  <p className="text-sm font-medium text-[#333] mb-2">قم بتثبيت حزمة تطوير البرمجيات Base44 وقم بتهيئة العميل باستخدام معرّف تطبيقك. تتولى حزمة تطوير البرمجيات عملية المصادقة وتوفر طرقًا مُحددة النوع لجميع عمليات الكيانات ووظائف الواجهة الخلفية.</p>
-                  <div className="relative rounded-lg bg-black overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
-                      <span className="text-xs text-slate-400 font-mono">terminal</span>
-                      <button onClick={() => copyToClipboard(installCmd, "install")} className="text-slate-400 hover:text-white">
-                        {copied === "install" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                        <span className="text-xs mr-1">نسخ</span>
-                      </button>
-                    </div>
-                    <pre className="px-4 py-3 text-sm text-green-400 font-mono" dir="ltr">{installCmd}</pre>
-                  </div>
-                </div>
-
-                {/* Init code */}
+              <CardContent className="p-5 space-y-5">
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Code2 className="w-4 h-4 text-[#5142A4]" />
-                      <span className="text-sm font-medium text-[#333]">تهيئة العميل</span>
-                    </div>
-                    <Button size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={() => copyToClipboard(initCode, "init")}>
-                      {copied === "init" ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                      انسخ الكل
-                    </Button>
+                  <h3 className="font-bold text-[#333] mb-1">واجهة برمجة التطبيقات الخاصة ببيتلي</h3>
+                  <p className="text-sm text-[#666] leading-relaxed">هذه هي الواجهة الرسمية لربط التطبيقات والخدمات الخارجية ببيتلي. لا تحتاج هذه الواجهة إلى Base44 SDK؛ المصادقة والبيانات تُدار عبر Bytly API وSupabase.</p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-medium text-[#333]">عنوان API</span>
+                    <button onClick={() => copyToClipboard("https://www.mybytly.com/api/mcp", "endpoint")} className="text-slate-400 hover:text-[#5142A4]">
+                      {copied === "endpoint" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                    </button>
                   </div>
-                  <div className="rounded-lg bg-black overflow-hidden">
-                    <pre className="px-4 py-3 text-sm text-slate-200 font-mono overflow-x-auto" dir="ltr">{initCode}</pre>
+                  <code className="block text-sm text-[#5142A4] font-mono break-all" dir="ltr">https://www.mybytly.com/api/mcp</code>
+                  <p className="text-xs text-slate-500">البروتوكول: MCP عبر HTTP — الاتصال عديم الحالة.</p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-[#333] mb-2">المصادقة</p>
+                  <p className="text-sm text-[#666] leading-relaxed">يدعم API توكن OAuth الخاص ببيتلي، كما يدعم Supabase Access Token للحالات الداخلية المتوافقة. لا تضع أي مفتاح سري أو Service Role Key في تطبيق العميل.</p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-[#333] mb-2">OAuth / الاكتشاف</p>
+                  <div className="space-y-2 text-sm font-mono" dir="ltr">
+                    <div className="p-3 rounded-lg bg-black text-slate-200 break-all">https://www.mybytly.com/.well-known/oauth-authorization-server</div>
+                    <div className="p-3 rounded-lg bg-black text-slate-200 break-all">https://www.mybytly.com/.well-known/oauth-protected-resource</div>
+                    <div className="p-3 rounded-lg bg-black text-slate-200 break-all">https://www.mybytly.com/oauth/register</div>
                   </div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-[#333] mb-2">العمليات المتاحة حاليًا</p>
+                  <div className="grid gap-2">
+                    {[
+                      ["get_current_user", "بيانات المستخدم الحالي ودوره."],
+                      ["list_projects", "المشاريع المتاحة للمستخدم المصادق عليه."],
+                      ["list_notifications", "إشعارات المستخدم المصادق عليه."]
+                    ].map(([name, desc]) => (
+                      <div key={name} className="p-3 rounded-lg border border-slate-200 bg-white">
+                        <code className="text-sm text-[#5142A4] font-mono" dir="ltr">{name}</code>
+                        <p className="text-xs text-slate-500 mt-1">{desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-[#333] mb-2">مثال طلب</p>
+                  <div className="relative rounded-lg bg-black overflow-hidden">
+                    <button onClick={() => copyToClipboard(JSON.stringify({jsonrpc:"2.0",id:1,method:"tools/list"},null,2), "example")} className="absolute top-2 left-2 text-slate-400 hover:text-white">
+                      {copied === "example" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                    <pre className="px-4 py-3 pr-12 text-sm text-slate-200 font-mono overflow-x-auto" dir="ltr">{JSON.stringify({jsonrpc:"2.0",id:1,method:"tools/list"},null,2)}</pre>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl border border-amber-200 bg-amber-50 text-sm text-amber-900 leading-relaxed">
+                  <strong>تنبيه أمني:</strong> مفاتيح Supabase السرية وService Role Key لا تُستخدم في الواجهة الأمامية ولا تُشارك مع أي طرف خارجي. استخدم OAuth/Access Token فقط.
                 </div>
               </CardContent>
             </Card>
