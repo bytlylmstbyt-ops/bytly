@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "./utils";
-import { base44 } from "@/api/base44Client";
 import BytlyAdvisorChat from "@/components/chatbot/BytlyAdvisorChat";
 import AdminBreadcrumb from "@/components/admin/AdminBreadcrumb";
 import DeleteAccountDialog from "@/components/user/DeleteAccountDialog";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { LanguageProvider, useLanguage } from "@/components/i18n/LanguageContext";
 import { useAuth } from "@/lib/AuthContext";
+import { supabase } from "@/lib/supabaseClient";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { MessageSquare, User, Menu, X, 
   LogOut, Briefcase, Settings, Wallet, 
@@ -38,9 +38,30 @@ function LayoutContent({ children, currentPageName }) {
   useEffect(() => {
     if (!isAuthenticated || !user) return;
     const sendHeartbeat = () => {
-      base44.functions.invoke('trackUserActivity', {
-        current_page: window.location.pathname
-      }).catch(() => {});
+      const trackActivity = async () => {
+        try {
+          const { data: authData } = await supabase.auth.getUser();
+          const authUser = authData?.user;
+          if (!authUser) return;
+          const now = new Date().toISOString();
+          const { data: existing } = await supabase
+            .from('user_activity')
+            .select('id')
+            .eq('user_id', authUser.id)
+            .maybeSingle();
+          if (existing?.id) {
+            await supabase
+              .from('user_activity')
+              .update({ current_page: window.location.pathname, last_seen_at: now, updated_at: now })
+              .eq('id', existing.id);
+          } else {
+            await supabase
+              .from('user_activity')
+              .insert({ user_id: authUser.id, current_page: window.location.pathname, last_seen_at: now, updated_at: now });
+          }
+        } catch {}
+      };
+      trackActivity();
     };
     sendHeartbeat();
     const interval = setInterval(sendHeartbeat, 60000);
