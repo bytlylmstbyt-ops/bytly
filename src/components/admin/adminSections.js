@@ -82,7 +82,7 @@ export const ADMIN_CATEGORIES = [
   ] },
   { key: "reports", label: "التقارير والتحليلات", icon: BarChart3, description: "تقارير الأداء والتحليلات التفصيلية.", items: [
     { page: "AdminReports", label: "تقارير المنصة", desc: "تقارير شاملة عن نشاط المنصة" },
-    { page: "Analytics", label: "التحليلات", desc: "تحليلات الاستخدام والزوار" },
+    { page: "AdminAnalytics", label: "تحليلات المستخدمين والجلسات", desc: "الزوار، المستخدمون، الجلسات، مصادر الزيارات، واستعراض أحداث الجلسة" },
     { page: "TaskReports", label: "تقارير المهام", desc: "متابعة إنجاز المهام" },
     { page: "AdminReviews", label: "إدارة التقييمات", desc: "مراجعة تقييمات المستخدمين" },
   ] },
