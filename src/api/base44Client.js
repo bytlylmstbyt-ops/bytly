@@ -66,45 +66,6 @@ legacyBase44.auth.me = legacyAuthMe;
 
 
 
-legacyBase44.auth.me = async () => {
-  try {
-    if (supabase) {
-      let sessionUser = null;
-      try { sessionUser = (await withHardTimeout(supabase.auth.getUser(), 10000)).data?.user || null; } catch {}
-      if (!sessionUser) { try { sessionUser = (await withHardTimeout(supabase.auth.getSession(), 10000)).data?.session?.user || null; } catch {} }
-      if (sessionUser) {
-        const email = (sessionUser.email || '').trim().toLowerCase();
-        const isOwner = sessionUser.id === PLATFORM_OWNER_ID || email === PLATFORM_OWNER_EMAIL;
-        let profile = null;
-        try {
-          let profileResult = await withHardTimeout(
-            supabase.from('profiles').select('role,email,full_name').eq('user_id', sessionUser.id).maybeSingle(),
-            10000
-          );
-          if (!profileResult.data && !profileResult.error) {
-            profileResult = await withHardTimeout(
-              supabase.from('profiles').select('role,email,full_name').eq('id', sessionUser.id).maybeSingle(),
-              10000
-            );
-          }
-          profile = profileResult.data || null;
-        } catch {}
-        const role = isOwner || profile?.role === 'admin' ? 'admin' : (profile?.role || 'user');
-        return {
-          id: sessionUser.id,
-          user_id: sessionUser.id,
-          email: sessionUser.email,
-          full_name: profile?.full_name || sessionUser.user_metadata?.full_name || sessionUser.user_metadata?.name || '',
-          role,
-          profile,
-          _authProvider: 'supabase',
-        };
-      }
-    }
-  } catch (error) { console.warn('Supabase auth bridge failed; falling back to legacy auth.', error); }
-  return legacyAuthMe();
-};
-
 // AI compatibility bridge: existing Bytly AI pages keep their UI contracts, while
 // InvokeLLM is now routed to the secure Supabase Gemini gateway instead of Base44.
 legacyBase44.integrations.Core.InvokeLLM = async ({ prompt, response_json_schema, agent = 'assistant', context = {} } = {}) => {
@@ -567,37 +528,10 @@ const createContractFromProposalSupabase = async proposalId => {
 };
 
 
-const makeSupabaseEntity = (table) => ({
-  filter: async (filters = {}, sort = '-created_at', limit = 100) => {
-    let q = supabase.from(table).select('*').limit(limit);
-    Object.entries(filters || {}).forEach(([k,v]) => { if (v !== undefined && v !== null) q = Array.isArray(v) ? q.in(k,v) : q.eq(k,v); });
-    q = q.order(String(sort).replace(/^-/, '') || 'created_at', { ascending: !String(sort).startsWith('-') });
-    const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة البيانات');
-    if (error) throw new Error(error.message || 'تعذر قراءة البيانات');
-    return data || [];
-  },
-  list: async (sort='-created_at', limit=100) => {
-    let q=supabase.from(table).select('*').limit(limit).order(String(sort).replace(/^-/, '') || 'created_at',{ascending:!String(sort).startsWith('-')});
-    const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة البيانات'); if(error)throw new Error(error.message); return data||[];
-  },
-  create: async payload => {
-    const {data,error}=await withHardTimeout(supabase.from(table).insert({...payload}).select('*').single(),15000,'انتهت مهلة إنشاء البيانات');
-    if(error)throw new Error(error.message||'تعذر إنشاء البيانات'); return data;
-  },
-  update: async (id,payload) => {
-    const {data,error}=await withHardTimeout(supabase.from(table).update({...payload,updated_at:new Date().toISOString()}).eq('id',id).select('*').single(),10000,'انتهت مهلة تحديث البيانات');
-    if(error)throw new Error(error.message||'تعذر تحديث البيانات'); return data;
-  },
-  delete: async id => {
-    const {error}=await withHardTimeout(supabase.from(table).delete().eq('id',id),10000,'انتهت مهلة حذف البيانات');
-    if(error)throw new Error(error.message||'تعذر حذف البيانات'); return true;
-  }
-});
 legacyBase44.entities.ConsultationAppointment = makeSupabaseEntity('consultation_appointments');
 legacyBase44.entities.ProjectTask = makeSupabaseEntity('project_tasks');
 legacyBase44.entities.ProjectMilestone = makeSupabaseEntity('project_milestones');
 
-const legacyFunctions = legacyBase44.functions;
 legacyBase44.functions = {
   ...legacyFunctions,
   invoke: async (name, payload) => {
