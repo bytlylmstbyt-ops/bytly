@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
   Search, MapPin, Clock, DollarSign, 
@@ -43,18 +44,37 @@ export default function Projects() {
   const loadProjects = async () => {
     setIsLoading(true);
     
-    // Get current user and engineer profile
-    const user = await base44.auth.me();
+    // Authentication/profile lookup now uses Supabase directly.
+    // Project listing remains on the legacy bridge in this first migration step
+    // because the current Supabase RLS policy only exposes participant projects.
+    let user = null;
+    if (supabase) {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (!authError) user = authData?.user || null;
+    }
+
+    // Compatibility fallback: auth only. Project data is still legacy in this step.
+    if (!user) {
+      try { user = await base44.auth.me(); } catch { user = null; }
+    }
+
     setCurrentUser(user);
     const admin = user?.role === "admin";
     setIsAdmin(admin);
     if (admin) { setIsLoading(false); return; }
-    
-    const engineerData = await base44.entities.Engineer.filter({ email: user.email }).catch(() => []);
-    if (engineerData && engineerData.length > 0) {
-      setCurrentEngineer(engineerData[0]);
+
+    if (supabase && user?.id) {
+      const { data: engineerData } = await supabase
+        .from("engineers")
+        .select("*")
+        .eq("user_id", user.id)
+        .limit(1);
+      if (engineerData?.length) setCurrentEngineer(engineerData[0]);
+    } else if (user?.email) {
+      const engineerData = await base44.entities.Engineer.filter({ email: user.email }).catch(() => []);
+      if (engineerData?.length) setCurrentEngineer(engineerData[0]);
     }
-    
+
     const filter = statusFilter ? { status: statusFilter } : {};
     const data = await base44.entities.Project.filter(filter, "-created_date", 50);
     // Hide hidden projects from the public market; pinned ones float to top
