@@ -58,8 +58,19 @@ export default function Projects() {
       try { user = await base44.auth.me(); } catch { user = null; }
     }
 
-    setCurrentUser(user);
-    const admin = user?.role === "admin";
+    let profile = null;
+    if (supabase && user?.id) {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      profile = profileData || null;
+    }
+
+    const normalizedUser = user ? { ...user, ...(profile || {}) } : null;
+    setCurrentUser(normalizedUser);
+    const admin = normalizedUser?.role === "admin" || normalizedUser?.role === "super_admin";
     setIsAdmin(admin);
     if (admin) { setIsLoading(false); return; }
 
