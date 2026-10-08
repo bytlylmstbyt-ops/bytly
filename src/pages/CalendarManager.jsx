@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -73,8 +73,15 @@ export default function CalendarManager() {
   const [actionLoading, setActionLoading] = useState(false);
 
   const invoke = async (action, data) => {
-    const res = await base44.functions.invoke('calendarService', { action, data });
-    return res.data;
+    if (!supabase) throw new Error("Supabase غير مهيأ.");
+    const map = { listEvents: "calendarList", createEvent: "calendarCreate", updateEvent: "calendarUpdate", deleteEvent: "calendarDelete" };
+    const serviceAction = map[action] || action;
+    const { data: result, error } = await supabase.functions.invoke("google-service", {
+      body: { action: serviceAction, data }
+    });
+    if (error) throw error;
+    if (result?.success === false) throw new Error(result.error || "تعذر تنفيذ عملية Google Calendar");
+    return result;
   };
 
   const loadEvents = async () => {
