@@ -1,19 +1,70 @@
-import { createClient } from '@base44/sdk';
-import { appParams } from '@/lib/app-params';
 import { supabase } from '@/lib/supabaseClient';
 import { publishLinkedInPost } from '@/lib/linkedinSupabaseService';
 import { callGemini } from '@/lib/geminiClient';
 
-const { appId, token } = appParams;
 const PLATFORM_OWNER_EMAIL = 'bytlylmstbyt@gmail.com';
 const PLATFORM_OWNER_ID = '2d1b547d-5ba5-4cdc-a39c-cfb60d2f52bc';
-const base44BackendUrl = import.meta.env.VITE_BASE44_APP_BASE_URL || 'https://bytly.base44.app';
-const legacyBase44 = createClient({ appId, token, requiresAuth: false, serverUrl: base44BackendUrl, appBaseUrl: base44BackendUrl });
-const legacyAuthMe = legacyBase44.auth.me.bind(legacyBase44.auth);
+
 const withHardTimeout = (promise, timeoutMs, message = 'انتهت مهلة الاتصال بالخدمة') => new Promise((resolve, reject) => {
   const timer = setTimeout(() => reject(new Error(message)), timeoutMs);
   Promise.resolve(promise).then(v => { clearTimeout(timer); resolve(v); }, e => { clearTimeout(timer); reject(e); });
 });
+
+const camelToSnake = name => String(name || '').replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
+const makeSupabaseEntity = (table) => ({
+  filter: async (filters = {}, sort = '-created_at', limit = 100) => {
+    let q = supabase.from(table).select('*').limit(limit);
+    Object.entries(filters || {}).forEach(([k,v]) => { if (v !== undefined && v !== null) q = Array.isArray(v) ? q.in(k,v) : q.eq(k,v); });
+    q = q.order(String(sort).replace(/^-/, '') || 'created_at', { ascending: !String(sort).startsWith('-') });
+    const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة البيانات');
+    if (error) throw new Error(error.message || 'تعذر قراءة البيانات');
+    return data || [];
+  },
+  list: async (sort='-created_at', limit=100) => {
+    let q=supabase.from(table).select('*').limit(limit).order(String(sort).replace(/^-/, '') || 'created_at',{ascending:!String(sort).startsWith('-')});
+    const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة البيانات'); if(error)throw new Error(error.message); return data||[];
+  },
+  get: async id => {
+    const {data,error}=await withHardTimeout(supabase.from(table).select('*').eq('id',id).maybeSingle(),10000,'انتهت مهلة قراءة البيانات');
+    if(error)throw new Error(error.message); return data;
+  },
+  create: async payload => { const {data,error}=await withHardTimeout(supabase.from(table).insert({...payload}).select('*').single(),15000,'انتهت مهلة إنشاء البيانات'); if(error)throw new Error(error.message||'تعذر إنشاء البيانات'); return data; },
+  update: async (id,payload) => { const {data,error}=await withHardTimeout(supabase.from(table).update({...payload,updated_at:new Date().toISOString()}).eq('id',id).select('*').single(),10000,'انتهت مهلة تحديث البيانات'); if(error)throw new Error(error.message||'تعذر تحديث البيانات'); return data; },
+  delete: async id => { const {error}=await withHardTimeout(supabase.from(table).delete().eq('id',id),10000,'انتهت مهلة حذف البيانات'); if(error)throw new Error(error.message||'تعذر حذف البيانات'); return true; }
+});
+
+const entityCache = new Map();
+const entities = new Proxy({}, { get(_target, name) {
+  if (typeof name !== 'string') return undefined;
+  if (!entityCache.has(name)) entityCache.set(name, makeSupabaseEntity(camelToSnake(name)));
+  return entityCache.get(name);
+}});
+
+const legacyFunctions = { invoke: async (name) => { throw new Error('وظيفة غير مرحّلة إلى Supabase: ' + name); } };
+const legacyBase44 = {
+  auth: {},
+  entities,
+  integrations: { Core: {} },
+  functions: legacyFunctions,
+};
+const legacyAuthMe = async () => {
+  if (!supabase) return null;
+  const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
+  const sessionUser = authData?.user || null;
+  if (!sessionUser) return null;
+  const email = (sessionUser.email || '').trim().toLowerCase();
+  const isOwner = sessionUser.id === PLATFORM_OWNER_ID || email === PLATFORM_OWNER_EMAIL;
+  let profile = null;
+  try {
+    let profileResult = await withHardTimeout(supabase.from('profiles').select('role,email,full_name').eq('user_id', sessionUser.id).maybeSingle(),10000);
+    if (!profileResult.data && !profileResult.error) profileResult = await withHardTimeout(supabase.from('profiles').select('role,email,full_name').eq('id', sessionUser.id).maybeSingle(),10000);
+    profile = profileResult.data || null;
+  } catch {}
+  return { id:sessionUser.id,user_id:sessionUser.id,email:sessionUser.email,full_name:profile?.full_name||sessionUser.user_metadata?.full_name||sessionUser.user_metadata?.name||'',role:isOwner||profile?.role==='admin'?'admin':(profile?.role||'user'),profile,_authProvider:'supabase' };
+};
+legacyBase44.auth.me = legacyAuthMe;
+
+
 
 legacyBase44.auth.me = async () => {
   try {
