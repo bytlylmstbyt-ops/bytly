@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -17,13 +17,28 @@ export default function MeetCallButton({ project, currentUser, assignedEngineerE
     setLoading(true);
     try {
       const attendees = [project.created_by, assignedEngineerEmail].filter(Boolean);
-      const res = await base44.functions.invoke("createMeetCall", {
-        project_id: project.id,
-        project_title: project.title,
-        attendee_emails: attendees,
-        scheduled_time: scheduledTime || undefined
+      const start = scheduledTime ? new Date(scheduledTime) : new Date(Date.now() + 30 * 60 * 1000);
+      const end = new Date(start.getTime() + 30 * 60 * 1000);
+      const { data: result, error } = await supabase.functions.invoke("google-service", {
+        body: {
+          action: "calendarCreate",
+          data: {
+            summary: project.title || "مناقشة مشروع Bytly",
+            attendees,
+            startDateTime: start.toISOString(),
+            endDateTime: end.toISOString(),
+            timeZone: "Asia/Riyadh",
+            description: "اجتماع مشروع عبر Bytly"
+          }
+        }
       });
-      setMeetResult(res.data);
+      if (error) throw error;
+      if (!result?.meet_link) throw new Error(result?.error || "لم يتم إرجاع رابط Google Meet.");
+      setMeetResult({
+        ...result,
+        start_time: result.event?.start?.dateTime || start.toISOString(),
+        end_time: result.event?.end?.dateTime || end.toISOString()
+      });
     } catch (e) {
       console.error(e);
     } finally {
