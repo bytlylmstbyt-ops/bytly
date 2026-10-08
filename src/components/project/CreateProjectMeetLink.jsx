@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,25 +32,30 @@ export default function CreateProjectMeetLink({ projectId = "", onCreated, onCan
     setResult(null);
 
     try {
-      const currentUser = await base44.auth.me();
+      const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+      if (authError || !currentUser) throw new Error("انتهت جلسة الدخول.");
       const participants = Array.from(new Set([currentUser.email, ...attendee_emails].filter(Boolean)));
       const meetingTopic = topic.trim() || "مناقشة مشروع عبر Google Meet";
 
       const payload = {
-        topic: meetingTopic,
-        attendee_emails: participants,
-        duration_minutes: durationMinutes,
+        summary: meetingTopic,
+        attendees: participants,
+        startDateTime: scheduledTime ? new Date(scheduledTime).toISOString() : new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        endDateTime: scheduledTime ? new Date(new Date(scheduledTime).getTime() + durationMinutes * 60000).toISOString() : new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        timeZone: "Asia/Riyadh",
       };
       if (projectId) payload.project_id = projectId;
       if (scheduledTime) payload.scheduled_time = scheduledTime;
 
-      const res = await base44.functions.invoke("createMeetCall", payload);
-      const meetResult = res?.data || res;
+      const { data: meetResult, error: meetError } = await supabase.functions.invoke("google-service", {
+        body: { action: "calendarCreate", data: payload }
+      });
+      if (meetError) throw meetError;
       if (!meetResult?.meet_link) {
         throw new Error("لم يتم إرجاع رابط Google Meet.");
       }
 
-      const conversation = await base44.entities.Conversation.create({
+      const conversation = await supabase.from("conversations").insert({
         name: meetingTopic,
         type: "group",
         project_id: projectId || undefined,
@@ -58,11 +63,12 @@ export default function CreateProjectMeetLink({ projectId = "", onCreated, onCan
         participant_roles: {},
         is_archived: false,
         is_main_room: false,
-      });
+      }).select("*").single();
+      if (conversation.error) throw conversation.error;
 
       const systemContent = `📅 دعوة اجتماع Google Meet\n\n${meetingTopic}\n\nانضم للاجتماع عبر الرابط:\n${meetResult.meet_link}`;
-      await base44.entities.Message.create({
-        conversation_id: conversation.id,
+      await supabase.from("messages").insert({
+        conversation_id: conversation.data.id,
         project_id: projectId || undefined,
         sender_email: currentUser.email,
         sender_name: currentUser.full_name || "Bytly",
@@ -72,13 +78,12 @@ export default function CreateProjectMeetLink({ projectId = "", onCreated, onCan
         is_system_message: true,
         is_read: false,
       });
-
-      await base44.entities.Conversation.update(conversation.id, {
+      await supabase.from("conversations").update({
         last_message: `📅 ${meetingTopic}`,
         last_message_date: new Date().toISOString(),
-      });
+      }).eq("id", conversation.data.id);
 
-      setResult({ ...meetResult, conversation_id: conversation.id, topic: meetingTopic });
+      setResult({ ...meetResult, conversation_id: conversation.data.id, topic: meetingTopic });
       toast.success("تم إنشاء رابط Google Meet ومحادثة المشروع بنجاح");
     } catch (error) {
       console.error("Create project meeting error:", error);
