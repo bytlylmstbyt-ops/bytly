@@ -75,21 +75,28 @@ export default function WalletTopup() {
       alert("الحد الأدنى للشحن 50 ريال");
       return;
     }
+    if (!user?.id) {
+      alert("يجب تسجيل الدخول أولاً");
+      return;
+    }
 
     setIsProcessing(true);
-
     try {
-      const response = await base44.functions.invoke('createWalletTopup', {
-        amount: parseFloat(amount),
-        user_email: user.email
+      const { data, error } = await supabase.functions.invoke("create-moyasar-wallet-recharge", {
+        body: { amount: parseFloat(amount) }
       });
-
-      if (response.data?.url) {
-        window.location.href = response.data.url;
+      if (error) throw error;
+      if (data?.requires_source) {
+        alert("تم تجهيز طلب الشحن، لكن بوابة الدفع التجريبية غير مفعلة في الواجهة بعد. لم يتم خصم أي مبلغ.");
+      } else if (data?.payment_id) {
+        alert(`تم إنشاء عملية الدفع التجريبية رقم ${data.payment_id}. لم يتم اعتماد الرصيد قبل التحقق من Moyasar.`);
+      } else {
+        alert("تم تجهيز طلب الشحن بدون خصم أي مبلغ.");
       }
     } catch (error) {
-      console.error("Error:", error);
-      alert("حدث خطأ في عملية الشحن");
+      console.error("Wallet topup error:", error);
+      alert(error?.message || "حدث خطأ في عملية الشحن");
+    } finally {
       setIsProcessing(false);
     }
   };
@@ -193,7 +200,7 @@ export default function WalletTopup() {
                     Google Pay
                   </Badge>
                   <Badge className="bg-white text-slate-700 border">
-                    STC Pay
+                    Moyasar — اختبار فقط
                   </Badge>
                 </div>
               </div>
