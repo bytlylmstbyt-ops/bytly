@@ -200,13 +200,6 @@ legacyBase44.entities.Engineer = {
       const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة بيانات المهندس');
       if (!error && data?.length) return data;
     } catch {}
-    try {
-      let q = supabase.from('base44_engineer_migration_staging').select('*');
-      if (email) q = q.ilike('email', email);
-      else Object.entries(filters).forEach(([k,v]) => { if (v != null && ['full_name','phone','city','specialization'].includes(k)) q = q.eq(k,v); });
-      const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة بيانات المهندس القديمة');
-      if (!error && data?.length) return data;
-    } catch {}
     return [];
   },
   create: async payload => {
@@ -223,11 +216,7 @@ const resolveLegacyId = async (entity, currentId) => {
   if (!currentId || !supabase) return currentId;
   try {
     const table = entity === 'Engineer' ? 'engineers' : entity === 'Client' ? 'clients' : 'projects';
-    const staging = entity === 'Engineer' ? 'base44_engineer_migration_staging' : entity === 'Client' ? 'base44_client_migration_staging' : 'base44_project_migration_staging';
-    const { data: row } = await supabase.from(table).select('email').eq('id', currentId).maybeSingle();
-    if (!row?.email) return currentId;
-    const { data: legacy } = await supabase.from(staging).select('base44_id').eq('email', row.email).maybeSingle();
-    return legacy?.base44_id || currentId;
+    return currentId;
   } catch { return currentId; }
 };
 
@@ -282,14 +271,14 @@ legacyBase44.entities.Contract = {
       const { data, error } = await withHardTimeout(q,10000,'انتهت مهلة قراءة العقود');
       if (!error && data?.length) return data;
     } catch {}
-    try { return await withHardTimeout(legacyContract.filter(mapped), 7000, 'انتهت مهلة قراءة العقود القديمة'); } catch { return []; }
+    return [];
   },
   list: async (sort='-created_date', limit=100) => {
     try {
       const { data, error } = await withHardTimeout(supabase.from('project_contracts').select('*').limit(limit).order('created_at',{ascending:!sort.startsWith('-')}),10000,'انتهت مهلة قراءة العقود');
       if (!error && data?.length) return data;
     } catch {}
-    try { return await withHardTimeout(legacyContract.list(sort, limit), 7000, 'انتهت مهلة قائمة العقود القديمة'); } catch { return []; }
+    return [];
   }
 };
 
@@ -305,14 +294,14 @@ legacyBase44.entities.Project = { ...legacyProject,
       const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة المشروع');
       if(!error && data?.length) return data;
     } catch {}
-    try { return await withHardTimeout(legacyProject.filter(mapped), 7000, 'انتهت مهلة قراءة المشاريع القديمة'); } catch { return []; }
+    return [];
   },
   list: async(sort='-created_date',limit=100)=>{
     try {
       const {data,error}=await withHardTimeout(supabase.from('projects').select('*').limit(limit).order('created_at',{ascending:!sort.startsWith('-')}),10000,'انتهت مهلة قراءة المشاريع');
       if(!error && data?.length) return data;
     } catch {}
-    try { return await withHardTimeout(legacyProject.list(sort,limit), 7000, 'انتهت مهلة قائمة المشاريع القديمة'); } catch { return []; }
+    return [];
   },
   update: async(id,payload)=>{const {data,error}=await withHardTimeout(supabase.from('projects').update({...payload,updated_at:new Date().toISOString()}).eq('id',id).select('*').single(),10000,'انتهت مهلة تحديث المشروع');if(error)throw new Error(error.message);return data},
   create: async payload=>{const row={...payload};delete row.id;delete row.created_date;const {data,error}=await withHardTimeout(supabase.from('projects').insert(row).select('*').single(),10000,'انتهت مهلة إنشاء المشروع');if(error)throw new Error(error.message);return data},
@@ -327,12 +316,6 @@ legacyBase44.entities.Client = {
       let q = supabase.from('clients').select('*');
       Object.entries(filters||{}).forEach(([k,v])=>{q=v===null?q.is(k,null):Array.isArray(v)?q.in(k,v):q.eq(k,v)});
       const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة العميل');
-      if(!error && data?.length) return data;
-    } catch {}
-    try {
-      let q = supabase.from('base44_client_migration_staging').select('*');
-      if (filters?.email) q = q.ilike('email', filters.email);
-      const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة بيانات العميل القديمة');
       if(!error && data?.length) return data;
     } catch {}
     return [];
