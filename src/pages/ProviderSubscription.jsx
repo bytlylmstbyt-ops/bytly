@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { CardContent } from "@/components/ui/card";
 import { CheckCircle2, X, Zap, Building2, Star, Loader2, AlertCircle, Crown, ShieldCheck, HardHat, Package } from "lucide-react";
@@ -151,7 +151,7 @@ export default function ProviderSubscription() {
     if (type === "supplier" || type === "contractor") {
       setProviderType(type);
     }
-    base44.auth.me().then(setUser).catch(() => {});
+    supabase.auth.getUser().then(({ data }) => { const u = data?.user; return u ? { id:u.id,user_id:u.id,email:u.email,full_name:u.user_metadata?.full_name||u.user_metadata?.name||'',role:u.user_metadata?.role||'user' } : null; }).then(setUser).catch(() => {});
     if (params.get("success")) setBanner("success");
     else if (params.get("canceled")) setBanner("canceled");
   }, []);
