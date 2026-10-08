@@ -592,7 +592,7 @@ legacyBase44.functions = {
     }
 
     if (name === 'createMeetCall') {
-      return { data: { success: true, meet_link: null, google_calendar_link: null, calendar_link: null } };
+      return { data: { success: false, meet_link: null, google_calendar_link: null, calendar_link: null, error: 'لم يتم إنشاء رابط Google Meet فعليًا بعد' } };
     }
 
     if (name === 'linkedinService' && payload?.action === 'shareDesignWork') {
