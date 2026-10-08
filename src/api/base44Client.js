@@ -515,6 +515,37 @@ const createContractFromProposalSupabase = async proposalId => {
   return { success: true, contract };
 };
 
+
+const makeSupabaseEntity = (table) => ({
+  filter: async (filters = {}, sort = '-created_at', limit = 100) => {
+    let q = supabase.from(table).select('*').limit(limit);
+    Object.entries(filters || {}).forEach(([k,v]) => { if (v !== undefined && v !== null) q = Array.isArray(v) ? q.in(k,v) : q.eq(k,v); });
+    q = q.order(String(sort).replace(/^-/, '') || 'created_at', { ascending: !String(sort).startsWith('-') });
+    const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة البيانات');
+    if (error) throw new Error(error.message || 'تعذر قراءة البيانات');
+    return data || [];
+  },
+  list: async (sort='-created_at', limit=100) => {
+    let q=supabase.from(table).select('*').limit(limit).order(String(sort).replace(/^-/, '') || 'created_at',{ascending:!String(sort).startsWith('-')});
+    const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة البيانات'); if(error)throw new Error(error.message); return data||[];
+  },
+  create: async payload => {
+    const {data,error}=await withHardTimeout(supabase.from(table).insert({...payload}).select('*').single(),15000,'انتهت مهلة إنشاء البيانات');
+    if(error)throw new Error(error.message||'تعذر إنشاء البيانات'); return data;
+  },
+  update: async (id,payload) => {
+    const {data,error}=await withHardTimeout(supabase.from(table).update({...payload,updated_at:new Date().toISOString()}).eq('id',id).select('*').single(),10000,'انتهت مهلة تحديث البيانات');
+    if(error)throw new Error(error.message||'تعذر تحديث البيانات'); return data;
+  },
+  delete: async id => {
+    const {error}=await withHardTimeout(supabase.from(table).delete().eq('id',id),10000,'انتهت مهلة حذف البيانات');
+    if(error)throw new Error(error.message||'تعذر حذف البيانات'); return true;
+  }
+});
+legacyBase44.entities.ConsultationAppointment = makeSupabaseEntity('consultation_appointments');
+legacyBase44.entities.ProjectTask = makeSupabaseEntity('project_tasks');
+legacyBase44.entities.ProjectMilestone = makeSupabaseEntity('project_milestones');
+
 const legacyFunctions = legacyBase44.functions;
 legacyBase44.functions = {
   ...legacyFunctions,
