@@ -34,13 +34,13 @@ export default function WalletTopup() {
 
       if (role === 'client' || role === 'investor') {
         const data = await Promise.race([
-          supabase.from('clients').select('*').eq('email', currentUser.email),
+          supabase.from('clients').select('*').eq('email', currentUser.email).then(({data}) => data || []),
           new Promise(resolve => setTimeout(() => resolve([]), 7000))
         ]).catch(() => []);
         if (data?.[0]) profile = { ...data[0], type: 'client' };
       } else if (role === 'engineer' || role === 'surveyor') {
         const data = await Promise.race([
-          supabase.from('engineers').select('*').eq('email', currentUser.email),
+          supabase.from('engineers').select('*').eq('email', currentUser.email).then(({data}) => data || []),
           new Promise(resolve => setTimeout(() => resolve([]), 7000))
         ]).catch(() => []);
         if (data?.[0]) profile = { ...data[0], type: 'engineer' };
@@ -48,14 +48,14 @@ export default function WalletTopup() {
 
       if (!profile) {
         const clients = await Promise.race([
-          supabase.from('clients').select('*').eq('email', currentUser.email),
+          supabase.from('clients').select('*').eq('email', currentUser.email).then(({data}) => data || []),
           new Promise(resolve => setTimeout(() => resolve([]), 7000))
         ]).catch(() => []);
         if (clients?.[0]) profile = { ...clients[0], type: 'client' };
       }
       if (!profile) {
         const engineers = await Promise.race([
-          supabase.from('engineers').select('*').eq('email', currentUser.email),
+          supabase.from('engineers').select('*').eq('email', currentUser.email).then(({data}) => data || []),
           new Promise(resolve => setTimeout(() => resolve([]), 7000))
         ]).catch(() => []);
         if (engineers?.[0]) profile = { ...engineers[0], type: 'engineer' };
