@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
   Wallet, CreditCard, Loader2, CheckCircle, 
@@ -25,7 +25,7 @@ export default function WalletTopup() {
   const loadUserData = async () => {
     setIsLoading(true);
     try {
-      const currentUser = await base44.auth.me();
+      const currentUser = await supabase.auth.getUser().then(({ data }) => { const u = data?.user; return u ? { id:u.id,user_id:u.id,email:u.email,full_name:u.user_metadata?.full_name||u.user_metadata?.name||'',role:u.user_metadata?.role||'user' } : null; });
       setUser(currentUser);
       if (!currentUser?.email) return;
 
@@ -34,13 +34,13 @@ export default function WalletTopup() {
 
       if (role === 'client' || role === 'investor') {
         const data = await Promise.race([
-          base44.entities.Client.filter({ email: currentUser.email }),
+          supabase.from('clients').select('*').eq('email', currentUser.email),
           new Promise(resolve => setTimeout(() => resolve([]), 7000))
         ]).catch(() => []);
         if (data?.[0]) profile = { ...data[0], type: 'client' };
       } else if (role === 'engineer' || role === 'surveyor') {
         const data = await Promise.race([
-          base44.entities.Engineer.filter({ email: currentUser.email }),
+          supabase.from('engineers').select('*').eq('email', currentUser.email),
           new Promise(resolve => setTimeout(() => resolve([]), 7000))
         ]).catch(() => []);
         if (data?.[0]) profile = { ...data[0], type: 'engineer' };
@@ -48,14 +48,14 @@ export default function WalletTopup() {
 
       if (!profile) {
         const clients = await Promise.race([
-          base44.entities.Client.filter({ email: currentUser.email }),
+          supabase.from('clients').select('*').eq('email', currentUser.email),
           new Promise(resolve => setTimeout(() => resolve([]), 7000))
         ]).catch(() => []);
         if (clients?.[0]) profile = { ...clients[0], type: 'client' };
       }
       if (!profile) {
         const engineers = await Promise.race([
-          base44.entities.Engineer.filter({ email: currentUser.email }),
+          supabase.from('engineers').select('*').eq('email', currentUser.email),
           new Promise(resolve => setTimeout(() => resolve([]), 7000))
         ]).catch(() => []);
         if (engineers?.[0]) profile = { ...engineers[0], type: 'engineer' };
