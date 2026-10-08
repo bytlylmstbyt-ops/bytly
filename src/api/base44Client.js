@@ -520,6 +520,50 @@ legacyBase44.functions = {
   ...legacyFunctions,
   invoke: async (name, payload) => {
     if (name === 'createContractFromProposal') return { data: await createContractFromProposalSupabase(payload?.proposal_id) };
+    if (name === 'bookReviewMeeting') {
+      const action = payload?.action || 'book';
+      const date = payload?.date || payload?.appointment_date;
+      const targetEmail = payload?.engineer_email || payload?.target_email || null;
+      if (action === 'available') {
+        let q = supabase.from('consultation_appointments').select('appointment_time').eq('appointment_date', date).neq('status', 'cancelled');
+        if (targetEmail) q = q.eq('target_email', targetEmail);
+        const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة المواعيد');
+        if (error) throw new Error(error.message || 'تعذر قراءة المواعيد');
+        const booked_slots = (data || []).map(x => String(x.appointment_time).slice(0,5));
+        const all = ['09:00','09:30','10:00','10:30','11:00','11:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00'];
+        return { data: { available_slots: all.filter(x => !booked_slots.includes(x)), booked_slots } };
+      }
+      const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
+      const user = authData?.user;
+      if (!user) throw new Error('يجب تسجيل الدخول أولاً');
+      const targetUser = targetEmail ? (await withHardTimeout(supabase.from('profiles').select('user_id').ilike('email', targetEmail).maybeSingle(), 10000)).data?.user_id : null;
+      const row = {
+        project_id: payload?.project_id || null, created_by: user.id, client_user_id: user.id,
+        provider_user_id: targetUser || null, target_id: payload?.target_id || null,
+        target_name: payload?.target_name || null, target_email: targetEmail,
+        appointment_date: payload.appointment_date, appointment_time: payload.appointment_time,
+        consultation_type: payload.consultation_type || 'video_call',
+        appointment_type: payload.consultation_type || 'video_call',
+        topic: payload.topic, notes: payload.notes || null, client_phone: payload.client_phone || null,
+        status: 'pending', meet_link: null, calendar_link: null
+      };
+      const { data, error } = await withHardTimeout(supabase.from('consultation_appointments').insert(row).select('*').single(), 15000, 'انتهت مهلة حجز الاجتماع');
+      if (error) throw new Error(error.message || 'تعذر حجز الاجتماع');
+      const day = String(payload.appointment_date).replace(/-/g,'');
+      const start = String(payload.appointment_time).replace(':','') + '00';
+      const hour = Number(String(payload.appointment_time).slice(0,2)) + 1;
+      const end = String(hour).padStart(2,'0') + String(payload.appointment_time).slice(3) + '00';
+      const calendarLink = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' +
+        encodeURIComponent(payload.topic || 'اجتماع Bytly') + '&dates=' + day + 'T' + start + '/' + day + 'T' + end +
+        '&details=' + encodeURIComponent(payload.notes || '') + (targetEmail ? '&add=' + encodeURIComponent(targetEmail) : '');
+      await withHardTimeout(supabase.from('consultation_appointments').update({ calendar_link: calendarLink }).eq('id', data.id), 10000);
+      return { data: { success: true, appointment: { ...data, calendar_link: calendarLink }, google_calendar_link: calendarLink, meet_link: null } };
+    }
+
+    if (name === 'createMeetCall') {
+      return { data: { success: true, meet_link: null, google_calendar_link: null, calendar_link: null } };
+    }
+
     if (name === 'linkedinService' && payload?.action === 'shareDesignWork') {
       const text = payload?.data?.customCaption;
       const published = await publishLinkedInPost(text);
