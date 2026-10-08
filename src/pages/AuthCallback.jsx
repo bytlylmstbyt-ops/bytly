@@ -46,34 +46,44 @@ export default function AuthCallback() {
           try {
             sessionStorage.removeItem("bytly_pending_integration");
 
-            if (integrationType === "gmail") {
-              const providerToken = data?.session?.provider_token;
-              const providerRefreshToken = data?.session?.provider_refresh_token;
+            const providerToken = data?.session?.provider_token;
+            const providerRefreshToken = data?.session?.provider_refresh_token;
 
+            if (integrationType === "gmail") {
               if (!providerToken || !providerRefreshToken) {
                 throw new Error("لم تُرجع Google رمز تحديث Gmail. أعيدي ربط Gmail مع السماح بالوصول بلا اتصال.");
               }
-
               const { data: storeResult, error: storeError } = await supabase.functions.invoke("gmail-service", {
                 body: { action: "storeProviderTokens", providerToken, providerRefreshToken },
               });
-
               if (storeError) throw storeError;
               if (!storeResult?.ok) throw new Error(storeResult?.error || "تعذر حفظ اتصال Gmail.");
-
-              try { localStorage.removeItem("bytly_gmail_provider_token"); } catch (_) {}
-              try { localStorage.removeItem("bytly_gmail_provider_refresh_token"); } catch (_) {}
-              try { localStorage.removeItem("bytly_google_provider_token"); } catch (_) {}
-              try { localStorage.removeItem("bytly_connected_integration"); } catch (_) {}
-
-              const existing = data?.session?.user?.user_metadata?.bytly_integrations || {};
-              const { error: metadataError } = await supabase.auth.updateUser({
-                data: { bytly_integrations: { ...existing, gmail: true } },
+            } else if (["googlecalendar","googledrive","googlesheets","googlemeet","google_analytics"].includes(integrationType)) {
+              if (!providerToken || !providerRefreshToken) {
+                throw new Error("لم تُرجع Google رمز تحديث الاتصال. أعيدي ربط Google مع السماح بالوصول بلا اتصال.");
+              }
+              const { data: storeResult, error: storeError } = await supabase.functions.invoke("google-service", {
+                body: {
+                  action: "storeProviderTokens",
+                  providerToken,
+                  providerRefreshToken,
+                  scopes: data?.session?.provider_token ? undefined : [],
+                },
               });
-              if (metadataError) console.warn("Could not persist Gmail connection flag:", metadataError);
-            } else {
-              try { localStorage.setItem("bytly_connected_integration", integrationType); } catch (_) {}
+              if (storeError) throw storeError;
+              if (!storeResult?.ok) throw new Error(storeResult?.error || "تعذر حفظ اتصال Google.");
             }
+
+            try { localStorage.removeItem("bytly_gmail_provider_token"); } catch (_) {}
+            try { localStorage.removeItem("bytly_gmail_provider_refresh_token"); } catch (_) {}
+            try { localStorage.removeItem("bytly_google_provider_token"); } catch (_) {}
+            try { localStorage.removeItem("bytly_connected_integration"); } catch (_) {}
+
+            const existing = data?.session?.user?.user_metadata?.bytly_integrations || {};
+            const { error: metadataError } = await supabase.auth.updateUser({
+              data: { bytly_integrations: { ...existing, [integrationType]: true } },
+            });
+            if (metadataError) console.warn("Could not persist integration connection flag:", metadataError);
           } catch (integrationError) {
             console.error("Integration OAuth callback error:", integrationError);
             if (active) {
