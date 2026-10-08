@@ -16,13 +16,16 @@ const PROVIDERS = {
 
 const GOOGLE_SCOPES_BY_TYPE = {
   gmail: [
-    "openid",
-    "email",
-    "profile",
+    "openid","email","profile",
     "https://www.googleapis.com/auth/gmail.send",
     "https://www.googleapis.com/auth/gmail.readonly",
     "https://www.googleapis.com/auth/gmail.settings.basic",
   ].join(" "),
+  googlecalendar: "openid email profile https://www.googleapis.com/auth/calendar",
+  googledrive: "openid email profile https://www.googleapis.com/auth/drive",
+  googlesheets: "openid email profile https://www.googleapis.com/auth/spreadsheets",
+  googlemeet: "openid email profile https://www.googleapis.com/auth/calendar",
+  google_analytics: "openid email profile https://www.googleapis.com/auth/analytics.readonly",
 };
 
 // LinkedIn OIDC provides identity information. Share on LinkedIn adds the
