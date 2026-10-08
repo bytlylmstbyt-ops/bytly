@@ -560,7 +560,45 @@ legacyBase44.functions = {
     }
 
     if (name === 'createMeetCall') {
-      return { data: { success: false, meet_link: null, google_calendar_link: null, calendar_link: null, error: 'لم يتم إنشاء رابط Google Meet فعليًا بعد' } };
+      const start = payload?.scheduled_time ? new Date(payload.scheduled_time) : new Date(Date.now() + 30 * 60 * 1000);
+      const end = new Date(start.getTime() + 60 * 60 * 1000);
+      const attendees = Array.isArray(payload?.attendee_emails)
+        ? payload.attendee_emails.map(email => String(email || '').trim()).filter(Boolean)
+        : [];
+      const summary = payload?.topic || (payload?.project_title ? `تحديث مشروع: ${payload.project_title}` : 'مناقشة عبر منصة بيتلي');
+      const description = payload?.project_id
+        ? `اجتماع مشروع Bytly رقم: ${payload.project_id}\\n\\nأُنشئ عبر منصة بيتلي`
+        : 'اجتماع عبر منصة بيتلي';
+      const { data, error } = await withHardTimeout(
+        supabase.functions.invoke('google-service', {
+          body: {
+            action: 'calendarCreate',
+            data: {
+              summary,
+              description,
+              startDateTime: start.toISOString(),
+              endDateTime: end.toISOString(),
+              timeZone: 'Asia/Riyadh',
+              attendees,
+            },
+          },
+        }),
+        30000,
+        'انتهت مهلة إنشاء اجتماع Google Meet'
+      );
+      if (error) throw new Error(error.message || 'تعذر إنشاء اجتماع Google Meet');
+      if (!data?.success) throw new Error(data?.error || 'تعذر إنشاء اجتماع Google Meet');
+      return {
+        data: {
+          success: true,
+          meet_link: data.meet_link || null,
+          google_calendar_link: data.event_link || null,
+          calendar_link: data.event_link || null,
+          event_id: data.event?.id || null,
+          start_time: data.event?.start?.dateTime || start.toISOString(),
+          end_time: data.event?.end?.dateTime || end.toISOString(),
+        },
+      };
     }
 
     if (name === 'linkedinService' && payload?.action === 'shareDesignWork') {
