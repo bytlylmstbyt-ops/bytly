@@ -66,20 +66,28 @@ export default function WalletRecharge() {
       alert("الحد الأدنى للشحن 50 ريال");
       return;
     }
+    if (!user?.id) {
+      alert("يجب تسجيل الدخول أولاً");
+      return;
+    }
 
     setIsProcessing(true);
-    
     try {
-      const response = await base44.functions.invoke('createWalletRecharge', {
-        amount: parseFloat(amount),
-        user_email: user.email
+      const { data, error } = await supabase.functions.invoke("create-moyasar-wallet-recharge", {
+        body: { amount: parseFloat(amount) }
       });
-
-      if (response.data?.url) {
-        window.location.href = response.data.url;
+      if (error) throw error;
+      if (data?.requires_source) {
+        alert("تم تجهيز طلب الشحن، لكن بوابة الدفع التجريبية غير مفعلة في الواجهة بعد. لم يتم خصم أي مبلغ.");
+      } else if (data?.payment_id) {
+        alert(`تم إنشاء عملية الدفع التجريبية رقم ${data.payment_id}. لم يتم اعتماد الرصيد قبل التحقق من Moyasar.`);
+      } else {
+        alert("تم تجهيز طلب الشحن بدون خصم أي مبلغ.");
       }
     } catch (error) {
-      alert("حدث خطأ في إنشاء عملية الشحن");
+      console.error("Wallet recharge error:", error);
+      alert(error?.message || "حدث خطأ في إنشاء عملية الشحن");
+    } finally {
       setIsProcessing(false);
     }
   };
@@ -176,7 +184,7 @@ export default function WalletRecharge() {
                 </div>
                 <div className="flex items-center gap-2">
                   <CreditCard className="w-4 h-4 text-blue-500" />
-                  دفع آمن عبر Stripe
+                  الدفع عبر Moyasar — وضع الاختبار فقط
                 </div>
               </div>
 
