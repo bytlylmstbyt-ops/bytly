@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { Wallet, DollarSign, CreditCard, Loader2, CheckCircle, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,14 +21,14 @@ export default function WalletRecharge() {
   const loadUserData = async () => {
     try {
       const currentUser = await Promise.race([
-        base44.auth.me(),
+        supabase.auth.getUser().then(({ data }) => { const u = data?.user; return u ? { id:u.id,user_id:u.id,email:u.email,full_name:u.user_metadata?.full_name||u.user_metadata?.name||'',role:u.user_metadata?.role||'user' } : null; }),
         new Promise((_, reject) => setTimeout(() => reject(new Error("انتهت مهلة تحميل المستخدم")), 10000))
       ]);
       setUser(currentUser);
       if (!currentUser?.email) return;
 
       const clientData = await Promise.race([
-        base44.entities.Client.filter({ email: currentUser.email }),
+        supabase.from('clients').select('*').eq('email', currentUser.email),
         new Promise(resolve => setTimeout(() => resolve([]), 7000))
       ]).catch(() => []);
       if (clientData?.[0]) {
@@ -37,7 +37,7 @@ export default function WalletRecharge() {
       }
 
       const engineerData = await Promise.race([
-        base44.entities.Engineer.filter({ email: currentUser.email }),
+        supabase.from('engineers').select('*').eq('email', currentUser.email),
         new Promise(resolve => setTimeout(() => resolve([]), 7000))
       ]).catch(() => []);
       if (engineerData?.[0]) {
