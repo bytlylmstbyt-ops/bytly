@@ -28,7 +28,7 @@ export default function WalletRecharge() {
       if (!currentUser?.email) return;
 
       const clientData = await Promise.race([
-        supabase.from('clients').select('*').eq('email', currentUser.email),
+        supabase.from('clients').select('*').eq('email', currentUser.email).then(({data}) => data || []),
         new Promise(resolve => setTimeout(() => resolve([]), 7000))
       ]).catch(() => []);
       if (clientData?.[0]) {
@@ -37,7 +37,7 @@ export default function WalletRecharge() {
       }
 
       const engineerData = await Promise.race([
-        supabase.from('engineers').select('*').eq('email', currentUser.email),
+        supabase.from('engineers').select('*').eq('email', currentUser.email).then(({data}) => data || []),
         new Promise(resolve => setTimeout(() => resolve([]), 7000))
       ]).catch(() => []);
       if (engineerData?.[0]) {
