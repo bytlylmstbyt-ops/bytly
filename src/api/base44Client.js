@@ -333,10 +333,193 @@ legacyBase44.entities.Portfolio = {...legacyPortfolio,create:async payload=>{con
 const legacyPlatformSettings = legacyBase44.entities.PlatformSettings;
 legacyBase44.entities.PlatformSettings = {...legacyPlatformSettings,list:async()=>{const {data,error}=await withHardTimeout(supabase.from('platform_settings').select('*').order('updated_at',{ascending:false}).limit(1),10000,'انتهت مهلة قراءة إعدادات المنصة');if(error)throw error;return data||[]},create:async p=>{const {data,error}=await withHardTimeout(supabase.from('platform_settings').insert(p).select('*').single(),10000,'انتهت مهلة حفظ إعدادات المنصة');if(error)throw error;return data},update:async(id,p)=>{const {data,error}=await withHardTimeout(supabase.from('platform_settings').update({...p,updated_at:new Date().toISOString()}).eq('id',id).select('*').single(),10000,'انتهت مهلة تحديث إعدادات المنصة');if(error)throw error;return data}};
 
+
+const resolveUserIdByEmail = async email => {
+  if (!email) return null;
+  const { data } = await withHardTimeout(
+    supabase.from('profiles').select('user_id,email').ilike('email', String(email).trim()).maybeSingle(),
+    10000
+  );
+  return data?.user_id || null;
+};
+
+const legacyProposal = legacyBase44.entities.Proposal;
+legacyBase44.entities.Proposal = {
+  ...legacyProposal,
+  filter: async (filters = {}) => {
+    let q = supabase.from('project_offers').select('*');
+    if (filters.project_id) q = q.eq('project_id', filters.project_id);
+    if (filters.status) q = q.eq('status', filters.status);
+    const { data, error } = await withHardTimeout(q.order('created_at', { ascending: false }), 10000, 'انتهت مهلة قراءة العروض');
+    if (error) throw new Error(error.message || 'تعذر قراءة العروض');
+    return (data || []).map(row => ({
+      ...row,
+      engineer_id: row.engineer_user_id,
+      price: row.amount,
+      delivery_days: row.duration_days,
+      cover_letter: row.proposal,
+      attachments: row.attachments || [],
+      portfolio_items: row.portfolio_items || []
+    }));
+  },
+  create: async payload => {
+    const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
+    const user = authData?.user;
+    if (!user) throw new Error('يجب تسجيل الدخول أولاً');
+    const row = {
+      project_id: payload.project_id,
+      engineer_user_id: user.id,
+      amount: Number(payload.price ?? payload.amount ?? 0),
+      currency: payload.currency || 'SAR',
+      duration_days: Number(payload.delivery_days ?? payload.duration_days ?? 0) || null,
+      proposal: payload.cover_letter ?? payload.proposal ?? null,
+      status: payload.status || 'pending',
+      attachments: Array.isArray(payload.attachments) ? payload.attachments : [],
+      portfolio_items: Array.isArray(payload.portfolio_items) ? payload.portfolio_items : []
+    };
+    const { data, error } = await withHardTimeout(supabase.from('project_offers').insert(row).select('*').single(), 15000);
+    if (error) throw new Error(error.message || 'تعذر حفظ العرض');
+    return { ...data, engineer_id: user.id, price: data.amount, delivery_days: data.duration_days, cover_letter: data.proposal };
+  },
+  update: async (id, payload) => {
+    const patch = {};
+    if (payload.status !== undefined) patch.status = payload.status;
+    if (payload.price !== undefined || payload.amount !== undefined) patch.amount = Number(payload.price ?? payload.amount);
+    if (payload.delivery_days !== undefined || payload.duration_days !== undefined) patch.duration_days = Number(payload.delivery_days ?? payload.duration_days);
+    if (payload.cover_letter !== undefined || payload.proposal !== undefined) patch.proposal = payload.cover_letter ?? payload.proposal;
+    const { data, error } = await withHardTimeout(supabase.from('project_offers').update(patch).eq('id', id).select('*').single(), 10000);
+    if (error) throw new Error(error.message || 'تعذر تحديث العرض');
+    return data;
+  }
+};
+
+const legacyReview = legacyBase44.entities.Review;
+legacyBase44.entities.Review = {
+  ...legacyReview,
+  filter: async (filters = {}) => {
+    let q = supabase.from('project_reviews').select('*');
+    if (filters.project_id) q = q.eq('project_id', filters.project_id);
+    if (filters.engineer_id) q = q.eq('reviewee_user_id', filters.engineer_id);
+    const { data, error } = await withHardTimeout(q.order('created_at', { ascending: false }), 10000);
+    if (error) throw new Error(error.message || 'تعذر قراءة التقييمات');
+    return data || [];
+  },
+  create: async payload => {
+    const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
+    const user = authData?.user;
+    if (!user) throw new Error('يجب تسجيل الدخول أولاً');
+    const row = {
+      project_id: payload.project_id,
+      reviewer_user_id: user.id,
+      reviewee_user_id: payload.reviewee_user_id || payload.engineer_id || null,
+      rating: Number(payload.rating || 5),
+      comment: payload.comment || null
+    };
+    const { data, error } = await withHardTimeout(supabase.from('project_reviews').insert(row).select('*').single(), 10000);
+    if (error) throw new Error(error.message || 'تعذر حفظ التقييم');
+    return data;
+  }
+};
+
+const legacyNotification = legacyBase44.entities.Notification;
+legacyBase44.entities.Notification = {
+  ...legacyNotification,
+  filter: async (filters = {}, sort = '-created_at', limit = 100) => {
+    let q = supabase.from('notifications').select('*').limit(limit);
+    if (filters.user_id) q = q.eq('user_id', filters.user_id);
+    if (filters.recipient_email) {
+      const uid = await resolveUserIdByEmail(filters.recipient_email);
+      if (!uid) return [];
+      q = q.eq('user_id', uid);
+    }
+    if (filters.type) q = q.eq('type', filters.type);
+    q = q.order(sort.replace(/^-/, ''), { ascending: !String(sort).startsWith('-') });
+    const { data, error } = await withHardTimeout(q, 10000);
+    if (error) throw new Error(error.message || 'تعذر قراءة الإشعارات');
+    return data || [];
+  },
+  create: async payload => {
+    const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
+    const actor = authData?.user;
+    if (!actor) throw new Error('يجب تسجيل الدخول أولاً');
+    const row = {
+      user_id: payload.user_id || await resolveUserIdByEmail(payload.recipient_email) || actor.id,
+      type: payload.type || 'system',
+      title: payload.title || '',
+      body: payload.message || payload.body || '',
+      entity_type: payload.entity_type || null,
+      entity_id: payload.related_entity_id || payload.related_project_id || null
+    };
+    const { data, error } = await withHardTimeout(supabase.from('notifications').insert(row).select('*').single(), 10000);
+    if (error) throw new Error(error.message || 'تعذر إنشاء الإشعار');
+    return data;
+  },
+  update: async (id, payload) => {
+    const patch = {};
+    if (payload.is_read !== undefined) patch.read_at = payload.is_read ? new Date().toISOString() : null;
+    if (payload.read_at !== undefined) patch.read_at = payload.read_at;
+    const { data, error } = await withHardTimeout(supabase.from('notifications').update(patch).eq('id', id).select('*').single(), 10000);
+    if (error) throw new Error(error.message || 'تعذر تحديث الإشعار');
+    return data;
+  }
+};
+
+const legacyTransaction = legacyBase44.entities.Transaction;
+legacyBase44.entities.Transaction = {
+  ...legacyTransaction,
+  filter: async (filters = {}) => {
+    let q = supabase.from('wallet_transactions').select('*');
+    if (filters.project_id) q = q.eq('project_id', filters.project_id);
+    if (filters.user_id) q = q.eq('user_id', filters.user_id);
+    if (filters.type) q = q.eq('type', filters.type);
+    const { data, error } = await withHardTimeout(q.order('created_at', { ascending: false }), 10000);
+    if (error) throw new Error(error.message || 'تعذر قراءة المعاملات');
+    return data || [];
+  }
+};
+
+const createContractFromProposalSupabase = async proposalId => {
+  const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
+  if (!authData?.user) throw new Error('يجب تسجيل الدخول أولاً');
+  const { data: offer, error: offerError } = await withHardTimeout(supabase.from('project_offers').select('*').eq('id', proposalId).single(), 10000);
+  if (offerError) throw new Error(offerError.message || 'تعذر قراءة العرض');
+  const { data: project, error: projectError } = await withHardTimeout(supabase.from('projects').select('*').eq('id', offer.project_id).single(), 10000);
+  if (projectError) throw new Error(projectError.message || 'تعذر قراءة المشروع');
+  const { data: existing } = await withHardTimeout(supabase.from('project_contracts').select('*').eq('offer_id', proposalId).maybeSingle(), 10000);
+  if (existing) return { success: true, contract: existing };
+  const row = {
+    project_id: project.id,
+    offer_id: offer.id,
+    client_user_id: project.client_user_id,
+    provider_user_id: offer.engineer_user_id,
+    client_id: project.client_user_id,
+    engineer_id: offer.engineer_user_id,
+    title: 'عقد مشروع ' + (project.title || ''),
+    contract_number: 'BYTLY-' + new Date().getFullYear() + '-' + String(Date.now()).slice(-8),
+    amount: offer.amount,
+    currency: offer.currency || 'SAR',
+    status: 'pending_signature',
+    terms: offer.proposal || null,
+    contract_type: 'project_start',
+    service_description: offer.proposal || project.description || null,
+    total_amount: offer.amount,
+    payment_terms: 'حسب مراحل المشروع المتفق عليها',
+    start_date: project.start_date || null,
+    delivery_date: project.deadline || null,
+    contract_version: 1,
+    provider_type: 'engineer',
+    description: project.description || null
+  };
+  const { data: contract, error } = await withHardTimeout(supabase.from('project_contracts').insert(row).select('*').single(), 15000);
+  if (error) throw new Error(error.message || 'تعذر إنشاء العقد');
+  return { success: true, contract };
+};
+
 const legacyFunctions = legacyBase44.functions;
 legacyBase44.functions = {
   ...legacyFunctions,
   invoke: async (name, payload) => {
+    if (name === 'createContractFromProposal') return { data: await createContractFromProposalSupabase(payload?.proposal_id) };
     if (name === 'linkedinService' && payload?.action === 'shareDesignWork') {
       const text = payload?.data?.customCaption;
       const published = await publishLinkedInPost(text);
