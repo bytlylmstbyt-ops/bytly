@@ -17,10 +17,66 @@ export default function WalletTopup() {
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentOrder, setPaymentOrder] = useState(null);
+  const [paymentFormError, setPaymentFormError] = useState("");
 
   useEffect(() => {
     loadUserData();
   }, []);
+
+  useEffect(() => {
+    if (!paymentOrder?.payment_order_id) return;
+    const publishableKey = import.meta.env.VITE_MOYASAR_PUBLISHABLE_KEY;
+    if (!publishableKey) {
+      setPaymentFormError("مفتاح الدفع التجريبي غير مضبوط في إعدادات الموقع. لم يتم خصم أي مبلغ.");
+      return;
+    }
+
+    let cancelled = false;
+    const initializeForm = () => {
+      if (cancelled || !window.Moyasar) return;
+      const element = document.querySelector("#bytly-moyasar-form");
+      if (!element) return;
+      element.innerHTML = "";
+      const callbackUrl = `${window.location.origin}/WalletRechargeSuccess?payment_order_id=${encodeURIComponent(paymentOrder.payment_order_id)}`;
+      window.Moyasar.init({
+        element: "#bytly-moyasar-form",
+        amount: Math.round(Number(paymentOrder.amount) * 100),
+        currency: "SAR",
+        description: `Bytly wallet recharge ${paymentOrder.payment_order_id}`,
+        publishable_api_key: publishableKey,
+        callback_url: callbackUrl,
+        supported_networks: ["mada", "visa", "mastercard", "amex"],
+        methods: ["creditcard"],
+      });
+    };
+
+    const cssId = "bytly-moyasar-css";
+    if (!document.getElementById(cssId)) {
+      const link = document.createElement("link");
+      link.id = cssId;
+      link.rel = "stylesheet";
+      link.href = "https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.3.0/dist/moyasar.css";
+      document.head.appendChild(link);
+    }
+    if (window.Moyasar) {
+      initializeForm();
+    } else {
+      let script = document.getElementById("bytly-moyasar-js");
+      if (!script) {
+        script = document.createElement("script");
+        script.id = "bytly-moyasar-js";
+        script.src = "https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.3.0/dist/moyasar.umd.min.js";
+        script.async = true;
+        document.head.appendChild(script);
+      }
+      script.addEventListener("load", initializeForm, { once: true });
+      script.addEventListener("error", () => {
+        if (!cancelled) setPaymentFormError("تعذر تحميل نموذج الدفع التجريبي. حاول مرة أخرى لاحقاً.");
+      }, { once: true });
+    }
+    return () => { cancelled = true; };
+  }, [paymentOrder]);
 
   const loadUserData = async () => {
     setIsLoading(true);
@@ -71,8 +127,9 @@ export default function WalletTopup() {
   };
 
   const handleTopup = async () => {
-    if (!amount || parseFloat(amount) < 50) {
-      alert("الحد الأدنى للشحن 50 ريال");
+    const requestedAmount = Number(amount);
+    if (!Number.isFinite(requestedAmount) || requestedAmount < 50 || requestedAmount > 100000) {
+      alert("أدخل مبلغاً بين 50 و100000 ريال");
       return;
     }
     if (!user?.id) {
@@ -81,21 +138,20 @@ export default function WalletTopup() {
     }
 
     setIsProcessing(true);
+    setPaymentFormError("");
+    setPaymentOrder(null);
     try {
       const { data, error } = await supabase.functions.invoke("create-moyasar-wallet-recharge", {
-        body: { amount: parseFloat(amount) }
+        body: { amount: requestedAmount }
       });
       if (error) throw error;
-      if (data?.requires_source) {
-        alert("تم تجهيز طلب الشحن، لكن بوابة الدفع التجريبية غير مفعلة في الواجهة بعد. لم يتم خصم أي مبلغ.");
-      } else if (data?.payment_id) {
-        alert(`تم إنشاء عملية الدفع التجريبية رقم ${data.payment_id}. لم يتم اعتماد الرصيد قبل التحقق من Moyasar.`);
-      } else {
-        alert("تم تجهيز طلب الشحن بدون خصم أي مبلغ.");
+      if (!data?.payment_order_id || !data?.requires_source) {
+        throw new Error(data?.error || "لم نتمكن من تجهيز طلب الشحن التجريبي");
       }
+      setPaymentOrder(data);
     } catch (error) {
-      console.error("Wallet topup error:", error);
-      alert(error?.message || "حدث خطأ في عملية الشحن");
+      console.error("Wallet recharge setup error:", error);
+      alert(error?.message || "حدث خطأ في تجهيز الدفع التجريبي");
     } finally {
       setIsProcessing(false);
     }
@@ -222,9 +278,21 @@ export default function WalletTopup() {
               </div>
 
               {/* Submit Button */}
+              {paymentFormError && (
+                <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  {paymentFormError}
+                </div>
+              )}
+              {paymentOrder?.payment_order_id && (
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-3">
+                  <p className="font-semibold text-amber-900">الدفع التجريبي — لم يتم تأكيد الشحن بعد</p>
+                  <p className="text-sm text-amber-800">المبلغ: {Number(paymentOrder.amount).toLocaleString("ar-SA")} ريال. استخدم بيانات الاختبار من Moyasar فقط.</p>
+                  <div id="bytly-moyasar-form" className="mysr-form" />
+                </div>
+              )}
               <Button
                 onClick={handleTopup}
-                disabled={!amount || parseFloat(amount) < 50 || isProcessing}
+                disabled={!amount || parseFloat(amount) < 50 || isProcessing || Boolean(paymentOrder?.payment_order_id)}
                 className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-lg py-6"
               >
                 {isProcessing ? (
