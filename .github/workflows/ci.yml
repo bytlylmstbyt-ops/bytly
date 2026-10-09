@@ -15,27 +15,50 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  validate:
+  base44-audit:
+    name: Base44 reference audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Audit remaining Base44 references
+        run: node scripts/audit-base44-references.mjs
+
+  lint:
+    name: ESLint
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-
       - name: Install dependencies
         run: npm ci
-
-      - name: Audit remaining Base44 references
-        run: node scripts/audit-base44-references.mjs
-
       - name: Run ESLint
         run: npm run lint
 
+  build:
+    name: Production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
       - name: Build production bundle
         run: npm run build
