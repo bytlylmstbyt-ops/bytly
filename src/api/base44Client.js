@@ -212,12 +212,25 @@ legacyBase44.entities.Engineer = {
   return data;
 }};
 
+const isUuid = value => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || ''));
+
 const resolveLegacyId = async (entity, currentId) => {
-  if (!currentId || !supabase) return currentId;
+  if (!currentId) return currentId;
+  if (!supabase) return null;
+  if (isUuid(currentId)) return String(currentId);
+  const table = entity === 'Engineer' ? 'engineers' : entity === 'Client' ? 'clients' : entity === 'Project' ? 'projects' : null;
+  if (!table) return null;
   try {
-    const table = entity === 'Engineer' ? 'engineers' : entity === 'Client' ? 'clients' : 'projects';
-    return currentId;
-  } catch { return currentId; }
+    const { data, error } = await withHardTimeout(
+      supabase.from(table).select('id').eq('base44_id', String(currentId)).maybeSingle(),
+      10000,
+      'انتهت مهلة مطابقة المعرّف القديم'
+    );
+    if (error || !data?.id) return null;
+    return data.id;
+  } catch {
+    return null;
+  }
 };
 
 const legacyPermitApplication = legacyBase44.entities.PermitApplication;
@@ -265,9 +278,10 @@ legacyBase44.entities.Contract = {
     if (mapped.engineer_id) mapped.engineer_id = await resolveLegacyId('Engineer', mapped.engineer_id);
     if (mapped.client_id) mapped.client_id = await resolveLegacyId('Client', mapped.client_id);
     if (mapped.project_id) mapped.project_id = await resolveLegacyId('Project', mapped.project_id);
+    if ((filters?.engineer_id && !mapped.engineer_id) || (filters?.client_id && !mapped.client_id) || (filters?.project_id && !mapped.project_id)) return [];
     try {
       let q = supabase.from('project_contracts').select('*');
-      Object.entries(filters || {}).forEach(([k,v]) => { q = v === null ? q.is(k,null) : Array.isArray(v) ? q.in(k,v) : q.eq(k,v); });
+      Object.entries(mapped).forEach(([k,v]) => { q = v === null ? q.is(k,null) : Array.isArray(v) ? q.in(k,v) : q.eq(k,v); });
       const { data, error } = await withHardTimeout(q,10000,'انتهت مهلة قراءة العقود');
       if (!error && data?.length) return data;
     } catch {}
@@ -288,9 +302,10 @@ legacyBase44.entities.Project = { ...legacyProject,
     const mapped = { ...(filters || {}) };
     if (mapped.client_id) mapped.client_id = await resolveLegacyId('Client', mapped.client_id);
     if (mapped.assigned_engineer_id) mapped.assigned_engineer_id = await resolveLegacyId('Engineer', mapped.assigned_engineer_id);
+    if ((filters?.client_id && !mapped.client_id) || (filters?.assigned_engineer_id && !mapped.assigned_engineer_id)) return [];
     try {
       let q=supabase.from('projects').select('*');
-      Object.entries(filters||{}).forEach(([k,v])=>{q=v===null?q.is(k,null):Array.isArray(v)?q.in(k,v):q.eq(k,v)});
+      Object.entries(mapped).forEach(([k,v])=>{q=v===null?q.is(k,null):Array.isArray(v)?q.in(k,v):q.eq(k,v)});
       const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة المشروع');
       if(!error && data?.length) return data;
     } catch {}
