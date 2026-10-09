@@ -23,8 +23,8 @@ export default function WalletRecharge() {
   useEffect(() => {
     if (!paymentOrder?.payment_order_id) return;
     const publishableKey = import.meta.env.VITE_MOYASAR_PUBLISHABLE_KEY;
-    if (!publishableKey) {
-      setPaymentFormError("مفتاح الدفع التجريبي غير مضبوط في إعدادات الموقع. لم يتم خصم أي مبلغ.");
+    if (!publishableKey || !publishableKey.startsWith("pk_test_")) {
+      setPaymentFormError("تم إيقاف الدفع: يجب ضبط مفتاح Moyasar التجريبي الذي يبدأ بـ pk_test_. لم يتم خصم أي مبلغ.");
       return;
     }
 
