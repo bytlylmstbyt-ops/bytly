@@ -217,6 +217,10 @@ const isUuid = value => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f
 const resolveLegacyId = async (entity, currentId) => {
   if (!currentId) return currentId;
   if (!supabase) return null;
+  if (Array.isArray(currentId)) {
+    const resolved = await Promise.all(currentId.map(value => resolveLegacyId(entity, value)));
+    return resolved.some(value => value == null) ? null : resolved;
+  }
   if (isUuid(currentId)) return String(currentId);
   const table = entity === 'Engineer' ? 'engineers' : entity === 'Client' ? 'clients' : entity === 'Project' ? 'projects' : null;
   if (!table) return null;
@@ -300,9 +304,10 @@ const legacyProject = legacyBase44.entities.Project;
 legacyBase44.entities.Project = { ...legacyProject,
   filter: async filters => {
     const mapped = { ...(filters || {}) };
-    if (mapped.client_id) mapped.client_id = await resolveLegacyId('Client', mapped.client_id);
+    // projects.client_id is a legacy text field; keep its original value.
+    // Only assigned_engineer_id is a UUID relationship to engineers.id.
     if (mapped.assigned_engineer_id) mapped.assigned_engineer_id = await resolveLegacyId('Engineer', mapped.assigned_engineer_id);
-    if ((filters?.client_id && !mapped.client_id) || (filters?.assigned_engineer_id && !mapped.assigned_engineer_id)) return [];
+    if (filters?.assigned_engineer_id && !mapped.assigned_engineer_id) return [];
     try {
       let q=supabase.from('projects').select('*');
       Object.entries(mapped).forEach(([k,v])=>{q=v===null?q.is(k,null):Array.isArray(v)?q.in(k,v):q.eq(k,v)});
