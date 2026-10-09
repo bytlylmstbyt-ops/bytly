@@ -237,6 +237,37 @@ const resolveLegacyId = async (entity, currentId) => {
   }
 };
 
+const resolveLegacyUserId = async (entity, currentId) => {
+  if (!currentId || !supabase) return null;
+  if (Array.isArray(currentId)) {
+    const resolved = await Promise.all(currentId.map(value => resolveLegacyUserId(entity, value)));
+    return resolved.some(value => value == null) ? null : resolved;
+  }
+  const table = entity === 'Engineer' ? 'engineers' : entity === 'Client' ? 'clients' : null;
+  if (!table) return null;
+  try {
+    if (isUuid(currentId)) {
+      const { data, error } = await withHardTimeout(
+        supabase.from(table).select('user_id').eq('id', String(currentId)).maybeSingle(),
+        10000,
+        'انتهت مهلة مطابقة هوية المستخدم'
+      );
+      if (!error && data?.user_id) return data.user_id;
+      // A UUID that is not an entity-row ID may already be the auth user ID.
+      return String(currentId);
+    }
+    const { data, error } = await withHardTimeout(
+      supabase.from(table).select('user_id').eq('base44_id', String(currentId)).maybeSingle(),
+      10000,
+      'انتهت مهلة مطابقة هوية المستخدم القديمة'
+    );
+    if (error || !data?.user_id) return null;
+    return data.user_id;
+  } catch {
+    return null;
+  }
+};
+
 const legacyPermitApplication = legacyBase44.entities.PermitApplication;
 legacyBase44.entities.PermitApplication = {
   ...legacyPermitApplication,
@@ -279,10 +310,16 @@ legacyBase44.entities.Contract = {
   ...legacyContract,
   filter: async filters => {
     const mapped = { ...(filters || {}) };
-    if (mapped.engineer_id) mapped.engineer_id = await resolveLegacyId('Engineer', mapped.engineer_id);
-    if (mapped.client_id) mapped.client_id = await resolveLegacyId('Client', mapped.client_id);
+    if (mapped.engineer_id) {
+      mapped.provider_user_id = await resolveLegacyUserId('Engineer', mapped.engineer_id);
+      delete mapped.engineer_id;
+    }
+    if (mapped.client_id) {
+      mapped.client_user_id = await resolveLegacyUserId('Client', mapped.client_id);
+      delete mapped.client_id;
+    }
     if (mapped.project_id) mapped.project_id = await resolveLegacyId('Project', mapped.project_id);
-    if ((filters?.engineer_id && !mapped.engineer_id) || (filters?.client_id && !mapped.client_id) || (filters?.project_id && !mapped.project_id)) return [];
+    if ((filters?.engineer_id && !mapped.provider_user_id) || (filters?.client_id && !mapped.client_user_id) || (filters?.project_id && !mapped.project_id)) return [];
     try {
       let q = supabase.from('project_contracts').select('*');
       Object.entries(mapped).forEach(([k,v]) => { q = v === null ? q.is(k,null) : Array.isArray(v) ? q.in(k,v) : q.eq(k,v); });
