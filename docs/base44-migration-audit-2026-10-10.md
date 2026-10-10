@@ -93,6 +93,23 @@ Base44 contains 6 `NotificationSettings` records for individual emails. The Supa
 ### Notifications
 Base44 has 47 `Notification` records. The latest Supabase operational query returned 35 rows, but these include newer registration notices and repeated notification types for the same entity. Since the schemas differ (`recipient_email/is_read/related_project_id` in Base44 versus `user_id/read_at/entity_type/entity_id` in Supabase), count-only comparison is not valid. A safe migration needs email-to-Supabase-user mapping, source-ID preservation or an explicit mapping table, test-notification filtering, and deduplication rules. **Notification migration status: partial/uncertain; 0 of 47 source records were proven to match by source ID in this check.**
 
+## Runtime compatibility-layer audit (main branch snapshot 2026-10-10)
+
+Read-only review of `src/api/base44Client.js` and active project pages found:
+
+- The current `base44Client.js` does **not** import `@base44/sdk`; it constructs a compatibility object backed by Supabase. This supports the conclusion that the inspected client is not directly making Base44 SDK API calls.
+- `src/pages/Projects.jsx` and `src/pages/ProjectDetails.jsx` still use the legacy `base44.entities.*` interface, but key paths are routed through the compatibility layer to Supabase tables.
+- Explicit Supabase mappings observed in the file include `Project -> projects`, `Contract -> project_contracts`, `Proposal -> project_offers`, `Review -> project_reviews`, `Notification -> notifications`, `Transaction -> wallet_transactions`, `Engineer -> engineers`, `Client -> clients`, `Portfolio.create -> portfolios`, `PlatformSettings -> platform_settings`, `PermitApplication -> permit_applications`, `ConsultationAppointment -> consultation_appointments`, `ProjectTask -> project_tasks`, and `ProjectMilestone -> project_milestones`. AI calls route through the Gemini client; admin AI conversation history routes to `admin_ai_conversations`; file uploads route to Supabase Storage.
+- This remains a **compatibility layer**, not complete removal of the legacy interface. The generic proxy converts unhandled entity names from CamelCase to singular snake_case (e.g. `NotificationSettings -> notification_settings`), but no corresponding notification-settings table was found in the public table inventory. Such calls can fail at runtime unless explicitly mapped.
+- `legacyFunctions.invoke` throws `وظيفة غير مرحّلة إلى Supabase` for function names without a specific handler. Specific handlers observed include `createContractFromProposal`, `bookReviewMeeting`, `createMeetCall`, and `linkedinService`; unrecognized function invocations are therefore a remaining risk.
+- Several wrappers intentionally return an empty array when a Supabase query errors or returns no rows (notably project/contract/engineer/client reads). This can hide schema/mapping problems as “no data”; empty tables alone cannot prove successful migration.
+
+### Code migration assessment
+- **Direct SDK dependency in inspected client:** not present in current `main` snapshot.
+- **Legacy compatibility interface usage:** still present in feature pages.
+- **Explicitly mapped key paths:** several mapped, but not all 97 entities/functions are proven covered.
+- **Runtime independence from Base44:** not yet proven end-to-end. Require a call-site inventory, explicit mapping registry, tests for every active entity/function, and a test run with any Base44 network access blocked.
+
 ## Operational tables
 
 At audit time, these operational tables were empty:
