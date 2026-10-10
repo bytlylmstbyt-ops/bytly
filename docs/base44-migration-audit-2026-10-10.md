@@ -110,6 +110,35 @@ Read-only review of `src/api/base44Client.js` and active project pages found:
 - **Explicitly mapped key paths:** several mapped, but not all 97 entities/functions are proven covered.
 - **Runtime independence from Base44:** not yet proven end-to-end. Require a call-site inventory, explicit mapping registry, tests for every active entity/function, and a test run with any Base44 network access blocked.
 
+## Critical runtime call-site audit (main snapshot 2026-10-10)
+
+A targeted review of active pages and the compatibility layer found three concrete blockers that should be fixed before claiming Base44-independent runtime behavior.
+
+### 1. Notification real-time subscription is not implemented in the bridge
+- `src/pages/Notifications.jsx` calls `base44.entities.Notification.subscribe(...)` during page initialization.
+- The generic entity adapter in `src/api/base44Client.js` implements `filter/list/get/create/update/delete`, but does not implement `subscribe`.
+- The notification-specific adapter overrides filter/create/update but also does not implement `subscribe`.
+- Therefore this call can fail at runtime (the returned entity's `subscribe` is undefined), and the notification page may not receive real-time updates. Implement Supabase Realtime subscription scoped to the authenticated user's `user_id`, map the event payload into the page's expected shape, and add cleanup tests.
+
+### 2. Notification settings use an unverified generic table mapping
+- `src/pages/Settings.jsx` reads, creates, and updates `base44.entities.NotificationSettings`.
+- The generic proxy maps this name to `notification_settings`, but the current public Supabase table inventory did not show that table.
+- Base44 has 6 settings records. Until a real target table or an explicit supported settings model exists, loading/saving these preferences may fail. Implement the target schema plus row-level security, or explicitly map to an existing verified preference store; test read/create/update for an authenticated user.
+
+### 3. Account deletion is currently wired to a deliberately unsupported function
+- `src/pages/Settings.jsx` calls `base44.functions.invoke('deleteAccount', ...)`.
+- The compatibility layer's default `legacyFunctions.invoke` always throws `وظيفة غير مرحّلة إلى Supabase`; the inspected function dispatch has no `deleteAccount` handler.
+- The UI's `finally` block then logs out and redirects to `/login` even when deletion failed. This can make the user believe the account was deleted while it remains present.
+- Do **not** add a client-side direct delete or use the service-role key in the browser. Implement a secured server-side Supabase Edge Function/API with authenticated-user checks, clear deletion policy for related records/storage, audit logging, and only log out/redirect after confirmed success. Until then, disable or relabel the destructive action and show a clear unavailable message.
+
+### Priority order
+P0: Fix misleading account-deletion flow (security/trust and destructive action semantics).
+P1: Implement and test Notification Realtime subscription.
+P1: Implement and test notification preferences persistence.
+P2: Continue full active call-site inventory and block Base44 network access in staging to detect unhandled routes.
+
+These are source-code findings from a static review; no destructive account action was executed and no production data was changed. They are not yet fixed by this audit commit.
+
 ## Operational tables
 
 At audit time, these operational tables were empty:
