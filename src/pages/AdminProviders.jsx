@@ -10,7 +10,7 @@ import BulkActionBar from "@/components/admin/BulkActionBar";
 import AddProviderDialog from "@/components/admin/AddProviderDialog";
 import { useBulkSelection } from "@/components/admin/useBulkSelection";
 import { readAdminFilters, writeAdminFilters, useAdminScrollRestore } from "@/components/admin/adminFilterPersistence";
-import { getCurrentUser, isCurrentUserAdmin, listProviders, updateProvider, deleteProvider } from "@/lib/supabaseProviderService";
+import { isCurrentUserAdmin, listProviders, updateProvider, deleteProvider } from "@/lib/supabaseProviderService";
 
 const PROVIDERS = [
   { key: "EngineeringFirm", label: "الشركات الهندسية", icon: Building2, nameField: "company_name", subField: "specializations" },
