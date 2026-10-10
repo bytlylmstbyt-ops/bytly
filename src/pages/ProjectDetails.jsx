@@ -94,8 +94,36 @@ export default function ProjectDetails() {
 
   const loadData = async () => {
     setIsLoading(true);
-    const currentUser = await base44.auth.me();
-    setUser(currentUser);
+
+    // Supabase is now the primary identity source. Project/contract/proposal
+    // records remain on the compatibility bridge until their RLS-safe
+    // Supabase paths are fully populated and tested.
+    let currentUser = null;
+    if (supabase) {
+      const { data, error } = await supabase.auth.getUser();
+      if (!error) currentUser = data?.user || null;
+    }
+    if (!currentUser) {
+      try { currentUser = await base44.auth.me(); } catch { currentUser = null; }
+    }
+
+    if (!currentUser) {
+      setUser(null);
+      setIsLoading(false);
+      return;
+    }
+
+    let profile = null;
+    if (supabase) {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+      profile = data || null;
+    }
+    const normalizedUser = { ...currentUser, ...(profile || {}) };
+    setUser(normalizedUser);
 
     const [projectData, proposalsData, engineersData, userEngData, userClientData, contractsData, transactionsData] = await Promise.all([
       base44.entities.Project.filter({ id: projectId }),
