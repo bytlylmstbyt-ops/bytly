@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabaseClient";
 import { saveRegistration } from "@/lib/registrationService";
 import EmailConfirmationPending from "@/components/registration/EmailConfirmationPending";
 import { useNavigate } from "react-router-dom";

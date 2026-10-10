@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Workflow, Plus, Loader2, Play, Trash2, Pencil, CheckCircle2, ShieldAlert, Sparkles, RefreshCw, Megaphone } from "lucide-react";
+import { Workflow, Plus, Loader2, Play, Trash2, Pencil, CheckCircle2, ShieldAlert, Sparkles, RefreshCw } from "lucide-react";
 import { callGemini } from "@/lib/geminiClient";
 
 const TRIGGER_LABELS = { event: "عند حدوث حدث", schedule: "مجدول", manual: "يدوي" };
