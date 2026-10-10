@@ -3,7 +3,7 @@ import { Wrench, ArrowRight, Upload, ImageIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import AIChat from "@/components/ai/AIChat";
 import { Button } from "@/components/ui/button";
-import { base44 } from "@/api/base44Client";
+
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 
 const SYSTEM_PROMPT = `أنت خبير تجديد وتحسين المنازل من فريق Bytly AI Engineers.
