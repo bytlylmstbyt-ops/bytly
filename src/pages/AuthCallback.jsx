@@ -30,6 +30,7 @@ export default function AuthCallback() {
         const params = new URLSearchParams(window.location.search);
         const code = params.get("code");
         const integrationType = params.get("integration");
+        const fromUrl = params.get("from_url");
         if (code) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) throw exchangeError;
@@ -138,7 +139,17 @@ export default function AuthCallback() {
           if (role && ROLE_ROUTES[role]) navigate(ROLE_ROUTES[role], { replace: true });
           else {
             try { sessionStorage.removeItem("bytly_registration_draft"); } catch {}
-            navigate("/Home", { replace: true });
+            let returnPath = "/Home";
+            if (fromUrl) {
+              try {
+                const target = new URL(fromUrl, window.location.origin);
+                const blockedPaths = ["/login", "/register", "/forgot-password", "/reset-password", "/auth/callback"];
+                if (target.origin === window.location.origin && !blockedPaths.includes(target.pathname)) {
+                  returnPath = target.pathname + target.search + target.hash;
+                }
+              } catch {}
+            }
+            navigate(returnPath, { replace: true });
           }
         }
       } catch (err) {
