@@ -702,19 +702,12 @@ export default function Settings() {
                   className="bg-red-600 hover:bg-red-700 text-white"
                   onClick={() => {
                     toast.error("حذف الحساب غير متاح مؤقتًا؛ لم يتم حذف حسابك. سنفعّل الحذف بعد تجهيز الخدمة الآمنة والتحقق من حذف البيانات المرتبطة.");
-                  }
+                  }}
                 >
-                  {isDeleting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                      جاري الحذف...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="w-4 h-4 ml-2" />
-                      حذف الحساب نهائياً
-                    </>
-                  )}
+                  <>
+                    <Trash2 className="w-4 h-4 ml-2" />
+                    حذف الحساب غير متاح مؤقتًا
+                  </>
                 </Button>
               </DialogFooter>
             </>
