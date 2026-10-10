@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Building2, Loader2, Search, ShieldCheck, Mail, Phone, ExternalLink } from "lucide-react";
+import { Building2, Loader2, Search, ShieldCheck, Mail, Phone } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 
