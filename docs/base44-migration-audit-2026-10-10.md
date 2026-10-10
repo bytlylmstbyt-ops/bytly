@@ -2,7 +2,32 @@
 
 ## Scope and safety
 
-This is a read-only snapshot of the current Supabase staging and operational tables, plus the repository's migration inventory. Counts below describe records currently in Supabase; they are **not** a complete export/count of the source Base44 workspace. No production data was changed by this audit.
+This is a read-only snapshot of Base44 source entities, Supabase staging/operational tables, and the repository's migration inventory. Source counts are scoped to the entities listed below, not all 97 entity types. No production data was changed by this audit.
+
+## Direct Base44 source inventory (queried 2026-10-10)
+
+The Base44 app was queried directly through its entity-record API. These counts are the records returned by the source workspace at audit time (maximum query limit 500 per entity); they are not inferred from Supabase staging tables.
+
+| Base44 entity | Source count | Notes |
+|---|---:|---|
+| `User` | 56 | Matches the 56-row Supabase migration map, but all map rows are still pending. |
+| `Project` | 1 | The source title/description explicitly identify it as a demo project; exclude from production import unless the owner reclassifies it. |
+| `Contract` | 1 | Linked to the demo project; staging status is `demo_excluded`. |
+| `Proposal` | 4 | Linked to the demo project; all staging rows are `demo_excluded`. |
+| `Review` | 3 | Requires source-by-source production/demo classification. |
+| `Message` | 26 | Message content was not copied into this report; classify records before any migration. |
+| `Conversation` | 22 | Separate from the `Message` entity; needs schema/relationship review. |
+| `Engineer` | 17 | Staging marks 9 as real and 8 as non-real; verify identities and duplicates. |
+| `Client` | 10 | Supabase staging contains 8, all marked non-real; reconcile the two-count difference and classify each source record. |
+| `EngineeringFirm` | 6 | Staging contains 6, all marked non-real. |
+| `Notification` | 47 | Supabase operational count was 31; these counts may include different dates or eligibility, so reconcile before importing. |
+| `Transaction` | 2 | Both reference `test-project-001`; treat as test-related until proven otherwise. |
+| `Invoice` | 1 | References `test-project-001`; treat as test-related until proven otherwise. |
+| `Dispute` | 0 | No source records returned. |
+| `ClientInteraction` | 0 | No source records returned. |
+| `ProjectTask`, `ProjectMilestone`, `ProjectMilestone2`, `Document`, `ProjectRevision`, `ProjectWorkflow`, `Payment` | 0 each | No source records returned for these entity names. |
+
+The direct source query changes the conclusion for the core entities: the small project/contract/proposal set visible in staging is the same size as Base44, and the one project is explicitly demo-labelled. This is not evidence that every one of the app's 97 entity types has been inventoried; the table above is a scoped source inventory for migration-critical entities.
 
 ## Operational tables
 
