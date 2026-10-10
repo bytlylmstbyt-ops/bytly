@@ -54,6 +54,29 @@ A subsequent batch was rate-limited by Base44. The remaining source entities hav
 
 The report branch workflow run `38027336035` completed successfully: production build, ESLint, and Base44 reference audit all passed. This validates the branch build and static checks, not the runtime correctness of the migration or production data completeness.
 
+## Source-to-target count reconciliation (follow-up 2026-10-10)
+
+A fresh read-only count comparison was run after inspecting the current Supabase tables. Counts below are current observations, not proof that records are identical; IDs, timestamps, ownership, and content still need row-level matching.
+
+| Base44 entity | Base44 count | Supabase candidate table | Supabase count | Reconciliation |
+|---|---:|---|---:|---|
+| `Portfolio` | 12 | `public.portfolios` | 6 | 6-record difference; compare source IDs, classify demos, and migrate only eligible missing records. |
+| `MarketEntity` | 10 | `public.developer_investor_management` | 10 | Counts match; verify row-level identity and fields before calling it complete. |
+| `Notification` | 47 | `public.notifications` | 35 | 12-record difference; compare eligibility, read state, user mapping, and dates. |
+| `AutomationRule` | 7 | `public.automation_rules` | 7 | Counts match; compare rule IDs/actions and whether the new scheduler executes them correctly. |
+| `AutomationRunLog` | 10 | `public.automation_run_logs` | 29 | Supabase has 19 more rows; likely includes new-system runs. Compare source IDs and timestamps rather than deleting anything. |
+| `Project` | 1 | `public.projects` | 0 | Source project is explicitly demo-labelled; staging remains `review_pending`. Keep excluded from production until classification is signed off. |
+| `Contract` | 1 | `public.project_contracts` | 0 | Source contract is tied to the demo project; staging says `demo_excluded`. |
+| `Proposal` | 4 | `public.project_offers` | 0 | All source proposals are tied to the demo project and staging says `demo_excluded`. |
+| `NotificationSettings` | 6 | No confirmed one-to-one target in this count query | — | Locate/verify the corresponding settings storage and ownership model. |
+| `Portfolio` records | 12 | — | — | The count mismatch is a concrete follow-up item; do not infer that exactly six real portfolios are missing until row-level classification. |
+
+Current operational table counts also show: `profiles=16`, `projects=0`, `project_offers=0`, `project_contracts=0`, `messages=0`, `conversations=0`, `project_reviews=0`, `invoices=0`, `portfolios=6`, `notifications=35`, `automation_rules=7`, `automation_run_logs=29`, `advertisements=3`, `advertisers=0`, `permit_applications=0`, and `consultation_appointments=0`. Counts can change as the app is used; they are not a substitute for source-ID reconciliation.
+
+## Latest CI evidence
+
+The latest workflow run available for the audit branch at the time of this follow-up was `38027610217`, completed with conclusion `success`. This confirms the branch's configured CI checks passed at that commit. The authentication change PR #10 also has a successful CI run (`38026707647`) but remains open and unmerged; runtime sign-in testing and review are still required.
+
 ## Operational tables
 
 At audit time, these operational tables were empty:
