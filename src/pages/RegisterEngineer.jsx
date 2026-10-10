@@ -4,7 +4,7 @@ import { createPageUrl } from "@/utils";
 import { supabase } from "@/lib/supabaseClient";
 import { saveRegistration } from "@/lib/registrationService";
 import { motion } from "framer-motion";
-import { Phone, MapPin, Briefcase, Award, Upload, FileText, ArrowLeft, ArrowRight, CheckCircle, Building2, PenTool, Loader2, Gift, User, Mail } from "lucide-react";
+import { Award, ArrowLeft, ArrowRight, CheckCircle, Building2, PenTool, Loader2, Gift, User, Mail } from "lucide-react";
 import PortfolioStep from "@/components/registration/PortfolioStep";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
