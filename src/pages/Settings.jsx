@@ -36,7 +36,6 @@ export default function Settings() {
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleteStep, setDeleteStep] = useState(1);
   const [deleteReason, setDeleteReason] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({});
   const [notificationSettings, setNotificationSettings] = useState({
     email_notifications: true,
@@ -697,7 +696,7 @@ export default function Settings() {
               <DialogFooter className="gap-2">
                 <Button variant="outline" style={{ minHeight: 44 }} onClick={() => setDeleteStep(2)}>رجوع</Button>
                 <Button
-                  disabled={deleteConfirmText !== "احذف حسابي" || isDeleting}
+                  disabled={deleteConfirmText !== "احذف حسابي"}
                   style={{ minHeight: 44 }}
                   className="bg-red-600 hover:bg-red-700 text-white"
                   onClick={() => {
