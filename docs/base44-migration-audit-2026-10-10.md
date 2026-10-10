@@ -29,6 +29,31 @@ The Base44 app was queried directly through its entity-record API. These counts 
 
 The direct source query changes the conclusion for the core entities: the small project/contract/proposal set visible in staging is the same size as Base44, and the one project is explicitly demo-labelled. This is not evidence that every one of the app's 97 entity types has been inventoried; the table above is a scoped source inventory for migration-critical entities.
 
+## Additional source entity checks (2026-10-10)
+
+A follow-up read-only source query confirmed these additional entity counts:
+
+| Base44 entity | Returned records | Notes |
+|---|---:|---|
+| `AIAgentConversation` | 8 | Requires comparison with the Supabase admin AI conversation bridge. |
+| `AIAssistantQueryLog` | 9 | No migration conclusion yet. |
+| `AIChangeRequestLog` | 15 | No migration conclusion yet. |
+| `Advertisement` | 3 | Compare against the platform advertising tables and classify source records. |
+| `AgentAction` | 2 | No migration conclusion yet. |
+| `AutomationRule` | 7 | Compare with the new automation implementation before disabling legacy workflows. |
+| `AutomationRunLog` | 10 | Historical execution records; retention/migration decision needed. |
+| `BIMModel` | 1 | Requires storage URL and metadata mapping review. |
+| `ChatbotConversation` | 500 | Query reached the 500-record limit; this means **at least 500**, not an exact total. Full paginated count/export is required. |
+| `ChatbotFAQ` | 7 | Compare with the new chatbot/knowledge base implementation. |
+| `ConsultationAppointment` | 2 | Compare with Supabase `consultation_appointments`. |
+| `EmailTemplate` | 11 | Compare with current email templates before migration. |
+
+A subsequent batch was rate-limited by Base44. The remaining source entities have not been counted in this follow-up and must not be treated as zero. No data was written to Base44 or Supabase during these checks.
+
+## CI status after report update
+
+The report branch workflow run `38027336035` completed successfully: production build, ESLint, and Base44 reference audit all passed. This validates the branch build and static checks, not the runtime correctness of the migration or production data completeness.
+
 ## Operational tables
 
 At audit time, these operational tables were empty:
