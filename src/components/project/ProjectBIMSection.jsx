@@ -12,13 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle
 } from "@/components/ui/dialog";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from "@/components/ui/select";
-import {
-  Loader2, Upload, Download, Eye, X, Box, FileText, Image as ImageIcon,
-  PencilRuler, FileBox, Trash2, Building2, Layers, Plus, File
-} from "lucide-react";
+
+import { Loader2, Upload, Download, Eye, Box, FileText, Image as ImageIcon, PencilRuler, FileBox, Trash2, Building2, Layers, Plus, File } from "lucide-react";
 import { notifyWorkspaceUpdate } from "./notifyWorkspaceUpdate";
 
 /* ── تصنيف الملف حسب الامتداد ── */
