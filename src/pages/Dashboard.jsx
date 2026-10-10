@@ -14,10 +14,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import IndividualClientDashboard from "@/components/client/IndividualClientDashboard";
-import MyContracts from "@/pages/MyContracts";
-import ClientDashboard from "@/pages/ClientDashboard";
-import EngineerDashboard from "@/pages/EngineerDashboard";
-import RoleDashboardRouter from "@/pages/RoleDashboardRouter";
+
+
+
+
 import DailyFollowUpTasks from "@/components/dashboard/DailyFollowUpTasks";
 import ProviderRatingsReport from "@/components/dashboard/ProviderRatingsReport";
 import { useLanguage } from "@/components/i18n/LanguageContext";
