@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { publishLinkedInPost, getLinkedInStatus } from "@/lib/linkedinSupabaseService";
+import { publishLinkedInPost } from "@/lib/linkedinSupabaseService";
 import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
