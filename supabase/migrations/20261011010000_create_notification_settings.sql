@@ -33,3 +33,18 @@ create policy "Users can delete their own notification settings"
   using (auth.uid() = user_id);
 
 grant select, insert, update, delete on public.notification_settings to authenticated;
+
+-- Enable Realtime delivery for notification rows where the standard publication exists.
+do $$
+begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
+     and not exists (
+       select 1 from pg_publication_tables
+       where pubname = 'supabase_realtime'
+         and schemaname = 'public'
+         and tablename = 'notifications'
+     ) then
+    alter publication supabase_realtime add table public.notifications;
+  end if;
+end
+$$;
