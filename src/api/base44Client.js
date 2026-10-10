@@ -34,8 +34,10 @@ const makeSupabaseEntity = (table) => ({
 });
 
 const entityCache = new Map();
-const entities = new Proxy({}, { get(_target, name) {
+const entities = new Proxy({}, { get(target, name) {
   if (typeof name !== 'string') return undefined;
+  // Explicit compatibility adapters assigned below must take precedence over the generic table proxy.
+  if (Object.prototype.hasOwnProperty.call(target, name)) return target[name];
   if (!entityCache.has(name)) entityCache.set(name, makeSupabaseEntity(camelToSnake(name)));
   return entityCache.get(name);
 }});
