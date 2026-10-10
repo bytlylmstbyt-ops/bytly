@@ -93,43 +93,12 @@ export default function Login() {
         return;
       }
 
-      try {
-        const { base44 } = await import("@/api/base44Client");
-        if (authCode !== "invalid_credentials" && !authMessage.includes("invalid login credentials")) {
-          setError(authMessage.includes("rate limit") ? "تم تجاوز حد محاولات تسجيل الدخول. انتظري قليلاً ثم حاولي مرة أخرى." : "تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
-          return;
-        }
-        await withTimeout(base44.auth.loginViaEmailPassword(cleanEmail, password), 15000, "انتهت مهلة التحقق من الحساب القديم.");
-        const { data: migrated, error: migrateError } = await withTimeout(
-          supabase.auth.signUp({ email: cleanEmail, password, options: { data: { email: cleanEmail } } }),
-          15000,
-          "انتهت مهلة نقل الحساب إلى نظام تسجيل الدخول الجديد."
-        );
-        if (migrateError) {
-          const code = String(migrateError.code || "").toLowerCase();
-          const message = String(migrateError.message || "").toLowerCase();
-          if (code === "user_already_exists" || message.includes("already registered") || message.includes("already exists") || message.includes("user already registered")) {
-            setError("تم العثور على الحساب في النظام الجديد، لكن كلمة المرور القديمة غير مرتبطة به. استخدمي «نسيت كلمة المرور» لتعيين كلمة مرور جديدة ثم سجّلي الدخول.");
-            return;
-          }
-          throw migrateError;
-        }
-        if (migrated?.session) {
-          try { localStorage.setItem("bytly_has_account", "1"); } catch {}
-          await redirectAfterSuccessfulLogin();
-          return;
-        }
-        setError("تم نقل حسابك إلى نظام تسجيل الدخول الجديد. افتحي رسالة التفعيل في بريدك الإلكتروني ثم سجّلي الدخول مرة أخرى.");
-      } catch (legacyError) {
-        const status = legacyError?.status;
-        const message = String(legacyError?.message || "").toLowerCase();
-        if (status === 403) setError("لا يمكن تسجيل الدخول بهذا الحساب حالياً.");
-        else if (status === 404 || message.includes("not found") || message.includes("invalid") || message.includes("credentials") || message.includes("password")) setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
-        else if (message.includes("timeout") || message.includes("مهلة")) setError("تعذر الوصول إلى خدمة تسجيل الدخول القديمة. حاولي مرة أخرى بعد قليل.");
-        else {
-          console.error("Legacy authentication bridge failed:", legacyError);
-          setError("تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
-        }
+      if (authCode === "invalid_credentials" || authMessage.includes("invalid login credentials")) {
+        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة. إذا كان الحساب قديماً من النظام السابق، استخدمي «نسيت كلمة المرور» لتعيين كلمة مرور جديدة ثم سجّلي الدخول.");
+      } else if (authMessage.includes("rate limit")) {
+        setError("تم تجاوز حد محاولات تسجيل الدخول. انتظري قليلاً ثم حاولي مرة أخرى.");
+      } else {
+        setError("تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
       }
     } catch (err) {
       console.error("Supabase login error:", err);
@@ -147,7 +116,7 @@ export default function Login() {
       const { error: oauthError } = await withTimeout(
         supabase.auth.signInWithOAuth({
           provider: "google",
-          options: { redirectTo: `${window.location.origin}/login?from_url=${encodeURIComponent(getReturnUrl())}` }
+          options: { redirectTo: `${window.location.origin}/auth/callback?from_url=${encodeURIComponent(getReturnUrl())}` }
         }),
         15000,
         "انتهت مهلة بدء تسجيل الدخول عبر Google."
