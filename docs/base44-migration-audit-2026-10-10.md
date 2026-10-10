@@ -77,6 +77,22 @@ Current operational table counts also show: `profiles=16`, `projects=0`, `projec
 
 The latest workflow run available for the audit branch at the time of this follow-up was `38027610217`, completed with conclusion `success`. This confirms the branch's configured CI checks passed at that commit. The authentication change PR #10 also has a successful CI run (`38026707647`) but remains open and unmerged; runtime sign-in testing and review are still required.
 
+## Row-level verification: portfolios and notification preferences (2026-10-10)
+
+### Portfolios
+The source `Portfolio` entity contains 12 records. Row-level inspection shows:
+- 3 records use `engineer_id="placeholder"` and were created on 2026-06-30.
+- 6 records use sample engineer IDs (`sample_engineer_1` through `sample_engineer_6`) and were created on 2026-01-30.
+- 3 records use `engineer_id="ahmed.alharbi@bytly.com"` and were created on 2026-01-30.
+
+The 6 rows currently in `public.portfolios` use synthetic `base44_id` values (`showcase-villa-01`, `showcase-interior-01`, etc.), have `engineer_id IS NULL`, and do not preserve the 12 source Base44 record IDs. Although some titles are similar to source sample entries, the target rows cannot be counted as verified source-record migration. Treat them as showcase/seed data until an explicit ID-level mapping is established. **Portfolio migration status: not verified; source-to-target ID matches demonstrated by this check: 0/12.** This is a matching-evidence result, not proof that none of the underlying content was reused.
+
+### Notification settings
+Base44 contains 6 `NotificationSettings` records for individual emails. The Supabase public table inventory returned no obvious one-to-one notification-settings table. Do not drop these preferences; locate the intended new storage model or document that preferences are not yet migrated. User emails were intentionally not copied into this audit report.
+
+### Notifications
+Base44 has 47 `Notification` records. The latest Supabase operational query returned 35 rows, but these include newer registration notices and repeated notification types for the same entity. Since the schemas differ (`recipient_email/is_read/related_project_id` in Base44 versus `user_id/read_at/entity_type/entity_id` in Supabase), count-only comparison is not valid. A safe migration needs email-to-Supabase-user mapping, source-ID preservation or an explicit mapping table, test-notification filtering, and deduplication rules. **Notification migration status: partial/uncertain; 0 of 47 source records were proven to match by source ID in this check.**
+
 ## Operational tables
 
 At audit time, these operational tables were empty:
