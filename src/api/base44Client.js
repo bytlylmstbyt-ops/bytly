@@ -416,22 +416,39 @@ legacyBase44.entities.Review = {
   }
 };
 
+const mapNotificationRow = (row, recipientEmail = null) => row ? ({
+  ...row,
+  created_date: row.created_at || row.created_date || null,
+  message: row.body || row.message || "",
+  is_read: Boolean(row.read_at || row.is_read),
+  recipient_email: recipientEmail || row.recipient_email || null,
+  related_entity_id: row.entity_id || row.related_entity_id || null,
+  related_project_id: row.entity_type === "project" ? (row.entity_id || null) : (row.related_project_id || null),
+}) : row;
+
 const legacyNotification = legacyBase44.entities.Notification;
 legacyBase44.entities.Notification = {
   ...legacyNotification,
-  filter: async (filters = {}, sort = '-created_at', limit = 100) => {
+  filter: async (filters = {}, sort = '-created_date', limit = 100) => {
     let q = supabase.from('notifications').select('*').limit(limit);
+    let recipientEmail = filters.recipient_email || null;
     if (filters.user_id) q = q.eq('user_id', filters.user_id);
-    if (filters.recipient_email) {
-      const uid = await resolveUserIdByEmail(filters.recipient_email);
+    if (recipientEmail) {
+      const uid = await resolveUserIdByEmail(recipientEmail);
       if (!uid) return [];
       q = q.eq('user_id', uid);
     }
     if (filters.type) q = q.eq('type', filters.type);
-    q = q.order(sort.replace(/^-/, ''), { ascending: !String(sort).startsWith('-') });
+    const requestedSort = String(sort || '-created_date');
+    const sortField = requestedSort.replace(/^-/, '') === 'created_date' ? 'created_at' : requestedSort.replace(/^-/, '');
+    q = q.order(sortField || 'created_at', { ascending: !requestedSort.startsWith('-') });
     const { data, error } = await withHardTimeout(q, 10000);
     if (error) throw new Error(error.message || 'تعذر قراءة الإشعارات');
-    return data || [];
+    if (!recipientEmail) {
+      const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
+      recipientEmail = authData?.user?.email || null;
+    }
+    return (data || []).map(row => mapNotificationRow(row, recipientEmail));
   },
   create: async payload => {
     const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
@@ -442,21 +459,115 @@ legacyBase44.entities.Notification = {
       type: payload.type || 'system',
       title: payload.title || '',
       body: payload.message || payload.body || '',
-      entity_type: payload.entity_type || null,
+      entity_type: payload.entity_type || (payload.related_project_id ? 'project' : null),
       entity_id: payload.related_entity_id || payload.related_project_id || null
     };
     const { data, error } = await withHardTimeout(supabase.from('notifications').insert(row).select('*').single(), 10000);
     if (error) throw new Error(error.message || 'تعذر إنشاء الإشعار');
-    return data;
+    return mapNotificationRow(data, payload.recipient_email || actor.email);
   },
   update: async (id, payload) => {
     const patch = {};
     if (payload.is_read !== undefined) patch.read_at = payload.is_read ? new Date().toISOString() : null;
     if (payload.read_at !== undefined) patch.read_at = payload.read_at;
+    if (payload.title !== undefined) patch.title = payload.title;
+    if (payload.message !== undefined || payload.body !== undefined) patch.body = payload.message ?? payload.body;
     const { data, error } = await withHardTimeout(supabase.from('notifications').update(patch).eq('id', id).select('*').single(), 10000);
     if (error) throw new Error(error.message || 'تعذر تحديث الإشعار');
-    return data;
-  }
+    const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
+    return mapNotificationRow(data, authData?.user?.email || null);
+  },
+  delete: async id => {
+    const { data, error } = await withHardTimeout(supabase.from('notifications').delete().eq('id', id).select('id').maybeSingle(), 10000);
+    if (error) throw new Error(error.message || 'تعذر حذف الإشعار');
+    if (!data) throw new Error('الإشعار غير موجود أو لا تملك صلاحية حذفه');
+    return true;
+  },
+  subscribe: (callback) => {
+    let channel = null;
+    let stopped = false;
+    const start = async () => {
+      const { data: authData, error } = await withHardTimeout(supabase.auth.getUser(), 10000);
+      const user = authData?.user;
+      if (error || !user || stopped) return;
+      channel = supabase.channel(`notifications:${user.id}:${Date.now()}`)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${user.id}`,
+        }, payload => {
+          if (stopped || typeof callback !== 'function') return;
+          const raw = payload.eventType === 'DELETE' ? payload.old : payload.new;
+          const type = payload.eventType === 'INSERT' ? 'create' : payload.eventType === 'UPDATE' ? 'update' : 'delete';
+          callback({
+            type,
+            id: raw?.id,
+            data: mapNotificationRow(raw, user.email),
+          });
+        })
+        .subscribe();
+    };
+    start().catch(error => console.error('Notification subscription failed:', error));
+    return () => {
+      stopped = true;
+      if (channel) supabase.removeChannel(channel);
+    };
+  },
+};
+
+const legacyNotificationSettings = legacyBase44.entities.NotificationSettings;
+const mapNotificationSettings = row => row ? ({
+  ...row,
+  id: row.user_id,
+  user_email: row.user_email || null,
+  email_notifications: row.email_notifications ?? true,
+  in_app_notifications: row.in_app_notifications ?? true,
+  notification_preferences: row.notification_preferences || {},
+}) : row;
+
+legacyBase44.entities.NotificationSettings = {
+  ...legacyNotificationSettings,
+  filter: async (filters = {}) => {
+    const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
+    const user = authData?.user;
+    if (authError) throw new Error(authError.message || 'تعذر التحقق من المستخدم');
+    if (!user) throw new Error('يجب تسجيل الدخول أولاً');
+    if (filters.user_email && String(filters.user_email).toLowerCase() !== String(user.email || '').toLowerCase()) return [];
+    const { data, error } = await withHardTimeout(supabase.from('notification_settings').select('*').eq('user_id', user.id).maybeSingle(), 10000);
+    if (error) throw new Error(error.message || 'تعذر قراءة تفضيلات الإشعارات');
+    return data ? [mapNotificationSettings({ ...data, user_email: user.email })] : [];
+  },
+  create: async payload => {
+    const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
+    const user = authData?.user;
+    if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً');
+    if (payload.user_email && String(payload.user_email).toLowerCase() !== String(user.email || '').toLowerCase()) throw new Error('غير مصرح بتعديل تفضيلات مستخدم آخر');
+    const row = {
+      user_id: user.id,
+      email_notifications: payload.email_notifications ?? true,
+      in_app_notifications: payload.in_app_notifications ?? true,
+      notification_preferences: payload.notification_preferences || {},
+      updated_at: new Date().toISOString(),
+    };
+    const { data, error } = await withHardTimeout(supabase.from('notification_settings').upsert(row, { onConflict: 'user_id' }).select('*').single(), 10000);
+    if (error) throw new Error(error.message || 'تعذر حفظ تفضيلات الإشعارات');
+    return mapNotificationSettings({ ...data, user_email: user.email });
+  },
+  update: async (id, payload) => {
+    const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
+    const user = authData?.user;
+    if (authError || !user || id !== user.id) throw new Error('غير مصرح بتعديل تفضيلات مستخدم آخر');
+    const patch = {
+      ...(payload.email_notifications !== undefined ? { email_notifications: payload.email_notifications } : {}),
+      ...(payload.in_app_notifications !== undefined ? { in_app_notifications: payload.in_app_notifications } : {}),
+      ...(payload.notification_preferences !== undefined ? { notification_preferences: payload.notification_preferences } : {}),
+      updated_at: new Date().toISOString(),
+    };
+    const { data, error } = await withHardTimeout(supabase.from('notification_settings').update(patch).eq('user_id', user.id).select('*').single(), 10000);
+    if (error) throw new Error(error.message || 'تعذر حفظ تفضيلات الإشعارات');
+    return mapNotificationSettings({ ...data, user_email: user.email });
+  },
 };
 
 const legacyTransaction = legacyBase44.entities.Transaction;
