@@ -1,7 +1,7 @@
 import React,{useEffect,useMemo,useState}from"react";
 import{Link}from"react-router-dom";
 import{Card,CardContent,CardHeader,CardTitle}from"@/components/ui/card";
-import{HardHat,Building2,UserRound,Star,Handshake,ShieldCheck,ClipboardCheck,UserCog,Users,UserPlus,Activity,RefreshCw,Globe2,Monitor}from"lucide-react";
+import{HardHat,Building2,UserRound,Star,Handshake,ShieldCheck,ClipboardCheck,UserCog,Users,UserPlus,Activity,RefreshCw,Globe2}from"lucide-react";
 import{createPageUrl}from"@/utils";
 import{supabase}from"@/lib/supabaseClient";
 
