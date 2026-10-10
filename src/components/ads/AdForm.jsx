@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import {
   Loader2, Upload, Image as ImageIcon, Play, Shield,
