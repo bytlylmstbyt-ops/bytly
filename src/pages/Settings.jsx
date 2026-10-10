@@ -36,7 +36,6 @@ export default function Settings() {
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleteStep, setDeleteStep] = useState(1);
   const [deleteReason, setDeleteReason] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
   const [formData, setFormData] = useState({});
   const [notificationSettings, setNotificationSettings] = useState({
     email_notifications: true,
@@ -382,7 +381,7 @@ export default function Settings() {
                     <div className="flex items-start gap-3 mb-3">
                       <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
                       <div>
-                        <h3 className="font-semibold text-red-700 mb-1">حذف الحساب نهائياً</h3>
+                        <h3 className="font-semibold text-red-700 mb-1">حذف الحساب غير متاح مؤقتًا</h3>
                         <p className="text-sm text-red-600 leading-relaxed">
                           سيؤدي حذف حسابك إلى إزالة جميع بياناتك الشخصية، مشاريعك، عقودك، ومحادثاتك بشكل <strong>نهائي وغير قابل للاسترداد</strong>، وفق سياسة الخصوصية.
                         </p>
@@ -697,43 +696,17 @@ export default function Settings() {
               <DialogFooter className="gap-2">
                 <Button variant="outline" style={{ minHeight: 44 }} onClick={() => setDeleteStep(2)}>رجوع</Button>
                 <Button
-                  disabled={deleteConfirmText !== "احذف حسابي" || isDeleting}
+                  disabled={deleteConfirmText !== "احذف حسابي"}
                   style={{ minHeight: 44 }}
                   className="bg-red-600 hover:bg-red-700 text-white"
-                  onClick={async () => {
-                    setIsDeleting(true);
-                    try {
-                      const currentUser = await base44.auth.me();
-                      if (!currentUser) {
-                        toast.error("لم يتم التعرف على المستخدم. يرجى إعادة تسجيل الدخول.");
-                        setIsDeleting(false);
-                        return;
-                      }
-                      await base44.functions.invoke('deleteAccount', {
-                        reason: deleteReason,
-                        user_email: currentUser.email,
-                      });
-                    } catch (e) {
-                      console.error('deleteAccount error', e);
-                      toast.error("حدث خطأ أثناء حذف الحساب. يرجى المحاولة مرة أخرى.");
-                    } finally {
-                      setIsDeleting(false);
-                      base44.auth.logout();
-                      window.location.href = '/login';
-                    }
+                  onClick={() => {
+                    toast.error("حذف الحساب غير متاح مؤقتًا؛ لم يتم حذف حسابك. سنفعّل الحذف بعد تجهيز الخدمة الآمنة والتحقق من حذف البيانات المرتبطة.");
                   }}
                 >
-                  {isDeleting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 ml-2 animate-spin" />
-                      جاري الحذف...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="w-4 h-4 ml-2" />
-                      حذف الحساب نهائياً
-                    </>
-                  )}
+                  <>
+                    <Trash2 className="w-4 h-4 ml-2" />
+                    حذف الحساب غير متاح مؤقتًا
+                  </>
                 </Button>
               </DialogFooter>
             </>

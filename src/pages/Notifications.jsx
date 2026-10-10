@@ -27,27 +27,24 @@ export default function Notifications() {
   }, [language]);
 
   useEffect(() => {
+    let active = true;
     loadNotifications();
-    
-    // Real-time subscription for new notifications
-    const setupSubscription = async () => {
-      const currentUser = await base44.auth.me();
-      const unsubscribe = base44.entities.Notification.subscribe((event) => {
-        if (event.type === 'create' && event.data.recipient_email === currentUser.email) {
-          setNotifications(prev => [event.data, ...prev]);
-        } else if (event.type === 'update') {
-          setNotifications(prev => prev.map(n => n.id === event.id ? event.data : n));
-        } else if (event.type === 'delete') {
-          setNotifications(prev => prev.filter(n => n.id !== event.id));
-        }
-      });
-      return unsubscribe;
-    };
 
-    const subscription = setupSubscription();
+    // Supabase Realtime only delivers rows for the authenticated user's user_id.
+    const unsubscribe = base44.entities.Notification.subscribe((event) => {
+      if (!active || !event) return;
+      if (event.type === 'create' && event.data) {
+        setNotifications(prev => [event.data, ...prev.filter(n => n.id !== event.data.id)]);
+      } else if (event.type === 'update' && event.data) {
+        setNotifications(prev => prev.map(n => n.id === event.id ? event.data : n));
+      } else if (event.type === 'delete') {
+        setNotifications(prev => prev.filter(n => n.id !== event.id));
+      }
+    });
 
     return () => {
-      subscription.then(unsub => unsub?.());
+      active = false;
+      unsubscribe?.();
     };
   }, []);
 
