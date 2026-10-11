@@ -129,7 +129,7 @@ export async function notifyWorkspaceUpdate({
  * قالب بريد إلكتروني بهوية بيتلي البصرية.
  */
 function buildEmailHtml(title, message, project, actionUrl) {
-  const appUrl = "https://bytly.base44.com" + actionUrl;
+  const appUrl = "https://mybytly.com" + actionUrl;
   const safeTitle = escapeHtml(title);
   const safeMessage = escapeHtml(message);
   const safeProjectTitle = escapeHtml(project?.title || "");
