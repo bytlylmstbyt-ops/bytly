@@ -1,69 +1,15 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-
-const AGENT_PROMPTS: Record<string, string> = {
-  assistant: `أنت المساعد الذكي العام داخل منصة Bytly (بيتلي)، المنظومة الهندسية المتكاملة في السعودية. أجب بالعربية الواضحة والمباشرة. ساعد المستخدم في فهم خدمات المنصة والمشاريع والخدمات الهندسية، ولا تخترع بيانات غير موجودة في السياق. إذا كانت المعلومة غير متاحة قل ذلك بوضوح.`,
-  marketing: `أنت وكيل التسويق الذكي لمنصة Bytly في السوق السعودي. حلل بيانات التسويق المتاحة، واقترح محتوى وحملات ورسائل وSEO/GEO وأفكار اكتساب مستخدمين. فرّق دائمًا بين الأرقام الفعلية والافتراضات والاقتراحات، ولا تخترع نتائج أو إحصاءات.`,
-  platform: `أنت وكيل المنصة والتطوير التشغيلي لمنصة Bytly. ساعد في تحليل صحة المنصة، مسارات المستخدمين، التسجيل، المشاريع، المحادثات، التكاملات، الأخطاء، والصلاحيات. لا تقترح حذف بيانات أو تغيير صلاحيات حساسة دون طلب صريح.`,
-  admin: `أنت المساعد الإداري المركزي لمنصة Bytly. اجمع بين فهم التشغيل والبيانات والتسويق والتطوير. قدّم ملخصات تنفيذية دقيقة، وحدد ما هو رقم فعلي وما هو استنتاج وما هو اقتراح. لا تنفذ عمليات حساسة أو تغييرات في البيانات من تلقاء نفسك.`,
-  automation: `أنت وكيل الأتمتة وسير العمل في منصة Bytly. حلّل سير العمل الحالي أولاً واكتشف التكرار قبل اقتراح أي قاعدة جديدة. اربط الأتمتة بمركز التسويق والحملات وقنوات LinkedIn وInstagram وTikTok وGmail وWhatsApp. يمكن إنشاء مسودات وتحليلات ومهام بانتظار الموافقة، لكن لا ترسل رسائل خارجية ولا تنشر ولا تنفق ميزانية تلقائياً. أي خطوة خارجية يجب أن تحمل approval_required=true.`
-};
-
-function jsonResponse(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-}
-
-Deno.serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return jsonResponse({ success: false, error: "Method not allowed" }, 405);
-
-  try {
-    const apiKey = Deno.env.get("GEMINI_API_KEY");
-    if (!apiKey) return jsonResponse({ success: false, error: "لم يتم إعداد GEMINI_API_KEY في Supabase بعد." }, 503);
-
-    const body = await req.json();
-    const requestedAgent = String(body?.agent || "assistant").trim().toLowerCase();
-    const agentAliases: Record<string, string> = { workflow: "automation", workflows: "automation", "workflow-automation": "automation", gmail: "automation", "marketing-automation": "automation" };
-    const agent = agentAliases[requestedAgent] || requestedAgent;
-    const prompt = String(body?.prompt || "").trim();
-    const context = body?.context || {};
-    const responseFormat = body?.responseFormat || "text";
-    if (!prompt) return jsonResponse({ success: false, error: "الطلب فارغ" }, 400);
-
-    const supportedAgents = new Set(Object.keys(AGENT_PROMPTS));
-    const systemInstruction = supportedAgents.has(agent) ? AGENT_PROMPTS[agent] : AGENT_PROMPTS.assistant;
-    const contextText = JSON.stringify(context).slice(0, 30000);
-    const contents = [{ role: "user", parts: [{ text: `${systemInstruction}\n\nسياق المنصة المتاح:\n${contextText}\n\nطلب المستخدم:\n${prompt}` }] }];
-
-    const generationConfig: Record<string, unknown> = { temperature: 0.25, maxOutputTokens: 2048 };
-    if (responseFormat === "json") generationConfig.responseMimeType = "application/json";
-
-    const model = "gemini-2.5-flash";
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents, generationConfig }),
-    });
-
-    const payload = await response.json();
-    if (!response.ok) {
-      console.error("Gemini error", payload);
-      return jsonResponse({ success: false, error: payload?.error?.message || "فشل الاتصال بـ Gemini" }, 502);
-    }
-
-    const text = payload?.candidates?.[0]?.content?.parts?.map((p: { text?: string }) => p.text || "").join("").trim() || "لم يصل رد من Gemini.";
-    let result: unknown = text;
-    if (responseFormat === "json") {
-      try { result = JSON.parse(text); } catch { result = { raw: text }; }
-    }
-    return jsonResponse({ success: true, agent, model, result });
-  } catch (error) {
-    console.error("bytly-ai error", error);
-    return jsonResponse({ success: false, error: error instanceof Error ? error.message : "حدث خطأ غير متوقع" }, 500);
-  }
-});
+const MODEL="gemini-3.6-flash";const MAX_CONTEXT_CHARS=16000;const MAX_OUTPUT_TOKENS=4096;const MAX_RETRIES=3;const BASE_DELAY_MS=1200;const MAX_DELAY_MS=9000;
+const CORS={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS"};
+const PROMPTS={assistant:"أنت المساعد الذكي العام داخل منصة Bytly (بيتلي). أجب بالعربية الواضحة والمباشرة ولا تخترع بيانات. إذا كان الطلب يتعلق بخطة أو تحليل داخلي للمنصة، اعتمد على السياق المرسل ولا تستخدم بحثًا خارجيًا إلا إذا طُلب منك صراحة.",marketing:"أنت وكيل التسويق والنمو لمنصة Bytly في السعودية. حلل البيانات واقترح المحتوى والحملات وSEO/GEO واكتساب المستخدمين دون اختلاق أرقام. لا تستخدم البحث الخارجي إلا إذا طُلب منك صراحة.",platform:"أنت وكيل المنصة والتطوير التشغيلي لمنصة Bytly. حلل صحة المنصة والتسجيل والمشاريع والتكاملات والأخطاء والصلاحيات. لا تقترح حذف بيانات أو تغيير صلاحيات حساسة دون طلب.",admin:"أنت المساعد الإداري المركزي لمنصة Bytly. اجمع بين التشغيل والبيانات والتسويق والتطوير، وميز بين الرقم الفعلي والاستنتاج والاقتراح. لا تنفذ عمليات حساسة تلقائيا. اعتمد على سياق المنصة المرسل، ولا تستخدم بحثًا خارجيًا إلا إذا طُلب منك صراحة.",automation:"أنت وكيل الأتمتة وسير العمل في منصة Bytly. حلّل سير العمل الحالي أولاً واكتشف التكرار قبل اقتراح أي قاعدة جديدة. اربط الأتمتة بمركز التسويق والحملات وقنوات LinkedIn وInstagram وTikTok وGmail وWhatsApp. لا ترسل رسائل خارجية ولا تنشر ولا تنفق ميزانية تلقائياً؛ أي خطوة خارجية يجب أن تحمل approval_required=true حتى تعتمدها الإدارة."};
+function out(x,s=200){return new Response(JSON.stringify(x),{status:s,headers:{...CORS,"Content-Type":"application/json"}})}
+function text(v,d=0){if(v==null||d>16)return"";if(typeof v==="string")return v.trim();if(typeof v==="number"||typeof v==="boolean")return String(v);if(Array.isArray(v))return v.map(x=>text(x,d+1)).filter(Boolean).join("\n");if(typeof v==="object"){const o=v;for(const k of ["output_text","text","content","message","result","response","output","parts"]){if(o[k]!=null){const t=text(o[k],d+1);if(t)return t}}}return""}
+function interactionText(data){if(typeof data?.output_text==="string"&&data.output_text.trim())return data.output_text.trim();const steps=Array.isArray(data?.steps)?data.steps:[];const chunks=[];for(const step of steps){if(step?.type!=="model_output")continue;const content=Array.isArray(step.content)?step.content:[];for(const item of content){if(item?.type==="text"&&typeof item.text==="string"&&item.text.trim())chunks.push(item.text.trim())}}if(chunks.length)return chunks.join("\n\n");return text(data)}
+function errorText(v){if(v instanceof Error)return v.message;if(typeof v==="string")return v;if(v&&typeof v==="object"){const o=v;for(const k of ["message","error","details","detail","hint"]){if(typeof o[k]==="string"&&o[k].trim())return o[k]}try{return JSON.stringify(o)}catch{return"خطأ غير معروف"}}return String(v??"خطأ غير معروف")}
+async function getUser(req){const a=req.headers.get("Authorization");if(!a?.startsWith("Bearer "))return null;const{createClient}=await import("npm:@supabase/supabase-js@2.57.4");const u=Deno.env.get("SUPABASE_URL"),k=Deno.env.get("SUPABASE_ANON_KEY");if(!u||!k)return null;const c=createClient(u,k,{global:{headers:{Authorization:a}}});const r=await c.auth.getUser();return r.data.user||null}
+async function isPlatformAdmin(user){const {createClient}=await import("npm:@supabase/supabase-js@2.57.4");const url=Deno.env.get("SUPABASE_URL"),key=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");if(!url||!key)return false;const admin=createClient(url,key,{auth:{autoRefreshToken:false,persistSession:false}});let q=await admin.from("profiles").select("role,email").eq("user_id",user.id).maybeSingle();if(!q.data&&!q.error)q=await admin.from("profiles").select("role,email").eq("id",user.id).maybeSingle();return q.data?.role==="admin"||String(q.data?.email||user.email||"").toLowerCase()==="bytlylmstbyt@gmail.com"}
+function shouldUseSearch(agent,prompt){if(agent!=="marketing"&&agent!=="admin")return false;return /(ابحث خارجيا|ابحث خارجيًا|استخدم البحث الخارجي|بحث خارجي|مصادر خارجية|web search|google search)/i.test(prompt)}
+function isRetryable(status){return status===408||status===500||status===502||status===503||status===504}
+function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
+async function callGeminiWithRetry(key,body){let lastStatus=0,lastMessage="";for(let attempt=0;attempt<=MAX_RETRIES;attempt++){try{const r=await fetch("https://generativelanguage.googleapis.com/v1beta/interactions",{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key,"Api-Revision":"2026-05-20"},body:JSON.stringify(body)});const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{data=null}if(r.ok)return{r,data,raw,attempts:attempt+1};lastStatus=r.status;lastMessage=data?.error?.message||data?.error||raw.slice(0,800)||`Gemini HTTP ${r.status}`;if(!isRetryable(r.status)||attempt===MAX_RETRIES)break;const retryAfter=Number(r.headers.get("retry-after"));const exponential=Math.min(MAX_DELAY_MS,BASE_DELAY_MS*Math.pow(2,attempt));const jitter=Math.floor(Math.random()*500);const delay=Number.isFinite(retryAfter)&&retryAfter>0?Math.min(MAX_DELAY_MS,retryAfter*1000):exponential+jitter;await sleep(delay)}catch(e){lastMessage=errorText(e);if(attempt===MAX_RETRIES)break;const delay=Math.min(MAX_DELAY_MS,BASE_DELAY_MS*Math.pow(2,attempt))+Math.floor(Math.random()*500);await sleep(delay)}}throw new Error(`Gemini HTTP ${lastStatus||"network"}: ${lastMessage}`)}
+Deno.serve(async req=>{if(req.method==="OPTIONS")return new Response("ok",{headers:CORS});if(req.method!=="POST")return out({success:false,error:"Method not allowed"},405);try{const key=Deno.env.get("GEMINI_API_KEY");if(!key)return out({success:false,error:"لم يتم إعداد GEMINI_API_KEY في Supabase بعد."},503);const b=await req.json();const requestedAgent=String(b.agent||"assistant").trim().toLowerCase(),agentAliases={workflow:"automation",workflows:"automation","workflow-automation":"automation",gmail:"automation","marketing-automation":"automation"},agent=agentAliases[requestedAgent]||requestedAgent,prompt=String(b.prompt||"").trim(),ctx=b.context&&typeof b.context==="object"?b.context:{},responseFormat=String(b.responseFormat||"text");if(!prompt)return out({success:false,error:"الطلب فارغ"},400);if(!PROMPTS[agent])return out({success:false,error:`نوع المساعد غير مدعوم: ${agent}`},400);const user=agent!=="assistant"?await getUser(req):null;if(agent!=="assistant"&&!user)return out({success:false,error:"هذا المساعد متاح للمستخدمين المسجلين فقط."},401);if((agent==="platform"||agent==="admin")&&user&&!await isPlatformAdmin(user))return out({success:false,error:"هذا الوكيل مخصص لإدارة المنصة فقط."},403);const contextText=JSON.stringify(ctx).slice(0,MAX_CONTEXT_CHARS);const input=`${PROMPTS[agent]}\n\nسياق المنصة:\n${contextText}\n\nالطلب:\n${prompt}`;const useSearch=shouldUseSearch(agent,prompt);const body={model:MODEL,input,generation_config:{thinking_level:"medium",max_output_tokens:MAX_OUTPUT_TOKENS},tools:useSearch?[{type:"google_search"}]:[]};const {r,data,raw,attempts}=await callGeminiWithRetry(key,body);if(!r.ok)throw new Error(data?.error?.message||data?.error||raw.slice(0,800)||`Gemini HTTP ${r.status}`);const result=interactionText(data);if(!result){const status=data?.status||"unknown";throw new Error(`Gemini returned no usable text. Response status: ${r.status}; interaction status: ${status}; steps: ${Array.isArray(data?.steps)?data.steps.length:0}`)}const usage=data?.usage||{};return out({success:true,agent,model:MODEL,result,searched:useSearch,diagnostics:{input_tokens:usage.total_input_tokens??null,output_tokens:usage.total_output_tokens??null,thought_tokens:usage.total_thought_tokens??null,tool_use_tokens:usage.total_tool_use_tokens??null,cached_tokens:usage.total_cached_tokens??null,total_tokens:usage.total_tokens??null,context_chars_sent:contextText.length,search_enabled:useSearch,retry_attempts:attempts-1}})}catch(e){console.error("Bytly AI Error:",e);const msg=errorText(e);const quota=/Gemini HTTP 429/.test(msg);const busy=/Gemini HTTP (503|502|504)/.test(msg);return out({success:false,error:quota?"تم تجاوز حد استخدام Gemini حاليًا. لم تتم إعادة المحاولة تلقائيًا حتى لا نستهلك حصة إضافية. الوكيل يعمل بدون البحث الخارجي لهذا الطلب.":busy?"وكيل Bytly مشغول مؤقتًا من خدمة Gemini. تمت إعادة المحاولة تلقائيًا عدة مرات، ولم يتم تغيير إعدادات الحساب أو المفتاح. يرجى المحاولة بعد قليل.":`تعذر تشغيل الوكيل: ${msg}`},500)}});
