@@ -42,14 +42,14 @@ const entities = new Proxy({}, { get(target, name) {
   return entityCache.get(name);
 }});
 
-const legacyFunctions = { invoke: async (name) => { throw new Error('وظيفة غير مرحّلة إلى Supabase: ' + name); } };
-const legacyBase44 = {
+const unmigratedFunctions = { invoke: async (name) => { throw new Error('وظيفة غير مرحّلة إلى Supabase: ' + name); } };
+const bytlyCompat = {
   auth: {},
   entities,
   integrations: { Core: {} },
-  functions: legacyFunctions,
+  functions: unmigratedFunctions,
 };
-const legacyAuthMe = async () => {
+const supabaseCurrentUser = async () => {
   if (!supabase) return null;
   const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
   const sessionUser = authData?.user || null;
@@ -64,13 +64,13 @@ const legacyAuthMe = async () => {
   } catch {}
   return { id:sessionUser.id,user_id:sessionUser.id,email:sessionUser.email,full_name:profile?.full_name||sessionUser.user_metadata?.full_name||sessionUser.user_metadata?.name||'',role:isOwner||profile?.role==='admin'?'admin':(profile?.role||'user'),profile,_authProvider:'supabase' };
 };
-legacyBase44.auth.me = legacyAuthMe;
+bytlyCompat.auth.me = supabaseCurrentUser;
 
 
 
 // AI compatibility bridge: existing Bytly AI pages keep their UI contracts, while
 // InvokeLLM is now routed to the secure Supabase Gemini gateway instead of Base44.
-legacyBase44.integrations.Core.InvokeLLM = async ({ prompt, response_json_schema, agent = 'assistant', context = {} } = {}) => {
+bytlyCompat.integrations.Core.InvokeLLM = async ({ prompt, response_json_schema, agent = 'assistant', context = {} } = {}) => {
   const wantsJson = Boolean(response_json_schema);
   const result = await callGemini({
     agent,
@@ -85,9 +85,9 @@ legacyBase44.integrations.Core.InvokeLLM = async ({ prompt, response_json_schema
 };
 
 try {
-  const legacyAgentConversation = legacyBase44.entities.AIAgentConversation;
+  const legacyAgentConversation = bytlyCompat.entities.AIAgentConversation;
   if (legacyAgentConversation) {
-    legacyBase44.entities.AIAgentConversation = {
+    bytlyCompat.entities.AIAgentConversation = {
       ...legacyAgentConversation,
       filter: async (filters = {}, sort = "-updated_at", limit = 50) => {
         const email = filters?.asked_by_email || null;
@@ -133,7 +133,7 @@ try {
   console.warn("Admin conversation Supabase bridge unavailable.", conversationBridgeError);
 }
 
-legacyBase44.integrations.Core.UploadFile = async ({ file }) => {
+bytlyCompat.integrations.Core.UploadFile = async ({ file }) => {
   if (!supabase) throw new Error('Supabase غير مهيأ');
   if (!file) throw new Error('لم يتم اختيار ملف');
   const safeName = String(file.name || 'asset').replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -143,8 +143,8 @@ legacyBase44.integrations.Core.UploadFile = async ({ file }) => {
   return { file_url: supabase.storage.from('platform-assets').getPublicUrl(data?.path || path).data.publicUrl };
 };
 
-const legacySyncState = legacyBase44.entities.SyncState;
-legacyBase44.entities.SyncState = {
+const legacySyncState = bytlyCompat.entities.SyncState;
+bytlyCompat.entities.SyncState = {
   ...legacySyncState,
   list: async () => {
     const { data, error } = await withHardTimeout(supabase.from('sync_states').select('*').order('last_sync', { ascending: false }), 10000, 'انتهت مهلة قراءة حالات التكامل');
@@ -153,8 +153,8 @@ legacyBase44.entities.SyncState = {
   },
 };
 
-const legacySocialPost = legacyBase44.entities.SocialPost;
-legacyBase44.entities.SocialPost = {
+const legacySocialPost = bytlyCompat.entities.SocialPost;
+bytlyCompat.entities.SocialPost = {
   ...legacySocialPost,
   list: async (sort = '-created_at', limit = 100) => {
     let query = supabase.from('social_posts').select('*').limit(limit);
@@ -191,8 +191,8 @@ legacyBase44.entities.SocialPost = {
   },
 };
 
-const legacyEngineer = legacyBase44.entities.Engineer;
-legacyBase44.entities.Engineer = {
+const legacyEngineer = bytlyCompat.entities.Engineer;
+bytlyCompat.entities.Engineer = {
   ...legacyEngineer,
   filter: async (filters = {}) => {
     const email = filters?.email?.toLowerCase?.();
@@ -222,8 +222,8 @@ const resolveLegacyId = async (entity, currentId) => {
   } catch { return currentId; }
 };
 
-const legacyPermitApplication = legacyBase44.entities.PermitApplication;
-legacyBase44.entities.PermitApplication = {
+const legacyPermitApplication = bytlyCompat.entities.PermitApplication;
+bytlyCompat.entities.PermitApplication = {
   ...legacyPermitApplication,
   filter: async (filters = {}, sort = "-created_date", limit = 100) => {
     let q = supabase.from("permit_applications").select("*").limit(limit);
@@ -259,8 +259,8 @@ legacyBase44.entities.PermitApplication = {
   },
 };
 
-const legacyContract = legacyBase44.entities.Contract;
-legacyBase44.entities.Contract = {
+const legacyContract = bytlyCompat.entities.Contract;
+bytlyCompat.entities.Contract = {
   ...legacyContract,
   filter: async filters => {
     const mapped = { ...(filters || {}) };
@@ -284,8 +284,8 @@ legacyBase44.entities.Contract = {
   }
 };
 
-const legacyProject = legacyBase44.entities.Project;
-legacyBase44.entities.Project = { ...legacyProject,
+const legacyProject = bytlyCompat.entities.Project;
+bytlyCompat.entities.Project = { ...legacyProject,
   filter: async filters => {
     const mapped = { ...(filters || {}) };
     if (mapped.client_id) mapped.client_id = await resolveLegacyId('Client', mapped.client_id);
@@ -310,8 +310,8 @@ legacyBase44.entities.Project = { ...legacyProject,
   delete: async id=>{const {error}=await withHardTimeout(supabase.from('projects').delete().eq('id',id),10000,'انتهت مهلة حذف المشروع');if(error)throw new Error(error.message);return true},
 };
 
-const legacyClient = legacyBase44.entities.Client;
-legacyBase44.entities.Client = {
+const legacyClient = bytlyCompat.entities.Client;
+bytlyCompat.entities.Client = {
   ...legacyClient,
   filter: async filters => {
     try {
@@ -324,11 +324,11 @@ legacyBase44.entities.Client = {
   }
 };
 
-const legacyPortfolio = legacyBase44.entities.Portfolio;
-legacyBase44.entities.Portfolio = {...legacyPortfolio,create:async payload=>{const {data,error}=await withHardTimeout(supabase.from('portfolios').insert({engineer_id:payload.engineer_id||null,title:payload.title||'عمل سابق',description:payload.description||null,images:Array.isArray(payload.images)?payload.images:[]}).select('*').single(),10000,'انتهت مهلة حفظ الأعمال السابقة');if(error)throw new Error(error.message);return data}};
+const legacyPortfolio = bytlyCompat.entities.Portfolio;
+bytlyCompat.entities.Portfolio = {...legacyPortfolio,create:async payload=>{const {data,error}=await withHardTimeout(supabase.from('portfolios').insert({engineer_id:payload.engineer_id||null,title:payload.title||'عمل سابق',description:payload.description||null,images:Array.isArray(payload.images)?payload.images:[]}).select('*').single(),10000,'انتهت مهلة حفظ الأعمال السابقة');if(error)throw new Error(error.message);return data}};
 
-const legacyPlatformSettings = legacyBase44.entities.PlatformSettings;
-legacyBase44.entities.PlatformSettings = {...legacyPlatformSettings,list:async()=>{const {data,error}=await withHardTimeout(supabase.from('platform_settings').select('*').order('updated_at',{ascending:false}).limit(1),10000,'انتهت مهلة قراءة إعدادات المنصة');if(error)throw error;return data||[]},create:async p=>{const {data,error}=await withHardTimeout(supabase.from('platform_settings').insert(p).select('*').single(),10000,'انتهت مهلة حفظ إعدادات المنصة');if(error)throw error;return data},update:async(id,p)=>{const {data,error}=await withHardTimeout(supabase.from('platform_settings').update({...p,updated_at:new Date().toISOString()}).eq('id',id).select('*').single(),10000,'انتهت مهلة تحديث إعدادات المنصة');if(error)throw error;return data}};
+const legacyPlatformSettings = bytlyCompat.entities.PlatformSettings;
+bytlyCompat.entities.PlatformSettings = {...legacyPlatformSettings,list:async()=>{const {data,error}=await withHardTimeout(supabase.from('platform_settings').select('*').order('updated_at',{ascending:false}).limit(1),10000,'انتهت مهلة قراءة إعدادات المنصة');if(error)throw error;return data||[]},create:async p=>{const {data,error}=await withHardTimeout(supabase.from('platform_settings').insert(p).select('*').single(),10000,'انتهت مهلة حفظ إعدادات المنصة');if(error)throw error;return data},update:async(id,p)=>{const {data,error}=await withHardTimeout(supabase.from('platform_settings').update({...p,updated_at:new Date().toISOString()}).eq('id',id).select('*').single(),10000,'انتهت مهلة تحديث إعدادات المنصة');if(error)throw error;return data}};
 
 
 const resolveUserIdByEmail = async email => {
@@ -340,8 +340,8 @@ const resolveUserIdByEmail = async email => {
   return data?.user_id || null;
 };
 
-const legacyProposal = legacyBase44.entities.Proposal;
-legacyBase44.entities.Proposal = {
+const legacyProposal = bytlyCompat.entities.Proposal;
+bytlyCompat.entities.Proposal = {
   ...legacyProposal,
   filter: async (filters = {}) => {
     let q = supabase.from('project_offers').select('*');
@@ -390,8 +390,8 @@ legacyBase44.entities.Proposal = {
   }
 };
 
-const legacyReview = legacyBase44.entities.Review;
-legacyBase44.entities.Review = {
+const legacyReview = bytlyCompat.entities.Review;
+bytlyCompat.entities.Review = {
   ...legacyReview,
   filter: async (filters = {}) => {
     let q = supabase.from('project_reviews').select('*');
@@ -428,8 +428,8 @@ const mapNotificationRow = (row, recipientEmail = null) => row ? ({
   related_project_id: row.entity_type === "project" ? (row.entity_id || null) : (row.related_project_id || null),
 }) : row;
 
-const legacyNotification = legacyBase44.entities.Notification;
-legacyBase44.entities.Notification = {
+const legacyNotification = bytlyCompat.entities.Notification;
+bytlyCompat.entities.Notification = {
   ...legacyNotification,
   filter: async (filters = {}, sort = '-created_date', limit = 100) => {
     let q = supabase.from('notifications').select('*').limit(limit);
@@ -518,7 +518,7 @@ legacyBase44.entities.Notification = {
   },
 };
 
-const legacyNotificationSettings = legacyBase44.entities.NotificationSettings;
+const legacyNotificationSettings = bytlyCompat.entities.NotificationSettings;
 const mapNotificationSettings = row => row ? ({
   ...row,
   id: row.user_id,
@@ -528,7 +528,7 @@ const mapNotificationSettings = row => row ? ({
   notification_preferences: row.notification_preferences || {},
 }) : row;
 
-legacyBase44.entities.NotificationSettings = {
+bytlyCompat.entities.NotificationSettings = {
   ...legacyNotificationSettings,
   filter: async (filters = {}) => {
     const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
@@ -572,8 +572,8 @@ legacyBase44.entities.NotificationSettings = {
   },
 };
 
-const legacyTransaction = legacyBase44.entities.Transaction;
-legacyBase44.entities.Transaction = {
+const legacyTransaction = bytlyCompat.entities.Transaction;
+bytlyCompat.entities.Transaction = {
   ...legacyTransaction,
   filter: async (filters = {}) => {
     let q = supabase.from('wallet_transactions').select('*');
@@ -624,9 +624,9 @@ const createContractFromProposalSupabase = async proposalId => {
 };
 
 
-legacyBase44.entities.ConsultationAppointment = makeSupabaseEntity('consultation_appointments');
-legacyBase44.entities.ProjectTask = makeSupabaseEntity('project_tasks');
-legacyBase44.entities.ProjectMilestone = makeSupabaseEntity('project_milestones');
+bytlyCompat.entities.ConsultationAppointment = makeSupabaseEntity('consultation_appointments');
+bytlyCompat.entities.ProjectTask = makeSupabaseEntity('project_tasks');
+bytlyCompat.entities.ProjectMilestone = makeSupabaseEntity('project_milestones');
 
 const bookSurveyAppointmentSupabase = async (payload = {}) => {
   const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
@@ -753,13 +753,13 @@ const bookSurveyAppointmentSupabase = async (payload = {}) => {
   return { data: { ...appointment, google_calendar_link: calendarLink, calendar_link: calendarLink } };
 };
 
-legacyBase44.functions = {
-  ...legacyFunctions,
+bytlyCompat.functions = {
+  ...unmigratedFunctions,
   invoke: async (name, payload) => {
     if (name === 'bookSurveyAppointment') return await bookSurveyAppointmentSupabase(payload);
     if (name === 'uploadFile') {
       if (!payload?.file) throw new Error('لم يتم تحديد الملف المراد رفعه');
-      const uploaded = await legacyBase44.integrations.Core.UploadFile({ file: payload.file });
+      const uploaded = await bytlyCompat.integrations.Core.UploadFile({ file: payload.file });
       return { data: uploaded };
     }
     if (name === 'filterSensitiveData') {
@@ -870,8 +870,8 @@ legacyBase44.functions = {
       const published = await publishLinkedInPost(text);
       return { data: { success: true, message: 'تم النشر على LinkedIn عبر Supabase ✓', postId: published?.postId || null } };
     }
-    return legacyFunctions.invoke(name, payload);
+    return unmigratedFunctions.invoke(name, payload);
   },
 };
 
-export const base44 = legacyBase44;
+export const base44 = bytlyCompat;
