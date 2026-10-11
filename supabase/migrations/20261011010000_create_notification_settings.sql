@@ -32,8 +32,6 @@ create policy "Users can delete their own notification settings"
   on public.notification_settings for delete to authenticated
   using (auth.uid() = user_id);
 
-revoke all privileges on table public.notification_settings from anon;
-revoke all privileges on table public.notification_settings from public;
 -- Explicitly revoke default/public API role access; authenticated users are governed by RLS.
 revoke all privileges on table public.notification_settings from anon;
 revoke all privileges on table public.notification_settings from public;
