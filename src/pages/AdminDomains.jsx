@@ -78,7 +78,7 @@ export default function AdminDomains() {
                 <h2 className="font-semibold text-base">رابط مجاني</h2>
                 <p className="text-xs text-slate-500 mt-1">هذا هو النطاق الأساسي لبيتلي المستخدم للوصول إلى المنصة.</p>
               </div>
-              <Button variant="outline" className="shrink-0 text-xs h-9" onClick={() => setDialog("free-url")}>تعديل عنوان URL</Button>
+              <Button variant="outline" className="shrink-0 text-xs h-9" onClick={() => setDialog("free-url")}>إعدادات النطاق</Button>
             </div>
             <div className="p-5">
               <div className="flex items-center gap-2">
