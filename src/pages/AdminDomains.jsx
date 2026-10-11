@@ -76,13 +76,13 @@ export default function AdminDomains() {
             <div className="px-6 py-5 flex items-center justify-between gap-4 border-b border-slate-100">
               <div>
                 <h2 className="font-semibold text-base">رابط مجاني</h2>
-                <p className="text-xs text-slate-500 mt-1">قم بتخصيص عنوان URL المجاني الذي يمكن للمستخدمين استخدامه قبل ربط نطاق مخصص.</p>
+                <p className="text-xs text-slate-500 mt-1">هذا هو النطاق الأساسي لبيتلي المستخدم للوصول إلى المنصة.</p>
               </div>
-              <Button variant="outline" className="shrink-0 text-xs h-9" onClick={() => setDialog("free-url")}>تعديل عنوان URL</Button>
+              <Button variant="outline" className="shrink-0 text-xs h-9" onClick={() => setDialog("free-url")}>إعدادات النطاق</Button>
             </div>
             <div className="p-5">
               <div className="flex items-center gap-2">
-                <Input readOnly value="mybytly.base44.app" className="h-10 bg-slate-50 text-sm" />
+                <Input readOnly value="mybytly.com" className="h-10 bg-slate-50 text-sm" />
                 <Button variant="outline" size="icon" className="h-10 w-10 shrink-0" onClick={copyFreeUrl} title="نسخ الرابط">
                   {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
                 </Button>
@@ -279,7 +279,7 @@ export default function AdminDomains() {
           </>}
           {dialog === "delete-domain" && <>
             <DialogHeader><DialogTitle className="flex items-center gap-2 text-red-600"><Trash2 className="w-5 h-5" />حذف النطاق</DialogTitle><DialogDescription>سيؤدي حذف النطاق إلى إلغاء ربطه بالمنصة. لن يتم حذف النطاق نفسه من مزود التسجيل.</DialogDescription></DialogHeader>
-            <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-xs text-red-700 flex items-start gap-2"><FileText className="w-4 h-4 mt-0.5 shrink-0" />سيستمر المستخدمون في الوصول عبر الرابط المجاني mybytly.base44.app بعد الحذف.</div>
+            <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-xs text-red-700 flex items-start gap-2"><FileText className="w-4 h-4 mt-0.5 shrink-0" />تأكدي من أن أي تغيير في النطاق لا يقطع وصول المستخدمين إلى mybytly.com.</div>
             <DialogFooter className="gap-2 sm:gap-2"><Button variant="outline" onClick={() => setDialog(null)}>إلغاء</Button><Button variant="destructive" className="bg-red-600 hover:bg-red-700" onClick={() => setDialog(null)}><Trash2 className="w-4 h-4 ml-1.5" />حذف النطاق</Button></DialogFooter>
           </>}
         </DialogContent>

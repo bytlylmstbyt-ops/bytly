@@ -39,7 +39,6 @@ const withTimeout = (promise, timeoutMs, message) => new Promise((resolve, rejec
 });
 const fieldStyle = { width: "100%", height: 48, boxSizing: "border-box", border: "1px solid #d1d5db", borderRadius: 10, padding: "0 14px", fontSize: 16, background: "white", color: "#111827" };
 const buttonStyle = { width: "100%", height: 48, border: 0, borderRadius: 10, padding: "0 14px", fontSize: 16, fontWeight: 600, cursor: "pointer" };
-const logoUrl = "https://base44.com/logo_v2.svg";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -93,44 +92,14 @@ export default function Login() {
         return;
       }
 
-      try {
-        const { base44 } = await import("@/api/base44Client");
-        if (authCode !== "invalid_credentials" && !authMessage.includes("invalid login credentials")) {
-          setError(authMessage.includes("rate limit") ? "تم تجاوز حد محاولات تسجيل الدخول. انتظري قليلاً ثم حاولي مرة أخرى." : "تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
-          return;
-        }
-        await withTimeout(base44.auth.loginViaEmailPassword(cleanEmail, password), 15000, "انتهت مهلة التحقق من الحساب القديم.");
-        const { data: migrated, error: migrateError } = await withTimeout(
-          supabase.auth.signUp({ email: cleanEmail, password, options: { data: { email: cleanEmail } } }),
-          15000,
-          "انتهت مهلة نقل الحساب إلى نظام تسجيل الدخول الجديد."
-        );
-        if (migrateError) {
-          const code = String(migrateError.code || "").toLowerCase();
-          const message = String(migrateError.message || "").toLowerCase();
-          if (code === "user_already_exists" || message.includes("already registered") || message.includes("already exists") || message.includes("user already registered")) {
-            setError("تم العثور على الحساب في النظام الجديد، لكن كلمة المرور القديمة غير مرتبطة به. استخدمي «نسيت كلمة المرور» لتعيين كلمة مرور جديدة ثم سجّلي الدخول.");
-            return;
-          }
-          throw migrateError;
-        }
-        if (migrated?.session) {
-          try { localStorage.setItem("bytly_has_account", "1"); } catch {}
-          await redirectAfterSuccessfulLogin();
-          return;
-        }
-        setError("تم نقل حسابك إلى نظام تسجيل الدخول الجديد. افتحي رسالة التفعيل في بريدك الإلكتروني ثم سجّلي الدخول مرة أخرى.");
-      } catch (legacyError) {
-        const status = legacyError?.status;
-        const message = String(legacyError?.message || "").toLowerCase();
-        if (status === 403) setError("لا يمكن تسجيل الدخول بهذا الحساب حالياً.");
-        else if (status === 404 || message.includes("not found") || message.includes("invalid") || message.includes("credentials") || message.includes("password")) setError("البريد الإلكتروني أو كلمة المرور غير صحيحة.");
-        else if (message.includes("timeout") || message.includes("مهلة")) setError("تعذر الوصول إلى خدمة تسجيل الدخول القديمة. حاولي مرة أخرى بعد قليل.");
-        else {
-          console.error("Legacy authentication bridge failed:", legacyError);
-          setError("تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
-        }
+      if (authCode === "invalid_credentials" || authMessage.includes("invalid login credentials")) {
+        setError("البريد الإلكتروني أو كلمة المرور غير صحيحة. إذا كان حسابك من النظام السابق، استخدمي «نسيت كلمة المرور؟» لإعداد كلمة مرور جديدة على بيتلي.");
+      } else if (authMessage.includes("rate limit")) {
+        setError("تم تجاوز حد محاولات تسجيل الدخول. انتظري قليلاً ثم حاولي مرة أخرى.");
+      } else {
+        setError("تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
       }
+      return;
     } catch (err) {
       console.error("Supabase login error:", err);
       setError(err?.message?.includes("مهلة") ? err.message : "تعذر تسجيل الدخول حالياً. يرجى المحاولة مرة أخرى.");
@@ -159,7 +128,7 @@ export default function Login() {
   return <main dir="rtl" style={{ minHeight: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, boxSizing: "border-box", background: "#f8fafc" }}>
     <section style={{ width: "100%", maxWidth: 430, background: "white", border: "1px solid #e5e7eb", borderRadius: 18, padding: 28, boxSizing: "border-box", boxShadow: "0 8px 30px rgba(0,0,0,.06)" }}>
       <header style={{ textAlign: "center", marginBottom: 24 }}>
-        <img src={logoUrl} alt="بيتلي | Bytly" style={{ display: "block", width: 110, height: 62, objectFit: "contain", margin: "0 auto 8px" }} onError={(e) => { e.currentTarget.style.display = "none"; }} />
+        <div aria-label="بيتلي | Bytly" style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 110, height: 62, margin: "0 auto 8px", color: "#6B5D4F", fontSize: 30, fontWeight: 800 }}>بيتلي</div>
         <h1 style={{ margin: 0, fontSize: 28, color: "#111827" }}>تسجيل الدخول</h1>
         <p style={{ margin: "8px 0 0", color: "#6b7280" }}>مرحباً بعودتك إلى بيتلي</p>
       </header>
