@@ -35,6 +35,9 @@ create policy "Users can delete their own notification settings"
 revoke all privileges on table public.notification_settings from anon;
 revoke all privileges on table public.notification_settings from public;
 revoke all privileges on table public.notification_settings from authenticated;
+-- Explicitly revoke default/public API role access; authenticated users are governed by RLS.
+revoke all privileges on table public.notification_settings from anon;
+revoke all privileges on table public.notification_settings from public;
 grant select, insert, update, delete on public.notification_settings to authenticated;
 
 -- Enable Realtime delivery for notification rows where the standard publication exists.
