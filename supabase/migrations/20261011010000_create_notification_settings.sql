@@ -32,6 +32,8 @@ create policy "Users can delete their own notification settings"
   on public.notification_settings for delete to authenticated
   using (auth.uid() = user_id);
 
+revoke all privileges on table public.notification_settings from anon;
+revoke all privileges on table public.notification_settings from public;
 grant select, insert, update, delete on public.notification_settings to authenticated;
 
 -- Enable Realtime delivery for notification rows where the standard publication exists.
