@@ -571,17 +571,24 @@ bytlyCompat.entities.NotificationSettings = {
     if (error) throw new Error(error.message || 'تعذر حفظ تفضيلات الإشعارات');
     return mapNotificationSettings({ ...data, user_email: user.email });
   },
-  update: async (id, payload) => {
+  update: async (id, payload = {}) => {
     const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
     const user = authData?.user;
-    if (authError || !user || id !== user.id) throw new Error('غير مصرح بتعديل تفضيلات مستخدم آخر');
-    const patch = {
-      ...(payload.email_notifications !== undefined ? { email_notifications: payload.email_notifications } : {}),
-      ...(payload.in_app_notifications !== undefined ? { in_app_notifications: payload.in_app_notifications } : {}),
-      ...(payload.notification_preferences !== undefined ? { notification_preferences: payload.notification_preferences } : {}),
+    if (authError || !user || String(id) !== user.id) throw new Error('غير مصرح بتعديل تفضيلات مستخدم آخر');
+    // A first-time user has no settings row yet. Upsert creates it and also
+    // updates an existing row, avoiding a .single() failure on zero rows.
+    const row = {
+      user_id: user.id,
+      email_notifications: payload.email_notifications ?? true,
+      in_app_notifications: payload.in_app_notifications ?? true,
+      notification_preferences: payload.notification_preferences ?? {},
       updated_at: new Date().toISOString(),
     };
-    const { data, error } = await withHardTimeout(supabase.from('notification_settings').update(patch).eq('user_id', user.id).select('*').single(), 10000);
+    const { data, error } = await withHardTimeout(
+      supabase.from('notification_settings').upsert(row, { onConflict: 'user_id' }).select('*').single(),
+      10000,
+      'انتهت مهلة حفظ تفضيلات الإشعارات'
+    );
     if (error) throw new Error(error.message || 'تعذر حفظ تفضيلات الإشعارات');
     return mapNotificationSettings({ ...data, user_email: user.email });
   },
