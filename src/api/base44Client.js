@@ -631,6 +631,31 @@ legacyBase44.entities.ProjectMilestone = makeSupabaseEntity('project_milestones'
 legacyBase44.functions = {
   ...legacyFunctions,
   invoke: async (name, payload) => {
+    if (name === 'uploadFile') {
+      if (!payload?.file) throw new Error('لم يتم تحديد الملف المراد رفعه');
+      const uploaded = await legacyBase44.integrations.Core.UploadFile({ file: payload.file });
+      return { data: uploaded };
+    }
+    if (name === 'filterSensitiveData') {
+      const originalContent = String(payload?.content ?? '');
+      const emailPattern = /\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\\b/g;
+      const phonePattern = /(?:\\+?966|0)?(?:5[0-9]{8}|[1-9][0-9]{7,8})/g;
+      const contactPattern = /(?:واتس|whatsapp|رقمي|جوالي|هاتفي|تواصل معي)/gi;
+      const hasEmail = emailPattern.test(originalContent);
+      emailPattern.lastIndex = 0;
+      const hasPhone = phonePattern.test(originalContent);
+      phonePattern.lastIndex = 0;
+      const hasContactMention = contactPattern.test(originalContent);
+      contactPattern.lastIndex = 0;
+      let filteredContent = originalContent.replace(emailPattern, '[بريد إلكتروني محجوب]').replace(phonePattern, '[رقم محجوب]');
+      const hasSensitiveData = hasEmail || hasPhone || hasContactMention;
+      return { data: {
+        filteredContent,
+        originalContent,
+        hasSensitiveData,
+        warning: hasSensitiveData ? 'تم حجب معلومات اتصال لحماية خصوصيتك. يرجى استخدام المنصة فقط للتواصل.' : null,
+      } };
+    }
     if (name === 'createContractFromProposal') return { data: await createContractFromProposalSupabase(payload?.proposal_id) };
     if (name === 'bookReviewMeeting') {
       const action = payload?.action || 'book';
