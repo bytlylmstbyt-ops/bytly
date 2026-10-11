@@ -764,8 +764,8 @@ legacyBase44.functions = {
     }
     if (name === 'filterSensitiveData') {
       const originalContent = String(payload?.content ?? '');
-      const emailPattern = /\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\\b/g;
-      const phonePattern = /(?:\\+?966|0)?(?:5[0-9]{8}|[1-9][0-9]{7,8})/g;
+      const emailPattern = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b/g;
+      const phonePattern = /(?:\+?966|0)?(?:5[0-9]{8}|[1-9][0-9]{7,8})/g;
       const contactPattern = /(?:واتس|whatsapp|رقمي|جوالي|هاتفي|تواصل معي)/gi;
       const hasEmail = emailPattern.test(originalContent);
       emailPattern.lastIndex = 0;
