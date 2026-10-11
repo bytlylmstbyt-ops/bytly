@@ -388,12 +388,13 @@ export default function Settings() {
                       </div>
                     </div>
                     <Button
-                      className="bg-red-600 hover:bg-red-700 text-white"
+                      className="bg-slate-300 text-slate-600 cursor-not-allowed"
                       style={{ minHeight: 44 }}
-                      onClick={() => { setShowDeleteDialog(true); setDeleteStep(1); setDeleteReason(""); setDeleteConfirmText(""); }}
+                      disabled
+                      aria-label="حذف الحساب غير متاح مؤقتًا"
                     >
                       <Trash2 className="w-4 h-4 ml-2" />
-                      حذف حسابي
+                      حذف الحساب غير متاح مؤقتًا
                     </Button>
                   </div>
                 </CardContent>
