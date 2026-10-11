@@ -39,7 +39,6 @@ const withTimeout = (promise, timeoutMs, message) => new Promise((resolve, rejec
 });
 const fieldStyle = { width: "100%", height: 48, boxSizing: "border-box", border: "1px solid #d1d5db", borderRadius: 10, padding: "0 14px", fontSize: 16, background: "white", color: "#111827" };
 const buttonStyle = { width: "100%", height: 48, border: 0, borderRadius: 10, padding: "0 14px", fontSize: 16, fontWeight: 600, cursor: "pointer" };
-const logoUrl = null;
 
 export default function Login() {
   const [email, setEmail] = useState("");
