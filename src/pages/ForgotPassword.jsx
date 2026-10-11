@@ -27,7 +27,7 @@ export default function ForgotPassword() {
       setSent(true);
     } catch (err) {
       console.error("Supabase password reset request error:", err);
-      setError("تعذر إرسال رابط إعادة تعيين كلمة المرور حالياً. تأكدي من البريد وحاولي مرة أخرى.");
+      setError("تعذر طلب إعادة تعيين كلمة المرور حالياً. تحققي من البريد وحاولي مرة أخرى.");
     } finally {
       setLoading(false);
     }
@@ -36,23 +36,23 @@ export default function ForgotPassword() {
   return (
     <AuthLayout
       icon={Mail}
-      title="Reset password"
-      subtitle="We'll send you a link to reset it"
+      title="إعادة تعيين كلمة المرور"
+      subtitle="سنرسل لك رابطاً لإعادة تعيين كلمة المرور إذا كان الحساب مهيأً في النظام الجديد"
       footer={
         <Link to="/login" className="text-primary font-medium hover:underline">
-          <ArrowLeft className="w-3 h-3 inline mr-1" />Back to log in
+          <ArrowLeft className="w-3 h-3 inline mr-1" />العودة إلى تسجيل الدخول
         </Link>
       }
     >
       {sent ? (
         <p className="text-sm text-foreground text-center">
-          If an account exists with that email, you'll receive a password reset link shortly.
+          إذا كان البريد مرتبطاً بحساب في النظام الجديد، فسيصلك رابط إعادة التعيين قريباً. إذا كان حسابك من النظام السابق ولم يصلك الرابط، فقد يحتاج فريق دعم بيتلي إلى ربط الحساب أولاً.
         </p>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <div role="alert" className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">{error}</div>}
           <div className="space-y-2">
-            <Label htmlFor="email">Email address</Label>
+            <Label htmlFor="email">البريد الإلكتروني</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
               <Input
@@ -60,7 +60,7 @@ export default function ForgotPassword() {
                 type="email"
                 autoComplete="email"
                 autoFocus
-                placeholder="you@example.com"
+                placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="pl-10 h-12"
@@ -69,7 +69,7 @@ export default function ForgotPassword() {
             </div>
           </div>
           <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
-            {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending...</> : "Send reset link"}
+            {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />جارٍ الإرسال...</> : "إرسال رابط إعادة التعيين"}
           </Button>
         </form>
       )}
