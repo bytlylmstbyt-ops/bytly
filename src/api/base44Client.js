@@ -695,8 +695,13 @@ const bookSurveyAppointmentSupabase = async (payload = {}) => {
     target_id,
     target_name: target_name || null,
     target_email: target_email || null,
+    client_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email || null,
+    client_email: user.email || null,
+    request_id: payload.request_id || null,
     appointment_date,
     appointment_time,
+    duration_minutes: Number(payload.duration_minutes) || 60,
+    location: payload.location || null,
     consultation_type: payload.consultation_type || 'site_visit',
     appointment_type: payload.consultation_type || 'site_visit',
     topic: payload.topic || 'موعد رفع مساحي',
@@ -736,7 +741,7 @@ const bookSurveyAppointmentSupabase = async (payload = {}) => {
       calendarLink = calendar.event_link || null;
       if (calendar.event?.id) {
         await withHardTimeout(
-          supabase.from('consultation_appointments').update({ calendar_link: calendarLink, meet_link: calendar.meet_link || null, updated_at: new Date().toISOString() }).eq('id', appointment.id),
+          supabase.from('consultation_appointments').update({ calendar_link: calendarLink, google_event_id: calendar.event?.id || null, meet_link: calendar.meet_link || null, updated_at: new Date().toISOString() }).eq('id', appointment.id),
           10000
         );
       }
@@ -745,7 +750,7 @@ const bookSurveyAppointmentSupabase = async (payload = {}) => {
     console.warn('Google Calendar sync skipped:', calendarError?.message || calendarError);
   }
 
-  return { data: { ...appointment, duration_minutes: Number(payload.duration_minutes) || 60, location: payload.location || '', request_id: payload.request_id || '', google_calendar_link: calendarLink, calendar_link: calendarLink } };
+  return { data: { ...appointment, google_calendar_link: calendarLink, calendar_link: calendarLink } };
 };
 
 legacyBase44.functions = {
