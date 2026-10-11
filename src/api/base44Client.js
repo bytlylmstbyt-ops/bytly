@@ -628,9 +628,130 @@ legacyBase44.entities.ConsultationAppointment = makeSupabaseEntity('consultation
 legacyBase44.entities.ProjectTask = makeSupabaseEntity('project_tasks');
 legacyBase44.entities.ProjectMilestone = makeSupabaseEntity('project_milestones');
 
+const bookSurveyAppointmentSupabase = async (payload = {}) => {
+  const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
+  const user = authData?.user;
+  if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً');
+
+  const action = payload.action || 'book';
+  if (action === 'available') {
+    if (!payload.date || !payload.surveyor_email) return { data: { available_slots: [] } };
+    const { data, error } = await withHardTimeout(
+      supabase.from('consultation_appointments').select('appointment_time')
+        .eq('appointment_date', payload.date)
+        .eq('target_email', payload.surveyor_email)
+        .neq('status', 'cancelled'),
+      10000,
+      'تعذر قراءة المواعيد المتاحة'
+    );
+    if (error) throw new Error(error.message || 'تعذر قراءة المواعيد المتاحة');
+    const booked_slots = (data || []).map(row => String(row.appointment_time).slice(0, 5));
+    const all = ['09:00','09:30','10:00','10:30','11:00','11:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00'];
+    return { data: { available_slots: all.filter(slot => !booked_slots.includes(slot)), booked_slots } };
+  }
+
+  if (action === 'list') {
+    let query = supabase.from('consultation_appointments').select('*').order('appointment_date', { ascending: true }).order('appointment_time', { ascending: true });
+    query = payload.role === 'client' ? query.eq('client_user_id', user.id) : query.eq('provider_user_id', user.id);
+    const { data, error } = await withHardTimeout(query, 10000, 'تعذر قراءة المواعيد');
+    if (error) throw new Error(error.message || 'تعذر قراءة المواعيد');
+    return { data: { appointments: data || [] } };
+  }
+
+  if (action === 'cancel') {
+    if (!payload.appointment_id) throw new Error('رقم الموعد مطلوب');
+    const { data, error } = await withHardTimeout(
+      supabase.from('consultation_appointments').update({ status: 'cancelled', updated_at: new Date().toISOString() })
+        .eq('id', payload.appointment_id)
+        .or(`created_by.eq.${user.id},provider_user_id.eq.${user.id}`)
+        .select('id')
+        .maybeSingle(),
+      10000,
+      'تعذر إلغاء الموعد'
+    );
+    if (error) throw new Error(error.message || 'تعذر إلغاء الموعد');
+    if (!data) throw new Error('الموعد غير موجود أو لا تملك صلاحية إلغائه');
+    return { data: { success: true } };
+  }
+
+  if (action !== 'book') throw new Error('نوع عملية حجز الموعد غير مدعوم');
+  const { target_id, target_name, target_email, appointment_date, appointment_time } = payload;
+  if (!target_id || !appointment_date || !appointment_time) throw new Error('التاريخ والوقت والهدف مطلوبان');
+
+  let providerUserId = null;
+  if (target_email) {
+    const { data: profile } = await withHardTimeout(
+      supabase.from('profiles').select('user_id').ilike('email', target_email).maybeSingle(),
+      10000,
+      'تعذر تحديد حساب مقدم الخدمة'
+    );
+    providerUserId = profile?.user_id || null;
+  }
+
+  const row = {
+    created_by: user.id,
+    client_user_id: user.id,
+    provider_user_id: providerUserId,
+    target_id,
+    target_name: target_name || null,
+    target_email: target_email || null,
+    appointment_date,
+    appointment_time,
+    consultation_type: payload.consultation_type || 'site_visit',
+    appointment_type: payload.consultation_type || 'site_visit',
+    topic: payload.topic || 'موعد رفع مساحي',
+    notes: payload.notes || null,
+    status: 'confirmed',
+  };
+  const { data: appointment, error } = await withHardTimeout(
+    supabase.from('consultation_appointments').insert(row).select('*').single(),
+    15000,
+    'تعذر إنشاء الموعد'
+  );
+  if (error) throw new Error(error.message || 'تعذر إنشاء الموعد');
+
+  let calendarLink = null;
+  try {
+    const start = new Date(`${appointment_date}T${appointment_time}:00+03:00`);
+    const end = new Date(start.getTime() + (Number(payload.duration_minutes) || 60) * 60000);
+    const { data: calendar, error: calendarError } = await withHardTimeout(
+      supabase.functions.invoke('google-service', {
+        body: {
+          action: 'calendarCreate',
+          data: {
+            summary: payload.topic || 'موعد رفع مساحي',
+            description: [payload.notes || '', payload.location ? `الموقع: ${payload.location}` : ''].filter(Boolean).join('\\n'),
+            startDateTime: start.toISOString(),
+            endDateTime: end.toISOString(),
+            timeZone: 'Asia/Riyadh',
+            attendees: [user.email, target_email].filter(Boolean),
+            location: payload.location || undefined,
+          },
+        },
+      }),
+      20000,
+      'انتهت مهلة مزامنة Google Calendar'
+    );
+    if (!calendarError && calendar?.success) {
+      calendarLink = calendar.event_link || null;
+      if (calendar.event?.id) {
+        await withHardTimeout(
+          supabase.from('consultation_appointments').update({ calendar_link: calendarLink, meet_link: calendar.meet_link || null, updated_at: new Date().toISOString() }).eq('id', appointment.id),
+          10000
+        );
+      }
+    }
+  } catch (calendarError) {
+    console.warn('Google Calendar sync skipped:', calendarError?.message || calendarError);
+  }
+
+  return { data: { ...appointment, duration_minutes: Number(payload.duration_minutes) || 60, location: payload.location || '', request_id: payload.request_id || '', google_calendar_link: calendarLink, calendar_link: calendarLink } };
+};
+
 legacyBase44.functions = {
   ...legacyFunctions,
   invoke: async (name, payload) => {
+    if (name === 'bookSurveyAppointment') return await bookSurveyAppointmentSupabase(payload);
     if (name === 'uploadFile') {
       if (!payload?.file) throw new Error('لم يتم تحديد الملف المراد رفعه');
       const uploaded = await legacyBase44.integrations.Core.UploadFile({ file: payload.file });
