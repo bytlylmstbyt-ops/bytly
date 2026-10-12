@@ -25,7 +25,21 @@ Deno.serve(async(req:Request)=>{
   const {data:engineers,error}=await admin.from("engineers").select("user_id,email,full_name,specialization,is_verified,status").eq("is_verified",true).not("user_id","is",null).limit(500);
   if(error)return json({ok:false,error:"تعذر البحث عن المهندسين المعتمدين"},500);
   const category=String(project.category||"").trim().toLowerCase();
-  recipients=(engineers||[]).filter((e:any)=>["approved","active","verified"].includes(String(e.status||"").toLowerCase())&&Boolean(category)&&String(e.specialization||"").toLowerCase().includes(category)&&e.user_id!==auth.user.id);
+  const categoryTerms:Record<string,string[]> = {
+   interior:["interior","تصميم داخلي","ديكور"],
+   architecture:["architecture","معماري","هندسة معمارية","عمارة"],
+   painting:["painting","رسم","مخططات"],
+   landscape:["landscape","حدائق","تنسيق"],
+   furniture:["furniture","أثاث"],
+   lighting:["lighting","إضاءة"],
+   civil:["civil","مدني"],
+  };
+  const terms=categoryTerms[category]||[category];
+  recipients=(engineers||[]).filter((e:any)=>{
+   const status=String(e.status||"").toLowerCase();
+   const specialization=String(e.specialization||"").toLowerCase();
+   return ["approved","active","verified"].includes(status)&&terms.some(term=>specialization.includes(term))&&e.user_id!==auth.user.id;
+  });
  }
  const unique=[...new Map(recipients.filter(e=>e.user_id).map(e=>[e.user_id,e])).values()];
  if(!unique.length)return json({ok:true,notified:0,message:"لا يوجد مهندسون معتمدون مطابقون حاليًا"});
