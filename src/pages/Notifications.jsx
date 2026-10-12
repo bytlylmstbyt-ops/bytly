@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
   Bell, CheckCircle, Briefcase, 
@@ -20,6 +20,7 @@ export default function Notifications() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [filter, setFilter] = useState("all");
+  const [loadError, setLoadError] = useState("");
 
   // Set moment locale based on current language
   useEffect(() => {
@@ -28,38 +29,70 @@ export default function Notifications() {
 
   useEffect(() => {
     let active = true;
-    loadNotifications();
+    let channel = null;
 
-    // Supabase Realtime only delivers rows for the authenticated user's user_id.
-    const unsubscribe = base44.entities.Notification.subscribe((event) => {
-      if (!active || !event) return;
-      if (event.type === 'create' && event.data) {
-        setNotifications(prev => [event.data, ...prev.filter(n => n.id !== event.data.id)]);
-      } else if (event.type === 'update' && event.data) {
-        setNotifications(prev => prev.map(n => n.id === event.id ? event.data : n));
-      } else if (event.type === 'delete') {
-        setNotifications(prev => prev.filter(n => n.id !== event.id));
-      }
-    });
+    const start = async () => {
+      await loadNotifications();
+      const { data: authData } = await supabase.auth.getUser();
+      const authUser = authData?.user;
+      if (!active || !authUser?.id) return;
 
+      channel = supabase
+        .channel("notifications-page-" + authUser.id)
+        .on("postgres_changes", {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: "user_id=eq." + authUser.id,
+        }, () => {
+          if (active) loadNotifications();
+        })
+        .subscribe();
+    };
+
+    start();
     return () => {
       active = false;
-      unsubscribe?.();
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 
   const loadNotifications = async () => {
+    setLoadError("");
     try {
-      const currentUser = await base44.auth.me();
-      setUser(currentUser);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const currentUser = authData?.user;
+      if (!currentUser?.id) {
+        setUser(null);
+        setNotifications([]);
+        return;
+      }
+      setUser({
+        id: currentUser.id,
+        email: currentUser.email || "",
+      });
 
-      const notificationsData = await base44.entities.Notification.filter({
-        recipient_email: currentUser.email
-      }, "-created_date", 50);
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("id,user_id,type,title,body,entity_type,entity_id,read_at,created_at")
+        .eq("user_id", currentUser.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
 
-      setNotifications(notificationsData);
+      setNotifications((data || []).map(row => ({
+        ...row,
+        message: row.body || "",
+        is_read: Boolean(row.read_at),
+        created_date: row.created_at,
+        related_project_id: row.entity_type === "project" ? row.entity_id : null,
+        priority: "medium",
+      })));
     } catch (error) {
-      console.error("Error loading notifications:", error);
+      console.error("Error loading notifications from Supabase:", error);
+      setLoadError(error?.message || "تعذر تحميل الإشعارات.");
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
@@ -103,30 +136,55 @@ export default function Notifications() {
 
   const markAllAsRead = async () => {
     try {
-      await Promise.all(
-        notifications
-          .filter(n => !n.is_read)
-          .map(n => base44.entities.Notification.update(n.id, { is_read: true }))
-      );
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const userId = authData?.user?.id;
+      if (!userId) return;
+      const { error } = await supabase
+        .from("notifications")
+        .update({ read_at: new Date().toISOString() })
+        .eq("user_id", userId)
+        .is("read_at", null);
+      if (error) throw error;
       await loadNotifications();
     } catch (error) {
-      console.error("Error marking as read:", error);
+      console.error("Error marking notifications as read:", error);
+      setLoadError(error?.message || "تعذر تحديث الإشعارات.");
     }
   };
 
   const markAsRead = async (notification) => {
-    if (!notification.is_read) {
-      await base44.entities.Notification.update(notification.id, { is_read: true });
-      await loadNotifications();
+    if (notification.is_read) return;
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const userId = authData?.user?.id;
+      if (!userId) return;
+      const now = new Date().toISOString();
+      const { error } = await supabase.from("notifications")
+        .update({ read_at: now })
+        .eq("id", notification.id)
+        .eq("user_id", userId);
+      if (error) throw error;
+      setNotifications(prev => prev.map(item => item.id === notification.id ? { ...item, is_read: true, read_at: now } : item));
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      setLoadError(error?.message || "تعذر تحديث الإشعار.");
     }
   };
 
   const deleteNotification = async (id) => {
     try {
-      await base44.entities.Notification.delete(id);
-      await loadNotifications();
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const userId = authData?.user?.id;
+      if (!userId) return;
+      const { error } = await supabase.from("notifications").delete().eq("id", id).eq("user_id", userId);
+      if (error) throw error;
+      setNotifications(prev => prev.filter(item => item.id !== id));
     } catch (error) {
       console.error("Error deleting notification:", error);
+      setLoadError(error?.message || "تعذر حذف الإشعار.");
     }
   };
 
@@ -149,6 +207,11 @@ export default function Notifications() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        {loadError && (
+          <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            {loadError}
+          </div>
+        )}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
