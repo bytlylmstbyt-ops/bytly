@@ -195,14 +195,13 @@ const legacyEngineer = bytlyCompat.entities.Engineer;
 bytlyCompat.entities.Engineer = {
   ...legacyEngineer,
   filter: async (filters = {}) => {
-    const email = filters?.email?.toLowerCase?.();
-    try {
-      let q = supabase.from('engineers').select('*');
-      Object.entries(filters).forEach(([k,v]) => { if (v != null) q = q.eq(k, v); });
-      const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة بيانات المهندس');
-      if (!error && data?.length) return data;
-    } catch {}
-    return [];
+    let q = supabase.from('engineers').select('*');
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) q = q.eq(key, value);
+    });
+    const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة بيانات المهندس');
+    if (error) throw new Error(error.message || 'تعذر قراءة بيانات المهندس من Supabase');
+    return data || [];
   },
   create: async payload => {
   const { data: sessionData } = await withHardTimeout(supabase.auth.getSession(), 10000, 'انتهت مهلة جلسة الدخول');
@@ -278,24 +277,45 @@ bytlyCompat.entities.Contract = {
   filter: async filters => {
     const mapped = { ...(filters || {}) };
     if (mapped.engineer_id) mapped.engineer_id = await resolveLegacyId('Engineer', mapped.engineer_id);
-    if (mapped.client_id) mapped.client_id = await resolveLegacyId('Client', mapped.client_id);
+    if (mapped.client_id) { mapped.client_user_id = await resolveClientUserId(mapped.client_id); delete mapped.client_id; }
     if (mapped.project_id) mapped.project_id = await resolveLegacyId('Project', mapped.project_id);
     if ((filters?.engineer_id && !mapped.engineer_id) || (filters?.client_id && !mapped.client_id) || (filters?.project_id && !mapped.project_id)) return [];
-    try {
-      let q = supabase.from('project_contracts').select('*');
-      Object.entries(mapped).forEach(([k,v]) => { q = v === null ? q.is(k,null) : Array.isArray(v) ? q.in(k,v) : q.eq(k,v); });
-      const { data, error } = await withHardTimeout(q,10000,'انتهت مهلة قراءة العقود');
-      if (!error && data?.length) return data;
-    } catch {}
-    return [];
+    let q = supabase.from('project_contracts').select('*');
+    Object.entries(mapped).forEach(([key, value]) => {
+      q = value === null ? q.is(key, null) : Array.isArray(value) ? q.in(key, value) : q.eq(key, value);
+    });
+    const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة العقود');
+    if (error) throw new Error(error.message || 'تعذر قراءة العقود من Supabase');
+    return data || [];
   },
-  list: async (sort='-created_date', limit=100) => {
-    try {
-      const { data, error } = await withHardTimeout(supabase.from('project_contracts').select('*').limit(limit).order('created_at',{ascending:!sort.startsWith('-')}),10000,'انتهت مهلة قراءة العقود');
-      if (!error && data?.length) return data;
-    } catch {}
-    return [];
+  list: async (sort = '-created_date', limit = 100) => {
+    const boundedLimit = Math.max(1, Math.min(Number(limit) || 100, 500));
+    const { data, error } = await withHardTimeout(
+      supabase.from('project_contracts').select('*').limit(boundedLimit)
+        .order('created_at', { ascending: !String(sort).startsWith('-') }),
+      10000,
+      'انتهت مهلة قراءة العقود'
+    );
+    if (error) throw new Error(error.message || 'تعذر قراءة العقود من Supabase');
+    return data || [];
   }
+};
+
+const resolveClientUserId = async currentId => {
+  if (currentId === null || currentId === undefined || currentId === '') return null;
+  const value = String(currentId).trim();
+  // Auth UUIDs are already the value expected by projects.client_user_id.
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) return value;
+  for (const column of ['base44_id', 'email']) {
+    const { data, error } = await withHardTimeout(
+      supabase.from('clients').select('user_id').eq(column, value).maybeSingle(),
+      10000,
+      'انتهت مهلة مطابقة حساب العميل'
+    );
+    if (error) throw new Error(error.message || 'تعذر مطابقة حساب العميل');
+    if (data?.user_id) return data.user_id;
+  }
+  return null;
 };
 
 const legacyProject = bytlyCompat.entities.Project;
@@ -359,14 +379,16 @@ bytlyCompat.entities.Project = { ...legacyProject,
 const legacyClient = bytlyCompat.entities.Client;
 bytlyCompat.entities.Client = {
   ...legacyClient,
-  filter: async filters => {
-    try {
-      let q = supabase.from('clients').select('*');
-      Object.entries(filters||{}).forEach(([k,v])=>{q=v===null?q.is(k,null):Array.isArray(v)?q.in(k,v):q.eq(k,v)});
-      const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة العميل');
-      if(!error && data?.length) return data;
-    } catch {}
-    return [];
+  filter: async (filters = {}) => {
+    let q = supabase.from('clients').select('*');
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (value === null) q = q.is(key, null);
+      else if (Array.isArray(value)) q = q.in(key, value);
+      else if (value !== undefined) q = q.eq(key, value);
+    });
+    const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة العميل');
+    if (error) throw new Error(error.message || 'تعذر قراءة العميل من Supabase');
+    return data || [];
   }
 };
 
