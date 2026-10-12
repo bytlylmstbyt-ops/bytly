@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { supabase } from "@/lib/supabaseClient";
 import { resolveProjectFileUrl } from "@/lib/projectFileStorage";
@@ -29,7 +28,6 @@ import ProjectPaymentsSection from "@/components/project/ProjectPaymentsSection"
 import ProjectOverviewTab from "@/components/project/ProjectOverviewTab";
 import ProjectTasksTab from "@/components/project/ProjectTasksTab";
 import ProjectCalendar from "@/components/project/ProjectCalendar";
-import { notifyWorkspaceUpdate } from "@/components/project/notifyWorkspaceUpdate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -83,6 +81,7 @@ export default function ProjectDetails() {
   const [contracts, setContracts] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [selectedProposal, setSelectedProposal] = useState(null);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     if (projectId) loadData();
@@ -94,86 +93,186 @@ export default function ProjectDetails() {
 
   const loadData = async () => {
     setIsLoading(true);
-    const currentUser = await base44.auth.me();
-    setUser(currentUser);
+    setLoadError("");
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const authUser = authData?.user;
+      if (!authUser?.id) throw new Error("سجّل الدخول لعرض تفاصيل المشروع.");
 
-    const [projectData, proposalsData, engineersData, userEngData, userClientData, contractsData, transactionsData] = await Promise.all([
-      base44.entities.Project.filter({ id: projectId }),
-      base44.entities.Proposal.filter({ project_id: projectId }),
-      base44.entities.Engineer.filter({ status: "approved" }),
-      base44.entities.Engineer.filter({ email: currentUser.email }),
-      base44.entities.Client.filter({ email: currentUser.email }),
-      base44.entities.Contract.filter({ project_id: projectId }),
-      base44.entities.Transaction.filter({ project_id: projectId }),
-    ]);
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_id,email,full_name,role")
+        .eq("user_id", authUser.id)
+        .maybeSingle();
+      if (profileError) throw profileError;
+      const currentUser = {
+        id: authUser.id,
+        user_id: authUser.id,
+        email: (authUser.email || profile?.email || "").trim().toLowerCase(),
+        full_name: profile?.full_name || authUser.user_metadata?.full_name || authUser.user_metadata?.name || "",
+        role: profile?.role || authUser.user_metadata?.role || "user",
+      };
+      setUser(currentUser);
 
-    setProject(projectData[0]);
-    setProposals(proposalsData);
-    setContracts(contractsData);
-    setTransactions(transactionsData);
+      const { data: projectRow, error: projectError } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("id", projectId)
+        .maybeSingle();
+      if (projectError) throw projectError;
+      if (!projectRow) throw new Error("المشروع غير موجود أو لا تملك صلاحية عرضه.");
 
-    const engMap = {};
-    engineersData.forEach(eng => { engMap[eng.id] = eng; });
-    setEngineers(engMap);
+      const [offersResult, engineersResult, currentEngineerResult, currentClientResult, contractsResult, transactionsResult] = await Promise.all([
+        supabase.from("project_offers").select("*").eq("project_id", projectId).order("created_at", { ascending: false }),
+        supabase.from("engineers").select("*").eq("status", "approved"),
+        supabase.from("engineers").select("*").eq("user_id", authUser.id).maybeSingle(),
+        supabase.from("clients").select("*").eq("user_id", authUser.id).maybeSingle(),
+        supabase.from("project_contracts").select("*").eq("project_id", projectId).order("created_at", { ascending: false }),
+        supabase.from("wallet_transactions").select("*").eq("project_id", projectId).order("created_at", { ascending: false }).limit(100),
+      ]);
+      for (const result of [offersResult, engineersResult, currentEngineerResult, currentClientResult, contractsResult, transactionsResult]) {
+        if (result.error) throw result.error;
+      }
 
-    if (userEngData.length > 0) setUserEngineer(userEngData[0]);
-    if (userClientData.length > 0) setUserClient(userClientData[0]);
-    setIsLoading(false);
+      const engineerMap = {};
+      (engineersResult.data || []).forEach(engineer => {
+        engineerMap[engineer.id] = engineer;
+        if (engineer.user_id) engineerMap[engineer.user_id] = engineer;
+      });
+      if (currentEngineerResult.data) {
+        setUserEngineer(currentEngineerResult.data);
+        engineerMap[currentEngineerResult.data.id] = currentEngineerResult.data;
+        engineerMap[currentEngineerResult.data.user_id] = currentEngineerResult.data;
+      } else {
+        setUserEngineer(null);
+      }
+      setUserClient(currentClientResult.data || null);
+
+      const mappedOffers = (offersResult.data || []).map(row => ({
+        ...row,
+        engineer_id: engineerMap[row.engineer_user_id]?.id || row.engineer_user_id,
+        price: row.amount,
+        delivery_days: row.duration_days,
+        cover_letter: row.proposal || "",
+        attachments: row.attachments || [],
+        portfolio_items: row.portfolio_items || [],
+      }));
+      setProject(projectRow);
+      setProposals(mappedOffers);
+      setContracts(contractsResult.data || []);
+      setTransactions(transactionsResult.data || []);
+      setEngineers(engineerMap);
+    } catch (error) {
+      console.error("Project details failed to load from Supabase:", error);
+      setLoadError(error?.message || "تعذر تحميل تفاصيل المشروع.");
+      setProject(null);
+      setProposals([]);
+      setContracts([]);
+      setTransactions([]);
+      setEngineers({});
+      setUserEngineer(null);
+      setUserClient(null);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const checkExistingReview = async () => {
     try {
-      const reviews = await base44.entities.Review.filter({ project_id: projectId });
-      if (reviews.length > 0) setExistingReview(reviews[0]);
-    } catch (error) { console.error("Error checking review:", error); }
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const userId = authData?.user?.id;
+      if (!userId) return;
+      const { data, error } = await supabase
+        .from("project_reviews")
+        .select("*")
+        .eq("project_id", projectId)
+        .eq("reviewer_user_id", userId)
+        .maybeSingle();
+      if (error) throw error;
+      setExistingReview(data || null);
+    } catch (error) {
+      console.error("Error checking project review:", error);
+      setLoadError(error?.message || "تعذر التحقق من التقييم السابق.");
+    }
   };
 
   const handleSubmitReview = async () => {
     setIsSubmitting(true);
+    setLoadError("");
     try {
-      const clientData = await base44.entities.Client.filter({ email: user.email });
-      const client = clientData[0];
-      await base44.entities.Review.create({
-        engineer_id: project.assigned_engineer_id,
-        client_id: client?.id,
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const userId = authData?.user?.id;
+      if (!userId || !project || project.client_user_id !== userId || project.status !== "completed") {
+        throw new Error("التقييم متاح لصاحب المشروع بعد اكتماله فقط.");
+      }
+      const engineer = engineers[project.assigned_engineer_id];
+      if (!engineer?.user_id) throw new Error("لا يوجد مهندس مرتبط بحساب مستخدم يمكن تقييمه.");
+      const rating = Math.min(5, Math.max(1, Number(reviewData.rating) || 5));
+      const { error } = await supabase.from("project_reviews").insert({
         project_id: projectId,
-        rating: reviewData.rating,
-        quality_rating: reviewData.quality_rating,
-        communication_rating: reviewData.communication_rating,
-        delivery_rating: reviewData.delivery_rating,
-        comment: reviewData.comment
+        reviewer_user_id: userId,
+        reviewee_user_id: engineer.user_id,
+        rating,
+        comment: String(reviewData.comment || "").trim() || null,
       });
+      if (error) throw error;
       setShowReviewForm(false);
-      checkExistingReview();
-    } catch (error) { console.error("Error:", error); } finally { setIsSubmitting(false); }
+      await checkExistingReview();
+    } catch (error) {
+      console.error("Error submitting project review:", error);
+      setLoadError(error?.message || "تعذر إرسال التقييم.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSubmitProposal = async () => {
-    if (!userEngineer) return;
+    setLoadError("");
+    const amount = Number(proposalData.price);
+    const durationDays = Number.parseInt(proposalData.delivery_days, 10);
+    if (!user?.id || !userEngineer?.id) {
+      setLoadError("يجب تسجيل الدخول بحساب مهندس معتمد لتقديم عرض.");
+      return;
+    }
+    if (!Number.isFinite(amount) || amount <= 0 || !Number.isInteger(durationDays) || durationDays <= 0) {
+      setLoadError("أدخل سعرًا صحيحًا ومدة تسليم بالأيام أكبر من صفر.");
+      return;
+    }
+    if (!project || project.status !== "open") {
+      setLoadError("لا يمكن تقديم عرض على هذا المشروع في حالته الحالية.");
+      return;
+    }
+    if (proposals.some(item => item.engineer_user_id === user.id)) {
+      setLoadError("سبق أن قدمت عرضًا على هذا المشروع.");
+      return;
+    }
+
     setIsSubmitting(true);
-    await base44.entities.Proposal.create({
-      project_id: projectId,
-      engineer_id: userEngineer.id,
-      price: parseFloat(proposalData.price),
-      delivery_days: parseInt(proposalData.delivery_days),
-      cover_letter: proposalData.cover_letter,
-      attachments: proposalData.attachments,
-      portfolio_items: proposalData.portfolio_items,
-      status: "pending"
-    });
-    await base44.entities.Project.update(projectId, { total_proposals: (project.total_proposals || 0) + 1 });
-    await base44.entities.Notification.create({
-      recipient_email: project.created_by,
-      title: "عرض جديد على مشروعك",
-      message: `قدم ${userEngineer.full_name} عرضاً جديداً على مشروع "${project.title}" بسعر ${proposalData.price} ريال.`,
-      type: "project_update",
-      related_project_id: projectId,
-      priority: "high"
-    });
-    setIsSubmitting(false);
-    setShowProposalForm(false);
-    setProposalData({ price: "", delivery_days: "", cover_letter: "", attachments: [], portfolio_items: [] });
-    loadData();
+    try {
+      const { error } = await supabase.from("project_offers").insert({
+        project_id: projectId,
+        engineer_user_id: user.id,
+        amount,
+        currency: "SAR",
+        duration_days: durationDays,
+        proposal: String(proposalData.cover_letter || "").trim() || null,
+        attachments: proposalData.attachments || [],
+        portfolio_items: proposalData.portfolio_items || [],
+        status: "pending",
+      });
+      if (error) throw error;
+      setShowProposalForm(false);
+      setProposalData({ price: "", delivery_days: "", cover_letter: "", attachments: [], portfolio_items: [] });
+      await loadData();
+    } catch (error) {
+      console.error("Error submitting project offer:", error);
+      setLoadError(error?.message || "تعذر إرسال العرض.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleExportToDrive = async () => {
@@ -246,76 +345,30 @@ export default function ProjectDetails() {
     setProposalData(prev => ({ ...prev, attachments: prev.attachments.filter((_, i) => i !== index) }));
   };
 
-  const handleAcceptProposal = async (proposal) => {
-    setProposals(prev => prev.map(p => p.id === proposal.id ? { ...p, status: "accepted" } : p));
-    const engineer = engineers[proposal.engineer_id];
-    if (engineer) {
-      await base44.entities.Notification.create({
-        recipient_email: engineer.email,
-        title: "تم قبول عرضك!",
-        message: `تهانينا! تم قبول عرضك على مشروع "${project.title}" بقيمة ${proposal.price} ريال.`,
-        type: "approval",
-        related_project_id: projectId,
-        priority: "high"
-      });
-    }
-    await base44.entities.Notification.create({
-      recipient_email: user.email,
-      title: "✅ تم قبول العرض بنجاح",
-      message: `تم قبول عرض ${engineer?.full_name || 'المهندس'} على مشروع "${project.title}".`,
-      type: "approval",
-      related_project_id: projectId,
-      related_entity_id: proposal.id,
-      action_url: `/ProjectDetails?id=${projectId}`,
-      priority: "high"
-    });
-    // تسجيل النشاط في مساحة العمل + إشعار الطرف الآخر بتغيير حالة المشروع
-    await notifyWorkspaceUpdate({
-      project,
-      assignedEngineer: engineer,
-      user,
-      activityType: "proposal_accepted",
-      summary: `تم قبول عرض ${engineer?.full_name || "المهندس"} على المشروع — سيتغير للمشروع إلى قيد التنفيذ`,
-      notifyTitle: "🎉 تم قبول العرض",
-      notifyMessage: `تم قبول عرض ${engineer?.full_name || "المهندس"} على مشروع "${project.title}" بقيمة ${proposal.price?.toLocaleString()} ر.س. سيبدأ المشروع قريباً.`,
-      entityType: "proposal",
-      entityId: proposal.id,
-      entityTitle: `عرض ${engineer?.full_name || ""}`,
-      priority: "high",
-    });
-    window.location.href = createPageUrl("Payment") + `?project=${projectId}&proposal=${proposal.id}`;
+  const handleAcceptProposal = async () => {
+    window.alert("قبول العرض وإنشاء العقد يحتاجان إجراءً ذريًا آمنًا على الخادم حتى لا تُقبل عروض متعددة أو يبدأ الدفع دون عقد صحيح. هذه العملية متوقفة مؤقتًا أثناء استكمال هذا المسار.");
   };
 
   const handleRejectProposal = async (proposal) => {
     if (!window.confirm("هل أنت متأكد من رفض هذا العرض؟")) return;
+    setLoadError("");
     try {
-      await base44.entities.Proposal.update(proposal.id, { status: "rejected" });
-      setProposals(prev => prev.map(p => p.id === proposal.id ? { ...p, status: "rejected" } : p));
-      const engineer = engineers[proposal.engineer_id];
-      if (engineer) {
-        await base44.entities.Notification.create({
-          recipient_email: engineer.email,
-          title: "تم رفض عرضك",
-          message: `تم رفض عرضك على مشروع "${project.title}".`,
-          type: "proposal",
-          related_project_id: projectId,
-          priority: "medium"
-        });
-      }
-    } catch (error) { console.error("Error rejecting proposal:", error); alert("حدث خطأ أثناء رفض العرض"); }
+      if (!user?.id || project?.client_user_id !== user.id) throw new Error("رفض العروض متاح لصاحب المشروع فقط.");
+      const { error } = await supabase
+        .from("project_offers")
+        .update({ status: "rejected" })
+        .eq("id", proposal.id)
+        .eq("project_id", projectId);
+      if (error) throw error;
+      await loadData();
+    } catch (error) {
+      console.error("Error rejecting offer:", error);
+      setLoadError(error?.message || "تعذر رفض العرض.");
+    }
   };
 
-  const handleCreateContractFromProposal = async (proposal) => {
-    if (!window.confirm("هل أنت متأكد من قبول هذا العرض وإنشاء العقد؟")) return;
-    try {
-      const response = await base44.functions.invoke("createContractFromProposal", { proposal_id: proposal.id });
-      if (response.data.success) {
-        alert("تم قبول العرض وإنشاء العقد بنجاح!");
-        setProposals(prev => prev.map(p => p.id === proposal.id ? { ...p, status: "accepted" } : p));
-        loadData();
-        setTimeout(() => { window.location.href = createPageUrl("MyContracts"); }, 1500);
-      }
-    } catch (error) { console.error("Error creating contract:", error); alert("حدث خطأ أثناء إنشاء العقد."); }
+  const handleCreateContractFromProposal = async () => {
+    window.alert("إنشاء العقد من العرض متوقف مؤقتًا حتى يُنقل إلى إجراء خادمي يتحقق من صلاحيات الطرفين وينشئ العقد مرة واحدة.");
   };
 
   const categories = { interior: "تصميم داخلي", architecture: "تصميم معماري", painting: "رسم هندسي", landscape: "تنسيق حدائق", furniture: "تصميم أثاث", lighting: "تصميم إضاءة" };
@@ -334,16 +387,17 @@ export default function ProjectDetails() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-slate-700 mb-4">لم يتم العثور على المشروع</h2>
+          <h2 className="text-2xl font-bold text-slate-700 mb-4">{loadError ? "تعذر تحميل المشروع" : "لم يتم العثور على المشروع"}</h2>
+          {loadError && <p role="alert" className="max-w-xl mx-auto mb-4 text-sm text-red-700">{loadError}</p>}
           <Link to={createPageUrl("Projects")}><Button>العودة للمشاريع</Button></Link>
         </div>
       </div>
     );
   }
 
-  const isClient = project.created_by === user.email;
+  const isClient = project.client_user_id === user.id || (userClient?.id && project.client_id === userClient.id);
   const isEngineer = userEngineer && project.assigned_engineer_id === userEngineer.id;
-  const hasSubmittedProposal = userEngineer && proposals.some(p => p.engineer_id === userEngineer.id);
+  const hasSubmittedProposal = userEngineer && proposals.some(p => p.engineer_user_id === user.id);
   const canExportDrive = user && (isClient || isEngineer || user.role === 'admin');
 
   const switchTab = (tabId) => {
