@@ -169,6 +169,10 @@ export default function CreateProject() {
 
     setIsLoading(true);
     
+    if (preselectedEngineerId && !preselectedEngineer?.id) {
+      throw new Error("تعذر التحقق من المهندس المحدد. أعيدي فتح صفحة المهندس واختاري طلب الخدمة مرة أخرى.");
+    }
+
     const { data: newProject, error: projectError } = await supabase.from("projects").insert({
       title: formData.title,
       description: formData.description,
@@ -183,8 +187,8 @@ export default function CreateProject() {
       client_id: client.id,
       status: "open",
       total_proposals: 0,
-      is_direct_hire: preselectedEngineerId ? true : false,
-      assigned_engineer_id: preselectedEngineerId || null,
+      is_direct_hire: Boolean(preselectedEngineer?.id),
+      assigned_engineer_id: preselectedEngineer?.id || null,
       client_user_id: user?.id || null,
       service_scope: { services: formData.service_scope, requested_by_client: true },
     }).select().single();
