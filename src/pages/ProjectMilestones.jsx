@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+
 import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { useNavigate } from "react-router-dom";
@@ -27,6 +27,7 @@ export default function ProjectMilestones() {
   const projectId = urlParams.get("id");
 
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [project, setProject] = useState(null);
   const [milestones, setMilestones] = useState([]);
   const [user, setUser] = useState(null);
@@ -50,44 +51,51 @@ export default function ProjectMilestones() {
   }, []);
 
   const loadData = async () => {
+    setLoading(true);
+    setLoadError("");
     try {
-      const currentUser = await base44.auth.me();
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const currentUser = authData?.user;
+      if (!currentUser?.id) throw new Error("سجّلي الدخول لعرض مراحل المشروع.");
       setUser(currentUser);
-
-      try {
-        const { data: financialSettings } = await supabase.rpc("get_financial_settings");
-        if (financialSettings) {
-          setVatRate(Number(financialSettings.vat_rate ?? 15));
-          setProjectCommissionRate(Number(financialSettings.default_project_commission_rate ?? 15));
-        }
-      } catch (settingsError) {
-        console.warn("Could not load financial settings; using defaults:", settingsError);
+      const { data: financialSettings, error: settingsError } = await supabase.rpc("get_financial_settings");
+      if (!settingsError && financialSettings) {
+        setVatRate(Number(financialSettings.vat_rate ?? 15));
+        setProjectCommissionRate(Number(financialSettings.default_project_commission_rate ?? 15));
       }
-
-      const [projectData] = await base44.entities.Project.filter({ id: projectId });
+      const { data: projectData, error: projectError } = await supabase.from("projects").select("*").eq("id", projectId).maybeSingle();
+      if (projectError) throw projectError;
+      if (!projectData) throw new Error("المشروع غير موجود أو لا تملكين صلاحية عرضه.");
       setProject(projectData);
-
-      const milestonesData = await base44.entities.ProjectMilestone.filter(
-        { project_id: projectId },
-        "order"
-      );
-      setMilestones(milestonesData);
-
-      const [engineerData] = await base44.entities.Engineer.filter({ 
-        id: projectData.assigned_engineer_id 
-      });
+      const { data: milestonesData, error: milestonesError } = await supabase.from("project_milestones").select("*").eq("project_id", projectData.id).order("sequence_no", { ascending: true });
+      if (milestonesError) throw milestonesError;
+      setMilestones(milestonesData || []);
+      let engineerData = null;
+      if (projectData.assigned_engineer_id) {
+        const { data, error } = await supabase.from("engineers").select("*").eq("id", projectData.assigned_engineer_id).maybeSingle();
+        if (error) throw error;
+        engineerData = data;
+      }
       setEngineer(engineerData);
-      setIsEngineer(engineerData?.email === currentUser.email);
-
-      const [clientData] = await base44.entities.Client.filter({ 
-        id: projectData.client_id 
-      });
+      setIsEngineer(Boolean(engineerData?.user_id && engineerData.user_id === currentUser.id));
+      let clientData = null;
+      if (projectData.client_user_id) {
+        const { data, error } = await supabase.from("clients").select("*").eq("user_id", projectData.client_user_id).maybeSingle();
+        if (error) throw error;
+        clientData = data;
+      } else if (projectData.client_id && /^[0-9a-f-]{36}$/i.test(String(projectData.client_id))) {
+        const { data, error } = await supabase.from("clients").select("*").eq("id", projectData.client_id).maybeSingle();
+        if (error) throw error;
+        clientData = data;
+      }
       setClient(clientData);
     } catch (error) {
-      console.error("Error loading data:", error);
-    } finally {
-      setLoading(false);
-    }
+      console.error("Error loading project milestones from Supabase:", error);
+      setLoadError(error?.message || "تعذر تحميل مراحل المشروع.");
+      setProject(null);
+      setMilestones([]);
+    } finally { setLoading(false); }
   };
 
   const submitMilestone = async (milestone) => {
@@ -97,19 +105,14 @@ export default function ProjectMilestones() {
     }
 
     try {
-      await base44.entities.ProjectMilestone.update(milestone.id, {
-        status: "submitted",
-        submitted_date: new Date().toISOString()
-      });
-
-      // Request payment approval from client — generates invoice + sends notification
-      try {
-        await base44.functions.invoke('requestMilestonePayment', {
-          milestone_id: milestone.id,
-          project_id: projectId
-        });
-      } catch (paymentErr) {
-        console.error("Error requesting milestone payment:", paymentErr);
+      const { error: updateError } = await supabase.from("project_milestones")
+        .update({ status: "submitted", audit_log: [...(milestone.audit_log || []), { action: "submitted", at: new Date().toISOString(), by: user?.id || null }] })
+        .eq("id", milestone.id).eq("project_id", projectId);
+      if (updateError) throw updateError;
+      if (client?.email) {
+        await sendNotification({ recipientEmail: client.email, title: "تم تسليم مرحلة للمراجعة",
+          message: "تم تسليم المرحلة «" + milestone.title + "» في مشروع «" + (project?.title || "") + "» للمراجعة. التسليم لا يعني أن الفاتورة أو الدفع قد اكتمل.",
+          type: "project", projectId, priority: "high" });
       }
 
       setSubmittingMilestone(null);
@@ -129,10 +132,10 @@ export default function ProjectMilestones() {
         uploadedUrls.push(file_url);
       }
 
-      await base44.entities.ProjectMilestone.update(milestone.id, {
-        deliverable_files: [...(milestone.deliverable_files || []), ...uploadedUrls],
-        status: "in_progress"
-      });
+      const { error: updateError } = await supabase.from("project_milestones")
+        .update({ deliverable_files: [...(milestone.deliverable_files || []), ...uploadedUrls], status: "in_progress" })
+        .eq("id", milestone.id).eq("project_id", projectId);
+      if (updateError) throw updateError;
 
       await loadData();
     } catch (error) {
@@ -265,18 +268,7 @@ export default function ProjectMilestones() {
     
     setProcessingPayment(true);
     try {
-      await base44.entities.Invoice.create({
-        client_id: client.id,
-        client_email: client.email,
-        project_id: projectId,
-        milestone_id: milestone.id,
-        amount: milestone.amount,
-        description: `فاتورة دفع مرحلة: ${milestone.title}`,
-        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        status: "pending"
-      });
-
-      alert("تم إرسال طلب الفاتورة. سيتم التواصل معك قريباً");
+      alert("إصدار الفواتير اليدوي غير متاح مؤقتًا حتى يتم ربطه بمسار فواتير آمن في الخادم. يمكنك تمويل المرحلة من المحفظة فقط؛ لم يتم إنشاء فاتورة أو خصم أي مبلغ.");
       setShowPaymentDialog(false);
     } catch (error) {
       alert("حدث خطأ");
@@ -292,11 +284,11 @@ export default function ProjectMilestones() {
     }
 
     try {
-      await base44.entities.ProjectMilestone.update(milestone.id, {
-        status: "revision_requested",
-        revision_notes: revisionNotes,
-        revision_count: (milestone.revision_count || 0) + 1
-      });
+      const { error: updateError } = await supabase.from("project_milestones")
+        .update({ status: "revision_requested", revision_count: (milestone.revision_count || 0) + 1,
+          audit_log: [...(milestone.audit_log || []), { action: "revision_requested", notes: revisionNotes, at: new Date().toISOString(), by: user?.id || null }] })
+        .eq("id", milestone.id).eq("project_id", projectId);
+      if (updateError) throw updateError;
 
       // Notify engineer
       await sendNotification({
@@ -329,7 +321,7 @@ export default function ProjectMilestones() {
       <div className="min-h-screen flex items-center justify-center">
         <Card className="max-w-md">
           <CardContent className="pt-6 text-center">
-            <p className="text-slate-600">المشروع غير موجود</p>
+            <p className="text-slate-600">{loadError || "المشروع غير موجود"}</p>
           </CardContent>
         </Card>
       </div>
