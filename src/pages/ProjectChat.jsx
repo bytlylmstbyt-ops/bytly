@@ -44,8 +44,23 @@ export default function ProjectChat() {
       .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, payload => {
         const row = payload.new || payload.old;
         if (!row || row.project_id !== projectId) return;
-        if (payload.eventType === "INSERT") setConversations(prev => prev.some(c => c.id === row.id) ? prev : [...prev, mapConversation(row)]);
-        if (payload.eventType === "UPDATE") set  const loadData = async () => {
+        if (payload.eventType === "INSERT") setConversations(prev => prev.some(item => item.id === row.id) ? prev : [...prev, mapConversation(row)]);
+        if (payload.eventType === "UPDATE") setConversations(prev => prev.map(item => item.id === row.id ? mapConversation(row) : item));
+        if (payload.eventType === "DELETE") setConversations(prev => prev.filter(item => item.id !== row.id));
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [projectId]);
+
+  const mapConversation = row => ({
+    ...row,
+    name: row.title || "محادثة المشروع",
+    participants: Array.isArray(row.participants) ? row.participants : [],
+    is_archived: row.is_archived || false,
+    participant_roles: row.participant_roles || {},
+  });
+
+  const loadData = async () => {
     setLoading(true);
     setLoadError("");
     try {
@@ -55,12 +70,10 @@ export default function ProjectChat() {
       if (!user?.id) throw new Error("سجّل الدخول لعرض محادثات المشروع.");
       setCurrentUser({ id: user.id, email: user.email, full_name: user.user_metadata?.full_name || user.email });
       if (!projectId) throw new Error("معرّف المشروع غير موجود في الرابط.");
-
       const { data: projectData, error: projectError } = await supabase.from("projects").select("*").eq("id", projectId).maybeSingle();
       if (projectError) throw projectError;
       if (!projectData) throw new Error("المشروع غير موجود أو لا تملك صلاحية عرضه.");
       setProject(projectData);
-
       const [convResult, memberResult, engineerResult, clientResult] = await Promise.all([
         supabase.from("conversations").select("*").eq("project_id", projectId).eq("is_archived", false).order("created_at", { ascending: false }),
         supabase.from("conversation_members").select("conversation_id").eq("user_id", user.id),
@@ -68,16 +81,14 @@ export default function ProjectChat() {
         supabase.from("clients").select("id,user_id,email,full_name,status").limit(500),
       ]);
       for (const result of [convResult, memberResult, engineerResult, clientResult]) if (result.error) throw result.error;
-      const memberConversationIds = new Set((memberResult.data || []).map(row => row.conversation_id));
-      const convs = (convResult.data || []).filter(row => row.created_by === user.id || memberConversationIds.has(row.id)).map(mapConversation);
-      setConversations(convs);
-
-      const participants = [
-        ...(engineerResult.data || []).map(e => ({ email: e.email, name: e.full_name, type: "engineer", user_id: e.user_id })).filter(p => p.email && p.user_id),
-        ...(clientResult.data || []).map(p => ({ email: p.email, name: p.full_name, type: "client", user_id: p.user_id })).filter(p => p.email && p.user_id),
-      ];
+      const memberIds = new Set((memberResult.data || []).map(row => row.conversation_id));
+      setConversations((convResult.data || []).filter(row => row.created_by === user.id || memberIds.has(row.id)).map(mapConversation));
+      const allParticipants = [
+        ...(engineerResult.data || []).map(item => ({ email: item.email, name: item.full_name, type: "engineer", user_id: item.user_id })),
+        ...(clientResult.data || []).map(item => ({ email: item.email, name: item.full_name, type: "client", user_id: item.user_id })),
+      ].filter(item => item.email && item.user_id && item.user_id !== user.id);
       const unique = new Map();
-      participants.forEach(p => { if (p.user_id !== user.id && !unique.has(p.user_id)) unique.set(p.user_id, p); });
+      allParticipants.forEach(item => { if (!unique.has(item.user_id)) unique.set(item.user_id, item); });
       setAvailableParticipants([...unique.values()]);
     } catch (error) {
       console.error("Error loading project chat:", error);
@@ -95,16 +106,16 @@ export default function ProjectChat() {
     setCreatingConv(true);
     setLoadError("");
     try {
-      const selected = availableParticipants.filter(p => selectedParticipants.includes(p.email));
+      const selected = availableParticipants.filter(item => selectedParticipants.includes(item.email));
       if (selected.length !== selectedParticipants.length) throw new Error("تعذر التحقق من جميع المشاركين المحددين.");
-      const userIds = [...new Set([currentUser.id, ...selected.map(p => p.user_id).filter(Boolean)])];
-      const emails = [currentUser.email, ...selected.map(p => p.email)].filter(Boolean);
+      const userIds = [...new Set([currentUser.id, ...selected.map(item => item.user_id)])];
+      const emails = [currentUser.email, ...selected.map(item => item.email)].filter(Boolean);
       const roles = { [currentUser.email]: "user" };
-      selected.forEach(p => { roles[p.email] = p.type; });
+      selected.forEach(item => { roles[item.email] = item.type; });
       const { data: created, error } = await supabase.from("conversations").insert({
         project_id: projectId,
         created_by: currentUser.id,
-        title: newConvName.trim() || `محادثة مع ${selected.map(p => p.name || p.email).join("، ")}`,
+        title: newConvName.trim() || `محادثة مع ${selected.map(item => item.name || item.email).join("، ")}`,
         type: selected.length > 1 ? "group" : "direct",
         participants: emails,
         participant_roles: roles,
@@ -114,10 +125,7 @@ export default function ProjectChat() {
       const { error: membersError } = await supabase.from("conversation_members").insert(
         userIds.map(user_id => ({ conversation_id: created.id, user_id }))
       );
-      if (membersError) {
-        setLoadError("تم إنشاء المحادثة لكن تعذر إضافة المشاركين. أعد المحاولة أو تواصل مع الدعم.");
-        throw membersError;
-      }
+      if (membersError) throw new Error("أُنشئت المحادثة لكن تعذرت إضافة المشاركين. أعيدي المحاولة أو تواصلي مع الدعم.");
       setConversations(prev => [mapConversation(created), ...prev]);
       setSelectedParticipants([]);
       setNewConvName("");
