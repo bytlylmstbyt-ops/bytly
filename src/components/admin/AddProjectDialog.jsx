@@ -134,7 +134,6 @@ export default function AddProjectDialog({ open, onOpenChange, onCreated, onUpda
         client_user_id: selectedClient?.user_id || null,
         assigned_engineer_id: form.assigned_engineer_id || null,
         technical_consultant_id: form.technical_consultant_id || null,
-        created_by: actor?.id || null,
       };
       delete supabasePayload.id;
       delete supabasePayload.created_at;

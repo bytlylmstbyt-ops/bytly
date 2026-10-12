@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle
 } from "@/components/ui/dialog";
@@ -44,28 +44,63 @@ export default function ProjectDetailModal({ open, onOpenChange, project, lookup
     setLoading(true);
     (async () => {
       try {
-        const [proposals, contracts, transactions, logs, milestones] = await Promise.all([
-          base44.entities.Proposal.filter({ project_id: project.id }).catch(() => []),
-          base44.entities.Contract.filter({ project_id: project.id }).catch(() => []),
-          base44.entities.Transaction.filter({ project_id: project.id }).catch(() => []),
-          base44.entities.TaskActivityLog.filter({ project_id: project.id }).catch(() => []),
-          base44.entities.ProjectMilestone.filter({ project_id: project.id }).catch(() => []),
+        const results = await Promise.all([
+          supabase.from("project_offers").select("*").eq("project_id", project.id).order("created_at", { ascending: false }),
+          supabase.from("project_contracts").select("*").eq("project_id", project.id).order("created_at", { ascending: false }),
+          supabase.from("project_payments").select("*").eq("project_id", project.id).order("created_at", { ascending: false }),
+          supabase.from("project_activity").select("*").eq("project_id", project.id).order("created_at", { ascending: false }).limit(100),
+          supabase.from("project_milestones").select("*").eq("project_id", project.id).order("sequence_no", { ascending: true }),
+          supabase.from("messages").select("*").eq("project_id", project.id).order("created_at", { ascending: false }).limit(100),
         ]);
-        const [engineers, messages] = await Promise.all([
-          proposals.length > 0
-            ? base44.entities.Engineer.filter({ id: { $in: proposals.map(p => p.engineer_id).filter(Boolean) } }).catch(() => [])
-            : Promise.resolve([]),
-          base44.entities.Message.filter({ project_id: project.id }).catch(() => []),
-        ]);
+        const failed = results.find((result) => result.error);
+        if (failed?.error) throw failed.error;
+        const [offersResult, contractsResult, paymentsResult, activityResult, milestonesResult, messagesResult] = results;
+        const offers = offersResult.data || [];
+        const engineerUserIds = [...new Set(offers.map((offer) => offer.engineer_user_id).filter(Boolean))];
+        let engineers = [];
+        if (engineerUserIds.length) {
+          const { data, error } = await supabase.from("engineers").select("id,user_id,full_name").in("user_id", engineerUserIds);
+          if (error) throw error;
+          engineers = data || [];
+        }
         const engMap = {};
-        engineers.forEach(e => { engMap[e.id] = e; });
-        const proposalsWithNames = proposals.map(p => ({
-          ...p,
-          engineer_name: engMap[p.engineer_id]?.full_name || "غير معروف",
+        engineers.forEach((engineer) => { engMap[engineer.user_id] = engineer; });
+        const proposals = offers.map((offer) => ({
+          ...offer,
+          engineer_name: engMap[offer.engineer_user_id]?.full_name || "غير معروف",
+          price: offer.amount,
+          delivery_days: offer.duration_days,
+          cover_letter: offer.proposal,
+        }));
+        const transactions = (paymentsResult.data || []).map((payment) => ({
+          ...payment,
+          type: payment.escrow_status === "held" || payment.escrow_status === "held_in_escrow"
+            ? "escrow_hold"
+            : payment.status === "released" || payment.escrow_status === "released" ? "escrow_release" : "payment",
+          user_email: payment.payer_user_id ? "دافع الدفعة" : "—",
+          status: payment.escrow_status === "held" ? "held_in_escrow" : payment.status,
+        }));
+        const logs = (activityResult.data || []).map((item) => ({
+          ...item,
+          action_type: item.action,
+          created_date: item.created_at,
+          summary: item.metadata?.summary || item.metadata?.description || item.action || "تحديث على المشروع",
+          actor_name: item.metadata?.actor_name || "مستخدم المنصة",
+          actor_email: item.metadata?.actor_email || "",
+        }));
+        const messages = (messagesResult.data || []).map((message) => ({
+          ...message,
+          sender_id: message.sender_user_id,
+          created_date: message.created_at,
+          content: message.body,
         }));
         setData({
-          proposals: proposalsWithNames,
-          contracts, transactions, messages, logs, milestones,
+          proposals,
+          contracts: contractsResult.data || [],
+          transactions,
+          messages,
+          logs,
+          milestones: milestonesResult.data || [],
         });
       } catch (err) {
         console.error("Detail load error", err);
