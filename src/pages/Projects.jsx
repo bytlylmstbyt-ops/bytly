@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
   Search, MapPin, Clock, DollarSign, 
@@ -35,6 +35,7 @@ export default function Projects() {
   const [currentUser, setCurrentUser] = useState(null);
   const [currentEngineer, setCurrentEngineer] = useState(null);
   const [isAdmin, setIsAdmin] = useState(null);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     loadProjects();
@@ -42,38 +43,73 @@ export default function Projects() {
 
   const loadProjects = async () => {
     setIsLoading(true);
-
+    setLoadError("");
     try {
-      // Resolve auth and project data inside one guarded lifecycle so a network,
-      // auth, or database error cannot leave the page spinning forever.
-      const user = await base44.auth.me();
-      setCurrentUser(user || null);
-      const admin = user?.role === "admin";
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const authUser = authData?.user;
+      if (!authUser?.id) {
+        setCurrentUser(null);
+        setCurrentEngineer(null);
+        setIsAdmin(false);
+        setProjects([]);
+        return;
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_id,email,full_name,role")
+        .eq("user_id", authUser.id)
+        .maybeSingle();
+      if (profileError) throw profileError;
+
+      const user = {
+        id: authUser.id,
+        email: authUser.email || profile?.email || "",
+        full_name: profile?.full_name || authUser.user_metadata?.full_name || authUser.user_metadata?.name || "",
+        role: profile?.role || authUser.app_metadata?.role || authUser.user_metadata?.role || authUser.user_metadata?.account_type || "user",
+      };
+      setCurrentUser(user);
+      const admin = String(user.role).toLowerCase() === "admin";
       setIsAdmin(admin);
       if (admin) {
         setProjects([]);
         return;
       }
 
-      if (!user?.email) {
+      if (!user.email) {
         setProjects([]);
         return;
       }
 
-      const engineerData = await base44.entities.Engineer.filter({ email: user.email }).catch((error) => {
-        console.warn("Projects: engineer profile lookup failed", error);
-        return [];
-      });
-      setCurrentEngineer(engineerData?.[0] || null);
+      let engineerQuery = supabase.from("engineers").select("*").limit(1);
+      engineerQuery = engineerQuery.eq("user_id", authUser.id);
+      let { data: engineerData, error: engineerError } = await engineerQuery.maybeSingle();
+      if (engineerError) throw engineerError;
+      if (!engineerData) {
+        const fallback = await supabase.from("engineers").select("*").ilike("email", user.email).limit(1).maybeSingle();
+        if (fallback.error) throw fallback.error;
+        engineerData = fallback.data;
+      }
+      setCurrentEngineer(engineerData || null);
 
-      const filter = statusFilter ? { status: statusFilter } : {};
-      const data = await base44.entities.Project.filter(filter, "-created_date", 50);
-      // Hide hidden projects from the public market; pinned ones float to top
-      const visible = (data || []).filter((p) => !p.is_hidden);
-      visible.sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0));
+      let query = supabase.from("projects").select("*").order("created_at", { ascending: false }).limit(50);
+      if (statusFilter) query = query.eq("status", statusFilter);
+      const { data, error } = await query;
+      if (error) throw error;
+
+      const visible = (data || [])
+        .map(project => ({
+          ...project,
+          created_date: project.created_at || project.created_date || null,
+          updated_date: project.updated_at || project.updated_date || null,
+        }))
+        .filter(project => !project.is_hidden);
+      visible.sort((a, b) => Number(Boolean(b.is_pinned)) - Number(Boolean(a.is_pinned)));
       setProjects(visible);
     } catch (error) {
-      console.error("Projects: failed to load projects", error);
+      console.error("Projects: failed to load projects from Supabase", error);
+      setLoadError(error?.message || "تعذر تحميل المشاريع من قاعدة البيانات.");
       setProjects([]);
     } finally {
       setIsLoading(false);
@@ -163,6 +199,13 @@ export default function Projects() {
   return (
     <PullToRefreshWrapper onRefresh={loadProjects} className="min-h-screen">
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30">
+      {loadError && (
+        <div role="alert" className="mx-auto max-w-7xl px-4 pt-24">
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            تعذر تحميل المشاريع: {loadError}
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="bg-gradient-to-br from-[#1a1a2e] to-[#1a1a2e]/90 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
