@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
+import { uploadProjectFile } from "@/lib/projectFileStorage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ export default function EnhancedChatWindow({ conversation, currentUserEmail, onC
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [sensitiveWarning, setSensitiveWarning] = useState(null);
+  const [chatError, setChatError] = useState("");
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -32,25 +34,50 @@ export default function EnhancedChatWindow({ conversation, currentUserEmail, onC
   const GoogleMeetButton = callManager.GoogleMeetButton;
 
   useEffect(() => {
+    let alive = true;
     loadMessages();
-    const unsubscribe = base44.entities.Message.subscribe((event) => {
-      if (event.data?.conversation_id === conversation.id) {
-        setMessages(prev => {
-          if (event.type === 'create' && !prev.find(m => m.id === event.id)) {
-            const withoutOptimistic = prev.filter(m => !(m._optimistic && m.sender_email === event.data?.sender_email));
-            const newMessages = [...withoutOptimistic, event.data].sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
-            setTimeout(scrollToBottom, 100);
-            if (event.data.sender_email !== currentUserEmail) playNotificationSound();
-            return newMessages;
-          }
-          if (event.type === 'update') return prev.map(m => m.id === event.id ? event.data : m);
-          if (event.type === 'delete') return prev.filter(m => m.id !== event.id);
-          return prev;
-        });
-      }
-    });
-    return () => unsubscribe();
+    const channel = supabase
+      .channel(`chat-messages-${conversation.id}`)
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "messages",
+        filter: `conversation_id=eq.${conversation.id}`,
+      }, payload => {
+        if (!alive) return;
+        if (payload.eventType === "INSERT") {
+          const message = mapMessage(payload.new);
+          setMessages(prev => {
+            if (prev.some(item => item.id === message.id)) return prev;
+            return [...prev.filter(item => !(item._optimistic && item.sender_user_id === message.sender_user_id)), message]
+              .sort((a, b) => new Date(a.created_date) - new Date(b.created_date));
+          });
+          if (payload.new.sender_user_id !== currentUserIdRef.current) playNotificationSound();
+          setTimeout(scrollToBottom, 100);
+        } else if (payload.eventType === "UPDATE") {
+          const message = mapMessage(payload.new);
+          setMessages(prev => prev.map(item => item.id === message.id ? message : item));
+        } else if (payload.eventType === "DELETE") {
+          setMessages(prev => prev.filter(item => item.id !== payload.old.id));
+        }
+      })
+      .subscribe();
+    return () => {
+      alive = false;
+      supabase.removeChannel(channel);
+    };
   }, [conversation.id, currentUserEmail]);
+
+  const currentUserIdRef = useRef(null);
+  const mapMessage = row => ({
+    ...row,
+    content: row.body || "",
+    sender_email: row.sender_email || "",
+    sender_name: row.sender_name || "مستخدم",
+    sender_role: row.sender_role || "user",
+    created_date: row.created_at,
+    attachments: row.attachments || [],
+  });
 
   const playNotificationSound = () => {
     try {
@@ -68,12 +95,22 @@ export default function EnhancedChatWindow({ conversation, currentUserEmail, onC
   };
 
   const loadMessages = async () => {
+    setChatError("");
     try {
-      const msgs = await base44.entities.Message.filter({ conversation_id: conversation.id }, "created_date");
-      setMessages(msgs);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const user = authData?.user;
+      if (!user?.id) throw new Error("انتهت الجلسة؛ سجّل الدخول مجددًا.");
+      currentUserIdRef.current = user.id;
+      const { data, error } = await supabase
+        .from("messages").select("*").eq("conversation_id", conversation.id)
+        .order("created_at", { ascending: true }).limit(500);
+      if (error) throw error;
+      setMessages((data || []).map(mapMessage));
       scrollToBottom();
     } catch (error) {
-      console.error("Error loading messages:", error);
+      console.error("Error loading messages from Supabase:", error);
+      setChatError(error?.message || "تعذر تحميل الرسائل.");
     } finally {
       setLoading(false);
     }
@@ -82,95 +119,109 @@ export default function EnhancedChatWindow({ conversation, currentUserEmail, onC
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 
   const handleFileUpload = async (files) => {
+    if (!files?.length) return;
+    if (!conversation.project_id) {
+      toast.error("رفع المرفقات متاح حاليًا داخل محادثة مرتبطة بمشروع.");
+      return;
+    }
     setUploading(true);
+    setChatError("");
     try {
       const attachments = [];
       for (const file of files) {
-        const { data } = await base44.functions.invoke('uploadFile', { file });
-        attachments.push({ name: file.name, url: data.file_url, size: file.size, type: file.type });
+        if (file.size > 20 * 1024 * 1024) throw new Error("الحد الأقصى لحجم الملف 20 ميجابايت.");
+        const url = await uploadProjectFile(conversation.project_id, file);
+        attachments.push({ name: file.name, url, size: file.size, type: file.type || "application/octet-stream" });
       }
       await sendMessageWithAttachments(attachments);
-      await base44.entities.Conversation.update(conversation.id, {
-        last_message: `📎 ${attachments.length} ملف(ات)`,
-        last_message_date: new Date().toISOString()
-      });
     } catch (error) {
-      console.error("File upload error:", error);
-      toast.error("خطأ في رفع الملفات");
+      console.error("Chat file upload failed:", error);
+      setChatError(error?.message || "تعذر رفع المرفقات.");
+      toast.error("تعذر رفع المرفقات. تأكدي من صلاحية الوصول للمشروع.");
     } finally {
       setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
   const sendMessageWithAttachments = async (attachments) => {
-    const user = await base44.auth.me();
-    await base44.entities.Message.create({
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError) throw authError;
+    const user = authData?.user;
+    if (!user?.id) throw new Error("سجّل الدخول لإرسال المرفقات.");
+    const content = attachments.length ? `📎 ${attachments.length} ملف(ات) مرفقة` : "";
+    const { error } = await supabase.from("messages").insert({
       conversation_id: conversation.id,
-      project_id: conversation.project_id,
-      sender_email: currentUserEmail,
-      sender_name: user.full_name,
+      project_id: conversation.project_id || null,
+      sender_user_id: user.id,
+      sender_email: user.email || currentUserEmail,
+      sender_name: user.user_metadata?.full_name || user.email || "مستخدم",
       sender_role: getUserRole(),
-      content: attachments.length > 0 ? `📎 ${attachments.length} ملف(ات) مرفقة` : "",
-      attachments
+      body: content,
+      message_type: "attachment",
+      attachments,
     });
-    if (conversation.project_id) {
-      try {
-        await base44.functions.invoke("saveChatAttachmentToProject", {
-          project_id: conversation.project_id,
-          attachments,
-          sender_email: currentUserEmail,
-          sender_name: user.full_name
-        });
-        toast.success("📄 تم حفظ الملفات في سجل المشروع تلقائياً");
-      } catch (e) {
-        console.error("Auto-save attachments to project failed:", e);
-      }
-    }
+    if (error) throw error;
     await loadMessages();
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() && !uploading) return;
-    const optimisticText = newMessage;
+    const raw = newMessage.trim();
+    if (!raw || sending) return;
     const optimisticId = `optimistic-${Date.now()}`;
-    const optimisticMsg = {
+    setMessages(prev => [...prev, {
       id: optimisticId,
       conversation_id: conversation.id,
+      sender_user_id: currentUserIdRef.current,
       sender_email: currentUserEmail,
       sender_name: "أنت",
       sender_role: getUserRole(),
-      content: optimisticText,
+      content: raw,
       created_date: new Date().toISOString(),
       _optimistic: true,
-    };
-    setMessages(prev => [...prev, optimisticMsg]);
+    }]);
     setNewMessage("");
     setTimeout(scrollToBottom, 50);
     setSending(true);
+    setChatError("");
     setSensitiveWarning(null);
     try {
-      const user = await base44.auth.me();
-      const { data: filterResult } = await base44.functions.invoke('filterSensitiveData', { content: optimisticText });
-      if (filterResult.hasSensitiveData) setSensitiveWarning(filterResult.warning);
-      setMessages(prev => prev.map(m => m.id === optimisticId ? { ...m, content: filterResult.filteredContent, has_sensitive_data: filterResult.hasSensitiveData } : m));
-      await base44.entities.Message.create({
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const user = authData?.user;
+      if (!user?.id) throw new Error("انتهت الجلسة؛ سجّل الدخول مجددًا.");
+      // Conservative client-side masking replaces the removed legacy filter. Never persist the raw input.
+      const emailPattern = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
+      const phonePattern = /(?:\+?\d[\d\s().-]{7,}\d)/g;
+      let filtered = raw;
+      const foundSensitive = emailPattern.test(raw) || phonePattern.test(raw);
+      emailPattern.lastIndex = 0;
+      phonePattern.lastIndex = 0;
+      filtered = filtered.replace(emailPattern, "[بريد محجوب]").replace(phonePattern, "[رقم محجوب]");
+      if (foundSensitive) {
+        setSensitiveWarning("حُجبت بعض بيانات الاتصال قبل حفظ الرسالة. راجعي النص قبل الإرسال إذا كان الحجب غير مقصود.");
+      }
+      const { data, error } = await supabase.from("messages").insert({
         conversation_id: conversation.id,
-        project_id: conversation.project_id,
-        sender_email: currentUserEmail,
-        sender_name: user.full_name,
+        project_id: conversation.project_id || null,
+        sender_user_id: user.id,
+        sender_email: user.email || currentUserEmail,
+        sender_name: user.user_metadata?.full_name || user.email || "مستخدم",
         sender_role: getUserRole(),
-        content: filterResult.filteredContent,
-        original_content: filterResult.originalContent,
-        has_sensitive_data: filterResult.hasSensitiveData
-      });
-      await base44.entities.Conversation.update(conversation.id, {
-        last_message: filterResult.filteredContent.substring(0, 100),
-        last_message_date: new Date().toISOString()
-      });
+        body: filtered,
+        original_content: null,
+        has_sensitive_data: foundSensitive,
+        message_type: "text",
+      }).select("*").single();
+      if (error) throw error;
+      const mapped = mapMessage(data);
+      setMessages(prev => prev.map(item => item.id === optimisticId ? mapped : item));
+      setNewMessage("");
     } catch (error) {
-      setMessages(prev => prev.filter(m => m.id !== optimisticId));
-      setNewMessage(optimisticText);
-      toast.error("خطأ في إرسال الرسالة");
+      setMessages(prev => prev.filter(item => item.id !== optimisticId));
+      setNewMessage(raw);
+      setChatError(error?.message || "تعذر إرسال الرسالة.");
+      toast.error("تعذر إرسال الرسالة");
     } finally {
       setSending(false);
     }
@@ -210,6 +261,7 @@ export default function EnhancedChatWindow({ conversation, currentUserEmail, onC
 
   return (
     <Card className="flex flex-col h-[600px]">
+      {chatError && <div role="alert" className="mx-4 mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{chatError}</div>}
       <CardHeader className="border-b">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-3"><Users className="w-5 h-5 text-[#C9A66B]" /><span>{conversation.name || "غرفة المشروع الرئيسية"}</span></div>
