@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import {
   ArrowRight, Star, Clock, DollarSign, User, CheckCircle,
@@ -42,6 +42,7 @@ export default function ProjectProposals() {
   const [showCompare, setShowCompare] = useState(false);
   const [busy, setBusy] = useState(false);
   const [pendingBulk, setPendingBulk] = useState(null);
+  const [loadError, setLoadError] = useState("");
   const bulk = useBulkSelection();
 
   useEffect(() => {
@@ -50,42 +51,72 @@ export default function ProjectProposals() {
 
   const loadData = async (silent = false) => {
     if (!silent) setIsLoading(true);
-    let me = null;
-    try { me = await base44.auth.me(); } catch {}
-    setIsAdmin(me?.role === "admin");
-    let projectData = [];
-    let proposalsData = [];
+    setLoadError("");
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const authUser = authData?.user;
+      if (!authUser?.id) throw new Error("سجّل الدخول لعرض العروض.");
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles").select("user_id,role,email,full_name").eq("user_id", authUser.id).maybeSingle();
+      if (profileError) throw profileError;
+      const admin = profile?.role === "admin" || authUser.app_metadata?.role === "admin";
+      setIsAdmin(admin);
 
-    if (projectId) {
-      [projectData, proposalsData] = await Promise.all([
-        base44.entities.Project.filter({ id: projectId }),
-        base44.entities.Proposal.filter({ project_id: projectId })
-      ]);
-    } else {
-      // Admin overview — load all proposals and related projects
-      proposalsData = await base44.entities.Proposal.list("-created_date", 200);
-      const projectIds = [...new Set(proposalsData.map(p => p.project_id).filter(Boolean))];
-      if (projectIds.length) {
-        const projectsMap = await base44.entities.Project.list("-created_date", 200);
-        projectData = projectsMap.filter(pr => projectIds.includes(pr.id));
+      let projectRows = [];
+      let offerRows = [];
+      if (projectId) {
+        const [projectResult, offerResult] = await Promise.all([
+          supabase.from("projects").select("*").eq("id", projectId).maybeSingle(),
+          supabase.from("project_offers").select("*").eq("project_id", projectId).order("created_at", { ascending: false }).limit(200),
+        ]);
+        if (projectResult.error) throw projectResult.error;
+        if (offerResult.error) throw offerResult.error;
+        if (!projectResult.data) throw new Error("المشروع غير موجود أو لا تملك صلاحية عرضه.");
+        projectRows = [projectResult.data];
+        offerRows = offerResult.data || [];
+      } else {
+        if (!admin) throw new Error("عرض جميع العروض متاح للإدارة فقط.");
+        const offerResult = await supabase.from("project_offers").select("*").order("created_at", { ascending: false }).limit(200);
+        if (offerResult.error) throw offerResult.error;
+        offerRows = offerResult.data || [];
+        const projectIds = [...new Set(offerRows.map(row => row.project_id).filter(Boolean))];
+        if (projectIds.length) {
+          const projectResult = await supabase.from("projects").select("*").in("id", projectIds);
+          if (projectResult.error) throw projectResult.error;
+          projectRows = projectResult.data || [];
+        }
       }
+
+      const { data: engineerRows, error: engineersError } = await supabase
+        .from("engineers").select("*").limit(1000);
+      if (engineersError) throw engineersError;
+      const engineerMap = {};
+      (engineerRows || []).forEach(engineer => {
+        engineerMap[engineer.id] = engineer;
+        if (engineer.user_id) engineerMap[engineer.user_id] = engineer;
+      });
+      const mappedOffers = offerRows.map(row => ({
+        ...row,
+        engineer_id: engineerMap[row.engineer_user_id]?.id || row.engineer_user_id,
+        price: Number(row.amount) || 0,
+        delivery_days: row.duration_days || 0,
+        cover_letter: row.proposal || "",
+        attachments: row.attachments || [],
+        portfolio_items: row.portfolio_items || [],
+      }));
+      setProject(projectRows.find(row => row.id === projectId) || null);
+      setProposals(mappedOffers);
+      setEngineers(engineerMap);
+    } catch (error) {
+      console.error("Project proposals failed to load from Supabase:", error);
+      setLoadError(error?.message || "تعذر تحميل العروض.");
+      setProject(null);
+      setProposals([]);
+      setEngineers({});
+    } finally {
+      setIsLoading(false);
     }
-
-    setProject(projectData[0] || null);
-    setProposals(proposalsData);
-
-    // Load engineer profiles
-    const engineerIds = [...new Set(proposalsData.map(p => p.engineer_id).filter(Boolean))];
-    const engineerMap = {};
-    await Promise.all(
-      engineerIds.map(async (id) => {
-        const data = await base44.entities.Engineer.filter({ id });
-        if (data[0]) engineerMap[id] = data[0];
-      })
-    );
-
-    setEngineers(engineerMap);
-    setIsLoading(false);
   };
 
   const filteredProposals = proposals.filter(p => {
@@ -120,58 +151,35 @@ export default function ProjectProposals() {
 
   const [acceptingId, setAcceptingId] = useState(null);
 
-  const handleAccept = async (proposalId) => {
-    setAcceptingId(proposalId);
-    try {
-      const proposal = proposals.find(p => p.id === proposalId);
-      await base44.entities.Proposal.update(proposalId, { status: "accepted" });
-      // Reject others
-      const others = proposals.filter(p => p.id !== proposalId);
-      await Promise.all(others.map(p => base44.entities.Proposal.update(p.id, { status: "rejected" })));
-      // Move project into execution and assign the winning engineer
-      if (projectId) {
-        await base44.entities.Project.update(projectId, {
-          status: "in_progress",
-          assigned_engineer_id: proposal?.engineer_id,
-        }).catch((e) => console.error("Project status update failed:", e));
-      }
-      // Notify the accepted engineer immediately
-      const eng = proposal ? engineers[proposal.engineer_id] : null;
-      if (eng?.email) {
-        await base44.entities.Notification.create({
-          recipient_email: eng.email,
-          title: "تم اعتماد عرضك! 🎉",
-          message: `تم قبول عرضك للمشروع "${project?.title || ""}" وتمت إضافة المشروع لقائمة مشاريعك تحت التنفيذ. سيتم توليد عقد العمل تلقائياً.`,
-          type: "proposal",
-          related_project_id: projectId,
-          related_entity_id: proposalId,
-          priority: "high",
-          action_url: projectId ? `/ProjectDetails?id=${projectId}` : null,
-        }).catch((e) => console.error("Notification create failed:", e));
-      }
-      // Generate digital work contract automatically
-      await base44.functions.invoke("autoGenerateContract", { proposalId });
-      await loadData();
-    } catch (err) {
-      console.error("Accept failed:", err);
-    } finally {
-      setAcceptingId(null);
-    }
+  const handleAccept = async () => {
+    window.alert("قبول العرض يجب أن يتم عبر إجراء خادمي ذري يتحقق من صاحب المشروع، ويمنع قبول عرضين، وينشئ العقد بشكل آمن. أوقفنا التغيير المباشر مؤقتًا لحماية المشروع والمدفوعات.");
   };
 
   const runBulk = async (action) => {
     setBusy(true);
+    setLoadError("");
     try {
+      if (!isAdmin) throw new Error("إجراء الإدارة غير متاح لهذا الحساب.");
       const ids = bulk.selectedIds;
+      if (!ids.length) return;
       if (action === "delete") {
-        await Promise.all(ids.map(id => base44.entities.Proposal.delete(id)));
+        const { error } = await supabase.from("project_offers").delete().in("id", ids);
+        if (error) throw error;
       } else {
-        await Promise.all(ids.map(id => base44.entities.Proposal.update(id, { status: action })));
+        const allowedStatuses = ["pending", "rejected"];
+        if (!allowedStatuses.includes(action)) throw new Error("هذه الحالة تحتاج إجراء اعتماد آمن.");
+        const { error } = await supabase.from("project_offers").update({ status: action }).in("id", ids);
+        if (error) throw error;
       }
       bulk.clear();
       await loadData(true);
-    } catch (err) { console.error("bulk failed", err); }
-    finally { setBusy(false); setPendingBulk(null); }
+    } catch (error) {
+      console.error("Bulk offer operation failed:", error);
+      setLoadError(error?.message || "تعذر تنفيذ الإجراء الجماعي.");
+    } finally {
+      setBusy(false);
+      setPendingBulk(null);
+    }
   };
 
   if (isLoading) {
@@ -186,7 +194,7 @@ export default function ProjectProposals() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="max-w-md w-full mx-4 text-center p-8">
-          <p className="text-slate-500">لم يتم العثور على المشروع</p>
+          <p className="text-slate-500">{loadError || "لم يتم العثور على المشروع"}</p>
           <Button className="mt-4" onClick={() => navigate(-1)}>رجوع</Button>
         </Card>
       </div>
@@ -196,6 +204,7 @@ export default function ProjectProposals() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/20 py-8" dir="rtl">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        {loadError && <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{loadError}</div>}
 
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
