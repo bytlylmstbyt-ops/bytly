@@ -3,7 +3,6 @@
  */
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
 import { CheckCircle2, Loader2, ArrowLeft, Building2, Shield, Wallet, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -14,44 +13,10 @@ export default function PermitPaymentSuccess() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const permitId = params.get('permit_id');
-    const sessionId = params.get('session_id');
-
-    if (!permitId || !sessionId) {
-      setStatus('error');
-      setError('معلومات الدفع غير مكتملة');
-      return;
-    }
-
-    (async () => {
-      try {
-        setStatus('distributing');
-        const res = await base44.functions.invoke('permitPayment', {
-          action: 'distribute',
-          permit_id: permitId,
-          session_id: sessionId,
-        });
-
-        if (res.data?.error) {
-          // Already distributed = still success
-          if (res.data?.already_distributed) {
-            setData({ already_distributed: true });
-            setStatus('done');
-            return;
-          }
-          setError(res.data.error);
-          setStatus('error');
-          return;
-        }
-
-        setData(res.data);
-        setStatus('done');
-      } catch (e) {
-        setError(e.message);
-        setStatus('error');
-      }
-    })();
+    // A browser return URL is not proof of payment. The legacy distribution
+    // endpoint is intentionally not called during migration.
+    setStatus('error');
+    setError('لا يمكن تأكيد الدفع من رابط العودة وحده. تكامل الدفع الآمن قيد النقل إلى بيتلي، ولم يتم تأكيد أي خصم أو توزيع أموال من هذه الصفحة.');
   }, []);
 
   const fmt = (n) => (n || 0).toLocaleString('ar-SA');

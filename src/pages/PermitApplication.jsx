@@ -4,7 +4,7 @@
  * تصميم مستوحى من المرجع المرفق — مركز، نظيف، RTL، ذهبي داكن
  */
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import { uploadScopedFile } from '@/lib/projectFileStorage';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -88,18 +88,44 @@ export default function PermitApplication() {
     : null;
 
   useEffect(() => {
+    let active = true;
     (async () => {
       setLoading(true);
-      const authenticated = await base44.auth.isAuthenticated();
-      if (authenticated) {
-        const u = await base44.auth.me();
-        setUser(u);
-        const apps = await base44.entities.PermitApplication.filter({ client_email: u.email }, '-created_date');
-        setMyApplications(apps);
-        setShowNew(apps.length === 0);
+      try {
+        if (!supabase) throw new Error('اتصال قاعدة البيانات غير مهيأ.');
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        const authUser = authData?.user;
+        if (!authUser) return;
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('full_name,email,phone')
+          .eq('user_id', authUser.id)
+          .maybeSingle();
+        if (profileError) throw profileError;
+        const currentUser = {
+          id: authUser.id,
+          email: authUser.email,
+          full_name: profile?.full_name || authUser.user_metadata?.full_name || authUser.email,
+          phone: profile?.phone || '',
+        };
+        const { data: apps, error: appsError } = await supabase
+          .from('permit_applications')
+          .select('*')
+          .eq('client_email', authUser.email)
+          .order('created_at', { ascending: false });
+        if (appsError) throw appsError;
+        if (!active) return;
+        setUser(currentUser);
+        setMyApplications(apps || []);
+        setShowNew((apps || []).length === 0);
+      } catch (error) {
+        if (active) alert(error?.message || 'تعذر تحميل طلبات التصاريح من قاعدة البيانات.');
+      } finally {
+        if (active) setLoading(false);
       }
-      setLoading(false);
     })();
+    return () => { active = false; };
   }, []);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -109,58 +135,70 @@ export default function PermitApplication() {
     setStep(0);
   };
 
-  const handlePay = async (app) => {
-    setPayLoading(true);
-    try {
-      const res = await base44.functions.invoke('permitPayment', {
-        action: 'create_checkout',
-        permit_id: app.id,
-      });
-      if (res.data?.checkout_url) {
-        window.location.href = res.data.checkout_url;
-      } else {
-        alert(res.data?.error || 'حدث خطأ في إنشاء جلسة الدفع');
-      }
-    } catch {
-      alert('حدث خطأ في إنشاء جلسة الدفع');
-    }
+  const handlePay = async () => {
+    // Never call the retired Base44 checkout or accept its Stripe test sessions.
     setPayLoading(false);
+    alert('الدفع الإلكتروني لطلبات رخص البناء غير متاح مؤقتًا أثناء نقل التكامل. لم يتم بدء أي عملية دفع أو خصم أي مبلغ.');
   };
 
   const uploadFile = async (e, key) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
     setUploadingFiles(p => ({ ...p, [key]: true }));
-    const file_url = await uploadScopedFile("permits", file);
-    if (key === 'drawings_files') {
-      setForm(f => ({ ...f, drawings_files: [...f.drawings_files, file_url] }));
-    } else {
-      set(key, file_url);
+    try {
+      const fileUrl = await uploadScopedFile('permits', file);
+      if (key === 'drawings_files') {
+        setForm(f => ({ ...f, drawings_files: [...f.drawings_files, fileUrl] }));
+      } else {
+        set(key, fileUrl);
+      }
+    } catch (error) {
+      alert(error?.message || 'تعذر رفع الملف إلى تخزين بيتلي.');
+    } finally {
+      setUploadingFiles(p => ({ ...p, [key]: false }));
+      e.target.value = '';
     }
-    setUploadingFiles(p => ({ ...p, [key]: false }));
   };
 
   const handleSubmit = async () => {
+    if (!supabase || !user?.id || !user?.email) {
+      alert('انتهت جلسة الدخول أو تعذر الاتصال بقاعدة البيانات. سجّل الدخول مجددًا ثم حاول.');
+      return;
+    }
     setSubmitting(true);
-    const payload = {
-      ...form,
-      client_name: user?.full_name,
-      client_email: user?.email,
-      land_area: Number(form.land_area),
-      building_area: Number(form.building_area) || Number(form.land_area),
-      floors_count: Number(form.floors_count),
-      balady_fee: fees?.baladyFee,
-      engineer_fee: fees?.engineerFee,
-      bytly_commission: fees?.bytlyCommission,
-      total_amount: fees?.totalAmount,
-      status: 'submitted',
-      payment_status: 'pending',
-    };
-    const newApp = await base44.entities.PermitApplication.create(payload);
-    setMyApplications(prev => [newApp, ...prev]);
-    setSelectedApp(newApp);
-    setShowNew(false);
-    setSubmitting(false);
+    try {
+      const payload = {
+        ...form,
+        created_by: user.id,
+        client_name: user.full_name,
+        client_email: user.email,
+        client_phone: form.client_phone || user.phone || '',
+        land_area: Number(form.land_area),
+        building_area: Number(form.building_area) || Number(form.land_area),
+        floors_count: Number(form.floors_count),
+        balady_fee: fees?.baladyFee,
+        engineer_fee: fees?.engineerFee,
+        bytly_commission: fees?.bytlyCommission,
+        total_amount: fees?.totalAmount,
+        status: 'submitted',
+        payment_status: 'pending',
+        stripe_session_id: null,
+        stripe_payment_intent: null,
+      };
+      const { data: newApp, error } = await supabase
+        .from('permit_applications')
+        .insert(payload)
+        .select('*')
+        .single();
+      if (error) throw error;
+      setMyApplications(prev => [newApp, ...prev]);
+      setSelectedApp(newApp);
+      setShowNew(false);
+    } catch (error) {
+      alert(error?.message || 'تعذر حفظ طلب التصريح في قاعدة البيانات.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const canNext = () => {
@@ -242,7 +280,7 @@ export default function PermitApplication() {
                     <Badge className={`text-[10px] ${sc.color}`}>{sc.label}</Badge>
                   </div>
                   <p className="text-xs text-[#6B7280]">{app.city} — {app.land_area} م²</p>
-                  <p className="text-xs text-[#9CA3AF] mt-1">{new Date(app.created_date).toLocaleDateString('ar-SA')}</p>
+                  <p className="text-xs text-[#9CA3AF] mt-1">{new Date(app.created_at || app.created_date).toLocaleDateString('ar-SA')}</p>
                 </button>
               );
             })}
@@ -274,10 +312,20 @@ export default function PermitApplication() {
                   </h3>
                   <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10" onClick={async () => {
                     setLoading(true);
-                    const updated = await base44.entities.PermitApplication.filter({ client_email: user.email }, '-created_date');
-                    setMyApplications(updated);
-                    setSelectedApp(updated.find(a => a.id === selectedApp.id) || selectedApp);
-                    setLoading(false);
+                    try {
+                      const { data: updated, error } = await supabase
+                        .from('permit_applications')
+                        .select('*')
+                        .eq('client_email', user.email)
+                        .order('created_at', { ascending: false });
+                      if (error) throw error;
+                      setMyApplications(updated || []);
+                      setSelectedApp((updated || []).find(a => a.id === selectedApp.id) || selectedApp);
+                    } catch (error) {
+                      alert(error?.message || 'تعذر تحديث طلبات التصاريح.');
+                    } finally {
+                      setLoading(false);
+                    }
                   }}>
                     <RefreshCw className="w-4 h-4" />
                   </Button>
