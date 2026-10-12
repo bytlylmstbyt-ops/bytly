@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion } from "framer-motion";
@@ -82,9 +81,16 @@ export default function CreateProject() {
   };
 
   const loadPreselectedEngineer = async () => {
-    const engineerData = await base44.entities.Engineer.filter({ id: preselectedEngineerId });
-    if (engineerData && engineerData.length > 0) {
-      setPreselectedEngineer(engineerData[0]);
+    try {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(preselectedEngineerId || "");
+      const query = supabase.from("engineers").select("*");
+      const { data, error } = isUuid
+        ? await query.eq("id", preselectedEngineerId).maybeSingle()
+        : await query.eq("base44_id", preselectedEngineerId).maybeSingle();
+      if (error) throw error;
+      if (data) setPreselectedEngineer(data);
+    } catch (error) {
+      console.error("Failed to load selected engineer from Supabase:", error);
     }
   };
 
@@ -195,23 +201,16 @@ export default function CreateProject() {
     // Update client's total projects
     await supabase.from("clients").update({total_projects:(client.total_projects||0)+1}).eq("id",client.id);
 
-    // If direct hire, notify only the selected engineer
-    if (preselectedEngineerId && preselectedEngineer) {
-      await base44.entities.Notification.create({
-        recipient_email: preselectedEngineer.email,
-        title: "طلب خدمة مباشرة جديد",
-        message: `تم اختيارك مباشرة لمشروع "${formData.title}" من قبل ${client.full_name}. الميزانية: ${formData.budget_min?.toLocaleString()} - ${formData.budget_max?.toLocaleString()} ريال`,
-        type: "project_update",
-        related_project_id: newProject.id,
-        priority: "high"
+    // Send project notifications through the authenticated Supabase Edge Function.
+    try {
+      const { data: notificationResult, error: notificationError } = await supabase.functions.invoke("notify-project-engineers", {
+        body: { projectId: newProject.id },
       });
-    } else {
-      // Notify approved engineers whose specialization matches the project category
-      try {
-        await base44.functions.invoke('notifyMatchingEngineers', { projectId: newProject.id });
-      } catch (e) {
-        console.error('notifyMatchingEngineers failed:', e);
-      }
+      if (notificationError) throw notificationError;
+      if (notificationResult?.ok === false) throw new Error(notificationResult.error || "تعذر إرسال تنبيهات المشروع");
+    } catch (notificationError) {
+      // Notification delivery must not undo a successfully created project.
+      console.error("Project was created, but engineer notifications could not be sent:", notificationError);
     }
 
     setIsLoading(false);
