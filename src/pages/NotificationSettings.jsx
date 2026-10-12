@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { Bell, Save, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ export default function NotificationSettings() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [settings, setSettings] = useState({
     notification_preferences: {
       project_updates: true,
@@ -36,56 +37,76 @@ export default function NotificationSettings() {
 
   const loadSettings = async () => {
     setIsLoading(true);
-    const currentUser = await base44.auth.me();
-    setUser(currentUser);
-
-    const [userSettings] = await base44.entities.NotificationSettings.filter({
-      user_email: currentUser.email
-    });
-
-    if (userSettings) {
-      setSettings({
-        notification_preferences: userSettings.notification_preferences || settings.notification_preferences,
-        email_notifications: userSettings.email_notifications ?? true,
-        reminder_timing: userSettings.reminder_timing || settings.reminder_timing
-      });
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const currentUser = authData?.user;
+      if (!currentUser?.id) throw new Error("يجب تسجيل الدخول لعرض إعدادات التنبيهات.");
+      setUser({ id: currentUser.id, email: currentUser.email });
+      const { data: row, error } = await supabase
+        .from("notification_settings")
+        .select("user_id,email_notifications,in_app_notifications,notification_preferences")
+        .eq("user_id", currentUser.id)
+        .maybeSingle();
+      if (error) throw error;
+      if (row) {
+        const prefs = row.notification_preferences || {};
+        setSettings({
+          notification_preferences: {
+            project_updates: prefs.project_updates ?? true,
+            contract_updates: prefs.contract_updates ?? true,
+            payment_reminders: prefs.payment_reminders ?? true,
+            milestone_reminders: prefs.milestone_reminders ?? true,
+            new_proposals: prefs.new_proposals ?? true,
+            deadline_reminders: prefs.deadline_reminders ?? true,
+            system_notifications: prefs.system_notifications ?? true,
+          },
+          email_notifications: row.email_notifications ?? true,
+          reminder_timing: prefs.reminder_timing || {
+            before_deadline_days: 3,
+            payment_reminder_days: 5,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error loading notification settings:", error);
+      setErrorMessage(error?.message || "تعذر تحميل إعدادات التنبيهات.");
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   const handleSave = async () => {
+    if (!user?.id) {
+      setErrorMessage("انتهت الجلسة. سجّلي الدخول مجددًا.");
+      return;
+    }
     setIsSaving(true);
     setSaved(false);
-
+    setErrorMessage("");
     try {
-      const [existingSettings] = await base44.entities.NotificationSettings.filter({
-        user_email: user.email
-      });
-
-      if (existingSettings) {
-        await base44.entities.NotificationSettings.update(existingSettings.id, {
-          notification_preferences: settings.notification_preferences,
-          email_notifications: settings.email_notifications,
-          reminder_timing: settings.reminder_timing
-        });
-      } else {
-        await base44.entities.NotificationSettings.create({
-          user_email: user.email,
-          notification_preferences: settings.notification_preferences,
-          email_notifications: settings.email_notifications,
-          reminder_timing: settings.reminder_timing
-        });
-      }
-
+      const payload = {
+        user_id: user.id,
+        email_notifications: settings.email_notifications,
+        in_app_notifications: true,
+        notification_preferences: {
+          ...settings.notification_preferences,
+          reminder_timing: settings.reminder_timing,
+        },
+        updated_at: new Date().toISOString(),
+      };
+      const { error } = await supabase
+        .from("notification_settings")
+        .upsert(payload, { onConflict: "user_id" });
+      if (error) throw error;
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (error) {
-      console.error("Error saving settings:", error);
-      alert("حدث خطأ أثناء حفظ الإعدادات");
+      console.error("Error saving notification settings:", error);
+      setErrorMessage(error?.message || "حدث خطأ أثناء حفظ الإعدادات.");
+    } finally {
+      setIsSaving(false);
     }
-
-    setIsSaving(false);
   };
 
   const updatePreference = (key, value) => {
@@ -131,6 +152,8 @@ export default function NotificationSettings() {
           </h1>
           <p className="text-slate-600 mt-2">تخصيص تفضيلات التنبيهات والإشعارات</p>
         </motion.div>
+
+        {errorMessage && <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{errorMessage}</div>}
 
         <div className="space-y-6">
           {/* Email Notifications Toggle */}
