@@ -1,5 +1,6 @@
 -- Allow each authenticated contractor or supplier to read projects assigned to their own provider record.
--- This is additive and does not grant access to unrelated private projects.
+-- Additive and scoped to the provider's own UUID; unrelated private projects remain protected.
+drop policy if exists "projects_select_assigned_contractor" on public.projects;
 create policy "projects_select_assigned_contractor"
 on public.projects
 for select
@@ -13,6 +14,7 @@ using (
   )
 );
 
+drop policy if exists "projects_select_assigned_supplier" on public.projects;
 create policy "projects_select_assigned_supplier"
 on public.projects
 for select
