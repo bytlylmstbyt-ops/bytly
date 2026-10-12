@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
   Building2, Users, Briefcase, CheckCircle, DollarSign, Plus, Settings, Star, Award, Eye
@@ -25,24 +25,56 @@ export default function FirmDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const user = await base44.auth.me();
-      const [firmData] = await base44.entities.EngineeringFirm.filter({ email: user.email });
-      
-      if (firmData) {
-        setFirm(firmData);
-        
-        const [members, projectsData, engineersData] = await Promise.all([
-          base44.entities.FirmTeamMember.filter({ firm_id: firmData.id }),
-          base44.entities.Project.filter({ client_id: firmData.id }),
-          base44.entities.Engineer.filter({ status: "approved" }, "-created_date", 20)
-        ]);
+      if (!supabase) throw new Error("Supabase غير مهيأ");
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const user = authData?.user;
+      if (!user) throw new Error("يجب تسجيل الدخول أولاً");
 
-        setTeamMembers(members);
-        setProjects(projectsData);
-        setEngineers(engineersData);
+      const { data: firmData, error: firmError } = await supabase
+        .from("engineering_firms")
+        .select("*")
+        .eq("owner_user_id", user.id)
+        .maybeSingle();
+      if (firmError) throw firmError;
+
+      if (!firmData) {
+        setFirm(null);
+        setTeamMembers([]);
+        setProjects([]);
+        setEngineers([]);
+        return;
       }
+
+      setFirm(firmData);
+      const [membersResult, projectsResult, engineersResult] = await Promise.all([
+        supabase
+          .from("consultants")
+          .select("*")
+          .eq("engineering_firm_id", firmData.id)
+          .order("created_at", { ascending: false })
+          .limit(100),
+        supabase
+          .from("projects")
+          .select("*")
+          .or(`client_id.eq.${firmData.id},company_id.eq.${firmData.id}`)
+          .order("created_at", { ascending: false })
+          .limit(100),
+        supabase
+          .from("engineers")
+          .select("*")
+          .eq("status", "approved")
+          .order("created_at", { ascending: false })
+          .limit(20)
+      ]);
+      if (membersResult.error) throw membersResult.error;
+      if (projectsResult.error) throw projectsResult.error;
+      if (engineersResult.error) throw engineersResult.error;
+      setTeamMembers(membersResult.data || []);
+      setProjects(projectsResult.data || []);
+      setEngineers(engineersResult.data || []);
     } catch (error) {
-      console.error("Error loading dashboard:", error);
+      console.error("Error loading engineering firm dashboard from Supabase:", error);
     } finally {
       setLoading(false);
     }
@@ -73,7 +105,7 @@ export default function FirmDashboard() {
 
   const activeProjects = projects.filter(p => p.status === "in_progress");
   const completedProjects = projects.filter(p => p.status === "completed");
-  const hasSubscription = firm.subscription_type !== "none";
+  const hasSubscription = Boolean(firm.subscription_type && firm.subscription_type !== "none");
 
   const statCards = [
     {

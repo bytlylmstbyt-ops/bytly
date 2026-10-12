@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,73 +32,63 @@ export default function ConsultantDashboard() {
 
   const loadDashboard = async () => {
     try {
-      const user = await base44.auth.me();
-      
-      // Load consultant profile
-      // Allow admin access
-      if (user.role === "admin") {
-        // Admin can view - use first available consultant for demo
-        const allConsultants = await base44.entities.Consultant.filter({ status: "approved" });
-        if (allConsultants.length > 0) {
-          setConsultant(allConsultants[0]);
-        } else {
-          // Create dummy consultant for admin view
-          setConsultant({
-            id: "admin-view",
-            full_name: "عرض المدير",
-            email: user.email,
-            consultant_type: "architectural",
-            wallet_balance: 0,
-            total_reviews: 0
-          });
-        }
-      } else {
-        const consultants = await base44.entities.Consultant.filter({ 
-          email: user.email 
-        });
-        
-        if (consultants.length === 0) {
-          alert("غير مصرح لك بالوصول لهذه الصفحة");
-          return;
-        }
-        
-        const consultantData = consultants[0];
-        setConsultant(consultantData);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const user = authData?.user;
+      if (!user) throw new Error("يجب تسجيل الدخول أولاً");
+
+      const { data: consultantData, error: consultantError } = await supabase
+        .from("consultants")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (consultantError) throw consultantError;
+      if (!consultantData) {
+        setConsultant(null);
+        return;
       }
-      
-      // Load pending withdrawal requests for review
-      const currentConsultant = consultant || (user.role === "admin" ? { id: "admin-view" } : null);
-      const allRequests = await base44.entities.WithdrawalRequest.list();
+      setConsultant(consultantData);
+
+      const [requestsResult, projectsResult] = await Promise.all([
+        supabase
+          .from("withdrawal_requests")
+          .select("*")
+          .or(`consultant_profile_id.eq.${consultantData.id},consultant_user_id.eq.${user.id},provider_user_id.eq.${user.id}`)
+          .order("created_at", { ascending: false })
+          .limit(200),
+        supabase
+          .from("projects")
+          .select("*")
+          .eq("technical_consultant_id", consultantData.id)
+          .in("status", ["pending_approval", "in_progress"])
+          .order("created_at", { ascending: false })
+          .limit(100)
+      ]);
+      if (requestsResult.error) throw requestsResult.error;
+      if (projectsResult.error) throw projectsResult.error;
+
+      const allRequests = requestsResult.data || [];
       const pending = allRequests.filter(r => !r.consultant_approval && r.status === "pending");
-      const completed = allRequests.filter(r => currentConsultant && r.consultant_id === currentConsultant.id);
-      
+      const completed = allRequests.filter(r =>
+        r.consultant_profile_id === consultantData.id ||
+        r.consultant_user_id === user.id ||
+        r.provider_user_id === user.id
+      );
       setPendingRequests(pending);
       setCompletedRequests(completed);
-      
-      // Load projects for review
-      const allProjects = await base44.entities.Project.list();
-      const reviewProjects = allProjects.filter(p => 
-        p.status === "pending_approval" || p.status === "in_progress"
+      setProjects(projectsResult.data || []);
+
+      const totalEarnings = completed.reduce((sum, req) =>
+        req.consultant_approval ? sum + (Number(req.amount || 0) * 0.05) : sum, 0
       );
-      setProjects(reviewProjects);
-      
-      // Calculate stats
-      const totalEarnings = completed.reduce((sum, req) => {
-        if (req.consultant_approval) {
-          return sum + (req.amount * 0.05);
-        }
-        return sum;
-      }, 0);
-      
       setStats({
         pending_reviews: pending.length,
         completed_reviews: completed.length,
         total_earnings: totalEarnings,
         avg_response_time: 0
       });
-      
     } catch (error) {
-      console.error("Error loading dashboard:", error);
+      console.error("Error loading consultant dashboard from Supabase:", error);
     } finally {
       setLoading(false);
     }

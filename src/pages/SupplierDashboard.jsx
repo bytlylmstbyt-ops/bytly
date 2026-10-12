@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import {
   Package, ShoppingCart, CheckCircle, DollarSign,
@@ -24,22 +24,47 @@ export default function SupplierDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const user = await base44.auth.me();
-      const [supplierData] = await base44.entities.Supplier.filter({ email: user.email });
+      if (!supabase) throw new Error("Supabase غير مهيأ");
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const user = authData?.user;
+      if (!user) throw new Error("يجب تسجيل الدخول أولاً");
+
+      const { data: supplierData, error: providerError } = await supabase
+        .from("suppliers")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (providerError) throw providerError;
 
       if (supplierData) {
         setSupplier(supplierData);
-
-        const [myProjects, openProjects] = await Promise.all([
-          base44.entities.Project.filter({ assigned_engineer_id: supplierData.id }),
-          base44.entities.Project.filter({ status: "open" }, "-created_date", 20)
+        const [myProjectsResult, openProjectsResult] = await Promise.all([
+          supabase
+            .from("projects")
+            .select("*")
+            .eq("assigned_supplier_id", supplierData.id)
+            .order("created_at", { ascending: false })
+            .limit(100),
+          supabase
+            .from("projects")
+            .select("*")
+            .eq("status", "open")
+            .eq("is_hidden", false)
+            .order("created_at", { ascending: false })
+            .limit(20)
         ]);
-
-        setProjects(myProjects);
-        setAvailableProjects(openProjects);
+        if (myProjectsResult.error) throw myProjectsResult.error;
+        if (openProjectsResult.error) throw openProjectsResult.error;
+        setProjects(myProjectsResult.data || []);
+        setAvailableProjects(openProjectsResult.data || []);
+      } else {
+        setSupplier(null);
+        setProjects([]);
+        setAvailableProjects([]);
       }
     } catch (error) {
-      console.error("Error loading dashboard:", error);
+      console.error("Error loading dashboard from Supabase:", error);
     } finally {
       setLoading(false);
     }

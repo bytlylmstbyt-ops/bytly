@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import ReviewModal from "@/components/reviews/ReviewModal";
 import AppointmentModal from "@/components/appointments/AppointmentModal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,51 +30,91 @@ export default function FirmProfile() {
 
   const loadFirmData = async () => {
     try {
-      const user = await base44.auth.me();
-      const clientData = await base44.entities.Client.filter({ email: user.email });
-      if (clientData.length > 0) setCurrentClient(clientData[0]);
+      if (!firmId) throw new Error("معرّف الشركة غير موجود");
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const user = authData?.user || null;
 
-      const [[firmData], members, reviews] = await Promise.all([
-        base44.entities.EngineeringFirm.filter({ id: firmId }),
-        base44.entities.FirmTeamMember.filter({ firm_id: firmId }),
-        base44.entities.FirmReview.filter({ firm_id: firmId }, "-created_date")
-      ]);
-      setFirm(firmData);
-      setTeamMembers(members);
-      setFirmReviews(reviews);
-
-      if (clientData.length > 0) {
-        const myReview = reviews.find(r => r.client_id === clientData[0].id);
-        if (myReview) setExistingReview(myReview);
+      const { data: firmData, error: firmError } = await supabase
+        .from("engineering_firms")
+        .select("*")
+        .eq("id", firmId)
+        .maybeSingle();
+      if (firmError) throw firmError;
+      if (!firmData) {
+        setFirm(null);
+        setTeamMembers([]);
+        setFirmReviews([]);
+        return;
       }
+
+      const [membersResult, reviewsResult, clientResult] = await Promise.all([
+        supabase
+          .from("consultants")
+          .select("*")
+          .eq("engineering_firm_id", firmData.id)
+          .order("created_at", { ascending: false })
+          .limit(100),
+        supabase
+          .from("firm_reviews")
+          .select("*")
+          .eq("firm_id", firmData.id)
+          .order("created_at", { ascending: false })
+          .limit(200),
+        user
+          ? supabase.from("clients").select("*").eq("user_id", user.id).maybeSingle()
+          : Promise.resolve({ data: null, error: null })
+      ]);
+      if (membersResult.error) throw membersResult.error;
+      if (reviewsResult.error) throw reviewsResult.error;
+      if (clientResult.error) throw clientResult.error;
+
+      const reviews = reviewsResult.data || [];
+      const avg = reviews.length
+        ? reviews.reduce((sum, item) => sum + Number(item.rating || 0), 0) / reviews.length
+        : 0;
+      setFirm({ ...firmData, client_satisfaction_rating: avg, total_reviews: reviews.length });
+      setTeamMembers(membersResult.data || []);
+      setFirmReviews(reviews);
+      setCurrentClient(clientResult.data || null);
+      setExistingReview(user ? reviews.find(item => item.client_user_id === user.id) || null : null);
     } catch (error) {
-      console.error("Error loading firm:", error);
+      console.error("Error loading firm from Supabase:", error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleSubmitReview = async (formData) => {
-    const avgRating = ((formData.quality_rating + formData.communication_rating + formData.service_rating) / 3);
-    const review = await base44.entities.FirmReview.create({
-      firm_id: firmId,
-      client_id: currentClient.id,
-      client_name: currentClient.full_name,
-      rating: formData.rating,
-      quality_rating: formData.quality_rating,
-      service_rating: formData.service_rating,
-      communication_rating: formData.communication_rating,
-      comment: formData.comment
-    });
-    // Update firm satisfaction rating
-    const allReviews = [...firmReviews, review];
-    const avg = allReviews.reduce((s, r) => s + r.rating, 0) / allReviews.length;
-    await base44.entities.EngineeringFirm.update(firmId, {
-      client_satisfaction_rating: parseFloat(avg.toFixed(2)),
-      total_reviews: allReviews.length
-    });
-    setExistingReview(review);
-    loadFirmData();
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const user = authData?.user;
+      if (!user) throw new Error("يجب تسجيل الدخول لتقييم الشركة");
+      if (!currentClient) throw new Error("يجب إكمال ملف العميل أولاً");
+
+      const { data: review, error } = await supabase
+        .from("firm_reviews")
+        .insert({
+          firm_id: firmId,
+          client_user_id: user.id,
+          client_profile_id: currentClient.id,
+          client_name: currentClient.full_name || user.email,
+          rating: Number(formData.rating),
+          quality_rating: Number(formData.quality_rating),
+          service_rating: Number(formData.service_rating),
+          communication_rating: Number(formData.communication_rating),
+          comment: formData.comment || null
+        })
+        .select("*")
+        .single();
+      if (error) throw error;
+      setExistingReview(review);
+      await loadFirmData();
+    } catch (error) {
+      console.error("Error submitting firm review:", error);
+      throw error;
+    }
   };
 
   const specializationLabels = {
@@ -339,7 +379,7 @@ export default function FirmProfile() {
                                 ))}
                               </div>
                             </div>
-                            <span className="text-xs text-slate-400">{new Date(review.created_date).toLocaleDateString("ar")}</span>
+                            <span className="text-xs text-slate-400">{new Date(review.created_at).toLocaleDateString("ar")}</span>
                           </div>
                           {review.comment && <p className="text-sm text-slate-600">{review.comment}</p>}
                           <div className="flex gap-3 mt-1 text-xs text-slate-400">
