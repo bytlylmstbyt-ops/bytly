@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,11 +19,20 @@ export default function FirmSettings() {
 
   const loadFirm = async () => {
     try {
-      const user = await base44.auth.me();
-      const [firmData] = await base44.entities.EngineeringFirm.filter({ email: user.email });
-      setFirm(firmData);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const user = authData?.user;
+      if (!user) throw new Error("يجب تسجيل الدخول أولاً");
+      const { data, error } = await supabase
+        .from("engineering_firms")
+        .select("*")
+        .eq("owner_user_id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+      setFirm(data || null);
     } catch (error) {
-      console.error("Error loading firm:", error);
+      console.error("Error loading firm from Supabase:", error);
+      toast.error("تعذر تحميل إعدادات الشركة");
     } finally {
       setLoading(false);
     }
@@ -36,9 +45,8 @@ export default function FirmSettings() {
     setUploading({ ...uploading, stamp: true });
     try {
       const file_url = await uploadScopedFile("firm-settings/stamps", file);
-      await base44.entities.EngineeringFirm.update(firm.id, {
-        official_stamp: file_url
-      });
+      const { error } = await supabase.from("engineering_firms").update({ official_stamp: file_url }).eq("id", firm.id).eq("owner_user_id", (await supabase.auth.getUser()).data.user.id);
+      if (error) throw error;
       toast.success("تم رفع الختم الرسمي بنجاح");
       await loadFirm();
     } catch (error) {
@@ -55,9 +63,8 @@ export default function FirmSettings() {
     setUploading({ ...uploading, signature: true });
     try {
       const file_url = await uploadScopedFile("firm-settings/signatures", file);
-      await base44.entities.EngineeringFirm.update(firm.id, {
-        authorized_signature: file_url
-      });
+      const { error } = await supabase.from("engineering_firms").update({ authorized_signature: file_url }).eq("id", firm.id).eq("owner_user_id", (await supabase.auth.getUser()).data.user.id);
+      if (error) throw error;
       toast.success("تم رفع التوقيع الرسمي بنجاح");
       await loadFirm();
     } catch (error) {
