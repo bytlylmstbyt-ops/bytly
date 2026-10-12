@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ export default function Analytics() {
   const [engineers, setEngineers] = useState([]);
   const [clients, setClients] = useState([]);
   const [user, setUser] = useState(null);
+  const [loadError, setLoadError] = useState("");
   
   // Filters
   const [selectedEngineer, setSelectedEngineer] = useState("all");
@@ -34,21 +35,34 @@ export default function Analytics() {
   }, []);
 
   const loadData = async () => {
+    setLoadError("");
     try {
-      const userData = await base44.auth.me();
-      setUser(userData);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      setUser(authData?.user || null);
 
-      const [projectsData, engineersData, clientsData] = await Promise.all([
-        base44.entities.Project.list(),
-        base44.entities.Engineer.list(),
-        base44.entities.Client.list()
+      const [projectsResult, engineersResult, clientsResult] = await Promise.all([
+        supabase.from("projects").select("*").order("created_at", { ascending: false }).limit(1000),
+        supabase.from("engineers").select("*").order("created_at", { ascending: false }).limit(1000),
+        supabase.from("clients").select("*").order("created_at", { ascending: false }).limit(1000),
       ]);
+      const failed = [projectsResult, engineersResult, clientsResult].find(result => result.error);
+      if (failed?.error) throw failed.error;
 
-      setProjects(projectsData);
-      setEngineers(engineersData);
-      setClients(clientsData);
+      // Preserve the legacy display field names while using the migrated Supabase schema.
+      setProjects((projectsResult.data || []).map(project => ({
+        ...project,
+        created_date: project.created_at || project.created_date || null,
+        updated_date: project.updated_at || project.updated_date || null,
+      })));
+      setEngineers(engineersResult.data || []);
+      setClients(clientsResult.data || []);
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error("Error loading analytics data from Supabase:", error);
+      setLoadError(error?.message || "تعذر تحميل بيانات التحليلات من قاعدة البيانات.");
+      setProjects([]);
+      setEngineers([]);
+      setClients([]);
     } finally {
       setLoading(false);
     }
@@ -118,6 +132,12 @@ export default function Analytics() {
           </h1>
           <p className="text-slate-600">تحليل شامل لأداء المشاريع والمهندسين</p>
         </div>
+
+        {loadError && (
+          <div role="alert" className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            تعذر تحميل بيانات التحليلات: {loadError}
+          </div>
+        )}
 
         {/* Filters */}
         <Card className="mb-6">
