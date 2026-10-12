@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,11 +28,14 @@ export default function TaskDetailModal({ task, project, engineers, isOpen, onCl
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
 
-    const currentUser = await base44.auth.me();
+    const { data: authData, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    const currentUser = authData?.user;
+    if (!currentUser?.id) throw new Error("سجّل الدخول لإضافة تعليق.");
     const updatedComments = [
       ...(formData.comments || []),
       {
-        author_email: currentUser.email,
+        author_email: currentUser.email || "",
         text: newComment,
         created_at: new Date().toISOString()
       }

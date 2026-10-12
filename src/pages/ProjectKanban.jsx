@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { useSearchParams } from "react-router-dom";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { motion } from "framer-motion";
@@ -32,23 +32,40 @@ export default function ProjectKanban() {
   const [selectedTask, setSelectedTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     loadData();
   }, [projectId]);
 
   const loadData = async () => {
+    setLoading(true);
+    setLoadError("");
     try {
-      const [projectData] = await base44.entities.Project.filter({ id: projectId });
-      setProject(projectData);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData?.user?.id) throw new Error("سجّل الدخول لعرض مهام المشروع.");
 
-      const allTasks = await base44.entities.ProjectTask.filter({ project_id: projectId });
-      setTasks(allTasks);
-
-      const engineersData = await base44.entities.Engineer.list();
-      setEngineers(engineersData);
+      const [projectResult, taskResult, engineerResult] = await Promise.all([
+        supabase.from("projects").select("*").eq("id", projectId).maybeSingle(),
+        supabase.from("project_tasks").select("*").eq("project_id", projectId).order("created_at", { ascending: true }),
+        supabase.from("engineers").select("id,user_id,full_name,email,status").eq("status", "approved"),
+      ]);
+      for (const result of [projectResult, taskResult, engineerResult]) if (result.error) throw result.error;
+      if (!projectResult.data) throw new Error("المشروع غير موجود أو لا تملك صلاحية عرضه.");
+      setProject(projectResult.data);
+      setTasks((taskResult.data || []).map(task => ({
+        ...task,
+        progress_percentage: task.progress ?? 0,
+        comments: task.comments || [],
+      })));
+      setEngineers(engineerResult.data || []);
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error("Error loading project Kanban from Supabase:", error);
+      setLoadError(error?.message || "تعذر تحميل لوحة المهام.");
+      setProject(null);
+      setTasks([]);
+      setEngineers([]);
     } finally {
       setLoading(false);
     }
@@ -73,9 +90,8 @@ export default function ProjectKanban() {
     ));
 
     try {
-      await base44.entities.ProjectTask.update(task.id, {
-        status: newStatus
-      });
+      const { error } = await supabase.from("project_tasks").update({ status: newStatus, completed_at: newStatus === "done" ? new Date().toISOString() : null }).eq("id", task.id).eq("project_id", projectId);
+      if (error) throw error;
     } catch (error) {
       console.error("Error updating task:", error);
       setTasks(prevTasks); // rollback to previous state
@@ -83,11 +99,31 @@ export default function ProjectKanban() {
   };
 
   const handleTaskSave = async (updatedTask) => {
+    setLoadError("");
     try {
-      await base44.entities.ProjectTask.update(updatedTask.id, updatedTask);
-      setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
+      if (!updatedTask.id) {
+        await handleCreateTask(updatedTask);
+        return;
+      }
+      const patch = {
+        title: String(updatedTask.title || "").trim(),
+        description: updatedTask.description || "",
+        status: updatedTask.status || "todo",
+        priority: updatedTask.priority || "medium",
+        assigned_to: updatedTask.assigned_to || null,
+        due_date: updatedTask.due_date || null,
+        estimated_hours: updatedTask.estimated_hours === "" ? null : Number(updatedTask.estimated_hours) || null,
+        progress: Math.max(0, Math.min(100, Number(updatedTask.progress_percentage) || 0)),
+        comments: Array.isArray(updatedTask.comments) ? updatedTask.comments : [],
+        completed_at: updatedTask.status === "done" ? new Date().toISOString() : null,
+      };
+      const { data, error } = await supabase.from("project_tasks").update(patch).eq("id", updatedTask.id).eq("project_id", projectId).select("*").single();
+      if (error) throw error;
+      setTasks(prev => prev.map(task => task.id === updatedTask.id ? { ...data, progress_percentage: data.progress ?? 0, comments: data.comments || [] } : task));
     } catch (error) {
       console.error("Error saving task:", error);
+      setLoadError(error?.message || "تعذر حفظ المهمة.");
+      throw error;
     }
   };
 
@@ -105,13 +141,32 @@ export default function ProjectKanban() {
   };
 
   const handleCreateTask = async (taskData) => {
+    setLoadError("");
     try {
-      const created = await base44.entities.ProjectTask.create(taskData);
-      setTasks([...tasks, created]);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData?.user?.id) throw new Error("انتهت الجلسة؛ سجّل الدخول مجددًا.");
+      const row = {
+        project_id: projectId,
+        title: String(taskData.title || "").trim(),
+        description: taskData.description || "",
+        status: taskData.status || "todo",
+        priority: taskData.priority || "medium",
+        assigned_to: taskData.assigned_to || null,
+        due_date: taskData.due_date || null,
+        estimated_hours: taskData.estimated_hours === "" ? null : Number(taskData.estimated_hours) || null,
+        progress: Math.max(0, Math.min(100, Number(taskData.progress_percentage) || 0)),
+        comments: Array.isArray(taskData.comments) ? taskData.comments : [],
+      };
+      if (!row.title) throw new Error("اكتب عنوان المهمة أولًا.");
+      const { data, error } = await supabase.from("project_tasks").insert(row).select("*").single();
+      if (error) throw error;
+      setTasks(prev => [...prev, { ...data, progress_percentage: data.progress ?? 0, comments: data.comments || [] }]);
       setIsModalOpen(false);
       setSelectedTask(null);
     } catch (error) {
       console.error("Error creating task:", error);
+      setLoadError(error?.message || "تعذر إنشاء المهمة.");
     }
   };
 
@@ -132,7 +187,8 @@ export default function ProjectKanban() {
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <Card className="max-w-md w-full mx-4">
           <CardHeader>
-            <CardTitle className="text-center">المشروع غير موجود</CardTitle>
+            <CardTitle className="text-center">{loadError ? "تعذر تحميل لوحة المهام" : "المشروع غير موجود"}</CardTitle>
+          {loadError && <p role="alert" className="p-4 text-sm text-red-700">{loadError}</p>}
           </CardHeader>
         </Card>
       </div>
@@ -148,6 +204,7 @@ export default function ProjectKanban() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {loadError && <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{loadError}</div>}
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
