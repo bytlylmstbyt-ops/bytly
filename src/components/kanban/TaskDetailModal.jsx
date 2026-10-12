@@ -28,7 +28,10 @@ export default function TaskDetailModal({ task, project, engineers, isOpen, onCl
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
 
-    const currentUser = await base44.auth.me();
+    const { data: authData, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    const currentUser = authData?.user;
+    if (!currentUser?.id) throw new Error("سجّل الدخول لإضافة تعليق.");
     const updatedComments = [
       ...(formData.comments || []),
       {
