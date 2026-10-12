@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
   FileText, CheckCircle, User, Building2,
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import ElectronicSignModal from "@/components/contracts/ElectronicSignModal";
+
 
 export default function ContractPage() {
   const urlParams = new URLSearchParams(window.location.search);
@@ -24,9 +24,7 @@ export default function ContractPage() {
   const [engineer, setEngineer] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSigning, setIsSigning] = useState(false);
-  const [agreed, setAgreed] = useState(false);
-  const [showSignModal, setShowSignModal] = useState(false);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     loadData();
@@ -34,92 +32,113 @@ export default function ContractPage() {
 
   const loadData = async () => {
     setIsLoading(true);
-    const user = await base44.auth.me();
-    setCurrentUser(user);
+    setLoadError("");
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const authUser = authData?.user;
+      if (!authUser?.id) throw new Error("سجّل الدخول لعرض العقد.");
 
-    if (contractId) {
-      const contractData = await base44.entities.Contract.filter({ id: contractId });
-      if (contractData.length > 0) {
-        const cont = contractData[0];
-        setContract(cont);
-
-        const [projectData, clientData, engineerData] = await Promise.all([
-          base44.entities.Project.filter({ id: cont.project_id }),
-          base44.entities.Client.filter({ id: cont.client_id }),
-          base44.entities.Engineer.filter({ id: cont.engineer_id })
-        ]);
-
-        setProject(projectData[0]);
-        setClient(clientData[0]);
-        setEngineer(engineerData[0]);
-      }
-    } else if (projectId) {
-      const projectData = await base44.entities.Project.filter({ id: projectId });
-      setProject(projectData[0]);
-      
-      if (projectData[0]) {
-        const [clientData, engineerData] = await Promise.all([
-          base44.entities.Client.filter({ id: projectData[0].client_id }),
-          base44.entities.Engineer.filter({ id: projectData[0].assigned_engineer_id })
-        ]);
-        setClient(clientData[0]);
-        setEngineer(engineerData[0]);
-      }
-    }
-
-    setIsLoading(false);
-  };
-
-  const handleSign = async () => {
-    if (!agreed || !contract) return;
-
-    setIsSigning(true);
-
-    const isClient = currentUser.email === client?.email;
-    const isEngineer = currentUser.email === engineer?.email;
-
-    const updates = {};
-    if (isClient) {
-      updates.client_signature = true;
-      updates.client_signature_date = new Date().toISOString();
-    }
-    if (isEngineer) {
-      updates.engineer_signature = true;
-      updates.engineer_signature_date = new Date().toISOString();
-    }
-
-    // Check if both signed
-    const bothSigned = (isClient && contract.engineer_signature) || 
-                      (isEngineer && contract.client_signature) ||
-                      (updates.client_signature && updates.engineer_signature);
-
-    if (bothSigned) {
-      updates.status = "active";
-      
-      // Send notification to both parties
-      await base44.entities.Notification.create({
-        recipient_email: client.email,
-        title: "تم توقيع العقد",
-        message: `تم توقيع عقد المشروع "${project?.title}" من قبل الطرفين وأصبح ساري المفعول`,
-        type: "project_update",
-        related_project_id: contract.project_id
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_id,email,full_name,phone,role")
+        .eq("user_id", authUser.id)
+        .maybeSingle();
+      if (profileError) throw profileError;
+      setCurrentUser({
+        id: authUser.id,
+        user_id: authUser.id,
+        email: (authUser.email || profile?.email || "").trim().toLowerCase(),
+        full_name: profile?.full_name || authUser.user_metadata?.full_name || authUser.user_metadata?.name || "",
+        role: profile?.role || authUser.user_metadata?.role || "user",
       });
 
-      await base44.entities.Notification.create({
-        recipient_email: engineer.email,
-        title: "تم توقيع العقد",
-        message: `تم توقيع عقد المشروع "${project?.title}" من قبل الطرفين وأصبح ساري المفعول`,
-        type: "project_update",
-        related_project_id: contract.project_id
-      });
-    } else {
-      updates.status = "pending_signature";
+      let loadedContract = null;
+      let loadedProject = null;
+      let loadedClient = null;
+      let loadedEngineer = null;
+
+      if (contractId) {
+        const { data: row, error: contractError } = await supabase
+          .from("project_contracts")
+          .select("*")
+          .eq("id", contractId)
+          .maybeSingle();
+        if (contractError) throw contractError;
+        if (!row) throw new Error("العقد غير موجود أو ليس لديك صلاحية عرضه.");
+        loadedContract = {
+          ...row,
+          total_amount: row.total_amount ?? row.amount ?? null,
+          created_date: row.created_at || null,
+          contract_type: row.contract_type || "service_agreement",
+        };
+
+        if (row.project_id) {
+          const { data, error } = await supabase.from("projects").select("*").eq("id", row.project_id).maybeSingle();
+          if (error) throw error;
+          loadedProject = data;
+        }
+
+        const clientUserId = row.client_user_id || null;
+        const providerUserId = row.provider_user_id || null;
+        const [clientProfileResult, providerProfileResult, clientRowResult, engineerRowResult] = await Promise.all([
+          clientUserId ? supabase.from("profiles").select("user_id,email,full_name,phone,role").eq("user_id", clientUserId).maybeSingle() : Promise.resolve({ data: null, error: null }),
+          providerUserId ? supabase.from("profiles").select("user_id,email,full_name,phone,role").eq("user_id", providerUserId).maybeSingle() : Promise.resolve({ data: null, error: null }),
+          row.client_id ? supabase.from("clients").select("*").eq("id", row.client_id).maybeSingle() : Promise.resolve({ data: null, error: null }),
+          row.engineer_id ? supabase.from("engineers").select("*").eq("id", row.engineer_id).maybeSingle() : Promise.resolve({ data: null, error: null }),
+        ]);
+        for (const result of [clientProfileResult, providerProfileResult, clientRowResult, engineerRowResult]) {
+          if (result.error) throw result.error;
+        }
+        loadedClient = clientRowResult.data || clientProfileResult.data;
+        loadedEngineer = engineerRowResult.data || providerProfileResult.data;
+
+        if (!loadedClient && clientUserId) {
+          const { data, error } = await supabase.from("clients").select("*").eq("user_id", clientUserId).maybeSingle();
+          if (error) throw error;
+          loadedClient = data;
+        }
+        if (!loadedEngineer && providerUserId) {
+          const { data, error } = await supabase.from("engineers").select("*").eq("user_id", providerUserId).maybeSingle();
+          if (error) throw error;
+          loadedEngineer = data;
+        }
+      } else if (projectId) {
+        const { data, error } = await supabase.from("projects").select("*").eq("id", projectId).maybeSingle();
+        if (error) throw error;
+        if (!data) throw new Error("المشروع غير موجود أو ليس لديك صلاحية عرضه.");
+        loadedProject = data;
+
+        const clientUserId = data.client_user_id || null;
+        const engineerId = data.assigned_engineer_id || null;
+        const [clientProfileResult, clientRowResult, engineerRowResult] = await Promise.all([
+          clientUserId ? supabase.from("profiles").select("user_id,email,full_name,phone,role").eq("user_id", clientUserId).maybeSingle() : Promise.resolve({ data: null, error: null }),
+          data.client_id ? supabase.from("clients").select("*").eq("id", data.client_id).maybeSingle() : Promise.resolve({ data: null, error: null }),
+          engineerId ? supabase.from("engineers").select("*").eq("id", engineerId).maybeSingle() : Promise.resolve({ data: null, error: null }),
+        ]);
+        for (const result of [clientProfileResult, clientRowResult, engineerRowResult]) {
+          if (result.error) throw result.error;
+        }
+        loadedClient = clientRowResult.data || clientProfileResult.data;
+        loadedEngineer = engineerRowResult.data;
+      } else {
+        throw new Error("رابط العقد غير مكتمل.");
+      }
+
+      setContract(loadedContract);
+      setProject(loadedProject);
+      setClient(loadedClient);
+      setEngineer(loadedEngineer);
+    } catch (error) {
+      console.error("Contract page failed to load Supabase data:", error);
+      setLoadError(error?.message || "تعذر تحميل بيانات العقد.");
+      setContract(null);
+      setProject(null);
+      setClient(null);
+      setEngineer(null);
+    } finally {
+      setIsLoading(false);
     }
-
-    await base44.entities.Contract.update(contract.id, updates);
-
-    setIsSigning(false);
-    loadData();
   };
 
   const handlePrint = () => {
@@ -140,6 +159,11 @@ export default function ContractPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {loadError && (
+          <div role="alert" className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+            تعذر تحميل العقد: {loadError}
+          </div>
+        )}
         {/* Header Actions */}
         <div className="flex justify-between items-center mb-6 print:hidden">
           <h1 className="text-2xl font-bold text-[#1a1a2e]">
@@ -577,45 +601,27 @@ export default function ContractPage() {
           </CardContent>
         </Card>
 
-        {/* Signature Section */}
+        {/* Signing remains disabled until a server-side, participant-verified signing flow is available. */}
         {contract && (() => {
-          const isClient   = currentUser?.email === client?.email;
-          const isEngineer = currentUser?.email === engineer?.email;
+          const email = (currentUser?.email || "").toLowerCase();
+          const isClient = email && email === (client?.email || "").toLowerCase();
+          const isEngineer = email && email === (engineer?.email || "").toLowerCase();
           const mySign = isClient ? contract.client_signature : contract.engineer_signature;
           const canSign = (isClient || isEngineer) && !mySign &&
             ["pending_signature", "draft"].includes(contract.status);
           return canSign ? (
-            <Card className="border-0 shadow-xl print:hidden">
+            <Card className="border border-amber-200 shadow-sm print:hidden">
               <CardContent className="p-6 text-center">
-                <PenLine className="w-10 h-10 mx-auto mb-3 text-[#C9A66B]" />
-                <p className="font-semibold text-[#1a1a2e] mb-1">بانتظار توقيعك</p>
-                <p className="text-slate-500 text-sm mb-5">
-                  أنت {isClient ? "العميل – الطرف الأول" : "المهندس – الطرف الثاني"}
+                <Shield className="w-10 h-10 mx-auto mb-3 text-amber-600" />
+                <p className="font-semibold text-[#1a1a2e] mb-1">التوقيع الإلكتروني قيد التحديث الآمن</p>
+                <p className="text-slate-600 text-sm">
+                  أوقفنا التوقيع مؤقتًا لأن المسار القديم يعتمد على Base44 ولا يتحقق بأمان من صلاحيات الطرف الذي يوقّع.
+                  لن نغيّر حالة العقد أو نسجّل توقيعًا حتى يكتمل مسار التوقيع الآمن على الخادم.
                 </p>
-                <Button
-                  onClick={() => setShowSignModal(true)}
-                  className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white px-8 py-5 text-base gap-2"
-                >
-                  <PenLine className="w-5 h-5" />
-                  وقّع الآن
-                </Button>
               </CardContent>
             </Card>
           ) : null;
         })()}
-
-        {/* Electronic Sign Modal */}
-        {showSignModal && contract && (
-          <ElectronicSignModal
-            contract={contract}
-            project={project}
-            client={client}
-            engineer={engineer}
-            currentUser={currentUser}
-            onDone={() => { setShowSignModal(false); loadData(); }}
-            onClose={() => setShowSignModal(false)}
-          />
-        )}
 
         {/* Contract Signed */}
         {contract?.client_signature && contract?.engineer_signature && (
