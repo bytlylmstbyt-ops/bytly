@@ -134,7 +134,31 @@ class RouteErrorBoundary extends React.Component {
   }
 }
 
-function PageSpinner() { return <div className="fixed inset-0 flex items-center justify-center bg-white/60"><div className="w-8 h-8 border-4 border-slate-200 border-t-[#C9A66B] rounded-full animate-spin" /></div>; }
+function PageSpinner() {
+  const [slow, setSlow] = React.useState(false);
+  React.useEffect(() => {
+    const timer = window.setTimeout(() => setSlow(true), 15000);
+    return () => window.clearTimeout(timer);
+  }, []);
+  return (
+    <div role="status" aria-live="polite" className="fixed inset-0 z-50 flex items-center justify-center bg-white/90 p-6">
+      <div className="flex max-w-sm flex-col items-center gap-4 text-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-[#C9A66B]" />
+        <p className="text-sm text-slate-700">{slow ? "تأخر تحميل الصفحة عن المعتاد." : "جارٍ تحميل الصفحة..."}</p>
+        {slow && (
+          <div className="flex flex-wrap justify-center gap-3">
+            <button type="button" onClick={() => window.location.reload()} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white">
+              إعادة المحاولة
+            </button>
+            <button type="button" onClick={() => { window.location.href = "/"; }} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">
+              العودة للرئيسية
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 function PublicHomeRoute() {
   const { isAuthenticated, isLoadingPublicSettings } = useAuth();
   if (isLoadingPublicSettings) return <PageSpinner />;
