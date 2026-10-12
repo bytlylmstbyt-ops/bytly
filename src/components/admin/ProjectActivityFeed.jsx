@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Activity, User, Clock, TrendingUp, RefreshCw } from "lucide-react";
@@ -19,17 +19,32 @@ export default function ProjectActivityFeed({ refreshKey = 0 }) {
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState([]);
 
+  const normalizeLog = (item) => ({
+    ...item,
+    action_type: item.action || item.action_type || "updated",
+    created_date: item.created_at || item.created_date,
+    summary: item.metadata?.summary || item.metadata?.description || item.summary || item.action || "تحديث على المشروع",
+    actor_name: item.metadata?.actor_name || item.actor_name || "مستخدم المنصة",
+    actor_email: item.metadata?.actor_email || item.actor_email || "",
+    old_value: item.metadata?.old_value ?? item.old_value,
+    new_value: item.metadata?.new_value ?? item.new_value,
+    field_name: item.metadata?.field_name ?? item.field_name,
+  });
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [logData, projData] = await Promise.all([
-        base44.entities.TaskActivityLog.list("-created_date", 40).catch(() => []),
-        base44.entities.Project.list("-created_date", 500).catch(() => []),
+      const [activityResult, projectsResult] = await Promise.all([
+        supabase.from("project_activity").select("*").order("created_at", { ascending: false }).limit(40),
+        supabase.from("projects").select("id,title").limit(500),
       ]);
-      setLogs(logData);
+      if (activityResult.error) throw activityResult.error;
+      setLogs((activityResult.data || []).map(normalizeLog));
+      const projData = projectsResult.error ? [] : (projectsResult.data || []);
       setProjects(projData);
       projData.forEach((p) => { PROJECT_TITLE_CACHE[p.id] = p.title; });
-    } catch {
+    } catch (error) {
+      console.error("Failed to load project activity feed from Supabase", error);
       setLogs([]);
     } finally {
       setLoading(false);
@@ -38,14 +53,15 @@ export default function ProjectActivityFeed({ refreshKey = 0 }) {
 
   useEffect(() => { load(); }, [load, refreshKey]);
 
-  // Realtime: subscribe to new TaskActivityLog entries
+  // Realtime: subscribe to new project activity rows from Supabase.
   useEffect(() => {
-    const unsub = base44.entities.TaskActivityLog.subscribe((event) => {
-      if (event.type === "create") {
-        setLogs((prev) => [event.data, ...prev].slice(0, 40));
-      }
-    });
-    return unsub;
+    const channel = supabase
+      .channel("admin-project-activity-feed")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "project_activity" }, (payload) => {
+        setLogs((prev) => [normalizeLog(payload.new), ...prev.filter((item) => item.id !== payload.new.id)].slice(0, 40));
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const projTitle = (id) => {
