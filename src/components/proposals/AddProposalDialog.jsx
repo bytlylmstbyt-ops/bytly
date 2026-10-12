@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -92,13 +92,34 @@ export default function AddProposalDialog({ open, onOpenChange, onCreated, prese
 
   useEffect(() => {
     if (!open) return;
+    let cancelled = false;
     setForm({ ...EMPTY, project_id: preselectedProjectId || "" });
     setActiveTemplate(null);
-    Promise.all([
-      base44.entities.Project.list("-created_date", 200).catch(() => []),
-      base44.entities.Engineer.filter({ status: "approved" }).catch(() => []),
-    ]).then(([p, e]) => { setProjects(p); setEngineers(e); });
-  }, [open]);
+    (async () => {
+      try {
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        if (!authData?.user?.id) throw new Error("سجّل الدخول أولًا.");
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles").select("role").eq("user_id", authData.user.id).maybeSingle();
+        if (profileError) throw profileError;
+        if (profile?.role !== "admin") throw new Error("هذه العملية متاحة للإدارة فقط.");
+        const [projectResult, engineerResult] = await Promise.all([
+          supabase.from("projects").select("id,title,status").order("created_at", { ascending: false }).limit(200),
+          supabase.from("engineers").select("id,user_id,full_name,status").eq("status", "approved").limit(500),
+        ]);
+        if (projectResult.error) throw projectResult.error;
+        if (engineerResult.error) throw engineerResult.error;
+        if (!cancelled) {
+          setProjects(projectResult.data || []);
+          setEngineers(engineerResult.data || []);
+        }
+      } catch (error) {
+        if (!cancelled) toast({ variant: "destructive", title: "تعذر تحميل بيانات العروض", description: String(error?.message || error).slice(0, 140) });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [open, preselectedProjectId]);
 
   const setField = (n, v) => setForm((p) => ({ ...p, [n]: v }));
 
@@ -133,49 +154,39 @@ export default function AddProposalDialog({ open, onOpenChange, onCreated, prese
     e.preventDefault();
     if (!form.project_id) return toast({ variant: "destructive", title: "المشروع مطلوب" });
     if (!form.engineer_id) return toast({ variant: "destructive", title: "مقدم الخدمة مطلوب" });
-    if (!form.price) return toast({ variant: "destructive", title: "قيمة العرض مطلوبة" });
+    const amount = Number(form.price);
+    const durationDays = form.delivery_days ? Number.parseInt(form.delivery_days, 10) : null;
+    if (!Number.isFinite(amount) || amount <= 0) return toast({ variant: "destructive", title: "أدخل قيمة عرض صحيحة" });
+    if (durationDays !== null && (!Number.isInteger(durationDays) || durationDays <= 0)) return toast({ variant: "destructive", title: "أدخل مدة صحيحة بالأيام" });
 
     setSaving(true);
     try {
-      let actor = null;
-      try { actor = await base44.auth.me(); } catch {}
-      const projectTitle = projects.find((p) => p.id === form.project_id)?.title || "";
-
-      const created = await base44.entities.Proposal.create({
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData?.user?.id) throw new Error("انتهت الجلسة؛ سجّل الدخول مجددًا.");
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles").select("role").eq("user_id", authData.user.id).maybeSingle();
+      if (profileError) throw profileError;
+      if (profile?.role !== "admin") throw new Error("إضافة العروض متاحة للإدارة فقط.");
+      const engineer = engineers.find(item => item.id === form.engineer_id);
+      if (!engineer?.user_id) throw new Error("المهندس المحدد غير مرتبط بحساب مستخدم صالح.");
+      const { data: created, error } = await supabase.from("project_offers").insert({
         project_id: form.project_id,
-        provider_type: "engineer",
-        engineer_id: form.engineer_id,
-        price: Number(form.price),
-        delivery_days: form.delivery_days ? Number(form.delivery_days) : undefined,
-        cover_letter: form.cover_letter,
-        attachments: form.attachments,
+        engineer_user_id: engineer.user_id,
+        amount,
+        currency: "SAR",
+        duration_days: durationDays,
+        proposal: String(form.cover_letter || "").trim() || null,
+        attachments: form.attachments || [],
+        portfolio_items: [],
         status: "pending",
-      });
-
-      await base44.entities.TaskActivityLog.create({
-        project_id: form.project_id,
-        task_id: created.id,
-        task_title: `عرض على «${projectTitle}»`,
-        actor_email: actor?.email || "",
-        actor_name: actor?.full_name || actor?.email || "",
-        action_type: "created",
-        field_name: "proposal",
-        old_value: "",
-        new_value: `${form.price} ر.س / ${form.delivery_days || "—"} يوم`,
-        summary: `تم إنشاء عرض جديد بقيمة ${form.price} ر.س لمشروع «${projectTitle}»`,
-      }).catch(() => {});
-
-      // Notify the project owner (client) about the new proposal
-      try {
-        await base44.functions.invoke('notifyNewProposal', { proposalId: created.id });
-      } catch (e) {
-        console.error('notifyNewProposal failed:', e);
-      }
-
-      toast({ title: "تم إنشاء العرض", description: "أُضيف العرض وأُرسل إشعار لصاحب المشروع." });
+      }).select("*").single();
+      if (error) throw error;
+      toast({ title: "تم إنشاء العرض", description: "تم حفظ العرض في قاعدة بيانات بيتلي." });
       onCreated?.(created);
       onOpenChange?.(false);
     } catch (err) {
+      console.error("Failed to create offer:", err);
       toast({ variant: "destructive", title: "فشل إنشاء العرض", description: String(err?.message || err).slice(0, 140) });
     } finally { setSaving(false); }
   };
