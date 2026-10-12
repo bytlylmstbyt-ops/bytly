@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,24 +20,41 @@ export default function EngineerProjects() {
   const [projects, setProjects] = useState([]);
   const [engineer, setEngineer] = useState(null);
   const [filter, setFilter] = useState("all");
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     loadProjects();
   }, []);
 
   const loadProjects = async () => {
+    setLoading(true);
+    setLoadError("");
     try {
-      const user = await base44.auth.me();
-      const [engineerData] = await base44.entities.Engineer.filter({ email: user.email });
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const user = authData?.user;
+      if (!user?.id) throw new Error("سجّلي الدخول لعرض المشاريع المسندة إليك.");
+
+      const { data: engineerData, error: engineerError } = await supabase
+        .from("engineers")
+        .select("id,user_id,email,full_name,status,is_verified")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (engineerError) throw engineerError;
+      if (!engineerData) throw new Error("حساب المهندس غير مربوط بحساب الدخول الحالي. تواصلي مع الدعم لربط الحساب بأمان.");
       setEngineer(engineerData);
 
-      const projectsData = await base44.entities.Project.filter({
-        assigned_engineer_id: engineerData.id
-      }, "-created_date");
-
-      setProjects(projectsData);
+      const { data: projectsData, error: projectsError } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("assigned_engineer_id", engineerData.id)
+        .order("created_at", { ascending: false });
+      if (projectsError) throw projectsError;
+      setProjects(projectsData || []);
     } catch (error) {
-      console.error("Error loading projects:", error);
+      console.error("Error loading engineer projects from Supabase:", error);
+      setLoadError(error?.message || "تعذر تحميل المشاريع المسندة إليك.");
+      setProjects([]);
     } finally {
       setLoading(false);
     }
@@ -103,6 +120,7 @@ export default function EngineerProjects() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
+          {loadError && <div role="alert" className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{loadError}</div>}
           <div className="mb-8">
             <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e] mb-2">
               مشاريعي
