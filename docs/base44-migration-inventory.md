@@ -64,6 +64,9 @@ This snapshot was checked against the connected Supabase project after the adapt
 - `base44_user_identity_map`: 14 rows: 4 real entries marked `base44_account_confirmed_no_supabase_auth`, 2 real entries marked `needs_supabase_auth_link`, and 8 non-real entries marked `pending`.
 - Do not create accounts, attach IDs, or mark mappings complete automatically. Verify account ownership and a valid Supabase Auth identity first.
 
+
+- Linkage audit: all 4 staged proposals and the 1 staged contract reference the one staged project record. Because that project is `demo_excluded`, these linked proposal/contract records must also remain excluded unless independent source evidence proves otherwise. The 3 staged reviews did not link to that project in this check.
+
 ### Decision / safe next action
 
 The current live staging inventory does **not** provide evidence for a safe bulk import of projects/contracts: the only staged project is explicitly excluded demo data, and the client/firm staging sets are all non-real. Preserve the staging records as audit evidence. Next, retrieve a verified source export from the old system or the owner-approved archive, reconcile stable IDs and real-user identity mappings, and then prepare a reviewed, idempotent migration plan. Do not fabricate records, import demo data, or enable live financial operations to make pages appear populated.
