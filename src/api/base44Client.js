@@ -304,9 +304,10 @@ bytlyCompat.entities.Contract = {
 const resolveClientUserId = async currentId => {
   if (currentId === null || currentId === undefined || currentId === '') return null;
   const value = String(currentId).trim();
-  // Auth UUIDs are already the value expected by projects.client_user_id.
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) return value;
-  for (const column of ['base44_id', 'email']) {
+
+  // Legacy client rows can be referenced by row UUID, Base44 ID, email, or Auth UUID.
+  // Resolve known client rows first so a clients.id UUID is never mistaken for auth.users.id.
+  for (const column of ['id', 'base44_id', 'email']) {
     const { data, error } = await withHardTimeout(
       supabase.from('clients').select('user_id').eq(column, value).maybeSingle(),
       10000,
@@ -314,7 +315,11 @@ const resolveClientUserId = async currentId => {
     );
     if (error) throw new Error(error.message || 'تعذر مطابقة حساب العميل');
     if (data?.user_id) return data.user_id;
+    if (data && column === 'id') return null;
   }
+
+  // A UUID that is not a known clients row may already be the Supabase Auth user ID.
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) return value;
   return null;
 };
 
