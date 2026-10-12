@@ -143,7 +143,7 @@ export default function AdminProjects() {
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
-      const { data: profile } = await supabase.from("profiles").select("role,email").eq("id", user.id).maybeSingle();
+      const { data: profile } = await supabase.from("profiles").select("role,email").eq("user_id", user.id).maybeSingle();
       setIsAdmin(profile?.role === "admin" || user.email === "bytlylmstbyt@gmail.com");
     }).catch(() => {});
   }, []);
