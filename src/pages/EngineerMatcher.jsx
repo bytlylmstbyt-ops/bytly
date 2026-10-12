@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, RefreshCw, Users, Trophy, ArrowRight } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import MatchForm from "@/components/matching/MatchForm";
 import MatchResultCard from "@/components/matching/MatchResultCard";
@@ -10,13 +10,70 @@ export default function EngineerMatcher() {
   const [results, setResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchError, setSearchError] = useState("");
 
   const handleSearch = async (formData) => {
     setIsLoading(true);
     setHasSearched(true);
-    const response = await base44.functions.invoke("matchEngineers", formData);
-    setResults(response.data?.results || []);
-    setIsLoading(false);
+    setSearchError("");
+    setResults([]);
+    try {
+      const { data, error } = await supabase
+        .from("engineers")
+        .select("id,full_name,specialization,city,rating,total_reviews,years_experience,profile_image,is_verified,is_real,status")
+        .eq("status", "approved")
+        .eq("is_verified", true)
+        .eq("is_real", true)
+        .limit(500);
+      if (error) throw error;
+
+      const termsByType = {
+        residential: ["architecture", "architectural", "معماري", "عمارة", "مدني", "civil", "إنشائي", "structural"],
+        commercial: ["commercial", "تجاري", "معماري", "architecture", "مدني", "civil", "إدارة مشاريع"],
+        industrial: ["industrial", "صناعي", "مدني", "civil", "كهرب", "ميكاني", "ميكانيك"],
+        renovation: ["renovation", "ترميم", "داخلي", "interior", "مدني", "civil", "معماري"],
+        interior: ["interior", "تصميم داخلي", "ديكور", "أثاث"],
+        landscape: ["landscape", "مناظر طبيعية", "حدائق", "تنسيق"],
+        other: [],
+      };
+      const terms = termsByType[formData.project_type] || [];
+      const requestedLocation = String(formData.location || "").trim().toLowerCase();
+      const minimumExperience = Number(formData.years_experience_min) || 0;
+      const ranked = (data || []).map((engineer) => {
+        const specialization = String(engineer.specialization || "").toLowerCase();
+        const city = String(engineer.city || "").toLowerCase();
+        const experience = Number(engineer.years_experience) || 0;
+        const rating = Math.min(5, Math.max(0, Number(engineer.rating) || 0));
+        const specializationMatch = terms.length === 0 || terms.some(term => specialization.includes(term.toLowerCase()));
+        const locationMatch = !requestedLocation || city.includes(requestedLocation) || requestedLocation.includes(city);
+        const experienceMatch = experience >= minimumExperience;
+        const specializationScore = specializationMatch ? 45 : 0;
+        const locationScore = !requestedLocation ? 25 : locationMatch ? 25 : 0;
+        const experienceScore = experienceMatch ? 20 : 0;
+        const ratingScore = Math.round((rating / 5) * 10);
+        const percentage = specializationScore + locationScore + experienceScore + ratingScore;
+        return {
+          ...engineer,
+          match_percentage: percentage,
+          match_breakdown: [
+            { label: "التخصص", score: specializationScore, max: 45 },
+            { label: "الموقع", score: locationScore, max: 25 },
+            { label: "الخبرة", score: experienceScore, max: 20 },
+            { label: "التقييم", score: ratingScore, max: 10 },
+          ],
+          _specializationMatch: specializationMatch,
+        };
+      }).filter(engineer => engineer._specializationMatch && (minimumExperience === 0 || (Number(engineer.years_experience) || 0) >= minimumExperience))
+        .sort((a, b) => b.match_percentage - a.match_percentage)
+        .map(({ _specializationMatch, ...engineer }) => engineer);
+      setResults(ranked);
+    } catch (error) {
+      console.error("Engineer matching failed:", error);
+      setSearchError(error?.message || "تعذر البحث عن المهندسين حاليًا.");
+      setResults([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleReset = () => {
@@ -41,15 +98,15 @@ export default function EngineerMatcher() {
               </span>
             </h1>
             <p className="text-slate-300 text-lg max-w-2xl mx-auto">
-              أدخل تفاصيل مشروعك وسيقوم محركنا الذكي بمطابقتك مع أفضل المهندسين مع إظهار نسبة التوافق لكل منهم
+              أدخل تفاصيل مشروعك لنرتّب المهندسين المعتمدين وفق التخصص والموقع والخبرة والتقييم. النسبة تقديرية وليست ضمانًا لجودة الخدمة
             </p>
 
             {/* Stats bar */}
             <div className="flex justify-center gap-8 mt-8">
               {[
-                { icon: Users, label: "مهندس معتمد", value: "200+" },
-                { icon: Trophy, label: "نسبة رضا", value: "98%" },
-                { icon: Sparkles, label: "معيار مطابقة", value: "5" },
+                { icon: Users, label: "مصدر البيانات", value: "محدّث" },
+                { icon: Trophy, label: "عوامل المطابقة", value: "4" },
+                { icon: Sparkles, label: "الترتيب", value: "تقديري" },
               ].map((stat, i) => (
                 <div key={i} className="text-center">
                   <div className="text-2xl font-black text-[#C9A66B]">{stat.value}</div>
@@ -126,7 +183,7 @@ export default function EngineerMatcher() {
                 </Button>
               </div>
 
-              {isLoading ? (
+              {searchError && <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{searchError}</div>}\n\n              {isLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {[1, 2, 3, 4].map(i => (
                     <div key={i} className="bg-white rounded-2xl p-5 animate-pulse shadow">
