@@ -310,7 +310,21 @@ export default function AdminProjects() {
         </div>
       </motion.div>
 
-      {loadError && (\n        <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">\n          <p className="font-semibold">تعذر تحميل بيانات إدارة المشاريع</p>\n          <p className="mt-1 break-words">{loadError}</p>\n          <button type="button" onClick={loadData} className="mt-2 underline">إعادة المحاولة</button>\n        </div>\n      )}\n\n      {!loading && !loadError && projects.length === 0 && (\n        <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">\n          لا توجد مشاريع فعلية في جدول Supabase حاليًا. لم نُدخل بيانات تجريبية تلقائيًا؛ يجب مراجعة سجل الترحيل وربط المشاريع الحقيقية قبل عرضها هنا.\n        </div>\n      )}\n\n      {/* Stats */}
+      {loadError && (
+        <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <p className="font-semibold">تعذر تحميل بيانات إدارة المشاريع</p>
+          <p className="mt-1 break-words">{loadError}</p>
+          <button type="button" onClick={loadData} className="mt-2 underline">إعادة المحاولة</button>
+        </div>
+      )}
+
+      {!loading && !loadError && projects.length === 0 && (
+        <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          لا توجد مشاريع فعلية في جدول Supabase حاليًا. لم نُدخل بيانات تجريبية تلقائيًا؛ يجب مراجعة سجل الترحيل وربط المشاريع الحقيقية قبل عرضها هنا.
+        </div>
+      )}
+
+      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
         {statCards.map((s, i) => {
           const Icon = s.icon;
