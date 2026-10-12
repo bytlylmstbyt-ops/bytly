@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import {
   Search, MapPin, Star, Briefcase, CheckCircle,
@@ -43,6 +43,7 @@ export default function ConsultingFirms() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSpec, setSelectedSpec] = useState("all");
   const [cityFilter, setCityFilter] = useState("all");
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     loadFirms();
@@ -50,9 +51,22 @@ export default function ConsultingFirms() {
 
   const loadFirms = async () => {
     setIsLoading(true);
-    const data = await base44.entities.EngineeringFirm.filter({ status: "approved" });
-    setFirms(data);
-    setIsLoading(false);
+    setLoadError("");
+    try {
+      const { data, error } = await supabase
+        .from("engineering_firms")
+        .select("*")
+        .eq("status", "approved")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      setFirms(data || []);
+    } catch (error) {
+      console.error("Error loading consulting firms from Supabase:", error);
+      setLoadError(error?.message || "تعذر تحميل الشركات الاستشارية حاليًا.");
+      setFirms([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const cities = ["all", ...new Set(firms.map(f => f.city).filter(Boolean))];
@@ -132,7 +146,7 @@ export default function ConsultingFirms() {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">\n        {loadError && <div role="alert" className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{loadError}</div>}
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
