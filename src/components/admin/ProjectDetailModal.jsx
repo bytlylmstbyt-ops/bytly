@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle
 } from "@/components/ui/dialog";
@@ -37,43 +37,69 @@ export default function ProjectDetailModal({ open, onOpenChange, project, lookup
   const [tab, setTab] = useState("overview");
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState({ proposals: [], contracts: [], transactions: [], messages: [], logs: [], milestones: [] });
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
-    if (!project?.id) return;
+    if (!open || !project?.id) return;
+    let cancelled = false;
     setTab("overview");
     setLoading(true);
-    (async () => {
+    setLoadError("");
+
+    const load = async () => {
+      const read = async (label, query) => {
+        try {
+          const { data: rows, error } = await query;
+          if (error) throw error;
+          return rows || [];
+        } catch (error) {
+          console.error(`Project detail ${label} query failed:`, error);
+          if (!cancelled) setLoadError((current) => current || "بعض تفاصيل المشروع غير متاحة من قاعدة البيانات الحالية.");
+          return [];
+        }
+      };
+
       try {
-        const [proposals, contracts, transactions, logs, milestones] = await Promise.all([
-          base44.entities.Proposal.filter({ project_id: project.id }).catch(() => []),
-          base44.entities.Contract.filter({ project_id: project.id }).catch(() => []),
-          base44.entities.Transaction.filter({ project_id: project.id }).catch(() => []),
-          base44.entities.TaskActivityLog.filter({ project_id: project.id }).catch(() => []),
-          base44.entities.ProjectMilestone.filter({ project_id: project.id }).catch(() => []),
-        ]);
-        const [engineers, messages] = await Promise.all([
-          proposals.length > 0
-            ? base44.entities.Engineer.filter({ id: { $in: proposals.map(p => p.engineer_id).filter(Boolean) } }).catch(() => [])
+        const [proposals, contracts, transactions, logs, milestones, messages, engineers] = await Promise.all([
+          project.base44_id
+            ? read("proposal staging", supabase.from("base44_proposal_migration_staging").select("*").eq("project_base44_id", project.base44_id).order("created_at", { ascending: false }))
             : Promise.resolve([]),
-          base44.entities.Message.filter({ project_id: project.id }).catch(() => []),
+          read("contracts", supabase.from("project_contracts").select("*").eq("project_id", project.id).order("created_at", { ascending: false })),
+          read("wallet transactions", supabase.from("wallet_transactions").select("*").eq("project_id", project.id).order("created_at", { ascending: false })),
+          read("activity", supabase.from("project_activity").select("*").eq("project_id", project.id).order("created_at", { ascending: false })),
+          read("milestones", supabase.from("project_milestones").select("*").eq("project_id", project.id).order("sequence_no", { ascending: true })),
+          read("messages", supabase.from("messages").select("*").eq("project_id", project.id).order("created_at", { ascending: false })),
+          read("engineers", supabase.from("engineers").select("id,base44_id,full_name")),
         ]);
-        const engMap = {};
-        engineers.forEach(e => { engMap[e.id] = e; });
-        const proposalsWithNames = proposals.map(p => ({
-          ...p,
-          engineer_name: engMap[p.engineer_id]?.full_name || "غير معروف",
-        }));
-        setData({
-          proposals: proposalsWithNames,
-          contracts, transactions, messages, logs, milestones,
+
+        const engineerMap = {};
+        (engineers || []).forEach((engineer) => {
+          if (engineer.id) engineerMap[engineer.id] = engineer;
+          if (engineer.base44_id) engineerMap[engineer.base44_id] = engineer;
         });
-      } catch (err) {
-        console.error("Detail load error", err);
+        const proposalsWithNames = (proposals || []).map((proposal) => ({
+          ...proposal,
+          engineer_name: engineerMap[proposal.engineer_id || proposal.engineer_base44_id]?.full_name || "غير معروف",
+        }));
+
+        if (!cancelled) {
+          setData({
+            proposals: proposalsWithNames,
+            contracts: contracts || [],
+            transactions: transactions || [],
+            messages: messages || [],
+            logs: logs || [],
+            milestones: milestones || [],
+          });
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    })();
-  }, [project?.id]);
+    };
+
+    load();
+    return () => { cancelled = true; };
+  }, [open, project?.id, project?.base44_id]);
 
   const clientName = project?.client_id ? lookup.clients[project.client_id] : "—";
   const engineerName = project?.assigned_engineer_id ? lookup.engineers[project.assigned_engineer_id] : "—";
@@ -85,6 +111,7 @@ export default function ProjectDetailModal({ open, onOpenChange, project, lookup
 
   const TabContent = () => {
     if (loading) return <div className="py-12 flex justify-center"><Loader2 className="w-6 h-6 text-[#C9A66B] animate-spin" /></div>;
+    if (loadError) return <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">{loadError} قد تكون بعض البيانات التاريخية لم تُرحّل بعد.</div>;
 
     switch (tab) {
       case "overview":
