@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -47,12 +47,21 @@ export default function ProjectDetailActivityLog({ projectId, projectTitle }) {
     if (!projectId) return;
     setLoading(true);
     try {
-      const data = await base44.entities.TaskActivityLog.filter(
-        { project_id: projectId },
-        "-created_date",
-        100
-      ).catch(() => []);
-      setLogs(data);
+      const { data, error } = await supabase
+        .from("project_activity")
+        .select("*")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      setLogs((data || []).map((item) => ({
+        ...item,
+        action_type: item.action,
+        created_date: item.created_at,
+        summary: item.metadata?.summary || item.metadata?.description || item.action || "تحديث على المشروع",
+        actor_name: item.metadata?.actor_name || "مستخدم المنصة",
+        actor_email: item.metadata?.actor_email || "",
+      })));
     } finally {
       setLoading(false);
     }
@@ -62,12 +71,25 @@ export default function ProjectDetailActivityLog({ projectId, projectTitle }) {
 
   // Realtime: live updates when a new log entry is created for this project
   useEffect(() => {
-    const unsub = base44.entities.TaskActivityLog.subscribe((event) => {
-      if (event.type === "create" && event.data?.project_id === projectId) {
-        setLogs((prev) => [event.data, ...prev]);
-      }
-    });
-    return unsub;
+    const channel = supabase
+      .channel(`project-activity-${projectId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "project_activity", filter: `project_id=eq.${projectId}` },
+        (payload) => {
+          const item = payload.new;
+          setLogs((prev) => [{
+            ...item,
+            action_type: item.action,
+            created_date: item.created_at,
+            summary: item.metadata?.summary || item.metadata?.description || item.action || "تحديث على المشروع",
+            actor_name: item.metadata?.actor_name || "مستخدم المنصة",
+            actor_email: item.metadata?.actor_email || "",
+          }, ...prev.filter((log) => log.id !== item.id)].slice(0, 100));
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [projectId]);
 
   return (
