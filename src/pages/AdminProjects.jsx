@@ -122,20 +122,39 @@ export default function AdminProjects() {
     setRefreshing(true);
     setLoadError("");
     try {
-      const [projectsResult, clientsResult, engineersResult] = await Promise.all([
-        supabase.from("projects").select("*").order("created_at", { ascending: false }).limit(500),
-        supabase.from("clients").select("*").order("created_at", { ascending: false }),
-        supabase.from("engineers").select("*").order("created_at", { ascending: false }),
-      ]);
+      // Projects are the primary dataset. Lookup tables must never prevent the
+      // admin page from rendering when a secondary query fails.
+      let projectsResult = await supabase
+        .from("projects")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (projectsResult.error) {
+        console.warn("Ordered projects query failed; retrying without ordering", projectsResult.error);
+        projectsResult = await supabase.from("projects").select("*").limit(500);
+      }
       if (projectsResult.error) throw projectsResult.error;
-      if (clientsResult.error) throw clientsResult.error;
-      if (engineersResult.error) throw engineersResult.error;
       setProjects(projectsResult.data || []);
-      setClients(clientsResult.data || []);
-      setEngineers(engineersResult.data || []);
+
+      const [clientsResult, engineersResult] = await Promise.allSettled([
+        supabase.from("clients").select("id,full_name").order("created_at", { ascending: false }),
+        supabase.from("engineers").select("id,full_name").order("created_at", { ascending: false }),
+      ]);
+      if (clientsResult.status === "fulfilled" && !clientsResult.value.error) {
+        setClients(clientsResult.value.data || []);
+      } else {
+        setClients([]);
+        console.warn("Admin projects client lookup unavailable", clientsResult.status === "rejected" ? clientsResult.reason : clientsResult.value.error);
+      }
+      if (engineersResult.status === "fulfilled" && !engineersResult.value.error) {
+        setEngineers(engineersResult.value.data || []);
+      } else {
+        setEngineers([]);
+        console.warn("Admin projects engineer lookup unavailable", engineersResult.status === "rejected" ? engineersResult.reason : engineersResult.value.error);
+      }
     } catch (err) {
-      console.error("Failed to load admin projects", err);
-      setLoadError(err?.message || "تعذر تحميل بيانات إدارة المشاريع من Supabase.");
+      console.error("Failed to load admin projects from Supabase", err);
+      setLoadError(err?.message || err?.details || "تعذر تحميل المشاريع من قاعدة البيانات. أعد المحاولة أو تواصل مع الدعم.");
     } finally {
       setLoading(false);
       setRefreshing(false);
