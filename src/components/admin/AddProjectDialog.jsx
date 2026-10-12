@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { uploadScopedFile } from "@/lib/projectFileStorage";
+import { uploadProjectFile } from "@/lib/projectFileStorage";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
@@ -54,6 +54,7 @@ export default function AddProjectDialog({ open, onOpenChange, onCreated, onUpda
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState([]);
   const [clients, setClients] = useState([]);
   const [engineers, setEngineers] = useState([]);
   const [firms, setFirms] = useState([]);
@@ -61,6 +62,7 @@ export default function AddProjectDialog({ open, onOpenChange, onCreated, onUpda
   // تحميل قوائم العملاء والمهندسين والمكاتب الاستشارية عند الفتح
   useEffect(() => {
     if (!open) return;
+    setPendingFiles([]);
     if (project) {
       setForm({
         ...EMPTY,
@@ -92,10 +94,15 @@ export default function AddProjectDialog({ open, onOpenChange, onCreated, onUpda
     if (!files || files.length === 0) return;
     setUploading(true);
     try {
+      // For a new project, wait until the row exists so files use a valid project scope.
+      if (!editing || !project?.id) {
+        setPendingFiles((current) => [...current, ...Array.from(files)]);
+        return;
+      }
       const urls = [];
-      for (const file of files) {
-        const file_url = await uploadScopedFile(`admin-projects/new`, file);
-        if (file_url) urls.push(file_url);
+      for (const file of Array.from(files)) {
+        const fileUrl = await uploadProjectFile(project.id, file);
+        if (fileUrl) urls.push(fileUrl);
       }
       setForm((p) => ({ ...p, attachments: [...(p.attachments || []), ...urls] }));
     } catch (err) {
@@ -149,8 +156,35 @@ export default function AddProjectDialog({ open, onOpenChange, onCreated, onUpda
       } else {
         const { data: created, error } = await supabase.from("projects").insert(supabasePayload).select().single();
         if (error) throw error;
-        toast({ title: "تم إنشاء المشروع", description: "أُضيف المشروع وحدّثت الإحصائيات تلقائياً." });
-        onCreated?.(created);
+        let finalProject = created;
+        let attachmentUploadFailed = false;
+        if (pendingFiles.length) {
+          try {
+            const uploadedUrls = [];
+            for (const file of pendingFiles) {
+              const fileUrl = await uploadProjectFile(created.id, file);
+              if (fileUrl) uploadedUrls.push(fileUrl);
+            }
+            if (uploadedUrls.length) {
+              const { data: updatedWithFiles, error: filesUpdateError } = await supabase
+                .from("projects")
+                .update({ attachments: [...(created.attachments || []), ...uploadedUrls] })
+                .eq("id", created.id)
+                .select()
+                .single();
+              if (filesUpdateError) throw filesUpdateError;
+              finalProject = updatedWithFiles;
+            }
+          } catch (uploadError) {
+            attachmentUploadFailed = true;
+            console.error("Project created but attachment upload failed", uploadError);
+          }
+        }
+        setPendingFiles([]);
+        toast(attachmentUploadFailed
+          ? { variant: "destructive", title: "تم إنشاء المشروع، لكن تعذر رفع بعض المرفقات", description: "افتح المشروع وأعد رفع الملفات بعد التحقق من صلاحيات التخزين." }
+          : { title: pendingFiles.length ? "تم إنشاء المشروع ورفع المرفقات" : "تم إنشاء المشروع", description: "حُفظ المشروع في Supabase." });
+        onCreated?.(finalProject);
         onOpenChange?.(false);
       }
     } catch (err) {
@@ -310,6 +344,20 @@ export default function AddProjectDialog({ open, onOpenChange, onCreated, onUpda
                   <input type="file" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} disabled={uploading} />
                 </label>
               </div>
+              {pendingFiles.length > 0 && (
+                <div className="space-y-1.5 mt-2">
+                  {pendingFiles.map((file, idx) => (
+                    <div key={`${file.name}-${idx}`} className="flex items-center gap-2 rounded-lg bg-amber-50 px-3 py-2 text-xs">
+                      <Paperclip className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                      <span className="flex-1 truncate">{file.name}</span>
+                      <button type="button" onClick={() => setPendingFiles((current) => current.filter((_, i) => i !== idx))} className="text-red-500 hover:bg-red-50 rounded p-1" aria-label="إزالة المرفق المعلق">
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                  <p className="text-[11px] text-amber-700">سيتم رفع هذه الملفات بعد إنشاء المشروع.</p>
+                </div>
+              )}
               {(form.attachments?.length > 0) && (
                 <div className="space-y-1.5 mt-2">
                   {form.attachments.map((url, idx) => (
