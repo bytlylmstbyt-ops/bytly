@@ -279,7 +279,7 @@ bytlyCompat.entities.Contract = {
     if (mapped.engineer_id) mapped.engineer_id = await resolveLegacyId('Engineer', mapped.engineer_id);
     if (mapped.client_id) { mapped.client_user_id = await resolveClientUserId(mapped.client_id); delete mapped.client_id; }
     if (mapped.project_id) mapped.project_id = await resolveLegacyId('Project', mapped.project_id);
-    if ((filters?.engineer_id && !mapped.engineer_id) || (filters?.client_id && !mapped.client_id) || (filters?.project_id && !mapped.project_id)) return [];
+    if ((filters?.engineer_id && !mapped.engineer_id) || (filters?.client_id && !mapped.client_user_id) || (filters?.project_id && !mapped.project_id)) return [];
     let q = supabase.from('project_contracts').select('*');
     Object.entries(mapped).forEach(([key, value]) => {
       q = value === null ? q.is(key, null) : Array.isArray(value) ? q.in(key, value) : q.eq(key, value);
@@ -326,9 +326,9 @@ const normalizeProjectRow = row => row ? ({
 bytlyCompat.entities.Project = { ...legacyProject,
   filter: async (filters = {}, sort = '-created_date', limit = 100) => {
     const mapped = { ...(filters || {}) };
-    if (mapped.client_id) mapped.client_id = await resolveLegacyId('Client', mapped.client_id);
+    if (mapped.client_id) { mapped.client_user_id = await resolveClientUserId(mapped.client_id); delete mapped.client_id; }
     if (mapped.assigned_engineer_id) mapped.assigned_engineer_id = await resolveLegacyId('Engineer', mapped.assigned_engineer_id);
-    if ((filters?.client_id && !mapped.client_id) || (filters?.assigned_engineer_id && !mapped.assigned_engineer_id)) return [];
+    if ((filters?.client_id && !mapped.client_user_id) || (filters?.assigned_engineer_id && !mapped.assigned_engineer_id)) return [];
 
     let query = supabase.from('projects').select('*');
     Object.entries(mapped).forEach(([key, value]) => {
