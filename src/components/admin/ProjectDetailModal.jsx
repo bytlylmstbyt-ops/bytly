@@ -52,7 +52,6 @@ export default function ProjectDetailModal({ open, onOpenChange, project, lookup
           supabase.from("project_milestones").select("*").eq("project_id", project.id).order("sequence_no", { ascending: true }),
           supabase.from("messages").select("*").eq("project_id", project.id).order("created_at", { ascending: false }).limit(100),
         ]);
-        const labels = ["offers", "contracts", "payments", "activity", "milestones", "messages"];
         const failed = results.find((result) => result.error);
         if (failed?.error) throw failed.error;
         const [offersResult, contractsResult, paymentsResult, activityResult, milestonesResult, messagesResult] = results;
