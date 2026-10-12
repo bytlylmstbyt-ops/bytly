@@ -8,7 +8,18 @@ export async function uploadScopedFile(scope, file) {
   if (!scope || !file) throw new Error("بيانات الملف غير مكتملة.");
 
   const safeName = (file.name || "file").replace(/[^\\w.\\-\\u0600-\\u06FF ]/g, "_");
-  const path = `${scope}/${crypto.randomUUID()}-${safeName}`;
+  let path;
+  if (scope === "permits") {
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError) throw authError;
+    const userId = authData?.user?.id;
+    if (!userId) throw new Error("يجب تسجيل الدخول قبل رفع ملفات التصريح.");
+    // Permit attachments are scoped to the authenticated user and protected by
+    // storage policies on permits/{auth.uid()}/...
+    path = `permits/${userId}/${crypto.randomUUID()}-${safeName}`;
+  } else {
+    path = `${scope}/${crypto.randomUUID()}-${safeName}`;
+  }
   const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
     upsert: false,
     contentType: file.type || undefined,
