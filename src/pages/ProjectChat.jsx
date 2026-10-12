@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { useSearchParams, Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { motion } from "framer-motion";
@@ -32,92 +32,98 @@ export default function ProjectChat() {
   const [availableParticipants, setAvailableParticipants] = useState([]);
   const [newConvName, setNewConvName] = useState("");
   const [creatingConv, setCreatingConv] = useState(false);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     loadData();
   }, [projectId]);
 
   useEffect(() => {
-    // Real-time subscription to conversation updates
-    const unsubscribe = base44.entities.Conversation.subscribe((event) => {
-      if (event.data?.project_id === projectId) {
-        if (event.type === 'create') {
-          setConversations(prev => [...prev, event.data]);
-        } else if (event.type === 'update') {
-          setConversations(prev => prev.map(c => c.id === event.id ? event.data : c));
-        }
-      }
-    });
-
-    return () => unsubscribe();
-  }, [projectId]);
-
-  const loadData = async () => {
+    const channel = supabase
+      .channel(`project-conversations-${projectId || "none"}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, payload => {
+        const row = payload.new || payload.old;
+        if (!row || row.project_id !== projectId) return;
+        if (payload.eventType === "INSERT") setConversations(prev => prev.some(c => c.id === row.id) ? prev : [...prev, mapConversation(row)]);
+        if (payload.eventType === "UPDATE") set  const loadData = async () => {
+    setLoading(true);
+    setLoadError("");
     try {
-      const user = await base44.auth.me();
-      setCurrentUser(user);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const user = authData?.user;
+      if (!user?.id) throw new Error("سجّل الدخول لعرض محادثات المشروع.");
+      setCurrentUser({ id: user.id, email: user.email, full_name: user.user_metadata?.full_name || user.email });
+      if (!projectId) throw new Error("معرّف المشروع غير موجود في الرابط.");
 
-      const [projectData] = await base44.entities.Project.filter({ id: projectId });
+      const { data: projectData, error: projectError } = await supabase.from("projects").select("*").eq("id", projectId).maybeSingle();
+      if (projectError) throw projectError;
+      if (!projectData) throw new Error("المشروع غير موجود أو لا تملك صلاحية عرضه.");
       setProject(projectData);
 
-      let convs = await base44.entities.Conversation.filter({
-        project_id: projectId,
-        is_archived: false
-      });
-
-      // Create main room if it doesn't exist
-      const mainRoom = convs.find(c => c.is_main_room);
-      if (!mainRoom && projectData.project_type === "full_construction") {
-        const participants = [projectData.client_id];
-        if (projectData.assigned_engineer_id) participants.push(projectData.assigned_engineer_id);
-        
-        const newMainRoom = await base44.entities.Conversation.create({
-          project_id: projectId,
-          type: "three_way",
-          name: "غرفة المشروع الرئيسية - جميع الأطراف",
-          description: "محادثة بين العميل والمهندس والشركة الاستشارية",
-          participants,
-          is_main_room: true
-        });
-        convs = [newMainRoom, ...convs];
-      }
-      
+      const [convResult, memberResult, engineerResult, clientResult] = await Promise.all([
+        supabase.from("conversations").select("*").eq("project_id", projectId).eq("is_archived", false).order("created_at", { ascending: false }),
+        supabase.from("conversation_members").select("conversation_id").eq("user_id", user.id),
+        supabase.from("engineers").select("id,user_id,email,full_name,status").limit(500),
+        supabase.from("clients").select("id,user_id,email,full_name,status").limit(500),
+      ]);
+      for (const result of [convResult, memberResult, engineerResult, clientResult]) if (result.error) throw result.error;
+      const memberConversationIds = new Set((memberResult.data || []).map(row => row.conversation_id));
+      const convs = (convResult.data || []).filter(row => row.created_by === user.id || memberConversationIds.has(row.id)).map(mapConversation);
       setConversations(convs);
 
-      // Load available participants
-      const [engineers, clients] = await Promise.all([
-        base44.entities.Engineer.list(),
-        base44.entities.Client.list()
-      ]);
-      setAvailableParticipants([
-        ...engineers.map(e => ({ email: e.email, name: e.full_name, type: "engineer" })),
-        ...clients.map(c => ({ email: c.email, name: c.full_name, type: "client" }))
-      ]);
+      const participants = [
+        ...(engineerResult.data || []).map(e => ({ email: e.email, name: e.full_name, type: "engineer", user_id: e.user_id })).filter(p => p.email && p.user_id),
+        ...(clientResult.data || []).map(p => ({ email: p.email, name: p.full_name, type: "client", user_id: p.user_id })).filter(p => p.email && p.user_id),
+      ];
+      const unique = new Map();
+      participants.forEach(p => { if (p.user_id !== user.id && !unique.has(p.user_id)) unique.set(p.user_id, p); });
+      setAvailableParticipants([...unique.values()]);
     } catch (error) {
-      console.error("Error loading data:", error);
+      console.error("Error loading project chat:", error);
+      setLoadError(error?.message || "تعذر تحميل محادثات المشروع.");
+      setProject(null);
+      setConversations([]);
+      setAvailableParticipants([]);
     } finally {
       setLoading(false);
     }
   };
 
   const handleCreateConversation = async () => {
-    if (selectedParticipants.length === 0) return;
-
+    if (!selectedParticipants.length || !currentUser?.id) return;
     setCreatingConv(true);
+    setLoadError("");
     try {
-      const newConv = await base44.entities.Conversation.create({
+      const selected = availableParticipants.filter(p => selectedParticipants.includes(p.email));
+      if (selected.length !== selectedParticipants.length) throw new Error("تعذر التحقق من جميع المشاركين المحددين.");
+      const userIds = [...new Set([currentUser.id, ...selected.map(p => p.user_id).filter(Boolean)])];
+      const emails = [currentUser.email, ...selected.map(p => p.email)].filter(Boolean);
+      const roles = { [currentUser.email]: "user" };
+      selected.forEach(p => { roles[p.email] = p.type; });
+      const { data: created, error } = await supabase.from("conversations").insert({
         project_id: projectId,
-        type: selectedParticipants.length > 1 ? "group" : "direct",
-        name: newConvName || `محادثة مع ${selectedParticipants.join(", ")}`,
-        participants: [currentUser.email, ...selectedParticipants],
-        admin_emails: [currentUser.email]
-      });
-
-      setConversations([...conversations, newConv]);
+        created_by: currentUser.id,
+        title: newConvName.trim() || `محادثة مع ${selected.map(p => p.name || p.email).join("، ")}`,
+        type: selected.length > 1 ? "group" : "direct",
+        participants: emails,
+        participant_roles: roles,
+        is_archived: false,
+      }).select("*").single();
+      if (error) throw error;
+      const { error: membersError } = await supabase.from("conversation_members").insert(
+        userIds.map(user_id => ({ conversation_id: created.id, user_id }))
+      );
+      if (membersError) {
+        setLoadError("تم إنشاء المحادثة لكن تعذر إضافة المشاركين. أعد المحاولة أو تواصل مع الدعم.");
+        throw membersError;
+      }
+      setConversations(prev => [mapConversation(created), ...prev]);
       setSelectedParticipants([]);
       setNewConvName("");
     } catch (error) {
-      console.error("Error creating conversation:", error);
+      console.error("Error creating Supabase conversation:", error);
+      setLoadError(error?.message || "تعذر إنشاء المحادثة.");
     } finally {
       setCreatingConv(false);
     }
@@ -140,6 +146,7 @@ export default function ProjectChat() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          {loadError && <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{loadError}</div>}
           {/* Header */}
           <div className="mb-8">
             <Link to={createPageUrl("ProjectKanban") + `?id=${projectId}`}>
