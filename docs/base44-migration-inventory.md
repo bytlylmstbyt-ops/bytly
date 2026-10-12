@@ -90,3 +90,38 @@ The test Project has a confusing `is_sample = false` flag, but its title and des
 - Therefore, **do not bulk-import Project, Proposal, or Contract staging data**. There are no verified real project/contract records in this source snapshot to migrate into the empty target tables.
 - The remaining real migration work is user/profile identity reconciliation (the source has 56 users while the mapping table has 48 pending), plus checking other business entities individually for real records and confirming the app's pages work against Supabase.
 - This is a point-in-time source inventory, not proof that no historical data exists in backups or exports outside the current Base44 entities. If an external archive exists, compare it separately before retiring Base44.
+
+## Additional business-entity source scan — 2026-10-12
+
+Additional live Base44 entity queries were performed for operational records:
+
+| Entity | Source records | Assessment |
+|---|---:|---|
+| `Engineer` | 17 | Includes 9 non-demo records represented in the target engineers table; also includes duplicates/test accounts |
+| `EngineeringFirm` | 6 | The matching target records are explicitly marked `is_real = false`; do not treat as verified real firms |
+| `Contractor` | 0 | No current source records returned |
+| `Supplier` | 0 | No current source records returned |
+| `LegalConsultant` | 0 | No current source records returned |
+| `QuoteRequest` | 0 | No current source records returned |
+| `Payment` | 0 | No current source records returned |
+| `Invoice` | 1 | `INV-TEST-001` references `test-project-001` and is test data; do not migrate |
+| `PermitApplication` | 1 | A real-looking application for the owner account exists; it references Base44-hosted DWG/PDF files and a Stripe test-session ID |
+| `Advertisement` | 3 | All three currently have matching target rows by Base44 ID |
+| `Dispute` | 0 | No current source records returned |
+| `WithdrawalRequest` | 0 | No current source records returned |
+| `ReadyMadeDesign` | 0 | No current source records returned |
+| `SurveyorProfile` | 0 | No current source records returned |
+| `MarketContract` | 0 | No current source records returned |
+| `DesignPurchase` | 0 | No current source records returned |
+
+### Permit application decision
+
+The permit application should **not** be marked fully migrated yet. Its client email matches an existing Supabase profile, but its `project_id` and `engineer_id` are empty, and its ownership-deed image, DWG drawings, and soil-report PDF are hosted on Base44. Copying the database row alone would preserve a runtime dependency on Base44 file hosting. It also contains a Stripe test-session ID and pending payment status. Migrate it only after copying and validating the files in Supabase Storage, preserving metadata and ownership, and ensuring test payment identifiers remain inert. No payment or permit status was changed.
+
+### Ads decision
+
+The three source advertisements are already represented in `public.advertisements` with matching `base44_id` values. No duplicate insert is needed. Their current destination URLs point to `https://bytly.com`; verify that this is the intended production domain before considering ad migration complete.
+
+### Identity and duplicate-profile caution
+
+The source Engineer entity contains two records for the same engineer email with different Base44 IDs/statuses, and it contains platform/demo profiles. Keep stable Base44 IDs as migration keys and deduplicate only after confirming ownership and intended account status. Email alone is not sufficient to merge profiles or grant access.
