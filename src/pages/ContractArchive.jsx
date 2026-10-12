@@ -1,133 +1,164 @@
-import { useState, useEffect } from "react";
-
-
-import { base44 } from "@/api/base44Client";
+import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { supabase } from "@/lib/supabaseClient";
+import { FileText, Search, Loader2, AlertCircle, Eye, CalendarDays, Banknote } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-
-
-
-
-
-
-
-
+const STATUS_LABELS = {
+  draft: "مسودة",
+  pending_signature: "بانتظار التوقيع",
+  signed: "موقّع",
+  active: "ساري",
+  completed: "مكتمل",
+  terminated: "منتهي",
+  archived: "مؤرشف",
+};
 
 export default function ContractArchive() {
   const [contracts, setContracts] = useState([]);
-  const [filteredContracts, setFilteredContracts] = useState([]);
-  const [engineers, setEngineers] = useState({});
-  const [clients, setClients] = useState({});
   const [projects, setProjects] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userType, setUserType] = useState(null);
 
   useEffect(() => {
-    loadData();
+    let active = true;
+    const load = async () => {
+      setLoading(true);
+      setLoadError("");
+      try {
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        const userId = authData?.user?.id;
+        if (!userId) throw new Error("سجّل الدخول لعرض أرشيف العقود.");
+
+        const { data, error } = await supabase
+          .from("project_contracts")
+          .select("*")
+          .or(`client_user_id.eq.${userId},provider_user_id.eq.${userId}`)
+          .order("created_at", { ascending: false })
+          .limit(500);
+        if (error) throw error;
+        const rows = data || [];
+
+        const projectIds = [...new Set(rows.map(row => row.project_id).filter(Boolean))];
+        let projectMap = {};
+        if (projectIds.length) {
+          const { data: projectRows, error: projectError } = await supabase
+            .from("projects")
+            .select("id,title")
+            .in("id", projectIds);
+          if (projectError) throw projectError;
+          projectMap = Object.fromEntries((projectRows || []).map(project => [project.id, project]));
+        }
+        if (!active) return;
+        setContracts(rows);
+        setProjects(projectMap);
+      } catch (error) {
+        console.error("Contract archive failed to load:", error);
+        if (!active) return;
+        setLoadError(error?.message || "تعذر تحميل أرشيف العقود.");
+        setContracts([]);
+        setProjects({});
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    load();
+    return () => { active = false; };
   }, []);
 
-  const filterContracts = () => {
-    let result = contracts;
-    if (statusFilter !== "all") {
-      result = result.filter(c => c.status === statusFilter);
-    }
-    if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
-      result = result.filter(c =>
-        (c.contract_number || "").toLowerCase().includes(q) ||
-        (c.title || "").toLowerCase().includes(q)
-      );
-    }
-    setFilteredContracts(result);
-  };
+  const filteredContracts = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return contracts.filter(contract => {
+      const statusMatches = statusFilter === "all" || contract.status === statusFilter;
+      const projectTitle = projects[contract.project_id]?.title || contract.title || "";
+      const searchMatches = !q ||
+        String(contract.contract_number || "").toLowerCase().includes(q) ||
+        String(projectTitle).toLowerCase().includes(q);
+      return statusMatches && searchMatches;
+    });
+  }, [contracts, projects, searchQuery, statusFilter]);
 
-  useEffect(() => {
-    filterContracts();
-  }, [contracts, searchQuery, statusFilter]);
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center" dir="rtl"><Loader2 className="w-10 h-10 animate-spin text-[#C9A66B]" /></div>;
+  }
 
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const user = await Promise.race([
-        base44.auth.me(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("انتهت مهلة تحميل المستخدم")), 10000))
-      ]);
-      setCurrentUser(user);
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8" dir="rtl">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-7">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e] flex items-center gap-2"><FileText className="w-7 h-7 text-[#C9A66B]" /> أرشيف العقود</h1>
+            <p className="text-sm text-slate-500 mt-2">العقود المرتبطة بحسابك في بيتلي</p>
+          </div>
+          <Badge variant="secondary" className="w-fit">{filteredContracts.length} عقد</Badge>
+        </div>
 
-      // Contracts in the new Supabase schema are linked directly to the
-      // authenticated user IDs (client_user_id/provider_user_id). Do not
-      // require a legacy Client/Engineer record just to open this page.
-      const authUserId = user?.user_id || user?.id;
-      let userContracts = [];
+        {loadError && (
+          <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 flex gap-2">
+            <AlertCircle className="w-5 h-5 shrink-0" /> {loadError}
+          </div>
+        )}
 
-      if (authUserId) {
-        const { data, error } = await Promise.race([
-          supabase
-            .from("project_contracts")
-            .select("*")
-            .or(`client_user_id.eq.${authUserId},provider_user_id.eq.${authUserId}`)
-            .order("created_at", { ascending: false }),
-          new Promise((_, reject) => setTimeout(() => reject(new Error("انتهت مهلة قراءة العقود")), 10000))
-        ]);
-        if (error) throw error;
-        userContracts = data || [];
-      }
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Input value={searchQuery} onChange={event => setSearchQuery(event.target.value)} placeholder="ابحث برقم العقد أو اسم المشروع..." className="pr-9 rounded-xl bg-white" />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-52 rounded-xl bg-white"><SelectValue placeholder="حالة العقد" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">كل الحالات</SelectItem>
+              {Object.entries(STATUS_LABELS).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
 
-      // Keep legacy fallback only for migrated accounts that have no new
-      // Supabase contracts. It is bounded so the page can never spin forever.
-      if (userContracts.length === 0 && user?.email) {
-        const [engineerData, clientData] = await Promise.all([
-          Promise.race([base44.entities.Engineer.filter({ email: user.email }), new Promise(resolve => setTimeout(() => resolve([]), 5000))]).catch(() => []),
-          Promise.race([base44.entities.Client.filter({ email: user.email }), new Promise(resolve => setTimeout(() => resolve([]), 5000))]).catch(() => [])
-        ]);
-
-        if (engineerData?.[0]) {
-          setUserType("engineer");
-          userContracts = await Promise.race([
-            base44.entities.Contract.filter({ engineer_id: engineerData[0].id }),
-            new Promise(resolve => setTimeout(() => resolve([]), 7000))
-          ]).catch(() => []);
-        } else if (clientData?.[0]) {
-          setUserType("client");
-          userContracts = await Promise.race([
-            base44.entities.Contract.filter({ client_id: clientData[0].id }),
-            new Promise(resolve => setTimeout(() => resolve([]), 7000))
-          ]).catch(() => []);
-        }
-      }
-
-      if (!userType) setUserType("client");
-      setContracts(userContracts);
-
-      // Resolve related records from the current Supabase schema.
-      const projectIds = [...new Set(userContracts.map(c => c.project_id).filter(Boolean))];
-      const [projectsData] = await Promise.all([
-        Promise.all(projectIds.map(id =>
-          Promise.race([
-            supabase.from("projects").select("*").eq("id", id).maybeSingle().then(r => r.data ? [r.data] : []),
-            new Promise(resolve => setTimeout(() => resolve([]), 5000))
-          ]).catch(() => [])
-        ))
-      ]);
-
-      const projectsMap = {};
-      projectsData.flat().forEach(data => { if (data?.id) projectsMap[data.id] = data; });
-      setProjects(projectsMap);
-
-      // These maps are retained for legacy contract rendering.
-      setEngineers({});
-      setClients({});
-    } catch (error) {
-      console.error("Error loading contracts:", error);
-      setContracts([]);
-      setUserType("client");
-      setEngineers({});
-      setClients({});
-      setProjects({});
-    } finally {
-      setIsLoading(false);
-    }
-  };}
+        {filteredContracts.length ? (
+          <div className="space-y-3">
+            {filteredContracts.map(contract => {
+              const projectTitle = projects[contract.project_id]?.title || contract.title || "مشروع بدون عنوان";
+              const amount = contract.total_amount ?? contract.amount;
+              return (
+                <Card key={contract.id} className="border-0 shadow-sm">
+                  <CardContent className="p-5 flex flex-col md:flex-row md:items-center gap-4">
+                    <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center shrink-0"><FileText className="w-5 h-5 text-[#C9A66B]" /></div>
+                    <div className="flex-1 min-w-0">
+                      <h2 className="font-bold text-[#1a1a2e] truncate">{projectTitle}</h2>
+                      <p className="text-xs text-slate-500 mt-1">رقم العقد: {contract.contract_number || "غير محدد"}</p>
+                      <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3 text-sm text-slate-500">
+                        <span className="inline-flex items-center gap-1"><CalendarDays className="w-4 h-4" />{contract.created_at ? new Date(contract.created_at).toLocaleDateString("ar-SA") : "—"}</span>
+                        <span className="inline-flex items-center gap-1"><Banknote className="w-4 h-4" />{amount != null ? Number(amount).toLocaleString("ar-SA") + " ر.س" : "القيمة غير محددة"}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge variant="secondary">{STATUS_LABELS[contract.status] || contract.status || "غير محدد"}</Badge>
+                      <Link to={createPageUrl("Contract") + `?id=${encodeURIComponent(contract.id)}`}>
+                        <Button variant="outline" size="sm"><Eye className="w-4 h-4 ml-1" /> عرض العقد</Button>
+                      </Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <Card className="border-dashed shadow-none bg-white/70">
+            <CardContent className="py-14 text-center">
+              <FileText className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+              <h2 className="font-semibold text-slate-700">لا توجد عقود مطابقة</h2>
+              <p className="text-sm text-slate-500 mt-2">{contracts.length ? "جرّب تغيير البحث أو فلتر الحالة." : "ستظهر العقود المرتبطة بحسابك هنا عند توفرها."}</p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
