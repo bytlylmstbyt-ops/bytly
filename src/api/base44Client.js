@@ -299,30 +299,61 @@ bytlyCompat.entities.Contract = {
 };
 
 const legacyProject = bytlyCompat.entities.Project;
+const normalizeProjectRow = row => row ? ({
+  ...row,
+  created_date: row.created_date || row.created_at || null,
+}) : row;
 bytlyCompat.entities.Project = { ...legacyProject,
-  filter: async filters => {
+  filter: async (filters = {}, sort = '-created_date', limit = 100) => {
     const mapped = { ...(filters || {}) };
     if (mapped.client_id) mapped.client_id = await resolveLegacyId('Client', mapped.client_id);
     if (mapped.assigned_engineer_id) mapped.assigned_engineer_id = await resolveLegacyId('Engineer', mapped.assigned_engineer_id);
     if ((filters?.client_id && !mapped.client_id) || (filters?.assigned_engineer_id && !mapped.assigned_engineer_id)) return [];
-    try {
-      let q=supabase.from('projects').select('*');
-      Object.entries(mapped).forEach(([k,v])=>{q=v===null?q.is(k,null):Array.isArray(v)?q.in(k,v):q.eq(k,v)});
-      const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة المشروع');
-      if(!error && data?.length) return data;
-    } catch {}
-    return [];
+
+    let query = supabase.from('projects').select('*');
+    Object.entries(mapped).forEach(([key, value]) => {
+      query = value === null ? query.is(key, null) : Array.isArray(value) ? query.in(key, value) : query.eq(key, value);
+    });
+    const sortField = String(sort || '-created_date').replace(/^-/, '');
+    query = query.order(sortField === 'created_date' ? 'created_at' : sortField, {
+      ascending: !String(sort || '-created_date').startsWith('-'),
+    }).limit(Math.max(1, Math.min(Number(limit) || 100, 500)));
+
+    const { data, error } = await withHardTimeout(query, 10000, 'انتهت مهلة قراءة المشاريع');
+    if (error) throw new Error(error.message || 'تعذر قراءة المشاريع من Supabase');
+    return (data || []).map(normalizeProjectRow);
   },
-  list: async(sort='-created_date',limit=100)=>{
-    try {
-      const {data,error}=await withHardTimeout(supabase.from('projects').select('*').limit(limit).order('created_at',{ascending:!sort.startsWith('-')}),10000,'انتهت مهلة قراءة المشاريع');
-      if(!error && data?.length) return data;
-    } catch {}
-    return [];
+  list: async (sort = '-created_date', limit = 100) => {
+    const sortField = String(sort || '-created_date').replace(/^-/, '');
+    const query = supabase.from('projects').select('*')
+      .order(sortField === 'created_date' ? 'created_at' : sortField, {
+        ascending: !String(sort || '-created_date').startsWith('-'),
+      })
+      .limit(Math.max(1, Math.min(Number(limit) || 100, 500)));
+    const { data, error } = await withHardTimeout(query, 10000, 'انتهت مهلة قراءة المشاريع');
+    if (error) throw new Error(error.message || 'تعذر قراءة المشاريع من Supabase');
+    return (data || []).map(normalizeProjectRow);
   },
-  update: async(id,payload)=>{const {data,error}=await withHardTimeout(supabase.from('projects').update({...payload,updated_at:new Date().toISOString()}).eq('id',id).select('*').single(),10000,'انتهت مهلة تحديث المشروع');if(error)throw new Error(error.message);return data},
-  create: async payload=>{const row={...payload};delete row.id;delete row.created_date;const {data,error}=await withHardTimeout(supabase.from('projects').insert(row).select('*').single(),10000,'انتهت مهلة إنشاء المشروع');if(error)throw new Error(error.message);return data},
-  delete: async id=>{const {error}=await withHardTimeout(supabase.from('projects').delete().eq('id',id),10000,'انتهت مهلة حذف المشروع');if(error)throw new Error(error.message);return true},
+  update: async (id, payload) => {
+    const patch = { ...payload, updated_at: new Date().toISOString() };
+    delete patch.created_date;
+    const { data, error } = await withHardTimeout(supabase.from('projects').update(patch).eq('id', id).select('*').single(), 10000, 'انتهت مهلة تحديث المشروع');
+    if (error) throw new Error(error.message || 'تعذر تحديث المشروع');
+    return normalizeProjectRow(data);
+  },
+  create: async payload => {
+    const row = { ...payload };
+    delete row.id;
+    delete row.created_date;
+    const { data, error } = await withHardTimeout(supabase.from('projects').insert(row).select('*').single(), 15000, 'انتهت مهلة إنشاء المشروع');
+    if (error) throw new Error(error.message || 'تعذر إنشاء المشروع');
+    return normalizeProjectRow(data);
+  },
+  delete: async id => {
+    const { error } = await withHardTimeout(supabase.from('projects').delete().eq('id', id), 10000, 'انتهت مهلة حذف المشروع');
+    if (error) throw new Error(error.message || 'تعذر حذف المشروع');
+    return true;
+  },
 };
 
 const legacyClient = bytlyCompat.entities.Client;
