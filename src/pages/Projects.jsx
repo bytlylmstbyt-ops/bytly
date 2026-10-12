@@ -42,26 +42,42 @@ export default function Projects() {
 
   const loadProjects = async () => {
     setIsLoading(true);
-    
-    // Get current user and engineer profile
-    const user = await base44.auth.me();
-    setCurrentUser(user);
-    const admin = user?.role === "admin";
-    setIsAdmin(admin);
-    if (admin) { setIsLoading(false); return; }
-    
-    const engineerData = await base44.entities.Engineer.filter({ email: user.email }).catch(() => []);
-    if (engineerData && engineerData.length > 0) {
-      setCurrentEngineer(engineerData[0]);
+
+    try {
+      // Resolve auth and project data inside one guarded lifecycle so a network,
+      // auth, or database error cannot leave the page spinning forever.
+      const user = await base44.auth.me();
+      setCurrentUser(user || null);
+      const admin = user?.role === "admin";
+      setIsAdmin(admin);
+      if (admin) {
+        setProjects([]);
+        return;
+      }
+
+      if (!user?.email) {
+        setProjects([]);
+        return;
+      }
+
+      const engineerData = await base44.entities.Engineer.filter({ email: user.email }).catch((error) => {
+        console.warn("Projects: engineer profile lookup failed", error);
+        return [];
+      });
+      setCurrentEngineer(engineerData?.[0] || null);
+
+      const filter = statusFilter ? { status: statusFilter } : {};
+      const data = await base44.entities.Project.filter(filter, "-created_date", 50);
+      // Hide hidden projects from the public market; pinned ones float to top
+      const visible = (data || []).filter((p) => !p.is_hidden);
+      visible.sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0));
+      setProjects(visible);
+    } catch (error) {
+      console.error("Projects: failed to load projects", error);
+      setProjects([]);
+    } finally {
+      setIsLoading(false);
     }
-    
-    const filter = statusFilter ? { status: statusFilter } : {};
-    const data = await base44.entities.Project.filter(filter, "-created_date", 50);
-    // Hide hidden projects from the public market; pinned ones float to top
-    const visible = data.filter((p) => !p.is_hidden);
-    visible.sort((a, b) => (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0));
-    setProjects(visible);
-    setIsLoading(false);
   };
 
   const activeFiltersCount = [locationFilter, dateFrom, dateTo, projectTypeFilter, categoryFilter].filter(Boolean).length;

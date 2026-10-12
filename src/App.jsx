@@ -95,7 +95,70 @@ const AdminPlatformSettings = React.lazy(() => import('./pages/AdminPlatformSett
 const ContractorsLanding = React.lazy(() => import('./pages/audiences/ContractorsLanding'));
 const ConsultingTeamsLanding = React.lazy(() => import('./pages/audiences/ConsultingTeamsLanding'));
 
-function PageSpinner() { return <div className="fixed inset-0 flex items-center justify-center bg-white/60"><div className="w-8 h-8 border-4 border-slate-200 border-t-[#C9A66B] rounded-full animate-spin" /></div>; }
+class RouteErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, info) {
+    console.error(`Bytly route failed to render: ${this.props.pageName || "unknown"}`, error, info);
+  }
+
+  render() {
+    if (!this.state.hasError) return this.props.children;
+    const pageName = this.props.pageName || "هذه الصفحة";
+    return (
+      <main dir="rtl" className="min-h-[60vh] flex items-center justify-center p-6 bg-slate-50">
+        <section role="alert" className="max-w-lg w-full rounded-2xl border border-amber-200 bg-white p-6 shadow-sm text-right">
+          <h1 className="text-xl font-semibold text-slate-900">تعذر تحميل الصفحة</h1>
+          <p className="mt-2 text-sm leading-7 text-slate-600">
+            حدث خطأ أثناء فتح {pageName}. لم نترك الصفحة على شاشة تحميل مستمرة.
+            يمكنك إعادة المحاولة أو العودة للرئيسية.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <button type="button" onClick={() => window.location.reload()} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white">
+              إعادة المحاولة
+            </button>
+            <button type="button" onClick={() => { window.location.href = "/"; }} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">
+              العودة للرئيسية
+            </button>
+          </div>
+        </section>
+      </main>
+    );
+  }
+}
+
+function PageSpinner() {
+  const [slow, setSlow] = React.useState(false);
+  React.useEffect(() => {
+    const timer = window.setTimeout(() => setSlow(true), 15000);
+    return () => window.clearTimeout(timer);
+  }, []);
+  return (
+    <div role="status" aria-live="polite" className="fixed inset-0 z-50 flex items-center justify-center bg-white/90 p-6">
+      <div className="flex max-w-sm flex-col items-center gap-4 text-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-t-[#C9A66B]" />
+        <p className="text-sm text-slate-700">{slow ? "تأخر تحميل الصفحة عن المعتاد." : "جارٍ تحميل الصفحة..."}</p>
+        {slow && (
+          <div className="flex flex-wrap justify-center gap-3">
+            <button type="button" onClick={() => window.location.reload()} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white">
+              إعادة المحاولة
+            </button>
+            <button type="button" onClick={() => { window.location.href = "/"; }} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700">
+              العودة للرئيسية
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 function PublicHomeRoute() {
   const { isAuthenticated, isLoadingPublicSettings } = useAuth();
   if (isLoadingPublicSettings) return <PageSpinner />;
@@ -109,8 +172,8 @@ function PublicHomeRoute() {
 }
 const { Pages, Layout } = pagesConfig;
 const LayoutWrapper = ({ children, currentPageName }) => Layout ? <Layout currentPageName={currentPageName}>{children}</Layout> : <>{children}</>;
-const lazyRoute = (Component, name) => <LayoutWrapper currentPageName={name}><Suspense fallback={<PageSpinner />}><Component /></Suspense></LayoutWrapper>;
-const protectedRoute = (Component, name) => <ProtectedRoute><RegistrationGate><LayoutWrapper currentPageName={name}><Suspense fallback={<PageSpinner />}><Component /></Suspense></LayoutWrapper></RegistrationGate></ProtectedRoute>;
+const lazyRoute = (Component, name) => <RouteErrorBoundary pageName={name}><LayoutWrapper currentPageName={name}><Suspense fallback={<PageSpinner />}><Component /></Suspense></LayoutWrapper></RouteErrorBoundary>;
+const protectedRoute = (Component, name) => <RouteErrorBoundary pageName={name}><ProtectedRoute><RegistrationGate><LayoutWrapper currentPageName={name}><Suspense fallback={<PageSpinner />}><Component /></Suspense></LayoutWrapper></RegistrationGate></ProtectedRoute></RouteErrorBoundary>;
 
 const AuthenticatedApp = () => {
   const { isLoadingPublicSettings } = useAuth();
