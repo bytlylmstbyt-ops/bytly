@@ -45,7 +45,7 @@ export default function EngineerMatcher() {
         const experience = Number(engineer.years_experience) || 0;
         const rating = Math.min(5, Math.max(0, Number(engineer.rating) || 0));
         const specializationMatch = terms.length === 0 || terms.some(term => specialization.includes(term.toLowerCase()));
-        const locationMatch = !requestedLocation || city.includes(requestedLocation) || requestedLocation.includes(city);
+        const locationMatch = !requestedLocation || (Boolean(city) && (city.includes(requestedLocation) || requestedLocation.includes(city)));
         const experienceMatch = experience >= minimumExperience;
         const specializationScore = specializationMatch ? 45 : 0;
         const locationScore = !requestedLocation ? 25 : locationMatch ? 25 : 0;
