@@ -70,3 +70,23 @@ This snapshot was checked against the connected Supabase project after the adapt
 ### Decision / safe next action
 
 The current live staging inventory does **not** provide evidence for a safe bulk import of projects/contracts: the only staged project is explicitly excluded demo data, and the client/firm staging sets are all non-real. Preserve the staging records as audit evidence. Next, retrieve a verified source export from the old system or the owner-approved archive, reconcile stable IDs and real-user identity mappings, and then prepare a reviewed, idempotent migration plan. Do not fabricate records, import demo data, or enable live financial operations to make pages appear populated.
+
+## Direct Base44 source verification — 2026-10-12
+
+The live Base44 app `بيتلي -BYTLY` (app ID `69741d7bf3195aeab86a1582`) was queried directly with the entity API. This replaces the earlier assumption that a separate export is the only way to establish the current Project/Contract inventory.
+
+| Base44 entity | Live records returned | Finding |
+|---|---:|---|
+| `Project` | 1 | The only record is titled “مشروع تجريبي — فيلا سكنية بالرياض”; its description says it is a test project for offer comparison |
+| `Proposal` | 4 | All 4 reference that same test project; their staged statuses are `demo_excluded` |
+| `Contract` | 1 | Contract `BYT-42330476` references the same test project; its staged status is `demo_excluded` |
+| `User` | 56 | 56 source user records are present; do not treat these as automatically linked Supabase Auth users |
+
+The test Project has a confusing `is_sample = false` flag, but its title and description explicitly identify it as a test project, and its staging row is `demo_excluded`. For migration safety, the explicit content, linked proposals/contract, and staging exclusion take precedence over that contradictory flag.
+
+### Migration decision after querying the live source
+
+- The current live Base44 `Project` and `Contract` entities do not contain any additional non-demo records beyond the single test project and its related test offers/contract returned by these queries.
+- Therefore, **do not bulk-import Project, Proposal, or Contract staging data**. There are no verified real project/contract records in this source snapshot to migrate into the empty target tables.
+- The remaining real migration work is user/profile identity reconciliation (the source has 56 users while the mapping table has 48 pending), plus checking other business entities individually for real records and confirming the app's pages work against Supabase.
+- This is a point-in-time source inventory, not proof that no historical data exists in backups or exports outside the current Base44 entities. If an external archive exists, compare it separately before retiring Base44.
