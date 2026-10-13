@@ -115,7 +115,7 @@ function TransactionRow({ tx }) {
             )}
           </div>
           {tx.description && <p className="text-xs text-slate-500 mt-0.5 truncate">{tx.description}</p>}
-          <p className="text-[10px] text-slate-400 mt-0.5">{moment(tx.created_date).format("DD/MM/YYYY – HH:mm")} · {moment(tx.created_date).fromNow()}</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">{moment(tx.created_at || tx.created_date).format("DD/MM/YYYY – HH:mm")} · {moment(tx.created_at || tx.created_date).fromNow()}</p>
         </div>
         <p className={`text-base font-bold shrink-0 ${debit ? "text-red-600" : "text-green-600"}`}>
           {debit ? "−" : "+"}{fmt(amount)}
@@ -166,7 +166,7 @@ function CommissionPanel({ transactions }) {
     .reduce((s, t) => s + (t.commission_amount || t.amount || 0), 0);
 
   const monthly = commissions.reduce((acc, t) => {
-    const k = moment(t.created_date).format("MM/YY");
+    const k = moment(t.created_at || t.created_date).format("MM/YY");
     acc[k] = (acc[k] || 0) + (t.commission_amount || t.amount || 0);
     return acc;
   }, {});
@@ -214,7 +214,7 @@ function CommissionPanel({ transactions }) {
             <div key={t.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg text-sm">
               <div>
                 <p className="text-slate-700 text-xs">{t.description || "عمولة منصة"}</p>
-                <p className="text-[10px] text-slate-400">{moment(t.created_date).format("DD/MM/YYYY")}</p>
+                <p className="text-[10px] text-slate-400">{moment(t.created_at || t.created_date).format("DD/MM/YYYY")}</p>
               </div>
               <p className="font-bold text-orange-600 text-sm">−{fmt(t.commission_amount || t.amount)} ر.س</p>
             </div>
@@ -370,7 +370,7 @@ export default function LiveWalletDashboard({ profile, userType }) {
   // Area chart data — last 8 weeks
   const weeklyData = transactions.reduce((acc, t) => {
     if (t.status !== "completed") return acc;
-    const week = moment(t.created_date).startOf("isoWeek").format("DD/MM");
+    const week = moment(t.created_at || t.created_date).startOf("isoWeek").format("DD/MM");
     if (!acc[week]) acc[week] = { week, income: 0, out: 0 };
     if (isDebit(t.type)) acc[week].out += t.amount || 0;
     else acc[week].income += t.amount || 0;
