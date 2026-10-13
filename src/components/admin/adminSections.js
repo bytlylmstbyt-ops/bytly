@@ -17,7 +17,7 @@ export const ADMIN_CATEGORIES = [
     { page: "Messages", label: "محادثات المستخدمين", desc: "واجهة المحادثات والرسائل للمستخدمين" },
     { page: "ProjectChat", label: "محادثات المشاريع", desc: "غرف محادثات المشاريع والمشاركين" },
   ] },
-  { key: "assistant", label: "مساعد الإدارة المركزي", icon: Sparkles, description: "وكيل ذكاء اصطناعي موحّد — أسئلة عن البيانات أو طلبات تعديل، بدون اختيار نوع الطلب مسبقًا.", items: [{ page: "AdminAIAssistant", label: "مساعد الإدارة المركزي", desc: "اكتب طلبك مباشرة — سؤال بيانات (قراءة فقط) أو طلب تعديل (خطة + معاينة قبل أي تنفيذ) — يفهم الوكيل نوع طلبك تلقائيًا" }] },
+  { key: "assistant", label: "مساعد الإدارة المركزي", icon: Sparkles, description: "وكيل ذكاء اصطناعي موحّد — أسئلة عن البيانات أو طلبات تعديل، بدون اختيار نوع الطلب مسبقًا.", items: [{ page: "AdminAIAssistant", label: "مساعد الإدارة المركزي", desc: "اكتب طلبك مباشرة — سؤال بيانات (قراءة فقط) أو طلب تعديل (خطة + معاينة قبل أي تنفيذ) — يفهم الوكيل نوع طلبك تلقائيًا" }, { page: "AdminChatbotCenter", label: "مركز الشات بوت", desc: "واجهة مستقلة للشات بوت مع سجل محادثات محفوظ في Supabase", priority: "high" }] },
   { key: "projects", label: "إدارة المشاريع", icon: FolderKanban, description: "كل ما يخص المشاريع وإدارتها من لوحة واحدة.", items: [
     { page: "AdminOperationsDashboard", label: "لوحة مدير العمليات", desc: "ملخص المشاريع والعروض والعقود والتنفيذ" },
     { page: "AdminProjects", label: "لوحة إدارة المشاريع", desc: "نظرة شاملة وإدارة كل مشاريع المنصة", permission: ["projects", "view"], priority: "critical" },
