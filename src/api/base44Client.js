@@ -712,7 +712,7 @@ const normalizeInvoice = row => row ? ({
   total_amount: Number(row.total_amount ?? row.subtotal ?? row.amount ?? 0),
   paid_date: row.paid_at || row.paid_date || null,
   created_date: row.created_at || row.created_date || null,
-}).map ? row : row;
+}) : null;
 const mapInvoicePayload = (payload = {}) => {
   const row = { ...payload };
   if (row.client_email !== undefined && row.buyer_email === undefined) row.buyer_email = row.client_email;
@@ -998,7 +998,7 @@ bytlyCompat.functions = {
         const { data: project, error: projectError } = await withHardTimeout(supabase.from('projects').select('*').eq('id', projectId).single(), 10000);
         if (projectError || !project) throw new Error('لم يتم العثور على المشروع');
         const [{ data: milestones, error: milestonesError }, { data: transactions, error: transactionsError }] = await Promise.all([
-          withHardTimeout(supabase.from('project_milestones').select('*').eq('project_id', projectId).order('sequence_no', { ascending: true }), 10000),
+          withHardTimeout(supabase.from('project_milestones').select('*').eq('project_id', projectId).order('created_at', { ascending: true }), 10000),
           withHardTimeout(supabase.from('wallet_transactions').select('*').eq('project_id', projectId).order('created_at', { ascending: false }).limit(20), 10000),
         ]);
         if (milestonesError) throw new Error(milestonesError.message);
