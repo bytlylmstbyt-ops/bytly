@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,10 +25,12 @@ export default function EmailComposeTab({ onSent }) {
   useEffect(() => {
     (async () => {
       try {
-        const [tmpls, usrs] = await Promise.all([
-          base44.entities.EmailTemplate.list("-created_date", 50),
-          base44.entities.User.list(),
+        const [{ data: tmpls, error: templatesError }, { data: usrs, error: usersError }] = await Promise.all([
+          supabase.from("email_templates").select("id,name,subject,body").eq("is_active", true).order("created_at", { ascending: false }).limit(50),
+          supabase.from("profiles").select("email,role").not("email", "is", null),
         ]);
+        if (templatesError) throw templatesError;
+        if (usersError) throw usersError;
         setTemplates(tmpls || []);
         setUsers(usrs || []);
       } catch (e) { console.error("Failed to load:", e); }
@@ -83,12 +84,21 @@ export default function EmailComposeTab({ onSent }) {
           setSaving(false);
           return;
         }
-        await base44.entities.EmailCampaign.create({
-          ...form,
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        const { error: saveError } = await supabase.from("email_campaigns").insert({
+          subject: form.subject,
+          body: sanitizeHtml(form.body),
+          recipient_type: form.recipient_type,
+          recipients: recipients.slice(0, 100),
+          role_filter: form.role_filter || null,
+          from_name: form.from_name || "Bytly",
+          scheduled_at: new Date(form.scheduled_at).toISOString(),
           status: "scheduled",
           total_recipients: recipients.length,
-          recipients: recipients.slice(0, 100),
+          created_by: authData.user?.id,
         });
+        if (saveError) throw saveError;
         toast({ title: t("integrations.adminEmail.compose.scheduleSuccess") });
       } else {
         // Send now — send to each recipient via SendEmail integration
@@ -109,15 +119,23 @@ export default function EmailComposeTab({ onSent }) {
           } catch { failed++; }
         }
         // Log campaign
-        await base44.entities.EmailCampaign.create({
-          ...form,
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        const { error: saveError } = await supabase.from("email_campaigns").insert({
+          subject: form.subject,
+          body: sanitizeHtml(form.body),
+          recipient_type: form.recipient_type,
+          recipients: recipients.slice(0, 100),
+          role_filter: form.role_filter || null,
+          from_name: form.from_name || "Bytly",
           status: failed === recipients.length ? "failed" : "sent",
           total_recipients: recipients.length,
           sent_count: sent,
           failed_count: failed,
           sent_at: new Date().toISOString(),
-          recipients: recipients.slice(0, 100),
+          created_by: authData.user?.id,
         });
+        if (saveError) throw saveError;
         toast({ title: t("integrations.adminEmail.compose.sendSuccess"), description: `${sent} ${isRTL ? "مرسل" : "sent"}, ${failed} ${isRTL ? "فاشل" : "failed"}` });
       }
       setForm({ subject: "", body: "", recipient_type: "individual", recipients: [], role_filter: "", from_name: "Bytly", scheduled_at: "" });
@@ -134,10 +152,20 @@ export default function EmailComposeTab({ onSent }) {
     }
     setSaving(true);
     try {
-      await base44.entities.EmailCampaign.create({
-        ...form, status: "draft", total_recipients: getRecipients().length,
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const { error: saveError } = await supabase.from("email_campaigns").insert({
+        subject: form.subject,
+        body: sanitizeHtml(form.body),
+        recipient_type: form.recipient_type,
         recipients: getRecipients().slice(0, 100),
+        role_filter: form.role_filter || null,
+        from_name: form.from_name || "Bytly",
+        status: "draft",
+        total_recipients: getRecipients().length,
+        created_by: authData.user?.id,
       });
+      if (saveError) throw saveError;
       toast({ title: t("integrations.adminEmail.compose.draftSaved") });
       setForm({ subject: "", body: "", recipient_type: "individual", recipients: [], role_filter: "", from_name: "Bytly", scheduled_at: "" });
       onSent?.();
