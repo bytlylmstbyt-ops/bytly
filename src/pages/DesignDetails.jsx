@@ -88,59 +88,22 @@ export default function DesignDetails() {
   };
 
   const payWithWallet = async () => {
-    if (!currentClient || currentClient.wallet_balance < design.price) {
+    if (!currentClient || Number(currentClient.wallet_balance || 0) < Number(design.price || 0)) {
       alert("رصيد المحفظة غير كافٍ");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const commissionRate = 0.25;
-      const commissionAmount = design.price * commissionRate;
-      const sellerEarnings = design.price - commissionAmount;
-
-      // Create purchase record
-      const purchase = await base44.entities.DesignPurchase.create({
-        design_id: designId,
-        buyer_email: user.email,
-        buyer_name: user.full_name,
-        buyer_id: currentClient.id,
-        seller_id: design.seller_id,
-        seller_email: design.created_by,
-        amount_paid: design.price,
-        platform_commission: commissionAmount,
-        seller_earnings: sellerEarnings,
-        payment_status: "completed",
-        payment_method: "wallet",
-        download_url: design.design_files?.[0] || null
-      });
-
-      // Deduct from buyer wallet
-      await base44.entities.Client.update(currentClient.id, {
-        wallet_balance: currentClient.wallet_balance - design.price
-      });
-
-      // Add to seller balance
-      const sellers = design.seller_type === "engineer" 
-        ? await base44.entities.Engineer.filter({ id: design.seller_id })
-        : await base44.entities.EngineeringFirm.filter({ id: design.seller_id });
-      
-      const seller = sellers[0];
-      if (seller) {
-        const entityName = design.seller_type === "engineer" ? "Engineer" : "EngineeringFirm";
-        await base44.entities[entityName].update(seller.id, {
-          available_balance: (seller.available_balance || 0) + sellerEarnings
-        });
+      // The Supabase RPC performs the debit, seller credit, commission ledger,
+      // purchase record and design counter in one transaction with row locks.
+      const result = await base44.entities.DesignPurchase.purchaseWithWallet(designId);
+      if (!result?.success || !result?.purchase_id) {
+        throw new Error("لم يتم تأكيد عملية الشراء");
       }
-
-      // Update design stats
-      await base44.entities.ReadyMadeDesign.update(designId, {
-        total_purchases: (design.total_purchases || 0) + 1
-      });
-
-      window.location.href = createPageUrl("DesignPurchaseSuccess") + `?purchase_id=${purchase.id}`;
+      window.location.href = createPageUrl("DesignPurchaseSuccess") + `?purchase_id=${result.purchase_id}`;
     } catch (error) {
-      alert("حدث خطأ في الدفع");
+      alert(error?.message || "تعذر إتمام الدفع من المحفظة");
       setIsSubmitting(false);
     }
   };
