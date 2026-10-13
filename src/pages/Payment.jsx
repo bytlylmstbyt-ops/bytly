@@ -203,46 +203,8 @@ export default function PaymentPage() {
   };
 
   const handleTapPayment = async () => {
-    setProcessing(true);
-
-    try {
-      const fees = calculateFees();
-
-      // Validate milestones if enabled
-      if (useMilestones) {
-        const totalPercentage = milestones.reduce((sum, m) => sum + Number(m.percentage), 0);
-        if (totalPercentage !== 100) {
-          alert("يجب أن يكون مجموع نسب المراحل 100%");
-          setProcessing(false);
-          return;
-        }
-      }
-
-      // Create Tap payment session
-      const response = await base44.functions.invoke('tapPaymentCheckout', {
-        amount: fees.totalAmount,
-        currency: 'SAR',
-        projectId,
-        invoiceId: `INV-${Date.now()}`,
-        description: `دفع مشروع: ${project.title}`,
-        customerEmail: client.email,
-        customerName: client.full_name
-      });
-
-      if (response.data.checkoutUrl) {
-        // Setup escrow before redirect
-        await setupEscrowAndProject();
-        // Redirect to Tap checkout
-        window.location.href = response.data.checkoutUrl;
-      } else {
-        alert("فشل إنشاء جلسة الدفع");
-        setProcessing(false);
-      }
-    } catch (error) {
-      console.error("Tap payment error:", error);
-      alert("حدث خطأ في معالجة الدفع");
-      setProcessing(false);
-    }
+    alert('الدفع بالبطاقة عبر Tap القديم متوقف حتى يكتمل ربط Moyasar التجريبي. لم يتم خصم مبلغ أو تسجيل ضمان.');
+    setProcessing(false);
   };
 
   const setupEscrowAndProject = async () => {
@@ -387,53 +349,43 @@ export default function PaymentPage() {
 
   const handleWalletPayment = async () => {
     setProcessing(true);
-
     try {
+      const { data: authResult, error: authError } = await supabase.auth.getUser();
+      const user = authResult && authResult.user;
+      if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً.');
+      if (!project || project.client_user_id !== user.id) throw new Error('غير مصرح لك بالدفع لهذا المشروع.');
+      if (!proposal || !proposal.engineer_id || proposal.engineer_id === user.id) throw new Error('مقدم الخدمة غير صالح.');
       const fees = calculateFees();
-
-      // Validate milestones if enabled
-      if (useMilestones) {
-        const totalPercentage = milestones.reduce((sum, m) => sum + Number(m.percentage), 0);
-        if (totalPercentage !== 100) {
-          alert("يجب أن يكون مجموع نسب المراحل 100%");
-          setProcessing(false);
-          return;
-        }
+      if (useMilestones && milestones.reduce((sum, m) => sum + Number(m.percentage), 0) !== 100) throw new Error('يجب أن يكون مجموع نسب المراحل 100%.');
+      const stages = useMilestones ? milestones : [{ title: 'دفعة المشروع', percentage: 100, description: '' }];
+      const { data: wallet, error: walletError } = await supabase.from('clients').select('wallet_balance').eq('user_id', user.id).maybeSingle();
+      if (walletError) throw walletError;
+      const required = stages.reduce((sum, stage) => { const amount = Math.round((fees.totalAmount * Number(stage.percentage) / 100) * 100) / 100; return sum + amount + Math.round(amount * 15) / 100; }, 0);
+      if (Number((wallet && wallet.wallet_balance) || 0) < required) throw new Error('رصيد المحفظة غير كافٍ للمبلغ شاملاً ضريبة القيمة المضافة.');
+      const { error: assignmentError } = await supabase.from('projects').update({ assigned_engineer_id: proposal.engineer_id }).eq('id', projectId).eq('client_user_id', user.id);
+      if (assignmentError) throw assignmentError;
+      for (let i = 0; i < stages.length; i++) {
+        const stage = stages[i];
+        const amount = Math.round((fees.totalAmount * Number(stage.percentage) / 100) * 100) / 100;
+        if (!String(stage.title || '').trim() || amount <= 0) throw new Error('عنوان المرحلة أو مبلغها غير صالح.');
+        const { data: milestone, error: milestoneError } = await supabase.from('project_milestones').insert({ project_id: projectId, title: String(stage.title).trim(), description: stage.description || '', sequence_no: i + 1, status: 'pending', amount: amount, provider_user_id: proposal.engineer_id, provider_type: 'engineer', stage_weight: Number(stage.percentage) }).select('id').single();
+        if (milestoneError) throw milestoneError;
+        const { data: funded, error: fundError } = await supabase.rpc('fund_project_milestone_from_wallet', { p_project_id: projectId, p_milestone_id: milestone.id });
+        if (fundError || !funded || !funded.ok) throw new Error((fundError && fundError.message) || 'تعذر حجز المرحلة في الضمان.');
       }
-
-      await setupEscrowAndProject();
-
-      // Handle wallet payment
-      if (paymentMethod === "wallet") {
-      // Deduct from client wallet
-      await base44.entities.Client.update(client.id, {
-        wallet_balance: (client.wallet_balance || 0) - fees.totalAmount
-      });
-
-      // Create escrow transaction
-      await base44.entities.Transaction.create({
-        user_id: client.email,
-        type: "escrow_hold",
-        amount: fees.totalAmount,
-        status: "completed",
-        description: `حجز مبلغ مشروع: ${project.title}`,
-        project_id: projectId,
-        payment_method: "wallet",
-        balance_before: client.wallet_balance || 0,
-        balance_after: (client.wallet_balance || 0) - fees.totalAmount
-      });
-    }
-    alert("تم الدفع بنجاح! المبلغ محجوز في حساب الضمان.");
-    navigate(createPageUrl("Dashboard"));
-
+      const { error: offerError } = await supabase.from('project_offers').update({ status: 'accepted' }).eq('id', proposalId).eq('project_id', projectId);
+      if (offerError) throw offerError;
+      const { error: statusError } = await supabase.from('projects').update({ status: 'in_progress', escrow_status: 'held' }).eq('id', projectId).eq('client_user_id', user.id);
+      if (statusError) throw statusError;
+      alert('تم حجز المبلغ في الضمان بنجاح.');
+      navigate(createPageUrl('Dashboard'));
     } catch (error) {
-      console.error("Error processing payment:", error);
-      alert("حدث خطأ أثناء معالجة الدفع");
+      console.error('Supabase wallet payment error:', error);
+      alert((error && error.message) || 'تعذر إكمال الدفع. لم يتم تأكيد العملية.');
     } finally {
       setProcessing(false);
     }
   };
-
   const handleCardPayment = async () => {
     if (paymentGateway === "tap") {
       await handleTapPayment();
