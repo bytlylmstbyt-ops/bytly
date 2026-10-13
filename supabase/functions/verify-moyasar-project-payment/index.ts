@@ -6,7 +6,8 @@ Deno.serve(async(req)=>{
  if(req.method==="OPTIONS") return new Response("ok",{headers:cors});
  if(!["GET","POST"].includes(req.method)) return json({error:"Method not allowed"},405);
  try{
-  const supabaseUrl=Deno.env.get("SUPABASE_URL")!, serviceRole=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, secret=Deno.env.get("MOYASAR_SECRET_KEY")!;
+  const supabaseUrl=Deno.env.get("SUPABASE_URL")!, serviceRole=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, secret=Deno.env.get("MOYASAR_SECRET_KEY")||"";
+  if(!secret.startsWith("sk_test_"))return json({error:"Moyasar test mode only: configure an sk_test_ secret key"},503);
   const db=createClient(supabaseUrl,serviceRole);
   const url=new URL(req.url); let body:any={};
   if(req.method==="POST") body=await req.json().catch(()=>({}));
