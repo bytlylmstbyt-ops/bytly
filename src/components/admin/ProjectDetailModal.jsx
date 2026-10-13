@@ -80,6 +80,8 @@ export default function ProjectDetailModal({ open, onOpenChange, project, lookup
               .from("base44_proposal_migration_staging")
               .select("*")
               .eq("project_base44_id", project.base44_id)
+              // Demo-only legacy rows must never appear as real customer offers.
+              .neq("status", "demo_excluded")
               .order("created_at", { ascending: false })
           );
         }
