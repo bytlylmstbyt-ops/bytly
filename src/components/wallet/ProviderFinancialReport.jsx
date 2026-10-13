@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, TrendingUp, TrendingDown, Lock, Wallet, FileText } from "lucide-react";
 
@@ -11,29 +11,33 @@ export default function ProviderFinancialReport({ provider, providerType, userEm
   useEffect(() => {
     if (!userEmail) return;
     loadReportData();
-  }, [userEmail]);
+  }, [userEmail, provider?.id, provider?.user_id, provider?.owner_user_id, providerType]);
 
   const loadReportData = async () => {
     setIsLoading(true);
     try {
-      const [txns, wdrls] = await Promise.all([
-        base44.entities.Transaction.filter(
-          { user_email: userEmail, user_type: providerType },
-          "-created_date",
-          500
-        ),
-        base44.entities.WithdrawalRequest.filter(
-          { provider_type: providerType },
-          "-created_date",
-          100
-        )
+      const userId = provider?.user_id || provider?.owner_user_id;
+      if (!userId) {
+        setTransactions([]);
+        setWithdrawals([]);
+        return;
+      }
+      const [transactionsResult, withdrawalsResult] = await Promise.all([
+        supabase.from("wallet_transactions").select("*").eq("user_id", userId)
+          .order("created_at", { ascending: false }).limit(500),
+        supabase.from("withdrawal_requests").select("*").eq("provider_type", providerType)
+          .order("created_at", { ascending: false }).limit(200),
       ]);
+      if (transactionsResult.error) throw transactionsResult.error;
+      if (withdrawalsResult.error) throw withdrawalsResult.error;
 
-      // Filter withdrawal requests that belong to this provider
+      // Only display withdrawal requests belonging to this authenticated provider.
       const idField = providerType === "contractor" ? "contractor_id" : "supplier_id";
-      const myWithdrawals = wdrls.filter(w => w[idField] === provider?.id);
+      const myWithdrawals = (withdrawalsResult.data || []).filter(w =>
+        w.provider_user_id === userId || w[idField] === provider?.id
+      );
 
-      setTransactions(txns);
+      setTransactions(transactionsResult.data || []);
       setWithdrawals(myWithdrawals);
     } catch (error) {
       console.error("Error loading financial report:", error);
