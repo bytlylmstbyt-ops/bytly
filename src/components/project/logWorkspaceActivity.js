@@ -1,19 +1,8 @@
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 
 /**
- * يسجل نشاطاً جديداً في مساحة عمل المشروع.
- * @param {Object} params
- * @param {string} params.projectId - معرف المشروع
- * @param {Object} params.user - المستخدم الحالي (من base44.auth.me)
- * @param {string} params.activityType - نوع النشاط (من enum في الكيان)
- * @param {string} params.summary - وصف مختصر
- * @param {string} [params.entityType] - نوع الكيان
- * @param {string} [params.entityId] - معرف الكيان
- * @param {string} [params.entityTitle] - عنوان الكيان
- * @param {string} [params.oldValue] - القيمة القديمة
- * @param {string} [params.newValue] - القيمة الجديدة
- * @param {Object} [params.metadata] - بيانات إضافية
- * @param {string} [params.actorRole] - دور المستخدم
+ * Writes project workspace activity to the canonical Supabase project_activity table.
+ * Activity logging is deliberately non-blocking for the user-facing workflow.
  */
 export async function logWorkspaceActivity({
   projectId,
@@ -28,23 +17,43 @@ export async function logWorkspaceActivity({
   metadata,
   actorRole,
 }) {
-  if (!projectId || !activityType || !summary) return;
+  if (!projectId || !activityType || !summary || !supabase) return;
   try {
-    await base44.entities.WorkspaceActivity.create({
-      project_id: projectId,
-      actor_email: user?.email || "system",
+    const { data: authData } = await supabase.auth.getUser();
+    let actorUserId = authData?.user?.id || null;
+    if (!actorUserId && user?.email) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .ilike("email", String(user.email).trim())
+        .maybeSingle();
+      actorUserId = profile?.user_id || null;
+    }
+
+    const validUuid = (value) => typeof value === "string" &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
+    const activityMetadata = {
+      summary: String(summary),
+      actor_email: user?.email || null,
       actor_name: user?.full_name || user?.email?.split("@")[0] || "النظام",
       actor_role: actorRole || "system",
-      activity_type: activityType,
-      entity_type: entityType,
-      entity_id: entityId,
-      entity_title: entityTitle,
-      summary,
-      old_value: oldValue ? String(oldValue) : undefined,
-      new_value: newValue ? String(newValue) : undefined,
-      metadata,
+      entity_title: entityTitle || null,
+      old_value: oldValue == null ? null : String(oldValue),
+      new_value: newValue == null ? null : String(newValue),
+      ...(metadata && typeof metadata === "object" ? metadata : {}),
+    };
+
+    const { error } = await supabase.from("project_activity").insert({
+      project_id: projectId,
+      actor_user_id: actorUserId,
+      action: String(activityType).slice(0, 200),
+      entity_type: entityType || null,
+      entity_id: validUuid(entityId) ? entityId : null,
+      metadata: activityMetadata,
     });
+    if (error) throw error;
   } catch (err) {
-    console.error("WorkspaceActivity log failed (non-blocking):", err);
+    console.error("Project activity log failed (non-blocking):", err?.message || err);
   }
 }
