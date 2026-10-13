@@ -208,7 +208,7 @@ begin
   if exists(select 1 from public.design_purchase where design_id=p_design_id and buyer_email=v_email and payment_status='completed') then
     raise exception 'تم شراء هذا التصميم مسبقاً';
   end if;
-  select * into v_client from public.clients where lower(email)=v_email and (user_id=v_user_id or user_id is null) order by (user_id=v_user_id) desc limit 1 for update;
+  select * into v_client from public.clients where lower(email)=v_email and (user_id=v_user_id or user_id is null) order by (user_id=v_user_id) desc nulls last limit 1 for update;
   if not found then raise exception 'ملف العميل غير موجود'; end if;
   if coalesce(v_client.wallet_balance,0) < v_amount then raise exception 'رصيد المحفظة غير كافٍ'; end if;
 
@@ -251,7 +251,7 @@ begin
   values
     (v_user_id,'design_purchase',v_amount,'completed',v_purchase_id,'شراء تصميم جاهز: '||v_design.title,'available','debit'),
     (v_seller_user_id,'design_sale',v_earnings,'completed',v_purchase_id,'بيع تصميم جاهز: '||v_design.title,'available','credit'),
-    ('2d1b547d-5ba5-4cdc-a39c-cfb60d2f52bc'::uuid,'platform_commission',v_commission,'completed',v_purchase_id,'عمولة منصة بيتلي على بيع تصميم: '||v_design.title,'available','credit');
+    ('2d1b547d-ba5d-4cdc-a39c-cfb60d2f52bc'::uuid,'platform_commission',v_commission,'completed',v_purchase_id,'عمولة منصة بيتلي على بيع تصميم: '||v_design.title,'available','credit');
   return jsonb_build_object('success',true,'purchase_id',v_purchase_id,'download_url',v_download_url,
     'amount_paid',v_amount,'platform_commission',v_commission,'seller_earnings',v_earnings);
 end;
