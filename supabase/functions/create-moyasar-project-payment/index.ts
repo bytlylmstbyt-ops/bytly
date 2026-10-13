@@ -6,9 +6,10 @@ Deno.serve(async(req)=>{
  if(req.method==="OPTIONS") return new Response("ok",{headers:cors});
  if(req.method!=="POST") return json({error:"Method not allowed"},405);
  const authHeader=req.headers.get("Authorization"); if(!authHeader)return json({error:"Unauthorized"},401);
- const supabaseUrl=Deno.env.get("SUPABASE_URL")!,anonKey=Deno.env.get("SUPABASE_ANON_KEY")!,serviceRole=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,moyasarSecret=Deno.env.get("MOYASAR_SECRET_KEY")!;
+ const supabaseUrl=Deno.env.get("SUPABASE_URL")!,anonKey=Deno.env.get("SUPABASE_ANON_KEY")!,serviceRole=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,moyasarSecret=Deno.env.get("MOYASAR_SECRET_KEY")||"";
  const userClient=createClient(supabaseUrl,anonKey,{global:{headers:{Authorization:authHeader}}}),admin=createClient(supabaseUrl,serviceRole);
  const {data:{user},error:userError}=await userClient.auth.getUser(); if(userError||!user)return json({error:"Unauthorized"},401);
+ if(!moyasarSecret.startsWith("sk_test_"))return json({error:"Moyasar test mode only: configure an sk_test_ secret key"},503);
  const body=await req.json().catch(()=>({})); const {project_id,milestone_id,contract_id,payment_method="moyasar",source}=body;
  if(!project_id||!milestone_id)return json({error:"project_id and milestone_id are required"},400);
  const {data:milestone,error:milestoneError}=await admin.from("project_milestones").select("id,project_id,provider_user_id,provider_type,amount,status").eq("id",milestone_id).eq("project_id",project_id).single();
@@ -32,7 +33,7 @@ Deno.serve(async(req)=>{
  const {data:pendingPayment}=await admin.from("project_payments").select("id,amount,currency,status,escrow_status,payee_user_id,provider_type,gateway_reference,total_amount").eq("project_id",project_id).eq("milestone_id",milestone_id).eq("payer_user_id",user.id).in("status",["initiated","pending"]).order("created_at",{ascending:false}).limit(1).maybeSingle();
  if(pendingPayment){payment=pendingPayment;}
  else {
-  const {data:created,error:paymentError}=await admin.from("project_payments").insert({project_id,milestone_id,contract_id:contract?.id??null,payer_user_id:user.id,payee_user_id:milestone.provider_user_id,provider_type:providerType,amount,currency:"SAR",status:"initiated",payment_method,escrow_status:"pending",platform_fee:Math.round(amount*0.15)/100,provider_amount:amount-Math.round(amount*0.15)/100,taxable_amount:amount,vat_rate:vatRate,vat_amount:vatAmount,total_amount:totalAmount}).select("id,amount,currency,status,escrow_status,payee_user_id,provider_type,gateway_reference,total_amount").single();
+  const {data:created,error:paymentError}=await admin.from("project_payments").insert({project_id,milestone_id,contract_id:contract?.id??null,payer_user_id:user.id,payee_user_id:milestone.provider_user_id,provider_type:providerType,amount,currency:"SAR",status:"initiated",payment_method,escrow_status:"pending",platform_fee:Math.round(amount*15)/100,provider_amount:amount-Math.round(amount*15)/100,taxable_amount:amount,vat_rate:vatRate,vat_amount:vatAmount,total_amount:totalAmount}).select("id,amount,currency,status,escrow_status,payee_user_id,provider_type,gateway_reference,total_amount").single();
   if(paymentError)return json({error:paymentError.message},500);
   payment=created;
  }
