@@ -173,13 +173,17 @@ export default function ProviderSubscription() {
     }
     const price_id = billingCycle === "yearly" ? plan.yearly_price_id : plan.monthly_price_id;
     setLoadingId(price_id);
-    const res = await base44.functions.invoke("createSubscriptionCheckout", {
+    const { data, error } = await supabase.functions.invoke("create-subscription-checkout", {
       price_id,
       plan_name: plan.name,
       provider_type: providerType,
     });
     setLoadingId(null);
-    if (res.data?.url) window.location.href = res.data.url;
+    if (error || !data?.url) {
+      alert(data?.error || error?.message || "تعذر إنشاء جلسة الاشتراك التجريبية.");
+      return;
+    }
+    window.location.href = data.url;
   };
 
   return (

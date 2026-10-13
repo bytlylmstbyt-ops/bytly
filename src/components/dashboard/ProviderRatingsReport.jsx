@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Star, User, Building2, Package, TrendingUp, ChevronLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
 const CATEGORIES = [
-  { key: "engineer", label: "المهندسون", entity: "Engineer", icon: User, nameField: "full_name", link: "/Engineers", color: "blue" },
-  { key: "contractor", label: "المقاولون", entity: "Contractor", icon: Building2, nameField: "company_name", link: "/ContractorDashboard", color: "amber" },
-  { key: "supplier", label: "الموردون", entity: "Supplier", icon: Package, nameField: "company_name", link: "/SupplierDashboard", color: "emerald" },
+  { key: "engineer", label: "المهندسون", table: "engineers", icon: User, nameField: "full_name", userField: "user_id", link: "/Engineers", color: "blue" },
+  { key: "contractor", label: "المقاولون", table: "contractors", icon: Building2, nameField: "company_name", userField: "user_id", link: "/ContractorDashboard", color: "amber" },
+  { key: "supplier", label: "الموردون", table: "suppliers", icon: Package, nameField: "company_name", userField: "user_id", link: "/SupplierDashboard", color: "emerald" },
 ];
 
 const COLOR_MAP = {
@@ -28,13 +28,35 @@ export default function ProviderRatingsReport() {
       try {
         const results = {};
         for (const cat of CATEGORIES) {
-          const list = await base44.entities[cat.entity].list("-rating", 5);
-          const all = await base44.entities[cat.entity].list("-rating", 200);
-          const rated = all.filter(p => (p.total_reviews || 0) > 0);
+          const { data: providers, error: providerError } = await supabase
+            .from(cat.table).select("*").order("created_at", { ascending: false }).limit(200);
+          if (providerError) throw providerError;
+          const all = providers || [];
+          const userIds = all.map(p => p[cat.userField]).filter(Boolean);
+          let reviewRows = [];
+          if (userIds.length) {
+            const { data: reviews, error: reviewError } = await supabase
+              .from("project_reviews").select("reviewee_user_id,rating").in("reviewee_user_id", userIds);
+            if (reviewError) throw reviewError;
+            reviewRows = reviews || [];
+          }
+          const reviewStats = new Map();
+          for (const review of reviewRows) {
+            const current = reviewStats.get(review.reviewee_user_id) || { total: 0, sum: 0 };
+            current.total += 1;
+            current.sum += Number(review.rating) || 0;
+            reviewStats.set(review.reviewee_user_id, current);
+          }
+          const enriched = all.map(provider => {
+            const stats = reviewStats.get(provider[cat.userField]) || { total: 0, sum: 0 };
+            return { ...provider, total_reviews: stats.total, rating: stats.total ? stats.sum / stats.total : 0 };
+          });
+          const rated = enriched.filter(p => p.total_reviews > 0);
           const avg = rated.length > 0
-            ? rated.reduce((s, p) => s + (p.rating || 0), 0) / rated.length
+            ? rated.reduce((sum, p) => sum + p.rating, 0) / rated.length
             : 0;
-          results[cat.key] = { top: list.slice(0, 5), avg: parseFloat(avg.toFixed(1)), total: all.length, reviewed: rated.length };
+          const top = [...enriched].sort((a, b) => (b.rating - a.rating) || (b.total_reviews - a.total_reviews)).slice(0, 5);
+          results[cat.key] = { top, avg: parseFloat(avg.toFixed(1)), total: all.length, reviewed: rated.length };
         }
         setData(results);
       } catch {

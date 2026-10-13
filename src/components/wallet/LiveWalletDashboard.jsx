@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -115,7 +115,7 @@ function TransactionRow({ tx }) {
             )}
           </div>
           {tx.description && <p className="text-xs text-slate-500 mt-0.5 truncate">{tx.description}</p>}
-          <p className="text-[10px] text-slate-400 mt-0.5">{moment(tx.created_date).format("DD/MM/YYYY – HH:mm")} · {moment(tx.created_date).fromNow()}</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">{moment(tx.created_at || tx.created_date).format("DD/MM/YYYY – HH:mm")} · {moment(tx.created_at || tx.created_date).fromNow()}</p>
         </div>
         <p className={`text-base font-bold shrink-0 ${debit ? "text-red-600" : "text-green-600"}`}>
           {debit ? "−" : "+"}{fmt(amount)}
@@ -162,11 +162,11 @@ function CommissionPanel({ transactions }) {
   const commissions = transactions.filter(t => t.type === "commission");
   const total = commissions.reduce((s, t) => s + (t.commission_amount || t.amount || 0), 0);
   const thisMonth = commissions
-    .filter(t => moment(t.created_date).isSame(moment(), "month"))
+    .filter(t => moment((t.created_at || t.created_date)).isSame(moment(), "month"))
     .reduce((s, t) => s + (t.commission_amount || t.amount || 0), 0);
 
   const monthly = commissions.reduce((acc, t) => {
-    const k = moment(t.created_date).format("MM/YY");
+    const k = moment(t.created_at || t.created_date).format("MM/YY");
     acc[k] = (acc[k] || 0) + (t.commission_amount || t.amount || 0);
     return acc;
   }, {});
@@ -214,7 +214,7 @@ function CommissionPanel({ transactions }) {
             <div key={t.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg text-sm">
               <div>
                 <p className="text-slate-700 text-xs">{t.description || "عمولة منصة"}</p>
-                <p className="text-[10px] text-slate-400">{moment(t.created_date).format("DD/MM/YYYY")}</p>
+                <p className="text-[10px] text-slate-400">{moment(t.created_at || t.created_date).format("DD/MM/YYYY")}</p>
               </div>
               <p className="font-bold text-orange-600 text-sm">−{fmt(t.commission_amount || t.amount)} ر.س</p>
             </div>
@@ -302,7 +302,7 @@ function HeldAmountsPanel({ transactions, profile }) {
 }
 
 // ── Main Component ────────────────────────────────────────────────────
-export default function LiveWalletDashboard({ profile, userType, userEmail }) {
+export default function LiveWalletDashboard({ profile, userType }) {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
@@ -312,31 +312,43 @@ export default function LiveWalletDashboard({ profile, userType, userEmail }) {
   const loadTransactions = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const data = await base44.entities.Transaction.filter(
-        { user_email: userEmail },
-        "-created_date",
-        150
-      );
-      setTransactions(data);
+      const userId = profile?.user_id || profile?.owner_user_id;
+      if (!userId) {
+        setTransactions([]);
+        setLastUpdated(new Date());
+        return;
+      }
+      const { data, error } = await supabase
+        .from("wallet_transactions").select("*").eq("user_id", userId)
+        .order("created_at", { ascending: false }).limit(150);
+      if (error) throw error;
+      setTransactions(data || []);
       setLastUpdated(new Date());
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [userEmail]);
+  }, [profile?.user_id, profile?.owner_user_id]);
 
   useEffect(() => {
     loadTransactions();
 
-    // Real-time subscription
-    const unsubscribe = base44.entities.Transaction.subscribe((event) => {
-      if (event.data?.user_email === userEmail) {
+    // Supabase Realtime subscription for this provider's wallet only.
+    const userId = profile?.user_id || profile?.owner_user_id;
+    if (!userId) return undefined;
+    const channel = supabase.channel(`provider-wallet-${userId}`)
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "wallet_transactions",
+        filter: `user_id=eq.${userId}`,
+      }, () => {
         setNewTxCount(c => c + 1);
         loadTransactions(true);
-      }
-    });
+      })
+      .subscribe();
 
-    return unsubscribe;
-  }, [loadTransactions, userEmail]);
+    return () => { supabase.removeChannel(channel); };
+  }, [loadTransactions, profile?.user_id, profile?.owner_user_id]);
 
   // Computed balances
   const availableBalance = profile?.available_balance || 0;
@@ -358,7 +370,7 @@ export default function LiveWalletDashboard({ profile, userType, userEmail }) {
   // Area chart data — last 8 weeks
   const weeklyData = transactions.reduce((acc, t) => {
     if (t.status !== "completed") return acc;
-    const week = moment(t.created_date).startOf("isoWeek").format("DD/MM");
+    const week = moment(t.created_at || t.created_date).startOf("isoWeek").format("DD/MM");
     if (!acc[week]) acc[week] = { week, income: 0, out: 0 };
     if (isDebit(t.type)) acc[week].out += t.amount || 0;
     else acc[week].income += t.amount || 0;

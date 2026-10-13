@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { Loader2, HardHat, Package, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -22,11 +22,28 @@ export default function ProviderWallet() {
   const loadWalletData = async () => {
     setIsLoading(true);
     try {
-      const currentUser = await base44.auth.me();
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const authUser = authData?.user;
+      if (!authUser) {
+        setUser(null);
+        setProfile(null);
+        return;
+      }
+      const currentUser = {
+        id: authUser.id,
+        user_id: authUser.id,
+        email: authUser.email,
+        full_name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || "",
+      };
       setUser(currentUser);
 
-      const [contractorData] = await base44.entities.Contractor.filter({ email: currentUser.email });
-      const [supplierData] = await base44.entities.Supplier.filter({ email: currentUser.email });
+      const [{ data: contractorData, error: contractorError }, { data: supplierData, error: supplierError }] = await Promise.all([
+        supabase.from("contractors").select("*").eq("user_id", authUser.id).maybeSingle(),
+        supabase.from("suppliers").select("*").eq("user_id", authUser.id).maybeSingle(),
+      ]);
+      if (contractorError) throw contractorError;
+      if (supplierError) throw supplierError;
 
       let profileData = null;
       let type = null;
@@ -43,12 +60,11 @@ export default function ProviderWallet() {
         setProfile(profileData);
         setProviderType(type);
 
-        const trans = await base44.entities.Transaction.filter(
-          { user_email: currentUser.email },
-          "-created_date",
-          100
-        );
-        setTransactions(trans);
+        const { data: trans, error: transactionsError } = await supabase
+          .from("wallet_transactions").select("*").eq("user_id", authUser.id)
+          .order("created_at", { ascending: false }).limit(100);
+        if (transactionsError) throw transactionsError;
+        setTransactions(trans || []);
       }
     } catch (error) {
       console.error("Error loading wallet data:", error);
