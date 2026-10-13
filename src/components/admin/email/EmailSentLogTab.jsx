@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,13 +37,17 @@ export default function EmailSentLogTab({ onRefresh, limit }) {
 
       const [gmailRes, sentEmails, campaigns] = await Promise.allSettled([
         gmailPromise,
-        base44.entities.SentEmail.list("-created_date", limit || 200),
-        base44.entities.EmailCampaign.filter({ status: "scheduled" }, "-created_date", 50),
+        supabase.from("email_logs").select("id,to_email,recipient_name,subject,body,source,status,sent_at,created_at").order("created_at", { ascending: false }).limit(limit || 200),
+        supabase.from("email_campaigns").select("id,recipients,recipient_type,subject,body,scheduled_at,created_at,status").eq("status", "scheduled").order("created_at", { ascending: false }).limit(50),
       ]);
 
       const gmailEmails = (gmailRes.status === "fulfilled" ? gmailRes.value?.data?.emails || gmailRes.value?.emails : []) || [];
-      const dbSent = (sentEmails.status === "fulfilled" ? sentEmails.value : []) || [];
-      const scheduled = (campaigns.status === "fulfilled" ? campaigns.value : []) || [];
+      const dbSentResult = sentEmails.status === "fulfilled" ? sentEmails.value : null;
+      const campaignResult = campaigns.status === "fulfilled" ? campaigns.value : null;
+      if (dbSentResult?.error) throw dbSentResult.error;
+      if (campaignResult?.error) throw campaignResult.error;
+      const dbSent = dbSentResult?.data || [];
+      const scheduled = campaignResult?.data || [];
 
       // Normalize Gmail emails
       const normalizedGmail = gmailEmails.map(e => ({

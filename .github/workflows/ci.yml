@@ -29,6 +29,20 @@ jobs:
       - name: Audit remaining Base44 references
         run: node scripts/audit-base44-references.mjs
 
+  base44-runtime-exit-gate:
+    name: Strict Base44 runtime exit gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Fail while runtime compatibility calls remain
+        run: node scripts/audit-base44-runtime-exit.mjs
+
   lint:
     name: ESLint
     runs-on: ubuntu-latest

@@ -183,7 +183,7 @@ export default function RegisterContractor() {
     try {
       const contractor = await saveRegistration({
         table: "contractors", role: "contractor", fullName: formData.company_name, email: formData.email, phone: formData.phone, password: formData.password,
-        row: { ...formData, status: "pending" }
+        row: (({ password, confirmPassword, ...contractorData }) => ({ ...contractorData, status: "pending" }))(formData)
       });
 
       toast.success("تم تسجيل المقاول بنجاح! في انتظار الموافقة من الإدارة");
@@ -193,8 +193,8 @@ export default function RegisterContractor() {
         setConfirmationEmail(formData.email);
         return;
       }
-      console.error("Error:", error);
-      toast.error("حدث خطأ أثناء التسجيل");
+      console.error("Error registering المقاول:", error);
+      toast.error(error?.message || "تعذر إكمال التسجيل. تحقق من البيانات وحاول مرة أخرى.");
     } finally {
       setLoading(false);
     }

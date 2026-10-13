@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Star, Quote } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/components/i18n/LanguageContext";
@@ -11,12 +11,16 @@ export default function TestimonialsSection() {
   useEffect(() => {
     (async () => {
       try {
-        const data = await base44.entities.Review.filter(
-          { status: "completed", sentiment: "positive" },
-          "-created_date",
-          3
-        );
-        setReviews(data.filter(r => r.comment && r.rating >= 4));
+        if (!supabase) throw new Error("Supabase is not configured");
+        const { data, error } = await supabase
+          .from("project_reviews")
+          .select("id, rating, comment, created_at")
+          .gte("rating", 4)
+          .not("comment", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(3);
+        if (error) throw error;
+        setReviews((data || []).filter((review) => review.comment?.trim()));
       } catch (_) { /* ignore — fallback to defaults */ }
     })();
   }, []);
@@ -24,11 +28,11 @@ export default function TestimonialsSection() {
   const defaults = t('testimonials.defaults') || [];
   const items = reviews.length >= 3
     ? reviews.map(r => ({
-        name: r.target_name || t('testimonials.fallbackClient'),
+        name: t('testimonials.fallbackClient'),
         role: t('testimonials.fallbackRole'),
         rating: r.rating,
         text: r.comment,
-        metric: r.highlights?.[0] || t('testimonials.fallbackMetric'),
+        metric: t('testimonials.fallbackMetric'),
       }))
     : defaults;
 

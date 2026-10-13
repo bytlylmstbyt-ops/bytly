@@ -29,6 +29,7 @@ export async function saveRegistration(payload) {
       body: {
         table: payload.table,
         role: payload.role,
+        userIdField: payload.userIdField || "user_id",
         fullName,
         email,
         phone,

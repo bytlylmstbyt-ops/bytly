@@ -17,6 +17,7 @@ export default function ContractorDashboard() {
   const [contractor, setContractor] = useState(null);
   const [projects, setProjects] = useState([]);
   const [availableProjects, setAvailableProjects] = useState([]);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     loadDashboardData();
@@ -30,12 +31,23 @@ export default function ContractorDashboard() {
       const user = authData?.user;
       if (!user) throw new Error("يجب تسجيل الدخول أولاً");
 
-      const { data: contractorData, error: providerError } = await supabase
+      setLoadError("");
+      let { data: contractorData, error: providerError } = await supabase
         .from("contractors")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
       if (providerError) throw providerError;
+      // Older imported provider rows may be missing user_id. Match only the signed-in Auth email.
+      if (!contractorData && user.email) {
+        const emailLookup = await supabase
+          .from("contractors")
+          .select("*")
+          .ilike("email", user.email.trim())
+          .maybeSingle();
+        if (emailLookup.error) throw emailLookup.error;
+        contractorData = emailLookup.data;
+      }
 
       if (contractorData) {
         setContractor(contractorData);
@@ -50,7 +62,7 @@ export default function ContractorDashboard() {
             .from("projects")
             .select("*")
             .eq("status", "open")
-            .eq("is_hidden", false)
+            .or("is_hidden.eq.false,is_hidden.is.null")
             .order("created_at", { ascending: false })
             .limit(20)
         ]);
@@ -65,6 +77,7 @@ export default function ContractorDashboard() {
       }
     } catch (error) {
       console.error("Error loading dashboard from Supabase:", error);
+      setLoadError(error?.message || "تعذر تحميل بيانات اللوحة.");
     } finally {
       setLoading(false);
     }
@@ -84,6 +97,7 @@ export default function ContractorDashboard() {
         <Card className="max-w-md">
           <CardContent className="pt-6 text-center">
             <p className="text-slate-600 mb-4">لم يتم العثور على حساب مقاول مرتبط بحسابك</p>
+            {loadError && <p role="alert" className="text-sm text-red-600 bg-red-50 rounded p-3 mb-4">{loadError}</p>}
             <Link to={createPageUrl("RegisterContractor")}>
               <Button>إنشاء حساب مقاول</Button>
             </Link>
