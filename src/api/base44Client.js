@@ -872,30 +872,94 @@ bytlyCompat.functions = {
       const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
       const user = authData?.user;
       if (!user) throw new Error('يجب تسجيل الدخول أولاً');
-      const targetUser = targetEmail ? (await withHardTimeout(supabase.from('profiles').select('user_id').ilike('email', targetEmail).maybeSingle(), 10000)).data?.user_id : null;
+      if (!payload?.appointment_date || !payload?.appointment_time) {
+        throw new Error('يرجى تحديد تاريخ ووقت الاجتماع');
+      }
+
+      const startLocal = new Date(`${payload.appointment_date}T${String(payload.appointment_time).slice(0,5)}:00+03:00`);
+      if (Number.isNaN(startLocal.getTime()) || startLocal.getTime() <= Date.now()) {
+        throw new Error('موعد الاجتماع غير صالح أو مضى وقته');
+      }
+      const durationMinutes = Math.max(15, Math.min(240, Number(payload?.duration_minutes) || 60));
+      const endLocal = new Date(startLocal.getTime() + durationMinutes * 60_000);
+      const summary = payload?.topic || 'اجتماع استشاري عبر بيتلي';
+      const description = [
+        'تم إنشاء الاجتماع عبر منصة بيتلي.',
+        payload?.project_id ? `رقم المشروع: ${payload.project_id}` : '',
+        payload?.notes || ''
+      ].filter(Boolean).join('\\n\\n');
+      const attendees = targetEmail && targetEmail.toLowerCase() !== String(user.email || '').toLowerCase()
+        ? [targetEmail]
+        : [];
+
+      // Create a real Google Calendar event with a Meet conference before saving
+      // the booking, so the UI never reports a successful meeting with a fake link.
+      const { data: googleData, error: googleError } = await withHardTimeout(
+        supabase.functions.invoke('google-service', {
+          body: {
+            action: 'calendarCreate',
+            data: {
+              summary,
+              description,
+              startDateTime: startLocal.toISOString(),
+              endDateTime: endLocal.toISOString(),
+              timeZone: 'Asia/Riyadh',
+              attendees,
+            },
+          },
+        }),
+        30000,
+        'انتهت مهلة إنشاء رابط الاجتماع'
+      );
+      if (googleError) throw new Error(googleError.message || 'تعذر إنشاء اجتماع Google Meet');
+      if (!googleData?.success || !googleData?.event?.id) {
+        throw new Error(googleData?.error || 'تعذر إنشاء حدث الاجتماع في Google Calendar');
+      }
+
       const row = {
-        project_id: payload?.project_id || null, created_by: user.id, client_user_id: user.id,
-        provider_user_id: targetUser || null, target_id: payload?.target_id || null,
-        target_name: payload?.target_name || null, target_email: targetEmail,
-        appointment_date: payload.appointment_date, appointment_time: payload.appointment_time,
+        project_id: payload?.project_id || null,
+        created_by: user.id,
+        client_user_id: user.id,
+        provider_user_id: targetUser || null,
+        target_id: payload?.target_id || null,
+        target_name: payload?.target_name || null,
+        target_email: targetEmail,
+        appointment_date: payload.appointment_date,
+        appointment_time: String(payload.appointment_time).slice(0,5),
+        duration_minutes: durationMinutes,
         consultation_type: payload.consultation_type || 'video_call',
         appointment_type: payload.consultation_type || 'video_call',
-        topic: payload.topic, notes: payload.notes || null, client_phone: payload.client_phone || null,
-        status: 'pending', meet_link: null, calendar_link: null
+        topic: summary,
+        notes: payload.notes || null,
+        client_phone: payload.client_phone || null,
+        status: 'pending',
+        meet_link: googleData.meet_link || null,
+        calendar_link: googleData.event_link || null,
+        google_event_id: googleData.event.id,
       };
-      const { data, error } = await withHardTimeout(supabase.from('consultation_appointments').insert(row).select('*').single(), 15000, 'انتهت مهلة حجز الاجتماع');
-      if (error) throw new Error(error.message || 'تعذر حجز الاجتماع');
-      const day = String(payload.appointment_date).replace(/-/g,'');
-      const start = String(payload.appointment_time).replace(':','') + '00';
-      const hour = Number(String(payload.appointment_time).slice(0,2)) + 1;
-      const end = String(hour).padStart(2,'0') + String(payload.appointment_time).slice(3) + '00';
-      const calendarLink = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' +
-        encodeURIComponent(payload.topic || 'اجتماع Bytly') + '&dates=' + day + 'T' + start + '/' + day + 'T' + end +
-        '&details=' + encodeURIComponent(payload.notes || '') + (targetEmail ? '&add=' + encodeURIComponent(targetEmail) : '');
-      await withHardTimeout(supabase.from('consultation_appointments').update({ calendar_link: calendarLink }).eq('id', data.id), 10000);
-      return { data: { success: true, appointment: { ...data, calendar_link: calendarLink }, google_calendar_link: calendarLink, meet_link: null } };
+      const { data: appointment, error: appointmentError } = await withHardTimeout(
+        supabase.from('consultation_appointments').insert(row).select('*').single(),
+        15000,
+        'انتهت مهلة حفظ الموعد'
+      );
+      if (appointmentError) {
+        // Best-effort cleanup prevents orphan calendar events if saving the booking fails.
+        await supabase.functions.invoke('google-service', {
+          body: { action: 'calendarDelete', data: { eventId: googleData.event.id } },
+        }).catch(() => {});
+        throw new Error(appointmentError.message || 'تعذر حفظ الموعد');
+      }
+      return {
+        data: {
+          success: true,
+          appointment,
+          meet_link: googleData.meet_link || null,
+          google_calendar_link: googleData.event_link || null,
+          calendar_link: googleData.event_link || null,
+          event_id: googleData.event.id,
+        },
+      };
     }
-
     if (name === 'createMeetCall') {
       const start = payload?.scheduled_time ? new Date(payload.scheduled_time) : new Date(Date.now() + 30 * 60 * 1000);
       const end = new Date(start.getTime() + 60 * 60 * 1000);
