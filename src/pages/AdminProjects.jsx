@@ -52,7 +52,6 @@ export default function AdminProjects() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [projects, setProjects] = useState([]);
-  const [loadError, setLoadError] = useState("");
   const [clients, setClients] = useState([]);
   const [engineers, setEngineers] = useState([]);
   const _f = useMemo(() => readAdminFilters("AdminProjects"), []);
@@ -120,41 +119,20 @@ export default function AdminProjects() {
 
   const loadData = useCallback(async () => {
     setRefreshing(true);
-    setLoadError("");
     try {
-      // Projects are the primary dataset. Lookup tables must never prevent the
-      // admin page from rendering when a secondary query fails.
-      let projectsResult = await supabase
-        .from("projects")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(500);
-      if (projectsResult.error) {
-        console.warn("Ordered projects query failed; retrying without ordering", projectsResult.error);
-        projectsResult = await supabase.from("projects").select("*").limit(500);
-      }
-      if (projectsResult.error) throw projectsResult.error;
-      setProjects(projectsResult.data || []);
-
-      const [clientsResult, engineersResult] = await Promise.allSettled([
-        supabase.from("clients").select("id,full_name").order("created_at", { ascending: false }),
-        supabase.from("engineers").select("id,full_name").order("created_at", { ascending: false }),
+      const [projectsResult, clientsResult, engineersResult] = await Promise.all([
+        supabase.from("projects").select("*").order("created_at", { ascending: false }).limit(500),
+        supabase.from("clients").select("*").order("created_at", { ascending: false }),
+        supabase.from("engineers").select("*").order("created_at", { ascending: false }),
       ]);
-      if (clientsResult.status === "fulfilled" && !clientsResult.value.error) {
-        setClients(clientsResult.value.data || []);
-      } else {
-        setClients([]);
-        console.warn("Admin projects client lookup unavailable", clientsResult.status === "rejected" ? clientsResult.reason : clientsResult.value.error);
-      }
-      if (engineersResult.status === "fulfilled" && !engineersResult.value.error) {
-        setEngineers(engineersResult.value.data || []);
-      } else {
-        setEngineers([]);
-        console.warn("Admin projects engineer lookup unavailable", engineersResult.status === "rejected" ? engineersResult.reason : engineersResult.value.error);
-      }
+      if (projectsResult.error) throw projectsResult.error;
+      if (clientsResult.error) throw clientsResult.error;
+      if (engineersResult.error) throw engineersResult.error;
+      setProjects(projectsResult.data || []);
+      setClients(clientsResult.data || []);
+      setEngineers(engineersResult.data || []);
     } catch (err) {
-      console.error("Failed to load admin projects from Supabase", err);
-      setLoadError(err?.message || err?.details || "تعذر تحميل المشاريع من قاعدة البيانات. أعد المحاولة أو تواصل مع الدعم.");
+      console.error("Failed to load", err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -165,9 +143,8 @@ export default function AdminProjects() {
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
-      const { data: profileByUser } = await supabase.from("profiles").select("role,email").eq("user_id", user.id).maybeSingle();
-      const { data: profileById } = profileByUser ? { data: profileByUser } : await supabase.from("profiles").select("role,email").eq("id", user.id).maybeSingle();
-      setIsAdmin(["admin", "super_admin"].includes(profileById?.role) || user.email === "bytlylmstbyt@gmail.com");
+      const { data: profile } = await supabase.from("profiles").select("role,email").eq("user_id", user.id).maybeSingle();
+      setIsAdmin(profile?.role === "admin" || user.email === "bytlylmstbyt@gmail.com");
     }).catch(() => {});
   }, []);
 
@@ -329,20 +306,6 @@ export default function AdminProjects() {
         </div>
       </motion.div>
 
-      {loadError && (
-        <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-          <p className="font-semibold">تعذر تحميل بيانات إدارة المشاريع</p>
-          <p className="mt-1 break-words">{loadError}</p>
-          <button type="button" onClick={loadData} className="mt-2 underline">إعادة المحاولة</button>
-        </div>
-      )}
-
-      {!loading && !loadError && projects.length === 0 && (
-        <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          لا توجد مشاريع فعلية في جدول Supabase حاليًا. لم نُدخل بيانات تجريبية تلقائيًا؛ يجب مراجعة سجل الترحيل وربط المشاريع الحقيقية قبل عرضها هنا.
-        </div>
-      )}
-
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
         {statCards.map((s, i) => {
@@ -466,7 +429,7 @@ export default function AdminProjects() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {paged.length === 0 ? (
-                <tr><td colSpan={12} className="text-center py-12 text-slate-400">{projects.length === 0 ? "لا توجد مشاريع محفوظة في قاعدة البيانات حتى الآن" : "لا توجد مشاريع مطابقة للفلاتر الحالية"}</td></tr>
+                <tr><td colSpan={12} className="text-center py-12 text-slate-400">لا توجد مشاريع مطابقة</td></tr>
               ) : paged.map(p => {
                 const comp = computeCompletion(p.status);
                 const checked = bulk.isSelected(p.id);
