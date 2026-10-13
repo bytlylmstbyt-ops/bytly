@@ -872,6 +872,7 @@ bytlyCompat.functions = {
       const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
       const user = authData?.user;
       if (!user) throw new Error('يجب تسجيل الدخول أولاً');
+      const targetUser = targetEmail ? (await withHardTimeout(supabase.from('profiles').select('user_id').ilike('email', targetEmail).maybeSingle(), 10000)).data?.user_id || null : null;
       if (!payload?.appointment_date || !payload?.appointment_time) {
         throw new Error('يرجى تحديد تاريخ ووقت الاجتماع');
       }
