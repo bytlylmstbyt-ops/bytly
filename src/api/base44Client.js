@@ -953,6 +953,63 @@ bytlyCompat.functions = {
     }
     if (name === 'createContractFromProposal') return { data: await createContractFromProposalSupabase(payload?.proposal_id) };
 
+    if (name === 'createInvoice') {
+      const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
+      const user = authData?.user;
+      if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً');
+      if (payload?.invoice_type !== 'milestone' || !payload?.milestone_id) {
+        throw new Error('إنشاء فواتير التصاميم غير مرحّل بعد؛ لم يتم إنشاء فاتورة غير مكتملة');
+      }
+      const { data: milestone, error: milestoneError } = await withHardTimeout(
+        supabase.from('project_milestones').select('id,project_id,title,amount,provider_user_id').eq('id', payload.milestone_id).maybeSingle(),
+        10000,
+        'انتهت مهلة قراءة مرحلة المشروع'
+      );
+      if (milestoneError || !milestone) throw new Error('لم يتم العثور على مرحلة المشروع');
+      const { data: project, error: projectError } = await withHardTimeout(
+        supabase.from('projects').select('id,title,client_user_id,assigned_engineer_id').eq('id', milestone.project_id).maybeSingle(),
+        10000,
+        'انتهت مهلة قراءة المشروع'
+      );
+      if (projectError || !project) throw new Error('لم يتم العثور على المشروع');
+      if (project.client_user_id !== user.id) throw new Error('لا تملك صلاحية إصدار فاتورة لهذا المشروع');
+      const amount = Number(milestone.amount || 0);
+      if (!Number.isFinite(amount) || amount <= 0) throw new Error('قيمة المرحلة غير صالحة');
+      const vatRate = 15;
+      const vatAmount = Math.round(amount * vatRate) / 100;
+      const issueDate = new Date();
+      const dueDate = new Date(issueDate);
+      dueDate.setDate(dueDate.getDate() + Math.max(1, Math.min(Number(payload?.payment_terms) || 30, 90)));
+      const { data: existing, error: existingError } = await withHardTimeout(
+        supabase.from('invoices').select('id,invoice_number,status').eq('project_id', project.id).eq('milestone_id', milestone.id).in('status', ['draft','pending','sent']).limit(1).maybeSingle(),
+        10000,
+        'انتهت مهلة التحقق من الفواتير السابقة'
+      );
+      if (existingError) throw new Error(existingError.message || 'تعذر التحقق من الفواتير السابقة');
+      if (existing) return { data: { success: true, invoice_id: existing.id, invoice_number: existing.invoice_number, already_exists: true } };
+      const invoice = await bytlyCompat.entities.Invoice.create({
+        project_id: project.id,
+        milestone_id: milestone.id,
+        invoice_type: 'project_milestone',
+        issuer_user_id: milestone.provider_user_id || project.assigned_engineer_id || user.id,
+        issuer_type: 'service_provider',
+        buyer_user_id: user.id,
+        buyer_email: user.email || null,
+        buyer_name: payload?.company_name || user.user_metadata?.full_name || null,
+        service_description: milestone.title || ('دفعة مرحلة من مشروع ' + (project.title || '')),
+        subtotal: amount,
+        taxable_amount: amount,
+        vat_rate: vatRate,
+        vat_amount: vatAmount,
+        total_amount: amount + vatAmount,
+        currency: 'SAR',
+        status: 'sent',
+        issue_date: issueDate.toISOString(),
+        due_date: dueDate.toISOString(),
+        notes: 'فاتورة مرحلة مشروع'
+      });
+      return { data: { success: true, invoice_id: invoice.id, invoice_number: invoice.invoice_number } };
+    }
     if (name === 'payFromWallet') {
       const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
       const user = authData?.user;
