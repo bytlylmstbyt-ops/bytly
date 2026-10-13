@@ -43,7 +43,7 @@ Deno.serve(async(req)=>{
   if(passwordBytes>72){await recordAttempt("failed",null,"validation","كلمة المرور طويلة");return json({ok:false,error:"كلمة المرور طويلة جداً. الحد الأقصى 72 بايت."},400);}
   if(!TABLES.has(table)||ROLE_TO_TABLE[role]!==table){await recordAttempt("failed",null,"validation","Invalid registration type");return json({ok:false,error:"Invalid registration type"},400);}
   if(!email||!fullName||!phone){await recordAttempt("failed",null,"validation","الاسم والبريد والهاتف مطلوبة");return json({ok:false,error:"الاسم والبريد والهاتف مطلوبة"},400);}
-  delete row.user_id;delete row.owner_user_id;delete row.id;row.email=email;row.full_name=fullName;row.phone=phone;row.is_real=true;row.source="supabase";
+  delete row.user_id;delete row.owner_user_id;delete row.id;row.email=email;row.phone=phone;const companyTables=new Set(["engineering_firms","contractors","suppliers"]);if(companyTables.has(table)){row.company_name=String(row.company_name||fullName).trim();delete row.full_name;}else{row.full_name=fullName;delete row.company_name;}if(["engineers","clients","engineering_firms"].includes(table)){row.is_real=true;row.source="supabase";}else{delete row.is_real;delete row.source;}
 
   const {data:existingProfile,error:profileLookupError}=await admin.from("profiles").select("id,user_id,role").eq("email",email).maybeSingle();
   if(profileLookupError){await recordAttempt("failed",null,"profile_lookup",profileLookupError.message);return json({ok:false,error:`تعذر التحقق من البريد: ${profileLookupError.message}`},500);}
