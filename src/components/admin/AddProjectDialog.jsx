@@ -135,13 +135,37 @@ export default function AddProjectDialog({ open, onOpenChange, onCreated, onUpda
       };
 
       const selectedClient = clients.find((c) => c.id === form.client_id);
+      let clientUserId = selectedClient?.user_id || null;
+
+      // Older client records may not have user_id populated. Resolve it through
+      // the profile email before attempting to write the NOT NULL project owner.
+      if (!clientUserId && selectedClient?.email) {
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .ilike("email", selectedClient.email.trim())
+          .maybeSingle();
+        if (profileError) throw profileError;
+        clientUserId = profile?.user_id || null;
+      }
+
+      if (!editing && !clientUserId) {
+        toast({
+          variant: "destructive",
+          title: "تعذر ربط المشروع بحساب العميل",
+          description: "ملف العميل المختار غير مرتبط بحساب دخول. حدّث ملف العميل واربطه بحسابه ثم أعد المحاولة.",
+        });
+        return;
+      }
+
       const supabasePayload = {
         ...payload,
         client_id: selectedClient?.id || form.client_id,
-        client_user_id: selectedClient?.user_id || null,
         assigned_engineer_id: form.assigned_engineer_id || null,
         technical_consultant_id: form.technical_consultant_id || null,
       };
+      // Never overwrite an existing owner UUID with null when editing legacy rows.
+      if (clientUserId) supabasePayload.client_user_id = clientUserId;
       delete supabasePayload.id;
       delete supabasePayload.created_at;
       delete supabasePayload.updated_at;
