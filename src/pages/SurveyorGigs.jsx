@@ -1,6 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
+
+async function callSurveyEngine(payload) {
+  const { data, error } = await supabase.functions.invoke('survey-engine', { body: payload });
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return data || {};
+}
 import { uploadScopedFile } from '@/lib/projectFileStorage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,8 +61,7 @@ function RegisterSurveyorForm({ onRegistered }) {
     setLoading(true);
     setError('');
     try {
-      const res = await base44.functions.invoke('surveyEngine', { action: 'register', ...form, years_experience: parseInt(form.years_experience) || 0, geofencing_radius_km: parseInt(form.geofencing_radius_km) || 50, latitude: form.latitude ? parseFloat(form.latitude) : null, longitude: form.longitude ? parseFloat(form.longitude) : null });
-      if (res.data?.error) { setError(res.data.error); return; }
+      await callSurveyEngine({ action: 'register', ...form, years_experience: parseInt(form.years_experience) || 0, geofencing_radius_km: parseInt(form.geofencing_radius_km) || 50, latitude: form.latitude ? parseFloat(form.latitude) : null, longitude: form.longitude ? parseFloat(form.longitude) : null });
       onRegistered();
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
@@ -135,12 +141,11 @@ function SubmitDeliverablesForm({ request, onDone }) {
     setSubmitting(true);
     setError('');
     try {
-      const res = await base44.functions.invoke('surveyEngine', {
+      await callSurveyEngine({
         action: 'submit', request_id: request.id,
         cad_files: cadFiles, visual_files: visualFiles,
         survey_metadata: metadata
       });
-      if (res.data?.error) { setError(res.data.error); return; }
       onDone();
     } catch (e) { setError(e.message); }
     finally { setSubmitting(false); }
@@ -205,7 +210,7 @@ function GigCard({ request, onAccept, onRefresh }) {
   const accept = async () => {
     setSubmitting(true);
     try {
-      await base44.functions.invoke('surveyEngine', { action: 'accept', request_id: request.id });
+      await callSurveyEngine({ action: 'accept', request_id: request.id });
       onRefresh();
     } catch (e) { console.error(e); }
     finally { setSubmitting(false); }
@@ -292,31 +297,28 @@ export default function SurveyorGigs() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const [profileRes, availRes, myRes] = await Promise.all([
-        base44.entities.SurveyorProfile.filter({ email: user?.email }).catch(() => []),
-        base44.functions.invoke('surveyEngine', { action: 'list', role_type: 'available' }).catch(() => ({ data: { requests: [] } })),
-        base44.functions.invoke('surveyEngine', { action: 'list', role_type: 'surveyor' }).catch(() => ({ data: { requests: [] } }))
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData.user) { navigate('/login'); return; }
+      const [profileResult, availableResult, mineResult] = await Promise.all([
+        supabase.functions.invoke('survey-engine', { body: { action: 'profile' } }),
+        callSurveyEngine({ action: 'list', role_type: 'available' }).catch(() => ({ requests: [] })),
+        callSurveyEngine({ action: 'list', role_type: 'surveyor' }).catch(() => ({ requests: [] }))
       ]);
-      const p = profileRes?.[0] || null;
+      if (profileResult.error) throw profileResult.error;
+      const p = profileResult.data?.profile || null;
       setProfile(p);
-      // Redirect to terms page if registered but terms not accepted yet
       if (p && !p.terms_accepted) { navigate('/SurveyorTerms'); return; }
-      setAvailableGigs(availRes.data?.requests || []);
-      setMyRequests(myRes.data?.requests || []);
-
-      // Load reviews for the surveyor
-      if (p) {
-        try {
-          const reviewData = await base44.entities.Review.filter({ engineer_id: p.id }, '-created_date', 20);
-          setReviews(reviewData || []);
-        } catch (_) { setReviews([]); }
-      }
+      setAvailableGigs(availableResult.requests || []);
+      setMyRequests(mineResult.requests || []);
+      // Review data remains empty until the reviews table and surveyor linkage are verified in Supabase.
+      setReviews([]);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   }, [user]);
 
   useEffect(() => {
-    base44.auth.me().then(u => { setUser(u); }).catch(() => {});
+    supabase.auth.getUser().then(({ data, error }) => { if (!error) setUser(data.user || null); }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -326,8 +328,11 @@ export default function SurveyorGigs() {
   // Subscribe to real-time updates
   useEffect(() => {
     if (!user) return;
-    const unsub = base44.entities.SurveyRequest.subscribe(() => { loadData(); });
-    return () => unsub();
+    const channel = supabase.channel('surveyor-requests-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'survey_requests' }, () => { loadData(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'survey_deliverables' }, () => { loadData(); })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [user, loadData]);
 
   if (loading && !user) {
