@@ -67,14 +67,14 @@ export default function ProjectDetailModal({ open, onOpenChange, project, lookup
           read("activity", supabase.from("project_activity").select("*").eq("project_id", project.id).order("created_at", { ascending: false })),
           read("milestones", supabase.from("project_milestones").select("*").eq("project_id", project.id).order("sequence_no", { ascending: true })),
           read("messages", supabase.from("messages").select("*").eq("project_id", project.id).order("created_at", { ascending: false })),
-          read("engineers", supabase.from("engineers").select("id,base44_id,full_name")),
+          read("engineers", supabase.from("engineers").select("id,user_id,full_name")),
         ]);
 
         const engineerMap = {};
         (engineers || []).forEach((engineer) => {
           if (engineer.id) engineerMap[engineer.id] = engineer;
           if (engineer.user_id) engineerMap[engineer.user_id] = engineer;
-          if (engineer.base44_id) engineerMap[engineer.base44_id] = engineer;
+
         });
         const proposalsWithNames = (proposals || []).map((proposal) => ({
           ...proposal,
@@ -82,7 +82,7 @@ export default function ProjectDetailModal({ open, onOpenChange, project, lookup
           price: proposal.price ?? proposal.amount ?? 0,
           delivery_days: proposal.delivery_days ?? proposal.duration_days ?? 0,
           cover_letter: proposal.cover_letter ?? proposal.proposal ?? "",
-          engineer_name: engineerMap[proposal.engineer_id || proposal.engineer_user_id || proposal.engineer_base44_id]?.full_name || "غير معروف",
+          engineer_name: engineerMap[proposal.engineer_id || proposal.engineer_user_id]?.full_name || "غير معروف",
         }));
 
         if (!cancelled) {
@@ -102,7 +102,7 @@ export default function ProjectDetailModal({ open, onOpenChange, project, lookup
 
     load();
     return () => { cancelled = true; };
-  }, [open, project?.id, project?.base44_id]);
+  }, [open, project?.id]);
 
   const clientName = project?.client_id ? lookup.clients[project.client_id] : "—";
   const engineerName = project?.assigned_engineer_id ? lookup.engineers[project.assigned_engineer_id] : "—";
