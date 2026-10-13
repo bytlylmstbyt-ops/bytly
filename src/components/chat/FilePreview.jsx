@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { resolveProjectFileUrl } from "@/lib/projectFileStorage";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +16,21 @@ import {
 
 export default function FilePreview({ attachment, onMarkOfficial, canMarkOfficial }) {
   const [showPreview, setShowPreview] = useState(false);
+  const [resolvedUrl, setResolvedUrl] = useState(null);
+  const [urlError, setUrlError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    setResolvedUrl(null);
+    setUrlError("");
+    resolveProjectFileUrl(attachment?.url).then(url => {
+      if (active) setResolvedUrl(url);
+    }).catch(error => {
+      console.error("Unable to create secure attachment URL:", error);
+      if (active) setUrlError("تعذر فتح الملف. تأكدي من صلاحيتك للوصول إلى المشروع.");
+    });
+    return () => { active = false; };
+  }, [attachment?.url]);
 
   const getFileIcon = (type) => {
     if (type?.includes('image')) return <ImageIcon className="w-5 h-5" />;
@@ -58,7 +74,7 @@ export default function FilePreview({ attachment, onMarkOfficial, canMarkOfficia
               </Button>
             )}
 
-            <a href={attachment.url} download target="_blank" rel="noopener noreferrer">
+            <a href={resolvedUrl || (attachment.url?.startsWith("supabase://") ? undefined : attachment.url)} download target="_blank" rel="noopener noreferrer" onClick={(event) => { if (!resolvedUrl && attachment.url?.startsWith("supabase://")) event.preventDefault(); }}>
               <Button size="sm" variant="ghost">
                 <Download className="w-4 h-4" />
               </Button>
