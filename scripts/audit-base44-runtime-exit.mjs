@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 /**
  * Strict release gate for removing Base44 runtime compatibility.
- * This intentionally fails while application code imports or calls the legacy
- * compatibility surface. The adapter implementation itself is excluded from
- * call-site scanning so the report measures consumers, not its own internals.
+ * Reports every runtime call site grouped by file so the remaining work can be
+ * migrated deliberately without deleting a compatibility layer prematurely.
  */
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -54,15 +53,26 @@ for (const root of roots) {
   }
 }
 
-console.log('Strict Base44 runtime exit gate');
-console.log(JSON.stringify({
+const byFile = new Map();
+for (const finding of findings) {
+  if (!byFile.has(finding.file)) byFile.set(finding.file, { file: finding.file, total: 0, categories: {} });
+  const item = byFile.get(finding.file);
+  item.total += finding.count;
+  if (!item.categories[finding.category]) item.categories[finding.category] = [];
+  item.categories[finding.category].push({ line: finding.line, count: finding.count });
+}
+const report = {
   scannedRoots: roots,
-  findings: findings.length,
+  findings: findings.reduce((n, finding) => n + finding.count, 0),
+  filesWithFindings: byFile.size,
   byCategory: Object.fromEntries(patterns.map(([label]) => [label, findings.filter(f => f.category === label).reduce((n, f) => n + f.count, 0)])),
-  examples: findings.slice(0, 100),
-}, null, 2));
+  byFile: [...byFile.values()].sort((a, b) => a.file.localeCompare(b.file)),
+};
 
-if (findings.length) {
+console.log('Strict Base44 runtime exit gate');
+console.log(JSON.stringify(report, null, 2));
+
+if (report.findings) {
   console.error('FAIL: active application code still depends on the Base44 compatibility surface. Migrate every listed call site before claiming Base44 independence.');
   process.exitCode = 1;
 } else {
