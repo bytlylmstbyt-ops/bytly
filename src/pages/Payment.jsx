@@ -132,6 +132,7 @@ export default function PaymentPage() {
       const fees = calculateFees();
       if (useMilestones && milestones.reduce((sum, m) => sum + Number(m.percentage), 0) !== 100) throw new Error('يجب أن يكون مجموع نسب المراحل 100%.');
       const stages = useMilestones ? milestones : [{ title: 'دفعة المشروع', percentage: 100, description: '' }];
+      if (stages.length > 1) throw new Error('الدفع متعدد المراحل من المحفظة يحتاج ربطًا ذريًا إضافيًا؛ أوقفت العملية لحماية الرصيد. استخدمي دفعة واحدة حاليًا.');
       const { data: wallet, error: walletError } = await supabase.from('clients').select('wallet_balance').eq('user_id', user.id).maybeSingle();
       if (walletError) throw walletError;
       const required = stages.reduce((sum, stage) => { const amount = Math.round((fees.totalAmount * Number(stage.percentage) / 100) * 100) / 100; return sum + amount + Math.round(amount * 15) / 100; }, 0);
