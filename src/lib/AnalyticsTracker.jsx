@@ -69,6 +69,7 @@ export default function AnalyticsTracker(){
    }
    const updateSession=async()=>{if(!sessionRef.current)return;await supabase.from("analytics_sessions").update({user_id:userRef.current,event_count:eventCount,page_count:pageCount,last_seen_at:new Date().toISOString(),duration_seconds:Math.floor((Date.now()-started)/1000),exit_page:path(),max_scroll_percent:maxScrollRef.current}).eq("id",sessionRef.current).eq("visitor_id",visitorRef.current)};
    const track=async(event_name,metadata={},section_name=null)=>{if(!sessionRef.current||!mounted)return;const{error}=await supabase.from("analytics_events").insert({session_id:sessionRef.current,user_id:userRef.current,visitor_id:visitorRef.current,event_name,page_path:path(),metadata,section_name,screen_x:metadata.screen_x||null,screen_y:metadata.screen_y||null});if(!error){eventCount++;if(event_name==="page_view")pageCount++;await updateSession()}};
+   const onCustomAnalyticsEvent=(event)=>{const detail=event.detail||{};if(detail.event_name)track(detail.event_name,detail.metadata||{},detail.section_name||null)};window.addEventListener("bytly:analytics-event",onCustomAnalyticsEvent);
    await track("page_view",{title:document.title});
    heartbeat=setInterval(updateSession,30000);
    lastPath=path();
@@ -80,7 +81,7 @@ export default function AnalyticsTracker(){
    getSections().forEach(el=>observer.observe(el));
    const onVisibility=()=>{if(document.visibilityState==="hidden")updateSession()};
    document.addEventListener("click",onClick,true);window.addEventListener("scroll",onScroll,{passive:true});document.addEventListener("visibilitychange",onVisibility);
-   return()=>{mounted=false;window.__bytlyReplayCleanup?.();clearInterval(heartbeat);clearInterval(routeWatcher);observer?.disconnect();authSubscription?.unsubscribe?.();document.removeEventListener("click",onClick,true);window.removeEventListener("scroll",onScroll);document.removeEventListener("visibilitychange",onVisibility);updateSession()};
+   return()=>{mounted=false;window.removeEventListener("bytly:analytics-event",onCustomAnalyticsEvent);window.__bytlyReplayCleanup?.();clearInterval(heartbeat);clearInterval(routeWatcher);observer?.disconnect();authSubscription?.unsubscribe?.();document.removeEventListener("click",onClick,true);window.removeEventListener("scroll",onScroll);document.removeEventListener("visibilitychange",onVisibility);updateSession()};
   }catch(e){console.warn("Analytics tracker skipped",e)}
  };
  start();
