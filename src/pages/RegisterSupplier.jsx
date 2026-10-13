@@ -195,8 +195,8 @@ export default function RegisterSupplier() {
         setConfirmationEmail(formData.email);
         return;
       }
-      console.error("Error:", error);
-      toast.error("حدث خطأ أثناء التسجيل");
+      console.error("Error registering المورد:", error);
+      toast.error(error?.message || "تعذر إكمال التسجيل. تحقق من البيانات وحاول مرة أخرى.");
     } finally {
       setLoading(false);
     }
