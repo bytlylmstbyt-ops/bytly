@@ -155,6 +155,7 @@ export default function RegisterFirm() {
           country: formData.country,
           website: formData.website,
           specializations: formData.specializations,
+          entity_type: "engineering_company",
           is_verified: false,
           status: "pending",
           total_projects: 0,
