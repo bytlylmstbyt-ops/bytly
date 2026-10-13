@@ -73,11 +73,16 @@ export default function ProjectDetailModal({ open, onOpenChange, project, lookup
         const engineerMap = {};
         (engineers || []).forEach((engineer) => {
           if (engineer.id) engineerMap[engineer.id] = engineer;
+          if (engineer.user_id) engineerMap[engineer.user_id] = engineer;
           if (engineer.base44_id) engineerMap[engineer.base44_id] = engineer;
         });
         const proposalsWithNames = (proposals || []).map((proposal) => ({
           ...proposal,
-          engineer_name: engineerMap[proposal.engineer_id || proposal.engineer_base44_id]?.full_name || "غير معروف",
+          engineer_id: proposal.engineer_id || proposal.engineer_user_id || null,
+          price: proposal.price ?? proposal.amount ?? 0,
+          delivery_days: proposal.delivery_days ?? proposal.duration_days ?? 0,
+          cover_letter: proposal.cover_letter ?? proposal.proposal ?? "",
+          engineer_name: engineerMap[proposal.engineer_id || proposal.engineer_user_id || proposal.engineer_base44_id]?.full_name || "غير معروف",
         }));
 
         if (!cancelled) {
