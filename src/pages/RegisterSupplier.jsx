@@ -186,7 +186,7 @@ export default function RegisterSupplier() {
     try {
       const supplier = await saveRegistration({
         table: "suppliers", role: "supplier", fullName: formData.company_name, email: formData.email, phone: formData.phone, password: formData.password,
-        row: { ...formData, status: "pending" }
+        row: (({ password, confirmPassword, ...supplierData }) => ({ ...supplierData, status: "pending" }))(formData)
       });
       toast.success("تم تسجيل المورد بنجاح! في انتظار الموافقة من الإدارة");
       navigate(createPageUrl("Home"), { replace: true });
