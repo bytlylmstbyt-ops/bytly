@@ -61,9 +61,7 @@ export default function ProjectDetailModal({ open, onOpenChange, project, lookup
 
       try {
         const [proposals, contracts, transactions, logs, milestones, messages, engineers] = await Promise.all([
-          project.base44_id
-            ? read("proposal staging", supabase.from("base44_proposal_migration_staging").select("*").eq("project_base44_id", project.base44_id).order("created_at", { ascending: false }))
-            : Promise.resolve([]),
+          read("project offers", supabase.from("project_offers").select("*").eq("project_id", project.id).order("created_at", { ascending: false })),
           read("contracts", supabase.from("project_contracts").select("*").eq("project_id", project.id).order("created_at", { ascending: false })),
           read("wallet transactions", supabase.from("wallet_transactions").select("*").eq("project_id", project.id).order("created_at", { ascending: false })),
           read("activity", supabase.from("project_activity").select("*").eq("project_id", project.id).order("created_at", { ascending: false })),
