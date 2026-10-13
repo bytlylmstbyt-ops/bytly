@@ -1009,6 +1009,14 @@ bytlyCompat.functions = {
       if (action === 'status') {
         const { data: project, error: projectError } = await withHardTimeout(supabase.from('projects').select('*').eq('id', projectId).single(), 10000);
         if (projectError || !project) throw new Error('لم يتم العثور على المشروع');
+        const { data: profile } = await withHardTimeout(supabase.from('profiles').select('role').eq('user_id', user.id).maybeSingle(), 10000);
+        const isAdmin = ['admin','owner'].includes(String(profile?.role || user.app_metadata?.role || '').toLowerCase());
+        const isParticipant = project.client_user_id === user.id
+          || project.assigned_engineer_id === user.id
+          || project.technical_consultant_id === user.id
+          || project.assigned_contractor_id === user.id
+          || project.assigned_supplier_id === user.id;
+        if (!isAdmin && !isParticipant) throw new Error('غير مصرح لك بعرض بيانات ضمان هذا المشروع');
         const [{ data: milestones, error: milestonesError }, { data: transactions, error: transactionsError }] = await Promise.all([
           withHardTimeout(supabase.from('project_milestones').select('*').eq('project_id', projectId).order('sequence_no', { ascending: true }), 10000),
           withHardTimeout(supabase.from('wallet_transactions').select('*').eq('project_id', projectId).order('created_at', { ascending: false }).limit(20), 10000),
@@ -1016,8 +1024,10 @@ bytlyCompat.functions = {
         if (milestonesError) throw new Error(milestonesError.message);
         if (transactionsError) throw new Error(transactionsError.message);
         const amount = Number(project.escrow_amount || 0);
-        const rate = Number(project.platform_commission || 15);
-        return { data: { escrow_status: project.escrow_status || 'none', escrow_amount: amount, commission_rate: rate, commission_amount: Math.round(amount * rate) / 100, engineer_will_receive: amount - Math.round(amount * rate) / 100, milestones: milestones || [], total_held: amount, total_released: 0, recent_transactions: transactions || [] } };
+        const rate = Number(project.project_commission_rate ?? project.platform_commission ?? 15);
+        const totalHeld = Number((transactions || []).filter(tx => tx.balance_type === 'held' && tx.direction === 'debit' && tx.status === 'completed').reduce((sum, tx) => sum + Number(tx.amount || 0), 0));
+        const totalReleased = Number((transactions || []).filter(tx => ['milestone_release','milestone_partial_release'].includes(tx.type) && tx.direction === 'credit' && tx.status === 'completed').reduce((sum, tx) => sum + Number(tx.amount || 0), 0));
+        return { data: { escrow_status: project.escrow_status || 'none', escrow_amount: amount, commission_rate: rate, commission_amount: Math.round(amount * rate) / 100, engineer_will_receive: amount - Math.round(amount * rate) / 100, milestones: milestones || [], total_held: totalHeld, total_released: totalReleased, recent_transactions: transactions || [] } };
       }
       if (!milestoneId) throw new Error('يلزم تحديد المرحلة المالية');
       const { data: financialMilestone, error: financialError } = await withHardTimeout(supabase.from('project_financial_milestones').select('id,project_id,milestone_id').eq('project_id', projectId).eq('milestone_id', milestoneId).maybeSingle(), 10000);
