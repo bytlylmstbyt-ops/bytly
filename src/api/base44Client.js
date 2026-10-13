@@ -15,7 +15,7 @@ const makeSupabaseEntity = (table) => ({
   filter: async (filters = {}, sort = '-created_at', limit = 100) => {
     let q = supabase.from(table).select('*').limit(limit);
     Object.entries(filters || {}).forEach(([k,v]) => { if (v !== undefined && v !== null) q = Array.isArray(v) ? q.in(k,v) : q.eq(k,v); });
-    q = q.order(String(sort).replace(/^-/, '') || 'created_at', { ascending: !String(sort).startsWith('-') });
+    q = q.order(mapLegacyFinancialSort(sort).replace(/^-/, '') || 'created_at', { ascending: !String(sort).startsWith('-') });
     const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة البيانات');
     if (error) throw new Error(error.message || 'تعذر قراءة البيانات');
     return data || [];
@@ -713,6 +713,7 @@ const normalizeInvoice = row => row ? ({
   paid_date: row.paid_at || row.paid_date || null,
   created_date: row.created_at || row.created_date || null,
 }) : null;
+const mapLegacyFinancialSort = sort => String(sort || '-created_at').replace(/created_date/g, 'created_at').replace(/paid_date/g, 'paid_at');
 const mapInvoicePayload = (payload = {}) => {
   const row = { ...payload };
   if (row.client_email !== undefined && row.buyer_email === undefined) row.buyer_email = row.client_email;
