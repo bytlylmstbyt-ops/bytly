@@ -31,12 +31,24 @@ export default function FirmDashboard() {
       const user = authData?.user;
       if (!user) throw new Error("يجب تسجيل الدخول أولاً");
 
-      const { data: firmData, error: firmError } = await supabase
+      // New registrations are linked by owner_user_id. Older migrated firm rows
+      // may not have that mapping yet, so use the authenticated email only as a
+      // safe fallback; never match by company name or an unverified identifier.
+      let { data: firmData, error: firmError } = await supabase
         .from("engineering_firms")
         .select("*")
         .eq("owner_user_id", user.id)
         .maybeSingle();
       if (firmError) throw firmError;
+      if (!firmData && user.email) {
+        const emailLookup = await supabase
+          .from("engineering_firms")
+          .select("*")
+          .ilike("email", user.email.trim())
+          .maybeSingle();
+        if (emailLookup.error) throw emailLookup.error;
+        firmData = emailLookup.data;
+      }
 
       if (!firmData) {
         setFirm(null);
