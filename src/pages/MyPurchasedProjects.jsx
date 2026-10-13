@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import { Card, CardContent } from "@/components/ui/card";
@@ -156,93 +157,72 @@ export default function MyPurchasedProjectsPage() {
   };
 
   const handleFinalApproval = async (projectId) => {
-    const confirm = window.confirm("هل أنت متأكد من الموافقة النهائية؟ سيتم تحرير المبلغ للمصمم والمستشارين.");
-    if (!confirm) return;
+    const confirmed = window.confirm("هل أنت متأكدة من الموافقة النهائية؟ سيتم تحرير الضمان فقط بعد التحقق من المرحلة المالية.");
+    if (!confirmed) return;
 
     try {
-      const project = projects.find(p => p.id === projectId);
-      const engineer = engineers[project.assigned_engineer_id];
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const actor = authData?.user;
+      if (authError || !actor) throw new Error("يجب تسجيل الدخول مجددًا.");
 
-      // 1. Release payment to engineer
-      await base44.entities.Engineer.update(project.assigned_engineer_id, {
-        available_balance: (engineer.available_balance || 0) + project.engineer_payment,
-        wallet_balance: (engineer.wallet_balance || 0) + project.engineer_payment
-      });
+      const project = projects.find((item) => item.id === projectId);
+      if (!project) throw new Error("لم يتم العثور على المشروع.");
 
-      // 2. Pay technical consultant
-      if (project.technical_consultant_id) {
-        const consultants = await base44.entities.Consultant.filter({ 
-          id: project.technical_consultant_id 
-        });
-        if (consultants.length > 0) {
-          await base44.entities.Consultant.update(project.technical_consultant_id, {
-            wallet_balance: (consultants[0].wallet_balance || 0) + project.technical_consultant_fee
-          });
-          
-          await sendNotification({
-            recipientEmail: consultants[0].email,
-            title: "تم إضافة أتعابك",
-            message: `تم إضافة ${project.technical_consultant_fee.toLocaleString('ar-SA')} ريال لمحفظتك`,
-            type: "payment",
-            priority: "high"
-          });
-        }
+      // Never change wallet balances from the browser. Only the secure escrow RPC
+      // may release held money after the funded milestone has been validated.
+      const { data: financialMilestones, error: financialError } = await supabase
+        .from("project_financial_milestones")
+        .select("id, milestone_id, escrow_status, release_status, dispute_status")
+        .eq("project_id", projectId);
+
+      if (financialError) throw financialError;
+      if (!financialMilestones?.length) {
+        alert("لا يوجد حجز ضمان مسجل لهذا المشروع. لم يتم تعديل أي رصيد. افتحي مراحل المشروع وتحققي من التمويل أولاً.");
+        return;
+      }
+      if (financialMilestones.length !== 1) {
+        alert("هذا المشروع يحتوي على عدة مراحل مالية. لتجنب تحرير دفعات جزئية أو مكررة، اعتمدي كل مرحلة من صفحة مراحل المشروع.");
+        return;
       }
 
-      // 3. Pay legal consultant
-      if (project.legal_consultant_id) {
-        const legalConsultants = await base44.entities.LegalConsultant.filter({ 
-          id: project.legal_consultant_id 
-        });
-        if (legalConsultants.length > 0) {
-          await base44.entities.LegalConsultant.update(project.legal_consultant_id, {
-            wallet_balance: (legalConsultants[0].wallet_balance || 0) + project.legal_consultant_fee
-          });
-          
-          await sendNotification({
-            recipientEmail: legalConsultants[0].email,
-            title: "تم إضافة أتعابك",
-            message: `تم إضافة ${project.legal_consultant_fee.toLocaleString('ar-SA')} ريال لمحفظتك`,
-            type: "payment",
-            priority: "high"
-          });
-        }
+      const financialMilestone = financialMilestones[0];
+      const { data: releaseResult, error: releaseError } = await supabase.rpc("release_project_milestone", {
+        p_milestone_id: financialMilestone.id,
+        p_actor_user_id: actor.id,
+        p_notes: "اعتماد العميل النهائي عبر صفحة مشاريعي"
+      });
+
+      if (releaseError) throw releaseError;
+      if (!releaseResult?.ok) {
+        const reason = releaseResult?.reason || releaseResult?.error || "تعذر تحرير الضمان";
+        throw new Error(String(reason));
       }
 
-      // 4. Update project
-      await base44.entities.Project.update(projectId, {
-        status: "completed",
-        payment_status: "completed",
-        escrow_status: "released",
-        client_final_approval: true,
-        client_approval_date: new Date().toISOString()
-      });
+      const { error: statusError } = await supabase
+        .from("projects")
+        .update({
+          status: "completed",
+          payment_status: "completed",
+          escrow_status: "released",
+          client_final_approval: true,
+          client_approval_date: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", projectId)
+        .eq("client_user_id", actor.id);
 
-      // 5. Create transactions
-      await base44.entities.Transaction.create({
-        user_id: engineer.email,
-        type: "escrow_release",
-        amount: project.engineer_payment,
-        status: "completed",
-        description: `استلام دفعة مشروع: ${project.title}`,
-        project_id: projectId
-      });
+      if (statusError) {
+        console.error("Escrow was released but project status update failed:", statusError);
+        alert("تم تحرير دفعة الضمان بأمان، لكن تعذر تحديث حالة المشروع. لا تعيدي اعتماد الدفعة؛ حدّثي الصفحة أو تواصلي مع الدعم.");
+        await loadData();
+        return;
+      }
 
-      // 6. Notify engineer
-      await sendNotification({
-        recipientEmail: engineer.email,
-        title: "تم تحرير المبلغ!",
-        message: `تم إضافة ${project.engineer_payment.toLocaleString('ar-SA')} ريال لمحفظتك`,
-        type: "payment",
-        projectId: projectId,
-        priority: "high"
-      });
-
-      alert("تم إتمام المشروع بنجاح!");
-      loadData();
+      alert("تم اعتماد المرحلة وتحرير الضمان عبر Supabase بنجاح.");
+      await loadData();
     } catch (error) {
-      console.error("Error approving project:", error);
-      alert("حدث خطأ");
+      console.error("Secure final approval failed:", error);
+      alert("تعذر اعتماد المشروع أو تحرير الضمان. لم يتم إجراء أي تعديل مباشر على أرصدة المحافظ. " + (error?.message || ""));
     }
   };
 
