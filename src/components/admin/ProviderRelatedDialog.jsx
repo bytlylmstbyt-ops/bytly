@@ -9,8 +9,6 @@ import { Loader2, FolderGit2, ScrollText, Wallet, History, Inbox } from "lucide-
 
 const fmtMoney = (v) => (v != null ? Number(v).toLocaleString("ar-SA") + " ر.س" : "—");
 
-const safe = async (fn) => { try { return await fn(); } catch { return []; } };
-
 export default function ProviderRelatedDialog({
   provider, providerKey, nameField, open, onOpenChange, initialTab,
 }) {
@@ -29,8 +27,6 @@ export default function ProviderRelatedDialog({
     (async () => {
       setLoading(true);
       const pid = provider.id;
-      const email = provider.email;
-
       const userId = provider.user_id || provider.owner_user_id || null;
 
       // Load only from the migrated Supabase tables. Keep each panel non-blocking.
