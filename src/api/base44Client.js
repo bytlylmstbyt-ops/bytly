@@ -208,6 +208,28 @@ const supabaseCurrentUser = async () => {
 };
 bytlyCompat.auth.me = supabaseCurrentUser;
 
+// Keep the legacy compatibility surface backed by Supabase Auth.
+// isAuthenticated stays synchronous for existing UI callers; session state is
+// initialized from Supabase and kept current by auth-state events.
+let cachedSupabaseSession = null;
+if (supabase?.auth) {
+  supabase.auth.getSession()
+    .then(({ data, error }) => {
+      if (!error) cachedSupabaseSession = data?.session || null;
+    })
+    .catch(() => { cachedSupabaseSession = null; });
+  supabase.auth.onAuthStateChange((_event, session) => {
+    cachedSupabaseSession = session || null;
+  });
+}
+bytlyCompat.auth.isAuthenticated = () => Boolean(cachedSupabaseSession);
+bytlyCompat.auth.logout = async () => {
+  const { error } = await withHardTimeout(supabase.auth.signOut(), 10000, 'انتهت مهلة تسجيل الخروج');
+  if (error) throw new Error(error.message || 'تعذر تسجيل الخروج');
+  cachedSupabaseSession = null;
+  return true;
+};
+
 
 
 // AI compatibility bridge: existing Bytly AI pages keep their UI contracts, while
