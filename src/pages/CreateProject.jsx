@@ -168,7 +168,29 @@ export default function CreateProject() {
     }
 
     setIsLoading(true);
-    
+    try {
+      // Resolve the authenticated Supabase user at submit time; React state can be stale.
+      const { data: authResult, error: authError } = await supabase.auth.getUser();
+      const authenticatedUser = authResult?.user;
+      if (authError || !authenticatedUser?.id) {
+        setIsLoading(false);
+        alert("انتهت جلسة الدخول أو لم نتمكن من التحقق منها. سجّلي الدخول مرة أخرى ثم حاولي إنشاء المشروع.");
+        return;
+      }
+
+      // Re-resolve the owner profile against the authenticated identity before inserting.
+      const { data: authenticatedClient, error: clientLookupError } = await supabase
+        .from("clients")
+        .select("id,user_id,total_projects")
+        .eq("user_id", authenticatedUser.id)
+        .maybeSingle();
+      if (clientLookupError) throw clientLookupError;
+      if (!authenticatedClient?.id) {
+        setIsLoading(false);
+        alert("لم نعثر على ملف صاحب مشروع مرتبط بحسابك. أكملي ملف صاحب المشروع ثم أعيدي المحاولة.");
+        return;
+      }
+
     if (preselectedEngineerId && !preselectedEngineer?.id) {
       throw new Error("تعذر التحقق من المهندس المحدد. أعيدي فتح صفحة المهندس واختاري طلب الخدمة مرة أخرى.");
     }
@@ -184,12 +206,12 @@ export default function CreateProject() {
       location: formData.location,
       deadline: formData.deadline,
       attachments: formData.attachments,
-      client_id: client.id,
+      client_id: authenticatedClient.id,
       status: "open",
       total_proposals: 0,
       is_direct_hire: Boolean(preselectedEngineer?.id),
       assigned_engineer_id: preselectedEngineer?.id || null,
-      client_user_id: user?.id || null,
+      client_user_id: authenticatedUser.id,
       service_scope: { services: formData.service_scope, requested_by_client: true },
     }).select().single();
     if (projectError) throw projectError;
@@ -203,7 +225,7 @@ export default function CreateProject() {
     for(let i=0;i<finalPlan.length;i++){const m=finalPlan[i];const stageAmount=(projectBudget*Number(m.percentage||0))/100;const providerId=i===0?(preselectedEngineerId||null):null;const {data:stage,error:stageError}=await supabase.from("project_milestones").insert({project_id:newProject.id,title:m.title,description:m.description,amount:stageAmount,percentage:m.percentage,sequence_no:i+1,service_key:m.service_key||null,provider_user_id:providerId,provider_type:providerId?"engineer":null,status:"pending",due_date:new Date(Date.now()+Number(m.days||7)*86400000).toISOString().split("T")[0]}).select("id").single();if(stageError) throw stageError;if(providerId){const {error:participantError}=await supabase.from("project_financial_participants").insert({project_id:newProject.id,milestone_id:stage.id,participant_user_id:providerId,participant_type:"engineer",provider_type:"engineer",service_key:m.service_key||null,role_label:"مقدم خدمة المرحلة",allocation_type:"percentage",allocation_value:100,priority:1,status:"active"});if(participantError) throw participantError;}}
     
     // Update client's total projects
-    await supabase.from("clients").update({total_projects:(client.total_projects||0)+1}).eq("id",client.id);
+    await supabase.from("clients").update({total_projects:(authenticatedClient.total_projects||0)+1}).eq("id",authenticatedClient.id);
 
     // Send project notifications through the authenticated Supabase Edge Function.
     try {
@@ -220,6 +242,11 @@ export default function CreateProject() {
     setIsLoading(false);
     alert(preselectedEngineerId ? "تم إرسال طلب الخدمة المباشرة بنجاح!" : "تم إنشاء المشروع بنجاح!");
     navigate(createPageUrl("Projects"));
+    } catch (error) {
+      console.error("Failed to create project:", error);
+      setIsLoading(false);
+      alert(error?.message || "فشل إنشاء المشروع. تحققي من البيانات وحاولي مرة أخرى.");
+    }
   };
 
   const categories = [
