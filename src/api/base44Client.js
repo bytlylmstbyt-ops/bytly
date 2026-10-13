@@ -151,6 +151,11 @@ bytlyCompat.entities.ReadyMadeDesign = {
   },
 };
 
+const resolvePurchaseDownloads = async rows => Promise.all((rows || []).map(async row => ({
+  ...row,
+  download_url: row?.download_url ? await resolveProjectFileUrl(row.download_url).catch(() => null) : null,
+})));
+
 const legacyDesignPurchase = bytlyCompat.entities.DesignPurchase;
 bytlyCompat.entities.DesignPurchase = {
   ...legacyDesignPurchase,
@@ -163,13 +168,13 @@ bytlyCompat.entities.DesignPurchase = {
     const sortColumn = String(sort || '-created_date').replace(/^-/, '') || 'created_date';
     const { data, error } = await withHardTimeout(query.order(sortColumn, { ascending: !String(sort).startsWith('-') }), 10000, 'انتهت مهلة قراءة مشتريات التصاميم');
     if (error) throw new Error(error.message || 'تعذر تحميل مشتريات التصاميم');
-    return data || [];
+    return resolvePurchaseDownloads(data || []);
   },
   list: async (sort = '-created_date', limit = 100) => bytlyCompat.entities.DesignPurchase.filter({}, sort, limit),
   get: async id => {
     const { data, error } = await withHardTimeout(supabase.from('design_purchase').select('*').eq('id', id).maybeSingle(), 10000);
     if (error) throw new Error(error.message || 'تعذر قراءة عملية الشراء');
-    return data;
+    return data ? (await resolvePurchaseDownloads([data]))[0] : null;
   },
   create: async () => {
     throw new Error('إنشاء عملية شراء مباشرة غير مسموح؛ استخدم مسار دفع موثوق');
@@ -177,7 +182,7 @@ bytlyCompat.entities.DesignPurchase = {
   update: async (id, payload = {}) => {
     const { data, error } = await withHardTimeout(supabase.from('design_purchase').update({ ...payload, updated_date: new Date().toISOString() }).eq('id', id).select('*').single(), 10000, 'انتهت مهلة تحديث طلب الشراء');
     if (error) throw new Error(error.message || 'تعذر تحديث طلب الشراء');
-    return data;
+    return (await resolvePurchaseDownloads([data]))[0];
   },
   purchaseWithWallet: async designId => {
     const { data, error } = await withHardTimeout(supabase.rpc('purchase_ready_made_design_with_wallet', { p_design_id: String(designId) }), 20000, 'انتهت مهلة تنفيذ الشراء من المحفظة');
