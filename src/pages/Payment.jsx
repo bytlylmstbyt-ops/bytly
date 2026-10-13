@@ -57,8 +57,9 @@ export default function PaymentPage() {
         .from("profiles").select("*").eq("id", user.id).single();
       if (clientError) throw clientError;
 
-      const { data: wallet } = await supabase
-        .from("wallet_accounts").select("available_balance, held_balance").eq("user_id", user.id).maybeSingle();
+      const { data: wallet, error: walletError } = await supabase
+        .from("clients").select("wallet_balance").eq("user_id", user.id).maybeSingle();
+      if (walletError) throw walletError;
 
       setProject(projectData);
       setProposal({
@@ -75,7 +76,7 @@ export default function PaymentPage() {
       setClient({
         ...clientData,
         full_name: clientData.full_name || clientData.name || "",
-        wallet_balance: Number(wallet?.available_balance || 0)
+        wallet_balance: Number(wallet?.wallet_balance || 0)
       });
     } catch (error) {
       console.error("Error loading data:", error);
