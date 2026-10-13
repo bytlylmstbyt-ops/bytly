@@ -734,7 +734,7 @@ bytlyCompat.entities.Invoice = {
     if (mapped.client_id && !mapped.buyer_user_id) { mapped.buyer_user_id = await resolveClientUserId(mapped.client_id); delete mapped.client_id; if (!mapped.buyer_user_id) return []; }
     let q = supabase.from('invoices').select('*').limit(Math.max(1, Math.min(Number(limit) || 100, 500)));
     Object.entries(mapped).forEach(([k,v]) => { q = v === null ? q.is(k,null) : Array.isArray(v) ? q.in(k,v) : q.eq(k,v); });
-    q = q.order(String(sort).replace(/^-/, '') || 'created_at', { ascending: !String(sort).startsWith('-') });
+    q = q.order(mapLegacyFinancialSort(sort).replace(/^-/, '') || 'created_at', { ascending: !String(sort).startsWith('-') });
     const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة الفواتير');
     if (error) throw new Error(error.message || 'تعذر قراءة الفواتير');
     return (data || []).map(normalizeInvoice);
