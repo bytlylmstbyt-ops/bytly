@@ -185,10 +185,49 @@ begin
     p_property_area_sqm,p_property_status,p_notes,'pending',v_payout,v_fee,v_total,15,'held'
   ) returning * into v_request;
 
+  -- Match only approved/available surveyors within their configured radius.
+  update public.survey_requests r set
+    matched_surveyors = coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'surveyor_id', s.id::text,
+        'user_id', s.user_id::text,
+        'name', s.full_name,
+        'distance_km', round((6371 * 2 * asin(sqrt(least(1,
+          power(sin(radians(s.latitude-p_latitude)/2),2) +
+          cos(radians(p_latitude))*cos(radians(s.latitude))*
+          power(sin(radians(s.longitude-p_longitude)/2),2)
+        ))))::numeric,2),
+        'notified', false
+      ) order by (6371 * 2 * asin(sqrt(least(1,
+          power(sin(radians(s.latitude-p_latitude)/2),2) +
+          cos(radians(p_latitude))*cos(radians(s.latitude))*
+          power(sin(radians(s.longitude-p_longitude)/2),2)
+        )))))
+      )
+      from public.surveyor_profiles s
+      where s.status='approved' and s.is_available=true and s.latitude is not null and s.longitude is not null
+        and (6371 * 2 * asin(sqrt(least(1,
+          power(sin(radians(s.latitude-p_latitude)/2),2) +
+          cos(radians(p_latitude))*cos(radians(s.latitude))*
+          power(sin(radians(s.longitude-p_longitude)/2),2)
+        ))))) <= s.geofencing_radius_km
+    ), '[]'::jsonb),
+    status = case when exists (
+      select 1 from public.surveyor_profiles s where s.status='approved' and s.is_available=true
+        and s.latitude is not null and s.longitude is not null
+        and (6371 * 2 * asin(sqrt(least(1,
+          power(sin(radians(s.latitude-p_latitude)/2),2) +
+          cos(radians(p_latitude))*cos(radians(s.latitude))*
+          power(sin(radians(s.longitude-p_longitude)/2),2)
+        ))))) <= s.geofencing_radius_km
+    ) then 'broadcasted' else 'pending' end,
+    updated_at=now()
+  where r.id=v_request.id returning * into v_request;
+
   update public.wallet_transactions set reference = v_request.id::text
     where user_id = p_actor_user_id and reference = 'survey-pending';
 
-  return jsonb_build_object('request_id',v_request.id,'total_charged',v_total,'payout_amount',v_payout,'platform_fee',v_fee);
+  return jsonb_build_object('request_id',v_request.id,'total_charged',v_total,'payout_amount',v_payout,'platform_fee',v_fee,'matched_count',jsonb_array_length(v_request.matched_surveyors));
 end;
 $$;
 
@@ -203,7 +242,7 @@ begin
     surveyor_profile_id=v_profile.id,surveyor_name=v_profile.full_name,surveyor_email=v_profile.email,
     accepted_at=now(),updated_at=now()
   where id=p_request_id and status in ('pending','broadcasted')
-    and (matched_surveyors='[]'::jsonb or matched_surveyors @> jsonb_build_array(jsonb_build_object('surveyor_id',v_profile.id::text)));
+    and matched_surveyors @> jsonb_build_array(jsonb_build_object('surveyor_id',v_profile.id::text));
   if not found then raise exception 'REQUEST_UNAVAILABLE'; end if;
   select * into v_request from public.survey_requests where id=p_request_id;
   return jsonb_build_object('request_id',v_request.id,'status',v_request.status,'surveyor_name',v_profile.full_name);
