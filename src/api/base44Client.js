@@ -730,7 +730,7 @@ bytlyCompat.entities.Invoice = {
   filter: async (filters = {}, sort = '-created_at', limit = 100) => {
     const mapped = { ...filters };
     if (mapped.client_email && !mapped.buyer_email) { mapped.buyer_email = mapped.client_email; delete mapped.client_email; }
-    if (mapped.client_id && !mapped.buyer_user_id) { mapped.buyer_user_id = mapped.client_id; delete mapped.client_id; }
+    if (mapped.client_id && !mapped.buyer_user_id) { mapped.buyer_user_id = await resolveClientUserId(mapped.client_id); delete mapped.client_id; if (!mapped.buyer_user_id) return []; }
     let q = supabase.from('invoices').select('*').limit(Math.max(1, Math.min(Number(limit) || 100, 500)));
     Object.entries(mapped).forEach(([k,v]) => { q = v === null ? q.is(k,null) : Array.isArray(v) ? q.in(k,v) : q.eq(k,v); });
     q = q.order(String(sort).replace(/^-/, '') || 'created_at', { ascending: !String(sort).startsWith('-') });
@@ -753,6 +753,7 @@ bytlyCompat.entities.Invoice = {
     const user = authData?.user;
     if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً');
     const row = mapInvoicePayload(payload);
+    if (payload?.client_id && !payload?.buyer_user_id) row.buyer_user_id = await resolveClientUserId(payload.client_id);
     row.created_by = row.created_by || user.id;
     row.issuer_user_id = row.issuer_user_id || user.id;
     row.issue_date = row.issue_date || new Date().toISOString();
