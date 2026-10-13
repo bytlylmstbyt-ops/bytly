@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+
 
 /**
  * useScrollDepthTracking — fires analytics events for:
@@ -31,10 +31,9 @@ export function useScrollDepthTracking(pageName = 'page') {
           if (pct >= m && !fired.current.has(`depth:${m}`)) {
             fired.current.add(`depth:${m}`);
             try {
-              base44.analytics.track({
-                eventName: 'scroll_depth',
-                properties: { page: pageName, depth: m },
-              });
+              window.dispatchEvent(new CustomEvent('bytly:analytics-event', {
+                detail: { event_name: 'scroll_depth', metadata: { page: pageName, depth: m } },
+              }));
             } catch (e) { /* analytics is best-effort */ }
           }
         });
@@ -61,10 +60,9 @@ export function useScrollDepthTracking(pageName = 'page') {
           if (fired.current.has(key)) return;
           fired.current.add(key);
           try {
-            base44.analytics.track({
-              eventName: 'section_viewed',
-              properties: { page: pageName, section: name },
-            });
+            window.dispatchEvent(new CustomEvent('bytly:analytics-event', {
+              detail: { event_name: 'section_viewed', metadata: { page: pageName, section: name }, section_name: name },
+            }));
           } catch (e) { /* best-effort */ }
         });
       },
