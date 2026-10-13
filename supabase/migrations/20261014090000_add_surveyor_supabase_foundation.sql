@@ -172,11 +172,6 @@ begin
         held_balance = held_balance + v_total, updated_at = now()
     where id = v_wallet.id;
 
-  insert into public.wallet_transactions(user_id,type,amount,currency,status,reference,description,balance_type,direction)
-    values (p_actor_user_id,'survey_escrow_hold',v_total,'SAR','completed','survey-pending','Survey escrow hold','available','debit');
-  insert into public.wallet_transactions(user_id,type,amount,currency,status,reference,description,balance_type,direction)
-    values (p_actor_user_id,'survey_escrow_hold',v_total,'SAR','completed','survey-pending','Survey escrow held','held','credit');
-
   insert into public.survey_requests(
     client_user_id,client_email,client_name,latitude,longitude,address,property_area_sqm,
     property_status,notes,status,payout_amount,platform_fee,total_charged,commission_rate,escrow_status
@@ -184,6 +179,11 @@ begin
     p_actor_user_id,lower(trim(p_client_email)),p_client_name,p_latitude,p_longitude,coalesce(p_address,''),
     p_property_area_sqm,p_property_status,p_notes,'pending',v_payout,v_fee,v_total,15,'held'
   ) returning * into v_request;
+
+  insert into public.wallet_transactions(user_id,type,amount,currency,status,reference,description,balance_type,direction)
+    values (p_actor_user_id,'survey_escrow_hold',v_total,'SAR','completed',v_request.id::text,'Survey escrow hold','available','debit');
+  insert into public.wallet_transactions(user_id,type,amount,currency,status,reference,description,balance_type,direction)
+    values (p_actor_user_id,'survey_escrow_hold',v_total,'SAR','completed',v_request.id::text,'Survey escrow held','held','credit');
 
   -- Match only approved/available surveyors within their configured radius.
   update public.survey_requests r set
@@ -223,9 +223,6 @@ begin
     ) then 'broadcasted' else 'pending' end,
     updated_at=now()
   where r.id=v_request.id returning * into v_request;
-
-  update public.wallet_transactions set reference = v_request.id::text
-    where user_id = p_actor_user_id and reference = 'survey-pending';
 
   return jsonb_build_object('request_id',v_request.id,'total_charged',v_total,'payout_amount',v_payout,'platform_fee',v_fee,'matched_count',jsonb_array_length(v_request.matched_surveyors));
 end;
