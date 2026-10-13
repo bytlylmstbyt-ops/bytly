@@ -55,9 +55,26 @@ Deno.serve(async (req: Request) => {
       };
       if (profile.latitude !== null && (profile.latitude < -90 || profile.latitude > 90)) return json({ error: "INVALID_LATITUDE" }, 400);
       if (profile.longitude !== null && (profile.longitude < -180 || profile.longitude > 180)) return json({ error: "INVALID_LONGITUDE" }, 400);
-      if (!profile.terms_accepted) return json({ error: "TERMS_REQUIRED" }, 400);
-      const { data, error } = await admin.from("surveyor_profiles").insert(profile).select("id,user_id,full_name,email,city,status").single();
+      const { data, error } = await admin.from("surveyor_profiles").insert(profile).select("id,user_id,full_name,email,city,status,terms_accepted").single();
       if (error) return json({ error: "PROFILE_CREATE_FAILED", detail: error.message }, 400);
+      return json({ success: true, profile: data });
+    }
+
+    if (action === "profile") {
+      const { data, error } = await admin.from("surveyor_profiles")
+        .select("id,user_id,full_name,email,phone,license_number,city,latitude,longitude,geofencing_radius_km,equipment_checklist,is_identity_verified,is_license_verified,verification_documents,profile_image,bio,years_experience,rating,total_jobs,wallet_balance,available_balance,status,is_available,terms_accepted,terms_accepted_date,created_at,updated_at")
+        .eq("user_id", user.id).maybeSingle();
+      if (error) return json({ error: error.message }, 400);
+      return json({ profile: data || null });
+    }
+
+    if (action === "accept_terms") {
+      const { data, error } = await admin.from("surveyor_profiles")
+        .update({ terms_accepted: true, terms_accepted_date: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .eq("user_id", user.id)
+        .select("id,terms_accepted,terms_accepted_date").maybeSingle();
+      if (error) return json({ error: error.message }, 400);
+      if (!data) return json({ error: "SURVEYOR_PROFILE_NOT_FOUND" }, 404);
       return json({ success: true, profile: data });
     }
 
