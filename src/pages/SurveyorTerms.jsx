@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
@@ -69,11 +69,14 @@ export default function SurveyorTerms() {
 
   const loadProfile = async () => {
     try {
-      const user = await base44.auth.me();
-      if (!user) { navigate('/login'); return; }
-      const profiles = await base44.entities.SurveyorProfile.filter({ email: user.email });
-      if (profiles.length === 0) { navigate('/SurveyorGigs'); return; }
-      const p = profiles[0];
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData.user) { navigate('/login'); return; }
+      const { data, error } = await supabase.functions.invoke('survey-engine', { body: { action: 'profile' } });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const p = data?.profile || null;
+      if (!p) { navigate('/SurveyorGigs'); return; }
       setProfile(p);
       if (p.terms_accepted) { navigate('/SurveyorGigs'); return; }
     } catch (e) {
@@ -88,10 +91,10 @@ export default function SurveyorTerms() {
     setSubmitting(true);
     setError('');
     try {
-      await base44.entities.SurveyorProfile.update(profile.id, {
-        terms_accepted: true,
-        terms_accepted_date: new Date().toISOString()
-      });
+      const { data, error } = await supabase.functions.invoke('survey-engine', { body: { action: 'accept_terms' } });
+      if (error) throw error;
+      if (data?.error || !data?.success) throw new Error(data?.error || 'تعذر حفظ الموافقة');
+      setProfile(data.profile || { ...profile, terms_accepted: true });
       navigate('/SurveyorGigs');
     } catch (e) {
       setError('فشل حفظ الموافقة. حاول مرة أخرى.');
