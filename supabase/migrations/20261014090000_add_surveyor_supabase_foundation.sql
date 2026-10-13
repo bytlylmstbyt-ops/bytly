@@ -88,17 +88,18 @@ alter table public.survey_deliverables enable row level security;
 
 drop policy if exists surveyor_profiles_select_own on public.surveyor_profiles;
 create policy surveyor_profiles_select_own on public.surveyor_profiles
-  for select to authenticated using (user_id = auth.uid() or status = 'approved');
+  for select to authenticated using (user_id = auth.uid());
 drop policy if exists surveyor_profiles_insert_own on public.surveyor_profiles;
 create policy surveyor_profiles_insert_own on public.surveyor_profiles
-  for insert to authenticated with check (user_id = auth.uid() and status = 'pending' and wallet_balance = 0 and available_balance = 0 and is_identity_verified = false and is_license_verified = false);
+  for insert to authenticated with check (user_id = auth.uid() and status = 'pending' and wallet_balance = 0 and available_balance = 0 and is_identity_verified = false and is_license_verified = false and rating = 0 and total_jobs = 0 and terms_accepted = false);
 drop policy if exists surveyor_profiles_update_own on public.surveyor_profiles;
 create policy surveyor_profiles_update_own on public.surveyor_profiles
   for update to authenticated using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 -- Prevent clients from changing verification, status, ratings, job counters or balances.
 revoke all on public.surveyor_profiles from anon, authenticated;
-grant select, insert on public.surveyor_profiles to authenticated;
+grant select on public.surveyor_profiles to authenticated;
+grant insert (user_id, full_name, email, phone, license_number, city, latitude, longitude, geofencing_radius_km, equipment_checklist, verification_documents, profile_image, bio, years_experience, is_available, terms_accepted, terms_accepted_date) on public.surveyor_profiles to authenticated;
 grant update (full_name, phone, city, latitude, longitude, geofencing_radius_km, equipment_checklist, verification_documents, profile_image, bio, years_experience, is_available, terms_accepted, terms_accepted_date, updated_at) on public.surveyor_profiles to authenticated;
 
 drop policy if exists survey_requests_select_participant on public.survey_requests;
