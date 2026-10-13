@@ -960,6 +960,109 @@ bytlyCompat.functions = {
     }
     if (name === 'createContractFromProposal') return { data: await createContractFromProposalSupabase(payload?.proposal_id) };
 
+    if (name === 'generateInvoices') {
+      const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
+      const user = authData?.user;
+      if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً');
+
+      const contractId = payload?.contractId || payload?.contract_id || payload?.event?.entity_id;
+      if (!contractId) throw new Error('رقم العقد مطلوب لإنشاء فواتير المراحل');
+
+      const { data: contract, error: contractError } = await withHardTimeout(
+        supabase.from('project_contracts')
+          .select('id,project_id,client_user_id,provider_user_id,status,contract_number,payment_terms')
+          .eq('id', contractId)
+          .maybeSingle(),
+        10000,
+        'انتهت مهلة قراءة العقد'
+      );
+      if (contractError) throw new Error(contractError.message || 'تعذر قراءة العقد');
+      if (!contract) throw new Error('لم يتم العثور على العقد');
+
+      const { data: profile } = await withHardTimeout(
+        supabase.from('profiles').select('role').eq('user_id', user.id).maybeSingle(),
+        10000
+      );
+      const role = String(profile?.role || user.app_metadata?.role || '').toLowerCase();
+      const isAdmin = ['admin', 'owner'].includes(role);
+      const isParticipant = contract.client_user_id === user.id || contract.provider_user_id === user.id;
+      if (!isAdmin && !isParticipant) throw new Error('غير مصرح لك بإنشاء فواتير هذا العقد');
+      if (String(contract.status || '').toLowerCase() !== 'active') {
+        return { data: { success: true, skipped: true, reason: 'العقد غير نشط؛ لم يتم إنشاء فواتير', invoices: [] } };
+      }
+
+      const { data: project, error: projectError } = await withHardTimeout(
+        supabase.from('projects').select('id,title,client_user_id').eq('id', contract.project_id).maybeSingle(),
+        10000,
+        'انتهت مهلة قراءة المشروع'
+      );
+      if (projectError) throw new Error(projectError.message || 'تعذر قراءة المشروع');
+      if (!project) throw new Error('لم يتم العثور على مشروع العقد');
+
+      const { data: milestones, error: milestonesError } = await withHardTimeout(
+        supabase.from('project_milestones').select('id,title,amount,sequence_no,project_id')
+          .eq('project_id', project.id).order('sequence_no', { ascending: true }),
+        10000,
+        'انتهت مهلة قراءة مراحل المشروع'
+      );
+      if (milestonesError) throw new Error(milestonesError.message || 'تعذر قراءة مراحل المشروع');
+
+      const invoices = [];
+      const skipped = [];
+      for (const milestone of milestones || []) {
+        const { data: existing, error: existingError } = await withHardTimeout(
+          supabase.from('invoices').select('id,invoice_number,status')
+            .eq('contract_id', contract.id).eq('milestone_id', milestone.id).limit(1).maybeSingle(),
+          10000,
+          'انتهت مهلة التحقق من الفواتير السابقة'
+        );
+        if (existingError) throw new Error(existingError.message || 'تعذر التحقق من الفواتير السابقة');
+        if (existing) {
+          skipped.push({ milestone_id: milestone.id, reason: 'الفاتورة موجودة مسبقًا', invoice_id: existing.id });
+          continue;
+        }
+
+        const amount = Number(milestone.amount || 0);
+        if (!Number.isFinite(amount) || amount <= 0) {
+          skipped.push({ milestone_id: milestone.id, reason: 'قيمة المرحلة غير صالحة' });
+          continue;
+        }
+        const vatRate = 15;
+        const vatAmount = Math.round((amount * vatRate / 100) * 100) / 100;
+        const now = new Date();
+        const dueDate = new Date(now);
+        const termDays = Number(contract.payment_terms);
+        dueDate.setDate(dueDate.getDate() + (Number.isFinite(termDays) && termDays > 0 ? Math.min(termDays, 90) : 30));
+        const invoiceNumber = 'BYT-INV-' + now.toISOString().slice(0, 10).replace(/-/g, '') + '-' + String(Date.now()).slice(-6) + '-' + String(milestone.sequence_no || 1);
+
+        const invoice = await bytlyCompat.entities.Invoice.create({
+          contract_id: contract.id,
+          project_id: project.id,
+          milestone_id: milestone.id,
+          invoice_number: invoiceNumber,
+          invoice_type: 'project_milestone',
+          issuer_user_id: contract.provider_user_id || user.id,
+          issuer_type: 'service_provider',
+          buyer_user_id: project.client_user_id || contract.client_user_id,
+          service_description: milestone.title || ('فاتورة مرحلة من مشروع ' + (project.title || '')),
+          subtotal: amount,
+          taxable_amount: amount,
+          vat_rate: vatRate,
+          vat_amount: vatAmount,
+          total_amount: Math.round((amount + vatAmount) * 100) / 100,
+          currency: 'SAR',
+          status: 'sent',
+          issue_date: now.toISOString(),
+          due_date: dueDate.toISOString(),
+          payment_terms: Number.isFinite(termDays) && termDays > 0 ? Math.min(termDays, 90) : 30,
+          notes: 'تم إنشاؤها عبر ترحيل وظيفة generateInvoices إلى Supabase'
+        });
+        invoices.push(invoice);
+      }
+
+      return { data: { success: true, contract_id: contract.id, created_count: invoices.length, skipped_count: skipped.length, invoices, skipped } };
+    }
+
     if (name === 'createInvoice' || name === 'generateMilestoneInvoice') {
       const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
       const user = authData?.user;
