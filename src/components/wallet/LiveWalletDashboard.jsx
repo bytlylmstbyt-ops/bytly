@@ -302,7 +302,7 @@ function HeldAmountsPanel({ transactions, profile }) {
 }
 
 // ── Main Component ────────────────────────────────────────────────────
-export default function LiveWalletDashboard({ profile, userType, userEmail }) {
+export default function LiveWalletDashboard({ profile, userType }) {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
