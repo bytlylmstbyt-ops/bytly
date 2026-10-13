@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
@@ -31,34 +31,50 @@ export default function ProviderRelatedDialog({
       const pid = provider.id;
       const email = provider.email;
 
-      // Projects — best effort by type
+      const userId = provider.user_id || provider.owner_user_id || null;
+
+      // Load only from the migrated Supabase tables. Keep each panel non-blocking.
       let projs = [];
       if (providerKey === "Contractor") {
-        const cs = await safe(() => base44.entities.Contract.filter({ contractor_id: pid }));
-        const ids = [...new Set(cs.map((c) => c.project_id).filter(Boolean))];
-        for (const id of ids) {
-          const p = await safe(() => base44.entities.Project.get(id));
-          if (p && p.id) projs.push(p);
-        }
+        const { data, error } = await supabase
+          .from("projects").select("*").eq("assigned_contractor_id", pid).order("created_at", { ascending: false }).limit(100);
+        if (error) console.error("Load contractor projects failed:", error);
+        projs = data || [];
       } else if (providerKey === "Consultant") {
-        projs = await safe(() => base44.entities.Project.filter({ technical_consultant_id: pid }));
-      } else if (providerKey === "LegalConsultant") {
-        projs = await safe(() => base44.entities.Project.filter({ legal_consultant_id: pid }));
+        const { data, error } = await supabase
+          .from("projects").select("*").eq("technical_consultant_id", pid).order("created_at", { ascending: false }).limit(100);
+        if (error) console.error("Load consultant projects failed:", error);
+        projs = data || [];
       }
 
-      // Contracts / reviews
       let related = [];
-      if (providerKey === "Contractor") {
-        related = await safe(() => base44.entities.Contract.filter({ contractor_id: pid }));
+      if (providerKey === "Contractor" && userId) {
+        const { data, error } = await supabase
+          .from("project_contracts").select("*").eq("provider_user_id", userId).order("created_at", { ascending: false }).limit(100);
+        if (error) console.error("Load provider contracts failed:", error);
+        related = data || [];
       } else if (providerKey === "Consultant") {
-        related = await safe(() => base44.entities.TechnicalReview.filter({ consultant_id: pid }));
+        const { data, error } = await supabase
+          .from("technical_reviews").select("*").eq("consultant_id", pid).order("created_at", { ascending: false }).limit(100);
+        if (error) console.error("Load technical reviews failed:", error);
+        related = data || [];
       }
 
-      // Transactions
-      const txns = email ? await safe(() => base44.entities.Transaction.filter({ user_email: email })) : [];
+      let txns = [];
+      if (userId) {
+        const { data, error } = await supabase
+          .from("wallet_transactions").select("*").eq("user_id", userId).order("created_at", { ascending: false }).limit(100);
+        if (error) console.error("Load provider wallet transactions failed:", error);
+        txns = data || [];
+      }
 
-      // Activity log
-      const logs = email ? await safe(() => base44.entities.TaskActivityLog.filter({ actor_email: email })) : [];
+      let logs = [];
+      if (userId) {
+        const { data, error } = await supabase
+          .from("user_activity").select("*").eq("user_id", userId).order("last_seen_at", { ascending: false }).limit(100);
+        if (error) console.error("Load provider activity failed:", error);
+        logs = data || [];
+      }
 
       if (alive) {
         setProjects(projs); setContracts(related); setTransactions(txns); setActivity(logs);
@@ -124,7 +140,7 @@ export default function ProviderRelatedDialog({
                       <div key={c.id} className="border border-slate-100 rounded-lg p-3">
                         <div className="flex items-center justify-between gap-2">
                           <p className="font-semibold text-[#4A3F35] text-sm">
-                            {providerKey === "Consultant" ? "مراجعة فنية" : "عقد"} {c.contract_number || ""}
+                            {providerKey === "Consultant" ? "مراجعة فنية" : "عقد"} {c.contract_number || c.title || ""}
                           </p>
                           <Badge variant="outline" className="bg-slate-50">{c.status || c.compliance_status || ""}</Badge>
                         </div>
@@ -167,12 +183,12 @@ export default function ProviderRelatedDialog({
                     {activity.slice(0, 30).map((a) => (
                       <div key={a.id} className="border border-slate-100 rounded-lg p-3">
                         <div className="flex items-center justify-between gap-2">
-                          <Badge variant="outline" className="bg-slate-50">{a.action_type}</Badge>
+                          <Badge variant="outline" className="bg-slate-50">{a.action || a.current_page || "نشاط حساب"}</Badge>
                           <span className="text-xs text-slate-400">
-                            {a.created_date ? new Date(a.created_date).toLocaleDateString("ar-SA") : ""}
+                            {(a.created_at || a.last_seen_at) ? new Date(a.created_at || a.last_seen_at).toLocaleDateString("ar-SA") : ""}
                           </span>
                         </div>
-                        <p className="text-sm text-[#4A3F35] mt-1">{a.summary || a.description}</p>
+                        <p className="text-sm text-[#4A3F35] mt-1">{a.summary || a.description || a.current_page || "تم تسجيل نشاط للحساب"}</p>
                       </div>
                     ))}
                   </div>
