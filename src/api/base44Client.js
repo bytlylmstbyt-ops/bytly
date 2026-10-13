@@ -769,7 +769,7 @@ bytlyCompat.entities.Invoice = {
   },
 };
 bytlyCompat.entities.WithdrawalRequest = {
-  ...bytlyCompat.entities.WithdrawalRequest,
+  ...makeSupabaseEntity('withdrawal_requests'),
   filter: async (filters = {}, sort = '-created_at', limit = 100) => {
     let q = supabase.from('withdrawal_requests').select('*').limit(Math.max(1, Math.min(Number(limit) || 100, 500)));
     Object.entries(filters || {}).forEach(([k,v]) => { if (v !== undefined && v !== null) q = Array.isArray(v) ? q.in(k,v) : q.eq(k,v); });
@@ -782,6 +782,16 @@ bytlyCompat.entities.WithdrawalRequest = {
     const { data, error } = await withHardTimeout(supabase.from('withdrawal_requests').select('*').limit(Math.max(1, Math.min(Number(limit) || 100, 500))).order(String(sort).replace(/^-/, '') || 'created_at', { ascending: !String(sort).startsWith('-') }), 10000, 'انتهت مهلة قراءة طلبات السحب');
     if (error) throw new Error(error.message || 'تعذر قراءة طلبات السحب');
     return data || [];
+  },
+  create: async payload => {
+    const amount = Number(payload?.amount);
+    const iban = String(payload?.iban || '').replace(/\\s+/g, '').toUpperCase();
+    const bankName = String(payload?.bank_name || '').trim();
+    const holder = String(payload?.account_holder_name || '').trim();
+    if (!Number.isFinite(amount) || amount <= 0 || !/^SA[0-9]{22}$/.test(iban) || !bankName || !holder) throw new Error('بيانات طلب السحب غير مكتملة أو غير صالحة');
+    const { data, error } = await withHardTimeout(supabase.rpc('request_withdrawal', { p_amount: amount, p_iban: iban, p_bank_name: bankName, p_account_holder_name: holder, p_project_id: payload?.project_id || null }), 15000, 'انتهت مهلة إنشاء طلب السحب');
+    if (error) throw new Error(error.message || 'تعذر إنشاء طلب السحب');
+    return data;
   },
 };
 
