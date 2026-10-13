@@ -1011,8 +1011,10 @@ bytlyCompat.functions = {
       const skipped = [];
       for (const milestone of milestones || []) {
         const { data: existing, error: existingError } = await withHardTimeout(
+          // A project milestone should have at most one invoice even if legacy invoice rows
+          // were created without contract_id. Use the stable project/milestone pair for idempotency.
           supabase.from('invoices').select('id,invoice_number,status')
-            .eq('contract_id', contract.id).eq('milestone_id', milestone.id).limit(1).maybeSingle(),
+            .eq('project_id', project.id).eq('milestone_id', milestone.id).limit(1).maybeSingle(),
           10000,
           'انتهت مهلة التحقق من الفواتير السابقة'
         );
