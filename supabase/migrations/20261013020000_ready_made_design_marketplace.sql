@@ -265,6 +265,16 @@ create policy ready_design_preview_files_public_read on storage.objects
 for select to anon, authenticated
 using (bucket_id = 'project-files' and (storage.foldername(name))[1] = 'ready-design-previews');
 
+drop policy if exists ready_design_preview_files_owner_insert on storage.objects;
+create policy ready_design_preview_files_owner_insert on storage.objects
+for insert to authenticated
+with check (bucket_id = 'project-files' and (storage.foldername(name))[1] = 'ready-design-previews' and (storage.foldername(name))[2] = auth.uid()::text);
+
+drop policy if exists ready_design_preview_files_owner_delete on storage.objects;
+create policy ready_design_preview_files_owner_delete on storage.objects
+for delete to authenticated
+using (bucket_id = 'project-files' and (storage.foldername(name))[1] = 'ready-design-previews' and (storage.foldername(name))[2] = auth.uid()::text);
+
 drop policy if exists ready_design_original_files_owner_insert on storage.objects;
 create policy ready_design_original_files_owner_insert on storage.objects
 for insert to authenticated
