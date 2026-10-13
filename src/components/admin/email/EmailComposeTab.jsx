@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,9 +95,16 @@ export default function EmailComposeTab({ onSent }) {
         let sent = 0, failed = 0;
         for (const email of recipients) {
           try {
-            await base44.integrations.Core.SendEmail({
-              to: email, subject: form.subject, body: sanitizeHtml(form.body), from_name: form.from_name,
+            const { data, error } = await supabase.functions.invoke("system-email", {
+              body: {
+                action: "sendEmail",
+                to: email,
+                subject: form.subject,
+                html: sanitizeHtml(form.body),
+              },
             });
+            if (error) throw error;
+            if (!data?.ok) throw new Error(data?.error || "Email delivery failed");
             sent++;
           } catch { failed++; }
         }
