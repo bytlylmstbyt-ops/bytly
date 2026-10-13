@@ -38,6 +38,15 @@ async function walk(dir) {
 }
 
 const totals = Object.fromEntries(Object.keys(patterns).map(key => [key, 0]));
+let packageSdkDependency = false;
+try {
+  const pkg = JSON.parse(await readFile('package.json', 'utf8'));
+  packageSdkDependency = ['dependencies', 'devDependencies', 'optionalDependencies'].some(section =>
+    Object.prototype.hasOwnProperty.call(pkg[section] || {}, '@base44/sdk')
+  );
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error;
+}
 const findings = [];
 for (const root of roots) {
   for (const file of await walk(root)) {
@@ -59,10 +68,23 @@ findings.sort((a, b) =>
   (a.entityCalls + a.authCalls + a.functionCalls + a.integrationCalls + a.compatibilityImport + a.sdkImport)
 );
 
-console.log('Base44 migration reference audit (static; references are not all live backend dependencies)');
+console.log('Base44 runtime dependency audit (static; compatibility references are tracked separately)');
 console.log(JSON.stringify({
   scannedRoots: roots,
   filesWithReferences: findings.length,
   totals,
   files: findings,
 }, null, 2));
+
+// Compatibility calls can still be backed by Supabase adapters. Do not claim
+// complete migration while these remain, but fail CI if the legacy SDK or a
+// live Base44 endpoint is reintroduced.
+if (packageSdkDependency || totals.sdkImport > 0 || totals.base44Domain > 0) {
+  console.error('FAIL: remove the Base44 SDK/domain dependency before merging.');
+  process.exitCode = 1;
+} else {
+  console.log('PASS: no Base44 SDK import or Base44 service-domain reference found.');
+  if (totals.compatibilityImport || totals.entityCalls || totals.authCalls || totals.functionCalls || totals.integrationCalls) {
+    console.warn('MIGRATION DEBT: compatibility API references remain; verify adapters and unsupported functions before claiming full independence.');
+  }
+}
