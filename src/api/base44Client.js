@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabaseClient';
 import { publishLinkedInPost } from '@/lib/linkedinSupabaseService';
 import { callGemini } from '@/lib/geminiClient';
+import { resolveProjectFileUrl } from '@/lib/projectFileStorage';
 
 const PLATFORM_OWNER_EMAIL = 'bytlylmstbyt@gmail.com';
 const PLATFORM_OWNER_ID = '2d1b547d-5ba5-4cdc-a39c-cfb60d2f52bc';
@@ -51,19 +52,33 @@ const bytlyCompat = {
 };
 // Ready-made design marketplace: public metadata is separated from private downloadable files.
 const legacyReadyMadeDesign = bytlyCompat.entities.ReadyMadeDesign;
+const signDesignUrls = async urls => Promise.all((Array.isArray(urls) ? urls : []).map(async url => {
+  try { return await resolveProjectFileUrl(url); } catch { return null; }
+})).then(urls => urls.filter(Boolean));
+
 const loadDesignAssets = async rows => {
-  const ids = (rows || []).map(row => row.id).filter(Boolean);
-  if (!ids.length) return rows || [];
+  const list = rows || [];
+  if (!list.length) return [];
+  const signedPreviews = await Promise.all(list.map(async row => ({
+    ...row,
+    preview_images: await signDesignUrls(row.preview_images),
+    design_files: [],
+  })));
   const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
-  if (!authData?.user) return rows || [];
+  if (!authData?.user) return signedPreviews;
+  const ids = list.map(row => row.id).filter(Boolean);
+  if (!ids.length) return signedPreviews;
   const { data: assets, error } = await withHardTimeout(
     supabase.from('ready_made_design_assets').select('design_id,design_files').in('design_id', ids),
     10000,
     'انتهت مهلة قراءة ملفات التصميم'
   );
   if (error) throw new Error(error.message || 'تعذر قراءة ملفات التصميم المصرح بها');
-  const byId = new Map((assets || []).map(asset => [asset.design_id, asset.design_files || []]));
-  return (rows || []).map(row => ({ ...row, design_files: byId.get(row.id) || [] }));
+  const byId = new Map(await Promise.all((assets || []).map(async asset => [
+    asset.design_id,
+    await signDesignUrls(asset.design_files),
+  ])));
+  return signedPreviews.map(row => ({ ...row, design_files: byId.get(row.id) || [] }));
 };
 bytlyCompat.entities.ReadyMadeDesign = {
   ...legacyReadyMadeDesign,
