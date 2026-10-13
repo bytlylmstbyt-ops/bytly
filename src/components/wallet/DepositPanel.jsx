@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,21 +28,8 @@ export default function DepositPanel({ profile, userEmail, onSuccess }) {
     }
 
     setIsProcessing(true);
-    try {
-      const res = await base44.functions.invoke("createWalletRecharge", {
-        amount: parsed,
-        user_email: userEmail
-      });
-      if (res.data?.url) {
-        window.location.href = res.data.url;
-      } else {
-        toast.error("حدث خطأ في إنشاء الدفع");
-        setIsProcessing(false);
-      }
-    } catch {
-      toast.error("حدث خطأ في الاتصال بنظام الدفع");
-      setIsProcessing(false);
-    }
+    // Use the migrated Supabase + Moyasar test-only flow instead of the legacy Base44/Stripe function.
+    window.location.assign(`${createPageUrl("WalletRecharge")}?amount=${encodeURIComponent(parsed)}`);
   };
 
   return (
