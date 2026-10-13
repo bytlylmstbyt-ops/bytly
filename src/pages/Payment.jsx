@@ -123,6 +123,8 @@ export default function PaymentPage() {
 
   const handleWalletPayment = async () => {
     setProcessing(true);
+    let fundedAny = false;
+    const originalAssignedEngineer = project?.assigned_engineer_id || null;
     try {
       const { data: authResult, error: authError } = await supabase.auth.getUser();
       const user = authResult && authResult.user;
@@ -147,6 +149,7 @@ export default function PaymentPage() {
         if (milestoneError) throw milestoneError;
         const { data: funded, error: fundError } = await supabase.rpc('fund_project_milestone_from_wallet', { p_project_id: projectId, p_milestone_id: milestone.id });
         if (fundError || !funded || !funded.ok) throw new Error((fundError && fundError.message) || 'تعذر حجز المرحلة في الضمان.');
+        fundedAny = true;
       }
       const { error: offerError } = await supabase.from('project_offers').update({ status: 'accepted' }).eq('id', proposalId).eq('project_id', projectId);
       if (offerError) throw offerError;
@@ -156,7 +159,9 @@ export default function PaymentPage() {
       navigate(createPageUrl('Dashboard'));
     } catch (error) {
       console.error('Supabase wallet payment error:', error);
-      alert((error && error.message) || 'تعذر إكمال الدفع. لم يتم تأكيد العملية.');
+      if (!fundedAny && projectId) await supabase.from('projects').update({ assigned_engineer_id: originalAssignedEngineer }).eq('id', projectId).eq('client_user_id', project?.client_user_id);
+      if (fundedAny) alert('تم حجز المبلغ في الضمان، لكن تعذر تحديث حالة العرض أو المشروع. لا تعيدي الدفع؛ يلزم إصلاح حالة المشروع.');
+      else alert((error && error.message) || 'تعذر إكمال الدفع. لم يتم تأكيد العملية.');
     } finally {
       setProcessing(false);
     }
