@@ -49,6 +49,128 @@ const bytlyCompat = {
   integrations: { Core: {} },
   functions: unmigratedFunctions,
 };
+// Ready-made design marketplace: public metadata is separated from private downloadable files.
+const legacyReadyMadeDesign = bytlyCompat.entities.ReadyMadeDesign;
+const loadDesignAssets = async rows => {
+  const ids = (rows || []).map(row => row.id).filter(Boolean);
+  if (!ids.length) return rows || [];
+  const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
+  if (!authData?.user) return rows || [];
+  const { data: assets, error } = await withHardTimeout(
+    supabase.from('ready_made_design_assets').select('design_id,design_files').in('design_id', ids),
+    10000,
+    'انتهت مهلة قراءة ملفات التصميم'
+  );
+  if (error) throw new Error(error.message || 'تعذر قراءة ملفات التصميم المصرح بها');
+  const byId = new Map((assets || []).map(asset => [asset.design_id, asset.design_files || []]));
+  return (rows || []).map(row => ({ ...row, design_files: byId.get(row.id) || [] }));
+};
+bytlyCompat.entities.ReadyMadeDesign = {
+  ...legacyReadyMadeDesign,
+  filter: async (filters = {}, sort = '-created_date', limit = 100) => {
+    let query = supabase.from('ready_made_design').select('*').limit(limit);
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      query = Array.isArray(value) ? query.in(key, value) : query.eq(key, value);
+    });
+    const sortColumn = String(sort || '-created_date').replace(/^-/, '') || 'created_date';
+    const { data, error } = await withHardTimeout(query.order(sortColumn, { ascending: !String(sort).startsWith('-') }), 10000, 'انتهت مهلة قراءة التصاميم');
+    if (error) throw new Error(error.message || 'تعذر تحميل التصاميم الجاهزة');
+    return loadDesignAssets(data || []);
+  },
+  list: async (sort = '-created_date', limit = 100) => {
+    let query = supabase.from('ready_made_design').select('*').limit(limit);
+    const sortColumn = String(sort || '-created_date').replace(/^-/, '') || 'created_date';
+    const { data, error } = await withHardTimeout(query.order(sortColumn, { ascending: !String(sort).startsWith('-') }), 10000, 'انتهت مهلة قراءة التصاميم');
+    if (error) throw new Error(error.message || 'تعذر تحميل التصاميم الجاهزة');
+    return loadDesignAssets(data || []);
+  },
+  get: async id => {
+    const rows = await bytlyCompat.entities.ReadyMadeDesign.filter({ id }, '-created_date', 1);
+    return rows[0] || null;
+  },
+  create: async payload => {
+    const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
+    const user = authData?.user;
+    if (!user) throw new Error('يجب تسجيل الدخول أولاً');
+    const { design_files = [], ...fields } = payload || {};
+    delete fields.id; delete fields.created_by; delete fields.created_date; delete fields.updated_date;
+    const row = { ...fields, created_by: user.email };
+    const { data, error } = await withHardTimeout(supabase.from('ready_made_design').insert(row).select('*').single(), 15000, 'انتهت مهلة حفظ التصميم');
+    if (error) throw new Error(error.message || 'تعذر حفظ التصميم');
+    if (Array.isArray(design_files) && design_files.length) {
+      const { error: assetError } = await withHardTimeout(supabase.from('ready_made_design_assets').insert({ design_id: data.id, design_files, created_by: user.email }), 10000, 'انتهت مهلة حفظ ملفات التصميم');
+      if (assetError) {
+        await supabase.from('ready_made_design').delete().eq('id', data.id);
+        throw new Error(assetError.message || 'تعذر حفظ الملفات الأصلية للتصميم');
+      }
+    }
+    return { ...data, design_files };
+  },
+  update: async (id, payload = {}) => {
+    const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
+    const user = authData?.user;
+    if (!user) throw new Error('يجب تسجيل الدخول أولاً');
+    const patch = { ...payload };
+    const hasAssets = Object.prototype.hasOwnProperty.call(patch, 'design_files');
+    const designFiles = patch.design_files;
+    delete patch.design_files; delete patch.id; delete patch.created_by; delete patch.created_date;
+    patch.updated_date = new Date().toISOString();
+    const { data, error } = await withHardTimeout(supabase.from('ready_made_design').update(patch).eq('id', id).select('*').single(), 10000, 'انتهت مهلة تحديث التصميم');
+    if (error) throw new Error(error.message || 'تعذر تحديث التصميم');
+    if (hasAssets) {
+      const { data: existing, error: lookupError } = await withHardTimeout(supabase.from('ready_made_design_assets').select('design_id').eq('design_id', id).maybeSingle(), 10000);
+      if (lookupError) throw new Error(lookupError.message || 'تعذر التحقق من ملفات التصميم');
+      const assetPatch = { design_files: Array.isArray(designFiles) ? designFiles : [], updated_at: new Date().toISOString() };
+      const result = existing
+        ? await withHardTimeout(supabase.from('ready_made_design_assets').update(assetPatch).eq('design_id', id), 10000)
+        : await withHardTimeout(supabase.from('ready_made_design_assets').insert({ design_id: id, design_files: assetPatch.design_files, created_by: user.email }), 10000);
+      if (result.error) throw new Error(result.error.message || 'تعذر تحديث ملفات التصميم');
+    }
+    return (await bytlyCompat.entities.ReadyMadeDesign.filter({ id }, '-created_date', 1))[0] || data;
+  },
+  delete: async id => {
+    const { error } = await withHardTimeout(supabase.from('ready_made_design').delete().eq('id', id), 10000, 'انتهت مهلة حذف التصميم');
+    if (error) throw new Error(error.message || 'تعذر حذف التصميم');
+    return true;
+  },
+};
+
+const legacyDesignPurchase = bytlyCompat.entities.DesignPurchase;
+bytlyCompat.entities.DesignPurchase = {
+  ...legacyDesignPurchase,
+  filter: async (filters = {}, sort = '-created_date', limit = 100) => {
+    let query = supabase.from('design_purchase').select('*').limit(limit);
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      query = Array.isArray(value) ? query.in(key, value) : query.eq(key, value);
+    });
+    const sortColumn = String(sort || '-created_date').replace(/^-/, '') || 'created_date';
+    const { data, error } = await withHardTimeout(query.order(sortColumn, { ascending: !String(sort).startsWith('-') }), 10000, 'انتهت مهلة قراءة مشتريات التصاميم');
+    if (error) throw new Error(error.message || 'تعذر تحميل مشتريات التصاميم');
+    return data || [];
+  },
+  list: async (sort = '-created_date', limit = 100) => bytlyCompat.entities.DesignPurchase.filter({}, sort, limit),
+  get: async id => {
+    const { data, error } = await withHardTimeout(supabase.from('design_purchase').select('*').eq('id', id).maybeSingle(), 10000);
+    if (error) throw new Error(error.message || 'تعذر قراءة عملية الشراء');
+    return data;
+  },
+  create: async () => {
+    throw new Error('إنشاء عملية شراء مباشرة غير مسموح؛ استخدم مسار دفع موثوق');
+  },
+  update: async (id, payload = {}) => {
+    const { data, error } = await withHardTimeout(supabase.from('design_purchase').update({ ...payload, updated_date: new Date().toISOString() }).eq('id', id).select('*').single(), 10000, 'انتهت مهلة تحديث طلب الشراء');
+    if (error) throw new Error(error.message || 'تعذر تحديث طلب الشراء');
+    return data;
+  },
+  purchaseWithWallet: async designId => {
+    const { data, error } = await withHardTimeout(supabase.rpc('purchase_ready_made_design_with_wallet', { p_design_id: String(designId) }), 20000, 'انتهت مهلة تنفيذ الشراء من المحفظة');
+    if (error) throw new Error(error.message || 'تعذر إتمام الشراء من المحفظة');
+    return data;
+  },
+};
+
 const supabaseCurrentUser = async () => {
   if (!supabase) return null;
   const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
