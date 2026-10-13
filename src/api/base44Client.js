@@ -15,7 +15,7 @@ const makeSupabaseEntity = (table) => ({
   filter: async (filters = {}, sort = '-created_at', limit = 100) => {
     let q = supabase.from(table).select('*').limit(limit);
     Object.entries(filters || {}).forEach(([k,v]) => { if (v !== undefined && v !== null) q = Array.isArray(v) ? q.in(k,v) : q.eq(k,v); });
-    q = q.order(mapLegacyFinancialSort(sort).replace(/^-/, '') || 'created_at', { ascending: !String(sort).startsWith('-') });
+    q = q.order(String(sort).replace(/^-/, '') || 'created_at', { ascending: !String(sort).startsWith('-') });
     const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة البيانات');
     if (error) throw new Error(error.message || 'تعذر قراءة البيانات');
     return data || [];
@@ -734,7 +734,7 @@ bytlyCompat.entities.Invoice = {
     if (mapped.client_id && !mapped.buyer_user_id) { mapped.buyer_user_id = await resolveClientUserId(mapped.client_id); delete mapped.client_id; if (!mapped.buyer_user_id) return []; }
     let q = supabase.from('invoices').select('*').limit(Math.max(1, Math.min(Number(limit) || 100, 500)));
     Object.entries(mapped).forEach(([k,v]) => { q = v === null ? q.is(k,null) : Array.isArray(v) ? q.in(k,v) : q.eq(k,v); });
-    q = q.order(String(sort).replace(/^-/, '') || 'created_at', { ascending: !String(sort).startsWith('-') });
+    q = q.order(mapLegacyFinancialSort(sort).replace(/^-/, '') || 'created_at', { ascending: !String(sort).startsWith('-') });
     const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة الفواتير');
     if (error) throw new Error(error.message || 'تعذر قراءة الفواتير');
     return (data || []).map(normalizeInvoice);
@@ -787,7 +787,7 @@ bytlyCompat.entities.WithdrawalRequest = {
   },
   create: async payload => {
     const amount = Number(payload?.amount);
-    const iban = String(payload?.iban || '').replace(/\\s+/g, '').toUpperCase();
+    const iban = String(payload?.iban || '').replace(/\s+/g, '').toUpperCase();
     const bankName = String(payload?.bank_name || '').trim();
     const holder = String(payload?.account_holder_name || '').trim();
     if (!Number.isFinite(amount) || amount <= 0 || !/^SA[0-9]{22}$/.test(iban) || !bankName || !holder) throw new Error('بيانات طلب السحب غير مكتملة أو غير صالحة');
@@ -1010,7 +1010,7 @@ bytlyCompat.functions = {
         const { data: project, error: projectError } = await withHardTimeout(supabase.from('projects').select('*').eq('id', projectId).single(), 10000);
         if (projectError || !project) throw new Error('لم يتم العثور على المشروع');
         const [{ data: milestones, error: milestonesError }, { data: transactions, error: transactionsError }] = await Promise.all([
-          withHardTimeout(supabase.from('project_milestones').select('*').eq('project_id', projectId).order('created_at', { ascending: true }), 10000),
+          withHardTimeout(supabase.from('project_milestones').select('*').eq('project_id', projectId).order('sequence_no', { ascending: true }), 10000),
           withHardTimeout(supabase.from('wallet_transactions').select('*').eq('project_id', projectId).order('created_at', { ascending: false }).limit(20), 10000),
         ]);
         if (milestonesError) throw new Error(milestonesError.message);
