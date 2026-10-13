@@ -953,11 +953,11 @@ bytlyCompat.functions = {
     }
     if (name === 'createContractFromProposal') return { data: await createContractFromProposalSupabase(payload?.proposal_id) };
 
-    if (name === 'createInvoice') {
+    if (name === 'createInvoice' || name === 'generateMilestoneInvoice') {
       const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
       const user = authData?.user;
       if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً');
-      if (payload?.invoice_type !== 'milestone' || !payload?.milestone_id) {
+      if ((name === 'createInvoice' && payload?.invoice_type !== 'milestone') || !payload?.milestone_id) {
         throw new Error('إنشاء فواتير التصاميم غير مرحّل بعد؛ لم يتم إنشاء فاتورة غير مكتملة');
       }
       const { data: milestone, error: milestoneError } = await withHardTimeout(
@@ -972,7 +972,9 @@ bytlyCompat.functions = {
         'انتهت مهلة قراءة المشروع'
       );
       if (projectError || !project) throw new Error('لم يتم العثور على المشروع');
-      if (project.client_user_id !== user.id) throw new Error('لا تملك صلاحية إصدار فاتورة لهذا المشروع');
+      const { data: callerProfile } = await withHardTimeout(supabase.from('profiles').select('role').eq('user_id', user.id).maybeSingle(), 10000);
+      const callerIsAdmin = ['admin','owner'].includes(String(callerProfile?.role || user.app_metadata?.role || '').toLowerCase());
+      if (project.client_user_id !== user.id && !(name === 'generateMilestoneInvoice' && callerIsAdmin)) throw new Error('لا تملك صلاحية إصدار فاتورة لهذا المشروع');
       const amount = Number(milestone.amount || 0);
       if (!Number.isFinite(amount) || amount <= 0) throw new Error('قيمة المرحلة غير صالحة');
       const vatRate = 15;
@@ -981,7 +983,7 @@ bytlyCompat.functions = {
       const dueDate = new Date(issueDate);
       dueDate.setDate(dueDate.getDate() + Math.max(1, Math.min(Number(payload?.payment_terms) || 30, 90)));
       const { data: existing, error: existingError } = await withHardTimeout(
-        supabase.from('invoices').select('id,invoice_number,status').eq('project_id', project.id).eq('milestone_id', milestone.id).in('status', ['draft','pending','sent']).limit(1).maybeSingle(),
+        supabase.from('invoices').select('id,invoice_number,status').eq('project_id', project.id).eq('milestone_id', milestone.id).limit(1).maybeSingle(),
         10000,
         'انتهت مهلة التحقق من الفواتير السابقة'
       );
