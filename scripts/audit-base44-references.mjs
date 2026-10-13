@@ -72,6 +72,8 @@ console.log('Base44 runtime dependency audit (static; compatibility references a
 console.log(JSON.stringify({
   scannedRoots: roots,
   filesWithReferences: findings.length,
+  packageSdkDependency,
+  runtimeDependencyGate: (!packageSdkDependency && totals.sdkImport === 0 && totals.base44Domain === 0) ? 'PASS' : 'FAIL',
   totals,
   files: findings,
 }, null, 2));
