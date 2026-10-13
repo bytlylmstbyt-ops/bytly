@@ -88,7 +88,8 @@ export default function AddDesign() {
     
     const uploadedUrls = [];
     for (const file of files) {
-      const file_url = await uploadScopedFile("ready-designs", file);
+      const uploadScope = type === "preview_images" ? "ready-design-previews" : "ready-designs";
+      const file_url = await uploadScopedFile(uploadScope, file);
       uploadedUrls.push(file_url);
     }
     
