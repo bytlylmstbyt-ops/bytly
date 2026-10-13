@@ -701,6 +701,102 @@ bytlyCompat.entities.ConsultationAppointment = makeSupabaseEntity('consultation_
 bytlyCompat.entities.ProjectTask = makeSupabaseEntity('project_tasks');
 bytlyCompat.entities.ProjectMilestone = makeSupabaseEntity('project_milestones');
 
+const legacyInvoice = bytlyCompat.entities.Invoice;
+const normalizeInvoice = row => row ? ({
+  ...row,
+  client_id: row.buyer_user_id || row.client_id || null,
+  client_email: row.buyer_email || row.client_email || null,
+  client_company: row.buyer_name || row.client_company || null,
+  amount: Number(row.subtotal ?? row.amount ?? 0),
+  tax_amount: Number(row.vat_amount ?? row.tax_amount ?? 0),
+  total_amount: Number(row.total_amount ?? row.subtotal ?? row.amount ?? 0),
+  paid_date: row.paid_at || row.paid_date || null,
+  created_date: row.created_at || row.created_date || null,
+}) : null;
+const mapLegacyFinancialSort = sort => String(sort || '-created_at').replace(/created_date/g, 'created_at').replace(/paid_date/g, 'paid_at');
+const mapInvoicePayload = (payload = {}) => {
+  const row = { ...payload };
+  if (row.client_email !== undefined && row.buyer_email === undefined) row.buyer_email = row.client_email;
+  if (row.client_company !== undefined && row.buyer_name === undefined) row.buyer_name = row.client_company;
+  if (row.client_id !== undefined && row.buyer_user_id === undefined) row.buyer_user_id = row.client_id;
+  if (row.amount !== undefined && row.subtotal === undefined) row.subtotal = row.amount;
+  if (row.tax_amount !== undefined && row.vat_amount === undefined) row.vat_amount = row.tax_amount;
+  if (row.paid_date !== undefined && row.paid_at === undefined) row.paid_at = row.paid_date;
+  if (row.created_date !== undefined && row.created_at === undefined) row.created_at = row.created_date;
+  ['client_email','client_company','client_id','amount','tax_amount','paid_date','created_date','payment_method'].forEach(k => delete row[k]);
+  return row;
+};
+bytlyCompat.entities.Invoice = {
+  ...legacyInvoice,
+  filter: async (filters = {}, sort = '-created_at', limit = 100) => {
+    const mapped = { ...filters };
+    if (mapped.client_email && !mapped.buyer_email) { mapped.buyer_email = mapped.client_email; delete mapped.client_email; }
+    if (mapped.client_id && !mapped.buyer_user_id) { mapped.buyer_user_id = await resolveClientUserId(mapped.client_id); delete mapped.client_id; if (!mapped.buyer_user_id) return []; }
+    let q = supabase.from('invoices').select('*').limit(Math.max(1, Math.min(Number(limit) || 100, 500)));
+    Object.entries(mapped).forEach(([k,v]) => { q = v === null ? q.is(k,null) : Array.isArray(v) ? q.in(k,v) : q.eq(k,v); });
+    q = q.order(mapLegacyFinancialSort(sort).replace(/^-/, '') || 'created_at', { ascending: !String(sort).startsWith('-') });
+    const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة الفواتير');
+    if (error) throw new Error(error.message || 'تعذر قراءة الفواتير');
+    return (data || []).map(normalizeInvoice);
+  },
+  list: async (sort = '-created_at', limit = 100) => {
+    const { data, error } = await withHardTimeout(supabase.from('invoices').select('*').limit(Math.max(1, Math.min(Number(limit) || 100, 500))).order(mapLegacyFinancialSort(sort).replace(/^-/, '') || 'created_at', { ascending: !String(sort).startsWith('-') }), 10000, 'انتهت مهلة قراءة الفواتير');
+    if (error) throw new Error(error.message || 'تعذر قراءة الفواتير');
+    return (data || []).map(normalizeInvoice);
+  },
+  get: async id => {
+    const { data, error } = await withHardTimeout(supabase.from('invoices').select('*').eq('id', id).maybeSingle(), 10000, 'انتهت مهلة قراءة الفاتورة');
+    if (error) throw new Error(error.message || 'تعذر قراءة الفاتورة');
+    return normalizeInvoice(data);
+  },
+  create: async payload => {
+    const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
+    const user = authData?.user;
+    if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً');
+    const row = mapInvoicePayload(payload);
+    if (payload?.client_id && !payload?.buyer_user_id) row.buyer_user_id = await resolveClientUserId(payload.client_id);
+    row.created_by = row.created_by || user.id;
+    row.issuer_user_id = row.issuer_user_id || user.id;
+    row.issue_date = row.issue_date || new Date().toISOString();
+    row.invoice_number = row.invoice_number || ('BYT-INV-' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '-' + String(Date.now()).slice(-6));
+    const { data, error } = await withHardTimeout(supabase.from('invoices').insert(row).select('*').single(), 15000, 'انتهت مهلة إنشاء الفاتورة');
+    if (error) throw new Error(error.message || 'تعذر إنشاء الفاتورة');
+    return normalizeInvoice(data);
+  },
+  update: async (id, payload) => {
+    const row = mapInvoicePayload(payload);
+    const { data, error } = await withHardTimeout(supabase.from('invoices').update({ ...row, updated_at: new Date().toISOString() }).eq('id', id).select('*').single(), 10000, 'انتهت مهلة تحديث الفاتورة');
+    if (error) throw new Error(error.message || 'تعذر تحديث الفاتورة');
+    return normalizeInvoice(data);
+  },
+};
+bytlyCompat.entities.WithdrawalRequest = {
+  ...makeSupabaseEntity('withdrawal_requests'),
+  filter: async (filters = {}, sort = '-created_at', limit = 100) => {
+    let q = supabase.from('withdrawal_requests').select('*').limit(Math.max(1, Math.min(Number(limit) || 100, 500)));
+    Object.entries(filters || {}).forEach(([k,v]) => { if (v !== undefined && v !== null) q = Array.isArray(v) ? q.in(k,v) : q.eq(k,v); });
+    q = q.order(String(sort).replace(/^-/, '') || 'created_at', { ascending: !String(sort).startsWith('-') });
+    const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة طلبات السحب');
+    if (error) throw new Error(error.message || 'تعذر قراءة طلبات السحب');
+    return data || [];
+  },
+  list: async (sort = '-created_at', limit = 100) => {
+    const { data, error } = await withHardTimeout(supabase.from('withdrawal_requests').select('*').limit(Math.max(1, Math.min(Number(limit) || 100, 500))).order(String(sort).replace(/^-/, '') || 'created_at', { ascending: !String(sort).startsWith('-') }), 10000, 'انتهت مهلة قراءة طلبات السحب');
+    if (error) throw new Error(error.message || 'تعذر قراءة طلبات السحب');
+    return data || [];
+  },
+  create: async payload => {
+    const amount = Number(payload?.amount);
+    const iban = String(payload?.iban || '').replace(/\s+/g, '').toUpperCase();
+    const bankName = String(payload?.bank_name || '').trim();
+    const holder = String(payload?.account_holder_name || '').trim();
+    if (!Number.isFinite(amount) || amount <= 0 || !/^SA[0-9]{22}$/.test(iban) || !bankName || !holder) throw new Error('بيانات طلب السحب غير مكتملة أو غير صالحة');
+    const { data, error } = await withHardTimeout(supabase.rpc('request_withdrawal', { p_amount: amount, p_iban: iban, p_bank_name: bankName, p_account_holder_name: holder, p_project_id: payload?.project_id || null }), 15000, 'انتهت مهلة إنشاء طلب السحب');
+    if (error) throw new Error(error.message || 'تعذر إنشاء طلب السحب');
+    return data;
+  },
+};
+
 const bookSurveyAppointmentSupabase = async (payload = {}) => {
   const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
   const user = authData?.user;
@@ -856,6 +952,192 @@ bytlyCompat.functions = {
       } };
     }
     if (name === 'createContractFromProposal') return { data: await createContractFromProposalSupabase(payload?.proposal_id) };
+
+    if (name === 'createInvoice' || name === 'generateMilestoneInvoice') {
+      const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
+      const user = authData?.user;
+      if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً');
+      if ((name === 'createInvoice' && payload?.invoice_type !== 'milestone') || !payload?.milestone_id) {
+        throw new Error('إنشاء فواتير التصاميم غير مرحّل بعد؛ لم يتم إنشاء فاتورة غير مكتملة');
+      }
+      const { data: milestone, error: milestoneError } = await withHardTimeout(
+        supabase.from('project_milestones').select('id,project_id,title,amount,provider_user_id').eq('id', payload.milestone_id).maybeSingle(),
+        10000,
+        'انتهت مهلة قراءة مرحلة المشروع'
+      );
+      if (milestoneError || !milestone) throw new Error('لم يتم العثور على مرحلة المشروع');
+      const { data: project, error: projectError } = await withHardTimeout(
+        supabase.from('projects').select('id,title,client_user_id,assigned_engineer_id').eq('id', milestone.project_id).maybeSingle(),
+        10000,
+        'انتهت مهلة قراءة المشروع'
+      );
+      if (projectError || !project) throw new Error('لم يتم العثور على المشروع');
+      const { data: callerProfile } = await withHardTimeout(supabase.from('profiles').select('role').eq('user_id', user.id).maybeSingle(), 10000);
+      const callerIsAdmin = ['admin','owner'].includes(String(callerProfile?.role || user.app_metadata?.role || '').toLowerCase());
+      if (project.client_user_id !== user.id && !(name === 'generateMilestoneInvoice' && callerIsAdmin)) throw new Error('لا تملك صلاحية إصدار فاتورة لهذا المشروع');
+      const amount = Number(milestone.amount || 0);
+      if (!Number.isFinite(amount) || amount <= 0) throw new Error('قيمة المرحلة غير صالحة');
+      const vatRate = 15;
+      const vatAmount = Math.round(amount * vatRate) / 100;
+      const issueDate = new Date();
+      const dueDate = new Date(issueDate);
+      dueDate.setDate(dueDate.getDate() + Math.max(1, Math.min(Number(payload?.payment_terms) || 30, 90)));
+      const { data: existing, error: existingError } = await withHardTimeout(
+        supabase.from('invoices').select('id,invoice_number,status').eq('project_id', project.id).eq('milestone_id', milestone.id).limit(1).maybeSingle(),
+        10000,
+        'انتهت مهلة التحقق من الفواتير السابقة'
+      );
+      if (existingError) throw new Error(existingError.message || 'تعذر التحقق من الفواتير السابقة');
+      if (existing) return { data: { success: true, invoice_id: existing.id, invoice_number: existing.invoice_number, already_exists: true } };
+      const invoice = await bytlyCompat.entities.Invoice.create({
+        project_id: project.id,
+        milestone_id: milestone.id,
+        invoice_type: 'project_milestone',
+        issuer_user_id: milestone.provider_user_id || project.assigned_engineer_id || user.id,
+        issuer_type: 'service_provider',
+        buyer_user_id: user.id,
+        buyer_email: user.email || null,
+        buyer_name: payload?.company_name || user.user_metadata?.full_name || null,
+        service_description: milestone.title || ('دفعة مرحلة من مشروع ' + (project.title || '')),
+        subtotal: amount,
+        taxable_amount: amount,
+        vat_rate: vatRate,
+        vat_amount: vatAmount,
+        total_amount: amount + vatAmount,
+        currency: 'SAR',
+        status: 'sent',
+        issue_date: issueDate.toISOString(),
+        due_date: dueDate.toISOString(),
+        notes: 'فاتورة مرحلة مشروع'
+      });
+      return { data: { success: true, invoice_id: invoice.id, invoice_number: invoice.invoice_number } };
+    }
+    if (name === 'payFromWallet') {
+      const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
+      const user = authData?.user;
+      if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً');
+      if (payload?.payment_type === 'milestone' && payload?.milestone_id) {
+        const { data: milestone, error: milestoneError } = await withHardTimeout(
+          supabase.from('project_milestones').select('id,project_id').eq('id', payload.milestone_id).maybeSingle(),
+          10000,
+          'انتهت مهلة قراءة مرحلة المشروع'
+        );
+        if (milestoneError || !milestone) throw new Error('لم يتم العثور على مرحلة المشروع');
+        const projectId = payload?.project_id || milestone.project_id;
+        const { data, error } = await withHardTimeout(
+          supabase.rpc('fund_project_milestone_from_wallet', { p_project_id: projectId, p_milestone_id: milestone.id }),
+          20000,
+          'انتهت مهلة حجز مبلغ المرحلة'
+        );
+        if (error) throw new Error(error.message || 'تعذر الدفع من المحفظة');
+        if (!data?.ok) throw new Error(data?.reason || 'تعذر الدفع من المحفظة');
+        return { data: { success: true, message: 'تم حجز دفعة المرحلة في الضمان', ...data } };
+      }
+      if (payload?.payment_type === 'design') {
+        throw new Error('شراء التصاميم من المحفظة لم يُرحّل بعد؛ لم يتم خصم أي مبلغ');
+      }
+      throw new Error('نوع عملية الدفع غير مدعوم');
+    }
+    if (name === 'requestMilestonePayment') {
+      const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
+      const user = authData?.user;
+      if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً');
+      const milestoneId = payload?.milestone_id;
+      const projectId = payload?.project_id;
+      if (!milestoneId || !projectId) throw new Error('يلزم تحديد المشروع والمرحلة');
+      const { data: milestone, error: milestoneError } = await withHardTimeout(supabase.from('project_milestones').select('*').eq('id', milestoneId).eq('project_id', projectId).single(), 10000);
+      if (milestoneError || !milestone) throw new Error('لم يتم العثور على مرحلة المشروع');
+      const { data: project, error: projectError } = await withHardTimeout(supabase.from('projects').select('*').eq('id', projectId).single(), 10000);
+      if (projectError || !project) throw new Error('لم يتم العثور على المشروع');
+      const profileResult = await withHardTimeout(supabase.from('profiles').select('role,email,full_name').eq('user_id', user.id).maybeSingle(), 10000);
+      const isAdmin = profileResult.data?.role === 'admin' || user.app_metadata?.role === 'admin';
+      const providerId = milestone.provider_user_id || project.assigned_engineer_id || project.engineer_user_id || null;
+      if (!isAdmin && providerId !== user.id) throw new Error('غير مصرح لك بإصدار فاتورة لهذه المرحلة');
+      const { data: existing } = await withHardTimeout(supabase.from('invoices').select('*').eq('project_id', projectId).eq('milestone_id', milestoneId).in('status', ['draft','pending','sent']).order('created_at', { ascending: false }).limit(1).maybeSingle(), 10000);
+      if (existing) return { data: { success: true, invoice: normalizeInvoice(existing), already_exists: true } };
+      const amount = Number(milestone.amount || 0);
+      if (!Number.isFinite(amount) || amount <= 0) throw new Error('قيمة المرحلة غير صالحة لإصدار الفاتورة');
+      const vatRate = 0.15;
+      const vatAmount = Math.round(amount * vatRate * 100) / 100;
+      const { data: buyerProfile } = await withHardTimeout(supabase.from('profiles').select('email,full_name').eq('user_id', project.client_user_id).maybeSingle(), 10000);
+      const invoice = await bytlyCompat.entities.Invoice.create({
+        project_id: projectId,
+        milestone_id: milestoneId,
+        invoice_type: 'project_milestone',
+        issuer_user_id: user.id,
+        issuer_type: 'service_provider',
+        buyer_user_id: project.client_user_id,
+        buyer_email: buyerProfile.data?.email || null,
+        buyer_name: buyerProfile.data?.full_name || null,
+        service_description: milestone.title || ('دفعة مرحلة من مشروع ' + (project.title || '')),
+        subtotal: amount,
+        taxable_amount: amount,
+        vat_rate: vatRate * 100,
+        vat_amount: vatAmount,
+        total_amount: amount + vatAmount,
+        currency: 'SAR',
+        status: 'sent',
+        issue_date: new Date().toISOString(),
+        due_date: new Date(Date.now() + 7 * 86400000).toISOString(),
+        notes: 'فاتورة دفعة مرحلة مشروع'
+      });
+      return { data: { success: true, invoice } };
+    }
+    if (name === 'escrow') {
+      const action = payload?.action || 'status';
+      const projectId = payload?.project_id;
+      const milestoneId = payload?.milestone_id;
+      if (!projectId) throw new Error('يلزم تحديد المشروع');
+      const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
+      const user = authData?.user;
+      if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً');
+      if (action === 'status') {
+        const { data: project, error: projectError } = await withHardTimeout(supabase.from('projects').select('*').eq('id', projectId).single(), 10000);
+        if (projectError || !project) throw new Error('لم يتم العثور على المشروع');
+        const { data: profile } = await withHardTimeout(supabase.from('profiles').select('role').eq('user_id', user.id).maybeSingle(), 10000);
+        const isAdmin = ['admin','owner'].includes(String(profile?.role || user.app_metadata?.role || '').toLowerCase());
+        const isParticipant = project.client_user_id === user.id
+          || project.assigned_engineer_id === user.id
+          || project.technical_consultant_id === user.id
+          || project.assigned_contractor_id === user.id
+          || project.assigned_supplier_id === user.id;
+        if (!isAdmin && !isParticipant) throw new Error('غير مصرح لك بعرض بيانات ضمان هذا المشروع');
+        const [{ data: milestones, error: milestonesError }, { data: transactions, error: transactionsError }] = await Promise.all([
+          withHardTimeout(supabase.from('project_milestones').select('*').eq('project_id', projectId).order('sequence_no', { ascending: true }), 10000),
+          withHardTimeout(supabase.from('wallet_transactions').select('*').eq('project_id', projectId).order('created_at', { ascending: false }).limit(20), 10000),
+        ]);
+        if (milestonesError) throw new Error(milestonesError.message);
+        if (transactionsError) throw new Error(transactionsError.message);
+        const amount = Number(project.escrow_amount || 0);
+        const rate = Number(project.project_commission_rate ?? project.platform_commission ?? 15);
+        const totalHeld = Number((transactions || []).filter(tx => tx.balance_type === 'held' && tx.direction === 'debit' && tx.status === 'completed').reduce((sum, tx) => sum + Number(tx.amount || 0), 0));
+        const totalReleased = Number((transactions || []).filter(tx => ['milestone_release','milestone_partial_release'].includes(tx.type) && tx.direction === 'credit' && tx.status === 'completed').reduce((sum, tx) => sum + Number(tx.amount || 0), 0));
+        return { data: { escrow_status: project.escrow_status || 'none', escrow_amount: amount, commission_rate: rate, commission_amount: Math.round(amount * rate) / 100, engineer_will_receive: amount - Math.round(amount * rate) / 100, milestones: milestones || [], total_held: totalHeld, total_released: totalReleased, recent_transactions: transactions || [] } };
+      }
+      if (!milestoneId) throw new Error('يلزم تحديد المرحلة المالية');
+      const { data: financialMilestone, error: financialError } = await withHardTimeout(supabase.from('project_financial_milestones').select('id,project_id,milestone_id').eq('project_id', projectId).eq('milestone_id', milestoneId).maybeSingle(), 10000);
+      if (financialError) throw new Error(financialError.message);
+      if (!financialMilestone) throw new Error('لم يتم العثور على الحجز المالي لهذه المرحلة');
+      if (action === 'release' || action === 'release_milestone') {
+        const { data, error } = await withHardTimeout(supabase.functions.invoke('financial-operations', { body: { action: 'release', milestone_id: financialMilestone.id, notes: payload?.notes || 'تحرير الدفعة بعد الاعتماد' } }), 20000);
+        if (error) throw new Error(error.message || 'تعذر تحرير دفعة الضمان');
+        if (data?.error) throw new Error(data.error);
+        return { data };
+      }
+      if (action === 'refund') {
+        const { data, error } = await withHardTimeout(supabase.functions.invoke('financial-operations', { body: { action: 'resolve', milestone_id: financialMilestone.id, resolution: payload?.refund_type === 'partial' ? 'refund_partial' : 'refund_full', refund_amount: Number(payload?.amount || payload?.refund_amount || 0), notes: payload?.notes || 'استرجاع مبلغ الضمان' } }), 20000);
+        if (error) throw new Error(error.message || 'تعذر استرجاع مبلغ الضمان');
+        if (data?.error) throw new Error(data.error);
+        return { data };
+      }
+      if (action === 'deposit' || action === 'deposit_milestone') {
+        const { data, error } = await withHardTimeout(supabase.rpc('fund_project_milestone_from_wallet', { p_project_id: projectId, p_milestone_id: milestoneId }), 20000);
+        if (error) throw new Error(error.message || 'تعذر حجز مبلغ المرحلة');
+        if (!data?.ok) throw new Error(data?.reason || 'تعذر حجز مبلغ المرحلة');
+        return { data };
+      }
+      throw new Error('إجراء الضمان غير مدعوم بعد: ' + action);
+    }
     if (name === 'bookReviewMeeting') {
       const action = payload?.action || 'book';
       const date = payload?.date || payload?.appointment_date;

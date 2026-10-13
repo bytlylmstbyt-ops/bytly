@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { Wallet, DollarSign, CreditCard, Loader2, CheckCircle, Zap } from "lucide-react";
@@ -8,9 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export default function WalletRecharge() {
+  const [searchParams] = useSearchParams();
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount] = useState(() => searchParams.get("amount") || "");
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentOrder, setPaymentOrder] = useState(null);
   const [paymentFormError, setPaymentFormError] = useState("");
