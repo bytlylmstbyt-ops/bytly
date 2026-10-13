@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "../utils";
@@ -8,90 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, ShieldCheck, CreditCard, AlertCircle, CheckCircle, Plus, Trash2, ListOrdered } from "lucide-react";
 import { motion } from "framer-motion";
-import { sendNotification } from "@/components/notifications/NotificationHelper";
-import { loadStripe } from "@stripe/stripe-js";
-import PaymentMethodSelector from "@/components/payment/PaymentMethodSelector";
-
-const stripePublishableKey = import.meta.env.STRIPE_PUBLISHABLE_KEY;
-const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : null;
-
-function StripePaymentForm({ amount, onSuccess, processing, setProcessing, projectId, proposalId, projectTitle }) {
-  const [error, setError] = useState(null);
-
-  const handleStripeCheckout = async () => {
-    // Check if running in iframe
-    if (window.self !== window.top) {
-      alert("الدفع بالبطاقة يعمل فقط من التطبيق المنشور. الرجاء فتح التطبيق في نافذة جديدة.");
-      return;
-    }
-
-    setProcessing(true);
-    setError(null);
-
-    try {
-      const response = await base44.functions.invoke('createStripeCheckout', {
-        projectId,
-        proposalId
-      });
-
-      if (response.data.url) {
-        // Process escrow setup first
-        await onSuccess();
-        // Redirect to Stripe checkout
-        window.location.href = response.data.url;
-      } else {
-        setError("فشل إنشاء جلسة الدفع");
-        setProcessing(false);
-      }
-    } catch (err) {
-      console.error("Stripe checkout error:", err);
-      setError("حدث خطأ في معالجة الدفع");
-      setProcessing(false);
-    }
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-    >
-      <Card>
-        <CardHeader>
-          <CardTitle>الدفع ببطاقة الائتمان</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
-              سيتم تحويلك إلى صفحة دفع آمنة لإتمام العملية
-            </p>
-          </div>
-          {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-              {error}
-            </div>
-          )}
-          <Button
-            onClick={handleStripeCheckout}
-            disabled={processing}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-6 text-lg"
-          >
-            {processing ? (
-              <>
-                <Loader2 className="w-6 h-6 animate-spin ml-2" />
-                جاري المعالجة...
-              </>
-            ) : (
-              <>
-                <CreditCard className="w-6 h-6 ml-2" />
-                الدفع بالبطاقة ({amount.toLocaleString('ar-SA')} ريال)
-              </>
-            )}
-          </Button>
-        </CardContent>
-      </Card>
-    </motion.div>
-  );
-}
 
 export default function PaymentPage() {
   const navigate = useNavigate();
@@ -106,7 +21,6 @@ export default function PaymentPage() {
   const [engineer, setEngineer] = useState(null);
   const [client, setClient] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("wallet"); // wallet, stripe
-  const [paymentGateway, setPaymentGateway] = useState("tap"); // tap, stripe
   const [useMilestones, setUseMilestones] = useState(false);
   const [milestones, setMilestones] = useState([
     { title: "المرحلة الأولى - التصميم الأولي", percentage: 30, description: "" },
@@ -207,146 +121,6 @@ export default function PaymentPage() {
     setProcessing(false);
   };
 
-  const setupEscrowAndProject = async () => {
-    const fees = calculateFees();
-
-      // Validate milestones if enabled
-      if (useMilestones) {
-        const totalPercentage = milestones.reduce((sum, m) => sum + Number(m.percentage), 0);
-        if (totalPercentage !== 100) {
-          alert("يجب أن يكون مجموع نسب المراحل 100%");
-          setProcessing(false);
-          return;
-        }
-      }
-
-    // 1. Update proposal status
-    await base44.entities.Proposal.update(proposalId, { status: "accepted" });
-
-    // 2. Update project with escrow
-    await base44.entities.Project.update(projectId, {
-        status: "in_progress",
-        assigned_engineer_id: proposal.engineer_id,
-        escrow_amount: fees.totalAmount,
-        escrow_status: "held",
-        platform_commission: 15,
-        technical_consultant_fee: fees.technicalConsultantFee,
-        legal_consultant_fee: fees.legalConsultantFee,
-        engineer_payment: fees.engineerPayment,
-        payment_status: "escrowed"
-      });
-
-    // 3. Create pending transaction
-    await base44.entities.Transaction.create({
-      user_id: client.email,
-      type: "escrow_hold",
-      amount: fees.totalAmount,
-      status: "pending",
-      description: `حجز مبلغ مشروع: ${project.title}`,
-      project_id: projectId,
-      payment_method: paymentGateway
-    });
-
-    // 4. Create milestones if enabled
-    if (useMilestones) {
-      for (let i = 0; i < milestones.length; i++) {
-        const milestone = milestones[i];
-        await base44.entities.ProjectMilestone.create({
-          project_id: projectId,
-          title: milestone.title,
-          description: milestone.description,
-          amount: (fees.totalAmount * milestone.percentage) / 100,
-          percentage: milestone.percentage,
-          order: i + 1,
-          status: "pending"
-        });
-      }
-    }
-
-    // 5. Assign consultants and create contract
-    await assignConsultantsAndContract();
-  };
-
-  const assignConsultantsAndContract = async () => {
-    const fees = calculateFees();
-
-    // Assign technical consultant
-    const consultants = await base44.entities.Consultant.filter({ status: "approved" });
-    if (consultants.length > 0) {
-      const randomConsultant = consultants[Math.floor(Math.random() * consultants.length)];
-      await base44.entities.Project.update(projectId, {
-        technical_consultant_id: randomConsultant.id
-      });
-
-      await sendNotification({
-        recipientEmail: randomConsultant.email,
-        title: "مشروع جديد للمراجعة الفنية",
-        message: `تم تعيينك كمستشار فني لمشروع: ${project.title}`,
-        type: "review",
-        projectId: projectId,
-        priority: "high"
-      });
-    }
-
-    // Assign legal consultant
-    const legalConsultants = await base44.entities.LegalConsultant.filter({ status: "approved" });
-    if (legalConsultants.length > 0) {
-      const randomLegal = legalConsultants[Math.floor(Math.random() * legalConsultants.length)];
-      await base44.entities.Project.update(projectId, {
-        legal_consultant_id: randomLegal.id
-      });
-
-      await sendNotification({
-        recipientEmail: randomLegal.email,
-        title: "مشروع جديد لتوثيق العقد",
-        message: `تم تعيينك كمستشار قانوني لمشروع: ${project.title}`,
-        type: "project_update",
-        projectId: projectId,
-        priority: "high"
-      });
-    }
-
-    // Create contract
-    await base44.entities.Contract.create({
-      project_id: projectId,
-      client_id: client.id,
-      engineer_id: proposal.engineer_id,
-      contract_type: "project_start",
-      total_amount: fees.totalAmount,
-      payment_terms: "دفعة كاملة بنظام الضمان",
-      delivery_date: new Date(Date.now() + proposal.delivery_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      status: "active"
-    });
-
-    // Reject other proposals
-    const allProposals = await base44.entities.Proposal.filter({ project_id: projectId });
-    for (const p of allProposals) {
-      if (p.id !== proposalId && p.status === "pending") {
-        await base44.entities.Proposal.update(p.id, { status: "rejected" });
-      }
-    }
-
-    // Notify engineer
-    await sendNotification({
-      recipientEmail: engineer.email,
-      title: "تم قبول عرضك!",
-      message: `تم قبول عرضك على مشروع: ${project.title}. ابدأ العمل الآن.`,
-      type: "project_update",
-      projectId: projectId,
-      priority: "high"
-    });
-
-    // Notify admin
-    await sendNotification({
-      recipientEmail: "bytlylmstbyt@gmail.com",
-      title: "مشروع جديد - دفع مكتمل",
-      message: `تم دفع ${fees.totalAmount.toLocaleString('ar-SA')} ريال لمشروع: ${project.title}`,
-      type: "payment",
-      projectId: projectId,
-      priority: "high"
-    });
-  };
-
   const handleWalletPayment = async () => {
     setProcessing(true);
     try {
@@ -386,13 +160,7 @@ export default function PaymentPage() {
       setProcessing(false);
     }
   };
-  const handleCardPayment = async () => {
-    if (paymentGateway === "tap") {
-      await handleTapPayment();
-    } else {
-      // Stripe payment handled in StripePaymentForm
-    }
-  };
+  const handleCardPayment = async () => { alert("الدفع بالبطاقة في هذه الصفحة غير متاح حتى يكتمل ربط Moyasar التجريبي. لم يتم خصم أي مبلغ."); };
 
   if (loading) {
     return (
@@ -602,26 +370,6 @@ export default function PaymentPage() {
           </Card>
         </motion.div>
 
-        {/* Payment Gateway Selection - shown only for card payments */}
-        {paymentMethod === "card" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <Card>
-              <CardHeader>
-                <CardTitle>اختر بوابة الدفع</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <PaymentMethodSelector
-                  selectedGateway={paymentGateway}
-                  onSelect={setPaymentGateway}
-                />
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
-
         {/* Milestones Option */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -697,18 +445,7 @@ export default function PaymentPage() {
         </motion.div>
 
         {/* Payment Forms */}
-        {paymentMethod === "card" && paymentGateway === "stripe" ? (
-          <StripePaymentForm
-            amount={fees.totalAmount}
-            onSuccess={setupEscrowAndProject}
-            processing={processing}
-            setProcessing={setProcessing}
-            projectId={projectId}
-            proposalId={proposalId}
-            projectTitle={project.title}
-          />
-        ) : (
-          /* Action Buttons */
+        {/* Action Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -729,7 +466,7 @@ export default function PaymentPage() {
                   <CreditCard className="w-6 h-6 ml-2" />
                   {paymentMethod === "wallet" 
                     ? `الدفع من المحفظة (${fees.totalAmount.toLocaleString('ar-SA')} ريال)`
-                    : `الدفع ببطاقة ${paymentGateway === "tap" ? "مدى/Apple Pay" : "ائتمانية"} (${fees.totalAmount.toLocaleString('ar-SA')} ريال)`
+                    : "الدفع بالبطاقة غير متاح حالياً"
                   }
                 </>
               )}
@@ -743,7 +480,6 @@ export default function PaymentPage() {
               إلغاء
             </Button>
           </motion.div>
-        )}
       </div>
     </div>
   );
