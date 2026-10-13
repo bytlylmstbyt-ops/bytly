@@ -127,3 +127,143 @@ grant select, insert on public.survey_deliverables to authenticated;
 
 -- Existing Base44 records must be reconciled and mapped to auth.users before any
 -- runtime cutover. This migration intentionally does not import or delete them.
+
+
+-- All money/state transitions below are atomic and callable only by service_role.
+create or replace function public.create_survey_request_with_escrow(
+  p_actor_user_id uuid,
+  p_client_email text,
+  p_client_name text,
+  p_latitude double precision,
+  p_longitude double precision,
+  p_address text,
+  p_property_area_sqm numeric,
+  p_property_status text,
+  p_notes text
+) returns jsonb
+language plpgsql security definer set search_path = public
+as $$
+declare
+  v_total numeric(12,2);
+  v_fee numeric(12,2);
+  v_payout numeric(12,2);
+  v_wallet public.wallet_accounts%rowtype;
+  v_request public.survey_requests%rowtype;
+begin
+  if p_actor_user_id is null or p_latitude is null or p_longitude is null
+    or p_latitude not between -90 and 90 or p_longitude not between -180 and 180
+    or p_property_area_sqm is null or p_property_area_sqm <= 0
+    or p_property_status not in ('vacant_land','existing_building') then
+    raise exception 'INVALID_SURVEY_REQUEST';
+  end if;
+
+  v_total := least(5000, greatest(300, round(p_property_area_sqm * case when p_property_status='existing_building' then 5 else 3 end)));
+  v_fee := round(v_total * 0.15, 2);
+  v_payout := v_total - v_fee;
+
+  select * into v_wallet from public.wallet_accounts
+    where user_id = p_actor_user_id and status = 'active' and currency = 'SAR'
+    for update;
+  if not found then raise exception 'WALLET_NOT_FOUND'; end if;
+  if v_wallet.available_balance < v_total then raise exception 'INSUFFICIENT_BALANCE'; end if;
+
+  update public.wallet_accounts
+    set available_balance = available_balance - v_total,
+        held_balance = held_balance + v_total, updated_at = now()
+    where id = v_wallet.id;
+
+  insert into public.wallet_transactions(user_id,type,amount,currency,status,reference,description,balance_type,direction)
+    values (p_actor_user_id,'survey_escrow_hold',v_total,'SAR','completed','survey-pending','Survey escrow hold','available','debit');
+  insert into public.wallet_transactions(user_id,type,amount,currency,status,reference,description,balance_type,direction)
+    values (p_actor_user_id,'survey_escrow_hold',v_total,'SAR','completed','survey-pending','Survey escrow held','held','credit');
+
+  insert into public.survey_requests(
+    client_user_id,client_email,client_name,latitude,longitude,address,property_area_sqm,
+    property_status,notes,status,payout_amount,platform_fee,total_charged,commission_rate,escrow_status
+  ) values (
+    p_actor_user_id,lower(trim(p_client_email)),p_client_name,p_latitude,p_longitude,coalesce(p_address,''),
+    p_property_area_sqm,p_property_status,p_notes,'pending',v_payout,v_fee,v_total,15,'held'
+  ) returning * into v_request;
+
+  update public.wallet_transactions set reference = v_request.id::text
+    where user_id = p_actor_user_id and reference = 'survey-pending';
+
+  return jsonb_build_object('request_id',v_request.id,'total_charged',v_total,'payout_amount',v_payout,'platform_fee',v_fee);
+end;
+$$;
+
+create or replace function public.accept_survey_request(p_actor_user_id uuid,p_request_id uuid)
+returns jsonb language plpgsql security definer set search_path=public
+as $$
+declare v_profile public.surveyor_profiles%rowtype; v_request public.survey_requests%rowtype;
+begin
+  select * into v_profile from public.surveyor_profiles where user_id=p_actor_user_id and status='approved' and is_available=true for update;
+  if not found then raise exception 'SURVEYOR_NOT_APPROVED'; end if;
+  update public.survey_requests set status='accepted',surveyor_user_id=p_actor_user_id,
+    surveyor_profile_id=v_profile.id,surveyor_name=v_profile.full_name,surveyor_email=v_profile.email,
+    accepted_at=now(),updated_at=now()
+  where id=p_request_id and status in ('pending','broadcasted')
+    and (matched_surveyors='[]'::jsonb or matched_surveyors @> jsonb_build_array(jsonb_build_object('surveyor_id',v_profile.id::text)));
+  if not found then raise exception 'REQUEST_UNAVAILABLE'; end if;
+  select * into v_request from public.survey_requests where id=p_request_id;
+  return jsonb_build_object('request_id',v_request.id,'status',v_request.status,'surveyor_name',v_profile.full_name);
+end;
+$$;
+
+create or replace function public.submit_survey_deliverable(
+  p_actor_user_id uuid,p_request_id uuid,p_cad_files text[],p_visual_files text[],p_survey_metadata jsonb,p_description text
+) returns jsonb language plpgsql security definer set search_path=public
+as $$
+declare v_request public.survey_requests%rowtype; v_delivery public.survey_deliverables%rowtype;
+begin
+  select * into v_request from public.survey_requests where id=p_request_id for update;
+  if not found then raise exception 'REQUEST_NOT_FOUND'; end if;
+  if v_request.surveyor_user_id <> p_actor_user_id then raise exception 'FORBIDDEN'; end if;
+  if v_request.status not in ('accepted','in_progress') then raise exception 'INVALID_REQUEST_STATUS'; end if;
+  insert into public.survey_deliverables(request_id,surveyor_user_id,cad_files,visual_files,survey_metadata,description)
+    values(p_request_id,p_actor_user_id,coalesce(p_cad_files,'{}'),coalesce(p_visual_files,'{}'),coalesce(p_survey_metadata,'{}'::jsonb),p_description)
+    returning * into v_delivery;
+  update public.survey_requests set status='submitted',submitted_at=now(),updated_at=now() where id=p_request_id;
+  return jsonb_build_object('request_id',p_request_id,'deliverable_id',v_delivery.id,'status','submitted');
+end;
+$$;
+
+create or replace function public.approve_survey_deliverable(p_actor_user_id uuid,p_request_id uuid)
+returns jsonb language plpgsql security definer set search_path=public
+as $$
+declare v_request public.survey_requests%rowtype; v_client_wallet public.wallet_accounts%rowtype; v_surveyor_wallet public.wallet_accounts%rowtype;
+begin
+  select * into v_request from public.survey_requests where id=p_request_id for update;
+  if not found then raise exception 'REQUEST_NOT_FOUND'; end if;
+  if v_request.client_user_id <> p_actor_user_id then raise exception 'FORBIDDEN'; end if;
+  if v_request.status <> 'submitted' or v_request.escrow_status <> 'held' then raise exception 'INVALID_ESCROW_STATE'; end if;
+
+  select * into v_client_wallet from public.wallet_accounts where user_id=v_request.client_user_id and currency='SAR' and status='active' for update;
+  if not found or v_client_wallet.held_balance < v_request.total_charged then raise exception 'ESCROW_BALANCE_MISMATCH'; end if;
+  select * into v_surveyor_wallet from public.wallet_accounts where user_id=v_request.surveyor_user_id and currency='SAR' and status='active' for update;
+  if not found then raise exception 'SURVEYOR_WALLET_NOT_FOUND'; end if;
+
+  update public.wallet_accounts set held_balance=held_balance-v_request.total_charged,updated_at=now() where id=v_client_wallet.id;
+  update public.wallet_accounts set available_balance=available_balance+v_request.payout_amount,updated_at=now() where id=v_surveyor_wallet.id;
+
+  insert into public.wallet_transactions(user_id,type,amount,currency,status,reference,description,balance_type,direction)
+    values(v_request.client_user_id,'survey_escrow_release',v_request.total_charged,'SAR','completed',p_request_id::text,'Survey escrow released','held','debit');
+  insert into public.wallet_transactions(user_id,type,amount,currency,status,reference,description,balance_type,direction)
+    values(v_request.surveyor_user_id,'survey_payout',v_request.payout_amount,'SAR','completed',p_request_id::text,'Survey payout','available','credit');
+
+  update public.survey_requests set status='disbursed',escrow_status='released',approved_at=now(),disbursed_at=now(),updated_at=now()
+    where id=p_request_id;
+  update public.surveyor_profiles set available_balance=available_balance+v_request.payout_amount,total_jobs=total_jobs+1,updated_at=now()
+    where user_id=v_request.surveyor_user_id;
+  return jsonb_build_object('request_id',p_request_id,'status','disbursed','payout_amount',v_request.payout_amount,'platform_fee',v_request.platform_fee);
+end;
+$$;
+
+revoke all on function public.create_survey_request_with_escrow(uuid,text,text,double precision,double precision,text,numeric,text,text) from public,anon,authenticated;
+revoke all on function public.accept_survey_request(uuid,uuid) from public,anon,authenticated;
+revoke all on function public.submit_survey_deliverable(uuid,uuid,text[],text[],jsonb,text) from public,anon,authenticated;
+revoke all on function public.approve_survey_deliverable(uuid,uuid) from public,anon,authenticated;
+grant execute on function public.create_survey_request_with_escrow(uuid,text,text,double precision,double precision,text,numeric,text,text) to service_role;
+grant execute on function public.accept_survey_request(uuid,uuid) to service_role;
+grant execute on function public.submit_survey_deliverable(uuid,uuid,text[],text[],jsonb,text) to service_role;
+grant execute on function public.approve_survey_deliverable(uuid,uuid) to service_role;
