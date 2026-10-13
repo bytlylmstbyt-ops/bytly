@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -97,22 +97,39 @@ export default function AdminProjectsManager() {
   const bulk = useBulkSelection();
 
   const refreshProjects = useCallback(async () => {
-    const p = await base44.entities.Project.list("-created_date", 500).catch(() => []);
-    setProjects(p);
+    const { data, error } = await supabase.from("projects").select("*").order("created_at", { ascending: false }).limit(500);
+    if (error) throw error;
+    setProjects(data || []);
   }, []);
 
   const loadAll = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [p, c, e, me] = await Promise.all([
-        base44.entities.Project.list("-created_date", 500).catch(() => []),
-        base44.entities.Client.list().catch(() => []),
-        base44.entities.Engineer.list().catch(() => []),
-        base44.auth.me().catch(() => null),
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const authUser = authData?.user;
+      if (!authUser?.id) throw new Error("يجب تسجيل الدخول بحساب الإدارة.");
+      const [projectsResult, clientsResult, engineersResult, profileResult] = await Promise.all([
+        supabase.from("projects").select("*").order("created_at", { ascending: false }).limit(500),
+        supabase.from("clients").select("*").order("created_at", { ascending: false }),
+        supabase.from("engineers").select("*").order("created_at", { ascending: false }),
+        supabase.from("profiles").select("full_name,role,email").eq("user_id", authUser.id).maybeSingle(),
       ]);
-      setProjects(p); setClients(c); setEngineers(e); setActor(me);
+      if (projectsResult.error) throw projectsResult.error;
+      if (clientsResult.error) throw clientsResult.error;
+      if (engineersResult.error) throw engineersResult.error;
+      if (profileResult.error) throw profileResult.error;
+      const role = String(profileResult.data?.role || authUser.user_metadata?.role || "").toLowerCase();
+      if (role !== "admin" && authUser.email?.toLowerCase() !== "bytlylmstbyt@gmail.com") throw new Error("ليست لديك صلاحية إدارة المشاريع.");
+      setProjects(projectsResult.data || []);
+      setClients(clientsResult.data || []);
+      setEngineers(engineersResult.data || []);
+      setActor({ id: authUser.id, user_id: authUser.id, email: authUser.email, full_name: profileResult.data?.full_name || authUser.email });
+    } catch (error) {
+      console.error("Failed to load project manager from Supabase:", error);
+      toast({ title: "تعذر تحميل إدارة المشاريع", description: error?.message || "تحققي من صلاحيات الحساب والاتصال.", variant: "destructive" });
     } finally { setLoading(false); setRefreshing(false); }
-  }, []);
+  }, [toast]);
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
@@ -174,12 +191,15 @@ export default function AdminProjectsManager() {
     setSelectedProject(project);
     setProjectDetailsLoading(true);
     try {
-      const [contracts, invoices, payments] = await Promise.all([
-        base44.entities.Contract.filter({ project_id: project.id }).catch(() => []),
-        base44.entities.Invoice.filter({ project_id: project.id }).catch(() => []),
-        base44.entities.Payment.filter({ project_id: project.id }).catch(() => []),
+      const [contractsResult, invoicesResult, paymentsResult] = await Promise.all([
+        supabase.from("project_contracts").select("*").eq("project_id", project.id).order("created_at", { ascending: false }),
+        supabase.from("invoices").select("*").eq("project_id", project.id).order("created_at", { ascending: false }),
+        supabase.from("project_payments").select("*").eq("project_id", project.id).order("created_at", { ascending: false }),
       ]);
-      setProjectRelations({ contracts, invoices, payments });
+      if (contractsResult.error) throw contractsResult.error;
+      if (invoicesResult.error) throw invoicesResult.error;
+      if (paymentsResult.error) throw paymentsResult.error;
+      setProjectRelations({ contracts: contractsResult.data || [], invoices: invoicesResult.data || [], payments: paymentsResult.data || [] });
     } finally { setProjectDetailsLoading(false); }
   };
   const onFormDone = async () => { setFormOpen(false); setFormProject(null); await refreshProjects(); };
@@ -187,14 +207,14 @@ export default function AdminProjectsManager() {
   // single-row ops
   const setStatus = async (p, status) => {
     setBusy(true);
-    try { await base44.entities.Project.update(p.id, { status }); await logProjectChange(p, { status }, actor); await refreshProjects(); toast({ title: "تم تحديث حالة المشروع" }); }
+    try { { const { error } = await supabase.from("projects").update({ status }).eq("id", p.id); if (error) throw error; } await logProjectChange(p, { status }, actor); await refreshProjects(); toast({ title: "تم تحديث حالة المشروع" }); }
     finally { setBusy(false); }
   };
   const togglePin = async (p) => {
     setBusy(true);
     try {
       const val = !p.is_pinned;
-      await base44.entities.Project.update(p.id, { is_pinned: val });
+      { const { error } = await supabase.from("projects").update({ is_pinned: val }).eq("id", p.id); if (error) throw error; }
       await logProjectFlagChange(p, actor, "is_pinned", p.is_pinned, val, val ? `تم تثبيت المشروع «${p.title}»` : `تم إلغاء تثبيت المشروع «${p.title}»`);
       await refreshProjects();
     } finally { setBusy(false); }
@@ -203,7 +223,7 @@ export default function AdminProjectsManager() {
     setBusy(true);
     try {
       const val = !p.is_hidden;
-      await base44.entities.Project.update(p.id, { is_hidden: val });
+      { const { error } = await supabase.from("projects").update({ is_hidden: val }).eq("id", p.id); if (error) throw error; }
       await logProjectFlagChange(p, actor, "is_hidden", p.is_hidden, val, val ? `تم إخفاء المشروع «${p.title}» عن السوق` : `تم إظهار المشروع «${p.title}» في السوق`);
       await refreshProjects();
     } finally { setBusy(false); }
@@ -211,7 +231,7 @@ export default function AdminProjectsManager() {
   const doDelete = async () => {
     if (!pendingDelete) return;
     setBusy(true);
-    try { await base44.entities.Project.delete(pendingDelete.id); await logProjectDeletion(pendingDelete, actor); await refreshProjects(); toast({ title: "تم حذف المشروع" }); }
+    try { { const { error } = await supabase.from("projects").delete().eq("id", pendingDelete.id); if (error) throw error; } await logProjectDeletion(pendingDelete, actor); await refreshProjects(); toast({ title: "تم حذف المشروع" }); }
     finally { setBusy(false); setPendingDelete(null); }
   };
 
@@ -221,17 +241,17 @@ export default function AdminProjectsManager() {
       const ids = bulk.selectedIds;
       const items = projects.filter(p => ids.includes(p.id));
       if (action === "delete") {
-        await Promise.all(ids.map(id => base44.entities.Project.delete(id)));
+        await Promise.all(ids.map(async id => { const { error } = await supabase.from("projects").delete().eq("id", id); if (error) throw error; }));
         await Promise.all(items.map(p => logProjectDeletion(p, actor)));
       } else {
         const cfg = BULK_MAP[action];
         if (Array.isArray(cfg)) {
           const [field, val] = cfg;
-          await Promise.all(ids.map(id => base44.entities.Project.update(id, { [field]: val })));
+          await Promise.all(ids.map(async id => { const { error } = await supabase.from("projects").update({ [field]: val }).eq("id", id); if (error) throw error; }));
           await Promise.all(items.map(p => logProjectFlagChange(p, actor, field, p[field], val, `${val ? "تفعيل" : "إلغاء"} ${field === "is_pinned" ? "التثبيت" : "الإخفاء"} لـ «${p.title}»`)));
         } else {
           const patch = cfg;
-          await Promise.all(ids.map(id => base44.entities.Project.update(id, patch)));
+          await Promise.all(ids.map(async id => { const { error } = await supabase.from("projects").update(patch).eq("id", id); if (error) throw error; }));
           await Promise.all(items.map(p => logProjectChange(p, patch, actor)));
         }
       }
