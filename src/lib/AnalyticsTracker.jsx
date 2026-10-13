@@ -84,7 +84,16 @@ export default function AnalyticsTracker(){
    return()=>{mounted=false;window.removeEventListener("bytly:analytics-event",onCustomAnalyticsEvent);window.__bytlyReplayCleanup?.();clearInterval(heartbeat);clearInterval(routeWatcher);observer?.disconnect();authSubscription?.unsubscribe?.();document.removeEventListener("click",onClick,true);window.removeEventListener("scroll",onScroll);document.removeEventListener("visibilitychange",onVisibility);updateSession()};
   }catch(e){console.warn("Analytics tracker skipped",e)}
  };
- start();
+ let cleanup;
+ let disposed = false;
+ start().then((fn) => {
+   cleanup = fn;
+   if (disposed) cleanup?.();
+ });
+ return () => {
+   disposed = true;
+   cleanup?.();
+ };
  },[]);
  return null
 }
