@@ -12,11 +12,11 @@ const roots = ['src', 'api', 'supabase/functions'];
 const extensions = new Set(['.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs']);
 const adapterPath = 'src/api/base44Client.js';
 const patterns = [
-  ['compatibility adapter import', /(?:from\\s*|import\\s*)['"][^'"]*base44Client(?:\\.js)?['"]/g],
-  ['legacy entity API', /\\bbase44\\.entities\\./g],
-  ['legacy auth API', /\\bbase44\\.auth\\./g],
-  ['legacy function API', /\\bbase44\\.functions\\./g],
-  ['legacy integration API', /\\bbase44\\.integrations\\./g],
+  ['compatibility adapter import', /(?:from\s*|import\s*)['"][^'"]*base44Client(?:\.js)?['"]/g],
+  ['legacy entity API', /\bbase44\.entities\./g],
+  ['legacy auth API', /\bbase44\.auth\./g],
+  ['legacy function API', /\bbase44\.functions\./g],
+  ['legacy integration API', /\bbase44\.integrations\./g],
   ['unsupported function fallback', /وظيفة غير مرحّلة إلى Supabase/g],
 ];
 
@@ -43,9 +43,8 @@ for (const root of roots) {
     const normalized = file.split(path.sep).join('/');
     if (normalized === adapterPath) continue;
     const source = await readFile(file, 'utf8');
-    const lines = source.split(/\\r?\\n/);
+    const lines = source.split(/\r?\n/);
     for (const [label, pattern] of patterns) {
-      pattern.lastIndex = 0;
       for (let i = 0; i < lines.length; i++) {
         pattern.lastIndex = 0;
         const matches = lines[i].match(pattern);
