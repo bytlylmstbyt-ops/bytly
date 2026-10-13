@@ -259,6 +259,47 @@ $$;
 revoke all on function public.purchase_ready_made_design_with_wallet(text) from public;
 grant execute on function public.purchase_ready_made_design_with_wallet(text) to authenticated;
 
+-- Preview images may be viewed publicly; original design files remain private.
+drop policy if exists ready_design_preview_files_public_read on storage.objects;
+create policy ready_design_preview_files_public_read on storage.objects
+for select to anon, authenticated
+using (bucket_id = 'project-files' and (storage.foldername(name))[1] = 'ready-design-previews');
+
+drop policy if exists ready_design_original_files_owner_insert on storage.objects;
+create policy ready_design_original_files_owner_insert on storage.objects
+for insert to authenticated
+with check (bucket_id = 'project-files' and (storage.foldername(name))[1] = 'ready-designs' and (storage.foldername(name))[2] = auth.uid()::text);
+
+drop policy if exists ready_design_original_files_entitled_read on storage.objects;
+create policy ready_design_original_files_entitled_read on storage.objects
+for select to authenticated
+using (
+  bucket_id = 'project-files'
+  and (storage.foldername(name))[1] = 'ready-designs'
+  and (
+    (storage.foldername(name))[2] = auth.uid()::text
+    or public.bytly_is_admin()
+    or exists (
+      select 1 from public.ready_made_design_assets a
+      where a.design_files::text like '%' || objects.name || '%'
+        and (
+          a.created_by = (auth.jwt()->>'email')
+          or exists (
+            select 1 from public.design_purchase dp
+            where dp.design_id = a.design_id
+              and dp.buyer_email = (auth.jwt()->>'email')
+              and dp.payment_status = 'completed'
+          )
+        )
+    )
+  )
+);
+
+drop policy if exists ready_design_original_files_owner_delete on storage.objects;
+create policy ready_design_original_files_owner_delete on storage.objects
+for delete to authenticated
+using (bucket_id = 'project-files' and (storage.foldername(name))[1] = 'ready-designs' and (storage.foldername(name))[2] = auth.uid()::text);
+
 grant select on public.ready_made_design to anon, authenticated;
 grant insert, update, delete on public.ready_made_design to authenticated;
 grant select on public.design_purchase to authenticated;
