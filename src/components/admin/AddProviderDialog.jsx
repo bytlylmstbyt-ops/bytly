@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
@@ -16,6 +16,7 @@ import { Building2, Scale, HardHat, Package, Megaphone, Loader2, Plus } from "lu
 // الأنواع القابلة للإنشاء (كيانات موجودة فعلاً)
 const TYPES = [
   { key: "EngineeringFirm", label: "شركة هندسية", icon: Building2 },
+  { key: "ConsultingFirm", label: "شركة استشارية", icon: Building2 },
   { key: "Consultant", label: "استشاري", icon: Scale },
   { key: "Contractor", label: "مقاول", icon: HardHat },
   { key: "Supplier", label: "مورد", icon: Package },
@@ -30,6 +31,17 @@ const STATUS_OPTIONS = [
 
 // إعدادات الحقول لكل نوع
 const FIELD_CONFIGS = {
+  ConsultingFirm: [
+    { name: "company_name", label: "اسم الشركة", required: true },
+    { name: "email", label: "البريد الإلكتروني", required: true, type: "email" },
+    { name: "commercial_registration", label: "السجل التجاري" },
+    { name: "phone", label: "رقم الهاتف" },
+    { name: "city", label: "المدينة" },
+    { name: "country", label: "الدولة", default: "السعودية" },
+    { name: "website", label: "الموقع الإلكتروني" },
+    { name: "team_size", label: "حجم الفريق", type: "number" },
+    { name: "description", label: "نبذة", type: "textarea" },
+  ],
   EngineeringFirm: [
     { name: "company_name", label: "اسم الشركة", required: true },
     { name: "email", label: "البريد الإلكتروني", required: true, type: "email" },
@@ -178,7 +190,11 @@ export default function AddProviderDialog({ open, onOpenChange, defaultType, onC
       fields.forEach((f) => {
         if (f.type === "number" && payload[f.name] === "") payload[f.name] = 0;
       });
-      await base44.entities[type].create(payload);
+      const { data, error } = await supabase.functions.invoke("admin-create-provider", {
+        body: { type, payload },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "تعذر إنشاء مقدم الخدمة في قاعدة البيانات");
       toast({ title: "تم الإنشاء بنجاح", description: "تمت إضافة مقدم الخدمة وتحديث القائمة." });
       onCreated?.();
       onOpenChange?.(false);
