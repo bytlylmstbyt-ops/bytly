@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -162,7 +162,7 @@ function CommissionPanel({ transactions }) {
   const commissions = transactions.filter(t => t.type === "commission");
   const total = commissions.reduce((s, t) => s + (t.commission_amount || t.amount || 0), 0);
   const thisMonth = commissions
-    .filter(t => moment(t.created_date).isSame(moment(), "month"))
+    .filter(t => moment((t.created_at || t.created_date)).isSame(moment(), "month"))
     .reduce((s, t) => s + (t.commission_amount || t.amount || 0), 0);
 
   const monthly = commissions.reduce((acc, t) => {
@@ -312,31 +312,43 @@ export default function LiveWalletDashboard({ profile, userType, userEmail }) {
   const loadTransactions = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const data = await base44.entities.Transaction.filter(
-        { user_email: userEmail },
-        "-created_date",
-        150
-      );
-      setTransactions(data);
+      const userId = profile?.user_id || profile?.owner_user_id;
+      if (!userId) {
+        setTransactions([]);
+        setLastUpdated(new Date());
+        return;
+      }
+      const { data, error } = await supabase
+        .from("wallet_transactions").select("*").eq("user_id", userId)
+        .order("created_at", { ascending: false }).limit(150);
+      if (error) throw error;
+      setTransactions(data || []);
       setLastUpdated(new Date());
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [userEmail]);
+  }, [profile?.user_id, profile?.owner_user_id]);
 
   useEffect(() => {
     loadTransactions();
 
-    // Real-time subscription
-    const unsubscribe = base44.entities.Transaction.subscribe((event) => {
-      if (event.data?.user_email === userEmail) {
+    // Supabase Realtime subscription for this provider's wallet only.
+    const userId = profile?.user_id || profile?.owner_user_id;
+    if (!userId) return undefined;
+    const channel = supabase.channel(`provider-wallet-${userId}`)
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "wallet_transactions",
+        filter: `user_id=eq.${userId}`,
+      }, () => {
         setNewTxCount(c => c + 1);
         loadTransactions(true);
-      }
-    });
+      })
+      .subscribe();
 
-    return unsubscribe;
-  }, [loadTransactions, userEmail]);
+    return () => { supabase.removeChannel(channel); };
+  }, [loadTransactions, profile?.user_id, profile?.owner_user_id]);
 
   // Computed balances
   const availableBalance = profile?.available_balance || 0;
