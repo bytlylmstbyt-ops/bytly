@@ -67,23 +67,40 @@ export default function ProjectDetailModal({ open, onOpenChange, project, lookup
           read("activity", supabase.from("project_activity").select("*").eq("project_id", project.id).order("created_at", { ascending: false })),
           read("milestones", supabase.from("project_milestones").select("*").eq("project_id", project.id).order("sequence_no", { ascending: true })),
           read("messages", supabase.from("messages").select("*").eq("project_id", project.id).order("created_at", { ascending: false })),
-          read("engineers", supabase.from("engineers").select("id,user_id,full_name")),
+          read("engineers", supabase.from("engineers").select("id,user_id,base44_id,full_name")),
         ]);
+
+        // Legacy proposals remain read-only in staging until identity/project mappings are verified.
+        // Prefer live Supabase offers; only consult staging when no live offers exist.
+        let proposalRows = proposals || [];
+        if (proposalRows.length === 0 && project.base44_id) {
+          proposalRows = await read(
+            "legacy proposal staging",
+            supabase
+              .from("base44_proposal_migration_staging")
+              .select("*")
+              .eq("project_base44_id", project.base44_id)
+              .order("created_at", { ascending: false })
+          );
+        }
 
         const engineerMap = {};
         (engineers || []).forEach((engineer) => {
           if (engineer.id) engineerMap[engineer.id] = engineer;
           if (engineer.user_id) engineerMap[engineer.user_id] = engineer;
-
+          if (engineer.base44_id) engineerMap[engineer.base44_id] = engineer;
         });
-        const proposalsWithNames = (proposals || []).map((proposal) => ({
-          ...proposal,
-          engineer_id: proposal.engineer_id || proposal.engineer_user_id || null,
-          price: proposal.price ?? proposal.amount ?? 0,
-          delivery_days: proposal.delivery_days ?? proposal.duration_days ?? 0,
-          cover_letter: proposal.cover_letter ?? proposal.proposal ?? "",
-          engineer_name: engineerMap[proposal.engineer_id || proposal.engineer_user_id]?.full_name || "غير معروف",
-        }));
+        const proposalsWithNames = proposalRows.map((proposal) => {
+          const engineerId = proposal.engineer_id || proposal.engineer_user_id || proposal.engineer_base44_id || null;
+          return {
+            ...proposal,
+            engineer_id: engineerId,
+            price: proposal.price ?? proposal.amount ?? 0,
+            delivery_days: proposal.delivery_days ?? proposal.duration_days ?? 0,
+            cover_letter: proposal.cover_letter ?? proposal.proposal ?? "",
+            engineer_name: engineerMap[engineerId]?.full_name || "غير معروف",
+          };
+        });
 
         if (!cancelled) {
           setData({
@@ -102,7 +119,7 @@ export default function ProjectDetailModal({ open, onOpenChange, project, lookup
 
     load();
     return () => { cancelled = true; };
-  }, [open, project?.id]);
+  }, [open, project?.id, project?.base44_id]);
 
   const clientName = project?.client_id ? lookup.clients[project.client_id] : "—";
   const engineerName = project?.assigned_engineer_id ? lookup.engineers[project.assigned_engineer_id] : "—";
