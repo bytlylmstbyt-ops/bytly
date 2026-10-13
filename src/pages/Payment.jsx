@@ -95,6 +95,8 @@ export default function PaymentPage() {
 
     return {
       totalAmount,
+      vatAmount: Math.round(totalAmount * 15) / 100,
+      customerTotalAmount: totalAmount + Math.round(totalAmount * 15) / 100,
       platformCommission,
       technicalConsultantFee,
       legalConsultantFee,
@@ -114,11 +116,6 @@ export default function PaymentPage() {
     const updated = [...milestones];
     updated[index][field] = value;
     setMilestones(updated);
-  };
-
-  const handleTapPayment = async () => {
-    alert('الدفع بالبطاقة عبر Tap القديم متوقف حتى يكتمل ربط Moyasar التجريبي. لم يتم خصم مبلغ أو تسجيل ضمان.');
-    setProcessing(false);
   };
 
   const handleWalletPayment = async () => {
@@ -459,7 +456,7 @@ export default function PaymentPage() {
           >
             <Button
               onClick={paymentMethod === "wallet" ? handleWalletPayment : handleCardPayment}
-              disabled={processing || (paymentMethod === "wallet" && (client?.wallet_balance || 0) < fees.totalAmount)}
+              disabled={processing || (paymentMethod === "wallet" && (client?.wallet_balance || 0) < fees.customerTotalAmount)}
               className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-6 text-lg"
             >
               {processing ? (
@@ -471,7 +468,7 @@ export default function PaymentPage() {
                 <>
                   <CreditCard className="w-6 h-6 ml-2" />
                   {paymentMethod === "wallet" 
-                    ? `الدفع من المحفظة (${fees.totalAmount.toLocaleString('ar-SA')} ريال)`
+                    ? `الدفع من المحفظة (${fees.customerTotalAmount.toLocaleString('ar-SA')} ريال شامل الضريبة)`
                     : "الدفع بالبطاقة غير متاح حالياً"
                   }
                 </>
