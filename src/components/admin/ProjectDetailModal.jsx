@@ -61,9 +61,7 @@ export default function ProjectDetailModal({ open, onOpenChange, project, lookup
 
       try {
         const [proposals, contracts, transactions, logs, milestones, messages, engineers] = await Promise.all([
-          project.base44_id
-            ? read("proposal staging", supabase.from("base44_proposal_migration_staging").select("*").eq("project_base44_id", project.base44_id).order("created_at", { ascending: false }))
-            : Promise.resolve([]),
+          read("project offers", supabase.from("project_offers").select("*").eq("project_id", project.id).order("created_at", { ascending: false })),
           read("contracts", supabase.from("project_contracts").select("*").eq("project_id", project.id).order("created_at", { ascending: false })),
           read("wallet transactions", supabase.from("wallet_transactions").select("*").eq("project_id", project.id).order("created_at", { ascending: false })),
           read("activity", supabase.from("project_activity").select("*").eq("project_id", project.id).order("created_at", { ascending: false })),
@@ -75,11 +73,16 @@ export default function ProjectDetailModal({ open, onOpenChange, project, lookup
         const engineerMap = {};
         (engineers || []).forEach((engineer) => {
           if (engineer.id) engineerMap[engineer.id] = engineer;
+          if (engineer.user_id) engineerMap[engineer.user_id] = engineer;
           if (engineer.base44_id) engineerMap[engineer.base44_id] = engineer;
         });
         const proposalsWithNames = (proposals || []).map((proposal) => ({
           ...proposal,
-          engineer_name: engineerMap[proposal.engineer_id || proposal.engineer_base44_id]?.full_name || "غير معروف",
+          engineer_id: proposal.engineer_id || proposal.engineer_user_id || null,
+          price: proposal.price ?? proposal.amount ?? 0,
+          delivery_days: proposal.delivery_days ?? proposal.duration_days ?? 0,
+          cover_letter: proposal.cover_letter ?? proposal.proposal ?? "",
+          engineer_name: engineerMap[proposal.engineer_id || proposal.engineer_user_id || proposal.engineer_base44_id]?.full_name || "غير معروف",
         }));
 
         if (!cancelled) {
