@@ -953,6 +953,32 @@ bytlyCompat.functions = {
     }
     if (name === 'createContractFromProposal') return { data: await createContractFromProposalSupabase(payload?.proposal_id) };
 
+    if (name === 'payFromWallet') {
+      const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
+      const user = authData?.user;
+      if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً');
+      if (payload?.payment_type === 'milestone' && payload?.milestone_id) {
+        const { data: milestone, error: milestoneError } = await withHardTimeout(
+          supabase.from('project_milestones').select('id,project_id').eq('id', payload.milestone_id).maybeSingle(),
+          10000,
+          'انتهت مهلة قراءة مرحلة المشروع'
+        );
+        if (milestoneError || !milestone) throw new Error('لم يتم العثور على مرحلة المشروع');
+        const projectId = payload?.project_id || milestone.project_id;
+        const { data, error } = await withHardTimeout(
+          supabase.rpc('fund_project_milestone_from_wallet', { p_project_id: projectId, p_milestone_id: milestone.id }),
+          20000,
+          'انتهت مهلة حجز مبلغ المرحلة'
+        );
+        if (error) throw new Error(error.message || 'تعذر الدفع من المحفظة');
+        if (!data?.ok) throw new Error(data?.reason || 'تعذر الدفع من المحفظة');
+        return { data: { success: true, message: 'تم حجز دفعة المرحلة في الضمان', ...data } };
+      }
+      if (payload?.payment_type === 'design') {
+        throw new Error('شراء التصاميم من المحفظة لم يُرحّل بعد؛ لم يتم خصم أي مبلغ');
+      }
+      throw new Error('نوع عملية الدفع غير مدعوم');
+    }
     if (name === 'requestMilestonePayment') {
       const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
       const user = authData?.user;
