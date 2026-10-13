@@ -916,6 +916,12 @@ bytlyCompat.functions = {
       if (!googleData?.success || !googleData?.event?.id) {
         throw new Error(googleData?.error || 'تعذر إنشاء حدث الاجتماع في Google Calendar');
       }
+      if (!googleData?.meet_link) {
+        await supabase.functions.invoke('google-service', {
+          body: { action: 'calendarDelete', data: { eventId: googleData.event.id } },
+        }).catch(() => {});
+        throw new Error('أنشأ Google Calendar الحدث دون رابط Google Meet. لم يتم تأكيد الحجز؛ أعد ربط Google Calendar وتأكد من صلاحيات إنشاء الاجتماعات.');
+      }
 
       const row = {
         project_id: payload?.project_id || null,
@@ -989,11 +995,17 @@ bytlyCompat.functions = {
         'انتهت مهلة إنشاء اجتماع Google Meet'
       );
       if (error) throw new Error(error.message || 'تعذر إنشاء اجتماع Google Meet');
-      if (!data?.success) throw new Error(data?.error || 'تعذر إنشاء اجتماع Google Meet');
+      if (!data?.success || !data?.event?.id) throw new Error(data?.error || 'تعذر إنشاء اجتماع Google Meet');
+      if (!data?.meet_link) {
+        await supabase.functions.invoke('google-service', {
+          body: { action: 'calendarDelete', data: { eventId: data.event.id } },
+        }).catch(() => {});
+        throw new Error('لم يُرجع Google رابط Meet صالحًا؛ لم يتم تأكيد إنشاء الاجتماع. أعد ربط Google Calendar وتحقق من صلاحيات Google Meet.');
+      }
       return {
         data: {
           success: true,
-          meet_link: data.meet_link || null,
+          meet_link: data.meet_link,
           google_calendar_link: data.event_link || null,
           calendar_link: data.event_link || null,
           event_id: data.event?.id || null,
