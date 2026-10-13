@@ -190,6 +190,9 @@ const AuthenticatedApp = () => {
     <Route path="/forgot-password" element={<ForgotPassword />} />
     <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/mcp-consent" element={<MCPConsent />} />
+    <Route path="/audiences/contractors" element={lazyRoute(ContractorsLanding, "ContractorsLanding")} />
+    <Route path="/audiences/engineering-firms" element={lazyRoute(EngineeringFirmsLanding, "EngineeringFirmsLanding")} />
+    <Route path="/audiences/consulting-teams" element={lazyRoute(ConsultingTeamsLanding, "ConsultingTeamsLanding")} />
     {Object.entries(Pages).map(([name, Component]) => <Route key={name} path={`/${name}`} element={publicPages.includes(name) ? lazyRoute(Component, name) : protectedRoute(Component, name)} />)}
     <Route path="*" element={<NotFoundError />} />
   </Routes>;
