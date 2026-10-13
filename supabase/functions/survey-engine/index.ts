@@ -78,6 +78,23 @@ Deno.serve(async (req: Request) => {
       return json({ success: true, profile: data });
     }
 
+    if (action === "profile") {
+      const { data, error } = await admin.from("surveyor_profiles").select("*").eq("user_id", user.id).maybeSingle();
+      if (error) return json({ error: error.message }, 400);
+      return json({ profile: data || null });
+    }
+
+    if (action === "accept_terms") {
+      const { data, error } = await admin.from("surveyor_profiles")
+        .update({ terms_accepted: true, terms_accepted_date: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .eq("user_id", user.id)
+        .select("id,user_id,full_name,email,terms_accepted,terms_accepted_date")
+        .maybeSingle();
+      if (error) return json({ error: error.message }, 400);
+      if (!data) return json({ error: "SURVEYOR_PROFILE_NOT_FOUND" }, 404);
+      return json({ success: true, profile: data });
+    }
+
     if (action === "create") {
       const latitude = Number(body.latitude);
       const longitude = Number(body.longitude);
