@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, TrendingUp, MailOpen, MousePointerClick, CheckCircle, XCircle } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageContext";
@@ -14,11 +14,13 @@ export default function EmailAnalyticsTab() {
   useEffect(() => {
     (async () => {
       try {
-        const [sent, camps] = await Promise.all([
-          base44.entities.SentEmail.list("-created_date", 500),
-          base44.entities.EmailCampaign.list("-created_date", 100),
+        const [{ data: sent, error: sentError }, { data: camps, error: campaignsError }] = await Promise.all([
+          supabase.from("email_logs").select("id,to_email,subject,body,source,status,sent_at,created_at").order("created_at", { ascending: false }).limit(500),
+          supabase.from("email_campaigns").select("id,status,open_count,click_count,sent_count,created_at").order("created_at", { ascending: false }).limit(100),
         ]);
-        setEmails(sent || []);
+        if (sentError) throw sentError;
+        if (campaignsError) throw campaignsError;
+        setEmails((sent || []).map(e => ({ ...e, created_date: e.created_at, date: e.sent_at || e.created_at })));
         setCampaigns(camps || []);
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
