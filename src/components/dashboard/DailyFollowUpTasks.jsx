@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +34,8 @@ export default function DailyFollowUpTasks() {
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
-      const all = await base44.entities.Engineer.filter({ status: "approved" }, "-created_date", 500);
+      const { data: all, error } = await supabase.from("engineers").select("*").eq("status", "approved").order("created_at", { ascending: false }).limit(500);
+      if (error) throw error;
       // Filter: has at least one missing field AND not followed up today
       const needsFollowUp = all.filter((eng) => {
         const missing = PROFILE_CHECKS.filter((c) => !c.check(eng));
@@ -54,9 +55,8 @@ export default function DailyFollowUpTasks() {
   const handleMarkContacted = async (eng) => {
     setActing(eng.id);
     try {
-      await base44.entities.Engineer.update(eng.id, {
-        last_followup_date: new Date().toISOString(),
-      });
+      const { error } = await supabase.from("engineers").update({ last_followup_date: new Date().toISOString() }).eq("id", eng.id);
+      if (error) throw error;
       setEngineers((prev) => prev.filter((e) => e.id !== eng.id));
     } catch (err) {
       alert("حدث خطأ في التحديث");
