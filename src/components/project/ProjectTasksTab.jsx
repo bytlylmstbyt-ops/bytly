@@ -35,7 +35,7 @@ async function logTaskActivity({ projectId, user, action, entityId, metadata = {
 }
 async function resolveUserId(email) {
   if (!email || !supabase) return null;
-  const { data, error } = await supabase.from("profiles").select("user_id").ilike("email", email).maybeSingle();
+  const { data, error } = await supabase.from("profiles").select("id,user_id").ilike("email", email).maybeSingle();
   if (error) throw error;
   return data?.user_id || data?.id || null;
 }
