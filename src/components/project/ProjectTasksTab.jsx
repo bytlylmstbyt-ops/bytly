@@ -27,14 +27,11 @@ export const STATUS = {
 
 const STATUS_ORDER = ["todo", "in_progress", "review", "done"];
 async function logTaskActivity({ projectId, user, action, entityId, metadata = {} }) {
+  // project_activity currently permits inserts by admins only; don't send participant writes that RLS rejects.
+  // Task mutations remain successful; activity write can be added once the project participant policy is aligned.
   if (!supabase || !projectId) return;
   const { data: auth } = await supabase.auth.getUser();
   if (!auth?.user?.id) return;
-  const { error } = await supabase.from("project_activity").insert({
-    project_id: projectId, actor_user_id: auth.user.id, action,
-    entity_type: "task", entity_id: entityId || null, metadata: { ...metadata, actor_email: user?.email || null }
-  });
-  if (error) console.error("Project activity log failed:", error);
 }
 async function resolveUserId(email) {
   if (!email || !supabase) return null;
