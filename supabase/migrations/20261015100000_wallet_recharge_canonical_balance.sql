@@ -39,6 +39,9 @@ begin
     return jsonb_build_object('ok', false, 'reason', 'order_not_pending', 'status', v_tx.status);
   end if;
 
+  -- Serialize completions that present the same gateway payment ID to prevent double credit.
+  perform pg_advisory_xact_lock(hashtext(p_payment_id));
+
   if exists (
     select 1 from public.wallet_transactions
     where reference = p_payment_id and id <> p_order_id
