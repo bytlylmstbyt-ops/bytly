@@ -157,3 +157,8 @@ begin
 end $$;
 revoke all on function public.bytly_cancel_survey_escrow(uuid,uuid) from public, anon, authenticated;
 grant execute on function public.bytly_cancel_survey_escrow(uuid,uuid) to service_role;
+
+-- Preserve the richer survey-rating fields previously collected in Base44.
+alter table public.project_reviews add column if not exists quality_rating integer not null default 0;
+alter table public.project_reviews add column if not exists delivery_rating integer not null default 0;
+alter table public.project_reviews add column if not exists communication_rating integer not null default 0;
