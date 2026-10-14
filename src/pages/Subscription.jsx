@@ -74,7 +74,18 @@ export default function SubscriptionPage() {
   const [banner, setBanner] = useState(null); // 'success' | 'canceled'
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => { const u = data?.user; return u ? { id:u.id,user_id:u.id,email:u.email,full_name:u.user_metadata?.full_name||u.user_metadata?.name||'',role:u.user_metadata?.role||'user' } : null; }).then(setUser).catch(() => {});
+    supabase.auth.getUser().then(async ({ data, error }) => {
+      const u = data?.user;
+      if (error || !u) return null;
+      const { data: profile } = await supabase.from("profiles").select("role").eq("user_id", u.id).maybeSingle();
+      return {
+        id: u.id,
+        user_id: u.id,
+        email: u.email,
+        full_name: u.user_metadata?.full_name || u.user_metadata?.name || "",
+        role: String(profile?.role || u.app_metadata?.role || u.user_metadata?.role || "user").toLowerCase(),
+      };
+    }).then(setUser).catch(() => setUser(null));
     const p = new URLSearchParams(window.location.search);
     if (p.get("success")) setBanner("success");
     else if (p.get("canceled")) setBanner("canceled");
@@ -86,17 +97,32 @@ export default function SubscriptionPage() {
       return;
     }
     if (!user) {
-      sessionStorage.setItem('loginReturnUrl', window.location.pathname);
-      window.location.href = '/login';
+      sessionStorage.setItem("loginReturnUrl", window.location.pathname);
+      window.location.href = "/login";
       return;
     }
+
+    // The currently deployed checkout endpoint only supports contractor/supplier
+    // subscription accounts. Do not send general client/engineer plans to it.
+    const providerType = ["contractor", "supplier"].includes(user.role) ? user.role : null;
+    if (!providerType) {
+      alert("الاشتراك المدفوع لهذا النوع من الحسابات لم يُفعّل بعد. لم يتم إنشاء عملية دفع أو خصم أي مبلغ.");
+      return;
+    }
+
     setLoadingId(plan.price_id);
-    const res = await base44.functions.invoke("createSubscriptionCheckout", {
-      price_id: plan.price_id,
-      plan_name: plan.name,
-    });
-    setLoadingId(null);
-    if (res.data?.url) window.location.href = res.data.url;
+    try {
+      const { data, error } = await supabase.functions.invoke("create-subscription-checkout", {
+        body: { price_id: plan.price_id, plan_name: plan.name, provider_type: providerType },
+      });
+      if (error) throw error;
+      if (!data?.url) throw new Error(data?.error || "لم يتم إنشاء رابط دفع صالح");
+      window.location.href = data.url;
+    } catch (error) {
+      alert(error?.message || "تعذر تجهيز الاشتراك. لم يتم خصم أي مبلغ.");
+    } finally {
+      setLoadingId(null);
+    }
   };
 
   return (
