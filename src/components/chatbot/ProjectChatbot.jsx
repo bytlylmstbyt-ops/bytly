@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Loader2, Bot, User, AlertTriangle, X, ChevronDown, ChevronUp, Paperclip } from "lucide-react";
@@ -72,14 +72,16 @@ export default function ProjectChatbot({ projectId, projectTitle }) {
     setLoading(true);
     try {
       const conversationHistory = messages.slice(-6);
-      const res = await base44.functions.invoke("projectAIChatbot", {
-        project_id: projectId,
-        user_message: text,
-        conversation_history: conversationHistory,
-        attachments: attachments.map(a => a.url),
+      const { data, error } = await supabase.functions.invoke("project-ai-chatbot", {
+        body: {
+          project_id: projectId,
+          user_message: text,
+          conversation_history: conversationHistory,
+          attachments: attachments.map(a => a.url),
+        },
       });
-
-      const data = res.data;
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "تعذر تشغيل مساعد المشروع.");
 
       if (data.delay_alerts) setDelayAlerts(data.delay_alerts);
       if (data.project_summary) setProjectSummary(data.project_summary);
