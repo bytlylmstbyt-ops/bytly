@@ -8,14 +8,20 @@ const km=(a:number,b:number,c:number,d:number)=>{const r=6371,x=(c-a)*Math.PI/18
 Deno.serve(async(req:Request)=>{
  if(req.method==="OPTIONS")return new Response("ok",{headers:cors});
  if(req.method!=="POST")return reply({error:"Method not allowed"},405);
- const h=req.headers.get("Authorization");if(!h?.startsWith("Bearer "))return reply({error:"Authentication required"},401);
  const url=Deno.env.get("SUPABASE_URL"),anon=Deno.env.get("SUPABASE_ANON_KEY"),key=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
  if(!url||!anon||!key)return reply({error:"Supabase configuration missing"},503);
+ const db=createClient(url,key);
+ let b:Record<string,unknown>,a:string;
+ try{b=await req.json();a=str(b.action);}catch{return reply({error:"Invalid JSON body"},400);}
+ // Public directory returns only approved, non-sensitive fields. All other actions require a valid Supabase user.
+ if(a==="directory"){
+  const {data,error}=await db.from("surveyor_profiles").select("id,full_name,city,bio,license_number,years_experience,rating,status").eq("status","approved").order("rating",{ascending:false}).limit(200);
+  if(error)throw error;return reply({surveyors:data||[]});
+ }
+ const h=req.headers.get("Authorization");if(!h?.startsWith("Bearer "))return reply({error:"Authentication required"},401);
  const caller=createClient(url,anon,{global:{headers:{Authorization:h}}});
  const {data:{user},error:authError}=await caller.auth.getUser();if(authError||!user)return reply({error:"جلسة الدخول غير صالحة"},401);
- const db=createClient(url,key);
  try{
- const b=await req.json(),a=str(b.action);
  const {data:roleRow}=await db.from("profiles").select("role").eq("user_id",user.id).maybeSingle();
  const admin=String(roleRow?.role||"").toLowerCase()==="admin";
  const {data:sv,error:svErr}=await db.from("surveyor_profiles").select("*").eq("user_id",user.id).maybeSingle();if(svErr)throw svErr;
@@ -48,10 +54,6 @@ Deno.serve(async(req:Request)=>{
   if(appointment.client_user_id!==user.id&&appointment.provider_user_id!==user.id&&!admin)return reply({error:"غير مصرح لك بإلغاء الموعد"},403);
   if(["completed","cancelled"].includes(appointment.status))return reply({error:"الموعد ملغى أو مكتمل بالفعل"},400);
   const {error}=await db.from("consultation_appointments").update({status:"cancelled",updated_at:new Date().toISOString()}).eq("id",id);if(error)throw error;return reply({success:true});
- }
- if(a==="directory"){
-  const {data,error}=await db.from("surveyor_profiles").select("id,full_name,city,bio,license_number,years_experience,rating,status").eq("status","approved").order("rating",{ascending:false}).limit(200);
-  if(error)throw error;return reply({surveyors:data||[]});
  }
  if(a==="profile")return reply({profile:sv||null});
  if(a==="register"){
