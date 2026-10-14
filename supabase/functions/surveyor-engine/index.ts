@@ -49,6 +49,10 @@ Deno.serve(async(req:Request)=>{
   if(["completed","cancelled"].includes(appointment.status))return reply({error:"الموعد ملغى أو مكتمل بالفعل"},400);
   const {error}=await db.from("consultation_appointments").update({status:"cancelled",updated_at:new Date().toISOString()}).eq("id",id);if(error)throw error;return reply({success:true});
  }
+ if(a==="directory"){
+  const {data,error}=await db.from("surveyor_profiles").select("id,full_name,city,bio,license_number,years_experience,rating,status").eq("status","approved").order("rating",{ascending:false}).limit(200);
+  if(error)throw error;return reply({surveyors:data||[]});
+ }
  if(a==="profile")return reply({profile:sv||null});
  if(a==="register"){
   if(sv)return reply({error:"لديك ملف مساح بالفعل"},409);
