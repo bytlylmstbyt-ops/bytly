@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { supabase } from "@/lib/supabaseClient";
-import { uploadScopedFile } from "@/lib/projectFileStorage";
+import { uploadScopedFile, resolveProjectFileUrl } from "@/lib/projectFileStorage";
 import { motion } from "framer-motion";
 import { 
   Briefcase, MapPin, Calendar, DollarSign, 
@@ -44,6 +44,26 @@ export default function CreateProject() {
   });
   
   const [showMilestones, setShowMilestones] = useState(false);
+  const [attachmentPreviewUrls, setAttachmentPreviewUrls] = useState({});
+
+  useEffect(() => {
+    let cancelled = false;
+    const resolvePreviews = async () => {
+      const entries = await Promise.all((formData.attachments || []).map(async (value) => {
+        try {
+          return [value, await resolveProjectFileUrl(value)];
+        } catch (error) {
+          console.error("Failed to resolve project attachment preview:", error);
+          return [value, null];
+        }
+      }));
+      if (!cancelled) {
+        setAttachmentPreviewUrls(Object.fromEntries(entries.filter(([, url]) => Boolean(url))));
+      }
+    };
+    resolvePreviews();
+    return () => { cancelled = true; };
+  }, [formData.attachments]);
 
   const handleAIComplete = (aiData) => {
     setFormData(prev => ({
@@ -540,7 +560,7 @@ export default function CreateProject() {
                       <div key={index} className="relative group">
                         <div className="w-20 h-20 rounded-lg overflow-hidden bg-slate-100">
                           {url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                            <img src={url} alt="" className="w-full h-full object-cover" />
+                            <img src={attachmentPreviewUrls[url] || undefined} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
                               <FileText className="w-8 h-8 text-slate-400" />
