@@ -151,8 +151,29 @@ export default function ProjectProposals() {
 
   const [acceptingId, setAcceptingId] = useState(null);
 
-  const handleAccept = async () => {
-    window.alert("قبول العرض يجب أن يتم عبر إجراء خادمي ذري يتحقق من صاحب المشروع، ويمنع قبول عرضين، وينشئ العقد بشكل آمن. أوقفنا التغيير المباشر مؤقتًا لحماية المشروع والمدفوعات.");
+  const handleAccept = async (offerId) => {
+    if (!offerId) return;
+    setAcceptingId(offerId);
+    setLoadError("");
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData?.user?.id) throw new Error("سجّل الدخول أولًا لقبول العرض.");
+      const { data, error } = await supabase.rpc("accept_project_offer", { p_offer_id: offerId });
+      if (error) throw error;
+      if (!data?.ok || !data?.contract_id) throw new Error(data?.error || "لم يتم إنشاء العقد؛ لم يُعتمد قبول العرض.");
+      await loadData(true);
+      window.alert(data.already_accepted
+        ? "هذا العرض مقبول بالفعل، والعقد محفوظ."
+        : "تم قبول العرض وإنشاء مسودة العقد بنجاح. راجع العقد وأكمل شروطه وتوقيعاته قبل أي دفعة.");
+    } catch (error) {
+      console.error("Offer acceptance failed:", error);
+      const message = error?.message || "تعذر قبول العرض.";
+      setLoadError(message);
+      window.alert(message);
+    } finally {
+      setAcceptingId(null);
+    }
   };
 
   const runBulk = async (action) => {
