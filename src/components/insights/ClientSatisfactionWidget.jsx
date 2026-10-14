@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, TrendingUp, AlertTriangle } from "lucide-react";
@@ -15,17 +15,57 @@ export default function ClientSatisfactionWidget({ projectId }) {
   }, [projectId]);
 
   const fetchAnalysis = async () => {
+    if (!projectId) {
+      setError("معرّف المشروع غير متوفر");
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
-      const response = await base44.functions.invoke("analyzeClientSatisfaction", {
-        project_id: projectId
-      });
-      
-      if (response.data.success) {
-        setAnalysis(response.data.analysis);
+      setError(null);
+      setAnalysis(null);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData?.user) throw new Error("يرجى تسجيل الدخول لعرض تقييمات المشروع");
+      const { data: reviews, error: reviewsError } = await supabase
+        .from("project_reviews")
+        .select("rating,quality_rating,communication_rating,delivery_rating,comment,created_at")
+        .eq("project_id", projectId)
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (reviewsError) throw reviewsError;
+      const rows = reviews || [];
+      if (!rows.length) {
+        setAnalysis(null);
+        setError("لا توجد تقييمات مسجلة لهذا المشروع حتى الآن");
+        return;
       }
+      const average = (field) => {
+        const values = rows.map(row => Number(row[field])).filter(value => Number.isFinite(value) && value >= 0 && value <= 5);
+        return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+      };
+      const overall = average("rating");
+      const score = overall == null ? 0 : Math.round(overall * 2 * 10) / 10;
+      const positive = [];
+      const needsAttention = [];
+      const dimensions = [
+        ["جودة الخدمة", average("quality_rating")],
+        ["التواصل", average("communication_rating")],
+        ["الالتزام بالتسليم", average("delivery_rating")],
+      ];
+      dimensions.forEach(([label, value]) => {
+        if (value == null) return;
+        if (value >= 4) positive.push(label + " (" + value.toFixed(1) + "/5)");
+        if (value < 3) needsAttention.push(label + " (" + value.toFixed(1) + "/5)");
+      });
+      setAnalysis({
+        satisfaction_score: score,
+        positive_sentiments: positive,
+        negative_sentiments: needsAttention,
+        recommendations: overall < 3 ? ["راجع الملاحظات المسجلة مع مقدم الخدمة قبل إغلاق المشروع."] : [],
+        summary: "المؤشر مبني على " + rows.length + " تقييم مسجل، ومتوسط التقييم العام " + (overall == null ? "غير متوفر" : overall.toFixed(1) + " من 5") + ". هذا ملخص إحصائي للتقييمات وليس تحليل مشاعر بالذكاء الاصطناعي."
+      });
     } catch (err) {
-      setError(err.message);
+      setError(err?.message || "تعذر تحميل تقييمات المشروع");
     } finally {
       setLoading(false);
     }
@@ -51,7 +91,7 @@ export default function ClientSatisfactionWidget({ projectId }) {
           <CardTitle>رضا العميل</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-slate-500">لم يتمكن من تحليل البيانات</p>
+          <p className="text-sm text-slate-500">لا تتوفر بيانات كافية لعرض مؤشر الرضا</p>
         </CardContent>
       </Card>
     );
@@ -78,7 +118,7 @@ export default function ClientSatisfactionWidget({ projectId }) {
             {analysis.satisfaction_score}/10 - {getSatisfactionLabel(analysis.satisfaction_score)}
           </Badge>
         </div>
-        <CardDescription>تحليل مدفوع بـ AI لرضا العميل</CardDescription>
+        <CardDescription>ملخص إحصائي مبني على تقييمات المشروع</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Positive Sentiments */}
