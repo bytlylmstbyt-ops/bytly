@@ -43,6 +43,87 @@ const entities = new Proxy({}, { get(target, name) {
   return entityCache.get(name);
 }});
 
+const createProjectSupabase = async (payload = {}) => {
+  const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
+  const user = authData?.user;
+  if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً');
+
+  const title = String(payload.title || payload.name || '').trim();
+  if (!title) throw new Error('عنوان المشروع مطلوب');
+
+  const allowed = [
+    'description', 'category', 'project_type', 'location', 'address',
+    'start_date', 'deadline', 'budget_min', 'budget_max', 'currency',
+    'attachments', 'service_scope', 'stage_count', 'is_direct_hire'
+  ];
+  const project = { title, client_user_id: user.id, status: 'draft', lifecycle_status: 'draft' };
+  for (const key of allowed) {
+    if (payload[key] !== undefined) project[key] = payload[key];
+  }
+  if (project.budget_min != null && (!Number.isFinite(Number(project.budget_min)) || Number(project.budget_min) < 0)) {
+    throw new Error('الميزانية الدنيا غير صالحة');
+  }
+  if (project.budget_max != null && (!Number.isFinite(Number(project.budget_max)) || Number(project.budget_max) < 0)) {
+    throw new Error('الميزانية العليا غير صالحة');
+  }
+  if (project.budget_min != null && project.budget_max != null && Number(project.budget_min) > Number(project.budget_max)) {
+    throw new Error('الميزانية الدنيا لا يمكن أن تتجاوز الميزانية العليا');
+  }
+
+  const { data, error } = await withHardTimeout(
+    supabase.from('projects').insert(project).select('*').single(),
+    15000,
+    'انتهت مهلة إنشاء المشروع'
+  );
+  if (error) throw new Error(error.message || 'تعذر إنشاء المشروع');
+  return data;
+};
+
+const submitProjectOfferSupabase = async (payload = {}) => {
+  const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
+  const user = authData?.user;
+  if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً');
+
+  const projectId = payload.project_id || payload.projectId;
+  if (!projectId) throw new Error('رقم المشروع مطلوب لإرسال العرض');
+  const amount = Number(payload.amount ?? payload.proposed_amount);
+  if (!Number.isFinite(amount) || amount <= 0) throw new Error('قيمة العرض يجب أن تكون أكبر من صفر');
+
+  const { data: project, error: projectError } = await withHardTimeout(
+    supabase.from('projects').select('id,client_user_id,status,lifecycle_status').eq('id', projectId).maybeSingle(),
+    10000,
+    'انتهت مهلة التحقق من المشروع'
+  );
+  if (projectError) throw new Error(projectError.message || 'تعذر التحقق من المشروع');
+  if (!project) throw new Error('المشروع غير موجود');
+  if (project.client_user_id === user.id) throw new Error('لا يمكنك تقديم عرض على مشروعك');
+  if (!['open', 'published', 'active'].includes(String(project.status || '').toLowerCase()) &&
+      !['open', 'published', 'active'].includes(String(project.lifecycle_status || '').toLowerCase())) {
+    throw new Error('المشروع غير مفتوح لاستقبال العروض');
+  }
+
+  const offer = {
+    project_id: projectId,
+    engineer_user_id: user.id,
+    amount,
+    currency: String(payload.currency || 'SAR'),
+    proposal: String(payload.proposal || payload.description || '').trim() || null,
+    duration_days: payload.duration_days == null ? null : Math.max(1, Math.floor(Number(payload.duration_days))),
+    attachments: Array.isArray(payload.attachments) ? payload.attachments : [],
+    portfolio_items: Array.isArray(payload.portfolio_items) ? payload.portfolio_items : [],
+    status: 'pending'
+  };
+  if (offer.duration_days != null && !Number.isFinite(offer.duration_days)) throw new Error('مدة التنفيذ غير صالحة');
+
+  const { data, error } = await withHardTimeout(
+    supabase.from('project_offers').insert(offer).select('*').single(),
+    15000,
+    'انتهت مهلة إرسال العرض'
+  );
+  if (error) throw new Error(error.message || 'تعذر إرسال العرض');
+  return data;
+};
+
 const unmigratedFunctions = { invoke: async (name) => { throw new Error('وظيفة غير مرحّلة إلى Supabase: ' + name); } };
 const bytlyCompat = {
   auth: {},
@@ -1096,6 +1177,10 @@ const bookSurveyAppointmentSupabase = async (payload = {}) => {
 bytlyCompat.functions = {
   ...unmigratedFunctions,
   invoke: async (name, payload) => {
+    if (name === 'createProject') return { data: await createProjectSupabase(payload) };
+    if (name === 'submitProjectOffer' || name === 'createProjectOffer' || name === 'submitProposal') {
+      return { data: await submitProjectOfferSupabase(payload) };
+    }
     if (name === 'bookSurveyAppointment') return await bookSurveyAppointmentSupabase(payload);
     if (name === 'uploadFile') {
       if (!payload?.file) throw new Error('لم يتم تحديد الملف المراد رفعه');
