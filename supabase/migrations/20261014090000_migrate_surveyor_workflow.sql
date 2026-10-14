@@ -92,9 +92,16 @@ create or replace function public.bytly_hold_survey_escrow(
 ) returns public.survey_requests
 language plpgsql security definer set search_path=public
 as $$
-declare v_wallet public.wallet_accounts; v_request public.survey_requests;
+declare v_wallet public.wallet_accounts; v_request public.survey_requests; v_legacy_balance numeric(12,2);
 begin
   select * into v_wallet from public.wallet_accounts where user_id=p_client_user_id and currency='SAR' and status='active' for update;
+  if not found then
+    select coalesce(wallet_balance,0) into v_legacy_balance from public.clients where user_id=p_client_user_id;
+    insert into public.wallet_accounts(user_id,currency,available_balance,held_balance,status)
+    values(p_client_user_id,'SAR',greatest(coalesce(v_legacy_balance,0),0),0,'active')
+    on conflict (user_id,currency) do nothing;
+    select * into v_wallet from public.wallet_accounts where user_id=p_client_user_id and currency='SAR' for update;
+  end if;
   if not found then raise exception 'WALLET_NOT_FOUND'; end if;
   if coalesce(v_wallet.available_balance,0) < p_total then raise exception 'INSUFFICIENT_BALANCE'; end if;
   update public.wallet_accounts set available_balance=available_balance-p_total, held_balance=held_balance+p_total, updated_at=now() where id=v_wallet.id;
