@@ -107,7 +107,7 @@ export default function AppointmentModal({ targetId, projectId, currentUser, tar
       setSubmitted(true);
     } catch (e) {
       console.error(e);
-      setResult({ error: e?.message || "تعذر حجز الموعد." });
+      window.alert(e?.message || "تعذر حجز الموعد.");
     } finally {
       setLoading(false);
     }
