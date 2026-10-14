@@ -5,8 +5,7 @@ import { useLanguage } from "@/components/i18n/LanguageContext";
 
 export default function TestimonialsSection() {
   const { t } = useLanguage();
-  // Use the existing localized fallback content; public testimonials are not
-  // fetched from a legacy Base44 entity.
+  // Use the existing localized testimonial content.
   const items = t('testimonials.defaults') || [];
 
   return (
