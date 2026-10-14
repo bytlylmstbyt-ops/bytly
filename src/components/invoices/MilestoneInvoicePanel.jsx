@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,13 +25,27 @@ export default function MilestoneInvoicePanel({ projectId, milestoneId, isClient
   const loadInvoices = async () => {
     setLoading(true);
     try {
-      const filter = milestoneId
-        ? { milestone_id: milestoneId }
-        : { project_id: projectId, invoice_type: "project_milestone" };
-      const data = await base44.entities.Invoice.filter(filter, "-created_date");
-      setInvoices(data);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData?.user) {
+        setInvoices([]);
+        return;
+      }
+      let query = supabase
+        .from("invoices")
+        .select("id,invoice_number,project_id,milestone_id,invoice_type,status,notes,due_date,total_amount,taxable_amount,vat_amount,currency,created_at,buyer_user_id,issuer_user_id")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (milestoneId) query = query.eq("milestone_id", milestoneId);
+      else query = query.eq("project_id", projectId).eq("invoice_type", "project_milestone");
+      const { data, error } = await query;
+      if (error) throw error;
+      setInvoices((data || []).filter(invoice =>
+        invoice.buyer_user_id === authData.user.id ||
+        invoice.issuer_user_id === authData.user.id
+      ));
     } catch (e) {
-      console.error(e);
+      console.error("تعذر تحميل فواتير المرحلة من Supabase:", e);
+      setInvoices([]);
     } finally {
       setLoading(false);
     }
@@ -44,14 +58,9 @@ export default function MilestoneInvoicePanel({ projectId, milestoneId, isClient
     }
     setPaying(invoice.id);
     try {
-      const res = await base44.functions.invoke("payMilestoneInvoice", {
-        invoice_id: invoice.id,
-        success_url: `${window.location.origin}/PaymentSuccess?invoice=${invoice.id}`,
-        cancel_url: window.location.href,
-      });
-      if (res.data?.checkout_url) {
-        window.location.href = res.data.checkout_url;
-      }
+      // Invoice checkout has no migrated, source-aware payment flow yet.
+      // Fail closed instead of invoking the removed Base44 function or creating an orphan payment order.
+      alert("الدفع الإلكتروني لهذه الفاتورة لم يُربط بعد ببوابة الدفع في نسخة Supabase. لم يتم خصم أي مبلغ.");
     } catch (e) {
       console.error(e);
     } finally {
