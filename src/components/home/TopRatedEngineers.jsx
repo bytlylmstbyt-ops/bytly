@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { Star, CheckCircle, Trophy, TrendingUp, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,11 +41,14 @@ export default function TopRatedEngineers() {
   const loadTopEngineers = async () => {
     try {
       // Fetch approved engineers sorted by rating, then pick the best by composite score
-      const engineers = await base44.entities.Engineer.filter(
-        { status: "approved" },
-        "-rating",
-        20
-      );
+      const { data: engineers, error } = await supabase
+        .from("engineers")
+        .select("id, full_name, profile_image, rating, total_reviews, completed_projects, is_verified, specialization, city, status")
+        .eq("status", "approved")
+        .eq("is_verified", true)
+        .order("rating", { ascending: false })
+        .limit(20);
+      if (error) throw error;
       // Filter to those with at least one review or completed project, then rank by score
       const ranked = engineers
         .filter((e) => (e.total_reviews || 0) > 0 || (e.completed_projects || 0) > 0)
