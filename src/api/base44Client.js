@@ -180,43 +180,41 @@ const legacyEngineer = legacyBase44.entities.Engineer;
 legacyBase44.entities.Engineer = {
   ...legacyEngineer,
   filter: async (filters = {}) => {
-    const email = filters?.email?.toLowerCase?.();
-    try {
-      let q = supabase.from('engineers').select('*');
-      Object.entries(filters).forEach(([k,v]) => { if (v != null) q = q.eq(k, v); });
-      const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة بيانات المهندس');
-      if (!error && data?.length) return data;
-    } catch {}
-    try {
-      let q = supabase.from('base44_engineer_migration_staging').select('*');
-      if (email) q = q.ilike('email', email);
-      else Object.entries(filters).forEach(([k,v]) => { if (v != null && ['full_name','phone','city','specialization'].includes(k)) q = q.eq(k,v); });
-      const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة بيانات المهندس القديمة');
-      if (!error && data?.length) return data;
-    } catch {}
-    return [];
+    let q = supabase.from('engineers').select('*');
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) q = q.eq(key, value);
+    });
+    const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة بيانات المهندس');
+    if (error) throw new Error(error.message || 'تعذر قراءة بيانات المهندس من Supabase');
+    return data || [];
   },
   create: async payload => {
-  const { data: sessionData } = await withHardTimeout(supabase.auth.getSession(), 10000, 'انتهت مهلة جلسة الدخول');
-  const authUser = sessionData?.session?.user;
-  if (!authUser) throw new Error('يجب تسجيل الدخول أولاً');
-  const row = { full_name: payload.full_name, email: authUser.email || payload.email || null, phone: payload.phone || null, city: payload.city || null, country: payload.country || null, specialization: payload.specialization || null, bio: payload.bio || null, registration_number: payload.registration_number || null, years_experience: Number(payload.years_experience) || 0, completed_projects: Number(payload.completed_projects) || 0, graduation_certificate_url: payload.graduation_certificate_url || null, saudi_engineers_council_certificate_url: payload.saudi_engineers_council_certificate_url || null, profile_image: payload.profile_image || null, is_verified: false, is_real: true, status: 'pending', rating: 0, total_reviews: 0, wallet_balance: 0, subscription_type: payload.subscription_type || 'none', is_subscription_active: Boolean(payload.is_subscription_active), subscription_start_date: payload.subscription_start_date || null, trial_end_date: payload.trial_end_date || null, user_id: authUser.id, source: 'supabase' };
-  const { data, error } = await withHardTimeout(supabase.from('engineers').insert(row).select('*').single(), 15000, 'انتهت مهلة حفظ بيانات التسجيل');
-  if (error) throw new Error(error.message || 'تعذر حفظ تسجيل المهندس');
-  return data;
-}};
-
-const resolveLegacyId = async (entity, currentId) => {
-  if (!currentId || !supabase) return currentId;
-  try {
-    const table = entity === 'Engineer' ? 'engineers' : entity === 'Client' ? 'clients' : 'projects';
-    const staging = entity === 'Engineer' ? 'base44_engineer_migration_staging' : entity === 'Client' ? 'base44_client_migration_staging' : 'base44_project_migration_staging';
-    const { data: row } = await supabase.from(table).select('email').eq('id', currentId).maybeSingle();
-    if (!row?.email) return currentId;
-    const { data: legacy } = await supabase.from(staging).select('base44_id').eq('email', row.email).maybeSingle();
-    return legacy?.base44_id || currentId;
-  } catch { return currentId; }
+    const { data: sessionData } = await withHardTimeout(supabase.auth.getSession(), 10000, 'انتهت مهلة جلسة الدخول');
+    const authUser = sessionData?.session?.user;
+    if (!authUser) throw new Error('يجب تسجيل الدخول أولاً');
+    const row = {
+      full_name: payload.full_name, email: authUser.email || payload.email || null,
+      phone: payload.phone || null, city: payload.city || null, country: payload.country || null,
+      specialization: payload.specialization || null, bio: payload.bio || null,
+      registration_number: payload.registration_number || null,
+      years_experience: Number(payload.years_experience) || 0,
+      completed_projects: Number(payload.completed_projects) || 0,
+      graduation_certificate_url: payload.graduation_certificate_url || null,
+      saudi_engineers_council_certificate_url: payload.saudi_engineers_council_certificate_url || null,
+      profile_image: payload.profile_image || null, is_verified: false, is_real: true,
+      status: 'pending', rating: 0, total_reviews: 0, wallet_balance: 0,
+      subscription_type: payload.subscription_type || 'none',
+      is_subscription_active: Boolean(payload.is_subscription_active),
+      subscription_start_date: payload.subscription_start_date || null,
+      trial_end_date: payload.trial_end_date || null, user_id: authUser.id, source: 'supabase'
+    };
+    const { data, error } = await withHardTimeout(supabase.from('engineers').insert(row).select('*').single(), 15000, 'انتهت مهلة حفظ بيانات التسجيل');
+    if (error) throw new Error(error.message || 'تعذر حفظ تسجيل المهندس');
+    return data;
+  }
 };
+
+const resolveLegacyId = async (_entity, currentId) => currentId;
 
 const legacyPermitApplication = legacyBase44.entities.PermitApplication;
 legacyBase44.entities.PermitApplication = {
@@ -303,13 +301,13 @@ legacyBase44.entities.Project = { ...legacyProject,
 const legacyClient = legacyBase44.entities.Client;
 legacyBase44.entities.Client = {
   ...legacyClient,
-  filter: async filters => {
-    try {
-      let q = supabase.from('clients').select('*');
-      Object.entries(filters||{}).forEach(([k,v])=>{q=v===null?q.is(k,null):Array.isArray(v)?q.in(k,v):q.eq(k,v)});
-      const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة العميل');
-      if(!error && data?.length) return data;
-    } catch {}
+  filter: async (filters = {}) => {
+    let q = supabase.from('clients').select('*');
+    Object.entries(filters || {}).forEach(([key, value]) => {
+      if (value === null) q = q.is(key, null);
+      else if (value !== undefined) q = Array.isArray(value) ? q.in(key, value) : q.eq(key, value);
+    });
+    const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة العميل');
     if (error) throw new Error(error.message || 'تعذر قراءة العملاء من Supabase');
     return data || [];
   }
