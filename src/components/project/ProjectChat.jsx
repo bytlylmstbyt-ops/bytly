@@ -114,9 +114,10 @@ export default function ProjectChat({ projectId, project, currentUser, engineerN
           : { data: [], error: null };
         if (profilesError) throw profilesError;
         const participantUserIds = [...new Set([
-          ...lookupIds,
+          project?.client_user_id,
+          assignedEngineerUserId,
           ...(profiles || []).map(p => p.user_id).filter(Boolean)
-        ])];
+        ].filter(Boolean))];
         const isProjectParticipant = participantUserIds.includes(authUser.id);
         if (!isProjectParticipant) throw new Error("الدردشة متاحة لأطراف المشروع المسجلين فقط.");
 
@@ -133,9 +134,8 @@ export default function ProjectChat({ projectId, project, currentUser, engineerN
           }).select("id,created_by").single();
           if (createError) throw createError;
           conversation = created;
-          const memberIds = [...new Set([...participantUserIds, authUser.id])];
           const { error: membershipError } = await supabase.from("conversation_members").upsert(
-            memberIds.map(user_id => ({ conversation_id: conversation.id, user_id })),
+            { conversation_id: conversation.id, user_id: authUser.id },
             { onConflict: "conversation_id,user_id", ignoreDuplicates: true }
           );
           if (membershipError) throw membershipError;
