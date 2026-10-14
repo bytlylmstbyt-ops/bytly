@@ -68,6 +68,45 @@ export async function resolveProjectFileUrl(value, expiresIn = 3600) {
   return data?.signedUrl || null;
 }
 
+/**
+ * Move uploaded draft attachments into the newly-created project's folder.
+ * Draft files are private to their uploader; project-folder files are readable
+ * by project participants under the project-files storage RLS policies.
+ */
+export async function promoteDraftProjectFiles(values, projectId) {
+  if (!supabase) throw new Error("Supabase غير مهيأ.");
+  if (!projectId) throw new Error("معرّف المشروع غير متوفر.");
+
+  const attachments = [];
+  const sourcePaths = [];
+
+  for (const value of values || []) {
+    if (!value?.startsWith(`${PREFIX}drafts/`)) {
+      attachments.push(value);
+      continue;
+    }
+
+    const sourcePath = value.slice(PREFIX.length);
+    const { data: fileData, error: downloadError } = await supabase.storage
+      .from(BUCKET)
+      .download(sourcePath);
+    if (downloadError) throw downloadError;
+
+    const fileName = sourcePath.split("/").pop() || "attachment";
+    const targetPath = `${projectId}/${crypto.randomUUID()}-${fileName}`;
+    const { error: uploadError } = await supabase.storage.from(BUCKET).upload(targetPath, fileData, {
+      upsert: false,
+      contentType: fileData.type || undefined,
+    });
+    if (uploadError) throw uploadError;
+
+    attachments.push(`${PREFIX}${targetPath}`);
+    sourcePaths.push(sourcePath);
+  }
+
+  return { attachments, sourcePaths };
+}
+
 export async function deleteProjectFile(value) {
   if (!value?.startsWith(PREFIX) || !supabase) return;
   const path = value.slice(PREFIX.length);
