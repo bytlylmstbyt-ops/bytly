@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { supabase } from "@/lib/supabaseClient";
-import { uploadScopedFile, resolveProjectFileUrl } from "@/lib/projectFileStorage";
+import { uploadScopedFile, resolveProjectFileUrl, promoteDraftProjectFiles } from "@/lib/projectFileStorage";
 import { motion } from "framer-motion";
 import { 
   Briefcase, MapPin, Calendar, DollarSign, 
@@ -201,6 +201,7 @@ export default function CreateProject() {
     }
 
     setIsLoading(true);
+    let attachmentMigrationWarning = false;
     try {
       // Resolve the authenticated Supabase user at submit time; React state can be stale.
       const { data: authResult, error: authError } = await supabase.auth.getUser();
@@ -265,6 +266,31 @@ export default function CreateProject() {
       throw new Error("لم تكتمل عملية إنشاء المشروع ومراحله. لم يتم اعتماد العملية.");
     }
 
+    // Draft files are uploader-private; move them under the project ID so RLS
+    // allows authorized project participants to create signed preview URLs.
+    if ((formData.attachments || []).some(value => value?.startsWith("supabase://project-files/drafts/"))) {
+      try {
+        const { attachments: projectAttachments, sourcePaths } = await promoteDraftProjectFiles(
+          formData.attachments,
+          newProject.id
+        );
+        const { error: attachmentUpdateError } = await supabase
+          .from("projects")
+          .update({ attachments: projectAttachments })
+          .eq("id", newProject.id)
+          .eq("client_user_id", authenticatedUser.id);
+        if (attachmentUpdateError) throw attachmentUpdateError;
+
+        if (sourcePaths.length > 0) {
+          const { error: cleanupError } = await supabase.storage.from("project-files").remove(sourcePaths);
+          if (cleanupError) console.warn("Project attachments were moved, but draft cleanup failed:", cleanupError);
+        }
+      } catch (attachmentMigrationError) {
+        attachmentMigrationWarning = true;
+        console.error("Project created, but draft attachments could not be promoted:", attachmentMigrationError);
+      }
+    }
+
     // Send project notifications through the authenticated Supabase Edge Function.
     try {
       const { data: notificationResult, error: notificationError } = await supabase.functions.invoke("notify-project-engineers", {
@@ -278,7 +304,9 @@ export default function CreateProject() {
     }
 
     setIsLoading(false);
-    alert(preselectedEngineerId ? "تم إرسال طلب الخدمة المباشرة بنجاح!" : "تم إنشاء المشروع بنجاح!");
+    alert(attachmentMigrationWarning
+      ? "تم إنشاء المشروع، لكن تعذر نقل بعض المرفقات إلى مساحة المشروع. افتحي المشروع وأعيدي رفع هذه الملفات حتى يتمكن المشاركون من عرضها."
+      : (preselectedEngineerId ? "تم إرسال طلب الخدمة المباشرة بنجاح!" : "تم إنشاء المشروع بنجاح!"));
     navigate(createPageUrl("Projects"));
     } catch (error) {
       console.error("Failed to create project:", error);
