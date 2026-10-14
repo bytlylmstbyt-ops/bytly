@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion } from "framer-motion";
 import { 
@@ -32,9 +32,26 @@ export default function InvoicePayment() {
 
   const loadInvoice = async () => {
     setIsLoading(true);
-    const [invoiceData] = await base44.entities.Invoice.filter({ id: invoiceId });
-    setInvoice(invoiceData);
-    setIsLoading(false);
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData?.user) throw new Error("يجب تسجيل الدخول أولاً");
+      const { data: invoiceData, error } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("id", invoiceId)
+        .maybeSingle();
+      if (error) throw error;
+      if (!invoiceData || ![invoiceData.buyer_user_id, invoiceData.issuer_user_id].includes(authData.user.id)) {
+        throw new Error("الفاتورة غير موجودة أو لا تملك صلاحية الوصول إليها");
+      }
+      setInvoice(invoiceData);
+    } catch (error) {
+      console.error("تعذر تحميل الفاتورة من Supabase:", error);
+      setInvoice(null);
+      alert(error?.message || "تعذر تحميل الفاتورة");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleUploadProof = async (e) => {
@@ -56,25 +73,25 @@ export default function InvoicePayment() {
     setIsSubmitting(true);
 
     try {
-      await base44.entities.Invoice.update(invoiceId, {
-        status: "paid",
-        payment_date: new Date().toISOString(),
-        payment_method: "bank_transfer",
-        payment_reference: paymentReference,
-        notes: paymentNotes
-      });
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData?.user) throw new Error("يجب تسجيل الدخول أولاً");
+      if (invoice.buyer_user_id !== authData.user.id) throw new Error("فقط صاحب الفاتورة يمكنه تقديم إثبات الدفع");
+      // A reference/proof is not proof that funds settled. Keep the invoice unpaid
+      // until a verified gateway callback or an authorized finance review confirms it.
+      const { error } = await supabase
+        .from("invoices")
+        .update({
+          payment_method: "bank_transfer",
+          payment_reference: paymentReference.trim(),
+          notes: paymentNotes.trim() || invoice.notes
+        })
+        .eq("id", invoiceId)
+        .eq("buyer_user_id", authData.user.id)
+        .neq("status", "paid");
+      if (error) throw error;
 
-      // Notify admin
-      await base44.entities.Notification.create({
-        recipient_email: "admin@bytly.com",
-        title: "دفع فاتورة جديد",
-        message: `تم تقديم دفعة للفاتورة ${invoice.invoice_number} بمبلغ ${invoice.total_amount.toLocaleString('ar-SA')} ريال`,
-        type: "payment",
-        priority: "high"
-      });
-
-      alert("تم إرسال إثبات الدفع بنجاح. سيتم مراجعته والتحقق منه خلال 24 ساعة");
-      loadInvoice();
+      alert("تم إرسال بيانات مرجع الدفع. لن تُعتبر الفاتورة مدفوعة حتى يتم التحقق من التحويل واعتماده.");
+      await loadInvoice();
     } catch (error) {
       console.error("Error:", error);
       alert("حدث خطأ");
