@@ -40,7 +40,7 @@ async function resolveUserId(email) {
   if (!email || !supabase) return null;
   const { data, error } = await supabase.from("profiles").select("user_id").ilike("email", email).maybeSingle();
   if (error) throw error;
-  return data?.user_id || null;
+  return data?.user_id || data?.id || null;
 }
 
 
@@ -264,9 +264,9 @@ export default function ProjectTasksTab({ project, user, userEngineer, engineers
       if (!supabase) throw new Error("Supabase غير مهيأ");
       const { data, error } = await supabase.from("project_tasks").select("*").eq("project_id", project.id).order("created_at", { ascending: false });
       if (error) throw error;
-      const { data: profiles, error: profileError } = await supabase.from("profiles").select("user_id,email");
+      const { data: profiles, error: profileError } = await supabase.from("profiles").select("id,user_id,email");
       if (profileError) throw profileError;
-      const emailById = Object.fromEntries((profiles || []).map(p => [p.user_id, p.email]));
+      const emailById = Object.fromEntries((profiles || []).map(p => [p.user_id || p.id, p.email]));
       setTasks((data || []).map(t => ({ ...t, assigned_to: emailById[t.assigned_to] || "", progress_percentage: Number(t.progress ?? 0) })));
     } catch (err) { console.error("Error loading tasks:", err); } finally { setLoading(false); }
   };
