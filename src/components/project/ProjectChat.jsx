@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { uploadProjectFile } from "@/lib/projectFileStorage";
+import { uploadProjectFile, resolveProjectFileUrl } from "@/lib/projectFileStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Paperclip, X, Download, Loader2, MessageSquare, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -155,21 +155,28 @@ export default function ProjectChat({ projectId, project, currentUser, engineerN
           .select("id,created_at,conversation_id,sender_user_id,body,message_type,attachments,sender_email,sender_name,sender_role")
           .eq("conversation_id", conversation.id).order("created_at", { ascending: true }).limit(200);
         if (messageError) throw messageError;
-        if (active) setMessages((rows || []).map(m => ({
+        const mappedRows = await Promise.all((rows || []).map(async m => ({
           ...m, created_date: m.created_at, content: m.body,
           sender_email: m.sender_email || (m.sender_user_id === authUser.id ? authUser.email : ""),
-          attachments: Array.isArray(m.attachments) ? m.attachments : []
+          attachments: await Promise.all((Array.isArray(m.attachments) ? m.attachments : []).map(async att => ({
+            ...att, url: await resolveProjectFileUrl(att.url).catch(() => att.url)
+          })))
         })));
+        if (active) setMessages(mappedRows);
 
         channel = supabase.channel(`project-chat-${conversation.id}`)
-          .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: `conversation_id=eq.${conversation.id}` }, payload => {
+          .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: `conversation_id=eq.${conversation.id}` }, async payload => {
             if (!active) return;
             if (payload.eventType === "DELETE") {
               setMessages(prev => prev.filter(m => m.id !== payload.old.id));
               return;
             }
             const row = payload.new;
-            const mapped = { ...row, created_date: row.created_at, content: row.body, attachments: Array.isArray(row.attachments) ? row.attachments : [] };
+            const attachments = await Promise.all((Array.isArray(row.attachments) ? row.attachments : []).map(async att => ({
+              ...att, url: await resolveProjectFileUrl(att.url).catch(() => att.url)
+            })));
+            if (!active) return;
+            const mapped = { ...row, created_date: row.created_at, content: row.body, attachments };
             setMessages(prev => payload.eventType === "INSERT"
               ? (prev.some(m => m.id === mapped.id) ? prev : [...prev, mapped])
               : prev.map(m => m.id === mapped.id ? mapped : m));
