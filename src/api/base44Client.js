@@ -9,7 +9,6 @@ const PLATFORM_OWNER_EMAIL = 'bytlylmstbyt@gmail.com';
 const PLATFORM_OWNER_ID = '2d1b547d-5ba5-4cdc-a39c-cfb60d2f52bc';
 const base44BackendUrl = import.meta.env.VITE_BASE44_APP_BASE_URL || 'https://bytly.base44.app';
 const legacyBase44 = createClient({ appId, token, requiresAuth: false, serverUrl: base44BackendUrl, appBaseUrl: base44BackendUrl });
-const legacyAuthMe = legacyBase44.auth.me.bind(legacyBase44.auth);
 const withHardTimeout = (promise, timeoutMs, message = 'انتهت مهلة الاتصال بالخدمة') => new Promise((resolve, reject) => {
   const timer = setTimeout(() => reject(new Error(message)), timeoutMs);
   Promise.resolve(promise).then(v => { clearTimeout(timer); resolve(v); }, e => { clearTimeout(timer); reject(e); });
@@ -546,9 +545,7 @@ legacyBase44.entities.ConsultationAppointment = makeSupabaseEntity('consultation
 legacyBase44.entities.ProjectTask = makeSupabaseEntity('project_tasks');
 legacyBase44.entities.ProjectMilestone = makeSupabaseEntity('project_milestones');
 
-const legacyFunctions = legacyBase44.functions;
 legacyBase44.functions = {
-  ...legacyFunctions,
   invoke: async (name, payload) => {
     if (name === 'createContractFromProposal') return { data: await createContractFromProposalSupabase(payload?.proposal_id) };
     if (name === 'bookReviewMeeting') {
