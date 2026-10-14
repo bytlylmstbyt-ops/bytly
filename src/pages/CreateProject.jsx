@@ -99,20 +99,33 @@ export default function CreateProject() {
   };
 
   const handleFileUpload = async (e) => {
-    const files = Array.from(e.target.files);
+    const input = e.target;
+    const files = Array.from(input.files || []);
+    if (files.length === 0) return;
+
     setIsLoading(true);
-    
     const uploadedUrls = [];
-    for (const file of files) {
-      const file_url = await uploadScopedFile("project-drafts", file);
-      uploadedUrls.push(file_url);
+    const failedFiles = [];
+    try {
+      for (const file of files) {
+        try {
+          const fileUrl = await uploadScopedFile("project-drafts", file);
+          uploadedUrls.push(fileUrl);
+        } catch (uploadError) {
+          console.error("Failed to upload project attachment:", file.name, uploadError);
+          failedFiles.push(file.name);
+        }
+      }
+      if (uploadedUrls.length > 0) {
+        setFormData(prev => ({ ...prev, attachments: [...prev.attachments, ...uploadedUrls] }));
+      }
+      if (failedFiles.length > 0) {
+        alert("تعذر رفع بعض الملفات: " + failedFiles.join("، ") + ". تحققي من الاتصال والصلاحيات ثم أعيدي المحاولة.");
+      }
+    } finally {
+      input.value = "";
+      setIsLoading(false);
     }
-    
-    setFormData(prev => ({
-      ...prev,
-      attachments: [...prev.attachments, ...uploadedUrls]
-    }));
-    setIsLoading(false);
   };
 
   const removeAttachment = (index) => {
