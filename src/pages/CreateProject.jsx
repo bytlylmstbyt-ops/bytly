@@ -195,6 +195,35 @@ export default function CreateProject() {
       throw new Error("تعذر التحقق من المهندس المحدد. أعيدي فتح صفحة المهندس واختاري طلب الخدمة مرة أخرى.");
     }
 
+    let finalPlan = formData.milestones.length > 0
+      ? formData.milestones.map((m, i) => ({
+          service_key: m.service_key || formData.service_scope[i] || "custom",
+          title: m.title,
+          description: m.description,
+          percentage: Number(m.percentage) || 0,
+          days: Number(m.due_days) || 7,
+        }))
+      : buildStagePlan();
+    if (finalPlan.length === 0) {
+      finalPlan = formData.project_type === "small"
+        ? [
+            { service_key: "custom", title: "المرحلة الأولى", description: "بدء وتنفيذ الخدمة المطلوبة", percentage: 50, days: 7 },
+            { service_key: "custom", title: "التسليم النهائي", description: "مراجعة وتسليم المخرجات", percentage: 50, days: 7 },
+          ]
+        : [
+            { service_key: "custom", title: "الدراسة والتخطيط", description: "تحديد المتطلبات ونطاق العمل", percentage: 15, days: 14 },
+            { service_key: "custom", title: "التصميم", description: "إعداد التصميم والمخططات", percentage: 25, days: 21 },
+            { service_key: "custom", title: "التنفيذ", description: "تنفيذ الأعمال المتفق عليها", percentage: 40, days: 60 },
+            { service_key: "custom", title: "التسليم النهائي", description: "المراجعة والتسليم", percentage: 20, days: 14 },
+          ];
+    }
+    if ((formData.project_type === "small" && finalPlan.length > 3) || (formData.project_type === "large" && finalPlan.length > 8)) {
+      throw new Error(formData.project_type === "small" ? "المشروع الصغير حدّه الأقصى 3 مراحل." : "المشروع الكبير حدّه الأقصى 8 مراحل رئيسية.");
+    }
+    if (Math.abs(finalPlan.reduce((sum, m) => sum + Number(m.percentage || 0), 0) - 100) > 0.01) {
+      throw new Error("يجب أن يساوي مجموع نسب المراحل 100% قبل إنشاء المشروع.");
+    }
+
     const { data: creationResult, error: creationError } = await supabase.rpc("create_project_with_stages", {
       p_project: {
         title: formData.title,
