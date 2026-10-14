@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
@@ -101,17 +100,16 @@ export default function Dashboard() {
     if (currentUser.role === 'admin') {
       setIsAdmin(true);
       // Load approved projects for admin
-      const approved = await base44.entities.Project.filter({ 
-        status: "technical_approved" 
-      });
+      const { data: approved, error: approvedError } = await supabase.from("projects").select("*").eq("status", "technical_approved");
+      if (approvedError) throw approvedError;
       setApprovedProjects(approved);
     }
 
     // Resolve the authenticated user's profile. A valid homeowner account
     // does not need a legacy Client row to open the dashboard.
     const [engineerData, clientData] = await Promise.all([
-      Promise.race([base44.entities.Engineer.filter({ email: currentUser.email }), new Promise(resolve => setTimeout(() => resolve([]), 5000))]).catch(() => []),
-      Promise.race([base44.entities.Client.filter({ email: currentUser.email }), new Promise(resolve => setTimeout(() => resolve([]), 5000))]).catch(() => [])
+      supabase.from("engineers").select("*").ilike("email", currentUser.email).limit(1).then(({ data, error }) => { if (error) throw error; return data || []; }).catch(() => []),
+      supabase.from("clients").select("*").ilike("email", currentUser.email).limit(1).then(({ data, error }) => { if (error) throw error; return data || []; }).catch(() => [])
     ]);
 
     if (engineerData.length > 0) {
@@ -120,9 +118,9 @@ export default function Dashboard() {
 
       // Load engineer stats
       const [portfolios, proposals, reviews] = await Promise.all([
-        Promise.race([base44.entities.Portfolio.filter({ engineer_id: engineerData[0].id }), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => []),
-        Promise.race([base44.entities.Proposal.filter({ engineer_id: engineerData[0].id }), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => []),
-        Promise.race([base44.entities.Review.filter({ engineer_id: engineerData[0].id }), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => [])
+        supabase.from("portfolios").select("*").eq("engineer_id", engineerData[0].id).then(({ data, error }) => { if (error) throw error; return data || []; }).catch(() => []),
+        supabase.from("project_offers").select("*").eq("engineer_user_id", engineerData[0].user_id || currentUser.id).order("created_at", { ascending: false }).then(({ data, error }) => { if (error) throw error; return data || []; }).catch(() => []),
+        supabase.from("project_reviews").select("*").eq("reviewee_user_id", engineerData[0].user_id || currentUser.id).order("created_at", { ascending: false }).then(({ data, error }) => { if (error) throw error; return data || []; }).catch(() => [])
       ]);
 
       setStats({
@@ -140,20 +138,22 @@ export default function Dashboard() {
       setProfile(clientData[0]);
 
       // Load client stats
-      const projects = await Promise.race([base44.entities.Project.filter({ client_id: clientData[0].id }), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => []);
+      const { data: projects, error: projectsError } = await supabase.from("projects").select("*").eq("client_user_id", clientData[0].user_id || currentUser.id).order("created_at", { ascending: false }).limit(100);
+      if (projectsError) throw projectsError;
+      const safeProjects = projects || [];
 
-      const totalSpent = projects.reduce((sum, p) => sum + (p.escrow_amount || 0), 0);
+      const totalSpent = safeProjects.reduce((sum, p) => sum + (p.escrow_amount || 0), 0);
 
       setStats({
-        totalProjects: projects.length,
-        openProjects: projects.filter(p => p.status === "open").length,
-        inProgressProjects: projects.filter(p => p.status === "in_progress").length,
-        completedProjects: projects.filter(p => p.status === "completed").length,
+        totalProjects: safeProjects.length,
+        openProjects: safeProjects.filter(p => p.status === "open").length,
+        inProgressProjects: safeProjects.filter(p => p.status === "in_progress").length,
+        completedProjects: safeProjects.filter(p => p.status === "completed").length,
         walletBalance: clientData[0].wallet_balance || 0,
         totalSpent
       });
 
-      setRecentProjects(projects.slice(0, 5));
+      setRecentProjects(safeProjects.slice(0, 5));
     }
 
     // Authenticated homeowner/investor with no legacy provider row.
