@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle
 } from "@/components/ui/dialog";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { useToast } from "@/components/ui/use-toast";
 
 const TARGET_LABELS = {
@@ -100,32 +100,56 @@ export default function ServiceReviewForm({
     ].filter(Boolean).join("\n\n");
 
     try {
-      await base44.functions.invoke('submitServiceReview', {
-        targetType,
-        targetId,
-        targetName,
-        rating,
-        qualityRating,
-        communicationRating,
-        deliveryRating,
-        comment: fullComment,
-        highlights: selectedHighlights,
-        milestoneId,
-        milestoneTitle,
-        projectId,
-      });
-      setLoading(false);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const authUser = authData?.user;
+      if (authError || !authUser) throw new Error("يرجى تسجيل الدخول قبل إرسال التقييم.");
+      if (!projectId) throw new Error("لا يمكن إرسال تقييم دون ربطه بمشروع مكتمل.");
+
+      // The current database policy supports verified project reviews for assigned
+      // engineers. Do not silently write contractor/supplier reviews into the wrong table.
+      if (targetType !== "engineer") {
+        throw new Error("تقييم هذا النوع من مقدمي الخدمة لم يُرحّل بعد. لم يتم حفظ أي تقييم.");
+      }
+
+      const { data: engineer, error: engineerError } = await supabase
+        .from("engineers")
+        .select("user_id")
+        .eq("id", targetId)
+        .not("user_id", "is", null)
+        .maybeSingle();
+      if (engineerError) throw engineerError;
+      if (!engineer?.user_id) throw new Error("لم يتم العثور على حساب المهندس المرتبط بهذا الملف.");
+
+      const boundedRating = (value) => Math.max(0, Math.min(5, Math.round(Number(value) || 0)));
+      const { error: insertError } = await supabase
+        .from("project_reviews")
+        .insert({
+          project_id: projectId,
+          reviewer_user_id: authUser.id,
+          reviewee_user_id: engineer.user_id,
+          rating: boundedRating(rating),
+          quality_rating: boundedRating(qualityRating),
+          communication_rating: boundedRating(communicationRating),
+          delivery_rating: boundedRating(deliveryRating),
+          comment: fullComment || null,
+        });
+      if (insertError) {
+        if (insertError.code === "42501") throw new Error("التقييم متاح لصاحب المشروع بعد اكتمال المشروع فقط.");
+        if (insertError.code === "23505") throw new Error("سبق أن أرسلت تقييمًا لهذا المشروع.");
+        throw insertError;
+      }
       setSubmitted(true);
       setTimeout(() => {
         onSubmitted && onSubmitted();
       }, 2000);
     } catch (error) {
-      setLoading(false);
       toast({
         title: "حدث خطأ أثناء إرسال التقييم",
-        description: error.message,
+        description: error?.message || "تعذر إرسال التقييم",
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
   };
 
