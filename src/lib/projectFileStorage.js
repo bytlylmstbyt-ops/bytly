@@ -23,7 +23,7 @@ export async function uploadScopedFile(scope, file, options = {}) {
     return `${PREFIX}${path}`;
   }
 
-  const safeName = (file.name || "file").replace(/[^\\w.\\-\\u0600-\\u06FF ]/g, "_");
+  const safeName = (file.name || "file").replace(/[^\w.\-\u0600-\u06FF ]/g, "_");
   let path;
   if (scope === "permits" || scope === "ready-designs" || scope === "ready-design-previews") {
     const { data: authData, error: authError } = await supabase.auth.getUser();
