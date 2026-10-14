@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,16 +19,31 @@ export default function AppointmentResponseModal({ appointment, open, onOpenChan
   const handleApprove = async () => {
     setLoading(true);
     try {
-      await base44.functions.invoke("handleAppointmentResponse", {
-        action: "approve",
-        appointment_id: appointment.id
-      });
-      
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const authUser = authData?.user;
+      if (authError || !authUser) throw new Error("يرجى تسجيل الدخول مجددًا");
+      const { data: current, error: readError } = await supabase
+        .from("consultation_appointments")
+        .select("id,provider_user_id,status")
+        .eq("id", appointment.id)
+        .maybeSingle();
+      if (readError) throw readError;
+      if (!current || current.provider_user_id !== authUser.id) throw new Error("ليس لديك صلاحية الرد على هذا الموعد");
+      if (["cancelled", "completed", "rejected"].includes(String(current.status).toLowerCase())) throw new Error("لا يمكن تعديل موعد مغلق");
+      const { data: updated, error: updateError } = await supabase
+        .from("consultation_appointments")
+        .update({ status: "confirmed", updated_at: new Date().toISOString() })
+        .eq("id", appointment.id)
+        .eq("provider_user_id", authUser.id)
+        .select("id")
+        .maybeSingle();
+      if (updateError) throw updateError;
+      if (!updated) throw new Error("لم يتم تأكيد الموعد؛ حدّث الصفحة وحاول مرة أخرى");
       onSuccess?.();
       onOpenChange(false);
     } catch (error) {
-      console.error('Error approving appointment:', error);
-      alert('حدث خطأ أثناء الموافقة على الموعد');
+      console.error("Error approving appointment:", error);
+      alert(error?.message || "حدث خطأ أثناء الموافقة على الموعد");
     } finally {
       setLoading(false);
     }
@@ -42,19 +57,41 @@ export default function AppointmentResponseModal({ appointment, open, onOpenChan
 
     setLoading(true);
     try {
-      await base44.functions.invoke("handleAppointmentResponse", {
-        action: "reschedule",
-        appointment_id: appointment.id,
-        reschedule_reason: rescheduleReason,
-        reschedule_date: rescheduleDate,
-        reschedule_time: rescheduleTime
-      });
-      
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const authUser = authData?.user;
+      if (authError || !authUser) throw new Error("يرجى تسجيل الدخول مجددًا");
+      const { data: current, error: readError } = await supabase
+        .from("consultation_appointments")
+        .select("id,provider_user_id,status,notes")
+        .eq("id", appointment.id)
+        .maybeSingle();
+      if (readError) throw readError;
+      if (!current || current.provider_user_id !== authUser.id) throw new Error("ليس لديك صلاحية الرد على هذا الموعد");
+      if (["cancelled", "completed", "rejected"].includes(String(current.status).toLowerCase())) throw new Error("لا يمكن تعديل موعد مغلق");
+      const nextDate = new Date(rescheduleDate + "T" + rescheduleTime);
+      if (Number.isNaN(nextDate.getTime()) || nextDate.getTime() <= Date.now()) throw new Error("اختر موعدًا جديدًا في المستقبل");
+      const reasonNote = "سبب اقتراح إعادة الجدولة: " + rescheduleReason.trim();
+      const notes = [current.notes, reasonNote].filter(Boolean).join("\\n\\n").slice(0, 5000);
+      const { data: updated, error: updateError } = await supabase
+        .from("consultation_appointments")
+        .update({
+          appointment_date: rescheduleDate,
+          appointment_time: rescheduleTime,
+          status: "rescheduled",
+          notes,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", appointment.id)
+        .eq("provider_user_id", authUser.id)
+        .select("id")
+        .maybeSingle();
+      if (updateError) throw updateError;
+      if (!updated) throw new Error("لم يتم حفظ الموعد الجديد؛ حدّث الصفحة وحاول مرة أخرى");
       onSuccess?.();
       onOpenChange(false);
     } catch (error) {
-      console.error('Error rescheduling appointment:', error);
-      alert('حدث خطأ أثناء تأجيل الموعد');
+      console.error("Error rescheduling appointment:", error);
+      alert(error?.message || "حدث خطأ أثناء تأجيل الموعد");
     } finally {
       setLoading(false);
     }
