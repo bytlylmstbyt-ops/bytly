@@ -1177,6 +1177,41 @@ const bookSurveyAppointmentSupabase = async (payload = {}) => {
 bytlyCompat.functions = {
   ...unmigratedFunctions,
   invoke: async (name, payload) => {
+    if (name === 'chatbotHandler') {
+      const userMessage = String(payload?.user_message || '').trim();
+      if (!userMessage && !(Array.isArray(payload?.attachments) && payload.attachments.length)) {
+        throw new Error('اكتب سؤالك أولاً أو أرفق ملفاً');
+      }
+      // Public website chatbot uses the existing Supabase Edge Function instead of
+      // the removed Base44 function. Only attachment metadata/URLs are passed as context.
+      const attachmentContext = (Array.isArray(payload?.attachments) ? payload.attachments : []).slice(0, 8).map(file => ({
+        name: String(file?.name || '').slice(0, 160),
+        type: String(file?.type || '').slice(0, 100),
+        url: String(file?.url || '').slice(0, 1000),
+      }));
+      const { data, error } = await withHardTimeout(
+        supabase.functions.invoke('bytly-ai', {
+          body: {
+            agent: 'assistant',
+            prompt: userMessage || 'يرجى مساعدة المستخدم في الملفات المرفقة وطلب توضيح المطلوب منها.',
+            context: {
+              channel: 'public_website_chatbot',
+              visitor_id: String(payload?.visitor_id || '').slice(0, 120),
+              conversation_id: String(payload?.conversation_id || '').slice(0, 120),
+              user_type: String(payload?.user_type || 'visitor').slice(0, 40),
+              attachments: attachmentContext,
+            },
+          },
+        }),
+        45000,
+        'انتهت مهلة رد مساعد بيتلي'
+      );
+      if (error) throw new Error(error.message || 'تعذر الاتصال بمساعد بيتلي');
+      if (!data?.success || !String(data?.result || '').trim()) {
+        throw new Error(data?.error || 'لم يُرجع مساعد بيتلي إجابة صالحة');
+      }
+      return { data: { success: true, response: data.result, suggestedEngineers: [], shouldEscalate: false } };
+    }
     if (name === 'createProject') return { data: await createProjectSupabase(payload) };
     if (name === 'submitProjectOffer' || name === 'createProjectOffer' || name === 'submitProposal') {
       return { data: await submitProjectOfferSupabase(payload) };
