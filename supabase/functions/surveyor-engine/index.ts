@@ -82,6 +82,14 @@ Deno.serve(async(req:Request)=>{
   const req=await getReq(str(b.request_id));if(!req)return reply({error:"الطلب غير موجود"},404);if(req.client_user_id!==user.id&&req.surveyor_user_id!==user.id&&!admin)return reply({error:"غير مصرح لك"},403);
   const {data:surveyor}=req.surveyor_id?await db.from("surveyor_profiles").select("*").eq("id",req.surveyor_id).maybeSingle():{data:null};return reply({request:req,deliverables:req.survey_deliverables||[],surveyor});
  }
+ if(a==="check_review"){
+  const requestId=str(b.request_id);const {data,error}=await db.from("project_reviews").select("id").eq("project_id",requestId).eq("reviewer_user_id",user.id).limit(1);if(error)throw error;return reply({reviewed:!!data?.length});
+ }
+ if(a==="wallet_history"){
+  const {data:wallet,error:wErr}=await db.from("wallet_accounts").select("available_balance,held_balance,currency").eq("user_id",user.id).eq("currency","SAR").maybeSingle();if(wErr)throw wErr;
+  const {data:tx,error:tErr}=await db.from("wallet_transactions").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(50);if(tErr)throw tErr;
+  return reply({wallet_balance:wallet?.available_balance||0,held_balance:wallet?.held_balance||0,transactions:tx||[]});
+ }
  if(a==="review"){
   const req=await getReq(str(b.request_id)),rating=n(b.rating);if(!req)return reply({error:"الطلب غير موجود"},404);if(req.client_user_id!==user.id)return reply({error:"غير مصرح لك"},403);if(req.status!=="disbursed")return reply({error:"لا يمكن التقييم قبل اعتماد المخرجات"},400);if(!Number.isFinite(rating)||rating<1||rating>5)return reply({error:"التقييم يجب أن يكون بين 1 و5"},400);
   const {data:old,error:oldErr}=await db.from("project_reviews").select("id").eq("project_id",req.id).eq("reviewer_user_id",user.id).limit(1);if(oldErr)throw oldErr;if(old?.length)return reply({error:"تم تقييم هذا الطلب مسبقاً"},409);
