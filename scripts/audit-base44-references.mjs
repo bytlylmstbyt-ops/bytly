@@ -63,6 +63,36 @@ for (const root of roots) {
   }
 }
 
+// Trace literal function invocations to concrete handlers in the Supabase compatibility layer.
+// This is intentionally diagnostic (not a CI failure) while migration is in progress.
+const invokedFunctions = new Map();
+const dynamicInvokeSites = [];
+const invokePattern = /\\bbase44\\.functions\\.invoke\\s*\\(\\s*(['\x22\\x60])([^'\x22\\x60]+)\\1/g;
+const dynamicInvokePattern = /\\bbase44\\.functions\\.invoke\\s*\\(\\s*(?!['\x22\\x60])/g;
+for (const root of roots) {
+  for (const file of await walk(root)) {
+    const source = await readFile(file, 'utf8');
+    let match;
+    while ((match = invokePattern.exec(source))) {
+      const name = match[2].trim();
+      if (!invokedFunctions.has(name)) invokedFunctions.set(name, new Set());
+      invokedFunctions.get(name).add(file.split(path.sep).join('/'));
+    }
+    if (dynamicInvokePattern.test(source)) dynamicInvokeSites.push(file.split(path.sep).join('/'));
+    dynamicInvokePattern.lastIndex = 0;
+  }
+}
+let dispatchSource = '';
+try { dispatchSource = await readFile('src/api/base44Client.js', 'utf8'); }
+catch (error) { if (error.code !== 'ENOENT') throw error; }
+const handledFunctions = new Set([...dispatchSource.matchAll(/\\bname\\s*===\\s*['\x22]([^'\x22]+)['\x22]/g)].map(match => match[1]));
+const invokeCoverage = [...invokedFunctions.entries()].map(([name, files]) => ({
+  name,
+  files: [...files].sort(),
+  hasSupabaseHandler: handledFunctions.has(name),
+})).sort((a, b) => a.name.localeCompare(b.name));
+const uncoveredFunctionInvokes = invokeCoverage.filter(item => !item.hasSupabaseHandler);
+
 findings.sort((a, b) =>
   (b.entityCalls + b.authCalls + b.functionCalls + b.integrationCalls + b.compatibilityImport + b.sdkImport) -
   (a.entityCalls + a.authCalls + a.functionCalls + a.integrationCalls + a.compatibilityImport + a.sdkImport)
