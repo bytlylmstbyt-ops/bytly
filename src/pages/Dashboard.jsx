@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
 import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
@@ -43,7 +42,6 @@ export default function Dashboard() {
     setIsLoading(true);
 
     // Supabase is the source of truth for the current Bytly account.
-    // Do not depend on the legacy Base44 session for normal users.
     const { data: authData, error: authError } = await supabase.auth.getUser();
     const authUser = authData?.user;
     if (authError || !authUser?.id || !authUser.email) {
@@ -81,101 +79,35 @@ export default function Dashboard() {
     };
     setUser(currentUser);
 
-    // Every non-admin account goes directly to the original role dashboard.
-    // A valid Supabase account must never be sent to "create a new account"
-    // just because a legacy Base44 profile row is missing.
-    if (normalizedRole !== "admin") {
-      setIsAdmin(false);
-      setProfile({
-        id: supabaseProfile?.id || authUser.id,
-        user_id: authUser.id,
-        full_name: currentUser.full_name,
-        email,
-        role: normalizedRole
-      });
+    const normalizedProfile = {
+      id: supabaseProfile?.id || authUser.id,
+      user_id: authUser.id,
+      full_name: currentUser.full_name,
+      email,
+      role: normalizedRole,
+      client_type: authUser.user_metadata?.client_type || "individual"
+    };
+    setProfile(normalizedProfile);
+
+    if (normalizedRole === "admin" || normalizedRole === "super_admin") {
+      setIsAdmin(true);
+      setUserType("admin");
+      const { data: approved, error: projectsError } = await supabase
+        .from("projects")
+        .select("id,title,status,phase,phase_progress,category,project_type,location,created_at,client_user_id")
+        .eq("status", "technical_approved")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (projectsError) {
+        console.error("Failed to load approved projects from Supabase:", projectsError);
+      } else {
+        setApprovedProjects(approved || []);
+      }
       setIsLoading(false);
       return;
     }
 
-    // Check if user is Admin
-    if (currentUser.role === 'admin') {
-      setIsAdmin(true);
-      // Load approved projects for admin
-      const approved = await base44.entities.Project.filter({ 
-        status: "technical_approved" 
-      });
-      setApprovedProjects(approved);
-    }
-
-    // Resolve the authenticated user's profile. A valid homeowner account
-    // does not need a legacy Client row to open the dashboard.
-    const [engineerData, clientData] = await Promise.all([
-      Promise.race([base44.entities.Engineer.filter({ email: currentUser.email }), new Promise(resolve => setTimeout(() => resolve([]), 5000))]).catch(() => []),
-      Promise.race([base44.entities.Client.filter({ email: currentUser.email }), new Promise(resolve => setTimeout(() => resolve([]), 5000))]).catch(() => [])
-    ]);
-
-    if (engineerData.length > 0) {
-      setUserType("engineer");
-      setProfile(engineerData[0]);
-
-      // Load engineer stats
-      const [portfolios, proposals, reviews] = await Promise.all([
-        Promise.race([base44.entities.Portfolio.filter({ engineer_id: engineerData[0].id }), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => []),
-        Promise.race([base44.entities.Proposal.filter({ engineer_id: engineerData[0].id }), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => []),
-        Promise.race([base44.entities.Review.filter({ engineer_id: engineerData[0].id }), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => [])
-      ]);
-
-      setStats({
-        portfolioCount: portfolios.length,
-        proposalsCount: proposals.length,
-        reviewsCount: reviews.length,
-        rating: engineerData[0].rating || 0,
-        completedProjects: engineerData[0].completed_projects || 0,
-        walletBalance: engineerData[0].wallet_balance || 0
-      });
-
-      setRecentProposals(proposals.slice(0, 5));
-    } else if (clientData.length > 0) {
-      setUserType("client");
-      setProfile(clientData[0]);
-
-      // Load client stats
-      const projects = await Promise.race([base44.entities.Project.filter({ client_id: clientData[0].id }), new Promise(resolve => setTimeout(() => resolve([]), 7000))]).catch(() => []);
-
-      const totalSpent = projects.reduce((sum, p) => sum + (p.escrow_amount || 0), 0);
-
-      setStats({
-        totalProjects: projects.length,
-        openProjects: projects.filter(p => p.status === "open").length,
-        inProgressProjects: projects.filter(p => p.status === "in_progress").length,
-        completedProjects: projects.filter(p => p.status === "completed").length,
-        walletBalance: clientData[0].wallet_balance || 0,
-        totalSpent
-      });
-
-      setRecentProjects(projects.slice(0, 5));
-    }
-
-    // Authenticated homeowner/investor with no legacy provider row.
-    // Give the dashboard a valid minimal client profile instead of treating
-    // the account as missing and sending the user back to registration.
-    if (engineerData.length === 0 && clientData.length === 0 && currentUser.role !== 'admin') {
-      const minimalClient = {
-        id: currentUser.id,
-        user_id: currentUser.id,
-        full_name: currentUser.full_name || currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || '',
-        email: currentUser.email,
-        client_type: 'individual',
-        wallet_balance: 0,
-        total_projects: 0,
-        profile_image: null
-      };
-      setUserType("client");
-      setProfile(minimalClient);
-      setStats({ totalProjects: 0, openProjects: 0, inProgressProjects: 0, completedProjects: 0, walletBalance: 0, totalSpent: 0 });
-      setRecentProjects([]);
-    }
-
+    setIsAdmin(false);
     setIsLoading(false);
   };
 
@@ -205,7 +137,10 @@ export default function Dashboard() {
     );
   }
 
-  // Non-admin accounts use the original Passport4 role dashboard router.\n  if (!isAdmin) return <RoleDashboardRouter />;\n\n  // Render specialized dashboard for individual clients
+  // Non-admin accounts use the role-specific dashboard router.
+  if (!isAdmin) return <RoleDashboardRouter />;
+
+  // Render specialized dashboard for individual clients
   if (userType === "client" && profile?.client_type === "individual") {
     return <IndividualClientDashboard client={profile} stats={stats} recentProjects={recentProjects} />;
   }

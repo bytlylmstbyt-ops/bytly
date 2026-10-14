@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import {
   Plus, Loader2, CheckCircle2, Circle, AlertCircle,
   User, Calendar, Send, Trash2, Edit3, TrendingUp, GripVertical
@@ -16,7 +16,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
 } from "@/components/ui/dialog";
 import MobileSelect from "@/components/mobile/MobileSelect";
-import { logWorkspaceActivity } from "@/components/project/logWorkspaceActivity";
+
 
 export const STATUS = {
   todo:        { label: "قيد الانتظار", icon: Circle,      color: "text-slate-500",   bg: "bg-slate-100",   border: "border-slate-200",   dot: "bg-slate-400" },
@@ -26,6 +26,20 @@ export const STATUS = {
 };
 
 const STATUS_ORDER = ["todo", "in_progress", "review", "done"];
+async function logTaskActivity({ projectId, user, action, entityId, metadata = {} }) {
+  // project_activity currently permits inserts by admins only; don't send participant writes that RLS rejects.
+  // Task mutations remain successful; activity write can be added once the project participant policy is aligned.
+  if (!supabase || !projectId) return;
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth?.user?.id) return;
+}
+async function resolveUserId(email) {
+  if (!email || !supabase) return null;
+  const { data, error } = await supabase.from("profiles").select("id,user_id").ilike("email", email).maybeSingle();
+  if (error) throw error;
+  return data?.user_id || data?.id || null;
+}
+
 
 const PRIORITY = {
   low:    { label: "منخفضة", color: "bg-slate-100 text-slate-600" },
@@ -244,8 +258,13 @@ export default function ProjectTasksTab({ project, user, userEngineer, engineers
   const loadTasks = async () => {
     setLoading(true);
     try {
-      const data = await base44.entities.ProjectTask.filter({ project_id: project.id });
-      setTasks(data);
+      if (!supabase) throw new Error("Supabase غير مهيأ");
+      const { data, error } = await supabase.from("project_tasks").select("*").eq("project_id", project.id).order("created_at", { ascending: false });
+      if (error) throw error;
+      const { data: profiles, error: profileError } = await supabase.from("profiles").select("id,user_id,email");
+      if (profileError) throw profileError;
+      const emailById = Object.fromEntries((profiles || []).map(p => [p.user_id || p.id, p.email]));
+      setTasks((data || []).map(t => ({ ...t, assigned_to: emailById[t.assigned_to] || "", progress_percentage: Number(t.progress ?? 0) })));
     } catch (err) { console.error("Error loading tasks:", err); } finally { setLoading(false); }
   };
 
@@ -289,37 +308,31 @@ export default function ProjectTasksTab({ project, user, userEngineer, engineers
         project_id: project.id,
         title: form.title,
         description: form.description,
-        assigned_to: form.assigned_to,
-        assigned_by: user.email,
+        assigned_to: await resolveUserId(form.assigned_to),
         priority: form.priority,
         due_date: form.due_date || null,
-        progress_percentage: form.progress_percentage,
+        progress: form.progress_percentage,
         status: form.progress_percentage >= 100 ? "done" : form.progress_percentage > 0 ? "in_progress" : (editingTask?.status || "todo"),
       };
 
       if (editingTask) {
-        await base44.entities.ProjectTask.update(editingTask.id, payload);
-        await logWorkspaceActivity({
-          projectId: project.id, user, activityType: "task_updated",
-          summary: `تم تعديل المهمة "${form.title}"`, entityType: "task",
-          entityId: editingTask.id, entityTitle: form.title,
-        });
+        const { error } = await supabase.from("project_tasks").update(payload).eq("id", editingTask.id).eq("project_id", project.id);
+        if (error) throw error;
+        await logTaskActivity({ projectId: project.id, user, action: "task_updated", entityId: editingTask.id, metadata: { title: form.title } });
       } else {
-        const created = await base44.entities.ProjectTask.create(payload);
-        await logWorkspaceActivity({
-          projectId: project.id, user, activityType: "task_created",
-          summary: `تم إنشاء مهمة جديدة "${form.title}"`, entityType: "task",
-          entityId: created.id, entityTitle: form.title,
-        });
-        await base44.entities.Notification.create({
-          recipient_email: form.assigned_to,
-          title: "📝 مهمة جديدة مسندة إليك",
-          message: `تم إسناد مهمة "${form.title}" إليك في مشروع "${project.title}".`,
-          type: "project_update",
-          related_project_id: project.id,
-          priority: form.priority === "urgent" ? "urgent" : "high",
-          action_url: `/ProjectDetails?id=${project.id}`,
-        });
+        if (!payload.assigned_to) throw new Error("لم يتم العثور على حساب المستخدم المسؤول عن المهمة.");
+        const { data: created, error } = await supabase.from("project_tasks").insert(payload).select("*").single();
+        if (error) throw error;
+        await logTaskActivity({ projectId: project.id, user, action: "task_created", entityId: created.id, metadata: { title: form.title } });
+        const recipientId = await resolveUserId(form.assigned_to);
+        if (recipientId) {
+          const { error: notificationError } = await supabase.from("notifications").insert({
+            user_id: recipientId, title: "📝 مهمة جديدة مسندة إليك",
+            body: `تم إسناد مهمة "${form.title}" إليك في مشروع "${project.title}".`,
+            type: "project_update", entity_type: "project", entity_id: project.id
+          });
+          if (notificationError) console.error("Task notification failed:", notificationError);
+        }
       }
       setShowForm(false);
       resetForm();
@@ -345,16 +358,9 @@ export default function ProjectTasksTab({ project, user, userEngineer, engineers
     const progress = newStatus === "done" ? 100 : newStatus === "todo" ? 0 : task.progress_percentage;
 
     try {
-      await base44.entities.ProjectTask.update(draggableId, {
-        status: newStatus,
-        progress_percentage: progress,
-      });
-      await logWorkspaceActivity({
-        projectId: project.id, user, activityType: "task_status_changed",
-        summary: `تم نقل المهمة "${task.title}" من "${STATUS[oldStatus]?.label}" إلى "${STATUS[newStatus]?.label}"`,
-        entityType: "task", entityId: task.id, entityTitle: task.title,
-        oldValue: STATUS[oldStatus]?.label, newValue: STATUS[newStatus]?.label,
-      });
+      const { error } = await supabase.from("project_tasks").update({ status: newStatus, progress }).eq("id", draggableId).eq("project_id", project.id);
+      if (error) throw error;
+      await logTaskActivity({ projectId: project.id, user, action: "task_status_changed", entityId: task.id, metadata: { title: task.title, old_status: oldStatus, new_status: newStatus } });
     } catch (err) {
       console.error("Error updating task status:", err);
       setTasks((prev) => prev.map((t) =>
@@ -368,12 +374,9 @@ export default function ProjectTasksTab({ project, user, userEngineer, engineers
     if (!window.confirm("حذف هذه المهمة؟")) return;
     const task = tasks.find((t) => t.id === taskId);
     try {
-      await base44.entities.ProjectTask.delete(taskId);
-      await logWorkspaceActivity({
-        projectId: project.id, user, activityType: "task_deleted",
-        summary: `تم حذف المهمة "${task?.title || ""}"`, entityType: "task",
-        entityId: taskId, entityTitle: task?.title,
-      });
+      const { error } = await supabase.from("project_tasks").delete().eq("id", taskId).eq("project_id", project.id);
+      if (error) throw error;
+      await logTaskActivity({ projectId: project.id, user, action: "task_deleted", entityId: taskId, metadata: { title: task?.title || "" } });
       loadTasks();
     } catch { alert("لا يمكن حذف المهمة — الأدمن فقط من يحذف."); }
   };
@@ -387,9 +390,8 @@ export default function ProjectTasksTab({ project, user, userEngineer, engineers
       text,
       created_at: new Date().toISOString(),
     };
-    await base44.entities.ProjectTask.update(taskId, {
-      comments: [...(task.comments || []), newComment],
-    });
+    const { error } = await supabase.from("project_tasks").update({ comments: [...(task.comments || []), newComment] }).eq("id", taskId).eq("project_id", project.id);
+    if (error) { console.error("Error adding task comment:", error); alert("تعذّر إضافة التعليق"); return; }
     setCommentText(prev => ({ ...prev, [taskId]: "" }));
     loadTasks();
   };

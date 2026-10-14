@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
   Search, ShoppingCart, Star, Download, Ruler, Layers, 
@@ -36,13 +36,21 @@ export default function DesignMarketplace() {
 
   const loadDesigns = async () => {
     setIsLoading(true);
-    const data = await base44.entities.ReadyMadeDesign.filter(
-      { status: "active" }, 
-      "-created_date", 
-      100
-    );
-    setDesigns(data);
-    setIsLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from("ready_made_design")
+        .select("*")
+        .eq("status", "active")
+        .order("created_date", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      setDesigns(data || []);
+    } catch (error) {
+      console.error("Failed to load ready-made designs from Supabase:", error);
+      setDesigns([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const filteredDesigns = designs

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { supabase } from "@/lib/supabaseClient";
-import { base44 } from "@/api/base44Client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, MapPin, Star, CheckCircle, 
@@ -164,27 +163,38 @@ export default function Engineers() {
 
   const handleBulkDelete = async () => {
     if (!window.confirm(`هل أنت متأكد من حذف ${selectedIds.size} مهندس؟`)) return;
-    for (const id of selectedIds) {
-      await base44.entities.Engineer.delete(id);
+    const ids = [...selectedIds];
+    const { error } = await supabase.from("engineers").delete().in("id", ids);
+    if (error) {
+      console.error("Failed to delete engineers:", error);
+      toast.error("تعذر حذف المهندسين. تحقق من صلاحيات حساب الإدارة.");
+      return;
     }
-    toast.success(`تم حذف ${selectedIds.size} مهندس`);
+    toast.success(`تم حذف ${ids.length} مهندس`);
     setSelectedIds(new Set());
     setIsSelectionMode(false);
-    loadEngineers();
+    await loadEngineers();
   };
 
   const handleBulkVerify = async () => {
-    const user = await base44.auth.me();
-    for (const id of selectedIds) {
-      await base44.entities.Engineer.update(id, {
-        is_verified: true,
-        certified_at: new Date().toISOString(),
-        certified_by: user?.email || ''
-      });
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData?.user) {
+      toast.error("يجب تسجيل الدخول قبل اعتماد المهندسين");
+      return;
     }
-    toast.success(`تم اعتماد ${selectedIds.size} مهندس بنجاح`);
+    const ids = [...selectedIds];
+    const { error } = await supabase.from("engineers").update({
+      is_verified: true,
+      updated_at: new Date().toISOString()
+    }).in("id", ids);
+    if (error) {
+      console.error("Failed to verify engineers:", error);
+      toast.error("تعذر اعتماد المهندسين. تحقق من صلاحيات حساب الإدارة.");
+      return;
+    }
+    toast.success(`تم اعتماد ${ids.length} مهندس بنجاح`);
     setSelectedIds(new Set());
-    loadEngineers();
+    await loadEngineers();
   };
 
   const activeFiltersCount = [

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Calendar, Clock, Loader2, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,21 +27,22 @@ export default function ProjectMeetingScheduler({ project, user, userEngineer, u
     if (!project?.id) return;
     setLoadingAppts(true);
     try {
-      const res = await base44.functions.invoke("bookReviewMeeting", {
-        action: "list",
-        role: isClient ? "client" : "engineer",
-      });
-      // فلترة المواعيد الخاصة بهذا المشروع فقط
-      const projectAppts = (res.data?.appointments || []).filter(
-        a => a.topic?.includes(project.title) || a.notes?.includes(project.id) || a.target_email === target?.email || a.client_email === target?.email
-      );
-      setAppointments(projectAppts);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData?.user) throw new Error("يجب تسجيل الدخول لعرض الاجتماعات.");
+      const { data, error } = await supabase.from("consultation_appointments")
+        .select("id,project_id,created_by,client_user_id,provider_user_id,appointment_date,appointment_time,topic,notes,status,meet_link,calendar_link,google_event_id")
+        .eq("project_id", project.id)
+        .order("appointment_date", { ascending: true })
+        .order("appointment_time", { ascending: true });
+      if (error) throw error;
+      setAppointments(data || []);
     } catch (e) {
       console.error("Error loading appointments:", e);
     } finally {
       setLoadingAppts(false);
     }
-  }, [project?.id, isClient, target?.email]);
+  }, [project?.id]);
 
   useEffect(() => {
     loadAppointments();
@@ -90,6 +91,8 @@ export default function ProjectMeetingScheduler({ project, user, userEngineer, u
           {/* حجز موعد مجدول */}
           <AppointmentModal
             targetId={target.id}
+            projectId={project.id}
+            currentUser={user}
             targetName={target.name}
             targetType={target.type}
             targetEmail={target.email}
@@ -133,7 +136,7 @@ export default function ProjectMeetingScheduler({ project, user, userEngineer, u
                     {apt.appointment_date} • {apt.appointment_time}
                   </p>
                 </div>
-                {apt.google_calendar_link && (
+                {apt.calendar_link && (
                   <a
                     href={apt.google_calendar_link}
                     target="_blank"
@@ -157,7 +160,7 @@ export default function ProjectMeetingScheduler({ project, user, userEngineer, u
         <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 flex items-start gap-2">
           <Calendar className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
           <p className="text-xs text-blue-700">
-            يتم إنشاء حدث في تقويم جوجل تلقائياً وإرسال دعوة لك ولـ {target.name}، مع رابط Google Meet للاجتماعات المرئية وتذكيرات قبل الموعد.
+            يُحفظ الموعد في قاعدة بيانات بيتلي. رابط Google Meet ومزامنة تقويم Google يظهران فقط عند تفعيل التكامل وإنشاء الرابط فعلياً.
           </p>
         </div>
       </CardContent>
