@@ -105,6 +105,13 @@ console.log(JSON.stringify({
   packageSdkDependency,
   runtimeDependencyGate: (!packageSdkDependency && totals.sdkImport === 0 && totals.base44Domain === 0) ? 'PASS' : 'FAIL',
   totals,
+  functionInvokeCoverage: {
+    literalCalls: invokeCoverage.length,
+    coveredByNamedDispatchHandler: invokeCoverage.filter(item => item.hasSupabaseHandler).length,
+    uncoveredFunctionInvokes,
+    dynamicInvokeSites: [...new Set(dynamicInvokeSites)].sort(),
+    note: 'Static handler presence is not proof of runtime correctness.',
+  },
   files: findings,
 }, null, 2));
 
