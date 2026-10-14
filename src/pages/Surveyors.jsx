@@ -19,12 +19,8 @@ export default function Surveyors() {
   useEffect(() => {
     let active = true;
     (async () => {
-      const { data, error: loadError } = await supabase
-        .from("surveyor_profiles")
-        .select("id, full_name, city, bio, license_number, years_experience, rating, status, is_available")
-        .eq("status", "approved")
-        .order("rating", { ascending: false })
-        .limit(200);
+      const { data: result, error: loadError } = await supabase.functions.invoke("surveyor-engine", { body: { action: "directory" } });
+      const data = result?.surveyors || [];
       if (!active) return;
       if (loadError) {
         console.error("Load surveyor directory failed:", loadError);
