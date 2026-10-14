@@ -67,8 +67,8 @@ for (const root of roots) {
 // This is intentionally diagnostic (not a CI failure) while migration is in progress.
 const invokedFunctions = new Map();
 const dynamicInvokeSites = [];
-const invokePattern = /\\bbase44\\.functions\\.invoke\\s*\\(\\s*(['\x22\\x60])([^'\x22\\x60]+)\\1/g;
-const dynamicInvokePattern = /\\bbase44\\.functions\\.invoke\\s*\\(\\s*(?!['\x22\\x60])/g;
+const invokePattern = /\bbase44\.functions\.invoke\s*\(\s*(['\"])([^'\"]+)\1/g;
+const dynamicInvokePattern = /\bbase44\.functions\.invoke\s*\(\s*(?!['\"])/g;
 for (const root of roots) {
   for (const file of await walk(root)) {
     const source = await readFile(file, 'utf8');
@@ -85,7 +85,7 @@ for (const root of roots) {
 let dispatchSource = '';
 try { dispatchSource = await readFile('src/api/base44Client.js', 'utf8'); }
 catch (error) { if (error.code !== 'ENOENT') throw error; }
-const handledFunctions = new Set([...dispatchSource.matchAll(/\\bname\\s*===\\s*['\x22]([^'\x22]+)['\x22]/g)].map(match => match[1]));
+const handledFunctions = new Set([...dispatchSource.matchAll(/\bname\s*===\s*['\"]([^'\"]+)['\"]/g)].map(match => match[1]));
 const invokeCoverage = [...invokedFunctions.entries()].map(([name, files]) => ({
   name,
   files: [...files].sort(),
