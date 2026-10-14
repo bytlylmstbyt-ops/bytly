@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "../utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,8 +42,19 @@ export default function ClientOnboarding() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const userData = await base44.auth.me();
-        setUser(userData);
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError || !authData?.user) throw new Error("AUTH_REQUIRED");
+        const authUser = authData.user;
+        const { data: profile } = await supabase.from("profiles")
+          .select("full_name,role")
+          .eq("user_id", authUser.id)
+          .maybeSingle();
+        setUser({
+          id: authUser.id,
+          email: authUser.email,
+          full_name: profile?.full_name || authUser.user_metadata?.full_name || authUser.user_metadata?.name || "",
+          role: profile?.role || authUser.app_metadata?.role || "client",
+        });
       } catch {
         navigate(createPageUrl("Home"));
       }
@@ -56,25 +67,40 @@ export default function ClientOnboarding() {
   };
 
   const analyzeNeeds = async () => {
+    if (!formData.title.trim() || !formData.description.trim()) {
+      alert("يرجى إدخال عنوان المشروع ووصفه أولاً");
+      return;
+    }
     setLoading(true);
     try {
-      const response = await base44.functions.invoke("analyzeClientNeeds", {
-        client_description: formData.description,
-        budget: formData.budget_max,
-        timeline: formData.timeline_days
-      });
-
-      if (response.data.success) {
-        setAnalysis(response.data.analysis);
-        setFormData(prev => ({
-          ...prev,
-          category: response.data.analysis.project_category,
-          requirements: response.data.analysis.key_requirements.join(", ")
-        }));
-        suggestEngineersStep(response.data.analysis);
-      }
+      const text = (formData.title + " " + formData.description + " " + formData.requirements).toLowerCase();
+      const inferredCategory = formData.category || (
+        /داخلي|ديكور|interior/.test(text) ? "interior" :
+        /ترميم|صيانة|repair|renovat/.test(text) ? "renovation" :
+        /حدائق|لاندسكيب|landscape/.test(text) ? "landscape" :
+        /إنشاء|بناء|هيكل|مدني|construction|civil/.test(text) ? "civil" : "architecture"
+      );
+      const requirements = formData.requirements.split(/[،,؛;\n]/).map(x => x.trim()).filter(Boolean);
+      const skills = inferredCategory === "interior" ? ["تصميم داخلي", "ديكور", "interior"] :
+        inferredCategory === "landscape" ? ["حدائق", "تنسيق", "landscape"] :
+        inferredCategory === "civil" ? ["مدني", "إنشاء", "civil"] :
+        inferredCategory === "renovation" ? ["ترميم", "صيانة", "renovation"] : ["معماري", "تصميم", "architecture"];
+      const analysisData = {
+        project_category: inferredCategory,
+        key_requirements: requirements.length ? requirements : [formData.description.trim()],
+        skills_needed: skills,
+        note: "اقتراح أولي مبني على معلومات النموذج؛ راجع التصنيف قبل إنشاء المشروع."
+      };
+      setAnalysis(analysisData);
+      setFormData(prev => ({
+        ...prev,
+        category: inferredCategory,
+        requirements: analysisData.key_requirements.join(", ")
+      }));
+      await suggestEngineersStep(analysisData);
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Supabase onboarding analysis failed:", error);
+      alert("تعذر تجهيز الاقتراحات. تحقق من بيانات المشروع ثم حاول مرة أخرى.");
     } finally {
       setLoading(false);
     }
@@ -82,20 +108,28 @@ export default function ClientOnboarding() {
 
   const suggestEngineersStep = async (analysisData) => {
     try {
-      const response = await base44.functions.invoke("suggestEngineers", {
-        category: analysisData.project_category,
-        skills_needed: analysisData.skills_needed,
-        budget: formData.budget_max,
-        timeline: formData.timeline_days,
-        location: formData.location
-      });
-
-      if (response.data.success) {
-        setSuggestedEngineers(response.data.suggestions);
-        setCurrentStep(3);
-      }
+      let query = supabase.from("engineers")
+        .select("id,user_id,full_name,email,city,specialization,bio,is_verified,status,rating,years_experience,completed_projects,profile_image")
+        .eq("is_verified", true)
+        .in("status", ["approved", "active", "verified"])
+        .not("user_id", "is", null)
+        .limit(100);
+      if (formData.location.trim()) query = query.ilike("city", "%" + formData.location.trim() + "%");
+      const { data, error } = await query;
+      if (error) throw error;
+      const terms = (analysisData.skills_needed || []).map(x => String(x).toLowerCase());
+      const suggestions = (data || []).map(engineer => {
+        const specialization = String(engineer.specialization || "").toLowerCase();
+        const matchedTerms = terms.reduce((score, term) => score + (specialization.includes(term) ? 1 : 0), 0);
+        const matchScore = terms.length ? Math.round((matchedTerms / terms.length) * 100) : 0;
+        return { ...engineer, match_score: matchScore, rating: Number(engineer.rating || 0) };
+      }).sort((a, b) => b.match_score - a.match_score || b.rating - a.rating).slice(0, 10);
+      setSuggestedEngineers(suggestions);
+      setCurrentStep(3);
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Could not suggest engineers from Supabase:", error);
+      setSuggestedEngineers([]);
+      alert("تعذر تحميل المهندسين المعتمدين. يمكنك تعديل المدينة أو المحاولة لاحقًا.");
     }
   };
 
@@ -107,38 +141,35 @@ export default function ClientOnboarding() {
 
     setLoading(true);
     try {
-      const project = await base44.entities.Project.create({
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        budget: formData.budget_max,
-        timeline_days: formData.timeline_days,
-        location: formData.location,
-        client_email: user.email,
-        status: "open",
-        lead_engineer_id: selectedEngineer.id
-      });
-
-      // Save onboarding flow
-      await base44.entities.OnboardingFlow.create({
-        client_email: user.email,
-        client_name: user.full_name,
-        status: "completed",
-        project_details: {
-          title: formData.title,
-          description: formData.description,
-          category: formData.category,
-          budget_min: formData.budget_min,
-          budget_max: formData.budget_max,
-          timeline_days: formData.timeline_days,
-          location: formData.location
+      const timelineDays = Math.max(1, Math.floor(Number(formData.timeline_days) || 30));
+      const deadline = new Date(Date.now() + timelineDays * 86400000).toISOString().slice(0, 10);
+      const { data: created, error: createError } = await supabase.rpc("create_project_with_stages", {
+        p_project: {
+          title: formData.title.trim(),
+          description: formData.description.trim(),
+          category: formData.category || "architecture",
+          project_type: "small",
+          budget_min: formData.budget_min === "" ? null : Number(formData.budget_min),
+          budget_max: formData.budget_max === "" ? null : Number(formData.budget_max),
+          location: formData.location.trim() || null,
+          deadline,
+          is_direct_hire: true,
+          assigned_engineer_id: selectedEngineer.id,
+          service_scope: {
+            requirements: formData.requirements.split(/[،,؛;\n]/).map(x => x.trim()).filter(Boolean),
+            timeline_days: timelineDays,
+            source: "client_onboarding"
+          }
         },
-        suggested_engineers: suggestedEngineers,
-        selected_engineer_id: selectedEngineer.id,
-        created_project_id: project.id,
-        completed_at: new Date().toISOString()
+        p_milestones: [{
+          title: "المرحلة الأولى",
+          description: formData.requirements.trim() || formData.description.trim(),
+          percentage: 100,
+          days: timelineDays
+        }]
       });
-
+      if (createError) throw createError;
+      if (!created?.project?.id) throw new Error("لم يتم تأكيد إنشاء المشروع");
       setCurrentStep(5);
     } catch (error) {
       console.error("Error:", error);
