@@ -1212,6 +1212,55 @@ bytlyCompat.functions = {
       }
       return { data: { success: true, response: data.result, suggestedEngineers: [], shouldEscalate: false } };
     }
+    if (name === 'saveChatAttachmentToProject') {
+      const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000);
+      const user = authData?.user;
+      if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً');
+      const projectId = String(payload?.project_id || '').trim();
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(projectId)) {
+        throw new Error('رقم المشروع غير صالح');
+      }
+      const { data: project, error: projectError } = await withHardTimeout(
+        supabase.from('projects').select('id,client_user_id,assigned_engineer_id,engineer_user_id,technical_consultant_id,assigned_contractor_id,assigned_supplier_id').eq('id', projectId).maybeSingle(),
+        10000,
+        'انتهت مهلة التحقق من المشروع'
+      );
+      if (projectError) throw new Error(projectError.message || 'تعذر التحقق من المشروع');
+      if (!project) throw new Error('لم يتم العثور على المشروع');
+      const { data: profile } = await withHardTimeout(supabase.from('profiles').select('role').eq('user_id', user.id).maybeSingle(), 10000);
+      const role = String(profile?.role || user.app_metadata?.role || '').toLowerCase();
+      const allowed = ['admin','owner'].includes(role) || [
+        project.client_user_id, project.assigned_engineer_id, project.engineer_user_id,
+        project.technical_consultant_id, project.assigned_contractor_id, project.assigned_supplier_id
+      ].includes(user.id);
+      if (!allowed) throw new Error('غير مصرح لك بحفظ مرفقات هذا المشروع');
+      const attachments = Array.isArray(payload?.attachments) ? payload.attachments.slice(0, 20) : [];
+      if (!attachments.length) return { data: { success: true, saved: 0, files: [] } };
+      const rows = attachments.map(file => {
+        const url = String(file?.url || '').trim();
+        if (!url || (!url.startsWith('https://') && !url.startsWith('supabase://'))) {
+          throw new Error('أحد المرفقات لا يحتوي على رابط تخزين صالح');
+        }
+        return {
+          project_id: projectId,
+          uploaded_by: user.id,
+          name: String(file?.name || 'مرفق محادثة').slice(0, 255),
+          storage_path: url,
+          mime_type: String(file?.type || 'application/octet-stream').slice(0, 160),
+          size_bytes: Math.max(0, Number(file?.size) || 0),
+          category: 'chat_attachment',
+          version: 1,
+          is_current: true,
+        };
+      });
+      const { data, error } = await withHardTimeout(
+        supabase.from('project_files').insert(rows).select('id,project_id,name,storage_path,mime_type,size_bytes,category,created_at'),
+        15000,
+        'انتهت مهلة حفظ مرفقات المحادثة في المشروع'
+      );
+      if (error) throw new Error(error.message || 'تعذر حفظ مرفقات المحادثة في سجل المشروع');
+      return { data: { success: true, saved: data?.length || 0, files: data || [] } };
+    }
     if (name === 'createProject') return { data: await createProjectSupabase(payload) };
     if (name === 'submitProjectOffer' || name === 'createProjectOffer' || name === 'submitProposal') {
       return { data: await submitProjectOfferSupabase(payload) };
