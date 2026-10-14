@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,23 +25,30 @@ export default function CRMInteractionForm({ onSuccess }) {
   const handleAnalyzeSentiment = async () => {
     setAnalyzing(true);
     try {
-      const response = await base44.functions.invoke("analyzeSentiment", {
-        content: formData.content,
-        interaction_type: formData.interaction_type
-      });
-
-      if (response.data.success) {
-        setSentiment(response.data);
-        if (response.data.urgentAction) {
-          setFormData(prev => ({
-            ...prev,
-            follow_up_required: true,
-            priority: "urgent"
-          }));
-        }
-      }
+      // Transparent local keyword heuristic; this is not an AI model.
+      const text = String(formData.content || "").toLowerCase();
+      const positiveWords = ["شكرا", "ممتاز", "راضي", "راضية", "سعيد", "سعيدة", "جيد", "ممتاز", "great", "thanks", "happy", "satisfied", "good", "excellent"];
+      const negativeWords = ["شكوى", "سيئ", "سيء", "تأخير", "متأخر", "مشكلة", "غاضب", "غير راضي", "غير راضية", "bad", "delay", "problem", "complaint", "angry", "unhappy", "unsatisfied"];
+      const urgencyWords = ["عاجل", "فوري", "تصعيد", "شكوى", "استرجاع", "urgent", "immediately", "escalation", "refund"];
+      const positiveCount = positiveWords.reduce((count, word) => count + (text.includes(word) ? 1 : 0), 0);
+      const negativeCount = negativeWords.reduce((count, word) => count + (text.includes(word) ? 1 : 0), 0);
+      const urgentAction = urgencyWords.some(word => text.includes(word));
+      const mood = positiveCount > negativeCount ? "positive" : negativeCount > positiveCount ? "negative" : "neutral";
+      const score = Math.max(-1, Math.min(1, (positiveCount - negativeCount) / Math.max(1, positiveCount + negativeCount)));
+      const concerns = negativeWords.filter(word => text.includes(word)).slice(0, 5);
+      const result = {
+        success: true,
+        sentiment: mood,
+        sentiment_score: score,
+        urgentAction,
+        concerns,
+        suggestedAction: urgentAction ? "مؤشر كلمات يستدعي مراجعة بشرية عاجلة قبل اتخاذ إجراء." : mood === "negative" ? "راجع الملاحظة يدويًا وتواصل مع العميل عند الحاجة." : "تحقق من السياق يدويًا قبل اتخاذ أي قرار.",
+        analysis_method: "local_keyword_heuristic"
+      };
+      setSentiment(result);
+      if (urgentAction) setFormData(prev => ({ ...prev, follow_up_required: true, priority: "urgent" }));
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Sentiment heuristic failed:", error);
     } finally {
       setAnalyzing(false);
     }
@@ -50,28 +57,42 @@ export default function CRMInteractionForm({ onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
     try {
-      await base44.entities.ClientInteraction.create({
-        ...formData,
-        sentiment: sentiment?.sentiment,
-        sentiment_score: sentiment?.sentiment_score,
-        interaction_date: new Date().toISOString()
-      });
-
-      if (formData.follow_up_required && sentiment) {
-        await base44.functions.invoke("scheduleFollowUp", {
-          client_email: formData.client_email,
-          project_id: formData.project_id,
-          sentiment_score: sentiment.sentiment_score,
-          concerns: sentiment.concerns,
-          interaction_type: formData.interaction_type
-        });
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const user = authData?.user;
+      if (authError || !user) throw new Error("يرجى تسجيل الدخول قبل حفظ تفاعل العميل.");
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (profileError) throw profileError;
+      if (String(profile?.role || user.app_metadata?.role || "").toLowerCase() !== "admin") {
+        throw new Error("هذه الوظيفة متاحة لفريق الإدارة فقط.");
       }
-
+      const normalizedEmail = formData.client_email.trim().toLowerCase();
+      const { error: insertError } = await supabase.from("client_interactions").insert({
+        client_email: normalizedEmail,
+        project_id: formData.project_id.trim() || null,
+        interaction_type: formData.interaction_type,
+        title: formData.title.trim(),
+        content: formData.content.trim(),
+        follow_up_required: Boolean(formData.follow_up_required),
+        priority: formData.priority,
+        sentiment: sentiment?.sentiment || null,
+        sentiment_score: Number.isFinite(Number(sentiment?.sentiment_score)) ? Number(sentiment.sentiment_score) : null,
+        recorded_by: user.email || null,
+        created_by: user.id,
+        interaction_date: new Date().toISOString(),
+        tags: [],
+        attachments: [],
+        status: "open"
+      });
+      if (insertError) throw insertError;
       onSuccess?.();
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Failed to save CRM interaction:", error);
+      window.alert(error?.message || "تعذر حفظ التفاعل. تحقق من صلاحيات الإدارة.");
     } finally {
       setLoading(false);
     }
@@ -135,7 +156,7 @@ export default function CRMInteractionForm({ onSuccess }) {
             <Badge className={sentiment.sentiment === 'positive' ? 'bg-green-600' : sentiment.sentiment === 'negative' ? 'bg-red-600' : 'bg-gray-600'}>
               {sentiment.sentiment === 'positive' ? 'إيجابي' : sentiment.sentiment === 'negative' ? 'سلبي' : 'محايد'}
             </Badge>
-            <span className="text-sm font-medium">تحليل المشاعر</span>
+            <span className="text-sm font-medium">مؤشر كلمات مبدئي (ليس تحليلًا بالذكاء الاصطناعي)</span>
           </div>
           <p className="text-sm text-slate-600">{sentiment.suggestedAction}</p>
           {sentiment.concerns?.length > 0 && (
