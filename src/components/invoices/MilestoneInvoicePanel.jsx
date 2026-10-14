@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, CreditCard, CheckCircle, Clock, AlertCircle, Loader2 } from "lucide-react";
+import { FileText, CheckCircle, Clock, AlertCircle, Loader2 } from "lucide-react";
 
 const statusConfig = {
   draft: { label: "مسودة", color: "bg-slate-100 text-slate-600", icon: FileText },
@@ -16,7 +16,6 @@ const statusConfig = {
 export default function MilestoneInvoicePanel({ projectId, milestoneId, isClient }) {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [paying, setPaying] = useState(null);
 
   const loadInvoices = useCallback(async () => {
     setLoading(true);
@@ -55,23 +54,7 @@ export default function MilestoneInvoicePanel({ projectId, milestoneId, isClient
     loadInvoices();
   }, [loadInvoices]);
 
-  const handlePay = async (invoice) => {
-    if (window !== window.top) {
-      alert("الدفع متاح فقط من التطبيق المنشور. يرجى فتح التطبيق في نافذة مستقلة.");
-      return;
-    }
-    setPaying(invoice.id);
-    try {
-      // Fail closed: the current Moyasar source-tokenization flow does not yet support invoice checkout.
-      // Never create a project/milestone payment using an invoice amount or mark an invoice paid without verified gateway confirmation.
-      alert("الدفع الإلكتروني لهذه الفاتورة لم يُربط بعد بتدفق دفع الفواتير في Supabase. لم يتم خصم أي مبلغ.");
-    } catch (e) {
-      console.error("تعذر بدء دفع الفاتورة:", e);
-      alert("تعذر بدء الدفع. لم يتم خصم أي مبلغ.");
-    } finally {
-      setPaying(null);
-    }
-  };
+
 
   if (loading) {
     return (
@@ -119,16 +102,10 @@ export default function MilestoneInvoicePanel({ projectId, milestoneId, isClient
                 {isClient && invoice.status === "sent" && (
                   <Button
                     size="sm"
-                    onClick={() => handlePay(invoice)}
-                    disabled={paying === invoice.id}
-                    className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white text-xs h-8"
+                    disabled
+                    className="bg-slate-200 text-slate-600 text-xs h-8 cursor-not-allowed"
                   >
-                    {paying === invoice.id ? (
-                      <Loader2 className="w-3 h-3 animate-spin ml-1" />
-                    ) : (
-                      <CreditCard className="w-3 h-3 ml-1" />
-                    )}
-                    ادفع الآن
+                    الدفع الإلكتروني غير متاح مؤقتًا
                   </Button>
                 )}
               </div>
