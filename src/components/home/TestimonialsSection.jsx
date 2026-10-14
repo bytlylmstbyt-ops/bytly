@@ -1,36 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import React from "react";
 import { Star, Quote } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 
 export default function TestimonialsSection() {
   const { t } = useLanguage();
-  const [reviews, setReviews] = useState([]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const data = await base44.entities.Review.filter(
-          { status: "completed", sentiment: "positive" },
-          "-created_date",
-          3
-        );
-        setReviews(data.filter(r => r.comment && r.rating >= 4));
-      } catch (_) { /* ignore — fallback to defaults */ }
-    })();
-  }, []);
-
-  const defaults = t('testimonials.defaults') || [];
-  const items = reviews.length >= 3
-    ? reviews.map(r => ({
-        name: r.target_name || t('testimonials.fallbackClient'),
-        role: t('testimonials.fallbackRole'),
-        rating: r.rating,
-        text: r.comment,
-        metric: r.highlights?.[0] || t('testimonials.fallbackMetric'),
-      }))
-    : defaults;
+  // Use the existing localized fallback content; public testimonials are not
+  // fetched from a legacy Base44 entity.
+  const items = t('testimonials.defaults') || [];
 
   return (
     <section className="py-16 sm:py-20 bg-gradient-to-b from-white to-amber-50/30">
