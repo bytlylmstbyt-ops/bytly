@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Calendar, Video, Phone, MapPin, Loader2, CheckCircle, ExternalLink, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,7 @@ const CONSULTATION_TYPES = [
   { value: "in_person", label: "لقاء شخصي", icon: MapPin },
 ];
 
-export default function AppointmentModal({ targetId, targetName, targetType, targetEmail, trigger }) {
+export default function AppointmentModal({ targetId, projectId, currentUser, targetName, targetType, targetEmail, trigger }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -55,13 +55,18 @@ export default function AppointmentModal({ targetId, targetName, targetType, tar
   const fetchAvailableSlots = async (date) => {
     setLoadingSlots(true);
     try {
-      const res = await base44.functions.invoke("bookReviewMeeting", {
-        action: "available",
-        engineer_email: targetEmail,
-        date
-      });
-      setAvailableSlots(res.data.available_slots || []);
-      setBookedSlots(res.data.booked_slots || []);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData?.user) throw new Error("يجب تسجيل الدخول.");
+      const { data: profile, error: profileError } = await supabase.from("profiles").select("id,user_id").ilike("email", targetEmail).maybeSingle();
+      if (profileError) throw profileError;
+      const targetUserId = profile?.user_id || profile?.id;
+      if (!targetUserId) { setAvailableSlots(TIME_SLOTS); setBookedSlots([]); return; }
+      const { data, error } = await supabase.from("consultation_appointments").select("appointment_time,status").eq("appointment_date", date).or("provider_user_id.eq." + targetUserId + ",client_user_id.eq." + targetUserId).neq("status", "cancelled");
+      if (error) throw error;
+      const booked = (data || []).map(a => String(a.appointment_time).slice(0, 5));
+      setBookedSlots(booked);
+      setAvailableSlots(TIME_SLOTS.filter(slot => !booked.includes(slot)));
     } catch (e) {
       // If fetch fails, show all slots
       setAvailableSlots(TIME_SLOTS);
@@ -74,25 +79,35 @@ export default function AppointmentModal({ targetId, targetName, targetType, tar
     if (!form.appointment_date || !form.appointment_time || !form.topic) return;
     setLoading(true);
     try {
-      const res = await base44.functions.invoke("bookReviewMeeting", {
-        action: "book",
-        target_type: targetType,
-        target_id: targetId,
-        target_name: targetName,
-        target_email: targetEmail || "",
-        appointment_date: form.appointment_date,
-        appointment_time: form.appointment_time,
-        duration_minutes: 60,
-        consultation_type: form.consultation_type,
-        topic: form.topic,
-        notes: form.notes,
-        client_phone: form.client_phone,
-        location: form.consultation_type === "in_person" ? "سيتم تحديد الموقع لاحقاً" : ""
-      });
-      setResult(res.data);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const authUser = authData?.user;
+      if (!authUser) throw new Error("يجب تسجيل الدخول قبل حجز الموعد.");
+      const { data: profile, error: profileError } = await supabase.from("profiles").select("id,user_id").ilike("email", targetEmail).maybeSingle();
+      if (profileError) throw profileError;
+      const resolvedTargetId = profile?.user_id || profile?.id || targetId;
+      if (!resolvedTargetId) throw new Error("تعذر تحديد حساب الطرف الآخر.");
+      const isBookingEngineer = targetType === "client";
+      const payload = {
+        project_id: projectId || null, created_by: authUser.id,
+        client_user_id: isBookingEngineer ? resolvedTargetId : authUser.id,
+        provider_user_id: isBookingEngineer ? authUser.id : resolvedTargetId,
+        target_id: resolvedTargetId, target_name: targetName || null, target_email: targetEmail || null,
+        appointment_date: form.appointment_date, appointment_time: form.appointment_time,
+        duration_minutes: 60, consultation_type: form.consultation_type, appointment_type: "project_review",
+        topic: form.topic, notes: form.notes || null, client_phone: form.client_phone || null,
+        client_name: isBookingEngineer ? targetName || null : currentUser?.full_name || authUser.email,
+        client_email: isBookingEngineer ? targetEmail || null : authUser.email,
+        location: form.consultation_type === "in_person" ? "سيتم تحديد الموقع لاحقاً" : null,
+        status: "scheduled"
+      };
+      const { data, error } = await supabase.from("consultation_appointments").insert(payload).select("id,appointment_date,appointment_time,meet_link,calendar_link,status").single();
+      if (error) throw error;
+      setResult({ ...data, google_calendar_link: data.calendar_link || null });
       setSubmitted(true);
     } catch (e) {
       console.error(e);
+      setResult({ error: e?.message || "تعذر حجز الموعد." });
     } finally {
       setLoading(false);
     }
@@ -132,7 +147,7 @@ export default function AppointmentModal({ targetId, targetName, targetType, tar
             </div>
             <h3 className="text-lg font-bold text-green-700 mb-2">✅ تم إرسال طلب الموعد بنجاح!</h3>
             <p className="text-slate-600 text-sm mb-4">
-              تم إرسال طلب حجز الموعد إلى {targetName} وسيتواصل معك قريباً للتأكيد.
+              تم حفظ الموعد في بيتلي. سيظهر رابط الاجتماع أو التقويم إذا تم إنشاؤه فعلياً.
             </p>
             <p className="text-slate-500 text-xs mb-4">
               التاريخ: {form.appointment_date} | الوقت: {form.appointment_time}
@@ -300,7 +315,7 @@ export default function AppointmentModal({ targetId, targetName, targetType, tar
             <div className="bg-blue-50 border border-blue-100 rounded-lg p-2.5 flex items-start gap-2">
               <Calendar className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
               <p className="text-xs text-blue-700">
-                سيتم إنشاء حدث في تقويم جوجل تلقائياً وإرسال دعوة لك وللمهندس، مع رابط Google Meet للاجتماعات المرئية.
+                يتم حفظ الحجز في بيتلي. إنشاء رابط Google Meet أو مزامنة تقويم Google يتطلب تكاملاً فعّالاً.
               </p>
             </div>
 
@@ -310,7 +325,7 @@ export default function AppointmentModal({ targetId, targetName, targetType, tar
               className="w-full bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin ml-2" /> : <Calendar className="w-4 h-4 ml-2" />}
-              تأكيد الحجز وإضافة للتقويم
+              تأكيد حجز الموعد
             </Button>
           </div>
         )}
