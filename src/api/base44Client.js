@@ -97,8 +97,8 @@ const submitProjectOfferSupabase = async (payload = {}) => {
   if (projectError) throw new Error(projectError.message || 'تعذر التحقق من المشروع');
   if (!project) throw new Error('المشروع غير موجود');
   if (project.client_user_id === user.id) throw new Error('لا يمكنك تقديم عرض على مشروعك');
-  if (!['open', 'published', 'active'].includes(String(project.status || '').toLowerCase()) &&
-      !['open', 'published', 'active'].includes(String(project.lifecycle_status || '').toLowerCase())) {
+  // Match the existing Supabase RLS policy, which permits offer inserts only for visible projects with status='open'.
+  if (String(project.status || '').toLowerCase() !== 'open') {
     throw new Error('المشروع غير مفتوح لاستقبال العروض');
   }
 
