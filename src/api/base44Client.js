@@ -1221,7 +1221,7 @@ bytlyCompat.functions = {
         throw new Error('رقم المشروع غير صالح');
       }
       const { data: project, error: projectError } = await withHardTimeout(
-        supabase.from('projects').select('id,client_user_id,assigned_engineer_id,engineer_user_id,technical_consultant_id,assigned_contractor_id,assigned_supplier_id').eq('id', projectId).maybeSingle(),
+        supabase.from('projects').select('id,client_user_id,assigned_engineer_id,technical_consultant_id,assigned_contractor_id,assigned_supplier_id').eq('id', projectId).maybeSingle(),
         10000,
         'انتهت مهلة التحقق من المشروع'
       );
@@ -1229,10 +1229,32 @@ bytlyCompat.functions = {
       if (!project) throw new Error('لم يتم العثور على المشروع');
       const { data: profile } = await withHardTimeout(supabase.from('profiles').select('role').eq('user_id', user.id).maybeSingle(), 10000);
       const role = String(profile?.role || user.app_metadata?.role || '').toLowerCase();
-      const allowed = ['admin','owner'].includes(role) || [
-        project.client_user_id, project.assigned_engineer_id, project.engineer_user_id,
-        project.technical_consultant_id, project.assigned_contractor_id, project.assigned_supplier_id
-      ].includes(user.id);
+      let isProjectMember = false;
+      const { data: membership, error: membershipError } = await withHardTimeout(
+        supabase.from('project_members').select('id').eq('project_id', projectId).eq('user_id', user.id).maybeSingle(),
+        10000,
+        'انتهت مهلة التحقق من عضوية المشروع'
+      );
+      if (membershipError) throw new Error(membershipError.message || 'تعذر التحقق من عضوية المشروع');
+      isProjectMember = Boolean(membership);
+      let isAssignedProvider = false;
+      const assignedChecks = [
+        ['engineers', project.assigned_engineer_id],
+        ['consultants', project.technical_consultant_id],
+        ['contractors', project.assigned_contractor_id],
+        ['suppliers', project.assigned_supplier_id],
+      ];
+      for (const [table, assignedId] of assignedChecks) {
+        if (!assignedId) continue;
+        const { data: provider, error: providerError } = await withHardTimeout(
+          supabase.from(table).select('user_id').eq('id', assignedId).maybeSingle(),
+          10000,
+          'انتهت مهلة التحقق من مقدم الخدمة'
+        );
+        if (providerError) throw new Error(providerError.message || 'تعذر التحقق من مقدم الخدمة');
+        if (provider?.user_id === user.id) { isAssignedProvider = true; break; }
+      }
+      const allowed = ['admin','owner'].includes(role) || project.client_user_id === user.id || isProjectMember || isAssignedProvider;
       if (!allowed) throw new Error('غير مصرح لك بحفظ مرفقات هذا المشروع');
       const attachments = Array.isArray(payload?.attachments) ? payload.attachments.slice(0, 20) : [];
       if (!attachments.length) return { data: { success: true, saved: 0, files: [] } };
