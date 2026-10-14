@@ -106,7 +106,7 @@ export default function MilestoneInvoicePanel({ projectId, milestoneId, isClient
               </div>
               <div className="flex flex-col items-end gap-2">
                 <p className="font-bold text-[#1a1a2e]">{invoice.total_amount?.toLocaleString()} ر.س</p>
-                <p className="text-xs text-slate-400">شامل الضريبة {invoice.tax_amount?.toLocaleString()} ر.س</p>
+                <p className="text-xs text-slate-400">شامل الضريبة {invoice.vat_amount?.toLocaleString()} ر.س</p>
                 <Badge className={`text-xs ${cfg.color} border-0`}>
                   <StatusIcon className="w-3 h-3 ml-1" />
                   {cfg.label}
