@@ -13,7 +13,7 @@ export async function uploadScopedFile(scope, file, options = {}) {
     if (authError) throw authError;
     const userId = authData?.user?.id;
     if (!userId) throw new Error("يجب تسجيل الدخول قبل رفع الملفات.");
-    const safeDraftName = (file.name || "file").replace(/[^\\w.\\-\\u0600-\\u06FF ]/g, "_");
+    const safeDraftName = (file.name || "file").replace(/[^\w.\-\u0600-\u06FF ]/g, "_");
     const path = `drafts/${userId}/${crypto.randomUUID()}-${safeDraftName}`;
     const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
       upsert: false,
