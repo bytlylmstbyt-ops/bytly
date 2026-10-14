@@ -120,6 +120,7 @@ export default function WalletPage() {
         profile = {
           ...profile,
           wallet_balance: Number(walletAccount?.available_balance || 0),
+          available_balance: Number(walletAccount?.available_balance || 0),
           held_balance: Number(walletAccount?.held_balance || 0),
           wallet_currency: walletAccount?.currency || "SAR",
         };
@@ -159,6 +160,7 @@ export default function WalletPage() {
           email: currentUser.email,
           full_name: currentUser.full_name,
           wallet_balance: Number(walletAccount?.available_balance || 0),
+          available_balance: Number(walletAccount?.available_balance || 0),
           held_balance: Number(walletAccount?.held_balance || 0),
           wallet_currency: walletAccount?.currency || "SAR",
           client_type: "individual",
