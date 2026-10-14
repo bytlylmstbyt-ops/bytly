@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import React, { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, CreditCard, CheckCircle, Clock, AlertCircle, Loader2 } from "lucide-react";
+import { FileText, CheckCircle, Clock, AlertCircle, Loader2 } from "lucide-react";
 
 const statusConfig = {
   draft: { label: "مسودة", color: "bg-slate-100 text-slate-600", icon: FileText },
@@ -16,48 +16,45 @@ const statusConfig = {
 export default function MilestoneInvoicePanel({ projectId, milestoneId, isClient }) {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [paying, setPaying] = useState(null);
 
-  useEffect(() => {
-    loadInvoices();
-  }, [projectId, milestoneId]);
-
-  const loadInvoices = async () => {
+  const loadInvoices = useCallback(async () => {
     setLoading(true);
     try {
-      const filter = milestoneId
-        ? { milestone_id: milestoneId }
-        : { project_id: projectId, invoice_type: "project_milestone" };
-      const data = await base44.entities.Invoice.filter(filter, "-created_date");
-      setInvoices(data);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData?.user) {
+        setInvoices([]);
+        return;
+      }
+      let query = supabase
+        .from("invoices")
+        .select("id,invoice_number,project_id,milestone_id,invoice_type,status,notes,due_date,total_amount,taxable_amount,vat_amount,currency,created_at,buyer_user_id,issuer_user_id")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      if (milestoneId) query = query.eq("milestone_id", milestoneId);
+      else if (projectId) query = query.eq("project_id", projectId).eq("invoice_type", "project_milestone");
+      else {
+        setInvoices([]);
+        return;
+      }
+      const { data, error } = await query;
+      if (error) throw error;
+      setInvoices((data || []).filter(invoice =>
+        invoice.buyer_user_id === authData.user.id ||
+        invoice.issuer_user_id === authData.user.id
+      ));
     } catch (e) {
-      console.error(e);
+      console.error("تعذر تحميل فواتير المرحلة من Supabase:", e);
+      setInvoices([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId, milestoneId]);
 
-  const handlePay = async (invoice) => {
-    if (window !== window.top) {
-      alert("الدفع متاح فقط من التطبيق المنشور. يرجى فتح التطبيق في نافذة مستقلة.");
-      return;
-    }
-    setPaying(invoice.id);
-    try {
-      const res = await base44.functions.invoke("payMilestoneInvoice", {
-        invoice_id: invoice.id,
-        success_url: `${window.location.origin}/PaymentSuccess?invoice=${invoice.id}`,
-        cancel_url: window.location.href,
-      });
-      if (res.data?.checkout_url) {
-        window.location.href = res.data.checkout_url;
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setPaying(null);
-    }
-  };
+  useEffect(() => {
+    loadInvoices();
+  }, [loadInvoices]);
+
+
 
   if (loading) {
     return (
@@ -91,13 +88,13 @@ export default function MilestoneInvoicePanel({ projectId, milestoneId, isClient
                   <p className="font-semibold text-sm text-[#1a1a2e]">{invoice.invoice_number}</p>
                   <p className="text-xs text-slate-500 mt-0.5">{invoice.notes}</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-slate-500">استحقاق: {invoice.due_date}</span>
+                    <span className="text-xs text-slate-500">استحقاق: {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString("ar-SA") : "—"}</span>
                   </div>
                 </div>
               </div>
               <div className="flex flex-col items-end gap-2">
-                <p className="font-bold text-[#1a1a2e]">{invoice.total_amount?.toLocaleString()} ر.س</p>
-                <p className="text-xs text-slate-400">شامل الضريبة {invoice.tax_amount?.toLocaleString()} ر.س</p>
+                <p className="font-bold text-[#1a1a2e]">{Number(invoice.total_amount || 0).toLocaleString("ar-SA")} ر.س</p>
+                <p className="text-xs text-slate-400">ضريبة القيمة المضافة {Number(invoice.vat_amount || 0).toLocaleString("ar-SA")} ر.س</p>
                 <Badge className={`text-xs ${cfg.color} border-0`}>
                   <StatusIcon className="w-3 h-3 ml-1" />
                   {cfg.label}
@@ -105,16 +102,10 @@ export default function MilestoneInvoicePanel({ projectId, milestoneId, isClient
                 {isClient && invoice.status === "sent" && (
                   <Button
                     size="sm"
-                    onClick={() => handlePay(invoice)}
-                    disabled={paying === invoice.id}
-                    className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white text-xs h-8"
+                    disabled
+                    className="bg-slate-200 text-slate-600 text-xs h-8 cursor-not-allowed"
                   >
-                    {paying === invoice.id ? (
-                      <Loader2 className="w-3 h-3 animate-spin ml-1" />
-                    ) : (
-                      <CreditCard className="w-3 h-3 ml-1" />
-                    )}
-                    ادفع الآن
+                    الدفع الإلكتروني غير متاح مؤقتًا
                   </Button>
                 )}
               </div>
