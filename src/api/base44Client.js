@@ -592,7 +592,41 @@ legacyBase44.functions = {
     }
 
     if (name === 'createMeetCall') {
-      return { data: { success: false, meet_link: null, google_calendar_link: null, calendar_link: null, error: 'لم يتم إنشاء رابط Google Meet فعليًا بعد' } };
+      const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000, 'انتهت مهلة التحقق من المستخدم');
+      if (authError || !authData?.user) throw new Error('يجب تسجيل الدخول أولاً');
+      const attendees = Array.isArray(payload?.attendee_emails)
+        ? [...new Set(payload.attendee_emails.map(value => String(value || '').trim().toLowerCase()).filter(value => value && value.includes('@')))]
+        : [];
+      const { data: meeting, error: meetingError } = await withHardTimeout(
+        supabase.functions.invoke('google-service', {
+          body: {
+            action: 'calendarCreate',
+            project_id: payload?.project_id || null,
+            project_title: payload?.project_title || 'اجتماع مشروع Bytly',
+            attendee_emails: attendees,
+            scheduled_time: payload?.scheduled_time || null,
+            created_by: authData.user.id,
+          },
+        }),
+        45000,
+        'انتهت مهلة إنشاء اجتماع Google Meet'
+      );
+      if (meetingError) throw new Error(meetingError.message || 'تعذر إنشاء اجتماع Google Meet');
+      const result = meeting?.data || meeting;
+      const meetLink = result?.meet_link || result?.meetLink || result?.hangoutLink || null;
+      const eventLink = result?.event_link || result?.calendar_link || result?.htmlLink || null;
+      if (!meetLink) throw new Error(result?.error || 'لم تُرجع خدمة Google رابط Google Meet');
+      return {
+        data: {
+          ...result,
+          success: true,
+          meet_link: meetLink,
+          event_link: eventLink,
+          google_calendar_link: eventLink,
+          calendar_link: eventLink,
+          start_time: result?.start_time || result?.startTime || payload?.scheduled_time || null,
+        },
+      };
     }
 
     if (name === 'linkedinService' && payload?.action === 'shareDesignWork') {
