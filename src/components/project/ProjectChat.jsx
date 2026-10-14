@@ -98,13 +98,17 @@ export default function ProjectChat({ projectId, project, currentUser, engineerN
         const authUser = authData?.user;
         if (!authUser) throw new Error("يجب تسجيل الدخول لاستخدام دردشة المشروع.");
 
-        const ids = [project?.client_user_id, project?.assigned_engineer_id, project?.technical_consultant_id].filter(Boolean);
-        const { data: profiles, error: profilesError } = await supabase.from("profiles").select("id,user_id,email,full_name").or(
-          `user_id.in.(${ids.join(",")}),id.in.(${ids.join(",")})`
-        );
-        if (profilesError && ids.length) throw profilesError;
-        const targetProfiles = (profiles || []).filter(p => (p.user_id || p.id) !== authUser.id);
-        const targetUserIds = [...new Set(targetProfiles.map(p => p.user_id || p.id).filter(Boolean))];
+        const participantIds = [project?.client_user_id, project?.assigned_engineer_id, project?.technical_consultant_id].filter(Boolean);
+        const { data: profiles, error: profilesError } = participantIds.length
+          ? await supabase.from("profiles").select("id,user_id,email,full_name").or(
+              `user_id.in.(${participantIds.join(",")}),id.in.(${participantIds.join(",")})`
+            )
+          : { data: [], error: null };
+        if (profilesError) throw profilesError;
+        const participantUserIds = [...new Set((profiles || []).map(p => p.user_id).filter(Boolean))];
+        const isProjectParticipant = [project?.client_user_id, project?.assigned_engineer_id, project?.technical_consultant_id]
+          .includes(authUser.id) || participantUserIds.includes(authUser.id);
+        if (!isProjectParticipant) throw new Error("الدردشة متاحة لأطراف المشروع المسجلين فقط.");
 
         let { data: conversation, error: conversationError } = await supabase
           .from("conversations").select("id,created_by")
@@ -115,21 +119,23 @@ export default function ProjectChat({ projectId, project, currentUser, engineerN
           const { data: created, error: createError } = await supabase.from("conversations").insert({
             project_id: projectId, created_by: authUser.id, type: "project",
             title: project?.title ? `دردشة المشروع: ${project.title}` : "دردشة المشروع",
-            participants: [authUser.id, ...targetUserIds]
+            participants: [authUser.id, ...participantUserIds]
           }).select("id,created_by").single();
           if (createError) throw createError;
           conversation = created;
-        }
-
-        const { data: memberships, error: memberError } = await supabase.from("conversation_members")
-          .select("user_id").eq("conversation_id", conversation.id);
-        if (memberError) throw memberError;
-        const members = new Set((memberships || []).map(m => m.user_id));
-        const addIds = [authUser.id, ...targetUserIds].filter(id => !members.has(id));
-        for (const userId of addIds) {
-          const { error } = await supabase.from("conversation_members").insert({ conversation_id: conversation.id, user_id: userId });
-          if (error && userId === authUser.id) throw error;
-          if (error) console.warn("Could not add project chat participant:", error.message);
+          const { error: membershipError } = await supabase.from("conversation_members").insert({ conversation_id: conversation.id, user_id: authUser.id });
+          if (membershipError) throw membershipError;
+        } else {
+          const { data: membership, error: membershipError } = await supabase.from("conversation_members")
+            .select("user_id").eq("conversation_id", conversation.id).eq("user_id", authUser.id).maybeSingle();
+          if (membershipError) throw membershipError;
+          if (!membership && conversation.created_by !== authUser.id) {
+            throw new Error("ليس لديك صلاحية الوصول إلى دردشة هذا المشروع.");
+          }
+          if (!membership && conversation.created_by === authUser.id) {
+            const { error: addMembershipError } = await supabase.from("conversation_members").insert({ conversation_id: conversation.id, user_id: authUser.id });
+            if (addMembershipError) throw addMembershipError;
+          }
         }
         if (!active) return;
         setResolvedConversationId(conversation.id);
