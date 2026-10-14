@@ -98,16 +98,26 @@ export default function ProjectChat({ projectId, project, currentUser, engineerN
         const authUser = authData?.user;
         if (!authUser) throw new Error("يجب تسجيل الدخول لاستخدام دردشة المشروع.");
 
-        const participantIds = [project?.client_user_id, project?.assigned_engineer_id, project?.technical_consultant_id].filter(Boolean);
-        const { data: profiles, error: profilesError } = participantIds.length
+        const participantIds = [project?.client_user_id, project?.technical_consultant_id].filter(Boolean);
+        let assignedEngineerUserId = null;
+        if (project?.assigned_engineer_id) {
+          const { data: engineer, error: engineerError } = await supabase.from("engineers")
+            .select("user_id").eq("id", project.assigned_engineer_id).maybeSingle();
+          if (engineerError) throw engineerError;
+          assignedEngineerUserId = engineer?.user_id || null;
+        }
+        const lookupIds = [...new Set([...participantIds, assignedEngineerUserId].filter(Boolean))];
+        const { data: profiles, error: profilesError } = lookupIds.length
           ? await supabase.from("profiles").select("id,user_id,email,full_name").or(
-              `user_id.in.(${participantIds.join(",")}),id.in.(${participantIds.join(",")})`
+              `user_id.in.(${lookupIds.join(",")}),id.in.(${lookupIds.join(",")})`
             )
           : { data: [], error: null };
         if (profilesError) throw profilesError;
-        const participantUserIds = [...new Set((profiles || []).map(p => p.user_id).filter(Boolean))];
-        const isProjectParticipant = [project?.client_user_id, project?.assigned_engineer_id, project?.technical_consultant_id]
-          .includes(authUser.id) || participantUserIds.includes(authUser.id);
+        const participantUserIds = [...new Set([
+          ...lookupIds,
+          ...(profiles || []).map(p => p.user_id).filter(Boolean)
+        ])];
+        const isProjectParticipant = participantUserIds.includes(authUser.id);
         if (!isProjectParticipant) throw new Error("الدردشة متاحة لأطراف المشروع المسجلين فقط.");
 
         let { data: conversation, error: conversationError } = await supabase
@@ -123,16 +133,17 @@ export default function ProjectChat({ projectId, project, currentUser, engineerN
           }).select("id,created_by").single();
           if (createError) throw createError;
           conversation = created;
-          const { error: membershipError } = await supabase.from("conversation_members").insert({ conversation_id: conversation.id, user_id: authUser.id });
+          const memberIds = [...new Set([...participantUserIds, authUser.id])];
+          const { error: membershipError } = await supabase.from("conversation_members").upsert(
+            memberIds.map(user_id => ({ conversation_id: conversation.id, user_id })),
+            { onConflict: "conversation_id,user_id", ignoreDuplicates: true }
+          );
           if (membershipError) throw membershipError;
         } else {
           const { data: membership, error: membershipError } = await supabase.from("conversation_members")
             .select("user_id").eq("conversation_id", conversation.id).eq("user_id", authUser.id).maybeSingle();
           if (membershipError) throw membershipError;
-          if (!membership && conversation.created_by !== authUser.id) {
-            throw new Error("ليس لديك صلاحية الوصول إلى دردشة هذا المشروع.");
-          }
-          if (!membership && conversation.created_by === authUser.id) {
+          if (!membership) {
             const { error: addMembershipError } = await supabase.from("conversation_members").insert({ conversation_id: conversation.id, user_id: authUser.id });
             if (addMembershipError) throw addMembershipError;
           }
