@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,36 +44,17 @@ export default function WithdrawalForm({ engineer, onSuccess }) {
     setLoading(true);
 
     try {
-      // Create withdrawal request
-      const request = await base44.entities.WithdrawalRequest.create({
-        engineer_id: engineer.id,
-        amount: amount,
-        iban: formData.iban,
-        bank_name: formData.bank_name,
-        account_holder_name: formData.account_holder_name,
-        status: "pending",
-        request_date: new Date().toISOString()
+      // The RPC validates the authenticated provider, bank details and available balance,
+      // then atomically holds the amount and records the withdrawal/ledger entries.
+      const { data: request, error: requestError } = await supabase.rpc("request_withdrawal", {
+        p_amount: amount,
+        p_iban: formData.iban.trim(),
+        p_bank_name: formData.bank_name.trim(),
+        p_account_holder_name: formData.account_holder_name.trim(),
+        p_project_id: null,
       });
-
-      // Update engineer's available balance
-      await base44.entities.Engineer.update(engineer.id, {
-        available_balance: engineer.available_balance - amount,
-        iban: formData.iban,
-        bank_name: formData.bank_name,
-        account_holder_name: formData.account_holder_name
-      });
-
-      // Create transaction record
-      await base44.entities.Transaction.create({
-        user_id: engineer.id,
-        type: "withdrawal_request",
-        amount: amount,
-        status: "pending",
-        description: "طلب سحب رصيد",
-        withdrawal_request_id: request.id,
-        balance_before: engineer.available_balance,
-        balance_after: engineer.available_balance - amount
-      });
+      if (requestError) throw requestError;
+      if (!request?.id) throw new Error("لم يتم تأكيد إنشاء طلب السحب");
 
       setSuccess(true);
       setFormData({ ...formData, amount: "" });
