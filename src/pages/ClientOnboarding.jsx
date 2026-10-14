@@ -120,7 +120,8 @@ export default function ClientOnboarding() {
       const terms = (analysisData.skills_needed || []).map(x => String(x).toLowerCase());
       const suggestions = (data || []).map(engineer => {
         const specialization = String(engineer.specialization || "").toLowerCase();
-        const matchScore = terms.reduce((score, term) => score + (specialization.includes(term) ? 1 : 0), 0);
+        const matchedTerms = terms.reduce((score, term) => score + (specialization.includes(term) ? 1 : 0), 0);
+        const matchScore = terms.length ? Math.round((matchedTerms / terms.length) * 100) : 0;
         return { ...engineer, match_score: matchScore, rating: Number(engineer.rating || 0) };
       }).sort((a, b) => b.match_score - a.match_score || b.rating - a.rating).slice(0, 10);
       setSuggestedEngineers(suggestions);
