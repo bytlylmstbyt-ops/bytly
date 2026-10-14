@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import {
   Search, ArrowLeft, CheckCircle, Users, Shield, Palette, Building2,
@@ -69,8 +69,9 @@ export default function Home() {
 
       // Check if user is an engineer
       try {
-        const engineers = await base44.entities.Engineer.filter({ email: currentUser.email }, null, 1);
-        if (engineers.length > 0) {
+        const { data: engineers, error: engineerError } = await supabase.from("engineers").select("id").eq("email", currentUser.email).limit(1);
+        if (engineerError) throw engineerError;
+        if ((engineers || []).length > 0) {
           setUserType('engineer');
           setShowWelcome(true);
           return;
@@ -83,8 +84,9 @@ export default function Home() {
 
       // Check if user is a firm
       try {
-        const firms = await base44.entities.EngineeringFirm.filter({ email: currentUser.email }, null, 1);
-        if (firms.length > 0) {
+        const { data: firms, error: firmError } = await supabase.from("engineering_firms").select("id").eq("email", currentUser.email).limit(1);
+        if (firmError) throw firmError;
+        if ((firms || []).length > 0) {
           setUserType('firm');
           setShowWelcome(true);
           return;
@@ -96,8 +98,9 @@ export default function Home() {
 
       // Check if user is a client
       try {
-        const clients = await base44.entities.Client.filter({ email: currentUser.email }, null, 1);
-        if (clients.length > 0) {
+        const { data: clients, error: clientError } = await supabase.from("clients").select("id").eq("email", currentUser.email).limit(1);
+        if (clientError) throw clientError;
+        if ((clients || []).length > 0) {
           setUserType('client');
           setShowWelcome(true);
           return;
@@ -113,8 +116,8 @@ export default function Home() {
 
   const handleWelcomeComplete = async () => {
     try {
-      const currentUser = user || await base44.auth.me();
-      localStorage.setItem(`bytly_seen_welcome_${currentUser.email}`, 'true');
+      const currentUser = user;
+      if (currentUser?.email) localStorage.setItem(`bytly_seen_welcome_${currentUser.email}`, 'true');
     } catch (error) {
       localStorage.setItem('bytly_seen_welcome', 'true');
     }
@@ -124,10 +127,14 @@ export default function Home() {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [engineersData, portfoliosData] = await Promise.all([
-        base44.entities.Engineer.filter({ status: "approved", is_verified: true }, "-rating", 6),
-        base44.entities.Portfolio.filter({ is_featured: true }, "-created_date", 8)
+      const [engineersResult, portfoliosResult] = await Promise.all([
+        supabase.from("engineers").select("*").eq("status", "approved").eq("is_verified", true).order("rating", { ascending: false }).limit(6),
+        supabase.from("portfolios").select("*").eq("is_featured", true).order("created_date", { ascending: false }).limit(8)
       ]);
+      if (engineersResult.error) throw engineersResult.error;
+      if (portfoliosResult.error) throw portfoliosResult.error;
+      const engineersData = engineersResult.data || [];
+      const portfoliosData = portfoliosResult.data || [];
       
       setEngineers(engineersData);
       setPortfolios(portfoliosData);
