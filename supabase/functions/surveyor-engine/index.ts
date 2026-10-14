@@ -21,6 +21,34 @@ Deno.serve(async(req:Request)=>{
  const {data:sv,error:svErr}=await db.from("surveyor_profiles").select("*").eq("user_id",user.id).maybeSingle();if(svErr)throw svErr;
  const getReq=async(id:string)=>{const {data,error}=await db.from("survey_requests").select("*,survey_deliverables(*)").eq("id",id).maybeSingle();if(error)throw error;return data;};
  const notify=async(uid:string,title:string,body:string,type="system")=>{const {error}=await db.from("notifications").insert({user_id:uid,title,body,type,entity_type:"survey_request"});if(error)console.error("notify",error.message);};
+ if(a==="available"){
+  const date=str(b.date),email=str(b.surveyor_email);if(!date||!email)return reply({available_slots:[]});
+  const {data:target,error}=await db.from("surveyor_profiles").select("id,user_id").eq("email",email).maybeSingle();if(error)throw error;if(!target)return reply({available_slots:[]});
+  const {data:booked,error:be}=await db.from("consultation_appointments").select("appointment_time,duration_minutes").eq("target_id",target.id).eq("appointment_date",date).neq("status","cancelled");if(be)throw be;
+  const allSlots=["09:00","10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00"];
+  const taken=new Set((booked||[]).map(x=>String(x.appointment_time).slice(0,5)));
+  return reply({available_slots:allSlots.filter(x=>!taken.has(x))});
+ }
+ if(a==="book"){
+  const date=str(b.appointment_date),time=str(b.appointment_time),targetId=str(b.target_id);
+  if(!date||!time||!targetId)return reply({error:"التاريخ والوقت والمساح مطلوبون"},400);
+  if(date<new Date().toISOString().slice(0,10))return reply({error:"لا يمكن حجز موعد في الماضي"},400);
+  const {data:target,error:te}=await db.from("surveyor_profiles").select("id,user_id,email,full_name").eq("id",targetId).maybeSingle();if(te)throw te;if(!target||target.email!==str(b.target_email))return reply({error:"المساح غير موجود"},404);
+  const {data:busy,error:be}=await db.from("consultation_appointments").select("id").eq("target_id",targetId).eq("appointment_date",date).eq("appointment_time",time).neq("status","cancelled").limit(1);if(be)throw be;if(busy?.length)return reply({error:"هذا الموعد حُجز للتو، اختر وقتاً آخر"},409);
+  const {data,error}=await db.from("consultation_appointments").insert({created_by:user.id,client_user_id:user.id,provider_user_id:target.user_id,target_id:target.id,target_name:target.full_name,target_email:target.email,appointment_date:date,appointment_time:time,duration_minutes:Math.max(15,Math.min(240,Math.round(n(b.duration_minutes)||60))),consultation_type:str(b.consultation_type)||"site_visit",appointment_type:"surveyor",topic:str(b.topic)||"موعد رفع مساحي",notes:str(b.notes),location:str(b.location),client_name:str(user.user_metadata?.full_name)||str(user.user_metadata?.name)||user.email,client_email:user.email,status:"confirmed",request_id:str(b.request_id)||null}).select("*").single();if(error)throw error;return reply({success:true,appointment:data});
+ }
+ if(a==="list_appointments"){
+  const role=str(b.role);let q=db.from("consultation_appointments").select("*").eq("appointment_type","surveyor").order("appointment_date",{ascending:true}).order("appointment_time",{ascending:true}).limit(100);
+  q=role==="client"?q.eq("client_user_id",user.id):q.eq("provider_user_id",user.id);
+  const {data,error}=await q;if(error)throw error;
+  return reply({appointments:(data||[]).map(x=>({...x,google_calendar_link:x.calendar_link,target_name:x.target_name,target_email:x.target_email}))});
+ }
+ if(a==="cancel_appointment"){
+  const id=str(b.appointment_id);const {data:appointment,error:findError}=await db.from("consultation_appointments").select("*").eq("id",id).maybeSingle();if(findError)throw findError;if(!appointment)return reply({error:"الموعد غير موجود"},404);
+  if(appointment.client_user_id!==user.id&&appointment.provider_user_id!==user.id&&!admin)return reply({error:"غير مصرح لك بإلغاء الموعد"},403);
+  if(["completed","cancelled"].includes(appointment.status))return reply({error:"الموعد ملغى أو مكتمل بالفعل"},400);
+  const {error}=await db.from("consultation_appointments").update({status:"cancelled",updated_at:new Date().toISOString()}).eq("id",id);if(error)throw error;return reply({success:true});
+ }
  if(a==="profile")return reply({profile:sv||null});
  if(a==="register"){
   if(sv)return reply({error:"لديك ملف مساح بالفعل"},409);
