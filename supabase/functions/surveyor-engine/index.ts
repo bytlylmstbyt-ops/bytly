@@ -93,7 +93,7 @@ Deno.serve(async(req:Request)=>{
  if(a==="review"){
   const req=await getReq(str(b.request_id)),rating=n(b.rating);if(!req)return reply({error:"الطلب غير موجود"},404);if(req.client_user_id!==user.id)return reply({error:"غير مصرح لك"},403);if(req.status!=="disbursed")return reply({error:"لا يمكن التقييم قبل اعتماد المخرجات"},400);if(!Number.isFinite(rating)||rating<1||rating>5)return reply({error:"التقييم يجب أن يكون بين 1 و5"},400);
   const {data:old,error:oldErr}=await db.from("project_reviews").select("id").eq("project_id",req.id).eq("reviewer_user_id",user.id).limit(1);if(oldErr)throw oldErr;if(old?.length)return reply({error:"تم تقييم هذا الطلب مسبقاً"},409);
-  const {error}=await db.from("project_reviews").insert({project_id:req.id,reviewer_user_id:user.id,reviewee_user_id:req.surveyor_user_id,rating,comment:str(b.comment)});if(error)throw error;
+  const {error}=await db.from("project_reviews").insert({project_id:req.id,reviewer_user_id:user.id,reviewee_user_id:req.surveyor_user_id,rating,quality_rating:Math.max(0,Math.min(5,Math.round(n(b.quality_rating)||0))),delivery_rating:Math.max(0,Math.min(5,Math.round(n(b.delivery_rating)||0))),communication_rating:Math.max(0,Math.min(5,Math.round(n(b.communication_rating)||0))),comment:str(b.comment)});if(error)throw error;
   const {data:rs,error:rsErr}=await db.from("project_reviews").select("rating").eq("reviewee_user_id",req.surveyor_user_id);if(rsErr)throw rsErr;const avg=(rs||[]).reduce((t,x)=>t+n(x.rating),0)/Math.max(1,(rs||[]).length);
   await db.from("surveyor_profiles").update({rating:Math.round(avg*10)/10}).eq("id",req.surveyor_id);await notify(req.surveyor_user_id,"تقييم جديد","حصلت على تقييم "+rating+" من 5.","review");return reply({success:true});
  }
