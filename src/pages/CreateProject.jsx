@@ -109,7 +109,7 @@ export default function CreateProject() {
     try {
       for (const file of files) {
         try {
-          const fileUrl = await uploadScopedFile("project-drafts", file);
+          const fileUrl = await uploadScopedFile("project-files", file, { projectId: "drafts" });
           uploadedUrls.push(fileUrl);
         } catch (uploadError) {
           console.error("Failed to upload project attachment:", file.name, uploadError);
