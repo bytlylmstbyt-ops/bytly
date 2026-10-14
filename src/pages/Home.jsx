@@ -129,7 +129,7 @@ export default function Home() {
     try {
       const [engineersResult, portfoliosResult] = await Promise.all([
         supabase.from("engineers").select("*").eq("status", "approved").eq("is_verified", true).order("rating", { ascending: false }).limit(6),
-        supabase.from("portfolios").select("*").eq("is_featured", true).order("created_date", { ascending: false }).limit(8)
+        supabase.from("portfolios").select("*").eq("is_featured", true).order("created_at", { ascending: false }).limit(8)
       ]);
       if (engineersResult.error) throw engineersResult.error;
       if (portfoliosResult.error) throw portfoliosResult.error;
