@@ -31,6 +31,9 @@ export default function WalletPage() {
 
   const loadWalletData = async () => {
     setIsLoading(true);
+    setTransactions([]);
+    setWithdrawalRequests([]);
+    setProjects([]);
     try {
       const { data: authData, error: authError } = await supabase.auth.getUser();
       const authUser = authData?.user;
