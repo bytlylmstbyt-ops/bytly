@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, BellRing, X, CheckCheck, RefreshCw } from "lucide-react";
@@ -31,33 +31,80 @@ export default function ProjectAlertsPanel({ userEmail, onClose }) {
   const loadAlerts = async () => {
     setLoading(true);
     try {
-      const notifs = await base44.entities.Notification.filter(
-        { recipient_email: userEmail, type: 'project_update', is_read: false },
-        '-created_date', 50
-      );
-      setAlerts(notifs);
-    } catch { setAlerts([]); }
-    finally { setLoading(false); }
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const authUser = authData?.user;
+      if (authError || !authUser || (userEmail && authUser.email?.toLowerCase() !== userEmail.toLowerCase())) {
+        setAlerts([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("id,user_id,type,title,body,entity_type,entity_id,read_at,created_at")
+        .eq("user_id", authUser.id)
+        .eq("type", "project_update")
+        .is("read_at", null)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      setAlerts((data || []).map(row => ({
+        ...row,
+        message: row.body || "",
+        created_date: row.created_at,
+        priority: "medium",
+        is_read: Boolean(row.read_at),
+      })));
+    } catch (error) {
+      console.error("Could not load project alerts from Supabase:", error);
+      setAlerts([]);
+      toast.error("تعذر تحميل إشعارات المشاريع");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const runCheck = async () => {
     setRunning(true);
-    try {
-      await base44.functions.invoke('taskProjectAlerts', {});
-      toast.success("تم فحص المشاريع وتوليد الإشعارات ✓");
-      await loadAlerts();
-    } catch (e) {
-      toast.error("فشل الفحص: " + e.message);
-    } finally { setRunning(false); }
+    await loadAlerts();
+    setRunning(false);
+    toast.success("تم تحديث الإشعارات");
   };
 
   const markRead = async (id) => {
-    await base44.entities.Notification.update(id, { is_read: true });
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData?.user) {
+      toast.error("يرجى تسجيل الدخول مجددًا");
+      return;
+    }
+    const { error } = await supabase
+      .from("notifications")
+      .update({ read_at: new Date().toISOString() })
+      .eq("id", id)
+      .eq("user_id", authData.user.id);
+    if (error) {
+      toast.error("تعذر تعليم الإشعار كمقروء");
+      return;
+    }
     setAlerts(prev => prev.filter(a => a.id !== id));
   };
 
   const markAllRead = async () => {
-    await Promise.all(alerts.map(a => base44.entities.Notification.update(a.id, { is_read: true })));
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData?.user) {
+      toast.error("يرجى تسجيل الدخول مجددًا");
+      return;
+    }
+    const ids = alerts.map(a => a.id);
+    if (!ids.length) return;
+    const { error } = await supabase
+      .from("notifications")
+      .update({ read_at: new Date().toISOString() })
+      .eq("user_id", authData.user.id)
+      .in("id", ids);
+    if (error) {
+      toast.error("تعذر تعليم الإشعارات كمقروءة");
+      return;
+    }
     setAlerts([]);
     toast.success("تم تعليم الكل كمقروء");
   };
@@ -100,7 +147,7 @@ export default function ProjectAlertsPanel({ userEmail, onClose }) {
             <div className="text-center py-12 text-slate-400">
               <BellRing className="w-10 h-10 mx-auto mb-2 opacity-30" />
               <p className="text-sm font-medium">لا توجد إشعارات جديدة</p>
-              <p className="text-xs mt-1">اضغط الزر أعلاه لفحص المشاريع</p>
+              <p className="text-xs mt-1">اضغط الزر أعلاه لتحديث الإشعارات</p>
             </div>
           )}
 
@@ -131,7 +178,7 @@ export default function ProjectAlertsPanel({ userEmail, onClose }) {
         <div className="border-t px-4 py-3 bg-slate-50">
           <Button onClick={runCheck} disabled={running} className="w-full bg-blue-600 hover:bg-blue-700 text-white" size="sm">
             {running ? <Loader2 className="w-4 h-4 animate-spin ml-1" /> : <RefreshCw className="w-4 h-4 ml-1" />}
-            فحص المشاريع الآن
+            تحديث الإشعارات
           </Button>
         </div>
       </div>
