@@ -145,12 +145,27 @@ export default function WalletPage() {
         } else if (type === "engineer" && profile.id) {
           const { data: withdrawals, error: withdrawalsError } = await supabase
             .from("withdrawal_requests")
-            .select("id,engineer_id,amount,iban,bank_name,account_holder_name,status,request_date,processing_date,completion_date,rejection_reason,transaction_reference,description,created_at,updated_at")
-            .eq("engineer_id", profile.id)
+            .select("id,provider_user_id,provider_type,financial_bank_account_id,amount,iban,bank_name,account_holder_name,status,request_date,processing_date,completion_date,rejection_reason,transaction_reference,description,created_at,updated_at")
+            .eq("provider_user_id", authUser.id)
             .order("created_at", { ascending: false })
             .limit(100);
           if (withdrawalsError) throw withdrawalsError;
-          setWithdrawalRequests((withdrawals || []).map(row => ({ ...row, created_date: row.created_at })));
+          const withdrawalIds = (withdrawals || []).map(row => row.id).filter(Boolean);
+          let bankDetailsByWithdrawal = new Map();
+          if (withdrawalIds.length) {
+            const { data: bankDetails, error: bankDetailsError } = await supabase
+              .from("withdrawal_bank_details")
+              .select("withdrawal_id,iban,bank_name,account_holder_name")
+              .eq("user_id", authUser.id)
+              .in("withdrawal_id", withdrawalIds);
+            if (bankDetailsError) throw bankDetailsError;
+            bankDetailsByWithdrawal = new Map((bankDetails || []).map(row => [row.withdrawal_id, row]));
+          }
+          setWithdrawalRequests((withdrawals || []).map(row => ({
+            ...row,
+            ...(bankDetailsByWithdrawal.get(row.id) || {}),
+            created_date: row.created_at,
+          })));
         }
       } else {
         // A valid signed-in homeowner can open the wallet before completing a client profile.
