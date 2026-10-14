@@ -128,7 +128,30 @@ const unmigratedFunctions = { invoke: async (name) => { throw new Error('وظي�
 const bytlyCompat = {
   auth: {},
   entities,
-  integrations: { Core: {} },
+  integrations: {
+    Core: {
+      InvokeLLM: async ({ prompt, response_json_schema, file_urls, ...options } = {}) => {
+        if (!String(prompt || '').trim()) throw new Error('يرجى إدخال الطلب');
+        const context = {
+          ...options,
+          attached_file_urls: Array.isArray(file_urls) ? file_urls.slice(0, 5) : [],
+          response_json_schema: response_json_schema || null,
+        };
+        return callGemini({
+          agent: 'assistant',
+          prompt: String(prompt),
+          context,
+          responseFormat: response_json_schema ? 'json' : 'text',
+        });
+      },
+      GenerateImage: async () => {
+        throw new Error('توليد الصور لم يُرحّل بعد إلى خدمة صور متصلة بـ Supabase؛ لم يتم إنشاء صورة.');
+      },
+      TranscribeAudio: async () => {
+        throw new Error('تحويل الصوت إلى نص لم يُرحّل بعد إلى خدمة صوت متصلة بـ Supabase.');
+      },
+    },
+  },
   functions: unmigratedFunctions,
 };
 // Ready-made design marketplace: public metadata is separated from private downloadable files.
