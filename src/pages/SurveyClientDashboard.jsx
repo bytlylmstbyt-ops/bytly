@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -130,8 +130,9 @@ function CreateRequestForm({ onCreated }) {
     setLoading(true);
     setError('');
     try {
-      const res = await base44.functions.invoke('surveyEngine', { action: 'create', ...form, property_area_sqm: parseFloat(form.property_area_sqm) });
-      if (res.data?.error) { setError(res.data.error); return; }
+      const { data, error: invokeError } = await supabase.functions.invoke('surveyor-engine', { body: { action: 'create', ...form, property_area_sqm: parseFloat(form.property_area_sqm) } });
+      if (invokeError) throw invokeError;
+      if (data?.error) { setError(data.error); return; }
       setForm({ latitude: '', longitude: '', address: '', property_area_sqm: '', property_status: 'vacant_land', notes: '' });
       setPricing(null);
       onCreated();
@@ -218,8 +219,9 @@ function RequestCard({ request, onRefresh }) {
     if (details) { setDetails(null); return; }
     setLoadingDetails(true);
     try {
-      const res = await base44.functions.invoke('surveyEngine', { action: 'status', request_id: request.id });
-      setDetails(res.data);
+      const { data, error } = await supabase.functions.invoke('surveyor-engine', { body: { action: 'status', request_id: request.id } });
+      if (error) throw error;
+      setDetails(data);
     } catch (e) { console.error(e); }
     finally { setLoadingDetails(false); }
   };
@@ -227,7 +229,8 @@ function RequestCard({ request, onRefresh }) {
   const approve = async () => {
     setApproving(true);
     try {
-      await base44.functions.invoke('surveyEngine', { action: 'approve', request_id: request.id });
+      const { error } = await supabase.functions.invoke('surveyor-engine', { body: { action: 'approve', request_id: request.id } });
+      if (error) throw error;
       onRefresh();
     } catch (e) { console.error(e); }
     finally { setApproving(false); }
@@ -237,7 +240,8 @@ function RequestCard({ request, onRefresh }) {
     if (!confirm('هل أنت متأكد من إلغاء الطلب؟')) return;
     setCancelling(true);
     try {
-      await base44.functions.invoke('surveyEngine', { action: 'cancel', request_id: request.id });
+      const { error } = await supabase.functions.invoke('surveyor-engine', { body: { action: 'cancel', request_id: request.id } });
+      if (error) throw error;
       onRefresh();
     } catch (e) { console.error(e); }
     finally { setCancelling(false); }
@@ -248,11 +252,9 @@ function RequestCard({ request, onRefresh }) {
     if (!request.surveyor_id || alreadyReviewed) return;
     setCheckingReview(true);
     try {
-      const existing = await base44.entities.Review.filter({
-        engineer_id: request.surveyor_id,
-        project_id: request.id
-      });
-      setAlreadyReviewed(existing.length > 0);
+      const { data, error } = await supabase.functions.invoke('surveyor-engine', { body: { action: 'check_review', request_id: request.id } });
+      if (error) throw error;
+      setAlreadyReviewed(Boolean(data?.reviewed));
     } catch (e) { console.error(e); }
     finally { setCheckingReview(false); }
   };
@@ -266,7 +268,7 @@ function RequestCard({ request, onRefresh }) {
               <Badge className={statusCfg.color + ' gap-1'}>
                 <statusCfg.icon className="w-3 h-3" /> {statusCfg.label}
               </Badge>
-              <span className="text-xs text-gray-400">{new Date(request.created_date).toLocaleDateString('ar-SA')}</span>
+              <span className="text-xs text-gray-400">{new Date(request.created_at || request.created_date).toLocaleDateString('ar-SA')}</span>
             </div>
             <p className="text-sm font-medium mt-1.5">{request.address || 'موقع بدون عنوان'}</p>
             <p className="text-xs text-gray-500">المساحة: {request.property_area_sqm} م² | المبلغ: {formatSAR(request.total_charged)}</p>
@@ -412,22 +414,28 @@ export default function SurveyClientDashboard() {
 
   const loadRequests = useCallback(async () => {
     try {
-      const res = await base44.functions.invoke('surveyEngine', { action: 'list', role_type: 'client' });
-      setRequests(res.data?.requests || []);
-    } catch (e) { console.error(e); }
+      const { data, error } = await supabase.functions.invoke('surveyor-engine', { body: { action: 'list', role_type: 'client' } });
+      if (error) throw error;
+      setRequests(data?.requests || []);
+    } catch (e) { console.error('Survey requests load failed', e); }
     finally { setLoading(false); }
   }, []);
 
   const loadClientProfile = useCallback(async () => {
     try {
-      const [client] = await base44.entities.Client.filter({ email: user?.email });
-      setClientProfile(client || null);
-    } catch (_) {}
-  }, [user]);
+      const { data, error } = await supabase.functions.invoke('surveyor-engine', { body: { action: 'wallet_history' } });
+      if (error) throw error;
+      setClientProfile({ wallet_balance: data?.wallet_balance || 0, held_balance: data?.held_balance || 0 });
+    } catch (e) { console.error('Wallet summary load failed', e); }
+  }, []);
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
-    loadRequests();
+    supabase.auth.getUser().then(({ data, error }) => {
+      if (error || !data?.user) { setLoading(false); return; }
+      const u = data.user;
+      setUser({ ...u, full_name: u.user_metadata?.full_name || u.user_metadata?.name || u.email });
+      loadRequests();
+    }).catch(() => setLoading(false));
   }, [loadRequests]);
 
   useEffect(() => {
