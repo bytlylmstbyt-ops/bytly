@@ -203,32 +203,34 @@ export default function CreateProject() {
       throw new Error("يجب أن يساوي مجموع نسب المراحل 100% قبل إنشاء المشروع.");
     }
 
-    const { data: newProject, error: projectError } = await supabase.from("projects").insert({
-      title: formData.title,
-      description: formData.description,
-      category: formData.category,
-      project_type: formData.project_type,
-      service_scope: formData.service_scope,
-      budget_min: parseFloat(formData.budget_min) || 0,
-      budget_max: parseFloat(formData.budget_max) || 0,
-      location: formData.location,
-      deadline: formData.deadline,
-      attachments: formData.attachments,
-      client_id: authenticatedClient.id,
-      status: "open",
-      stage_count: finalPlan.length,
-      total_proposals: 0,
-      is_direct_hire: Boolean(preselectedEngineer?.id),
-      assigned_engineer_id: preselectedEngineer?.id || null,
-      client_user_id: authenticatedUser.id,
-      service_scope: { services: formData.service_scope, requested_by_client: true },
-    }).select().single();
-    if (projectError) throw projectError;
-
-    for(let i=0;i<finalPlan.length;i++){const m=finalPlan[i];const stageAmount=(projectBudget*Number(m.percentage||0))/100;const providerId=i===0?(preselectedEngineerId||null):null;const {data:stage,error:stageError}=await supabase.from("project_milestones").insert({project_id:newProject.id,title:m.title,description:m.description,amount:stageAmount,percentage:m.percentage,sequence_no:i+1,service_key:m.service_key||null,provider_user_id:providerId,provider_type:providerId?"engineer":null,status:"pending",due_date:new Date(Date.now()+Number(m.days||7)*86400000).toISOString().split("T")[0]}).select("id").single();if(stageError) throw stageError;if(providerId){const {error:participantError}=await supabase.from("project_financial_participants").insert({project_id:newProject.id,milestone_id:stage.id,participant_user_id:providerId,participant_type:"engineer",provider_type:"engineer",service_key:m.service_key||null,role_label:"مقدم خدمة المرحلة",allocation_type:"percentage",allocation_value:100,priority:1,status:"active"});if(participantError) throw participantError;}}
-    
-    // Update client's total projects
-    await supabase.from("clients").update({total_projects:(authenticatedClient.total_projects||0)+1}).eq("id",authenticatedClient.id);
+    const { data: creationResult, error: creationError } = await supabase.rpc("create_project_with_stages", {
+      p_project: {
+        title: formData.title,
+        description: formData.description,
+        category: formData.category,
+        project_type: formData.project_type,
+        service_scope: { services: formData.service_scope, requested_by_client: true },
+        budget_min: parseFloat(formData.budget_min) || 0,
+        budget_max: parseFloat(formData.budget_max) || 0,
+        location: formData.location,
+        deadline: formData.deadline || null,
+        attachments: formData.attachments || [],
+        is_direct_hire: Boolean(preselectedEngineer?.id),
+        assigned_engineer_id: preselectedEngineer?.id || null,
+      },
+      p_milestones: finalPlan.map(m => ({
+        service_key: m.service_key || "custom",
+        title: m.title,
+        description: m.description,
+        percentage: Number(m.percentage) || 0,
+        days: Number(m.days) || 7,
+      })),
+    });
+    if (creationError) throw creationError;
+    const newProject = creationResult?.project;
+    if (!newProject?.id || !Array.isArray(creationResult?.milestones) || creationResult.milestones.length !== finalPlan.length) {
+      throw new Error("لم تكتمل عملية إنشاء المشروع ومراحله. لم يتم اعتماد العملية.");
+    }
 
     // Send project notifications through the authenticated Supabase Edge Function.
     try {
