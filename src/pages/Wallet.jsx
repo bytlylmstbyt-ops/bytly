@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { Loader2, Building2, User as UserIcon } from "lucide-react";
 import WithdrawalForm from "../components/wallet/WithdrawalForm";
@@ -31,100 +31,167 @@ export default function WalletPage() {
 
   const loadWalletData = async () => {
     setIsLoading(true);
+    setTransactions([]);
+    setWithdrawalRequests([]);
+    setProjects([]);
     try {
-      const currentUser = await base44.auth.me();
-      setUser(currentUser);
-      if (!currentUser?.email) return;
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const authUser = authData?.user;
+      if (authError || !authUser) {
+        setUser(null);
+        setUserProfile(null);
+        setUserType(null);
+        setTransactions([]);
+        setWithdrawalRequests([]);
+        setProjects([]);
+        return;
+      }
 
-      const role = String(currentUser.role || currentUser.profile?.role || '').toLowerCase();
+      const { data: profileRow, error: profileError } = await supabase
+        .from("profiles")
+        .select("user_id,email,full_name,role,phone")
+        .eq("user_id", authUser.id)
+        .maybeSingle();
+      if (profileError) throw profileError;
+
+      const currentUser = {
+        id: authUser.id,
+        email: authUser.email || profileRow?.email || "",
+        full_name: profileRow?.full_name || authUser.user_metadata?.full_name || authUser.user_metadata?.name || "",
+        role: profileRow?.role || authUser.app_metadata?.role || "",
+        phone: profileRow?.phone || authUser.phone || authUser.user_metadata?.phone || null,
+        profile: profileRow || null,
+        user_metadata: authUser.user_metadata || {},
+      };
+      setUser(currentUser);
+
+      const role = String(currentUser.role || "").toLowerCase();
       let profile = null;
       let type = null;
 
-      if (role === 'client' || role === 'investor') {
-        const clientData = await Promise.race([
-          base44.entities.Client.filter({ email: currentUser.email }),
-          new Promise(resolve => setTimeout(() => resolve([]), 7000))
-        ]).catch(() => []);
-        if (clientData?.[0]) {
-          profile = clientData[0];
-          type = clientData[0].client_type === 'investor' ? 'investor' : 'client';
+      if (role === "client" || role === "investor") {
+        const { data, error } = await supabase
+          .from("clients")
+          .select("id,user_id,full_name,email,phone,city,country,client_type,company_name,trust_score,total_projects,subscription_type,is_subscription_active,status")
+          .eq("user_id", authUser.id)
+          .maybeSingle();
+        if (error) throw error;
+        if (data) {
+          profile = data;
+          type = data.client_type === "investor" || role === "investor" ? "investor" : "client";
         }
-      } else if (role === 'engineer' || role === 'surveyor') {
-        const engineerData = await Promise.race([
-          base44.entities.Engineer.filter({ email: currentUser.email }),
-          new Promise(resolve => setTimeout(() => resolve([]), 7000))
-        ]).catch(() => []);
-        if (engineerData?.[0]) {
-          profile = engineerData[0];
-          type = 'engineer';
+      } else if (role === "engineer" || role === "surveyor") {
+        const { data, error } = await supabase
+          .from("engineers")
+          .select("id,user_id,full_name,email,phone,city,specialization,bio,is_verified,status,rating,registration_number,country,years_experience,completed_projects,profile_image,total_reviews,subscription_type,is_subscription_active")
+          .eq("user_id", authUser.id)
+          .maybeSingle();
+        if (error) throw error;
+        if (data) {
+          profile = data;
+          type = "engineer";
         }
-      }
-
-      // Legacy users can have a generic profile.role='user'. In that case check
-      // client then engineer, but never block on unrelated provider entities.
-      if (!profile) {
-        const clientData = await Promise.race([
-          base44.entities.Client.filter({ email: currentUser.email }),
-          new Promise(resolve => setTimeout(() => resolve([]), 7000))
-        ]).catch(() => []);
-        if (clientData?.[0]) {
-          profile = clientData[0];
-          type = clientData[0].client_type === 'investor' ? 'investor' : 'client';
-        }
-      }
-      if (!profile) {
-        const engineerData = await Promise.race([
-          base44.entities.Engineer.filter({ email: currentUser.email }),
-          new Promise(resolve => setTimeout(() => resolve([]), 7000))
-        ]).catch(() => []);
-        if (engineerData?.[0]) {
-          profile = engineerData[0];
-          type = 'engineer';
+      } else {
+        // Some existing accounts have a generic role. Resolve only by the authenticated user ID.
+        const [{ data: client, error: clientError }, { data: engineer, error: engineerError }] = await Promise.all([
+          supabase.from("clients").select("id,user_id,full_name,email,phone,city,country,client_type,company_name,status").eq("user_id", authUser.id).maybeSingle(),
+          supabase.from("engineers").select("id,user_id,full_name,email,phone,city,specialization,status,profile_image").eq("user_id", authUser.id).maybeSingle(),
+        ]);
+        if (clientError) throw clientError;
+        if (engineerError) throw engineerError;
+        if (client) {
+          profile = client;
+          type = client.client_type === "investor" ? "investor" : "client";
+        } else if (engineer) {
+          profile = engineer;
+          type = "engineer";
         }
       }
 
+      const { data: walletAccount, error: walletError } = await supabase
+        .from("wallet_accounts")
+        .select("available_balance,held_balance,currency,status")
+        .eq("user_id", authUser.id)
+        .maybeSingle();
+      if (walletError) throw walletError;
+
+      // Never use the legacy profile wallet_balance as the financial source of truth.
       if (profile) {
-        const trans = await Promise.race([
-          base44.entities.Transaction.filter({ user_email: currentUser.email }, '-created_date', 100),
-          new Promise(resolve => setTimeout(() => resolve([]), 5000))
-        ]).catch(() => []);
-        setTransactions(trans);
-
-        if (type === 'client' || type === 'investor') {
-          const projectsList = await Promise.race([
-            base44.entities.Project.filter({ client_id: profile.id }, '-created_date'),
-            new Promise(resolve => setTimeout(() => resolve([]), 7000))
-          ]).catch(() => []);
-          setProjects(projectsList);
-        } else if (type === 'engineer') {
-          const withdrawals = await Promise.race([
-            base44.entities.WithdrawalRequest.filter({ engineer_id: profile.id }, '-created_date'),
-            new Promise(resolve => setTimeout(() => resolve([]), 5000))
-          ]).catch(() => []);
-          setWithdrawalRequests(withdrawals);
-        }
-      }
-
-      // Homeowners do not need an engineer/provider profile to access the wallet.
-      // If authentication is valid but no provider row exists yet, use the authenticated
-      // identity as a minimal client wallet profile instead of blocking on "complete profile".
-      if (!profile) {
         profile = {
-          id: currentUser.id,
-          user_id: currentUser.id,
-          email: currentUser.email,
-          full_name: currentUser.full_name || currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || '',
-          wallet_balance: 0,
-          client_type: 'individual',
-          profile_image: null,
-          phone: currentUser.phone || currentUser.user_metadata?.phone || null,
+          ...profile,
+          wallet_balance: Number(walletAccount?.available_balance || 0),
+          available_balance: Number(walletAccount?.available_balance || 0),
+          held_balance: Number(walletAccount?.held_balance || 0),
+          wallet_currency: walletAccount?.currency || "SAR",
         };
-        type = 'client';
+        const { data: transactionsData, error: transactionsError } = await supabase
+          .from("wallet_transactions")
+          .select("id,user_id,project_id,payment_id,type,amount,currency,status,reference,description,balance_type,direction,created_at")
+          .eq("user_id", authUser.id)
+          .order("created_at", { ascending: false })
+          .limit(100);
+        if (transactionsError) throw transactionsError;
+        setTransactions((transactionsData || []).map(row => ({ ...row, created_date: row.created_at })));
+
+        if (type === "client" || type === "investor") {
+          const { data: projectRows, error: projectsError } = await supabase
+            .from("projects")
+            .select("id,title,description,status,category,project_type,location,start_date,deadline,budget_min,budget_max,currency,created_at,client_user_id")
+            .eq("client_user_id", authUser.id)
+            .order("created_at", { ascending: false })
+            .limit(100);
+          if (projectsError) throw projectsError;
+          setProjects((projectRows || []).map(row => ({ ...row, created_date: row.created_at })));
+        } else if (type === "engineer" && profile.id) {
+          const { data: withdrawals, error: withdrawalsError } = await supabase
+            .from("withdrawal_requests")
+            .select("id,provider_user_id,provider_type,financial_bank_account_id,amount,iban,bank_name,account_holder_name,status,request_date,processing_date,completion_date,rejection_reason,transaction_reference,description,created_at,updated_at")
+            .eq("provider_user_id", authUser.id)
+            .order("created_at", { ascending: false })
+            .limit(100);
+          if (withdrawalsError) throw withdrawalsError;
+          const withdrawalIds = (withdrawals || []).map(row => row.id).filter(Boolean);
+          let bankDetailsByWithdrawal = new Map();
+          if (withdrawalIds.length) {
+            const { data: bankDetails, error: bankDetailsError } = await supabase
+              .from("withdrawal_bank_details")
+              .select("withdrawal_id,iban,bank_name,account_holder_name")
+              .eq("user_id", authUser.id)
+              .in("withdrawal_id", withdrawalIds);
+            if (bankDetailsError) throw bankDetailsError;
+            bankDetailsByWithdrawal = new Map((bankDetails || []).map(row => [row.withdrawal_id, row]));
+          }
+          setWithdrawalRequests((withdrawals || []).map(row => ({
+            ...row,
+            ...(bankDetailsByWithdrawal.get(row.id) || {}),
+            created_date: row.created_at,
+          })));
+        }
+      } else {
+        // A valid signed-in homeowner can open the wallet before completing a client profile.
+        profile = {
+          id: authUser.id,
+          user_id: authUser.id,
+          email: currentUser.email,
+          full_name: currentUser.full_name,
+          wallet_balance: Number(walletAccount?.available_balance || 0),
+          available_balance: Number(walletAccount?.available_balance || 0),
+          held_balance: Number(walletAccount?.held_balance || 0),
+          wallet_currency: walletAccount?.currency || "SAR",
+          client_type: "individual",
+          profile_image: null,
+          phone: currentUser.phone,
+        };
+        type = "client";
+        setTransactions([]);
+        setProjects([]);
+        setWithdrawalRequests([]);
       }
+
       setUserProfile(profile);
-      setUserType(type || 'client');
+      setUserType(type || "client");
     } catch (error) {
-      console.error("Error loading wallet data:", error);
+      console.error("Error loading wallet data from Supabase:", error);
       setUserProfile(null);
       setUserType(null);
     } finally {
