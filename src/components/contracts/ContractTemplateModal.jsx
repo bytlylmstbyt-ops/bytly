@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from "react";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import {
   Scale, Loader2, CheckCircle, FileText, Calendar, DollarSign,
   User, Building2, Shield, X
@@ -69,41 +69,100 @@ export default function ContractTemplateModal({
   const handleCreate = async () => {
     setCreating(true);
     try {
-      const contract = await base44.entities.Contract.create({
-        project_id: project.id,
-        client_id: client?.id || project?.client_id || "",
-        provider_type: engineer ? "engineer" : "engineer",
-        engineer_id: engineer?.id || project?.assigned_engineer_id || "",
+      const amount = Number(form.total_amount);
+      if (!project?.id || !Number.isFinite(amount) || amount <= 0) {
+        throw new Error("تحقق من المشروع وقيمة العقد قبل المتابعة.");
+      }
+      if (form.start_date && form.delivery_date && form.delivery_date < form.start_date) {
+        throw new Error("تاريخ التسليم يجب أن يكون بعد تاريخ البدء.");
+      }
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      const authUser = authData?.user;
+      if (authError || !authUser) throw new Error("يرجى تسجيل الدخول قبل إنشاء العقد.");
+
+      const { data: projectRecord, error: projectError } = await supabase
+        .from("projects")
+        .select("id,title,client_user_id,assigned_engineer_id")
+        .eq("id", project.id)
+        .maybeSingle();
+      if (projectError) throw projectError;
+      if (!projectRecord) throw new Error("المشروع غير متاح لهذا الحساب.");
+
+      const engineerProfileId = engineer?.id || projectRecord.assigned_engineer_id;
+      if (!engineerProfileId) throw new Error("يجب تعيين مهندس للمشروع قبل إنشاء العقد.");
+      const { data: engineerRecord, error: engineerError } = await supabase
+        .from("engineers")
+        .select("id,user_id")
+        .eq("id", engineerProfileId)
+        .maybeSingle();
+      if (engineerError) throw engineerError;
+      if (!engineerRecord?.user_id) throw new Error("حساب المهندس غير مرتبط بمستخدم في Supabase.");
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("user_id", authUser.id)
+        .maybeSingle();
+      if (profileError) throw profileError;
+      const isAdmin = String(profile?.role || authUser.app_metadata?.role || "").toLowerCase() === "admin";
+      if (projectRecord.client_user_id !== authUser.id && !isAdmin) {
+        throw new Error("إنشاء العقد متاح لصاحب المشروع أو الإدارة فقط.");
+      }
+
+      const contractPayload = {
+        project_id: projectRecord.id,
+        client_user_id: projectRecord.client_user_id,
+        provider_user_id: engineerRecord.user_id,
+        title: `عقد ${projectRecord.title || "المشروع"}`,
         contract_number: contractNumber,
+        amount,
+        total_amount: amount,
+        currency: "SAR",
+        status: "pending_signature",
+        terms: buildContractText(),
+        client_id: client?.id || project?.client_id || null,
+        engineer_id: engineerRecord.id,
         contract_type: form.contract_type,
         service_description: buildContractText(),
-        total_amount: Number(form.total_amount),
         payment_terms: form.payment_terms,
-        delivery_date: form.delivery_date,
-        start_date: form.start_date,
-        additional_terms: form.additional_terms,
-        status: "pending_signature",
+        delivery_date: form.delivery_date || null,
+        start_date: form.start_date || null,
+        additional_terms: form.additional_terms || null,
+        description: `عقد رقمي ${contractNumber} بين ${clientName} (العميل) و${engineerName} (المهندس) للمشروع "${projectRecord.title || project?.title || ""}". القيمة: ${amount.toLocaleString()} ر.س.`,
+        contract_version: 1,
+        provider_type: "engineer",
         client_signature: false,
         engineer_signature: false,
-        contract_version: 1,
-        description: `عقد رقمي ${contractNumber} بين ${clientName} (العميل) و${engineerName} (المهندس) للمشروع "${project?.title}". القيمة: ${Number(form.total_amount).toLocaleString()} ر.س.`,
-      });
+      };
+      const { data: contract, error: insertError } = await supabase
+        .from("project_contracts")
+        .insert(contractPayload)
+        .select("*")
+        .single();
+      if (insertError) throw insertError;
 
-      await logWorkspaceActivity({
-        projectId: project.id,
-        user: currentUser,
-        activityType: "contract_created",
-        summary: `تم إنشاء عقد جديد رقم ${contractNumber} للمشروع`,
-        entityType: "contract",
-        entityId: contract.id,
-        entityTitle: `عقد #${contractNumber}`,
-      });
+      // Activity logging is secondary; it must not make a successfully created
+      // contract appear to have failed and invite duplicate contract submissions.
+      try {
+        await logWorkspaceActivity({
+          projectId: project.id,
+          user: currentUser,
+          activityType: "contract_created",
+          summary: `تم إنشاء عقد جديد رقم ${contractNumber} للمشروع`,
+          entityType: "contract",
+          entityId: contract.id,
+          entityTitle: `عقد #${contractNumber}`,
+        });
+      } catch (activityError) {
+        console.warn("Contract saved, but activity log failed:", activityError);
+      }
 
-      setCreating(false);
       setDone(true);
       setTimeout(() => onCreated?.(contract), 1600);
     } catch (err) {
       console.error("Contract creation failed:", err);
+      window.alert(err?.message || "تعذر إنشاء العقد. تحقق من صلاحياتك وبيانات المشروع.");
+    } finally {
       setCreating(false);
     }
   };
