@@ -49,8 +49,8 @@ legacyBase44.auth.me = async () => {
         };
       }
     }
-  } catch (error) { console.warn('Supabase auth bridge failed; falling back to legacy auth.', error); }
-  return legacyAuthMe();
+  } catch (error) { console.warn('Supabase auth bridge failed.', error); }
+  return null;
 };
 
 // AI compatibility bridge: existing Bytly AI pages keep their UI contracts, while
@@ -265,18 +265,15 @@ legacyBase44.entities.Contract = {
     if (mapped.project_id) mapped.project_id = await resolveLegacyId('Project', mapped.project_id);
     try {
       let q = supabase.from('project_contracts').select('*');
-      Object.entries(filters || {}).forEach(([k,v]) => { q = v === null ? q.is(k,null) : Array.isArray(v) ? q.in(k,v) : q.eq(k,v); });
+      Object.entries(mapped).forEach(([k,v]) => { q = v === null ? q.is(k,null) : Array.isArray(v) ? q.in(k,v) : q.eq(k,v); });
       const { data, error } = await withHardTimeout(q,10000,'انتهت مهلة قراءة العقود');
-      if (!error && data?.length) return data;
-    } catch {}
-    try { return await withHardTimeout(legacyContract.filter(mapped), 7000, 'انتهت مهلة قراءة العقود القديمة'); } catch { return []; }
+      if (error) throw new Error(error.message || 'تعذر قراءة العقود من Supabase');
+      return data || [];
   },
   list: async (sort='-created_date', limit=100) => {
-    try {
-      const { data, error } = await withHardTimeout(supabase.from('project_contracts').select('*').limit(limit).order('created_at',{ascending:!sort.startsWith('-')}),10000,'انتهت مهلة قراءة العقود');
-      if (!error && data?.length) return data;
-    } catch {}
-    try { return await withHardTimeout(legacyContract.list(sort, limit), 7000, 'انتهت مهلة قائمة العقود القديمة'); } catch { return []; }
+    const { data, error } = await withHardTimeout(supabase.from('project_contracts').select('*').limit(limit).order('created_at',{ascending:!sort.startsWith('-')}),10000,'انتهت مهلة قراءة العقود');
+    if (error) throw new Error(error.message || 'تعذر قراءة العقود من Supabase');
+    return data || [];
   }
 };
 
@@ -288,18 +285,15 @@ legacyBase44.entities.Project = { ...legacyProject,
     if (mapped.assigned_engineer_id) mapped.assigned_engineer_id = await resolveLegacyId('Engineer', mapped.assigned_engineer_id);
     try {
       let q=supabase.from('projects').select('*');
-      Object.entries(filters||{}).forEach(([k,v])=>{q=v===null?q.is(k,null):Array.isArray(v)?q.in(k,v):q.eq(k,v)});
+      Object.entries(mapped).forEach(([k,v])=>{q=v===null?q.is(k,null):Array.isArray(v)?q.in(k,v):q.eq(k,v)});
       const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة المشروع');
-      if(!error && data?.length) return data;
-    } catch {}
-    try { return await withHardTimeout(legacyProject.filter(mapped), 7000, 'انتهت مهلة قراءة المشاريع القديمة'); } catch { return []; }
+      if(error) throw new Error(error.message || 'تعذر قراءة المشاريع من Supabase');
+      return data || [];
   },
   list: async(sort='-created_date',limit=100)=>{
-    try {
-      const {data,error}=await withHardTimeout(supabase.from('projects').select('*').limit(limit).order('created_at',{ascending:!sort.startsWith('-')}),10000,'انتهت مهلة قراءة المشاريع');
-      if(!error && data?.length) return data;
-    } catch {}
-    try { return await withHardTimeout(legacyProject.list(sort,limit), 7000, 'انتهت مهلة قائمة المشاريع القديمة'); } catch { return []; }
+    const {data,error}=await withHardTimeout(supabase.from('projects').select('*').limit(limit).order('created_at',{ascending:!sort.startsWith('-')}),10000,'انتهت مهلة قراءة المشاريع');
+    if(error) throw new Error(error.message || 'تعذر قراءة المشاريع من Supabase');
+    return data || [];
   },
   update: async(id,payload)=>{const {data,error}=await withHardTimeout(supabase.from('projects').update({...payload,updated_at:new Date().toISOString()}).eq('id',id).select('*').single(),10000,'انتهت مهلة تحديث المشروع');if(error)throw new Error(error.message);return data},
   create: async payload=>{const row={...payload};delete row.id;delete row.created_date;const {data,error}=await withHardTimeout(supabase.from('projects').insert(row).select('*').single(),10000,'انتهت مهلة إنشاء المشروع');if(error)throw new Error(error.message);return data},
@@ -316,13 +310,8 @@ legacyBase44.entities.Client = {
       const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة العميل');
       if(!error && data?.length) return data;
     } catch {}
-    try {
-      let q = supabase.from('base44_client_migration_staging').select('*');
-      if (filters?.email) q = q.ilike('email', filters.email);
-      const {data,error}=await withHardTimeout(q,10000,'انتهت مهلة قراءة بيانات العميل القديمة');
-      if(!error && data?.length) return data;
-    } catch {}
-    return [];
+    if (error) throw new Error(error.message || 'تعذر قراءة العملاء من Supabase');
+    return data || [];
   }
 };
 
@@ -631,7 +620,7 @@ legacyBase44.functions = {
       const published = await publishLinkedInPost(text);
       return { data: { success: true, message: 'تم النشر على LinkedIn عبر Supabase ✓', postId: published?.postId || null } };
     }
-    return legacyFunctions.invoke(name, payload);
+    throw new Error(`وظيفة ${name} لم تُرحّل بعد إلى Supabase؛ أُوقف الاستدعاء القديم لمنع الاعتماد على Base44.`);
   },
 };
 
