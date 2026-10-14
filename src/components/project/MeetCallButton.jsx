@@ -34,6 +34,37 @@ export default function MeetCallButton({ project, currentUser, assignedEngineerE
       });
       if (error) throw error;
       if (!result?.meet_link) throw new Error(result?.error || "لم يتم إرجاع رابط Google Meet.");
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const authUser = authData?.user;
+      if (!authUser) throw new Error("يجب تسجيل الدخول لحفظ الاجتماع.");
+      const { data: targetProfile, error: profileError } = await supabase.from("profiles").select("id,user_id,email").ilike("email", isEngineer ? project.created_by : assignedEngineerEmail).maybeSingle();
+      if (profileError) throw profileError;
+      const otherUserId = targetProfile?.user_id || targetProfile?.id || null;
+      const clientId = isEngineer ? otherUserId : authUser.id;
+      const providerId = isEngineer ? authUser.id : otherUserId;
+      const dateValue = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh", year: "numeric", month: "2-digit", day: "2-digit" }).format(start);
+      const timeValue = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Riyadh", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(start);
+      const { error: saveError } = await supabase.from("consultation_appointments").insert({
+        project_id: project.id,
+        created_by: authUser.id,
+        client_user_id: clientId,
+        provider_user_id: providerId,
+        target_id: otherUserId,
+        target_email: isEngineer ? project.created_by : assignedEngineerEmail,
+        appointment_date: dateValue,
+        appointment_time: timeValue,
+        duration_minutes: 30,
+        consultation_type: "video_call",
+        appointment_type: "instant_project_meeting",
+        topic: project.title || "اجتماع مشروع بيتلي",
+        notes: "تم إنشاء الاجتماع عبر تكامل Google Calendar.",
+        status: "scheduled",
+        meet_link: result.meet_link,
+        calendar_link: result.event_link || null,
+        google_event_id: result.event?.id || null
+      });
+      if (saveError) throw saveError;
       setMeetResult({
         ...result,
         start_time: result.event?.start?.dateTime || start.toISOString(),
