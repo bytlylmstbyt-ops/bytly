@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,17 +33,24 @@ function formatSAR(n) {
 
 export default function TransactionHistory({ userEmail, walletBalance, onRefresh }) {
   const [transactions, setTransactions] = useState([]);
+  const [currentBalance, setCurrentBalance] = useState(walletBalance || 0);
   const [loading, setLoading] = useState(true);
 
   const loadTransactions = async () => {
     setLoading(true);
     try {
-      const data = await base44.entities.Transaction.filter(
-        { user_email: userEmail },
-        '-created_date',
-        50
-      );
-      setTransactions(data);
+      const { data, error } = await supabase.functions.invoke('surveyor-engine', { body: { action: 'wallet_history' } });
+      if (error) throw error;
+      setCurrentBalance(data?.wallet_balance ?? walletBalance ?? 0);
+      setTransactions((data?.transactions || []).map(tx => ({
+        ...tx,
+        type: tx.type === 'survey_escrow_hold' ? 'escrow_hold' : tx.type === 'survey_escrow_release' ? 'escrow_release' : tx.type === 'survey_escrow_refund' ? 'refund' : tx.type,
+        description: tx.description,
+        amount: tx.amount,
+        created_date: tx.created_at,
+        net_amount: tx.amount,
+        balance_after: null
+      })));
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -70,7 +77,7 @@ export default function TransactionHistory({ userEmail, walletBalance, onRefresh
               <p className="text-white/70 text-sm flex items-center gap-1.5">
                 <Wallet className="w-4 h-4" /> رصيد المحفظة
               </p>
-              <p className="text-3xl font-bold mt-1 text-[#C9A66B]">{formatSAR(walletBalance)}</p>
+              <p className="text-3xl font-bold mt-1 text-[#C9A66B]">{formatSAR(currentBalance)}</p>
             </div>
             <Button
               size="sm"
@@ -124,7 +131,7 @@ export default function TransactionHistory({ userEmail, walletBalance, onRefresh
                           {tx.description || 'معاملة'}
                         </p>
                         <p className="text-xs text-gray-400 mt-0.5">
-                          {new Date(tx.created_date).toLocaleDateString('ar-SA', {
+                          {new Date(tx.created_at || tx.created_date).toLocaleDateString('ar-SA', {
                             year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                           })}
                         </p>
