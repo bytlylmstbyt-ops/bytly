@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -20,14 +20,13 @@ export default function ProjectRiskAnalysis({ projectId }) {
   const analyzeRisks = async () => {
     try {
       setLoading(true);
-      const response = await base44.functions.invoke("analyzeProjectRisks", {
-        project_id: projectId
+      const { data, error } = await supabase.functions.invoke("analyze-project-risks", {
+        body: { project_id: projectId }
       });
-
-      if (response.data.success) {
-        setAnalysis(response.data.analysis);
-        setMetrics(response.data.metrics);
-      }
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "تعذر تحليل مخاطر المشروع");
+      setAnalysis(data.analysis);
+      setMetrics(data.metrics);
     } catch (error) {
       console.error("Error:", error);
     } finally {
