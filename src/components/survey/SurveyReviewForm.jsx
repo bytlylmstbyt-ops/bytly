@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2, Star, Send } from 'lucide-react';
@@ -19,17 +19,18 @@ export default function SurveyReviewForm({ requestId, surveyorId, surveyorName, 
     setSubmitting(true);
     setError('');
     try {
-      await base44.functions.invoke('surveyEngine', {
+      const { data, error: invokeError } = await supabase.functions.invoke('surveyor-engine', { body: {
         action: 'review',
         request_id: requestId,
         surveyor_id: surveyorId,
-        client_id: clientId,
         rating,
         quality_rating: qualityRating,
         delivery_rating: deliveryRating,
         communication_rating: communicationRating,
         comment
-      });
+      } });
+      if (invokeError) throw invokeError;
+      if (data?.error) throw new Error(data.error);
       onSubmitted?.();
     } catch (e) { setError(e.message); }
     finally { setSubmitting(false); }

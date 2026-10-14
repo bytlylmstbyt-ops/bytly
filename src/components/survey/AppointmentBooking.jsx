@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -43,10 +43,11 @@ export function BookingForm({ requestId, surveyorName, surveyorEmail, surveyorId
     if (!date || !surveyorEmail) return;
     setLoadingSlots(true);
     setTime('');
-    base44.functions.invoke('bookSurveyAppointment', {
+    supabase.functions.invoke('surveyor-engine', { body: {
       action: 'available', surveyor_email: surveyorEmail, date
-    }).then(res => {
-      setAvailableSlots(res.data?.available_slots || []);
+    }}).then(({ data, error }) => {
+      if (error) throw error;
+      setAvailableSlots(data?.available_slots || []);
     }).catch(() => setAvailableSlots([]))
     .finally(() => setLoadingSlots(false));
   }, [date, surveyorEmail]);
@@ -56,7 +57,7 @@ export function BookingForm({ requestId, surveyorName, surveyorEmail, surveyorId
     setSubmitting(true);
     setError('');
     try {
-      const res = await base44.functions.invoke('bookSurveyAppointment', {
+      const { data: res, error: invokeError } = await supabase.functions.invoke('surveyor-engine', { body: {
         action: 'book',
         request_id: requestId || '',
         target_type: 'surveyor',
@@ -70,10 +71,11 @@ export function BookingForm({ requestId, surveyorName, surveyorEmail, surveyorId
         topic: form.topic || 'موعد رفع مساحي',
         notes: form.notes,
         location: siteLocation || ''
-      });
-      if (res.data?.error) { setError(res.data.error); return; }
+      }});
+      if (invokeError) throw invokeError;
+      if (res?.error) { setError(res.error); return; }
       setDate(''); setTime(''); setForm({ consultation_type: 'site_visit', topic: 'موعد رفع مساحي', notes: '', duration_minutes: '60' });
-      onBooked?.(res.data);
+      onBooked?.(res);
     } catch (e) { setError(e.message); }
     finally { setSubmitting(false); }
   };
@@ -166,8 +168,9 @@ export function AppointmentList({ role, onRefresh }) {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await base44.functions.invoke('bookSurveyAppointment', { action: 'list', role });
-      setAppointments(res.data?.appointments || []);
+      const { data, error } = await supabase.functions.invoke('surveyor-engine', { body: { action: 'list_appointments', role } });
+      if (error) throw error;
+      setAppointments(data?.appointments || []);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
@@ -177,7 +180,8 @@ export function AppointmentList({ role, onRefresh }) {
   const cancel = async (id) => {
     if (!confirm('هل أنت متأكد من إلغاء الموعد؟')) return;
     try {
-      await base44.functions.invoke('bookSurveyAppointment', { action: 'cancel', appointment_id: id });
+      const { error } = await supabase.functions.invoke('surveyor-engine', { body: { action: 'cancel_appointment', appointment_id: id } });
+      if (error) throw error;
       load();
       onRefresh?.();
     } catch (e) { console.error(e); }

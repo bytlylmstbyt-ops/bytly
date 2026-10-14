@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import { uploadScopedFile } from '@/lib/projectFileStorage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,7 +54,8 @@ function RegisterSurveyorForm({ onRegistered }) {
     setLoading(true);
     setError('');
     try {
-      const res = await base44.functions.invoke('surveyEngine', { action: 'register', ...form, years_experience: parseInt(form.years_experience) || 0, geofencing_radius_km: parseInt(form.geofencing_radius_km) || 50, latitude: form.latitude ? parseFloat(form.latitude) : null, longitude: form.longitude ? parseFloat(form.longitude) : null });
+      const { data: res, error: invokeError } = await supabase.functions.invoke('surveyor-engine', { body: { action: 'register', ...form, years_experience: parseInt(form.years_experience) || 0, geofencing_radius_km: parseInt(form.geofencing_radius_km) || 50, latitude: form.latitude ? parseFloat(form.latitude) : null, longitude: form.longitude ? parseFloat(form.longitude) : null } });
+      if (invokeError) throw invokeError;
       if (res.data?.error) { setError(res.data.error); return; }
       onRegistered();
     } catch (e) { setError(e.message); }
@@ -135,11 +136,12 @@ function SubmitDeliverablesForm({ request, onDone }) {
     setSubmitting(true);
     setError('');
     try {
-      const res = await base44.functions.invoke('surveyEngine', {
+      const { data: res, error: invokeError } = await supabase.functions.invoke('surveyor-engine', { body: {
         action: 'submit', request_id: request.id,
         cad_files: cadFiles, visual_files: visualFiles,
         survey_metadata: metadata
-      });
+      } });
+      if (invokeError) throw invokeError;
       if (res.data?.error) { setError(res.data.error); return; }
       onDone();
     } catch (e) { setError(e.message); }
@@ -205,7 +207,8 @@ function GigCard({ request, onAccept, onRefresh }) {
   const accept = async () => {
     setSubmitting(true);
     try {
-      await base44.functions.invoke('surveyEngine', { action: 'accept', request_id: request.id });
+      const { error } = await supabase.functions.invoke('surveyor-engine', { body: { action: 'accept', request_id: request.id } });
+      if (error) throw error;
       onRefresh();
     } catch (e) { console.error(e); }
     finally { setSubmitting(false); }
@@ -230,7 +233,7 @@ function GigCard({ request, onAccept, onRefresh }) {
             <div className="text-xs text-gray-500 space-y-0.5 mt-1">
               <p>📐 المساحة: {request.property_area_sqm} م² | حالة: {request.property_status === 'existing_building' ? 'مبنى قائم' : 'أرض فضاء'}</p>
               <p>💰 المبلغ: <span className="font-bold text-[#C9A66B]">{formatSAR(request.payout_amount)}</span></p>
-              <p>📅 {new Date(request.created_date).toLocaleDateString('ar-SA')}</p>
+              <p>📅 {new Date(request.created_at || request.created_date).toLocaleDateString('ar-SA')}</p>
             </div>
           </div>
           {request.status === 'broadcasted' && (
@@ -290,45 +293,34 @@ export default function SurveyorGigs() {
   const [activeTab, setActiveTab] = useState('available');
 
   const loadData = useCallback(async () => {
+    if (!user?.id) return;
     setLoading(true);
     try {
-      const [profileRes, availRes, myRes] = await Promise.all([
-        base44.entities.SurveyorProfile.filter({ email: user?.email }).catch(() => []),
-        base44.functions.invoke('surveyEngine', { action: 'list', role_type: 'available' }).catch(() => ({ data: { requests: [] } })),
-        base44.functions.invoke('surveyEngine', { action: 'list', role_type: 'surveyor' }).catch(() => ({ data: { requests: [] } }))
-      ]);
-      const p = profileRes?.[0] || null;
+      const { data, error } = await supabase.functions.invoke('surveyor-engine', { body: { action: 'dashboard' } });
+      if (error) throw error;
+      const p = data?.profile || null;
       setProfile(p);
-      // Redirect to terms page if registered but terms not accepted yet
       if (p && !p.terms_accepted) { navigate('/SurveyorTerms'); return; }
-      setAvailableGigs(availRes.data?.requests || []);
-      setMyRequests(myRes.data?.requests || []);
-
-      // Load reviews for the surveyor
-      if (p) {
-        try {
-          const reviewData = await base44.entities.Review.filter({ engineer_id: p.id }, '-created_date', 20);
-          setReviews(reviewData || []);
-        } catch (_) { setReviews([]); }
-      }
-    } catch (e) { console.error(e); }
+      setAvailableGigs(data?.available_requests || []);
+      setMyRequests(data?.my_requests || []);
+      setReviews(data?.reviews || []);
+    } catch (e) { console.error('Surveyor dashboard load failed', e); }
     finally { setLoading(false); }
-  }, [user]);
+  }, [user?.id, navigate]);
 
   useEffect(() => {
-    base44.auth.me().then(u => { setUser(u); }).catch(() => {});
+    supabase.auth.getUser().then(({ data, error }) => {
+      if (error || !data?.user) { setUser(null); setLoading(false); return; }
+      const u = data.user;
+      setUser({ ...u, full_name: u.user_metadata?.full_name || u.user_metadata?.name || u.email });
+    }).catch(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     if (user) loadData();
   }, [user, loadData]);
 
-  // Subscribe to real-time updates
-  useEffect(() => {
-    if (!user) return;
-    const unsub = base44.entities.SurveyRequest.subscribe(() => { loadData(); });
-    return () => unsub();
-  }, [user, loadData]);
+  // Updates are refreshed on demand; the workflow is served by authenticated Supabase Edge Functions.
 
   if (loading && !user) {
     return <div className="flex items-center justify-center min-h-screen" dir="rtl"><Loader2 className="w-8 h-8 animate-spin text-[#C9A66B]" /></div>;
@@ -485,7 +477,7 @@ export default function SurveyorGigs() {
                             <span className="text-sm font-bold text-[#C9A66B] mr-1">{review.rating}/5</span>
                           </div>
                           <span className="text-xs text-gray-400">
-                            {new Date(review.created_date).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' })}
+                            {new Date(review.created_at || review.created_date).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' })}
                           </span>
                         </div>
 
