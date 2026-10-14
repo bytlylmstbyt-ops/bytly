@@ -98,7 +98,7 @@ export default function ProjectChat({ projectId, project, currentUser, engineerN
         const authUser = authData?.user;
         if (!authUser) throw new Error("يجب تسجيل الدخول لاستخدام دردشة المشروع.");
 
-        const participantIds = [project?.client_user_id, project?.technical_consultant_id].filter(Boolean);
+        const participantIds = [project?.client_user_id].filter(Boolean);
         let assignedEngineerUserId = null;
         if (project?.assigned_engineer_id) {
           const { data: engineer, error: engineerError } = await supabase.from("engineers")
@@ -106,7 +106,14 @@ export default function ProjectChat({ projectId, project, currentUser, engineerN
           if (engineerError) throw engineerError;
           assignedEngineerUserId = engineer?.user_id || null;
         }
-        const lookupIds = [...new Set([...participantIds, assignedEngineerUserId].filter(Boolean))];
+        let consultantUserId = null;
+        if (project?.technical_consultant_id) {
+          const { data: consultant, error: consultantError } = await supabase.from("consultants")
+            .select("user_id").eq("id", project.technical_consultant_id).maybeSingle();
+          if (consultantError) throw consultantError;
+          consultantUserId = consultant?.user_id || null;
+        }
+        const lookupIds = [...new Set([...participantIds, assignedEngineerUserId, consultantUserId].filter(Boolean))];
         const { data: profiles, error: profilesError } = lookupIds.length
           ? await supabase.from("profiles").select("id,user_id,email,full_name").or(
               `user_id.in.(${lookupIds.join(",")}),id.in.(${lookupIds.join(",")})`
@@ -116,6 +123,7 @@ export default function ProjectChat({ projectId, project, currentUser, engineerN
         const participantUserIds = [...new Set([
           project?.client_user_id,
           assignedEngineerUserId,
+          consultantUserId,
           ...(profiles || []).map(p => p.user_id).filter(Boolean)
         ].filter(Boolean))];
         const isProjectParticipant = participantUserIds.includes(authUser.id);
