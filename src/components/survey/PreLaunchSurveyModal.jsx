@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Star, Send, Sparkles } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 import { toast } from "react-hot-toast";
 
@@ -48,7 +48,13 @@ export default function PreLaunchSurveyModal({ open, onClose, sourcePage = "home
 
     setSubmitting(true);
     try {
-      const user = await base44.auth.isAuthenticated() ? await base44.auth.me() : null;
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const user = authUser ? {
+        id: authUser.id,
+        email: authUser.email || "",
+        full_name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || "",
+      } : null;
       const payload = {
         ...formData,
         respondent_email: formData.respondent_email || user?.email || "",
@@ -57,7 +63,45 @@ export default function PreLaunchSurveyModal({ open, onClose, sourcePage = "home
         description: `استطلاع من ${formData.respondent_name || user?.full_name || "زائر"} - الدور: ${formData.user_role}`
       };
 
-      await base44.entities.SurveyResponse.create(payload);
+      // Store survey submissions as restricted analytics events until a dedicated
+      // survey table is provisioned. The analytics table only permits admins to read.
+      const visitorKey = "bytly_analytics_visitor_id";
+      const sessionKey = "bytly_analytics_session_id";
+      const makeId = () => globalThis.crypto?.randomUUID?.() ||
+        "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+          const r = Math.random() * 16 | 0;
+          return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+      let visitorId = localStorage.getItem(visitorKey);
+      if (!visitorId) {
+        visitorId = makeId();
+        localStorage.setItem(visitorKey, visitorId);
+      }
+      let sessionId = sessionStorage.getItem(sessionKey);
+      if (!sessionId) {
+        sessionId = makeId();
+        sessionStorage.setItem(sessionKey, sessionId);
+      }
+      const now = new Date().toISOString();
+      const { error: sessionError } = await supabase.from("analytics_sessions").upsert({
+        id: sessionId,
+        visitor_id: visitorId,
+        user_id: user?.id || null,
+        last_seen_at: now,
+        entry_page: sourcePage,
+        exit_page: sourcePage,
+      }, { onConflict: "id" });
+      if (sessionError) throw sessionError;
+      const { error: surveyError } = await supabase.from("analytics_events").insert({
+        session_id: sessionId,
+        visitor_id: visitorId,
+        user_id: user?.id || null,
+        event_name: "prelaunch_survey_submitted",
+        page_path: window.location.pathname,
+        metadata: { ...payload, submitted_at: now },
+        occurred_at: now,
+      });
+      if (surveyError) throw surveyError;
       toast.success(tr("thankYouMessage"));
       handleClose();
     } catch (error) {
