@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,10 +28,24 @@ export default function ContactUs() {
         setError('');
         setLoading(true);
         try {
-            await base44.functions.invoke('contactUs', form);
+            const { data: authData, error: authError } = await supabase.auth.getUser();
+            if (authError || !authData?.user) {
+                setError('يرجى تسجيل الدخول قبل إرسال الرسالة.');
+                return;
+            }
+            const { data, error: invokeError } = await supabase.functions.invoke('contact-us', { body: form });
+            if (invokeError) throw invokeError;
+            if (!data?.success) {
+                const errorMessages = {
+                    EMAIL_MUST_MATCH_ACCOUNT: 'استخدم البريد الإلكتروني المرتبط بحسابك.',
+                    RATE_LIMITED: 'وصلت إلى الحد المؤقت للرسائل. حاول بعد ساعة.',
+                    EMAIL_SERVICE_NOT_CONFIGURED: 'خدمة البريد غير مهيأة حاليًا. لم يتم تأكيد إرسال الرسالة.',
+                };
+                throw new Error(errorMessages[data?.error] || 'تعذر إرسال الرسالة. حاول مرة أخرى لاحقًا.');
+            }
             setSent(true);
         } catch (err) {
-            setError(t('contactUs.sendError'));
+            setError(err?.message || t('contactUs.sendError'));
         } finally {
             setLoading(false);
         }
