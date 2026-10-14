@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
 import { Users, Briefcase, Lock, Headset, Calendar } from "lucide-react";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 
@@ -8,20 +7,6 @@ const NUMBER_ICONS = [Users, Briefcase, Lock, Headset];
 
 export default function ProofNumbersSection() {
   const { t } = useLanguage();
-  const [counts, setCounts] = useState({ engineers: 0, portfolios: 0 });
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const [eng, portfolios] = await Promise.all([
-          base44.entities.Engineer.filter({ status: "approved" }, null, 1),
-          base44.entities.Portfolio.list(1, 1),
-        ]);
-        setCounts({ engineers: eng.length, portfolios: portfolios.length });
-      } catch (_) { /* ignore */ }
-    })();
-  }, []);
-
   const numbers = t('proofNumbers.numbers') || [];
 
   return (
