@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { uploadProjectFile } from "@/lib/projectFileStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Paperclip, X, Download, Loader2, MessageSquare, Shield } from "lucide-react";
@@ -81,67 +81,144 @@ export default function ProjectChat({ projectId, project, currentUser, engineerN
   const [sending, setSending] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [pendingFiles, setPendingFiles] = useState([]);
+  const [chatError, setChatError] = useState("");
+  const [resolvedConversationId, setResolvedConversationId] = useState(null);
   const bottomRef = useRef(null);
   const fileRef = useRef(null);
 
-  // Determine conversation ID (use projectId as unique key)
-  const conversationId = `project_chat_${projectId}`;
-
   useEffect(() => {
-    loadMessages();
-    // Real-time subscription
-    const unsub = base44.entities.Message.subscribe((event) => {
-      if (event.data?.conversation_id === conversationId) {
-        setMessages(prev => {
-          if (event.type === "create") return [...prev, event.data];
-          if (event.type === "update") return prev.map(m => m.id === event.id ? event.data : m);
-          if (event.type === "delete") return prev.filter(m => m.id !== event.id);
-          return prev;
-        });
+    let active = true;
+    let channel;
+    const initialize = async () => {
+      setChatError("");
+      if (!supabase || !projectId) return;
+      try {
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError) throw authError;
+        const authUser = authData?.user;
+        if (!authUser) throw new Error("يجب تسجيل الدخول لاستخدام دردشة المشروع.");
+
+        const ids = [project?.client_user_id, project?.assigned_engineer_id, project?.technical_consultant_id].filter(Boolean);
+        const { data: profiles, error: profilesError } = await supabase.from("profiles").select("id,user_id,email,full_name").or(
+          `user_id.in.(${ids.join(",")}),id.in.(${ids.join(",")})`
+        );
+        if (profilesError && ids.length) throw profilesError;
+        const targetProfiles = (profiles || []).filter(p => (p.user_id || p.id) !== authUser.id);
+        const targetUserIds = [...new Set(targetProfiles.map(p => p.user_id || p.id).filter(Boolean))];
+
+        let { data: conversation, error: conversationError } = await supabase
+          .from("conversations").select("id,created_by")
+          .eq("project_id", projectId).eq("type", "project").maybeSingle();
+        if (conversationError) throw conversationError;
+
+        if (!conversation) {
+          const { data: created, error: createError } = await supabase.from("conversations").insert({
+            project_id: projectId, created_by: authUser.id, type: "project",
+            title: project?.title ? `دردشة المشروع: ${project.title}` : "دردشة المشروع",
+            participants: [authUser.id, ...targetUserIds]
+          }).select("id,created_by").single();
+          if (createError) throw createError;
+          conversation = created;
+        }
+
+        const { data: memberships, error: memberError } = await supabase.from("conversation_members")
+          .select("user_id").eq("conversation_id", conversation.id);
+        if (memberError) throw memberError;
+        const members = new Set((memberships || []).map(m => m.user_id));
+        const addIds = [authUser.id, ...targetUserIds].filter(id => !members.has(id));
+        for (const userId of addIds) {
+          const { error } = await supabase.from("conversation_members").insert({ conversation_id: conversation.id, user_id: userId });
+          if (error && userId === authUser.id) throw error;
+          if (error) console.warn("Could not add project chat participant:", error.message);
+        }
+        if (!active) return;
+        setResolvedConversationId(conversation.id);
+
+        const { data: rows, error: messageError } = await supabase.from("messages")
+          .select("id,created_at,conversation_id,sender_user_id,body,message_type,attachments,sender_email,sender_name,sender_role")
+          .eq("conversation_id", conversation.id).order("created_at", { ascending: true }).limit(200);
+        if (messageError) throw messageError;
+        if (active) setMessages((rows || []).map(m => ({
+          ...m, created_date: m.created_at, content: m.body,
+          sender_email: m.sender_email || (m.sender_user_id === authUser.id ? authUser.email : ""),
+          attachments: Array.isArray(m.attachments) ? m.attachments : []
+        })));
+
+        channel = supabase.channel(`project-chat-${conversation.id}`)
+          .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: `conversation_id=eq.${conversation.id}` }, payload => {
+            if (!active) return;
+            if (payload.eventType === "DELETE") {
+              setMessages(prev => prev.filter(m => m.id !== payload.old.id));
+              return;
+            }
+            const row = payload.new;
+            const mapped = { ...row, created_date: row.created_at, content: row.body, attachments: Array.isArray(row.attachments) ? row.attachments : [] };
+            setMessages(prev => payload.eventType === "INSERT"
+              ? (prev.some(m => m.id === mapped.id) ? prev : [...prev, mapped])
+              : prev.map(m => m.id === mapped.id ? mapped : m));
+          }).subscribe();
+      } catch (error) {
+        console.error("Project chat initialization failed:", error);
+        if (active) setChatError(error?.message || "تعذر تحميل دردشة المشروع.");
       }
-    });
-    return unsub;
-  }, [projectId]);
+    };
+    initialize();
+    return () => { active = false; if (channel) supabase?.removeChannel(channel); };
+  }, [projectId, project?.client_user_id, project?.assigned_engineer_id, project?.technical_consultant_id, project?.title]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const loadMessages = async () => {
-    const msgs = await base44.entities.Message.filter({ conversation_id: conversationId }, "created_date", 100);
-    setMessages(msgs);
-  };
 
   const handleFileSelect = async (e) => {
     const files = Array.from(e.target.files);
     if (!files.length) return;
     setUploading(true);
     const uploaded = [];
-    for (const file of files) {
-      const file_url = await uploadProjectFile(projectId, file);
-      uploaded.push({ name: file.name, url: file_url });
+    try {
+      for (const file of files) {
+        const file_url = await uploadProjectFile(projectId, file);
+        uploaded.push({ name: file.name, url: file_url });
+      }
+      setPendingFiles(prev => [...prev, ...uploaded]);
+    } catch (error) {
+      setChatError(error?.message || "تعذر رفع المرفق.");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
     }
-    setPendingFiles(prev => [...prev, ...uploaded]);
-    setUploading(false);
-    e.target.value = "";
   };
 
   const handleSend = async () => {
     if (!text.trim() && pendingFiles.length === 0) return;
     setSending(true);
-    await base44.entities.Message.create({
-      conversation_id: conversationId,
-      project_id: projectId,
-      sender_email: currentUser.email,
-      sender_name: currentUser.full_name || currentUser.email,
-      sender_role: "client",
-      content: text.trim(),
-      attachments: pendingFiles,
-      is_read: false,
-    });
-    setText("");
-    setPendingFiles([]);
-    setSending(false);
+    setChatError("");
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const authUser = authData?.user;
+      if (!authUser || !resolvedConversationId) throw new Error("تعذر تحديد محادثة المشروع أو المستخدم.");
+      const { error } = await supabase.from("messages").insert({
+        conversation_id: resolvedConversationId,
+        project_id: projectId,
+        sender_user_id: authUser.id,
+        sender_email: authUser.email || currentUser?.email || null,
+        sender_name: currentUser?.full_name || authUser.email || "مستخدم",
+        sender_role: "user",
+        body: text.trim(),
+        attachments: pendingFiles,
+        message_type: pendingFiles.length ? "attachment" : "text"
+      });
+      if (error) throw error;
+      await supabase.from("conversations").update({ last_message: text.trim() || "مرفق", last_message_date: new Date().toISOString() }).eq("id", resolvedConversationId);
+      setText("");
+      setPendingFiles([]);
+    } catch (error) {
+      setChatError(error?.message || "تعذر إرسال الرسالة.");
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -170,6 +247,7 @@ export default function ProjectChat({ projectId, project, currentUser, engineerN
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
+        {chatError && <p role="alert" className="text-xs text-red-600 bg-red-50 rounded-lg p-2">{chatError}</p>}
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2">
             <MessageSquare className="w-10 h-10 text-slate-200" />
