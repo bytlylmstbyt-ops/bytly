@@ -7,14 +7,14 @@ export async function uploadScopedFile(scope, file, options = {}) {
   if (!supabase) throw new Error("Supabase غير مهيأ.");
   if (!scope || !file) throw new Error("بيانات الملف غير مكتملة.");
 
-  // Draft attachments are kept private and isolated until a real project is created.
-  // Once projectId is available, use the same project-scoped folder as normal project files.
-  if (scope === "project-files" && options.projectId) {
+  // Draft attachments are private and scoped to the authenticated user's own folder.
+  if (scope === "project-files" && options.projectId === "drafts") {
     const { data: authData, error: authError } = await supabase.auth.getUser();
     if (authError) throw authError;
-    if (!authData?.user?.id) throw new Error("يجب تسجيل الدخول قبل رفع الملفات.");
+    const userId = authData?.user?.id;
+    if (!userId) throw new Error("يجب تسجيل الدخول قبل رفع الملفات.");
     const safeDraftName = (file.name || "file").replace(/[^\\w.\\-\\u0600-\\u06FF ]/g, "_");
-    const path = `${options.projectId}/${crypto.randomUUID()}-${safeDraftName}`;
+    const path = `drafts/${userId}/${crypto.randomUUID()}-${safeDraftName}`;
     const { error } = await supabase.storage.from(BUCKET).upload(path, file, {
       upsert: false,
       contentType: file.type || undefined,
