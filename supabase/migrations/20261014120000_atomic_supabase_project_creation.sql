@@ -23,6 +23,7 @@ declare
   v_vat numeric(14,2);
   v_customer_total numeric(14,2);
   v_stage_count integer;
+  v_provider_user_id uuid;
   v_sum_percentage numeric;
   v_stages jsonb := '[]'::jsonb;
 begin
@@ -41,6 +42,15 @@ begin
   select coalesce(sum((value->>'percentage')::numeric),0)
     into v_sum_percentage from jsonb_array_elements(p_milestones);
   if abs(v_sum_percentage - 100) > 0.01 then raise exception 'STAGE_PERCENTAGES_MUST_TOTAL_100'; end if;
+
+  if nullif(p_project->>'assigned_engineer_id','') is not null then
+    select user_id into v_provider_user_id
+    from public.engineers
+    where id = (p_project->>'assigned_engineer_id')::uuid
+      and user_id is not null
+    limit 1;
+    if v_provider_user_id is null then raise exception 'SELECTED_ENGINEER_ACCOUNT_NOT_LINKED'; end if;
+  end if;
 
   insert into public.projects (
     title, description, category, project_type, service_scope,
@@ -89,8 +99,8 @@ begin
       coalesce((v_stage->>'percentage')::numeric,0),
       v_sequence,
       nullif(v_stage->>'service_key',''),
-      case when v_sequence=1 then nullif(p_project->>'assigned_engineer_id','')::uuid else null end,
-      case when v_sequence=1 and nullif(p_project->>'assigned_engineer_id','') is not null then 'engineer' else null end,
+      case when v_sequence=1 then v_provider_user_id else null end,
+      case when v_sequence=1 and v_provider_user_id is not null then 'engineer' else null end,
       'pending',
       (current_date + make_interval(days => greatest(1,coalesce((v_stage->>'days')::integer,7))))::date,
       v_commission, v_vat_rate, v_vat, v_customer_total
@@ -106,13 +116,13 @@ begin
       v_vat_rate, v_vat, v_customer_total, v_commission_rate, v_commission
     ) returning * into v_financial;
 
-    if v_sequence = 1 and nullif(p_project->>'assigned_engineer_id','') is not null then
+    if v_sequence = 1 and v_provider_user_id is not null then
       insert into public.project_financial_participants (
         project_id, milestone_id, participant_user_id, participant_type,
         provider_type, service_key, role_label, allocation_type,
         allocation_value, priority, status
       ) values (
-        v_project.id, v_financial.id, v_stage_row.provider_user_id, 'engineer',
+        v_project.id, v_financial.id, v_provider_user_id, 'engineer',
         'engineer', v_stage_row.service_key, 'مقدم خدمة المرحلة',
         'percentage', 100, 1, 'active'
       );
