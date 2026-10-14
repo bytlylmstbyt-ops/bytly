@@ -5,7 +5,7 @@
  * This reports compatibility references; it does not treat every reference
  * as proof of a live Base44 backend dependency.
  */
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir, readFile, appendFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const roots = ['src', 'api', 'supabase/functions'];
@@ -92,6 +92,31 @@ const invokeCoverage = [...invokedFunctions.entries()].map(([name, files]) => ({
   hasSupabaseHandler: handledFunctions.has(name),
 })).sort((a, b) => a.name.localeCompare(b.name));
 const uncoveredFunctionInvokes = invokeCoverage.filter(item => !item.hasSupabaseHandler);
+const githubSummaryPath = process.env.GITHUB_STEP_SUMMARY;
+if (githubSummaryPath) {
+  const uncoveredSummary = uncoveredFunctionInvokes.length
+    ? uncoveredFunctionInvokes.map(item => "- " + item.name + ": " + item.files.join(", ")).join("\\n")
+    : "- No uncovered literal function invokes found.";
+  const dynamicSummary = [...new Set(dynamicInvokeSites)].length
+    ? [...new Set(dynamicInvokeSites)].map(file => "- " + file).join("\\n")
+    : "- No dynamic invocation sites found.";
+  await appendFile(githubSummaryPath, [
+    "## Base44 function migration coverage",
+    "- Literal function names invoked: " + invokeCoverage.length,
+    "- Names with named adapter handlers: " + invokeCoverage.filter(item => item.hasSupabaseHandler).length,
+    "- Names without named handlers: " + uncoveredFunctionInvokes.length,
+    "",
+    "### Uncovered function invocations",
+    uncoveredSummary,
+    "",
+    "### Dynamic invocation sites requiring manual review",
+    dynamicSummary,
+    "",
+    "> Handler presence is a static signal only; it does not prove runtime correctness.",
+    "",
+  ].join("\\n"));
+}
+
 
 findings.sort((a, b) =>
   (b.entityCalls + b.authCalls + b.functionCalls + b.integrationCalls + b.compatibilityImport + b.sdkImport) -
