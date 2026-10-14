@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import RiskOverviewStats from "@/components/risk/RiskOverviewStats";
 import ProjectRiskCard from "@/components/risk/ProjectRiskCard";
 import RiskDetailPanel from "@/components/risk/RiskDetailPanel";
@@ -25,32 +25,64 @@ export default function RiskDashboard() {
 
   const loadProjects = async () => {
     setLoading(true);
-    const data = await base44.entities.Project.filter({ status: "in_progress" });
-    setProjects(data);
-    setLoading(false);
+    try {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData?.user) throw new Error("يرجى تسجيل الدخول لعرض مخاطر المشاريع");
+      const { data, error } = await supabase
+        .from("projects")
+        .select("id,title,location,status,client_user_id,assigned_engineer_id,assigned_contractor_id,assigned_supplier_id,technical_consultant_id,budget_min,budget_max,deadline,phase_progress")
+        .eq("status", "in_progress")
+        .order("updated_at", { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      setProjects(data || []);
+      setErrorMessage(null);
+    } catch (error) {
+      console.error("Failed to load risk dashboard projects:", error);
+      setErrorMessage(error?.message || "تعذر تحميل المشاريع حسب صلاحيات الحساب");
+      setProjects([]);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const [errorMessage, setErrorMessage] = useState(null);
 
   const analyzeProject = async (projectId) => {
     setAnalyzingId(projectId);
-    const res = await base44.functions.invoke("analyzeProjectRisks", { project_id: projectId });
-    setRiskResults(prev => ({ ...prev, [projectId]: res.data }));
-    setAnalyzingId(null);
-    return res.data;
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-project-risks", {
+        body: { project_id: projectId },
+      });
+      if (error) throw error;
+      if (!data?.success || !data?.analysis) throw new Error(data?.error || "تعذر تحليل مخاطر المشروع");
+      setRiskResults(prev => ({ ...prev, [projectId]: data }));
+      return data;
+    } catch (error) {
+      console.error("Project risk analysis failed:", error);
+      setRiskResults(prev => ({ ...prev, [projectId]: { error: error?.message || "تعذر التحليل" } }));
+      return null;
+    } finally {
+      setAnalyzingId(null);
+    }
   };
 
   const analyzeAll = async () => {
     setAnalyzingAll(true);
-    for (const p of projects) {
-      if (!riskResults[p.id]) {
-        await analyzeProject(p.id);
+    try {
+      for (const project of projects) {
+        if (!riskResults[project.id]?.analysis) {
+          await analyzeProject(project.id);
+        }
       }
+    } finally {
+      setAnalyzingAll(false);
     }
-    setAnalyzingAll(false);
   };
 
   const handleSelectProject = async (project) => {
     setSelectedProject(project);
-    if (!riskResults[project.id]) {
+    if (!riskResults[project.id]?.analysis) {
       await analyzeProject(project.id);
     }
   };
@@ -100,6 +132,11 @@ export default function RiskDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        {errorMessage && (
+          <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {errorMessage}
+          </div>
+        )}
         {/* Stats */}
         <RiskOverviewStats
           totalProjects={projects.length}
