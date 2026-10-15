@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { supabase } from "@/lib/supabaseClient";
-import { uploadScopedFile } from "@/lib/projectFileStorage";
+import { uploadScopedFile, resolveProjectFileUrl, promoteDraftProjectFiles } from "@/lib/projectFileStorage";
 import { motion } from "framer-motion";
 import { 
   Briefcase, MapPin, Calendar, DollarSign, 
@@ -44,6 +44,26 @@ export default function CreateProject() {
   });
   
   const [showMilestones, setShowMilestones] = useState(false);
+  const [attachmentPreviewUrls, setAttachmentPreviewUrls] = useState({});
+
+  useEffect(() => {
+    let cancelled = false;
+    const resolvePreviews = async () => {
+      const entries = await Promise.all((formData.attachments || []).map(async (value) => {
+        try {
+          return [value, await resolveProjectFileUrl(value)];
+        } catch (error) {
+          console.error("Failed to resolve project attachment preview:", error);
+          return [value, null];
+        }
+      }));
+      if (!cancelled) {
+        setAttachmentPreviewUrls(Object.fromEntries(entries.filter(([, url]) => Boolean(url))));
+      }
+    };
+    resolvePreviews();
+    return () => { cancelled = true; };
+  }, [formData.attachments]);
 
   const handleAIComplete = (aiData) => {
     setFormData(prev => ({
@@ -99,20 +119,33 @@ export default function CreateProject() {
   };
 
   const handleFileUpload = async (e) => {
-    const files = Array.from(e.target.files);
+    const input = e.target;
+    const files = Array.from(input.files || []);
+    if (files.length === 0) return;
+
     setIsLoading(true);
-    
     const uploadedUrls = [];
-    for (const file of files) {
-      const file_url = await uploadScopedFile("project-drafts", file);
-      uploadedUrls.push(file_url);
+    const failedFiles = [];
+    try {
+      for (const file of files) {
+        try {
+          const fileUrl = await uploadScopedFile("project-files", file, { projectId: "drafts" });
+          uploadedUrls.push(fileUrl);
+        } catch (uploadError) {
+          console.error("Failed to upload project attachment:", file.name, uploadError);
+          failedFiles.push(file.name);
+        }
+      }
+      if (uploadedUrls.length > 0) {
+        setFormData(prev => ({ ...prev, attachments: [...prev.attachments, ...uploadedUrls] }));
+      }
+      if (failedFiles.length > 0) {
+        alert("تعذر رفع بعض الملفات: " + failedFiles.join("، ") + ". تحققي من الاتصال والصلاحيات ثم أعيدي المحاولة.");
+      }
+    } finally {
+      input.value = "";
+      setIsLoading(false);
     }
-    
-    setFormData(prev => ({
-      ...prev,
-      attachments: [...prev.attachments, ...uploadedUrls]
-    }));
-    setIsLoading(false);
   };
 
   const removeAttachment = (index) => {
@@ -168,6 +201,7 @@ export default function CreateProject() {
     }
 
     setIsLoading(true);
+    let attachmentMigrationWarning = false;
     try {
       // Resolve the authenticated Supabase user at submit time; React state can be stale.
       const { data: authResult, error: authError } = await supabase.auth.getUser();
@@ -232,6 +266,31 @@ export default function CreateProject() {
       throw new Error("لم تكتمل عملية إنشاء المشروع ومراحله. لم يتم اعتماد العملية.");
     }
 
+    // Draft files are uploader-private; move them under the project ID so RLS
+    // allows authorized project participants to create signed preview URLs.
+    if ((formData.attachments || []).some(value => value?.startsWith("supabase://project-files/drafts/"))) {
+      try {
+        const { attachments: projectAttachments, sourcePaths } = await promoteDraftProjectFiles(
+          formData.attachments,
+          newProject.id
+        );
+        const { error: attachmentUpdateError } = await supabase
+          .from("projects")
+          .update({ attachments: projectAttachments })
+          .eq("id", newProject.id)
+          .eq("client_user_id", authenticatedUser.id);
+        if (attachmentUpdateError) throw attachmentUpdateError;
+
+        if (sourcePaths.length > 0) {
+          const { error: cleanupError } = await supabase.storage.from("project-files").remove(sourcePaths);
+          if (cleanupError) console.warn("Project attachments were moved, but draft cleanup failed:", cleanupError);
+        }
+      } catch (attachmentMigrationError) {
+        attachmentMigrationWarning = true;
+        console.error("Project created, but draft attachments could not be promoted:", attachmentMigrationError);
+      }
+    }
+
     // Send project notifications through the authenticated Supabase Edge Function.
     try {
       const { data: notificationResult, error: notificationError } = await supabase.functions.invoke("notify-project-engineers", {
@@ -245,7 +304,9 @@ export default function CreateProject() {
     }
 
     setIsLoading(false);
-    alert(preselectedEngineerId ? "تم إرسال طلب الخدمة المباشرة بنجاح!" : "تم إنشاء المشروع بنجاح!");
+    alert(attachmentMigrationWarning
+      ? "تم إنشاء المشروع، لكن تعذر نقل بعض المرفقات إلى مساحة المشروع. افتحي المشروع وأعيدي رفع هذه الملفات حتى يتمكن المشاركون من عرضها."
+      : (preselectedEngineerId ? "تم إرسال طلب الخدمة المباشرة بنجاح!" : "تم إنشاء المشروع بنجاح!"));
     navigate(createPageUrl("Projects"));
     } catch (error) {
       console.error("Failed to create project:", error);
@@ -527,7 +588,7 @@ export default function CreateProject() {
                       <div key={index} className="relative group">
                         <div className="w-20 h-20 rounded-lg overflow-hidden bg-slate-100">
                           {url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                            <img src={url} alt="" className="w-full h-full object-cover" />
+                            <img src={attachmentPreviewUrls[url] || undefined} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
                               <FileText className="w-8 h-8 text-slate-400" />
