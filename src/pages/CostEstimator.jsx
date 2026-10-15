@@ -90,63 +90,67 @@ export default function CostEstimator() {
 
   const f = (key) => (val) => setForm(p => ({ ...p, [key]: val }));
 
-  const handleCalculate = async () => {
-    if (!form.land_area || isNaN(form.land_area)) return;
+  const handleCalculate = () => {
+    const landArea = Number(form.land_area);
+    if (!Number.isFinite(landArea) || landArea <= 0 || !Number.isInteger(Number(form.floors)) || Number(form.floors) < 1) {
+      return;
+    }
+
     setIsCalculating(true);
-
-    const buildingType = BUILDING_TYPES.find(b => b.value === form.building_type);
-    const finishType = FINISH_TYPES.find(f => f.value === form.finish_type);
-    const region = REGIONS.find(r => r.value === form.region);
-
-    const builtArea = parseFloat(form.land_area) * form.floors * 0.65; // 65% coverage
-    const baseCost = buildingType.base_cost * finishType.multiplier * region.factor;
-
-    let total = builtArea * baseCost;
-    const extras = [];
-
-    if (form.has_basement) { const bCost = parseFloat(form.land_area) * 950; total += bCost; extras.push({ label: "بدروم", cost: bCost }); }
-    if (form.has_pool) { total += 180000; extras.push({ label: "مسبح", cost: 180000 }); }
-    if (form.has_elevator) { total += 130000; extras.push({ label: "مصعد", cost: 130000 }); }
-
-    const infra = total * 0.12; // بنية تحتية
-    const design = total * 0.06; // تصميم
-
-    const grandTotal = total + infra + design;
-
-    // AI enhancement
-    let aiInsights = null;
     try {
-      const aiRes = await base44.integrations.Core.InvokeLLM({
-        prompt: `أنت خبير تقدير تكاليف البناء في السعودية. المشروع: ${buildingType.label}، مساحة الأرض: ${form.land_area} م²، ${form.floors} أدوار، تشطيب ${finishType.label}، منطقة ${region.label}. قدم 3 ملاحظات مهنية مختصرة جداً لترشيد التكلفة أو تنبيهات مهمة. أجب بـ JSON فقط: {"tips": ["نص1","نص2","نص3"], "risk": "low|medium|high"}`,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            tips: { type: "array", items: { type: "string" } },
-            risk: { type: "string" }
-          }
-        }
+      const buildingType = BUILDING_TYPES.find(b => b.value === form.building_type);
+      const finishType = FINISH_TYPES.find(item => item.value === form.finish_type);
+      const region = REGIONS.find(item => item.value === form.region);
+      if (!buildingType || !finishType || !region) {
+        throw new Error("بيانات الحاسبة غير مكتملة");
+      }
+
+      // Keep the estimate independent from external AI/Base44 calls so the button
+      // always produces the estimate even when an optional service is unavailable.
+      const builtArea = landArea * Number(form.floors) * 0.65;
+      const baseCost = buildingType.base_cost * finishType.multiplier * region.factor;
+      let total = builtArea * baseCost;
+      const extras = [];
+
+      if (form.has_basement) {
+        const basementCost = landArea * 950;
+        total += basementCost;
+        extras.push({ label: "بدروم", cost: basementCost });
+      }
+      if (form.has_pool) {
+        total += 180000;
+        extras.push({ label: "مسبح", cost: 180000 });
+      }
+      if (form.has_elevator) {
+        total += 130000;
+        extras.push({ label: "مصعد", cost: 130000 });
+      }
+
+      const infra = total * 0.12;
+      const design = total * 0.06;
+      const grandTotal = total + infra + design;
+
+      setResult({
+        builtArea: Math.round(builtArea),
+        baseCostPerMeter: Math.round(baseCost),
+        constructionCost: Math.round(total),
+        infraCost: Math.round(infra),
+        designCost: Math.round(design),
+        extras,
+        grandTotal: Math.round(grandTotal),
+        minTotal: Math.round(grandTotal * 0.85),
+        maxTotal: Math.round(grandTotal * 1.2),
+        aiInsights: null,
+        buildingType: buildingType.label,
+        finishType: finishType.label,
+        region: region.label,
       });
-      aiInsights = aiRes;
-    } catch (e) {}
-
-    setResult({
-      builtArea: Math.round(builtArea),
-      baseCostPerMeter: Math.round(baseCost),
-      constructionCost: Math.round(total),
-      infraCost: Math.round(infra),
-      designCost: Math.round(design),
-      extras,
-      grandTotal: Math.round(grandTotal),
-      minTotal: Math.round(grandTotal * 0.85),
-      maxTotal: Math.round(grandTotal * 1.2),
-      aiInsights,
-      buildingType: buildingType.label,
-      finishType: finishType.label,
-      region: region.label,
-    });
-
-    setIsCalculating(false);
-    setStep(2);
+      setStep(2);
+    } catch (error) {
+      console.error("Cost estimate calculation failed:", error);
+    } finally {
+      setIsCalculating(false);
+    }
   };
 
   const handleSendRequests = async () => {
