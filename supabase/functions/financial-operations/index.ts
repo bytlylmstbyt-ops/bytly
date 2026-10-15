@@ -37,7 +37,6 @@ Deno.serve(async (req) => {
     if (action === "release") {
       const { data, error } = await admin.rpc("release_project_milestone", {
         p_milestone_id: milestoneId,
-        p_actor_user_id: userData.user.id,
         p_notes: body?.notes ?? null,
       });
       result = { data, error };
@@ -48,7 +47,7 @@ Deno.serve(async (req) => {
         : requestedResolution === "refund_partial"
           ? "partial_refund"
           : requestedResolution;
-      const { data, error } = await admin.rpc("resolve_project_milestone", {
+      const { data, error } = await admin.rpc("resolve_project_milestone_authenticated", {
         p_milestone_id: milestoneId,
         p_resolution: normalizedResolution,
         p_refund_amount: body?.refund_amount ?? 0,
