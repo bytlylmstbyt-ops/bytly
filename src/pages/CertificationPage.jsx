@@ -32,24 +32,34 @@ export default function CertificationPage(){
     if(legacy.error) console.warn("Project legacy lookup:",legacy.error);
     p=legacy.data;
    }
-   // Keep the original certificate page intact: if the project cannot be read,
-   // do not replace the certificate with a generic error screen.
-   if(!p){
-    p={id:projectId,title:"شهادة اعتماد فني",status:"technical_approved"};
-   }
+   // Never fabricate a project record: certificate data must come from Supabase.
+   if(!p) throw new Error("NOT_FOUND");
    setProject(p);
+   setConsultant(null);
 
-   const [engineerResult,clientResult,reviewResult]=await Promise.all([
-    p.assigned_engineer_id ? supabase.from("engineers").select("*").eq("id",p.assigned_engineer_id).maybeSingle() : Promise.resolve({data:null,error:null}),
-    p.client_id ? supabase.from("clients").select("*").eq("id",p.client_id).maybeSingle() : Promise.resolve({data:null,error:null}),
-    supabase.from("technical_reviews").select("*").eq("project_id",projectId).order("created_at",{ascending:false}).limit(1).maybeSingle()
+   const [engineerResult,clientResult,reviewResult] = await Promise.all([
+    p.assigned_engineer_id
+      ? supabase.from("engineers").select("*").eq("id",p.assigned_engineer_id).maybeSingle()
+      : Promise.resolve({data:null,error:null}),
+    p.client_id
+      ? supabase.from("clients").select("*").eq("id",p.client_id).maybeSingle()
+      : Promise.resolve({data:null,error:null}),
+    // Use the canonical Supabase project ID. The URL may still contain a legacy Base44 ID.
+    supabase.from("technical_reviews").select("*").eq("project_id",p.id).order("created_at",{ascending:false}).limit(1).maybeSingle()
    ]);
    if(engineerResult.error) console.warn("Certification engineer lookup failed:",engineerResult.error);
    if(clientResult.error) console.warn("Certification client lookup failed:",clientResult.error);
    if(reviewResult.error) console.warn("Certification technical review lookup failed:",reviewResult.error);
    setEngineer(engineerResult.data||null);
    setClient(clientResult.data||null);
-   setTechnicalReview(reviewResult.data||null);
+   let latestReview = reviewResult.data || null;
+   // Compatibility for old links/reviews that still store the Base44 project ID.
+   if(!latestReview && projectId !== p.id){
+    const legacyReview = await supabase.from("technical_reviews").select("*").eq("project_id",projectId).order("created_at",{ascending:false}).limit(1).maybeSingle();
+    if(legacyReview.error) console.warn("Legacy certification review lookup failed:",legacyReview.error);
+    latestReview = legacyReview.data || null;
+   }
+   setTechnicalReview(latestReview);
 
    if(p.technical_consultant_id){
     const {data:x,error:e}=await supabase.from("consultants").select("*").eq("id",p.technical_consultant_id).maybeSingle();
@@ -64,7 +74,7 @@ export default function CertificationPage(){
    }
   }catch(err){
    console.error("CertificationPage load error:",err);
-   setLoadError(err.message==="AUTH"?"يرجى تسجيل الدخول للوصول إلى الشهادة":err.message==="NOT_FOUND"?"لم يتم العثور على المشروع":err.message==="NOT_APPROVED"?"هذه الشهادة لم تعتمد بعد":"تعذر تحميل بيانات الشهادة. يمكنك المحاولة مرة أخرى.");
+   setLoadError(err.message==="AUTH"?"يرجى تسجيل الدخول للوصول إلى الشهادة":err.message==="NOT_FOUND"?"لم يتم العثور على المشروع في قاعدة البيانات الحالية. افتحي الشهادة من قائمة جميع الشهادات المحدّثة.":err.message==="NOT_APPROVED"?"هذه الشهادة لم تعتمد بعد":"تعذر تحميل بيانات الشهادة. يمكنك المحاولة مرة أخرى.");
   }finally{setLoading(false);}
  };
  const pdf=async()=>{
