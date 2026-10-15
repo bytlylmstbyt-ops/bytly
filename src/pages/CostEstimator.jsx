@@ -258,6 +258,8 @@ export default function CostEstimator() {
                         <Label className="text-sm mb-2 block">مساحة الأرض (م²) *</Label>
                         <Input
                           type="number"
+                          min="1"
+                          step="1"
                           placeholder="مثال: 400"
                           value={form.land_area}
                           onChange={e => f("land_area")(e.target.value)}
@@ -358,7 +360,7 @@ export default function CostEstimator() {
               <div className="mt-6 text-center">
                 <Button
                   onClick={handleCalculate}
-                  disabled={!form.land_area || isCalculating}
+                  disabled={!form.land_area || !Number.isFinite(Number(form.land_area)) || Number(form.land_area) <= 0 || isCalculating}
                   className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white px-10 py-6 text-lg rounded-2xl shadow-lg hover:shadow-xl transition-all gap-3"
                 >
                   {isCalculating ? (
