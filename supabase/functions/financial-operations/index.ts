@@ -9,38 +9,36 @@ const cors = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  const json = (data: unknown, status = 200) =>
+    new Response(JSON.stringify(data), { status, headers: { ...cors, "Content-Type": "application/json" } });
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "AUTH_REQUIRED" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
-    }
+    if (!authHeader?.startsWith("Bearer ")) return json({ error: "AUTH_REQUIRED" }, 401);
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const admin = createClient(supabaseUrl, serviceRoleKey, { auth: { autoRefreshToken: false, persistSession: false } });
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!supabaseUrl || !anonKey) return json({ error: "SERVER_CONFIGURATION_ERROR" }, 500);
 
-    const token = authHeader.slice(7);
-    const { data: userData, error: userError } = await admin.auth.getUser(token);
-    if (userError || !userData.user) {
-      return new Response(JSON.stringify({ error: "INVALID_SESSION" }), { status: 401, headers: { ...cors, "Content-Type": "application/json" } });
-    }
+    // Keep the caller JWT attached so Postgres auth.uid() reflects the signed-in user.
+    const caller = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+    const { data: userData, error: userError } = await caller.auth.getUser();
+    if (userError || !userData.user) return json({ error: "INVALID_SESSION" }, 401);
 
     const body = await req.json();
     const action = body?.action;
     const milestoneId = body?.milestone_id;
-    if (!milestoneId || !["release", "resolve"].includes(action)) {
-      return new Response(JSON.stringify({ error: "INVALID_REQUEST" }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
-    }
+    if (!milestoneId || !["release", "resolve"].includes(action)) return json({ error: "INVALID_REQUEST" }, 400);
 
     let result;
     if (action === "release") {
-      const { data, error } = await admin.rpc("release_project_milestone", {
+      result = await caller.rpc("release_project_milestone_authenticated", {
         p_milestone_id: milestoneId,
-        p_actor_user_id: userData.user.id,
         p_notes: body?.notes ?? null,
       });
-      result = { data, error };
     } else {
       const requestedResolution = body?.resolution;
       const normalizedResolution = requestedResolution === "refund_full"
@@ -48,22 +46,18 @@ Deno.serve(async (req) => {
         : requestedResolution === "refund_partial"
           ? "partial_refund"
           : requestedResolution;
-      const { data, error } = await admin.rpc("resolve_project_milestone", {
+      result = await caller.rpc("resolve_project_milestone", {
         p_milestone_id: milestoneId,
         p_resolution: normalizedResolution,
         p_refund_amount: body?.refund_amount ?? 0,
         p_notes: body?.notes ?? null,
         p_actor_user_id: userData.user.id,
       });
-      result = { data, error };
     }
 
-    if (result.error) {
-      return new Response(JSON.stringify({ error: result.error.message, code: result.error.code }), { status: 400, headers: { ...cors, "Content-Type": "application/json" } });
-    }
-
-    return new Response(JSON.stringify(result.data), { status: 200, headers: { ...cors, "Content-Type": "application/json" } });
+    if (result.error) return json({ error: result.error.message, code: result.error.code }, 400);
+    return json(result.data);
   } catch (error) {
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "INTERNAL_ERROR" }), { status: 500, headers: { ...cors, "Content-Type": "application/json" } });
+    return json({ error: error instanceof Error ? error.message : "INTERNAL_ERROR" }, 500);
   }
 });
