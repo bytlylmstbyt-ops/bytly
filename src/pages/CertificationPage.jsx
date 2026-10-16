@@ -80,7 +80,7 @@ export default function CertificationPage(){
    }
   }catch(err){
    console.error("CertificationPage load error:",err);
-   setLoadError(err.message==="AUTH"?"يرجى تسجيل الدخول للوصول إلى الشهادة":err.message==="NOT_FOUND"?"لم يتم العثور على المشروع في قاعدة البيانات الحالية. افتحي الشهادة من قائمة جميع الشهادات المحدّثة.":err.message==="NOT_APPROVED"?"هذه الشهادة لم تعتمد بعد":"تعذر تحميل بيانات الشهادة. يمكنك المحاولة مرة أخرى.");
+   setLoadError(err.message==="AUTH"?"يرجى تسجيل الدخول للوصول إلى الشهادة":err.message==="NOT_FOUND"?"لم يتم العثور على المشروع في قاعدة البيانات الحالية. افتحي الشهادة من قائمة جميع الشهادات المحدّثة.":err.message==="NOT_APPROVED"?"هذه الشهادة لم تعتمد بعد":("تعذر تحميل بيانات الشهادة: "+(err.message||"خطأ غير معروف")));
   }finally{setLoading(false);}
  };
  const pdf=async()=>{
