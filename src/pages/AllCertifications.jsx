@@ -226,7 +226,7 @@ export default function AllCertificationsPage() {
               <Card>
                 <CardContent className="py-12 text-center">
                   <Filter className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                  <p className="text-slate-500">لا توجد شهادات مطابقة للبحث</p>
+                  <p className="text-slate-700 font-semibold">{projects.length === 0 ? "لا توجد شهادات حتى الآن" : "لا توجد شهادات مطابقة للبحث"}</p><p className="text-sm text-slate-500 mt-2">{projects.length === 0 ? "ستظهر هنا شهادات المشاريع بعد تسجيلها واستكمال المراجعة الفنية والاعتماد. لم يتم إنشاء أي شهادات أو تقييمات تجريبية." : "جرّبي تغيير كلمات البحث أو حالة الاعتماد."}</p>
                 </CardContent>
               </Card>
             </div>
