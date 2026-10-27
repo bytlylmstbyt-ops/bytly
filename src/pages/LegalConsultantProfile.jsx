@@ -253,7 +253,7 @@ export default function LegalConsultantProfile() {
 
           {/* Templates Tab */}
           <TabsContent value="templates">
-            <LegalTemplateUploader consultantId={profile.id} />
+            {typeof window !== "undefined" && window.sessionStorage.getItem("bytly_admin_preview") ? <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">رفع القوالب القانونية متوقف في وضع المعاينة؛ لن يتم إرسال ملفات أو حفظ بيانات حقيقية.</div> : <LegalTemplateUploader consultantId={profile.id} />}
           </TabsContent>
 
           {/* Stats Tab */}
