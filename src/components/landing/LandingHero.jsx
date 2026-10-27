@@ -54,56 +54,21 @@ export default function LandingHero() {
           </p>
         </motion.div>
 
-        {/* Main visual comes after the explanation and before the user chooses a path. */}
+        {/* Approved Bytly hero image — use the exact user-provided artwork. */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
+          initial={{ opacity: 0, scale: 0.99 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.1 }}
           className="relative mb-9 md:mb-11"
         >
-          <div className="relative aspect-[16/9] md:aspect-[2/1] rounded-3xl overflow-hidden shadow-xl">
-            <div className="absolute inset-0 grid grid-cols-12 grid-rows-6 gap-2 md:gap-3 bg-[#2A2119] p-2 md:p-3">
-              <div className="col-span-8 row-span-6 relative overflow-hidden rounded-2xl">
-                <img
-                  src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1400&q=85&fit=crop"
-                  alt={isRTL ? "تصميم معماري ومخططات هندسية" : "Architectural design and engineering plans"}
-                  className="w-full h-full object-cover"
-                  loading="eager"
-                />
-              </div>
-              <div className="col-span-4 row-span-3 relative overflow-hidden rounded-2xl">
-                <img
-                  src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=900&q=85&fit=crop"
-                  alt={isRTL ? "موقع إنشاءات وتنفيذ" : "Construction site and execution"}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
-              </div>
-              <div className="col-span-4 row-span-3 relative overflow-hidden rounded-2xl">
-                <img
-                  src="https://images.unsplash.com/photo-1581092921461-eab62e97a780?w=900&q=85&fit=crop"
-                  alt={isRTL ? "عمل هندسي وتقني" : "Engineering and technical work"}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-            <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, rgba(20,18,15,0.02) 30%, rgba(20,18,15,0.32) 100%)" }} />
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="absolute bottom-3 right-3 left-3 md:bottom-5 md:right-5 md:left-5 rounded-2xl p-3 md:p-4 shadow-lg flex items-center justify-around gap-2"
-              style={{ backgroundColor: "rgba(255,255,255,0.94)", backdropFilter: "blur(12px)" }}
-            >
-              {stats.map(({ icon: Icon, label, value }) => (
-                <div key={label} className="text-center min-w-0">
-                  <Icon className="w-4 h-4 md:w-5 md:h-5 mx-auto mb-1" style={{ color: "#9C8567" }} />
-                  <div className="font-bold text-xs md:text-sm" style={{ color: "#1B1C2A" }}>{value}</div>
-                  <div className="text-[9px] md:text-[10px]" style={{ color: "#9C8567" }}>{label}</div>
-                </div>
-              ))}
-            </motion.div>
+          <div className="relative overflow-hidden rounded-3xl shadow-xl bg-[#2A2119]">
+            <img
+              src="https://media.base44.com/images/public/69741d7bf3195aeab86a1582/ed693b192_55AEB86D-76D8-4664-8BB8-37F16C3093E4.jpeg"
+              alt={isRTL ? "بيتلي — المنظومة الهندسية المتكاملة، من المخططات والتصميم إلى التنفيذ" : "Bytly — the integrated engineering marketplace, from architectural plans and design to construction"}
+              className="block w-full h-auto"
+              loading="eager"
+              fetchPriority="high"
+            />
           </div>
         </motion.div>
 
