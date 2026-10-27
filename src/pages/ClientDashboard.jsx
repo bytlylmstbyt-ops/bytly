@@ -29,8 +29,21 @@ export default function ClientDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const previewMode = typeof window !== "undefined" && Boolean(window.sessionStorage.getItem("bytly_admin_preview"));
-      if (previewMode) { setLoading(false); return; }
+      const previewRaw = typeof window !== "undefined" ? window.sessionStorage.getItem("bytly_admin_preview") : null;
+      if (previewRaw) {
+        const preview = JSON.parse(previewRaw);
+        if (preview?.role === "client") {
+          setClient({ id: "preview-client", user_id: "preview-user", full_name: "أحمد", email: "ahmed@example.test", client_type: "individual", city: "جدة", status: "approved" });
+          setStats({ totalProjects: 3, openProjects: 1, inProgressProjects: 1, completedProjects: 1, totalSpent: 5000, activeProposals: 2 });
+          setRecentProjects([
+            { id: "preview-project-1", title: "تصميم فيلا سكنية", status: "open", budget_min: 15000, budget_max: 25000, created_at: new Date().toISOString() },
+            { id: "preview-project-2", title: "إشراف هندسي على التنفيذ", status: "in_progress", budget_min: 8000, budget_max: 12000, created_at: new Date().toISOString() },
+            { id: "preview-project-3", title: "مخططات معمارية", status: "completed", budget_min: 4000, budget_max: 6000, created_at: new Date().toISOString() }
+          ]);
+          setRecentProposals([{ id: "preview-offer-1", status: "pending" }, { id: "preview-offer-2", status: "pending" }]);
+          return;
+        }
+      }
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
       const currentUser = authData?.user;
