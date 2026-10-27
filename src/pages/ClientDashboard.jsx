@@ -36,7 +36,8 @@ export default function ClientDashboard() {
       const { data: clientData } = await supabase.from("clients").select("*").eq("user_id", currentUser.id).maybeSingle();
       setClient(clientData);
       if (!clientData) return;
-      const { data: projects = [] } = await supabase.from("projects").select("*").eq("client_id", clientData.id).order("created_at",{ascending:false});
+      const { data: projects = [], error: projectsError } = await supabase.from("projects").select("*").or(`client_id.eq.${clientData.id},client_user_id.eq.${currentUser.id}`).order("created_at", { ascending: false });
+      if (projectsError) throw projectsError;
       const projectIds=projects.map(p=>p.id);
       let myProposals=[];
       if(projectIds.length){
@@ -135,6 +136,11 @@ export default function ClientDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#E8DFD0] bg-white p-4 shadow-sm">
+          <div><h2 className="font-bold text-[#332719]">إدارة مشاريعك من مكان واحد</h2><p className="mt-1 text-sm text-slate-500">افتح تفاصيل كل مشروع، تابع حالته وعروضه، وانتقل إلى المحادثات.</p></div>
+          <Link to={createPageUrl("MyProjects")}><Button className="bg-[#9A743B] text-white hover:bg-[#7F5E2D]">إدارة مشاريعي</Button></Link>
+          <Link to={createPageUrl("CreateProject")}><Button variant="outline">إقدام مشروعك</Button></Link>
+        </div>
         <SmartAlertsDashboard client={client} />
         {client.client_type === "investor" ? (
           <InvestorClientDashboard 
