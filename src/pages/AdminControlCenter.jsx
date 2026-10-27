@@ -361,6 +361,7 @@ export default function AdminControlCenter() {
         </nav>
 
         <main className="flex-1 min-w-0" dir="rtl">
+          {isPlatformOwner && <PreviewLauncher />}
           <div className="mb-6 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
             <div className="text-right">
               <div className="inline-flex items-center gap-2 rounded-full bg-[#F1EEFF] text-[#5142A4] px-3 py-1 text-xs font-medium mb-2"><LayoutDashboard className="w-3.5 h-3.5" /> {isPlatformOwner ? "مالكة المنصة • Super Admin" : "لوحة القيادة التنفيذية"}</div>
