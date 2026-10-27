@@ -28,6 +28,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import PublicLanding from './pages/PublicLanding';
 import MCPConsent from './pages/MCPConsent';
+import PreviewExperience from './pages/PreviewExperience';
 
 const TechnicalResources = React.lazy(() => import('./pages/TechnicalResources'));
 const AdManager = React.lazy(() => import('./pages/AdManager'));
@@ -173,7 +174,14 @@ function PublicHomeRoute() {
 const { Pages, Layout } = pagesConfig;
 const LayoutWrapper = ({ children, currentPageName }) => Layout ? <Layout currentPageName={currentPageName}>{children}</Layout> : <>{children}</>;
 const lazyRoute = (Component, name) => <RouteErrorBoundary pageName={name}><LayoutWrapper currentPageName={name}><Suspense fallback={<PageSpinner />}><Component /></Suspense></LayoutWrapper></RouteErrorBoundary>;
-const protectedRoute = (Component, name) => <RouteErrorBoundary pageName={name}><ProtectedRoute><RegistrationGate><LayoutWrapper currentPageName={name}><Suspense fallback={<PageSpinner />}><Component /></Suspense></LayoutWrapper></RegistrationGate></ProtectedRoute></RouteErrorBoundary>;
+const protectedRoute = (Component, name) => {
+  let previewActive = false;
+  try { previewActive = !!JSON.parse(window.sessionStorage.getItem("bytly_admin_preview") || "null"); } catch {}
+  if (previewActive) {
+    return <RouteErrorBoundary pageName={name}><LayoutWrapper currentPageName={name}><PreviewExperience pageName={name} /></LayoutWrapper></RouteErrorBoundary>;
+  }
+  return <RouteErrorBoundary pageName={name}><ProtectedRoute><RegistrationGate><LayoutWrapper currentPageName={name}><Suspense fallback={<PageSpinner />}><Component /></Suspense></LayoutWrapper></RegistrationGate></ProtectedRoute></RouteErrorBoundary>;
+};
 
 function PreviewModeBanner() {
   const [preview, setPreview] = React.useState(() => {
