@@ -63,7 +63,7 @@ export default function LandingHero() {
         >
           <div className="relative aspect-[16/9] md:aspect-[2/1] rounded-3xl overflow-hidden shadow-xl">
             <img
-              src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1600&q=85"
+              src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=2000&q=90&fit=crop"
               alt={isRTL ? "واجهة معمارية تعبّر عن خدمات بيتلي الهندسية" : "Architectural showcase representing Bytly's engineering services"}
               className="w-full h-full object-cover"
               loading="eager"
