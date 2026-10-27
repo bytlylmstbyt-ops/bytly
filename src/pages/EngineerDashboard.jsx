@@ -36,6 +36,20 @@ export default function EngineerDashboard() {
 
   const loadData = async () => {
     try {
+      const previewRaw = typeof window !== "undefined" ? window.sessionStorage.getItem("bytly_admin_preview") : null;
+      if (previewRaw && JSON.parse(previewRaw)?.role === "engineer") {
+        const demoUser = { id: "preview-engineer-user", email: "engineer@example.test" };
+        setUser(demoUser);
+        setEngineer({ id: "preview-engineer-1", user_id: demoUser.id, full_name: "م. أحمد محمد", email: demoUser.email, phone: "05XXXXXXXX", city: "جدة", specialization: "هندسة معمارية", years_experience: 8, status: "approved", is_verified: true, bio: "ملف تجريبي لمعاينة تجربة بيتلي.", profile_image: "", cover_image: "" });
+        setProjects([{ id: "preview-eng-project-1", title: "تصميم فيلا سكنية", status: "in_progress", escrow_status: "held", engineer_payment: 0, budget_max: 22000 }, { id: "preview-eng-project-2", title: "مخططات مبنى تجاري", status: "completed", escrow_status: "released", engineer_payment: 8500, budget_max: 10000 }]);
+        setPortfolio([{ id: "preview-portfolio-1", title: "مشروع سكني تجريبي", description: "نموذج من معرض الأعمال" }]);
+        setReviews([{ id: "preview-review-1", rating: 5, comment: "تجربة ممتازة" }, { id: "preview-review-2", rating: 4, comment: "عمل احترافي" }]);
+        setDisputes([]);
+        setNotifications([{ id: "preview-notification-1", title: "مرحباً بك في بيتلي", message: "أكمل ملفك وابدأ باستكشاف الفرص", is_read: false, created_at: new Date().toISOString() }]);
+        setProposals([{ id: "preview-proposal-1", status: "pending", project_id: "preview-eng-project-1" }, { id: "preview-proposal-2", status: "accepted", project_id: "preview-eng-project-2" }]);
+        setAppointments([]);
+        return;
+      }
       const {data:authData,error:authError}=await supabase.auth.getUser(); if(authError) throw authError;
       const currentUser=authData?.user; if(!currentUser?.id){setIsLoading(false);return;} setUser(currentUser);
       const {data:eng}=await supabase.from("engineers").select("*").eq("user_id",currentUser.id).maybeSingle();
