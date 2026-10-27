@@ -25,6 +25,15 @@ export default function LegalConsultantProfile() {
   }, []);
 
   const loadProfile = async () => {
+    const previewRaw = typeof window !== "undefined" ? window.sessionStorage.getItem("bytly_admin_preview") : null;
+    if (previewRaw && JSON.parse(previewRaw)?.role === "legal_consultant") {
+      const demo = { id: "preview-legal-consultant-1", email: "legal@example.test", full_name: "المستشار القانوني التجريبي", legal_specialization: "العقود والنزاعات الهندسية", city: "جدة", status: "approved", is_verified: true, bio: "بيانات تجريبية لمعاينة تجربة بيتلي." };
+      setUser({ email: demo.email, full_name: demo.full_name });
+      setProfile(demo);
+      setFormData(demo);
+      setIsLoading(false);
+      return;
+    }
     const currentUser = await base44.auth.me();
     setUser(currentUser);
 
@@ -45,6 +54,7 @@ export default function LegalConsultantProfile() {
   };
 
   const handleImageUpload = async (e) => {
+    if (typeof window !== "undefined" && window.sessionStorage.getItem("bytly_admin_preview")) { alert("هذه معاينة فقط؛ رفع الملفات غير متاح."); return; }
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -55,6 +65,7 @@ export default function LegalConsultantProfile() {
   };
 
   const handleSave = async () => {
+    if (typeof window !== "undefined" && window.sessionStorage.getItem("bytly_admin_preview")) { alert("هذه معاينة فقط؛ لم يتم حفظ أي تغييرات."); return; }
     setIsSaving(true);
     try {
       await base44.entities.LegalConsultant.update(profile.id, formData);
