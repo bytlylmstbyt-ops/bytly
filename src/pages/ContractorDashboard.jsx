@@ -24,6 +24,13 @@ export default function ContractorDashboard() {
 
   const loadDashboardData = async () => {
     try {
+      const previewRaw = typeof window !== "undefined" ? window.sessionStorage.getItem("bytly_admin_preview") : null;
+      if (previewRaw && JSON.parse(previewRaw)?.role === "contractor") {
+        setContractor({ id: "preview-contractor-1", company_name: "مؤسسة البناء المتكامل", city: "جدة", specialization: "مقاولات عامة", years_experience: 10, status: "approved", is_verified: true, wallet_balance: 0, rating: 4.8, bio: "ملف تجريبي لمعاينة لوحة المقاول في بيتلي." });
+        setProjects([{ id: "preview-contractor-project-1", title: "تنفيذ أعمال تشطيب", status: "in_progress", budget_max: 45000 }, { id: "preview-contractor-project-2", title: "ترميم مبنى سكني", status: "completed", budget_max: 18000 }]);
+        setAvailableProjects([{ id: "preview-available-project-1", title: "تنفيذ فيلا سكنية", status: "open", budget_min: 60000, budget_max: 90000 }, { id: "preview-available-project-2", title: "أعمال عظم", status: "open", budget_min: 40000, budget_max: 65000 }]);
+        return;
+      }
       if (!supabase) throw new Error("Supabase غير مهيأ");
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
