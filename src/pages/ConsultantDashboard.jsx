@@ -32,6 +32,12 @@ export default function ConsultantDashboard() {
 
   const loadDashboard = async () => {
     try {
+      const previewRaw = typeof window !== "undefined" ? window.sessionStorage.getItem("bytly_admin_preview") : null;
+      if (previewRaw && JSON.parse(previewRaw)?.role === "consultant") {
+        setConsultant({ id: "preview-consultant-1", full_name: "م. سارة المستشارة", email: "consultant@example.test", city: "جدة", specialization: "استشارات فنية وهندسية", status: "approved", rating: 4.9 });
+        setStats({ pending_reviews: 2, completed_reviews: 8, total_earnings: 12500, avg_response_time: "يوم واحد" });
+        return;
+      }
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
       const user = authData?.user;
