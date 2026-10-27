@@ -234,13 +234,13 @@ function AdminInvestorPage() {
 function PreviewLauncher() {
   const [role, setRole] = useState("client");
   const roles = [
-    { value: "client", label: "عميل / صاحب مشروع", route: "ClientDashboard" },
-    { value: "engineer", label: "مهندس مستقل", route: "EngineerDashboard" },
-    { value: "firm", label: "مكتب هندسي", route: "FirmDashboard" },
-    { value: "contractor", label: "مقاول", route: "ContractorDashboard" },
-    { value: "supplier", label: "مورد", route: "SupplierDashboard" },
-    { value: "consultant", label: "استشاري", route: "ConsultantDashboard" },
-    { value: "legal_consultant", label: "استشاري قانوني", route: "LegalConsultantProfile" },
+    { value: "client", label: "صاحب مشروع — أحمد (بيانات تجريبية)", route: "ClientDashboard" },
+    { value: "engineer", label: "مهندس مستقل (بيانات تجريبية)", route: "EngineerDashboard" },
+    { value: "firm", label: "مكتب هندسي (بيانات تجريبية)", route: "FirmDashboard" },
+    { value: "contractor", label: "مقاول (بيانات تجريبية)", route: "ContractorDashboard" },
+    { value: "supplier", label: "مورد (بيانات تجريبية)", route: "SupplierDashboard" },
+    { value: "consultant", label: "استشاري فني (بيانات تجريبية)", route: "ConsultantDashboard" },
+    { value: "legal_consultant", label: "استشاري قانوني (بيانات تجريبية)", route: "LegalConsultantProfile" },
   ];
   const startPreview = () => {
     const selected = roles.find(item => item.value === role);
@@ -254,8 +254,8 @@ function PreviewLauncher() {
     <section dir="rtl" className="mb-6 rounded-2xl border border-[#D8C29B] bg-gradient-to-l from-[#FFF9ED] to-white p-5 shadow-sm">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="max-w-2xl">
-          <h2 className="text-lg font-bold text-[#3D3329]">معاينة المنصة حسب نوع الحساب</h2>
-          <p className="mt-1 text-sm leading-6 text-slate-600">اختاري نوع الحساب لفتح لوحة الدور ومراجعة شكل الواجهة والتنقل بين الصفحات. تنتهي المعاينة بزر العودة، وتظل جلسة الأدمن الأصلية كما هي.</p>
+          <h2 className="text-lg font-bold text-[#3D3329]">الدخول كمستخدم تجريبي</h2>
+          <p className="mt-1 text-sm leading-6 text-slate-600">اختاري نوع المستخدم ثم اضغطي على زر الدخول لفتح صفحاته وبياناته التجريبية مباشرة، دون إنشاء حساب جديد.</p>
           <p className="mt-1 text-xs text-amber-800">تنبيه: هذه معاينة للواجهة باستخدام جلسة الأدمن الحالية؛ لا تمثل بيانات حساب مستخدم آخر، ولا ينبغي تنفيذ عمليات أو تغييرات أثناء المعاينة.</p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -263,7 +263,7 @@ function PreviewLauncher() {
             {roles.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
           <button type="button" onClick={startPreview} className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#3D3329] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#514333]">
-            <EyeOff className="h-4 w-4" /> بدء المعاينة
+            <EyeOff className="h-4 w-4" /> الدخول كمستخدم تجريبي
           </button>
         </div>
       </div>
