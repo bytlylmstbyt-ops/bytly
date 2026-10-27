@@ -62,13 +62,33 @@ export default function LandingHero() {
           className="relative mb-9 md:mb-11"
         >
           <div className="relative aspect-[16/9] md:aspect-[2/1] rounded-3xl overflow-hidden shadow-xl">
-            <img
-              src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=2000&q=90&fit=crop"
-              alt={isRTL ? "واجهة معمارية تعبّر عن خدمات بيتلي الهندسية" : "Architectural showcase representing Bytly's engineering services"}
-              className="w-full h-full object-cover"
-              loading="eager"
-            />
-            <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(20,18,15,0.02) 35%, rgba(20,18,15,0.48) 100%)" }} />
+            <div className="absolute inset-0 grid grid-cols-12 grid-rows-6 gap-2 md:gap-3 bg-[#2A2119] p-2 md:p-3">
+              <div className="col-span-8 row-span-6 relative overflow-hidden rounded-2xl">
+                <img
+                  src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1400&q=85&fit=crop"
+                  alt={isRTL ? "تصميم معماري ومخططات هندسية" : "Architectural design and engineering plans"}
+                  className="w-full h-full object-cover"
+                  loading="eager"
+                />
+              </div>
+              <div className="col-span-4 row-span-3 relative overflow-hidden rounded-2xl">
+                <img
+                  src="https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=900&q=85&fit=crop"
+                  alt={isRTL ? "موقع إنشاءات وتنفيذ" : "Construction site and execution"}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+              <div className="col-span-4 row-span-3 relative overflow-hidden rounded-2xl">
+                <img
+                  src="https://images.unsplash.com/photo-1581092921461-eab62e97a780?w=900&q=85&fit=crop"
+                  alt={isRTL ? "عمل هندسي وتقني" : "Engineering and technical work"}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+            <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, rgba(20,18,15,0.02) 30%, rgba(20,18,15,0.32) 100%)" }} />
             <motion.div
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
