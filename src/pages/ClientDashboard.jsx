@@ -29,6 +29,8 @@ export default function ClientDashboard() {
 
   const loadDashboardData = async () => {
     try {
+      const previewMode = typeof window !== "undefined" && Boolean(window.sessionStorage.getItem("bytly_admin_preview"));
+      if (previewMode) { setLoading(false); return; }
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
       const currentUser = authData?.user;
