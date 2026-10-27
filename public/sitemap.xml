@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://www.mybytly.com/</loc><lastmod>2026-10-27</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://www.mybytly.com/About</loc><lastmod>2026-10-27</lastmod><priority>0.7</priority></url>
+  <url><loc>https://www.mybytly.com/ContactUs</loc><lastmod>2026-10-27</lastmod><priority>0.5</priority></url>
+  <url><loc>https://www.mybytly.com/Terms</loc><lastmod>2026-10-27</lastmod><priority>0.3</priority></url>
+  <url><loc>https://www.mybytly.com/Privacy</loc><lastmod>2026-10-27</lastmod><priority>0.3</priority></url>
+  <url><loc>https://www.mybytly.com/Copyright</loc><lastmod>2026-10-27</lastmod><priority>0.2</priority></url>
+  <url><loc>https://www.mybytly.com/Complaints</loc><lastmod>2026-10-27</lastmod><priority>0.3</priority></url>
+  <url><loc>https://www.mybytly.com/Support</loc><lastmod>2026-10-27</lastmod><priority>0.3</priority></url>
+  <url><loc>https://www.mybytly.com/audiences/contractors</loc><lastmod>2026-10-27</lastmod><priority>0.6</priority></url>
+  <url><loc>https://www.mybytly.com/audiences/engineering-firms</loc><lastmod>2026-10-27</lastmod><priority>0.6</priority></url>
+  <url><loc>https://www.mybytly.com/audiences/consulting-teams</loc><lastmod>2026-10-27</lastmod><priority>0.6</priority></url>
+</urlset>
