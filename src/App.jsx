@@ -178,7 +178,9 @@ const protectedRoute = (Component, name) => {
   let previewActive = false;
   try { previewActive = !!JSON.parse(window.sessionStorage.getItem("bytly_admin_preview") || "null"); } catch {}
   if (previewActive) {
-    return <RouteErrorBoundary pageName={name}><LayoutWrapper currentPageName={name}><PreviewExperience pageName={name} /></LayoutWrapper></RouteErrorBoundary>;
+    // Render the actual Bytly page during admin preview, not a substitute mock shell.
+    // Preview-specific demo data and safe interaction handling must be implemented in each page/data layer.
+    return <RouteErrorBoundary pageName={name}><LayoutWrapper currentPageName={name}><Suspense fallback={<PageSpinner />}><Component /></Suspense></LayoutWrapper></RouteErrorBoundary>;
   }
   return <RouteErrorBoundary pageName={name}><ProtectedRoute><RegistrationGate><LayoutWrapper currentPageName={name}><Suspense fallback={<PageSpinner />}><Component /></Suspense></LayoutWrapper></RegistrationGate></ProtectedRoute></RouteErrorBoundary>;
 };
