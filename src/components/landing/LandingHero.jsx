@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, ShieldCheck, Sparkles, Building2 } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Sparkles, Building2, BriefcaseBusiness as BriefcaseBusinessIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/components/i18n/LanguageContext";
 
@@ -55,17 +55,39 @@ export default function LandingHero() {
               {t("landing.hero.desc")}
             </p>
 
-            {/* CTA Button */}
-            <div className="flex justify-center lg:justify-start mb-8">
-              <Link to="/RegisterChoice">
-                <Button
-                  className="text-white text-base px-8 h-12 rounded-xl hover:opacity-90 transition-opacity"
-                  style={{ backgroundColor: "#A68D6E" }}
-                >
-                  {t("landing.hero.cta")}
-                  <ArrowLeft className={`w-5 h-5 ${isRTL ? "" : "rotate-180"}`} />
-                </Button>
-              </Link>
+            {/* Role-based entry points: keep the existing account registration flow behind each choice. */}
+            <div className="mb-8">
+              <p className="text-sm font-semibold mb-3" style={{ color: "#6B5D4F" }}>
+                {isRTL ? "كيف ترغب في استخدام بيتلي؟" : "How would you like to use Bytly?"}
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto lg:mx-0">
+                <Link to="/RegisterChoice?flow=client" className="group block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A68D6E] focus-visible:ring-offset-2">
+                  <div className="h-full rounded-2xl border border-[#DCC8A8] bg-white p-4 text-start shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+                    <div className="flex items-center justify-between gap-3 mb-2">
+                      <span className="font-bold text-[#30251B]">{isRTL ? "أنا صاحب مشروع" : "I’m a project owner"}</span>
+                      <Building2 className="h-5 w-5 shrink-0 text-[#A68D6E]" />
+                    </div>
+                    <p className="text-sm leading-6 text-[#6B6258]">{isRTL ? "ابحث عن المتخصصين، واطلب عروض الأسعار، وتابع مشروعك." : "Find professionals, request quotes, and manage your project."}</p>
+                    <span className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[#8A6A3D]">
+                      {isRTL ? "ابدأ مشروعك" : "Start your project"}
+                      <ArrowLeft className={`h-4 w-4 ${isRTL ? "" : "rotate-180"}`} />
+                    </span>
+                  </div>
+                </Link>
+                <Link to="/RegisterChoice?flow=provider" className="group block rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A68D6E] focus-visible:ring-offset-2">
+                  <div className="h-full rounded-2xl border border-[#DCC8A8] bg-[#F5EFE5] p-4 text-start shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+                    <div className="flex items-center justify-between gap-3 mb-2">
+                      <span className="font-bold text-[#30251B]">{isRTL ? "أنا مقدم خدمة" : "I’m a service provider"}</span>
+                      <BriefcaseBusinessIcon className="h-5 w-5 shrink-0 text-[#A68D6E]" />
+                    </div>
+                    <p className="text-sm leading-6 text-[#6B6258]">{isRTL ? "اعرض خدماتك، واستقبل الطلبات، وأدر مشاريعك ومستحقاتك." : "Showcase services, receive requests, and manage projects and earnings."}</p>
+                    <span className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[#8A6A3D]">
+                      {isRTL ? "انضم كمقدم خدمة" : "Join as a provider"}
+                      <ArrowLeft className={`h-4 w-4 ${isRTL ? "" : "rotate-180"}`} />
+                    </span>
+                  </div>
+                </Link>
+              </div>
             </div>
 
             {/* Trust Tags */}
