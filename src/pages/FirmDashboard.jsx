@@ -25,6 +25,13 @@ export default function FirmDashboard() {
 
   const loadDashboardData = async () => {
     try {
+      const previewRaw = typeof window !== "undefined" ? window.sessionStorage.getItem("bytly_admin_preview") : null;
+      if (previewRaw && JSON.parse(previewRaw)?.role === "firm") {
+        setFirm({ id: "preview-firm-1", company_name: "مكتب بيتلي الهندسي التجريبي", city: "جدة", specialization: "تصميم وإشراف هندسي", status: "approved", is_verified: true, rating: 4.8, bio: "بيانات تجريبية لمعاينة لوحة المكتب الهندسي." });
+        setTeamMembers([{ id: "preview-team-1", full_name: "م. أحمد محمد", role: "مهندس معماري" }, { id: "preview-team-2", full_name: "م. سارة علي", role: "مهندسة مدنية" }]);
+        setProjects([{ id: "preview-firm-project-1", title: "تصميم مجمع سكني", status: "in_progress", budget_max: 45000 }, { id: "preview-firm-project-2", title: "مخططات فيلا", status: "completed", budget_max: 12000 }]);
+        return;
+      }
       if (!supabase) throw new Error("Supabase غير مهيأ");
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
