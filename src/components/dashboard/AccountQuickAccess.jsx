@@ -11,6 +11,7 @@ import { Bell, MessageCircle, Mail, Phone, MapPin } from "lucide-react";
 export default function AccountQuickAccess({ profile, roleLabel }) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [conversationCount, setConversationCount] = useState(0);
+  const [accountEmail, setAccountEmail] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -19,6 +20,7 @@ export default function AccountQuickAccess({ profile, roleLabel }) {
         if (!supabase) return;
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user || !active) return;
+        setAccountEmail(user.email || "");
 
         let notificationResult = await supabase
           .from("notifications")
@@ -50,7 +52,7 @@ export default function AccountQuickAccess({ profile, roleLabel }) {
   }, []);
 
   const displayName = profile?.full_name || profile?.company_name || profile?.name || "عضو بيتلي";
-  const email = profile?.email;
+  const email = profile?.email || accountEmail;
   const phone = profile?.phone || profile?.phone_number;
   const location = profile?.city || profile?.location || profile?.address;
 
