@@ -28,6 +28,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import PublicLanding from './pages/PublicLanding';
 import MCPConsent from './pages/MCPConsent';
+import PreviewExperience from './pages/PreviewExperience';
 
 const TechnicalResources = React.lazy(() => import('./pages/TechnicalResources'));
 const AdManager = React.lazy(() => import('./pages/AdManager'));
@@ -173,7 +174,38 @@ function PublicHomeRoute() {
 const { Pages, Layout } = pagesConfig;
 const LayoutWrapper = ({ children, currentPageName }) => Layout ? <Layout currentPageName={currentPageName}>{children}</Layout> : <>{children}</>;
 const lazyRoute = (Component, name) => <RouteErrorBoundary pageName={name}><LayoutWrapper currentPageName={name}><Suspense fallback={<PageSpinner />}><Component /></Suspense></LayoutWrapper></RouteErrorBoundary>;
-const protectedRoute = (Component, name) => <RouteErrorBoundary pageName={name}><ProtectedRoute><RegistrationGate><LayoutWrapper currentPageName={name}><Suspense fallback={<PageSpinner />}><Component /></Suspense></LayoutWrapper></RegistrationGate></ProtectedRoute></RouteErrorBoundary>;
+const protectedRoute = (Component, name) => {
+  let previewActive = false;
+  try { previewActive = !!JSON.parse(window.sessionStorage.getItem("bytly_admin_preview") || "null"); } catch {}
+  if (previewActive) {
+    // Render the actual Bytly page during admin preview, not a substitute mock shell.
+    // Preview-specific demo data and safe interaction handling must be implemented in each page/data layer.
+    return <RouteErrorBoundary pageName={name}><LayoutWrapper currentPageName={name}><Suspense fallback={<PageSpinner />}><Component /></Suspense></LayoutWrapper></RouteErrorBoundary>;
+  }
+  return <RouteErrorBoundary pageName={name}><ProtectedRoute><RegistrationGate><LayoutWrapper currentPageName={name}><Suspense fallback={<PageSpinner />}><Component /></Suspense></LayoutWrapper></RegistrationGate></ProtectedRoute></RouteErrorBoundary>;
+};
+
+function PreviewModeBanner() {
+  const [preview, setPreview] = React.useState(() => {
+    try { return JSON.parse(window.sessionStorage.getItem("bytly_admin_preview") || "null"); } catch { return null; }
+  });
+  React.useEffect(() => {
+    const sync = () => { try { setPreview(JSON.parse(window.sessionStorage.getItem("bytly_admin_preview") || "null")); } catch { setPreview(null); } };
+    window.addEventListener("bytly-preview-change", sync);
+    window.addEventListener("storage", sync);
+    return () => { window.removeEventListener("bytly-preview-change", sync); window.removeEventListener("storage", sync); };
+  }, []);
+  if (!preview) return null;
+  const endPreview = () => {
+    window.sessionStorage.removeItem("bytly_admin_preview");
+    setPreview(null);
+    window.location.href = "/AdminControlCenter";
+  };
+  return <div dir="rtl" className="sticky top-0 z-[100] flex flex-wrap items-center justify-between gap-3 border-b-2 border-[#C9A66B] bg-[#2F2945] px-4 py-3 text-white shadow-lg">
+    <div><strong>وضع معاينة الواجهة</strong><span className="mr-2 text-sm text-white/80">نوع الحساب: {preview.label} — هذه معاينة للواجهة وليست دخولًا بحساب المستخدم الحقيقي.</span></div>
+    <button type="button" onClick={endPreview} className="rounded-lg bg-[#C9A66B] px-4 py-2 text-sm font-bold text-[#211B2C]">إنهاء المعاينة والعودة للأدمن</button>
+  </div>;
+}
 
 const AuthenticatedApp = () => {
   const { isLoadingPublicSettings } = useAuth();
@@ -199,5 +231,5 @@ const AuthenticatedApp = () => {
 };
 
 export default function App() {
-  return <QueryClientProvider client={queryClientInstance}><Router><AuthProvider><NavigationTracker /><AnalyticsTracker /><RouteTitleManager /><AuthenticatedApp /><Toaster /><HotToastToaster /><SonnerToaster /></AuthProvider></Router></QueryClientProvider>;
+  return <QueryClientProvider client={queryClientInstance}><Router><AuthProvider><PreviewModeBanner /><NavigationTracker /><AnalyticsTracker /><RouteTitleManager /><AuthenticatedApp /><Toaster /><HotToastToaster /><SonnerToaster /></AuthProvider></Router></QueryClientProvider>;
 }

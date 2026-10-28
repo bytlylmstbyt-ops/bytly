@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
+import AccountQuickAccess from "@/components/dashboard/AccountQuickAccess";
 export default function ConsultantDashboard() {
   const [loading, setLoading] = useState(true);
   const [consultant, setConsultant] = useState(null);
@@ -32,6 +33,12 @@ export default function ConsultantDashboard() {
 
   const loadDashboard = async () => {
     try {
+      const previewRaw = typeof window !== "undefined" ? window.sessionStorage.getItem("bytly_admin_preview") : null;
+      if (previewRaw && JSON.parse(previewRaw)?.role === "consultant") {
+        setConsultant({ id: "preview-consultant-1", full_name: "م. سارة المستشارة", email: "consultant@example.test", city: "جدة", specialization: "استشارات فنية وهندسية", status: "approved", rating: 4.9 });
+        setStats({ pending_reviews: 2, completed_reviews: 8, total_earnings: 12500, avg_response_time: "يوم واحد" });
+        return;
+      }
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
       const user = authData?.user;
@@ -140,6 +147,7 @@ export default function ConsultantDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-green-50/30 py-8 px-4" dir="rtl">
       <div className="max-w-7xl mx-auto space-y-6">
+        <AccountQuickAccess profile={consultant} roleLabel="لوحة الاستشاري" />
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

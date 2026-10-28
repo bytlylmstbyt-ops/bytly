@@ -231,6 +231,46 @@ function AdminInvestorPage() {
   );
 }
 
+function PreviewLauncher() {
+  const [role, setRole] = useState("client");
+  const roles = [
+    { value: "client", label: "صاحب مشروع — أحمد (بيانات تجريبية)", route: "ClientDashboard" },
+    { value: "engineer", label: "مهندس مستقل (بيانات تجريبية)", route: "EngineerDashboard" },
+    { value: "firm", label: "مكتب هندسي (بيانات تجريبية)", route: "FirmDashboard" },
+    { value: "contractor", label: "مقاول (بيانات تجريبية)", route: "ContractorDashboard" },
+    { value: "supplier", label: "مورد (بيانات تجريبية)", route: "SupplierDashboard" },
+    { value: "consultant", label: "استشاري فني (بيانات تجريبية)", route: "ConsultantDashboard" },
+    { value: "legal_consultant", label: "استشاري قانوني (بيانات تجريبية)", route: "LegalConsultantProfile" },
+  ];
+  const startPreview = () => {
+    const selected = roles.find(item => item.value === role);
+    if (!selected) return;
+    try {
+      window.sessionStorage.setItem("bytly_admin_preview", JSON.stringify({ role: selected.value, label: selected.label, startedAt: new Date().toISOString() }));
+    } catch {}
+    window.location.href = "/" + selected.route;
+  };
+  return (
+    <section dir="rtl" className="mb-6 rounded-2xl border border-[#D8C29B] bg-gradient-to-l from-[#FFF9ED] to-white p-5 shadow-sm">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="max-w-2xl">
+          <h2 className="text-lg font-bold text-[#3D3329]">الدخول كمستخدم تجريبي</h2>
+          <p className="mt-1 text-sm leading-6 text-slate-600">اختاري نوع المستخدم ثم اضغطي على زر الدخول لفتح صفحاته وبياناته التجريبية مباشرة، دون إنشاء حساب جديد.</p>
+          <p className="mt-1 text-xs text-amber-800">تنبيه: هذه معاينة للواجهة باستخدام جلسة الأدمن الحالية؛ لا تمثل بيانات حساب مستخدم آخر، ولا ينبغي تنفيذ عمليات أو تغييرات أثناء المعاينة.</p>
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <select aria-label="اختيار نوع الحساب للمعاينة" value={role} onChange={event => setRole(event.target.value)} className="min-w-[220px] rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-800">
+            {roles.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
+          </select>
+          <button type="button" onClick={startPreview} className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#3D3329] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#514333]">
+            <EyeOff className="h-4 w-4" /> الدخول كمستخدم تجريبي
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function AdminControlCenter() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -321,6 +361,7 @@ export default function AdminControlCenter() {
         </nav>
 
         <main className="flex-1 min-w-0" dir="rtl">
+          {isPlatformOwner && <PreviewLauncher />}
           <div className="mb-6 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
             <div className="text-right">
               <div className="inline-flex items-center gap-2 rounded-full bg-[#F1EEFF] text-[#5142A4] px-3 py-1 text-xs font-medium mb-2"><LayoutDashboard className="w-3.5 h-3.5" /> {isPlatformOwner ? "مالكة المنصة • Super Admin" : "لوحة القيادة التنفيذية"}</div>

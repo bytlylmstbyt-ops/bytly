@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import AccountQuickAccess from "@/components/dashboard/AccountQuickAccess";
 export default function SupplierDashboard() {
   const [loading, setLoading] = useState(true);
   const [supplier, setSupplier] = useState(null);
@@ -24,6 +25,13 @@ export default function SupplierDashboard() {
 
   const loadDashboardData = async () => {
     try {
+      const previewRaw = typeof window !== "undefined" ? window.sessionStorage.getItem("bytly_admin_preview") : null;
+      if (previewRaw && JSON.parse(previewRaw)?.role === "supplier") {
+        setSupplier({ id: "preview-supplier-1", company_name: "شركة مواد البناء الحديثة", city: "جدة", specialization: "مواد البناء والتشطيبات", years_experience: 7, status: "approved", is_verified: true, wallet_balance: 0, rating: 4.7, bio: "ملف تجريبي لمعاينة لوحة المورد في بيتلي.", product_categories: ["مواد بناء", "تشطيبات", "عوازل"] });
+        setProjects([{ id: "preview-supplier-project-1", title: "توريد مواد تشطيب", status: "in_progress", budget_max: 12000 }, { id: "preview-supplier-project-2", title: "توريد عوازل", status: "completed", budget_max: 6500 }]);
+        setAvailableProjects([{ id: "preview-supplier-available-1", title: "توريد مواد لمشروع سكني", status: "open", budget_min: 8000, budget_max: 14000 }, { id: "preview-supplier-available-2", title: "توريد أبواب ونوافذ", status: "open", budget_min: 10000, budget_max: 18000 }]);
+        return;
+      }
       if (!supabase) throw new Error("Supabase غير مهيأ");
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
@@ -131,6 +139,7 @@ export default function SupplierDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <AccountQuickAccess profile={supplier} roleLabel="لوحة المورد" />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           {/* Header */}
           <Card className="border-0 shadow-lg overflow-hidden mb-8">
