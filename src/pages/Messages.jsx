@@ -64,18 +64,19 @@ export default function Messages() {
         const { data } = await supabase.from("project_members").select("user_id").in("project_id", [...projectIds]);
         (data || []).forEach(x => { if (x.user_id) userIds.add(x.user_id); });
       }
-      const profileResult = await supabase.from("profiles").select("id,user_id,email,full_name,role,phone").in("user_id", [...userIds]);
+      const [profileResult, supportResult] = await Promise.all([
+        supabase.from("profiles").select("id,user_id,email,full_name,role,phone").in("user_id", [...userIds]),
+        supabase.from("profiles").select("id,user_id,email,full_name,role,phone").in("role", ["admin", "super_admin", "support"])
+      ]);
       const map = new Map();
       const add = (rows, role) => (rows || []).forEach(row => {
         const p = normalize(row, role);
         if (p && p.email !== me) map.set(p.email, p);
       });
       if (!profileResult.error) {
-        (profileResult.data || []).forEach(row => {
-          if (["admin", "super_admin", "support"].includes(String(row.role || "").toLowerCase())) add([row], "support");
-          else add([row], row.role || "client");
-        });
+        (profileResult.data || []).forEach(row => add([row], row.role || "client"));
       }
+      if (!supportResult.error) (supportResult.data || []).forEach(row => add([row], "support"));
       // Assigned providers are stored as role-table IDs, so resolve them to their contact records.
       const assigned = [
         ["engineers", "assigned_engineer_id", "id,email,full_name,phone,city,specialization,is_verified,profile_image", "engineer"],
