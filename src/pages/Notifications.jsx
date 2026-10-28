@@ -93,6 +93,7 @@ export default function Notifications() {
       case "complaint": return <AlertCircle className="w-5 h-5 text-red-500" />;
       case "approval": return <CheckCircle className="w-5 h-5 text-green-500" />;
       case "system": return <ShieldCheck className="w-5 h-5 text-blue-600" />;
+      case "admin_notice": return <Bell className="w-5 h-5 text-amber-600" />;
       case "dispute_update": return <ShieldAlert className="w-5 h-5 text-orange-500" />;
       default: return <Bell className="w-5 h-5 text-slate-500" />;
     }
