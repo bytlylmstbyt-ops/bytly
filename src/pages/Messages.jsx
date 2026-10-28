@@ -26,20 +26,71 @@ export default function Messages() {
     catch (e) { console.error(e); setError(e?.message || "تعذر تحميل المحادثات"); } finally { setLoading(false); }
   };
   const loadDirectory = async () => {
-    if (!supabase) return;
+    if (!supabase || !user?.id) return;
     try {
-      const results = await Promise.allSettled([
-        supabase.from("profiles").select("id,email,full_name,role,phone").limit(200),
-        supabase.from("engineers").select("id,email,full_name,phone,city,specialization,is_verified,profile_image").limit(200),
-        supabase.from("clients").select("id,email,full_name,phone,city,company_name").limit(200),
-        supabase.from("engineering_firms").select("id,email,company_name,phone,city,is_verified,company_logo").limit(200),
-        supabase.from("consultants").select("id,email,full_name,phone,city,status").limit(200)
+      // Only offer contacts who share a project with this account, plus official platform support.
+      // The inbox itself is still loaded separately from conversations where the current email is a participant.
+      const [membershipResult, clientProjectsResult, ownEngineer, ownContractor, ownSupplier, ownConsultant, ownClient] = await Promise.all([
+        supabase.from("project_members").select("project_id").eq("user_id", user.id),
+        supabase.from("projects").select("id,client_user_id,assigned_engineer_id,technical_consultant_id,assigned_contractor_id,assigned_supplier_id,company_id").eq("client_user_id", user.id),
+        supabase.from("engineers").select("id").eq("user_id", user.id).maybeSingle(),
+        supabase.from("contractors").select("id").eq("user_id", user.id).maybeSingle(),
+        supabase.from("suppliers").select("id").eq("user_id", user.id).maybeSingle(),
+        supabase.from("consultants").select("id").eq("user_id", user.id).maybeSingle(),
+        supabase.from("clients").select("id").eq("user_id", user.id).maybeSingle()
       ]);
-      const map = new Map(); const add = (rows, role) => (rows || []).forEach(row => { const p = normalize(row, role); if (p && p.email !== me) map.set(p.email, p); });
-      if (results[0].status === "fulfilled") results[0].value.data?.forEach(row => add([row], row.role === "engineer" ? "engineer" : row.role === "firm" ? "firm" : row.role === "consultant" ? "consultant" : "client"));
-      if (results[1].status === "fulfilled") add(results[1].value.data, "engineer"); if (results[2].status === "fulfilled") add(results[2].value.data, "client"); if (results[3].status === "fulfilled") add(results[3].value.data, "firm"); if (results[4].status === "fulfilled") add(results[4].value.data, "consultant");
+      const projectIds = new Set([...(membershipResult.data || []).map(x => x.project_id), ...(clientProjectsResult.data || []).map(x => x.id)]);
+      const ownRoleIds = [
+        ["assigned_engineer_id", ownEngineer.data?.id],
+        ["assigned_contractor_id", ownContractor.data?.id],
+        ["assigned_supplier_id", ownSupplier.data?.id],
+        ["technical_consultant_id", ownConsultant.data?.id]
+      ];
+      for (const [field, id] of ownRoleIds) {
+        if (!id) continue;
+        const { data } = await supabase.from("projects").select("id").eq(field, id);
+        (data || []).forEach(x => projectIds.add(x.id));
+      }
+      let projectRows = clientProjectsResult.data || [];
+      if (projectIds.size) {
+        const { data, error } = await supabase.from("projects")
+          .select("id,client_user_id,assigned_engineer_id,technical_consultant_id,assigned_contractor_id,assigned_supplier_id,company_id")
+          .in("id", [...projectIds]);
+        if (!error) projectRows = data || [];
+      }
+      const userIds = new Set([user.id]);
+      (projectRows || []).forEach(p => { if (p.client_user_id) userIds.add(p.client_user_id); });
+      if (projectIds.size) {
+        const { data } = await supabase.from("project_members").select("user_id").in("project_id", [...projectIds]);
+        (data || []).forEach(x => { if (x.user_id) userIds.add(x.user_id); });
+      }
+      const profileResult = await supabase.from("profiles").select("id,user_id,email,full_name,role,phone").in("user_id", [...userIds]);
+      const map = new Map();
+      const add = (rows, role) => (rows || []).forEach(row => {
+        const p = normalize(row, role);
+        if (p && p.email !== me) map.set(p.email, p);
+      });
+      if (!profileResult.error) {
+        (profileResult.data || []).forEach(row => {
+          if (["admin", "super_admin", "support"].includes(String(row.role || "").toLowerCase())) add([row], "support");
+          else add([row], row.role || "client");
+        });
+      }
+      // Assigned providers are stored as role-table IDs, so resolve them to their contact records.
+      const assigned = [
+        ["engineers", "assigned_engineer_id", "id,email,full_name,phone,city,specialization,is_verified,profile_image", "engineer"],
+        ["contractors", "assigned_contractor_id", "id,email,company_name,phone,city,specialization,is_verified,profile_image", "contractor"],
+        ["suppliers", "assigned_supplier_id", "id,email,company_name,phone,city,specialization,is_verified,profile_image", "supplier"],
+        ["consultants", "technical_consultant_id", "id,email,full_name,phone,city,specialization,status", "consultant"]
+      ];
+      for (const [table, field, columns, role] of assigned) {
+        const ids = [...new Set((projectRows || []).map(p => p[field]).filter(Boolean))];
+        if (!ids.length) continue;
+        const { data } = await supabase.from(table).select(columns).in("id", ids);
+        add(data, role);
+      }
       setDirectory([...map.values()]);
-    } catch (e) { console.error("Directory error", e); }
+    } catch (e) { console.error("Project-scoped directory error", e); setDirectory([]); }
   };
   const openConversation = async conversation => {
     if (!conversation) return; setSelected(conversation); setMessages([]); setLoadingMessages(true); setShowAddMenu(false);
@@ -73,11 +124,11 @@ export default function Messages() {
   if (error) return <div className="min-h-[70vh] flex items-center justify-center p-6"><div className="max-w-md w-full rounded-2xl border bg-white p-8 text-center shadow-sm"><MessageCircle className="mx-auto mb-4 h-10 w-10 text-[#C9A66B]"/><h2 className="text-xl font-bold mb-2">تعذر تحميل المحادثات</h2><p className="text-sm text-slate-600 mb-5">{error}</p><button onClick={loadConversations} className="rounded-xl bg-[#3b2418] px-5 py-2.5 text-white">إعادة المحاولة</button></div></div>;
 
   return <div className="min-h-[70vh] bg-slate-50 p-3 md:p-6" dir="rtl"><div className="mx-auto max-w-7xl rounded-2xl border bg-white shadow-sm overflow-hidden">
-    <div className="flex items-center justify-between border-b p-4"><div><h1 className="text-xl font-bold">المحادثات</h1><p className="text-sm text-slate-500">تواصل مباشر مع مستخدمي بيتلي</p></div><button onClick={() => setNewChat(true)} className="inline-flex items-center gap-2 rounded-xl bg-[#3b2418] px-4 py-2 text-white"><Plus size={18}/> محادثة جديدة</button></div>
+    <div className="flex items-center justify-between border-b p-4"><div><h1 className="text-xl font-bold">المحادثات</h1><p className="text-sm text-slate-500">رسائلك الخاصة ومحادثات المشاريع المرتبطة بحسابك</p></div><button onClick={() => setNewChat(true)} className="inline-flex items-center gap-2 rounded-xl bg-[#3b2418] px-4 py-2 text-white"><Plus size={18}/> محادثة جديدة</button></div>
     <div className="grid min-h-[650px] md:grid-cols-[330px_1fr]" dir="ltr">
       <aside className="border-r bg-slate-50" dir="rtl"><div className="p-3"><div className="relative"><Search className="absolute right-3 top-3 h-4 w-4 text-slate-400"/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="بحث في المحادثات" className="w-full rounded-xl border bg-white py-2.5 pr-9 pl-3 text-sm"/></div></div><div className="max-h-[570px] overflow-auto">{filtered.length===0?<div className="p-8 text-center text-sm text-slate-500">لا توجد محادثات بعد.</div>:filtered.map(c=><button key={c.id} onClick={()=>openConversation(c)} className={`w-full border-b p-4 text-right hover:bg-white ${selected?.id===c.id?'bg-white':''}`}><div className="font-semibold truncate">{c.displayName}</div><div className="mt-1 truncate text-xs text-slate-500">{c.last_message || "ابدأ المحادثة"}</div></button>)}</div></aside>
       <main dir="rtl" className="flex min-h-[650px] flex-col">
-        <div className="border-b bg-white p-4">{selected?<div className="flex items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><button className="md:hidden" onClick={()=>setSelected(null)}><ChevronLeft/></button><div className="h-11 w-11 shrink-0 rounded-full bg-[#ead7b7] flex items-center justify-center"><Users size={20}/></div><div className="min-w-0"><div className="font-bold truncate">{selected.name || selected.people?.map(p=>p.name).join("، ") || (selected.participants || []).filter(e=>String(e).toLowerCase()!==me).join("، ") || "مستخدم"}</div><div className="text-xs text-slate-500">محادثة مباشرة</div></div></div><div className="flex items-center gap-1"><button onClick={()=>call(false)} title="مكالمة صوتية" className="rounded-xl p-2.5 hover:bg-slate-100"><Phone size={19}/></button><button onClick={()=>call(true)} title="مكالمة فيديو" className="rounded-xl p-2.5 hover:bg-slate-100"><Video size={20}/></button></div></div>:<div className="py-3 text-slate-500">اختر محادثة من القائمة أو اضغط «محادثة جديدة».</div>}</div>
+        <div className="border-b bg-white p-4">{selected?<div className="flex items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><button className="md:hidden" onClick={()=>setSelected(null)}><ChevronLeft/></button><div className="h-11 w-11 shrink-0 rounded-full bg-[#ead7b7] flex items-center justify-center"><Users size={20}/></div><div className="min-w-0"><div className="font-bold truncate">{selected.name || selected.people?.map(p=>p.name).join("، ") || (selected.participants || []).filter(e=>String(e).toLowerCase()!==me).join("، ") || "مستخدم"}</div><div className="text-xs text-slate-500">محادثة مباشرة</div></div></div><div className="flex items-center gap-1"><button onClick={()=>call(false)} title="مكالمة صوتية" className="rounded-xl p-2.5 hover:bg-slate-100"><Phone size={19}/></button><button onClick={()=>call(true)} title="مكالمة فيديو" className="rounded-xl p-2.5 hover:bg-slate-100"><Video size={20}/></button></div></div>:<div className="py-3 text-slate-500">اختر محادثة مرتبطة بحسابك أو ابدأ تواصلًا مع أحد أطراف مشاريعك.</div>}</div>
         <div className="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-4">{!selected?<div className="h-full min-h-[480px] flex items-center justify-center text-slate-400">اختر مستخدمًا لبدء التواصل.</div>:loadingMessages?<div className="flex justify-center py-10"><Loader2 className="animate-spin"/></div>:messages.length===0?<div className="h-full min-h-[400px] flex items-center justify-center text-sm text-slate-400">لا توجد رسائل بعد. اكتب أول رسالة الآن.</div>:messages.map(m=><div key={m.id} className={`flex ${m.sender_email===me?'justify-start':'justify-end'}`}><div className={`max-w-[80%] rounded-2xl px-4 py-2.5 shadow-sm ${m.sender_email===me?'bg-[#3b2418] text-white':'bg-white border text-slate-800'}`}><div className="whitespace-pre-wrap text-sm">{m.content}</div>{(m.attachments||[]).map((a,i)=><a key={i} href={a.url} target="_blank" rel="noreferrer" className="mt-2 flex items-center gap-2 text-xs underline"><Download size={14}/>{a.name}</a>)}</div></div>)}</div>
         {selected&&<div className="border-t bg-white p-3"><div className="flex items-end gap-2 relative">
           <div className="relative"><button type="button" onClick={()=>setShowAddMenu(v=>!v)} title="إضافة" className="flex h-12 w-12 items-center justify-center rounded-xl border bg-white hover:bg-slate-50"><Plus size={22}/></button>
@@ -90,6 +141,6 @@ export default function Messages() {
       </main>
     </div>
   </div>
-  {newChat&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" dir="rtl"><div className="w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl bg-white shadow-xl"><div className="flex items-center justify-between border-b p-4"><div><h2 className="text-lg font-bold">محادثة جديدة</h2><p className="text-xs text-slate-500">اختر مستخدمًا حقيقيًا للتواصل معه</p></div><button onClick={()=>setNewChat(false)}><X/></button></div><div className="border-b p-3"><div className="relative mb-3"><Search className="absolute right-3 top-3 h-4 w-4 text-slate-400"/><input value={directorySearch} onChange={e=>setDirectorySearch(e.target.value)} placeholder="ابحث بالاسم أو البريد أو الشركة أو المدينة" className="w-full rounded-xl border py-2.5 pr-9 pl-3 text-sm"/></div><div className="flex flex-wrap gap-2">{TYPES.map(([key,label])=><button key={key} onClick={()=>setType(key)} className={`rounded-full px-3 py-1.5 text-xs ${type===key?'bg-[#3b2418] text-white':'bg-slate-100 text-slate-700'}`}>{label}</button>)}</div></div><div className="max-h-[55vh] overflow-auto p-2">{people.length===0?<div className="p-10 text-center text-sm text-slate-500">لا يوجد مستخدم مطابق للبحث.</div>:people.map(person=><button key={person.email} onClick={()=>startDirect(person)} className="flex w-full items-center gap-3 rounded-xl p-3 text-right hover:bg-slate-50"><div className="h-11 w-11 shrink-0 rounded-full bg-[#ead7b7] flex items-center justify-center"><Users size={19}/></div><div className="min-w-0 flex-1"><div className="font-semibold truncate">{person.name}</div><div className="text-xs text-slate-500 truncate">{person.email}{person.company_name?` · ${person.company_name}`:""}</div></div><span className="rounded-full bg-slate-100 px-2 py-1 text-[11px]">{TYPES.find(x=>x[0]===person.type)?.[1] || "مستخدم"}</span></button>)}</div></div></div>}
+  {newChat&&<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" dir="rtl"><div className="w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl bg-white shadow-xl"><div className="flex items-center justify-between border-b p-4"><div><h2 className="text-lg font-bold">محادثة جديدة</h2><p className="text-xs text-slate-500">اختر عميلًا أو مقدم خدمة مرتبطًا بمشاريعك أو تواصل مع دعم بيتلي</p></div><button onClick={()=>setNewChat(false)}><X/></button></div><div className="border-b p-3"><div className="relative mb-3"><Search className="absolute right-3 top-3 h-4 w-4 text-slate-400"/><input value={directorySearch} onChange={e=>setDirectorySearch(e.target.value)} placeholder="ابحث بالاسم أو البريد أو الشركة أو المدينة" className="w-full rounded-xl border py-2.5 pr-9 pl-3 text-sm"/></div><div className="flex flex-wrap gap-2">{TYPES.map(([key,label])=><button key={key} onClick={()=>setType(key)} className={`rounded-full px-3 py-1.5 text-xs ${type===key?'bg-[#3b2418] text-white':'bg-slate-100 text-slate-700'}`}>{label}</button>)}</div></div><div className="max-h-[55vh] overflow-auto p-2">{people.length===0?<div className="p-10 text-center text-sm text-slate-500">لا يوجد مستخدم مطابق للبحث.</div>:people.map(person=><button key={person.email} onClick={()=>startDirect(person)} className="flex w-full items-center gap-3 rounded-xl p-3 text-right hover:bg-slate-50"><div className="h-11 w-11 shrink-0 rounded-full bg-[#ead7b7] flex items-center justify-center"><Users size={19}/></div><div className="min-w-0 flex-1"><div className="font-semibold truncate">{person.name}</div><div className="text-xs text-slate-500 truncate">{person.email}{person.company_name?` · ${person.company_name}`:""}</div></div><span className="rounded-full bg-slate-100 px-2 py-1 text-[11px]">{TYPES.find(x=>x[0]===person.type)?.[1] || "مستخدم"}</span></button>)}</div></div></div>}
   </div>;
 }
