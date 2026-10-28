@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
+import AccountQuickAccess from "@/components/dashboard/AccountQuickAccess";
 export default function ConsultantDashboard() {
   const [loading, setLoading] = useState(true);
   const [consultant, setConsultant] = useState(null);
@@ -146,6 +147,7 @@ export default function ConsultantDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-green-50/30 py-8 px-4" dir="rtl">
       <div className="max-w-7xl mx-auto space-y-6">
+        <AccountQuickAccess profile={consultant} roleLabel="لوحة الاستشاري" />
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

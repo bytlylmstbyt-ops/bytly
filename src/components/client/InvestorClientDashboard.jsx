@@ -13,6 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import MasterProgressDashboard from "@/components/investor/MasterProgressDashboard";
 
+import AccountQuickAccess from "@/components/dashboard/AccountQuickAccess";
+
 export default function InvestorClientDashboard({ client, stats, recentProjects }) {
   const [preferredFirms, setPreferredFirms] = useState([]);
 
@@ -65,6 +67,7 @@ export default function InvestorClientDashboard({ client, stats, recentProjects 
 
   return (
     <div className="space-y-8">
+      <AccountQuickAccess profile={client} roleLabel="لوحة المستثمر" />
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
