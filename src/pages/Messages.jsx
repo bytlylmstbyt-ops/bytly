@@ -22,7 +22,9 @@ export default function Messages() {
   const loadConversations = async () => {
     if (!supabase || !me) { setLoading(false); setError("يجب تسجيل الدخول للوصول إلى المحادثات."); return; }
     setLoading(true); setError("");
-    try { const result = await timeout(supabase.from("user_conversations").select("*").contains("participants", [me]).order("last_message_date", { ascending: false, nullsFirst: false }).order("created_at", { ascending: false })); if (result.error) throw result.error; setConversations(result.data || []); }
+    try { const result = await timeout(supabase.from("user_conversations").select("*").contains("participants", [me]).order("last_message_date", { ascending: false, nullsFirst: false }).order("created_at", { ascending: false })); if (result.error) throw result.error;
+      // The inbox is for direct one-to-one chats only; old platform/group threads must not leak into personal inboxes.
+      setConversations((result.data || []).filter(c => Array.isArray(c.participants) && c.participants.length === 2 && c.participants.includes(me))); }
     catch (e) { console.error(e); setError(e?.message || "تعذر تحميل المحادثات"); } finally { setLoading(false); }
   };
   const loadDirectory = async () => {
