@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import AccountQuickAccess from "@/components/dashboard/AccountQuickAccess";
 export default function SupplierDashboard() {
   const [loading, setLoading] = useState(true);
   const [supplier, setSupplier] = useState(null);
@@ -138,6 +139,7 @@ export default function SupplierDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <AccountQuickAccess profile={supplier} roleLabel="لوحة المورد" />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           {/* Header */}
           <Card className="border-0 shadow-lg overflow-hidden mb-8">
