@@ -38,17 +38,16 @@ export default function Notifications() {
       setUser({ id: currentUser.id, email: currentUser.email || "" });
       setIsAdmin(admin);
 
-      let query = supabase.from("notifications")
+      // Every account uses a personal inbox. Platform registration/system events belong in the admin console.
+      const { data, error } = await supabase.from("notifications")
         .select("id,user_id,type,title,body,entity_type,entity_id,read_at,created_at")
+        .eq("user_id", currentUser.id)
         .order("created_at", { ascending: false }).limit(100);
-      // Head office can review platform-wide notifications. Regular accounts only see
-      // their own user-targeted notifications, and internal system notices are admin-only.
-      if (admin) query = query;
-      else query = query.eq("user_id", currentUser.id).neq("type", "system");
-
-      const { data, error } = await query;
       if (error) throw error;
-      setNotifications((data || []).map(row => ({
+      const personalRows = (data || []).filter(row =>
+        !["system", "new_registration", "new_user_registration", "new_user", "registration"].includes(String(row.type || "").toLowerCase())
+      );
+      setNotifications(personalRows.map(row => ({
         ...row,
         message: row.body || "",
         is_read: Boolean(row.read_at),
@@ -76,7 +75,7 @@ export default function Notifications() {
       if (!active) return;
       let subscription = supabase.channel("notifications-page-" + authUser.id).on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "notifications", ...(admin ? {} : { filter: "user_id=eq." + authUser.id }) },
+        { event: "*", schema: "public", table: "notifications", filter: "user_id=eq." + authUser.id },
         () => { if (active) loadNotifications(); }
       );
       channel = subscription.subscribe();
@@ -102,9 +101,9 @@ export default function Notifications() {
   const markAllAsRead = async () => {
     try {
       if (!user?.id) return;
-      let query = supabase.from("notifications").update({ read_at: new Date().toISOString() }).is("read_at", null);
-      if (!isAdmin) query = query.eq("user_id", user.id).neq("type", "system");
-      const { error } = await query;
+      const { error } = await supabase.from("notifications").update({ read_at: new Date().toISOString() })
+        .eq("user_id", user.id).is("read_at", null)
+        .not("type", "in", "(system,new_registration,new_user_registration,new_user,registration)");
       if (error) throw error;
       await loadNotifications();
     } catch (error) { setLoadError(error?.message || "تعذر تحديث الإشعارات."); }
@@ -122,9 +121,9 @@ export default function Notifications() {
 
   const deleteNotification = async notification => {
     try {
-      let query = supabase.from("notifications").delete().eq("id", notification.id);
-      if (!isAdmin) query = query.eq("user_id", user?.id).neq("type", "system");
-      const { error } = await query;
+      const { error } = await supabase.from("notifications").delete()
+        .eq("id", notification.id).eq("user_id", user?.id)
+        .not("type", "in", "(system,new_registration,new_user_registration,new_user,registration)");
       if (error) throw error;
       setNotifications(prev => prev.filter(item => item.id !== notification.id));
     } catch (error) { setLoadError(error?.message || "تعذر حذف الإشعار."); }
