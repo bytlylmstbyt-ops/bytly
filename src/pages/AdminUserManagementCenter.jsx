@@ -28,7 +28,7 @@ export default function AdminUserManagementCenter(){
   setNotificationSending(true);setNotificationStatus("");
   try{
    const{data:authData,error:authError}=await supabase.auth.getUser();if(authError)throw authError;if(!authData?.user?.id)throw new Error("يجب تسجيل الدخول بحساب إداري.");
-   const{error}=await supabase.from("notifications").insert({user_id:notificationTarget,type:"system",title,body,entity_type:"system"});
+   const{error}=await supabase.from("notifications").insert({user_id:notificationTarget,type:"admin_notice",title,body,entity_type:"admin_notice"});
    if(error)throw error;setNotificationStatus("تم إرسال الإشعار إلى الحساب المحدد.");setNotificationTitle("");setNotificationBody("");
   }catch(error){console.error("Targeted notification failed:",error);setNotificationStatus(error?.message||"تعذر إرسال الإشعار. تحققي من صلاحيات المشرف.");}
   finally{setNotificationSending(false);}
