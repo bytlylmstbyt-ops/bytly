@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 import { 
   Briefcase, Wallet, Plus, ArrowLeft, Clock, 
-  TrendingUp, Settings, Shield, Unlock, Scale, Star, CalendarDays, Bell, FileText
+  TrendingUp, Settings, Shield, Unlock, Scale, Star, CalendarDays, Bell, FileText, Mail, Phone, MapPin, MessageCircle
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,32 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ProjectScheduleCalendar from "@/components/engineers/ProjectScheduleCalendar";
 
 export default function IndividualClientDashboard({ client, stats, recentProjects, recentProposals = [] }) {
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [conversationCount, setConversationCount] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    const loadCommunicationSummary = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || !active) return;
+        const [notificationsResult, conversationsResult] = await Promise.all([
+          supabase.from("notifications").select("id", { count: "exact", head: true }).eq("user_id", user.id).is("read_at", null),
+          user.email
+            ? supabase.from("user_conversations").select("id", { count: "exact", head: true }).contains("participants", [user.email.trim().toLowerCase()])
+            : Promise.resolve({ count: 0, error: null })
+        ]);
+        if (!active) return;
+        if (!notificationsResult.error) setUnreadNotifications(notificationsResult.count || 0);
+        if (!conversationsResult.error) setConversationCount(conversationsResult.count || 0);
+      } catch (error) {
+        console.error("Could not load client communication summary", error);
+      }
+    };
+    loadCommunicationSummary();
+    return () => { active = false; };
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -30,14 +57,31 @@ export default function IndividualClientDashboard({ client, stats, recentProject
                   {client.full_name?.charAt(0)}
                 </AvatarFallback>
               </Avatar>
-              <div>
+              <div className="min-w-0">
                 <h1 className="text-2xl font-bold text-[#1a1a2e]">
-                  مرحباً، {client.full_name}
+                  مرحباً بك، {client.full_name || "عميل بيتلي"}
                 </h1>
-                <p className="text-slate-500">صاحب مشاريع</p>
+                <p className="text-slate-500">صاحب مشاريع · أهلاً بك في بيتلي</p>
+                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-600">
+                  {client.phone && <a href={`tel:${client.phone}`} className="inline-flex items-center gap-1.5 hover:text-[#9a7740]" dir="ltr"><Phone className="h-4 w-4" />{client.phone}</a>}
+                  {client.email && <a href={`mailto:${client.email}`} className="inline-flex items-center gap-1.5 hover:text-[#9a7740]"><Mail className="h-4 w-4" />{client.email}</a>}
+                  {(client.city || client.location || client.address) && <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" />{[client.city, client.location, client.address].filter(Boolean).join("، ")}</span>}
+                </div>
               </div>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Link to={createPageUrl("NotificationCenter")} aria-label="الإشعارات" title="الإشعارات">
+                <Button variant="outline" className="relative" size="icon">
+                  <Bell className="h-5 w-5" />
+                  {unreadNotifications > 0 && <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-red-600 px-1 text-[10px] leading-5 text-white">{unreadNotifications > 99 ? "99+" : unreadNotifications}</span>}
+                </Button>
+              </Link>
+              <Link to={createPageUrl("Messages")} aria-label="الرسائل" title="الرسائل">
+                <Button variant="outline" className="relative" size="icon">
+                  <MessageCircle className="h-5 w-5" />
+                  {conversationCount > 0 && <span className="absolute -right-1 -top-1 min-w-5 rounded-full bg-[#C9A66B] px-1 text-[10px] leading-5 text-white">{conversationCount > 99 ? "99+" : conversationCount}</span>}
+                </Button>
+              </Link>
               <Link to={createPageUrl("CreateProject")}>
                 <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
                   <Plus className="w-5 h-5 ml-2" />
