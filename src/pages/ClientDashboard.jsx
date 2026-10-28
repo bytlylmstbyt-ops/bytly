@@ -162,7 +162,8 @@ export default function ClientDashboard() {
           <IndividualClientDashboard 
             client={client} 
             stats={stats} 
-            recentProjects={recentProjects} 
+            recentProjects={recentProjects}
+            recentProposals={recentProposals}
           />
         )}
       </div>
