@@ -17,6 +17,7 @@ import { AdSidebarSection } from "@/components/ads/SmartAdCard";
 import { useAds } from "@/hooks/useAds";
 import ProjectScheduleCalendar from "@/components/engineers/ProjectScheduleCalendar";
 
+import AccountQuickAccess from "@/components/dashboard/AccountQuickAccess";
 export default function EngineerDashboard() {
   const { ads: dashboardAds } = useAds({ placement: "engineer_dashboard", tags: ["مدني", "هندسة", "مقاولات"], maxAds: 2 });
   const [user, setUser] = useState(null);
@@ -128,6 +129,7 @@ export default function EngineerDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8">
       <div className="max-w-7xl mx-auto px-4">
+        <AccountQuickAccess profile={engineer} roleLabel="لوحة المهندس" />
         {/* Header Section */}
         <div className="mb-8">
           <Card className="border-0 shadow-lg overflow-hidden">
