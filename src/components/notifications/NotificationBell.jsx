@@ -35,7 +35,7 @@ export default function NotificationBell() {
       const {data:{user}}=await supabase.auth.getUser();
       if(!user) return;
       const load=async()=>{
-        const {data,error}=await supabase.from("notifications").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(10);
+        const {data,error}=await supabase.from("notifications").select("*").eq("user_id",user.id).not("type","in","(system,new_registration,new_user_registration,new_user,registration)").order("created_at",{ascending:false}).limit(10);
         if(error) console.error("Supabase notifications load error:",error);
         else { setNotifications(data||[]); setUnreadCount((data||[]).filter(n=>!n.read_at).length); }
       };
@@ -43,6 +43,7 @@ export default function NotificationBell() {
       channel=supabase.channel(`notifications-${user.id}`)
         .on("postgres_changes",{event:"INSERT",schema:"public",table:"notifications",filter:`user_id=eq.${user.id}`},payload=>{
           const n=payload.new;
+          if(["system","new_registration","new_user_registration","new_user","registration"].includes(String(n.type||"").toLowerCase())) return;
           setNotifications(prev=>[n,...prev].slice(0,10));
           setUnreadCount(prev=>prev+1);
           toast({title:`${TYPE_ICONS[n.type]||"🔔"} ${n.title||"إشعار جديد"}`,description:n.body||"",duration:6000});
@@ -60,7 +61,7 @@ export default function NotificationBell() {
   const markAllAsRead=async()=>{
     if(!supabase) return;
     const {data:{user}}=await supabase.auth.getUser(); if(!user) return;
-    const {error}=await supabase.from("notifications").update({read_at:new Date().toISOString()}).eq("user_id",user.id).is("read_at",null);
+    const {error}=await supabase.from("notifications").update({read_at:new Date().toISOString()}).eq("user_id",user.id).not("type","in","(system,new_registration,new_user_registration,new_user,registration)").is("read_at",null);
     if(error) console.error("Mark notifications read error:",error);
     else {setUnreadCount(0);setNotifications(prev=>prev.map(n=>({...n,read_at:n.read_at||new Date().toISOString()})));}
   };
