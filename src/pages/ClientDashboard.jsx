@@ -37,7 +37,7 @@ export default function ClientDashboard() {
           setStats({ totalProjects: 3, openProjects: 1, inProgressProjects: 1, completedProjects: 1, totalSpent: 5000, activeProposals: 2 });
           setRecentProjects([
             { id: "preview-project-1", title: "تصميم فيلا سكنية", status: "open", budget_min: 15000, budget_max: 25000, created_at: new Date().toISOString() },
-            { id: "preview-project-2", title: "إشراف هندسي على التنفيذ", status: "in_progress", budget_min: 8000, budget_max: 12000, created_at: new Date().toISOString() },
+            { id: "preview-project-2", title: "إشراف هندسي على التنفيذ", status: "in_progress", budget_min: 8000, budget_max: 12000, escrow_status: "held", escrow_amount: 5000, created_at: new Date().toISOString() },
             { id: "preview-project-3", title: "مخططات معمارية", status: "completed", budget_min: 4000, budget_max: 6000, created_at: new Date().toISOString() }
           ]);
           setRecentProposals([{ id: "preview-offer-1", status: "pending" }, { id: "preview-offer-2", status: "pending" }]);
@@ -156,6 +156,7 @@ export default function ClientDashboard() {
             client={client} 
             stats={stats} 
             recentProjects={recentProjects} 
+            recentProposals={recentProposals}
           />
         ) : (
           <IndividualClientDashboard 
