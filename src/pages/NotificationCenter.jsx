@@ -99,7 +99,7 @@ export default function NotificationCenter(){
   if(!supabase){setLoading(false);return}
   const{data:{user}}=await supabase.auth.getUser();
   if(!user){setLoading(false);return}
-  const{data,error}=await supabase.from("notifications").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(100);
+  const{data,error}=await supabase.from("notifications").select("*").eq("user_id",user.id).not("type","in","(system,new_registration,new_user_registration,new_user,registration)").order("created_at",{ascending:false}).limit(100);
   if(error)console.error(error);
   const items=data||[];setN(items);setLoading(false);
   if(notificationId){const found=items.find(x=>x.id===notificationId);if(found)selectNotification(found);}
@@ -107,7 +107,7 @@ export default function NotificationCenter(){
 
  useEffect(()=>{load();let ch;if(supabase){supabase.auth.getUser().then(({data:{user}})=>{if(user)ch=supabase.channel("notification-center-"+user.id).on("postgres_changes",{event:"*",schema:"public",table:"notifications",filter:"user_id=eq."+user.id},load).subscribe()})}return()=>{if(ch)supabase.removeChannel(ch)}},[notificationId]);
 
- const mark=async()=>{if(!supabase)return;const{data:{user}}=await supabase.auth.getUser();if(!user)return;await supabase.from("notifications").update({read_at:new Date().toISOString()}).eq("user_id",user.id).is("read_at",null);load()};
+ const mark=async()=>{if(!supabase)return;const{data:{user}}=await supabase.auth.getUser();if(!user)return;await supabase.from("notifications").update({read_at:new Date().toISOString()}).eq("user_id",user.id).not("type","in","(system,new_registration,new_user_registration,new_user,registration)").is("read_at",null);load()};
 
  if(loading)return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-[#C9A66B]"/></div>;
  const selected=n.find(x=>x.id===selectedId);
