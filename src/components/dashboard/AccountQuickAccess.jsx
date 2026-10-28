@@ -17,6 +17,8 @@ export default function AccountQuickAccess({ profile, roleLabel }) {
     let active = true;
     const loadCounts = async () => {
       try {
+        // Admin role preview uses demo profiles; do not show the administrator's counts as another account's.
+        if (typeof window !== "undefined" && window.sessionStorage.getItem("bytly_admin_preview")) return;
         if (!supabase) return;
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user || !active) return;
