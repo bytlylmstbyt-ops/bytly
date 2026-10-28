@@ -90,6 +90,18 @@ export default function Messages() {
         const { data } = await supabase.from(table).select(columns).in("id", ids);
         add(data, role);
       }
+      // Client profiles may be hidden by profiles RLS, so resolve clients through their public role records.
+      const clientUserIds = [...new Set((projectRows || []).map(p => p.client_user_id).filter(Boolean))];
+      if (clientUserIds.length) {
+        const { data } = await supabase.from("clients").select("id,user_id,email,full_name,phone,city,company_name").in("user_id", clientUserIds);
+        add(data, "client");
+      }
+      // Include the engineering firm assigned to a shared project when available.
+      const firmIds = [...new Set((projectRows || []).map(p => p.company_id).filter(Boolean))];
+      if (firmIds.length) {
+        const { data } = await supabase.from("engineering_firms").select("id,email,company_name,phone,city,is_verified,company_logo").in("id", firmIds);
+        add(data, "firm");
+      }
       setDirectory([...map.values()]);
     } catch (e) { console.error("Project-scoped directory error", e); setDirectory([]); }
   };
