@@ -64,7 +64,10 @@ export default function AdminClientsPage() {
         supabase
           .from("profiles")
           .select("user_id,full_name,email,phone,created_at,role")
-          .ilike("role", "client"),
+          // The messaging directory currently treats generic "user" profiles as
+          // client contacts too. Include those registered accounts here so admins
+          // can find them, while labeling them as prospects rather than verified clients.
+          .in("role", ["client", "user"]),
       ]);
 
       if (clientsError) {
