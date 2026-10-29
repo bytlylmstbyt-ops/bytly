@@ -35,9 +35,36 @@ export default function Messages() {
         supabase.from("engineering_firms").select("id,email,company_name,phone,city,is_verified,company_logo").limit(200),
         supabase.from("consultants").select("id,email,full_name,phone,city,status").limit(200)
       ]);
-      const map = new Map(); const add = (rows, role) => (rows || []).forEach(row => { const p = normalize(row, role); if (p && p.email !== me) map.set(p.email, p); });
-      if (results[0].status === "fulfilled") results[0].value.data?.forEach(row => add([row], row.role === "engineer" ? "engineer" : row.role === "firm" ? "firm" : row.role === "consultant" ? "consultant" : "client"));
-      if (results[1].status === "fulfilled") add(results[1].value.data, "engineer"); if (results[2].status === "fulfilled") add(results[2].value.data, "client"); if (results[3].status === "fulfilled") add(results[3].value.data, "firm"); if (results[4].status === "fulfilled") add(results[4].value.data, "consultant");
+      // Use profiles as the canonical identity source. Several legacy role tables may
+      // contain stale or duplicated email rows; they must not overwrite a registered
+      // profile's name or role merely because they were returned later.
+      const map = new Map();
+      const addProfiles = rows => (rows || []).forEach(row => {
+        const role = ["engineer", "firm", "consultant", "client"].includes(String(row.role || "").toLowerCase())
+          ? String(row.role).toLowerCase()
+          : "client";
+        const person = normalize(row, role);
+        if (person && person.email !== me && !map.has(person.email)) map.set(person.email, person);
+      });
+      const addLegacy = (rows, role) => (rows || []).forEach(row => {
+        const person = normalize(row, role);
+        if (!person || person.email === me) return;
+        const existing = map.get(person.email);
+        if (!existing) {
+          map.set(person.email, person);
+          return;
+        }
+        // Enrich canonical profile data only; never replace its identity or role.
+        if (!existing.company_name && person.company_name) existing.company_name = person.company_name;
+        if (!existing.city && person.city) existing.city = person.city;
+        if (!existing.image && person.image) existing.image = person.image;
+        if (!existing.verified && person.verified) existing.verified = true;
+      });
+      if (results[0].status === "fulfilled") addProfiles(results[0].value.data);
+      if (results[1].status === "fulfilled") addLegacy(results[1].value.data, "engineer");
+      if (results[2].status === "fulfilled") addLegacy(results[2].value.data, "client");
+      if (results[3].status === "fulfilled") addLegacy(results[3].value.data, "firm");
+      if (results[4].status === "fulfilled") addLegacy(results[4].value.data, "consultant");
       setDirectory([...map.values()]);
     } catch (e) { console.error("Directory error", e); }
   };
