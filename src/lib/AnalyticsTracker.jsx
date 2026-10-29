@@ -51,12 +51,23 @@ export default function AnalyticsTracker(){
     await supabase.from("analytics_events").insert({session_id:sessionRef.current,user_id:authUser.id,visitor_id:visitorRef.current,event_name:"login",page_path:path(),metadata:{provider:authUser.app_metadata?.provider||"password",email:authUser.email||null,attribution}});
    };
 
-   const{data:authListener}=supabase.auth.onAuthStateChange(async(event,session)=>{
-    if(event==="SIGNED_IN"&&session?.user)await linkAuthenticatedUser(session.user);
-    if(event==="TOKEN_REFRESHED"&&session?.user){userRef.current=session.user.id;await supabase.from("analytics_sessions").update({user_id:session.user.id,last_seen_at:new Date().toISOString()}).eq("id",sessionRef.current).eq("visitor_id",visitorRef.current)}
-    if(event==="SIGNED_OUT")userRef.current=null;
+   const{data:authListener}=supabase.auth.onAuthStateChange((event,session)=>{
+    // Keep Supabase's auth callback synchronous; run database writes outside its internal lock.
+    queueMicrotask(async()=>{
+     if(!mounted)return;
+     if((event==="SIGNED_IN"||event==="INITIAL_SESSION"||event==="USER_UPDATED")&&session?.user)await linkAuthenticatedUser(session.user);
+     if(event==="TOKEN_REFRESHED"&&session?.user){
+      userRef.current=session.user.id;
+      await supabase.from("analytics_sessions").update({user_id:session.user.id,last_seen_at:new Date().toISOString()}).eq("id",sessionRef.current).eq("visitor_id",visitorRef.current);
+     }
+     if(event==="SIGNED_OUT")userRef.current=null;
+    });
    });
    authSubscription=authListener?.subscription;
+   // Re-check after the session row and listener exist: sign-in can finish during the
+   // country lookup/session insert above, before the listener was registered.
+   const{data:{user:currentUser}}=await supabase.auth.getUser();
+   if(currentUser?.id)await linkAuthenticatedUser(currentUser);
 
    if(localStorage.getItem("bytly_replay_enabled")!=="false"){
     let replaySeq=0,lastReplay="";
