@@ -19,25 +19,32 @@ Deno.serve(async(req:Request)=>{
   const body=await req.json().catch(()=>({})),requested=Number(body?.range),range=[1,7,30].includes(requested)?requested:7;
   const now=new Date(),key=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Riyadh",year:"numeric",month:"2-digit",day:"2-digit"}).format(now);
   const [y,m,d]=key.split("-").map(Number),since=new Date(Date.UTC(y,m-1,d-(range===1?0:range-1),-3,0,0)).toISOString();
-  const [s,e,pr,c]=await Promise.all([
+  const [s,e,pr,c,au]=await Promise.all([
    service.from("analytics_sessions").select("*").gte("started_at",since).order("started_at",{ascending:false}).limit(1000),
    service.from("analytics_events").select("*").gte("occurred_at",since).order("occurred_at",{ascending:false}).limit(5000),
    service.from("profiles").select("user_id,full_name,email,role"),
-   service.from("clients").select("user_id,full_name,email,client_type")
+   service.from("clients").select("user_id,full_name,email,client_type"),
+   service.auth.admin.listUsers({page:1,perPage:1000})
   ]);
   const err=[s,e,pr,c].find(x=>x.error)?.error;
+  if(au.error)return json({error:"تعذر ربط البريد الإلكتروني بحسابات المستخدمين: "+au.error.message},500);
   if(err)return json({error:"تعذر قراءة بيانات التحليلات: "+err.message},500);
   const events=e.data||[];
   const eventsBySession=new Map<string,any[]>();
   for(const event of events){const list=eventsBySession.get(event.session_id)||[];list.push(event);eventsBySession.set(event.session_id,list)}
+  const authEmailById=new Map((au.data?.users||[]).map((user:any)=>[user.id,user.email||null]));
   const sessions=(s.data||[]).map((session:any)=>{
    const list=(eventsBySession.get(session.id)||[]).slice().sort((a,b)=>new Date(a.occurred_at).getTime()-new Date(b.occurred_at).getTime());
+   // Events may already know the signed-in user even if the session update failed.
+   const eventUser=[...list].reverse().find((event:any)=>event.user_id)?.user_id||null;
+   const linkedUserId=session.user_id||eventUser;
+   const authEmail=linkedUserId?authEmailById.get(linkedUserId)||null:null;
    const first=list[0]?.occurred_at||session.started_at;
    const last=list[list.length-1]?.occurred_at||session.last_seen_at||session.started_at;
    const duration=Math.max(0,Math.floor((new Date(last).getTime()-new Date(first).getTime())/1000));
    const pageCount=list.filter(e=>e.event_name==="page_view").length;
    const scroll=Math.max(0,...list.filter(e=>e.event_name==="scroll").map(e=>Number(e.metadata?.percent)||0));
-   return {...session,duration_seconds:Math.max(Number(session.duration_seconds)||0,duration),page_count:Math.max(Number(session.page_count)||0,pageCount),event_count:Math.max(Number(session.event_count)||0,list.length),last_seen_at:last,exit_page:session.exit_page||list[list.length-1]?.page_path||null,max_scroll_percent:Math.max(Number(session.max_scroll_percent)||0,scroll)};
+   return {...session,user_id:linkedUserId,auth_email:authEmail,duration_seconds:Math.max(Number(session.duration_seconds)||0,duration),page_count:Math.max(Number(session.page_count)||0,pageCount),event_count:Math.max(Number(session.event_count)||0,list.length),last_seen_at:last,exit_page:session.exit_page||list[list.length-1]?.page_path||null,max_scroll_percent:Math.max(Number(session.max_scroll_percent)||0,scroll)};
   });
   return json({kind:"analytics",range,since,sessions,events,profiles:pr.data||[],clients:c.data||[]});
  }catch(error){return json({error:error instanceof Error?error.message:String(error)},500);}
