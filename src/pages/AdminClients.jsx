@@ -50,38 +50,69 @@ export default function AdminClientsPage() {
   const loadData = useCallback(async () => {
     setRefreshing(true);
     try {
-      // تحميل العملاء هو المصدر الأساسي للصفحة. لا نجعل أي جدول CRM ثانوي يمنع ظهور العملاء.
-      const { data: clientsData, error: clientsError } = await supabase
-        .from("clients")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(500);
-      if (clientsError) throw clientsError;
+      // Load CRM records and registered client accounts independently. The CRM table
+      // may be incomplete or temporarily unavailable; registered profiles must still show.
+      const [
+        { data: clientsData, error: clientsError },
+        { data: clientProfiles, error: profilesError },
+      ] = await Promise.all([
+        supabase
+          .from("clients")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(500),
+        supabase
+          .from("profiles")
+          .select("user_id,full_name,email,phone,created_at,role")
+          .ilike("role", "client"),
+      ]);
 
-      const { data: clientProfiles, error: profilesError } = await supabase
-        .from("profiles")
-        .select("user_id,full_name,email,phone,created_at")
-        .eq("role", "client");
+      if (clientsError) {
+        console.error("AdminClients: CRM clients query failed; using registered profiles:", clientsError);
+      }
+      if (profilesError) {
+        console.error("AdminClients: registered client profiles query failed:", profilesError);
+      }
 
-      // بعض الحسابات القديمة قد تكون موجودة في profiles ولم تتم مزامنتها بعد إلى clients.
-      let baseClients = clientsData || [];
+      // Prefer the stable auth user_id for matching. Keep CRM-only records, refresh
+      // identity fields for matches, and add profiles missing from the CRM table.
+      const baseClients = clientsData || [];
+      const clientsByUserId = new Map(
+        baseClients.filter(client => client.user_id).map(client => [client.user_id, client])
+      );
+
       if (!profilesError && clientProfiles?.length) {
-        const existing = new Set(baseClients.map(c => c.user_id).filter(Boolean));
-        const missing = clientProfiles
-          .filter(p => p.user_id && !existing.has(p.user_id))
-          .map(p => ({
-            id: `profile-${p.user_id}`,
-            user_id: p.user_id,
-            full_name: p.full_name,
-            email: p.email,
-            phone: p.phone,
-            client_type: "individual",
-            is_real: true,
-            source: "registration",
-            created_at: p.created_at,
-            is_subscription_active: true,
-          }));
-        baseClients = [...baseClients, ...missing];
+        for (const profile of clientProfiles) {
+          if (!profile.user_id) continue;
+          const existing = clientsByUserId.get(profile.user_id);
+
+          if (existing) {
+            existing.full_name = profile.full_name || existing.full_name;
+            existing.email = profile.email || existing.email;
+            existing.phone = profile.phone || existing.phone;
+            existing.created_at = profile.created_at || existing.created_at;
+            existing.source = existing.source || "registration";
+          } else {
+            const registeredClient = {
+              id: `profile-${profile.user_id}`,
+              user_id: profile.user_id,
+              full_name: profile.full_name,
+              email: profile.email,
+              phone: profile.phone,
+              client_type: "individual",
+              is_real: true,
+              source: "registration",
+              created_at: profile.created_at,
+              is_subscription_active: true,
+            };
+            baseClients.push(registeredClient);
+            clientsByUserId.set(profile.user_id, registeredClient);
+          }
+        }
+      }
+
+      if (clientsError && profilesError) {
+        throw new Error("تعذر تحميل العملاء المسجلين وبيانات إدارة العملاء. يرجى المحاولة مرة أخرى.");
       }
 
       const { data: projectsIndex, error: projectsIndexError } = await supabase
