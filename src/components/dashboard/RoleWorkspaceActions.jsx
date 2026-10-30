@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Briefcase, PlusCircle, FolderKanban, MessageSquare, Wallet, Bell, Settings, CalendarDays, Wrench, Building2, FileText, UserRound } from "lucide-react";
+import { PlusCircle, FolderKanban, MessageSquare, Wallet, Bell, Settings, CalendarDays, Wrench, Building2, FileText, UserRound } from "lucide-react";
 
 const WORKSPACES = {
   client: { title: "إدارة مشاريعك", intro: "أنشئ مشروعاً، راجع العروض، وتابع التنفيذ والمدفوعات.", actions: [
