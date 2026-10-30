@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import RoleWorkspaceActions from "@/components/dashboard/RoleWorkspaceActions";
 import { supabase } from "@/lib/supabaseClient";
 import EngineerDashboard from "./EngineerDashboard";
@@ -130,7 +132,15 @@ export default function RoleDashboardRouter() {
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4" dir="rtl">
         <div className="max-w-md w-full rounded-2xl bg-white shadow-lg p-8 text-center">
           <h2 className="text-xl font-bold text-[#1a1a2e] mb-3">لوحة التحكم</h2>
-          <p className="text-slate-600">{state.error}</p>
+          <p className="text-slate-600 mb-6">{state.error}</p>
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
+            <Link to="/RegisterChoice">
+              <Button className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white">تحديد نوع الحساب</Button>
+            </Link>
+            <Link to="/Support">
+              <Button variant="outline">التواصل مع الدعم</Button>
+            </Link>
+          </div>
         </div>
       </div>
     );
