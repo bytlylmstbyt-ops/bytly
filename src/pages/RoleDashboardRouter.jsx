@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import RoleWorkspaceActions from "@/components/dashboard/RoleWorkspaceActions";
 import { supabase } from "@/lib/supabaseClient";
 import EngineerDashboard from "./EngineerDashboard";
 import ClientDashboard from "./ClientDashboard";
@@ -23,8 +26,10 @@ const ROLE_TABLES = [
 const normalizeRole = (value) => {
   const role = String(value || "").trim().toLowerCase();
   if (["engineering_firm", "engineeringfirm", "firm"].includes(role)) return "firm";
-  if (["legalconsultant", "legal-consultant", "lawyer"].includes(role)) return "legal_consultant";
+  if (["legal", "legalconsultant", "legal-consultant", "lawyer"].includes(role)) return "legal_consultant";
   if (["developer", "investor"].includes(role)) return "investor";
+  if (["individual"].includes(role)) return "client";
+  if (["surveyor"].includes(role)) return "engineer";
   return role;
 };
 
@@ -41,9 +46,10 @@ export default function RoleDashboardRouter() {
         const { data: authData, error: authError } = await supabase.auth.getUser();
         if (authError) throw authError;
         const user = authData?.user;
-        if (!user?.id || !user?.email) throw new Error("No authenticated user");
+        if (!user?.id) throw new Error("No authenticated user");
 
-        const email = user.email.trim().toLowerCase();
+        // Phone-authenticated users may not have an email address.
+        const email = String(user.email || "").trim().toLowerCase();
         const metadata = user.user_metadata || {};
         const explicitRole = normalizeRole(metadata.role || metadata.account_type || metadata.user_type);
 
@@ -53,7 +59,7 @@ export default function RoleDashboardRouter() {
         try {
           const byUser = await supabase.from("profiles").select("id,user_id,email,full_name,role").eq("user_id", user.id).maybeSingle();
           profile = byUser.data || null;
-          if (!profile) {
+          if (!profile && email) {
             const byEmail = await supabase.from("profiles").select("id,user_id,email,full_name,role").ilike("email", email).maybeSingle();
             profile = byEmail.data || null;
           }
@@ -65,10 +71,12 @@ export default function RoleDashboardRouter() {
         if (!role || role === "user") {
           const matches = await Promise.all(ROLE_TABLES.map(async ([candidate, table]) => {
             try {
-              const byUser = await supabase.from(table).select("*").eq("user_id", user.id).limit(1);
+              const byUser = await supabase.from(table).select("id,user_id").eq("user_id", user.id).limit(1);
               if (byUser.data?.length) return { role: candidate, profile: byUser.data[0] };
-              const byEmail = await supabase.from(table).select("*").ilike("email", email).limit(1);
-              if (byEmail.data?.length) return { role: candidate, profile: byEmail.data[0] };
+              if (email) {
+                const byEmail = await supabase.from(table).select("id,user_id").ilike("email", email).limit(1);
+                if (byEmail.data?.length) return { role: candidate, profile: byEmail.data[0] };
+              }
             } catch {}
             return null;
           }));
@@ -80,15 +88,26 @@ export default function RoleDashboardRouter() {
           }
         }
 
+        // Client accounts marked as investors must enter the investor workspace,
+        // even when the canonical profile role remains "client".
+        if (role === "client") {
+          const { data: clientAccount } = await supabase
+            .from("clients")
+            .select("client_type")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          if (String(clientAccount?.client_type || "").toLowerCase() === "investor") role = "investor";
+        }
+
         if (role === "investor") {
-          if (!cancelled) setState({ loading: false, component: InvestorHub, error: null });
+          if (!cancelled) setState({ loading: false, component: InvestorHub, role, error: null });
           return;
         }
 
         const mapped = ROLE_TABLES.find(([candidate]) => candidate === role);
         if (!mapped) throw new Error("Account type not resolved");
 
-        if (!cancelled) setState({ loading: false, component: mapped[2], error: null });
+        if (!cancelled) setState({ loading: false, component: mapped[2], role, error: null });
       } catch (error) {
         console.error("Role dashboard routing error:", error);
         if (!cancelled) setState({
@@ -116,12 +135,25 @@ export default function RoleDashboardRouter() {
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4" dir="rtl">
         <div className="max-w-md w-full rounded-2xl bg-white shadow-lg p-8 text-center">
           <h2 className="text-xl font-bold text-[#1a1a2e] mb-3">لوحة التحكم</h2>
-          <p className="text-slate-600">{state.error}</p>
+          <p className="text-slate-600 mb-6">{state.error}</p>
+          <div className="flex flex-col sm:flex-row justify-center gap-3">
+            <Link to="/RegisterChoice">
+              <Button className="bg-gradient-to-r from-[#6B5D4F] to-[#C9A66B] text-white">تحديد نوع الحساب</Button>
+            </Link>
+            <Link to="/Support">
+              <Button variant="outline">التواصل مع الدعم</Button>
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   const Component = state.component;
-  return <Component />;
+  return (
+    <>
+      <RoleWorkspaceActions role={state.role} />
+      <Component />
+    </>
+  );
 }

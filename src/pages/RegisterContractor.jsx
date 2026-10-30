@@ -187,7 +187,7 @@ export default function RegisterContractor() {
       });
 
       toast.success("تم تسجيل المقاول بنجاح! في انتظار الموافقة من الإدارة");
-      navigate(createPageUrl("Home"), { replace: true });
+      navigate(createPageUrl("Dashboard"), { replace: true });
     } catch (error) {
       if (error?.message === "EMAIL_CONFIRMATION_REQUIRED") {
         setConfirmationEmail(formData.email);

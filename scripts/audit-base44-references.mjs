@@ -17,7 +17,9 @@ const patterns = {
   authCalls: /\bbase44\.auth\./g,
   functionCalls: /\bbase44\.functions\./g,
   integrationCalls: /\bbase44\.integrations\./g,
-  base44Domain: /https?:\/\/[^\s"'\x60]*base44\.com/gi,
+  // Static media hosted on Base44 is tracked separately; it is not a Base44 API/runtime dependency.
+  base44Domain: /https?:\/\/(?!media\.base44\.com)[^\s"'\x60]*base44\.com/gi,
+  legacyMediaAssetDomain: /https?:\/\/media\.base44\.com/gi,
 };
 
 async function walk(dir) {
@@ -88,5 +90,8 @@ if (packageSdkDependency || totals.sdkImport > 0 || totals.base44Domain > 0) {
   console.log('PASS: no Base44 SDK import or Base44 service-domain reference found.');
   if (totals.compatibilityImport || totals.entityCalls || totals.authCalls || totals.functionCalls || totals.integrationCalls) {
     console.warn('MIGRATION DEBT: compatibility API references remain; verify adapters and unsupported functions before claiming full independence.');
+  }
+  if (totals.legacyMediaAssetDomain > 0) {
+    console.warn('LEGACY MEDIA: static assets still load from media.base44.com; migrate these assets to first-party storage when practical.');
   }
 }

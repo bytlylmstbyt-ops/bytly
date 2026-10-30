@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { supabase } from "@/lib/supabaseClient";
 import IndividualClientDashboard from "@/components/client/IndividualClientDashboard";
-import InvestorClientDashboard from "@/components/client/InvestorClientDashboard";
+import InvestorHub from "./InvestorHub";
 import SmartAlertsDashboard from "@/components/client/SmartAlertsDashboard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Briefcase, Clock, TrendingUp, CheckCircle, DollarSign, Users } from "lucide-react";
@@ -137,11 +137,7 @@ export default function ClientDashboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         <SmartAlertsDashboard client={client} />
         {client.client_type === "investor" ? (
-          <InvestorClientDashboard 
-            client={client} 
-            stats={stats} 
-            recentProjects={recentProjects} 
-          />
+          <InvestorHub />
         ) : (
           <IndividualClientDashboard 
             client={client} 
