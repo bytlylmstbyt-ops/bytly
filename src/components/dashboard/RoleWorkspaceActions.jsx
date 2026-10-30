@@ -13,7 +13,7 @@ const WORKSPACES = {
     ["الإشعارات", "اعرف آخر التحديثات", "Notifications", Bell]
   ]},
   investor: { title: "إدارة استثماراتك ومشاريعك", intro: "تابع المشاريع والمراحل والمستندات والالتزامات المالية.", actions: [
-    ["مركز المستثمر", "تابع محفظة المشاريع ومراحلها", "InvestorHub", Building2],
+    ["مشاريع الاستثمار", "راجع المشاريع وحالاتها", "Projects", FolderKanban],
     ["إضافة مشروع", "ابدأ مشروعاً استثمارياً جديداً", "CreateProject", PlusCircle],
     ["جميع المشاريع", "راجع مشاريعك وحالاتها", "Projects", FolderKanban],
     ["المحفظة", "راجع الحركات المالية", "Wallet", Wallet],
@@ -54,7 +54,7 @@ const WORKSPACES = {
   ]},
   consultant: { title: "إدارة أعمالك الاستشارية", intro: "تابع المشاريع والمراجعات الفنية والتواصل.", actions: [
     ["مشاريعي", "تابع المشاريع المسندة إليك", "Projects", FolderKanban],
-    ["المراجعات الفنية", "افتح لوحة المراجعات", "ConsultantDashboard", FileText],
+    ["المشاريع المسندة", "راجع المشاريع المرتبطة بعملك", "Projects", FolderKanban],
     ["المحفظة", "راجع مستحقاتك", "ProviderWallet", Wallet],
     ["المحادثات", "تواصل مع أطراف المشروع", "Messages", MessageSquare],
     ["الإشعارات", "تابع المهام الجديدة", "Notifications", Bell],
