@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, ShieldAlert, Eye, ArrowRight, FolderKanban, Wallet, MessageSquare, Bell, FileText, Users, BriefcaseBusiness, HardHat, Building2, Package, Scale, Compass, UserRound } from "lucide-react";
+import { Loader2, ShieldAlert, Eye, ArrowRight, FolderKanban, Wallet, MessageSquare, Bell, FileText, BriefcaseBusiness, HardHat, Building2, Package, Scale, Compass, UserRound } from "lucide-react";
 
 const roles = [
   { id: "client", label: "صاحب مشروع / منزل", icon: UserRound, intro: "مساحة العميل لمتابعة طلباته ومشاريعه والتواصل مع مقدمي الخدمات.", modules: [["مشاريعي", "إنشاء مشروع ومتابعة حالته ومراحله", "Projects", FolderKanban], ["العروض", "مراجعة عروض الأسعار ومقارنتها", "ProjectProposals", FileText], ["المحادثات", "التواصل مع فريق المشروع", "Messages", MessageSquare], ["المحفظة والمدفوعات", "متابعة الفواتير ومراحل الدفع", "Wallet", Wallet]] },
