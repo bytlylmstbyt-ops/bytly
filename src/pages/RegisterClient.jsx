@@ -45,7 +45,7 @@ export default function RegisterClient() {
   useEffect(() => {
     let active = true;
     supabase.auth.getSession().then(({ data }) => {
-      if (active && data?.session?.user) navigate(createPageUrl("Home"), { replace: true });
+      if (active && data?.session?.user) navigate(createPageUrl("Dashboard"), { replace: true });
     }).catch(() => {});
     return () => { active = false; };
   }, [navigate]);
