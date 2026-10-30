@@ -304,10 +304,7 @@ export default function FirmDashboard() {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span>أعضاء الفريق ({teamMembers.length})</span>
-                    <Button className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white">
-                      <Plus className="w-5 h-5 ml-2" />
-                      إضافة عضو
-                    </Button>
+                    <span className="text-xs text-slate-500">إضافة أعضاء الفريق غير مفعّلة حالياً</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -338,7 +335,7 @@ export default function FirmDashboard() {
                     <div className="text-center py-12">
                       <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                       <p className="text-slate-600 mb-3">لا يوجد أعضاء في الفريق</p>
-                      <Button variant="outline">إضافة أول عضو</Button>
+                      <p className="text-xs text-slate-500">ستظهر هنا حسابات أعضاء الفريق بعد ربطها بالمكتب.</p>
                     </div>
                   )}
                 </CardContent>
