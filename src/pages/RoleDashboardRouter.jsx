@@ -83,6 +83,17 @@ export default function RoleDashboardRouter() {
           }
         }
 
+        // Client accounts marked as investors must enter the investor workspace,
+        // even when the canonical profile role remains "client".
+        if (role === "client") {
+          const { data: clientAccount } = await supabase
+            .from("clients")
+            .select("client_type")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          if (String(clientAccount?.client_type || "").toLowerCase() === "investor") role = "investor";
+        }
+
         if (role === "investor") {
           if (!cancelled) setState({ loading: false, component: InvestorHub, role, error: null });
           return;
