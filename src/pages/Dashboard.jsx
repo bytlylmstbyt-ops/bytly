@@ -23,43 +23,6 @@ import { useLanguage } from "@/components/i18n/LanguageContext";
 import PullToRefreshWrapper from "@/components/mobile/PullToRefreshWrapper";
 
 
-function RoleDashboardRouter({ role }) {
-  const normalizedRole = String(role || "").trim().toLowerCase();
-  const destinations = {
-    client: "/ClientDashboard",
-    individual: "/ClientDashboard",
-    investor: "/ClientDashboard",
-    developer: "/ClientDashboard",
-    engineer: "/EngineerDashboard",
-    surveyor: "/EngineerDashboard",
-    firm: "/FirmDashboard",
-    engineering_firm: "/FirmDashboard",
-    engineeringfirm: "/FirmDashboard",
-    contractor: "/ContractorDashboard",
-    supplier: "/SupplierDashboard",
-    consultant: "/ConsultantDashboard",
-    legal_consultant: "/LegalConsultantProfile",
-    legalconsultant: "/LegalConsultantProfile",
-    legal: "/LegalConsultantProfile",
-  };
-  const destination = destinations[normalizedRole];
-  if (destination) return <Navigate to={destination} replace />;
-  return (
-    <div dir="rtl" className="min-h-[60vh] flex items-center justify-center p-6">
-      <Card className="max-w-lg w-full">
-        <CardContent className="p-6 text-center">
-          <h2 className="text-lg font-bold text-slate-800 mb-2">نحتاج إلى تحديد نوع حسابك</h2>
-          <p className="text-sm leading-7 text-slate-600 mb-4">
-            لم نتمكن من تحديد لوحة التحكم المناسبة لهذا الحساب. بياناتك لم تُحذف؛ يرجى استكمال نوع الحساب أو التواصل مع الدعم.
-          </p>
-          <Link to="/Settings">
-            <Button>مراجعة بيانات الحساب</Button>
-          </Link>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
 
 export default function Dashboard() {
   const { t } = useLanguage();
@@ -177,7 +140,7 @@ export default function Dashboard() {
   }
 
   // Non-admin accounts use the role-specific dashboard router.
-  if (!isAdmin) return <RoleDashboardRouter role={profile?.role} />;
+  if (!isAdmin) return <Navigate to="/RoleDashboardRouter" replace />;
 
   // Render specialized dashboard for individual clients
   if (userType === "client" && profile?.client_type === "individual") {
