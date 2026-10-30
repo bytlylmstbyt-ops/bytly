@@ -46,9 +46,10 @@ export default function RoleDashboardRouter() {
         const { data: authData, error: authError } = await supabase.auth.getUser();
         if (authError) throw authError;
         const user = authData?.user;
-        if (!user?.id || !user?.email) throw new Error("No authenticated user");
+        if (!user?.id) throw new Error("No authenticated user");
 
-        const email = user.email.trim().toLowerCase();
+        // Phone-authenticated users may not have an email address.
+        const email = String(user.email || "").trim().toLowerCase();
         const metadata = user.user_metadata || {};
         const explicitRole = normalizeRole(metadata.role || metadata.account_type || metadata.user_type);
 
@@ -58,7 +59,7 @@ export default function RoleDashboardRouter() {
         try {
           const byUser = await supabase.from("profiles").select("id,user_id,email,full_name,role").eq("user_id", user.id).maybeSingle();
           profile = byUser.data || null;
-          if (!profile) {
+          if (!profile && email) {
             const byEmail = await supabase.from("profiles").select("id,user_id,email,full_name,role").ilike("email", email).maybeSingle();
             profile = byEmail.data || null;
           }
@@ -70,10 +71,12 @@ export default function RoleDashboardRouter() {
         if (!role || role === "user") {
           const matches = await Promise.all(ROLE_TABLES.map(async ([candidate, table]) => {
             try {
-              const byUser = await supabase.from(table).select("*").eq("user_id", user.id).limit(1);
+              const byUser = await supabase.from(table).select("id,user_id").eq("user_id", user.id).limit(1);
               if (byUser.data?.length) return { role: candidate, profile: byUser.data[0] };
-              const byEmail = await supabase.from(table).select("*").ilike("email", email).limit(1);
-              if (byEmail.data?.length) return { role: candidate, profile: byEmail.data[0] };
+              if (email) {
+                const byEmail = await supabase.from(table).select("id,user_id").ilike("email", email).limit(1);
+                if (byEmail.data?.length) return { role: candidate, profile: byEmail.data[0] };
+              }
             } catch {}
             return null;
           }));
