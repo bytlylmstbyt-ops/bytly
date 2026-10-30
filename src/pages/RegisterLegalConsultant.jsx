@@ -66,7 +66,7 @@ export default function RegisterLegalConsultantPage() {
         }}
       });
       alert("تم تقديم طلب التسجيل بنجاح! سيتم مراجعته من قبل الإدارة.");
-      navigate(createPageUrl("Home"), { replace: true });
+      navigate(createPageUrl("Dashboard"), { replace: true });
     } catch (error) {
       if (error?.message === "EMAIL_CONFIRMATION_REQUIRED") {
         setConfirmationEmail(formData.email);
