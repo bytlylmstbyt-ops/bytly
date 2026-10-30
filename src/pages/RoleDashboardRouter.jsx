@@ -24,8 +24,10 @@ const ROLE_TABLES = [
 const normalizeRole = (value) => {
   const role = String(value || "").trim().toLowerCase();
   if (["engineering_firm", "engineeringfirm", "firm"].includes(role)) return "firm";
-  if (["legalconsultant", "legal-consultant", "lawyer"].includes(role)) return "legal_consultant";
+  if (["legal", "legalconsultant", "legal-consultant", "lawyer"].includes(role)) return "legal_consultant";
   if (["developer", "investor"].includes(role)) return "investor";
+  if (["individual"].includes(role)) return "client";
+  if (["surveyor"].includes(role)) return "engineer";
   return role;
 };
 
