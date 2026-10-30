@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import RoleWorkspaceActions from "@/components/dashboard/RoleWorkspaceActions";
 import { supabase } from "@/lib/supabaseClient";
 import EngineerDashboard from "./EngineerDashboard";
 import ClientDashboard from "./ClientDashboard";
@@ -81,14 +82,14 @@ export default function RoleDashboardRouter() {
         }
 
         if (role === "investor") {
-          if (!cancelled) setState({ loading: false, component: InvestorHub, error: null });
+          if (!cancelled) setState({ loading: false, component: InvestorHub, role, error: null });
           return;
         }
 
         const mapped = ROLE_TABLES.find(([candidate]) => candidate === role);
         if (!mapped) throw new Error("Account type not resolved");
 
-        if (!cancelled) setState({ loading: false, component: mapped[2], error: null });
+        if (!cancelled) setState({ loading: false, component: mapped[2], role, error: null });
       } catch (error) {
         console.error("Role dashboard routing error:", error);
         if (!cancelled) setState({
@@ -123,5 +124,10 @@ export default function RoleDashboardRouter() {
   }
 
   const Component = state.component;
-  return <Component />;
+  return (
+    <>
+      <RoleWorkspaceActions role={state.role} />
+      <Component />
+    </>
+  );
 }
