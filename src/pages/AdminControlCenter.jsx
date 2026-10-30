@@ -327,7 +327,7 @@ export default function AdminControlCenter() {
               <h1 className="text-2xl md:text-3xl font-bold text-[#25213A]">{isPlatformOwner ? "لوحة تحكم مالكة المنصة" : "لوحة التحكم"}</h1>
               <p className="text-sm text-slate-500 mt-1">نظرة شاملة على أداء المنصة وإدارة العمليات الرئيسية.</p>
             </div>
-            <div className="flex items-center gap-2 rounded-xl bg-white border border-slate-200 shadow-sm px-4 py-2.5 text-sm"><span className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-slate-600">{isPlatformOwner ? "المالك الوحيد • صلاحيات Super Admin كاملة" : "لوحة التحكم الرئيسية"}</span></div>
+            <div className="flex flex-wrap items-center gap-2"><Link to="/AdminRolePreview" className="inline-flex items-center gap-2 rounded-xl bg-[#8A6A3D] text-white px-4 py-2.5 text-sm font-semibold shadow-sm hover:bg-[#72552F]"><EyeOff className="w-4 h-4" /> معاينة لوحات المستخدمين</Link><div className="flex items-center gap-2 rounded-xl bg-white border border-slate-200 shadow-sm px-4 py-2.5 text-sm"><span className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-slate-600">{isPlatformOwner ? "المالك الوحيد • صلاحيات Super Admin كاملة" : "لوحة التحكم الرئيسية"}</span></div></div>
           </div>
 
           {safeActiveKey === "overview" && <div className="space-y-5"><MonthlyRevenueSummaryPanel /><FinancialChartsPanel /><ProjectCompletionTrendPanel /><EngineerPerformancePanel /></div>}
