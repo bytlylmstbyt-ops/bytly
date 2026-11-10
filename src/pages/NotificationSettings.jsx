@@ -22,7 +22,8 @@ export default function NotificationSettings() {
       milestone_reminders: true,
       new_proposals: true,
       deadline_reminders: true,
-      system_notifications: true
+      system_notifications: true,
+      user_login_alerts: true
     },
     email_notifications: true,
     reminder_timing: {
@@ -42,7 +43,8 @@ export default function NotificationSettings() {
       if (authError) throw authError;
       const currentUser = authData?.user;
       if (!currentUser?.id) throw new Error("يجب تسجيل الدخول لعرض إعدادات التنبيهات.");
-      setUser({ id: currentUser.id, email: currentUser.email });
+      const { data: profile } = await supabase.from("profiles").select("role").eq("user_id", currentUser.id).maybeSingle();
+      setUser({ id: currentUser.id, email: currentUser.email, role: profile?.role || "user" });
       const { data: row, error } = await supabase
         .from("notification_settings")
         .select("user_id,email_notifications,in_app_notifications,notification_preferences")
@@ -60,6 +62,7 @@ export default function NotificationSettings() {
             new_proposals: prefs.new_proposals ?? true,
             deadline_reminders: prefs.deadline_reminders ?? true,
             system_notifications: prefs.system_notifications ?? true,
+            user_login_alerts: prefs.user_login_alerts ?? true,
           },
           email_notifications: row.email_notifications ?? true,
           reminder_timing: prefs.reminder_timing || {
@@ -259,6 +262,18 @@ export default function NotificationSettings() {
                   onCheckedChange={(checked) => updatePreference('system_notifications', checked)}
                 />
               </div>
+              {user?.role === "admin" && (
+                <div className="flex items-center justify-between rounded-xl border border-[#C9A66B]/40 bg-amber-50/40 p-3">
+                  <div>
+                    <Label className="text-base">تنبيهات دخول المستخدمين</Label>
+                    <p className="text-sm text-slate-600 mt-1">إشعار إداري داخل بيتلي عند نجاح دخول أي مستخدم إلى المنصة.</p>
+                  </div>
+                  <Switch
+                    checked={settings.notification_preferences.user_login_alerts}
+                    onCheckedChange={(checked) => updatePreference('user_login_alerts', checked)}
+                  />
+                </div>
+              )}
             </CardContent>
           </Card>
 
