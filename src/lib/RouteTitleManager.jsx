@@ -91,6 +91,10 @@ export default function RouteTitleManager() {
     setMeta('og:title', title, 'property');
     setMeta('og:description', description, 'property');
     setMeta('og:url', canonicalUrl, 'property');
+    setMeta('og:image', 'https://media.base44.com/images/public/69741d7bf3195aeab86a1582/ed693b192_55AEB86D-76D8-4664-8BB8-37F16C3093E4.jpeg', 'property');
+    setMeta('og:image:alt', 'بيتلي — المنظومة الهندسية المتكاملة', 'property');
+    setMeta('twitter:card', 'summary_large_image');
+    setMeta('twitter:image', 'https://media.base44.com/images/public/69741d7bf3195aeab86a1582/ed693b192_55AEB86D-76D8-4664-8BB8-37F16C3093E4.jpeg');
     setMeta('twitter:title', title);
     setMeta('twitter:description', description);
 
