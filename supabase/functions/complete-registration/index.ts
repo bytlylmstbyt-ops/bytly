@@ -45,18 +45,14 @@ Deno.serve(async(req)=>{
   if(!email||!fullName||!phone){await recordAttempt("failed",null,"validation","الاسم والبريد والهاتف مطلوبة");return json({ok:false,error:"الاسم والبريد والهاتف مطلوبة"},400);}
   if(table==="engineers"){
     const certificateFields=["graduation_certificate_url","saudi_engineers_council_certificate_url"];
-    const hasNewDocuments=certificateFields.some(field=>Boolean(documents[field]?.base64));
-    const hasLegacyCertificates=certificateFields.every(field=>{
-      const value=String(row[field]||"").trim();
-      return value.length>0&&!value.startsWith("pending:");
-    });
-    // Backward compatibility for already-deployed clients that still send certificate URLs
-    // in the role row. New clients must use the secure server-side upload path.
-    if(!hasNewDocuments&&!hasLegacyCertificates){
+    const hasBothDocuments=certificateFields.every(field=>Boolean(documents[field]?.base64));
+    // Never accept a URL or a filename from the browser as proof of a certificate.
+    // Both actual files must pass validation and be uploaded by this server function.
+    if(!hasBothDocuments){
       await recordAttempt("failed",null,"document_validation","شهادات التسجيل غير مرفقة");
       return json({ok:false,error:"يرجى إرفاق شهادة التخرج وشهادة القيد في الهيئة السعودية للمهندسين."},400);
     }
-    if(hasNewDocuments){
+    {
       for(const field of certificateFields){
         const doc=documents[field];
         if(!doc?.base64||!doc?.name||!["application/pdf","image/jpeg","image/png","image/webp"].includes(doc.type)){
