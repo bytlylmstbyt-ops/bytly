@@ -8,7 +8,17 @@ async function getPlatformOwnerId(admin:any){const {data,error}=await admin.from
 const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{...corsHeaders,"Content-Type":"application/json"}});
 
 function b64url(bytes:Uint8Array){let s="";for(const b of bytes)s+=String.fromCharCode(b);return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"");}
-function clean(v:string){return v.replace(/[\r\n]/g," ").trim();}
+function clean(v:string){return v.replace(/[\\r\\n]/g," ").trim();}
+function validDocumentBytes(base64:string,type:string){
+  if(!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(base64))return false;
+  let bytes:Uint8Array;
+  try{bytes=Uint8Array.from(atob(base64),c=>c.charCodeAt(0));}catch{return false;}
+  if(type==="application/pdf")return new TextDecoder().decode(bytes.slice(0,5))==="%PDF-";
+  if(type==="image/jpeg")return bytes.length>=3&&bytes[0]===0xff&&bytes[1]===0xd8&&bytes[2]===0xff;
+  if(type==="image/png")return bytes.length>=8&&[137,80,78,71,13,10,26,10].every((v,i)=>bytes[i]===v);
+  if(type==="image/webp")return bytes.length>=12&&new TextDecoder().decode(bytes.slice(0,4))==="RIFF"&&new TextDecoder().decode(bytes.slice(8,12))==="WEBP";
+  return false;
+}
 async function sendSystemEmail(to:string,subject:string,html:string){
  const clientId=Deno.env.get("BYTLY_GMAIL_CLIENT_ID"), clientSecret=Deno.env.get("BYTLY_GMAIL_CLIENT_SECRET"), refreshToken=Deno.env.get("BYTLY_GMAIL_REFRESH_TOKEN");
  if(!clientId||!clientSecret||!refreshToken)return {sent:false,reason:"GMAIL_SYSTEM_SECRETS_NOT_CONFIGURED"};
@@ -30,7 +40,7 @@ Deno.serve(async(req)=>{
   const url=Deno.env.get("SUPABASE_URL");
   if(!url||!serviceKey)return json({ok:false,error:"Server registration is not configured"},500);
   const admin=createClient(url,serviceKey,{auth:{autoRefreshToken:false,persistSession:false}});
-  const body=await req.json();const table=String(body?.table||"");const role=String(body?.role||"");
+  const contentLength=Number(req.headers.get("content-length")||0);\n  if(contentLength>30*1024*1024)return json({ok:false,error:"حجم الطلب أكبر من الحد المسموح."},413);\n  const body=await req.json();const table=String(body?.table||"");const role=String(body?.role||"");
   const email=String(body?.email||"").trim().toLowerCase();const fullName=String(body?.fullName||"").trim();const phone=String(body?.phone||"").trim();
   const row=body?.row&&typeof body.row==="object"?{...body.row}:{};const password=String(body?.password||"");const attribution=body?.attribution&&typeof body.attribution==="object"?body.attribution:{};const documents=body?.documents&&typeof body.documents==="object"?body.documents:{};
   const passwordBytes=new TextEncoder().encode(password).length;
@@ -54,9 +64,9 @@ Deno.serve(async(req)=>{
     }
     for(const field of certificateFields){
         const doc=documents[field];
-        if(!doc?.base64||!doc?.name||!["application/pdf","image/jpeg","image/png","image/webp"].includes(doc.type)){
-          await recordAttempt("failed",null,"document_validation",`مستند التسجيل غير مكتمل: ${field}`);
-          return json({ok:false,error:"يرجى إرفاق شهادة التخرج وشهادة القيد في الهيئة السعودية للمهندسين."},400);
+        if(!doc?.base64||!doc?.name||String(doc.name).length>200||!["application/pdf","image/jpeg","image/png","image/webp"].includes(doc.type)||!validDocumentBytes(String(doc.base64),String(doc.type))){
+          await recordAttempt("failed",null,"document_validation",`مستند التسجيل غير مكتمل أو نوع الملف لا يطابق محتواه: ${field}`);
+          return json({ok:false,error:"يرجى إرفاق شهادة صحيحة بصيغة PDF أو JPG أو PNG أو WEBP."},400);
         }
         if(Math.floor(String(doc.base64).length*3/4)>10*1024*1024){
           await recordAttempt("failed",null,"document_validation",`حجم المستند أكبر من الحد: ${field}`);
