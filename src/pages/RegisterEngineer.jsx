@@ -28,6 +28,7 @@ export default function RegisterEngineer() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [portfolioItems, setPortfolioItems] = useState([]);
   const [skippedUploads, setSkippedUploads] = useState(new Set());
+  const [pendingDocuments, setPendingDocuments] = useState({});
   const [formData, setFormData] = useState({
     full_name: "", email: "", phone: "",
     user_type: "engineer",
@@ -95,34 +96,40 @@ export default function RegisterEngineer() {
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
   const handleFileUpload = async (e, field) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    if (file.size > MAX_FILE_SIZE) { const message = `حجم الملف ${(file.size / 1024 / 1024).toFixed(1)} ميجابايت. الحد الأقصى 10 ميجابايت.`; setNotice({ type: "error", title: "حجم الملف كبير", message }); toast.error(message); return; }
+    if (file.size > MAX_FILE_SIZE) {
+      const message = `حجم الملف ${(file.size / 1024 / 1024).toFixed(1)} ميجابايت. الحد الأقصى 10 ميجابايت.`;
+      setNotice({ type: "error", title: "حجم الملف كبير", message }); toast.error(message); return;
+    }
+    if (field === "graduation_certificate_url" || field === "saudi_engineers_council_certificate_url") {
+      const allowed = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+      if (!allowed.includes(file.type)) {
+        const message = "الملف يجب أن يكون PDF أو صورة JPG أو PNG أو WEBP.";
+        setNotice({ type: "error", title: "نوع ملف غير مدعوم", message }); toast.error(message); return;
+      }
+      setPendingDocuments(prev => ({ ...prev, [field]: file }));
+      handleInputChange(field, `pending:${file.name}`);
+      setSkippedUploads(prev => { const next = new Set(prev); next.delete(field); return next; });
+      setNotice({ type: "success", title: "تم اختيار المستند", message: "سيتم رفعه بشكل آمن بعد إنشاء حسابك." });
+      toast.success("تم اختيار المستند. سيُرفع عند إتمام التسجيل.");
+      return;
+    }
     setIsFileUploading(true);
     setNotice({ type: "info", title: "جارٍ رفع الملف", message: `جارٍ رفع: ${file.name} — قد يستغرق ذلك قليلًا...` });
     try {
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const path = `engineers/${Date.now()}-${Math.random().toString(36).slice(2)}-${safeName}`;
+      const path = `profiles/${Date.now()}-${Math.random().toString(36).slice(2)}-${safeName}`;
       const { error: uploadError } = await withTimeout(supabase.storage.from("registration-documents").upload(path, file, { upsert: false, contentType: file.type || undefined }), 120000);
       if (uploadError) throw uploadError;
-      const { data: publicUrlData } = supabase.storage.from("registration-documents").getPublicUrl(path);
-      const file_url = publicUrlData?.publicUrl;
-      if (!file_url) throw new Error("تم رفع الملف لكن تعذر الحصول على رابطه.");
-      handleInputChange(field, file_url);
-      setSkippedUploads(prev => { const next = new Set(prev); next.delete(field); return next; });
+      const { data: signedData, error: signedError } = await supabase.storage.from("registration-documents").createSignedUrl(path, 60 * 60 * 24 * 30);
+      if (signedError) throw signedError;
+      handleInputChange(field, signedData?.signedUrl || "");
       setNotice({ type: "success", title: "تم رفع الملف بنجاح", message: "يمكنك المتابعة في إكمال التسجيل." });
     } catch (error) {
-      const responseData = error?.data || error?.response?.data;
-      if (isPlanLimitError(error)) {
-        setSkippedUploads(prev => new Set(prev).add(field));
-        const fieldLabel = field === "graduation_certificate_url" ? "شهادة التخرج" : field === "saudi_engineers_council_certificate_url" ? "شهادة القيد بالهيئة السعودية للمهندسين" : "الصورة الشخصية";
-        const skipMessage = `تعذر رفع ${fieldLabel} بسبب حد التكامل في الخطة. يمكنك إكمال التسجيل الآن وإضافة ${fieldLabel} لاحقًا من إعدادات الملف الشخصي، أو ترقية الخطة.`;
-        setNotice({ type: "warning", title: "تعذر رفع الملف - يمكنك المتابعة", message: skipMessage }); toast(skipMessage, { icon: "⚠️", duration: 8000 });
-      } else {
-        const message = error?.message === "timeout" ? "انتهت مهلة رفع الملف. حاول استخدام ملف أصغر أو إعادة المحاولة لاحقًا." : responseData?.message || responseData?.detail || responseData?.error || "تعذر رفع الملف مؤقتًا. يُرجى التحقق من الاتصال وإعادة المحاولة.";
-        setNotice({ type: "error", title: "تعذر رفع الملف", message }); toast.error(message);
-      }
+      const message = error?.message || "تعذر رفع الملف مؤقتًا. يُرجى إعادة المحاولة.";
+      setNotice({ type: "error", title: "تعذر رفع الملف", message }); toast.error(message);
       console.error("RegisterEngineer upload error:", error);
     } finally { setIsFileUploading(false); }
   };
@@ -144,6 +151,7 @@ export default function RegisterEngineer() {
       const engineer = await withTimeout(saveRegistration({
         table: "engineers", role: "engineer", fullName: formData.full_name, email: formData.email, phone: formData.phone,
         password,
+        documents: pendingDocuments,
         row: { full_name: formData.full_name, phone: formData.phone, city: formData.city, country: formData.country, specialization: formData.specialization, registration_number: formData.registration_number, bio: formData.bio, graduation_certificate_url: formData.graduation_certificate_url, saudi_engineers_council_certificate_url: formData.saudi_engineers_council_certificate_url, profile_image: formData.profile_image, years_experience: parseInt(formData.years_experience) || 0, completed_projects: parseInt(formData.completed_projects) || 0, status: "pending", is_verified: false, rating: 0, total_reviews: 0, wallet_balance: 0, subscription_type: isFreeEligible ? "free_trial" : "none", is_subscription_active: isFreeEligible, subscription_start_date: isFreeEligible ? localDate(today) : undefined, trial_end_date: isFreeEligible ? localDate(trialEnd) : undefined, is_real: true, source: "supabase" }
       }), 15000);
       // نجاح إنشاء الحساب = الانتقال فورًا للصفحة الرئيسية. أي حفظ إضافي للأعمال/الإشعارات لا يوقف دخول المستخدم.\n      try { localStorage.removeItem(STORAGE_KEY); } catch {}\n      navigate(createPageUrl("Home"), { replace: true });\n\n      const validPortfolioItems = portfolioItems.filter(item => item.title || item.images?.length > 0);
