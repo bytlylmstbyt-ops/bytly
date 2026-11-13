@@ -179,7 +179,7 @@ const AuthenticatedApp = () => {
   const { isLoadingPublicSettings } = useAuth();
   if (isLoadingPublicSettings) return <PageSpinner />;
   const publicPages = [
-    'ContactUs','Terms','Privacy','Copyright','Complaints','Support','FAQ','Certificates','RegisterChoice','RegisterAccount','RegistrationSuccess','About',
+    'ContactUs','Terms','Privacy','Copyright','Complaints','Support','FAQ','Certificates','CostEstimator','RegisterChoice','RegisterAccount','RegistrationSuccess','About',
     'RegisterClient','RegisterEngineer','RegisterFirm','RegisterLegalConsultant','RegisterConsultant','RegisterContractor','RegisterSupplier'
   ];
   return <Routes>
