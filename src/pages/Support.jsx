@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,7 @@ export default function SupportPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const submitLockRef = useRef(false);
   const [tickets, setTickets] = useState([]);
   const [formData, setFormData] = useState({ category: "", subject: "", description: "", attachments: [] });
 
@@ -45,7 +46,12 @@ export default function SupportPage() {
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
+    e.target.value = "";
     if (!file) return;
+    if (!file.type.startsWith("image/") || file.size > 10 * 1024 * 1024) {
+      alert("يرجى اختيار صورة لا يتجاوز حجمها 10 ميجابايت.");
+      return;
+    }
     try {
       const file_url = await uploadScopedFile("support", file);
       setFormData({ ...formData, attachments: [...formData.attachments, file_url] });
@@ -54,9 +60,15 @@ export default function SupportPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitLockRef.current || submitting) return;
+    if (!user?.id) { alert("يجب تسجيل الدخول لإرسال تذكرة الدعم."); return; }
+    if (!formData.category || !formData.subject.trim() || !formData.description.trim()) {
+      alert("يرجى تعبئة التصنيف والعنوان ووصف المشكلة.");
+      return;
+    }
+    submitLockRef.current = true;
     setSubmitting(true);
     try {
-      if (!user?.id) throw new Error("يجب تسجيل الدخول لإرسال تذكرة الدعم.");
       const { error } = await supabase.from("support_tickets").insert({
         user_id: user.id,
         category: formData.category,
@@ -71,7 +83,7 @@ export default function SupportPage() {
       setFormData({ category: "", subject: "", description: "", attachments: [] });
       loadData();
     } catch (error) { console.error("Error submitting ticket:", error); alert(t('supportPage.errorMsg')); }
-    finally { setSubmitting(false); }
+    finally { submitLockRef.current = false; setSubmitting(false); }
   };
 
   const getStatusBadge = (status) => {
