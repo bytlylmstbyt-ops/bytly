@@ -131,19 +131,24 @@ function LayoutContent({ children, currentPageName }) {
             {/* Back Button (mobile) + Logo */}
             <div className="flex items-center gap-1">
               <BackButton />
-              <Link to={createPageUrl("Home")} className="flex items-center">
+              <Link to={isAuthenticated ? createPageUrl("Home") : "/"} className="flex items-center">
                 <Logo size="default" />
               </Link>
             </div>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-2">
-              {[
+              {(isAuthenticated ? [
                 { to: createPageUrl("Home"), label: t('nav.home'), name: 'Home' },
                 { to: createPageUrl("Engineers"), label: t('nav.engineers'), name: 'Engineers' },
                 { to: createPageUrl("Projects"), label: t('nav.projects'), name: 'Projects' },
                 { to: createPageUrl("Gallery"), label: t('nav.gallery'), name: 'Gallery' },
-              ].map(({ to, label, name }) => (
+              ] : [
+                { to: "/", label: t('nav.home'), name: 'PublicHome' },
+                { to: "/audiences/engineering-firms", label: "شركات الهندسة", name: 'PublicFirms' },
+                { to: "/audiences/contractors", label: "المقاولون", name: 'PublicContractors' },
+                { to: "/audiences/consulting-teams", label: "الاستشاريون", name: 'PublicConsultants' },
+              ]).map(({ to, label, name }) => (
                 <Link
                   key={name}
                   to={to}
@@ -387,13 +392,18 @@ function LayoutContent({ children, currentPageName }) {
         {isMenuOpen && (
           <div className="md:hidden glass-effect border-t max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain">
             <div className="px-4 py-2 space-y-0.5">
-              {[
+              {(isAuthenticated ? [
                 { to: createPageUrl("Home"), label: t('nav.home') },
                 { to: createPageUrl("Engineers"), label: t('nav.engineers') },
                 { to: createPageUrl("Projects"), label: t('nav.projects') },
                 { to: createPageUrl("Gallery"), label: t('nav.gallery') },
                 { to: createPageUrl("Messages"), label: t('nav.chat') },
-              ].map(({ to, label }) => (
+              ] : [
+                { to: "/", label: t('nav.home') },
+                { to: "/audiences/engineering-firms", label: "شركات الهندسة" },
+                { to: "/audiences/contractors", label: "المقاولون" },
+                { to: "/audiences/consulting-teams", label: "الاستشاريون" },
+              ]).map(({ to, label }) => (
                 <Link
                   key={to}
                   to={to}
