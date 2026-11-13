@@ -51,6 +51,11 @@ Deno.serve(async(req)=>{
     try{await admin.from("registration_attempts").upsert({id:attemptId,email,status,user_id:userId,error_stage:stage,error_message:message ? `[${role}/${table}] ${message}` : `[${role}/${table}]`},{onConflict:"id"});}catch(_){}
   };
   await recordAttempt("started");
+  if(email){
+    const since=new Date(Date.now()-60*60*1000).toISOString();
+    const {count:recentAttempts,error:rateLimitError}=await admin.from("registration_attempts").select("id",{count:"exact",head:true}).eq("email",email).gte("created_at",since);
+    if(!rateLimitError&&(recentAttempts||0)>5)return json({ok:false,error:"تم تجاوز عدد محاولات التسجيل لهذا البريد. حاول بعد ساعة."},429);
+  }
   if(password.length<8){await recordAttempt("failed",null,"validation","كلمة المرور قصيرة");return json({ok:false,error:"كلمة المرور يجب أن تكون 8 أحرف على الأقل."},400);}
   if(passwordBytes>72){await recordAttempt("failed",null,"validation","كلمة المرور طويلة");return json({ok:false,error:"كلمة المرور طويلة جداً. الحد الأقصى 72 بايت."},400);}
   if(!TABLES.has(table)||ROLE_TO_TABLE[role]!==table){await recordAttempt("failed",null,"validation","Invalid registration type");return json({ok:false,error:"Invalid registration type"},400);}
@@ -76,7 +81,13 @@ Deno.serve(async(req)=>{
         }
     }
   }
-  delete row.user_id;delete row.owner_user_id;delete row.id;row.email=email;row.phone=phone;const companyTables=new Set(["engineering_firms","contractors","suppliers"]);if(companyTables.has(table)){row.company_name=String(row.company_name||fullName).trim();delete row.full_name;}else{row.full_name=fullName;delete row.company_name;}if(["engineers","clients","engineering_firms"].includes(table)){row.is_real=true;row.source="supabase";}else{delete row.is_real;delete row.source;}
+  delete row.user_id;delete row.owner_user_id;delete row.id;delete row.base44_id;delete row.created_at;delete row.updated_at;row.email=email;row.phone=phone;
+  // Never let an unauthenticated registration request set privileged account state or balances.
+  if(table==="engineers"){row.is_verified=false;row.status="pending";row.rating=0;row.total_reviews=0;row.wallet_balance=0;}
+  if(table==="clients"){row.trust_score=0;row.wallet_balance=0;row.total_projects=0;row.subscription_type="none";row.is_subscription_active=false;}
+  if(table==="engineering_firms"){row.is_verified=false;row.status="pending";row.total_projects=0;row.active_projects=0;row.wallet_balance=0;}
+  if(table==="consultants"){row.status="pending";row.verification_status="pending";}
+  if(table==="contractors"||table==="suppliers"||table==="legal_consultants")row.status="pending";const companyTables=new Set(["engineering_firms","contractors","suppliers"]);if(companyTables.has(table)){row.company_name=String(row.company_name||fullName).trim();delete row.full_name;}else{row.full_name=fullName;delete row.company_name;}if(["engineers","clients","engineering_firms"].includes(table)){row.is_real=true;row.source="supabase";}else{delete row.is_real;delete row.source;}
 
   const {data:existingProfile,error:profileLookupError}=await admin.from("profiles").select("id,user_id,role").eq("email",email).maybeSingle();
   if(profileLookupError){await recordAttempt("failed",null,"profile_lookup",profileLookupError.message);return json({ok:false,error:`تعذر التحقق من البريد: ${profileLookupError.message}`},500);}
