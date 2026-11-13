@@ -143,8 +143,23 @@ Deno.serve(async(req)=>{
       row[field]=path;
     }
   }
-  const {data:saved,error:rowError}=await admin.from(table).insert(row).select("*").single();
-  if(rowError){for(const uploadedPath of uploadedDocumentPaths){try{await admin.storage.from("registration-documents").remove([uploadedPath]);}catch(_){}}await recordAttempt("failed",userId,"role_record_create",rowError.message);await admin.from("profiles").delete().eq("user_id",userId);await admin.auth.admin.deleteUser(userId);return json({ok:false,error:`تعذر حفظ بيانات التسجيل: ${rowError.message}`},400);}
+  // The profiles trigger sync_client_profile_to_clients creates the client row
+  // during profile upsert. Upsert here to enrich that row instead of inserting a
+  // second row with the same unique user_id.
+  const roleRecordWrite=table==="clients"
+    ? admin.from(table).upsert(row,{onConflict:"user_id"})
+    : admin.from(table).insert(row);
+  const {data:saved,error:rowError}=await roleRecordWrite.select("*").single();
+  if(rowError){
+    for(const uploadedPath of uploadedDocumentPaths){try{await admin.storage.from("registration-documents").remove([uploadedPath]);}catch(_){}}
+    await recordAttempt("failed",userId,"role_record_create",rowError.message);
+    // A newly created client Auth user may already have a trigger-created row.
+    // Remove that row before deleting its profile/Auth user to avoid an orphan.
+    if(table==="clients"){try{await admin.from("clients").delete().eq("user_id",userId);}catch(_){}}
+    await admin.from("profiles").delete().eq("user_id",userId);
+    await admin.auth.admin.deleteUser(userId);
+    return json({ok:false,error:`تعذر حفظ بيانات التسجيل: ${rowError.message}`},400);
+  }
 
   let platformNotification=false;
   try{const platformOwnerId=await getPlatformOwnerId(admin);
