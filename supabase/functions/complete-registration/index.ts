@@ -54,7 +54,8 @@ Deno.serve(async(req)=>{
   if(email){
     const since=new Date(Date.now()-60*60*1000).toISOString();
     const {count:recentAttempts,error:rateLimitError}=await admin.from("registration_attempts").select("id",{count:"exact",head:true}).eq("email",email).gte("created_at",since);
-    if(!rateLimitError&&(recentAttempts||0)>5)return json({ok:false,error:"تم تجاوز عدد محاولات التسجيل لهذا البريد. حاول بعد ساعة."},429);
+    if(rateLimitError)return json({ok:false,error:"تعذر التحقق من محاولات التسجيل. حاول بعد قليل."},503);
+    if((recentAttempts||0)>5)return json({ok:false,error:"تم تجاوز عدد محاولات التسجيل لهذا البريد. حاول بعد ساعة."},429);
   }
   if(password.length<8){await recordAttempt("failed",null,"validation","كلمة المرور قصيرة");return json({ok:false,error:"كلمة المرور يجب أن تكون 8 أحرف على الأقل."},400);}
   if(passwordBytes>72){await recordAttempt("failed",null,"validation","كلمة المرور طويلة");return json({ok:false,error:"كلمة المرور طويلة جداً. الحد الأقصى 72 بايت."},400);}
