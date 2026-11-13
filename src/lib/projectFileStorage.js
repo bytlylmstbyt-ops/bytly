@@ -9,12 +9,12 @@ export async function uploadScopedFile(scope, file) {
 
   const safeName = (file.name || "file").replace(/[^\\w.\\-\\u0600-\\u06FF ]/g, "_");
   let path;
-  if (scope === "permits" || scope === "ready-designs" || scope === "ready-design-previews") {
+  if (scope === "permits" || scope === "ready-designs" || scope === "ready-design-previews" || scope === "support") {
     const { data: authData, error: authError } = await supabase.auth.getUser();
     if (authError) throw authError;
     const userId = authData?.user?.id;
     if (!userId) throw new Error("يجب تسجيل الدخول قبل رفع الملفات.");
-    // Private originals and public previews have separate storage prefixes and RLS policies.
+    // Private originals, support attachments and public previews have separate storage prefixes and RLS policies.
     path = `${scope}/${userId}/${crypto.randomUUID()}-${safeName}`;
   } else {
     path = `${scope}/${crypto.randomUUID()}-${safeName}`;
