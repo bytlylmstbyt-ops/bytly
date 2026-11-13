@@ -9,6 +9,7 @@ const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:
 
 function b64url(bytes:Uint8Array){let s="";for(const b of bytes)s+=String.fromCharCode(b);return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"");}
 function clean(v:string){return v.replace(/[\\r\\n]/g," ").trim();}
+function escapeHtml(value:string){return value.replace(/[&<>"\']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","\'":"&#39;"}[char]||char));}
 function validDocumentBytes(base64:string,type:string){
   if(!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(base64))return false;
   let bytes:Uint8Array;
@@ -40,9 +41,15 @@ Deno.serve(async(req)=>{
   const url=Deno.env.get("SUPABASE_URL");
   if(!url||!serviceKey)return json({ok:false,error:"Server registration is not configured"},500);
   const admin=createClient(url,serviceKey,{auth:{autoRefreshToken:false,persistSession:false}});
+  const maxRequestBytes=30*1024*1024;
   const contentLength=Number(req.headers.get("content-length")||0);
-  if(contentLength>30*1024*1024)return json({ok:false,error:"حجم الطلب أكبر من الحد المسموح."},413);
-  const body=await req.json();const table=String(body?.table||"");const role=String(body?.role||"");
+  if(contentLength>maxRequestBytes)return json({ok:false,error:"حجم الطلب أكبر من الحد المسموح."},413);
+  const reader=req.body?.getReader();
+  if(!reader)return json({ok:false,error:"طلب التسجيل فارغ."},400);
+  const bodyChunks:Uint8Array[]=[];let bodyBytes=0;
+  while(true){const {done,value}=await reader.read();if(done)break;bodyBytes+=value.byteLength;if(bodyBytes>maxRequestBytes){await reader.cancel();return json({ok:false,error:"حجم الطلب أكبر من الحد المسموح."},413);}bodyChunks.push(value);}
+  const bodyBuffer=new Uint8Array(bodyBytes);let bodyOffset=0;for(const chunk of bodyChunks){bodyBuffer.set(chunk,bodyOffset);bodyOffset+=chunk.byteLength;}
+  let body:any;try{body=JSON.parse(new TextDecoder().decode(bodyBuffer));}catch{return json({ok:false,error:"بيانات التسجيل غير صالحة."},400);}const table=String(body?.table||"");const role=String(body?.role||"");
   const email=String(body?.email||"").trim().toLowerCase();const fullName=String(body?.fullName||"").trim();const phone=String(body?.phone||"").trim();
   const row=body?.row&&typeof body.row==="object"?{...body.row}:{};const password=String(body?.password||"");const attribution=body?.attribution&&typeof body.attribution==="object"?body.attribution:{};const documents=body?.documents&&typeof body.documents==="object"?body.documents:{};
   const passwordBytes=new TextEncoder().encode(password).length;
@@ -133,8 +140,8 @@ Deno.serve(async(req)=>{
     }
   }catch(_){}
 
-  const welcomeHtml=`<div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.8"><h2>مرحباً بك في Bytly</h2><p>أهلاً ${clean(fullName)}،</p><p>شكراً لتسجيلك في <strong>Bytly / بيتلي</strong>. تم إنشاء حسابك بنجاح.</p><p>يمكنك الآن تسجيل الدخول والبدء باستخدام المنصة.</p><p>مع التحية،<br>فريق Bytly</p></div>`;
-  const adminHtml=`<div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.8"><h2>تسجيل مستخدم جديد في Bytly</h2><p><strong>الاسم:</strong> ${clean(fullName)}</p><p><strong>البريد:</strong> ${clean(email)}</p><p><strong>الهاتف:</strong> ${clean(phone)}</p><p><strong>نوع الحساب:</strong> ${clean(role)}</p><p><strong>معرّف المستخدم:</strong> ${clean(userId)}</p></div>`;
+  const welcomeHtml=`<div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.8"><h2>مرحباً بك في Bytly</h2><p>أهلاً ${escapeHtml(fullName)}،</p><p>شكراً لتسجيلك في <strong>Bytly / بيتلي</strong>. تم إنشاء حسابك بنجاح.</p><p>يمكنك الآن تسجيل الدخول والبدء باستخدام المنصة.</p><p>مع التحية،<br>فريق Bytly</p></div>`;
+  const adminHtml=`<div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.8"><h2>تسجيل مستخدم جديد في Bytly</h2><p><strong>الاسم:</strong> ${escapeHtml(fullName)}</p><p><strong>البريد:</strong> ${escapeHtml(email)}</p><p><strong>الهاتف:</strong> ${escapeHtml(phone)}</p><p><strong>نوع الحساب:</strong> ${escapeHtml(role)}</p><p><strong>معرّف المستخدم:</strong> ${escapeHtml(userId)}</p></div>`;
   const welcome=await sendSystemEmail(email,"مرحباً بك في Bytly — تم إنشاء حسابك بنجاح",welcomeHtml);
   const adminEmail=await sendSystemEmail("bytlylmstbyt@gmail.com",`تسجيل مستخدم جديد في Bytly: ${fullName}`,adminHtml);
 
