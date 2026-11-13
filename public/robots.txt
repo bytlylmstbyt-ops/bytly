@@ -20,7 +20,12 @@ Disallow: /Home
 Disallow: /Wallet
 Disallow: /Messages
 Disallow: /Settings
-Disallow: /AdminControlCenter
+Disallow: /Admin
+Disallow: /Engineers
+Disallow: /Projects
+Disallow: /Gallery
+Disallow: /ConsultingFirms
+Disallow: /DesignMarketplace
 Allow: /
 
 Sitemap: https://www.mybytly.com/sitemap.xml
