@@ -52,8 +52,7 @@ Deno.serve(async(req)=>{
       await recordAttempt("failed",null,"document_validation","شهادات التسجيل غير مرفقة");
       return json({ok:false,error:"يرجى إرفاق شهادة التخرج وشهادة القيد في الهيئة السعودية للمهندسين."},400);
     }
-    {
-      for(const field of certificateFields){
+    for(const field of certificateFields){
         const doc=documents[field];
         if(!doc?.base64||!doc?.name||!["application/pdf","image/jpeg","image/png","image/webp"].includes(doc.type)){
           await recordAttempt("failed",null,"document_validation",`مستند التسجيل غير مكتمل: ${field}`);
@@ -63,7 +62,6 @@ Deno.serve(async(req)=>{
           await recordAttempt("failed",null,"document_validation",`حجم المستند أكبر من الحد: ${field}`);
           return json({ok:false,error:"حجم كل مستند يجب ألا يتجاوز 10 ميجابايت."},400);
         }
-      }
     }
   }
   delete row.user_id;delete row.owner_user_id;delete row.id;row.email=email;row.phone=phone;const companyTables=new Set(["engineering_firms","contractors","suppliers"]);if(companyTables.has(table)){row.company_name=String(row.company_name||fullName).trim();delete row.full_name;}else{row.full_name=fullName;delete row.company_name;}if(["engineers","clients","engineering_firms"].includes(table)){row.is_real=true;row.source="supabase";}else{delete row.is_real;delete row.source;}
