@@ -84,7 +84,7 @@ Deno.serve(async(req)=>{
   }
   delete row.user_id;delete row.owner_user_id;delete row.id;delete row.base44_id;delete row.created_at;delete row.updated_at;row.email=email;row.phone=phone;
   // Never let an unauthenticated registration request set privileged account state or balances.
-  if(table==="engineers"){row.is_verified=false;row.status="pending";row.rating=0;row.total_reviews=0;row.wallet_balance=0;}
+  if(table==="engineers"){row.is_verified=false;row.status="pending";row.rating=0;row.total_reviews=0;row.wallet_balance=0;row.subscription_type="none";row.is_subscription_active=false;delete row.subscription_start_date;delete row.trial_end_date;}
   if(table==="clients"){row.trust_score=0;row.wallet_balance=0;row.total_projects=0;row.subscription_type="none";row.is_subscription_active=false;}
   if(table==="engineering_firms"){row.is_verified=false;row.status="pending";row.total_projects=0;row.active_projects=0;row.wallet_balance=0;}
   if(table==="consultants"){row.status="pending";row.verification_status="pending";}
@@ -139,6 +139,6 @@ Deno.serve(async(req)=>{
   const adminEmail=await sendSystemEmail("bytlylmstbyt@gmail.com",`تسجيل مستخدم جديد في Bytly: ${fullName}`,adminHtml);
 
   await recordAttempt("succeeded",userId,null,null);
-  return json({ok:true,user_id:userId,record_id:saved?.id||null,documents_uploaded:uploadedDocumentPaths.length,platform_notification_sent:platformNotification,welcome_email_sent:welcome.sent,admin_email_sent:adminEmail.sent,email_status:{welcome:welcome.reason||"sent",admin:adminEmail.reason||"sent"}});
+  return json({ok:true,id:saved?.id||null,user_id:userId,record_id:saved?.id||null,documents_uploaded:uploadedDocumentPaths.length,platform_notification_sent:platformNotification,welcome_email_sent:welcome.sent,admin_email_sent:adminEmail.sent,email_status:{welcome:welcome.reason||"sent",admin:adminEmail.reason||"sent"}});
  }catch(error){console.error("complete-registration error",error);return json({ok:false,error:error instanceof Error?error.message:"تعذر إكمال التسجيل"},500);}
 });
