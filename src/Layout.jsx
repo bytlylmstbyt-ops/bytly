@@ -160,7 +160,7 @@ function LayoutContent({ children, currentPageName }) {
               ))}
 
               {/* Bytly Sections Dropdown */}
-              <DropdownMenu>
+              {isAuthenticated && (<DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className={`flex items-center gap-1 text-sm font-medium transition-colors hover:text-[#C9A66B] focus:outline-none ${['CostEstimator','ConstructionTracker','TechnicalResources','PermitApplication','EngineerMatcher','DesignMarketplace','AIEngineers','SurveyClientDashboard','SurveyorGigs'].includes(currentPageName) ? 'text-[#C9A66B]' : 'text-[#6B5D4F] dark:text-slate-300'}`}>
                     {t('nav.bytlySections')}
@@ -265,15 +265,15 @@ function LayoutContent({ children, currentPageName }) {
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
-              </DropdownMenu>
+              </DropdownMenu>)}
 
-              <Link 
+              {isAuthenticated && <Link 
                 to={createPageUrl("Messages")} 
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] flex items-center gap-1.5 ${currentPageName === 'Messages' ? 'text-[#C9A66B]' : 'text-[#6B5D4F] dark:text-slate-300'}`}
               >
                 <MessagesSquare className="w-4 h-4" />
                 {t('nav.chat')}
-              </Link>
+              </Link>}
             </nav>
 
             {/* Actions */}
@@ -450,7 +450,7 @@ function LayoutContent({ children, currentPageName }) {
               )}
               {/* Bytly Sections group */}
               <div className="pt-2 pb-1 px-4 text-xs font-semibold text-[#C9A66B] uppercase tracking-wide">{t('nav.bytlySections')}</div>
-              {[
+              {(isAuthenticated ? [
                 { to: "/CostEstimator", label: `🧮 ${t('nav.costCalculator')}` },
                 { to: "/ProjectStages", label: `🛡️ محاكي حوكمة مراحل المشروع` },
                 { to: "/ConstructionTracker", label: `🏗️ ${t('nav.constructionTracker')}` },
@@ -468,7 +468,7 @@ function LayoutContent({ children, currentPageName }) {
                                 { to: "/audiences/engineering-firms", label: `🏢 شركات الهندسة` },
                                 { to: "/audiences/contractors", label: `🏗️ للمقاولين` },
                                 { to: "/audiences/consulting-teams", label: `🧑‍💼 للاستشاريين` },
-                                ].map(({ to, label }) => (
+                                ] : []).map(({ to, label }) => (
                                 <Link
                                   key={to}
                                   to={to}
