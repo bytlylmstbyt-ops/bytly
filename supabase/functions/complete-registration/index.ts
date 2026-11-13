@@ -61,8 +61,7 @@ Deno.serve(async(req)=>{
         if(Math.floor(String(doc.base64).length*3/4)>10*1024*1024){
           await recordAttempt("failed",null,"document_validation",`حجم المستند أكبر من الحد: ${field}`);
           return json({ok:false,error:"حجم كل مستند يجب ألا يتجاوز 10 ميجابايت."},400);
-        }
-    }
+      }
   }
   delete row.user_id;delete row.owner_user_id;delete row.id;row.email=email;row.phone=phone;const companyTables=new Set(["engineering_firms","contractors","suppliers"]);if(companyTables.has(table)){row.company_name=String(row.company_name||fullName).trim();delete row.full_name;}else{row.full_name=fullName;delete row.company_name;}if(["engineers","clients","engineering_firms"].includes(table)){row.is_real=true;row.source="supabase";}else{delete row.is_real;delete row.source;}
 
