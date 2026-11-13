@@ -48,7 +48,24 @@ export default function AdminEngineersPage() {
 
       const { data: engineersData, error: engineersError } = await supabase.from("engineers").select("*").order("created_at", { ascending: false });
       if (engineersError) throw engineersError;
-      setEngineers(engineersData || []);
+      const engineersWithDocumentLinks = await Promise.all((engineersData || []).map(async (engineer) => {
+        const signedField = async (value) => {
+          if (!value) return value;
+          if (/^https?:\/\//i.test(value)) return value;
+          const { data, error } = await supabase.storage.from("registration-documents").createSignedUrl(value, 60 * 15);
+          if (error) {
+            console.error("Could not sign engineer document URL:", error);
+            return "";
+          }
+          return data?.signedUrl || "";
+        };
+        const [graduation, council] = await Promise.all([
+          signedField(engineer.graduation_certificate_url),
+          signedField(engineer.saudi_engineers_council_certificate_url)
+        ]);
+        return { ...engineer, graduation_certificate_url: graduation, saudi_engineers_council_certificate_url: council };
+      }));
+      setEngineers(engineersWithDocumentLinks);
     } catch (error) {
       console.error("Error loading data:", error);
       alert("حدث خطأ في تحميل البيانات");
