@@ -41,7 +41,8 @@ Deno.serve(async(req)=>{
   if(!url||!serviceKey)return json({ok:false,error:"Server registration is not configured"},500);
   const admin=createClient(url,serviceKey,{auth:{autoRefreshToken:false,persistSession:false}});
   const contentLength=Number(req.headers.get("content-length")||0);
-  if(contentLength>30*1024*1024)return json({ok:false,error:"حجم الطلب أكبر من الحد المسموح."},413);\n  const body=await req.json();const table=String(body?.table||"");const role=String(body?.role||"");
+  if(contentLength>30*1024*1024)return json({ok:false,error:"حجم الطلب أكبر من الحد المسموح."},413);
+  const body=await req.json();const table=String(body?.table||"");const role=String(body?.role||"");
   const email=String(body?.email||"").trim().toLowerCase();const fullName=String(body?.fullName||"").trim();const phone=String(body?.phone||"").trim();
   const row=body?.row&&typeof body.row==="object"?{...body.row}:{};const password=String(body?.password||"");const attribution=body?.attribution&&typeof body.attribution==="object"?body.attribution:{};const documents=body?.documents&&typeof body.documents==="object"?body.documents:{};
   const passwordBytes=new TextEncoder().encode(password).length;
