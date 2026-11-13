@@ -91,9 +91,9 @@ Deno.serve(async(req)=>{
   }
   delete row.user_id;delete row.owner_user_id;delete row.id;delete row.base44_id;delete row.created_at;delete row.updated_at;row.email=email;row.phone=phone;
   // Never let an unauthenticated registration request set privileged account state or balances.
-  if(table==="engineers"){row.is_verified=false;row.status="pending";row.rating=0;row.total_reviews=0;row.wallet_balance=0;row.subscription_type="none";row.is_subscription_active=false;delete row.subscription_start_date;delete row.trial_end_date;}
+  if(table==="engineers"){row.is_verified=false;row.status="pending";row.rating=0;row.total_reviews=0;row.completed_projects=0;row.wallet_balance=0;row.subscription_type="none";row.is_subscription_active=false;delete row.subscription_start_date;delete row.trial_end_date;}
   if(table==="clients"){row.trust_score=0;row.wallet_balance=0;row.total_projects=0;row.subscription_type="none";row.is_subscription_active=false;}
-  if(table==="engineering_firms"){row.is_verified=false;row.status="pending";row.total_projects=0;row.active_projects=0;row.wallet_balance=0;}
+  if(table==="engineering_firms"){row.is_verified=false;row.status="pending";row.verification_status="pending";row.total_projects=0;row.active_projects=0;row.wallet_balance=0;delete row.official_stamp;delete row.authorized_signature;}
   if(table==="consultants"){row.status="pending";row.verification_status="pending";}
   if(table==="contractors"||table==="suppliers"||table==="legal_consultants")row.status="pending";const companyTables=new Set(["engineering_firms","contractors","suppliers"]);if(companyTables.has(table)){row.company_name=String(row.company_name||fullName).trim();delete row.full_name;}else{row.full_name=fullName;delete row.company_name;}if(["engineers","clients","engineering_firms"].includes(table)){row.is_real=true;row.source="supabase";}else{delete row.is_real;delete row.source;}
 
