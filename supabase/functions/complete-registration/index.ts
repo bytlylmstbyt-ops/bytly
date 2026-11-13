@@ -4,6 +4,20 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const corsHeaders={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS"};
 const TABLES=new Set(["engineers","clients","engineering_firms","consultants","contractors","suppliers","legal_consultants"]);
 const ROLE_TO_TABLE={engineer:"engineers",surveyor:"engineers",painter:"engineers",client:"clients",investor:"clients",firm:"engineering_firms",consultant:"consultants",contractor:"contractors",supplier:"suppliers",legal:"legal_consultants"};
+const REGISTRATION_FIELDS:Record<string,Set<string>>={
+ engineers:new Set(["full_name","email","phone","city","country","specialization","bio","registration_number","years_experience","profile_image"]),
+ clients:new Set(["full_name","email","phone","city","country","client_type","company_name"]),
+ engineering_firms:new Set(["company_name","email","phone","commercial_registration","municipality_license","city","country","website","team_size","specializations","entity_type","license_number","license_expiry"]),
+ consultants:new Set(["full_name","email","phone","consultant_type","engineers_society_membership_number","engineering_specialization","iban","bank_name","bio","city","country","years_experience","certificates","consultant_kind","sce_professional_degree","sce_classification","license_number","license_expiry","terms_accepted"]),
+ contractors:new Set(["company_name","email","phone","contractor_type","specialization","services","commercial_registration","license_number","license_file","registration_file","bio","city","country","profile_image","cover_image","documents","years_experience","team_size","established_year","website"]),
+ suppliers:new Set(["company_name","email","phone","supplier_type","specialization","product_categories","commercial_registration","license_number","license_file","registration_file","bio","city","country","profile_image","cover_image","documents","years_experience","established_year","website"]),
+ legal_consultants:new Set(["full_name","email","phone","lawyer_license_number","city","legal_specialization","bio","years_experience","terms_and_conditions"])
+};
+function filterRegistrationRow(table:string,input:Record<string,unknown>){
+ const allowed=REGISTRATION_FIELDS[table];const result:Record<string,unknown>={};
+ for(const [key,value] of Object.entries(input||{})){if(allowed?.has(key))result[key]=value;}
+ return result;
+}
 async function getPlatformOwnerId(admin:any){const {data,error}=await admin.from("profiles").select("user_id").in("role",["admin","super_admin"]).order("created_at",{ascending:true}).limit(1).maybeSingle();if(error)throw new Error(`تعذر تحديد حساب الإدارة: ${error.message}`);return data?.user_id||null;}
 const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{...corsHeaders,"Content-Type":"application/json"}});
 
@@ -51,7 +65,7 @@ Deno.serve(async(req)=>{
   const bodyBuffer=new Uint8Array(bodyBytes);let bodyOffset=0;for(const chunk of bodyChunks){bodyBuffer.set(chunk,bodyOffset);bodyOffset+=chunk.byteLength;}
   let body:any;try{body=JSON.parse(new TextDecoder().decode(bodyBuffer));}catch{return json({ok:false,error:"بيانات التسجيل غير صالحة."},400);}const table=String(body?.table||"");const role=String(body?.role||"");
   const email=String(body?.email||"").trim().toLowerCase();const fullName=String(body?.fullName||"").trim();const phone=String(body?.phone||"").trim();
-  const row=body?.row&&typeof body.row==="object"?{...body.row}:{};const password=String(body?.password||"");const attribution=body?.attribution&&typeof body.attribution==="object"?body.attribution:{};const documents=body?.documents&&typeof body.documents==="object"?body.documents:{};
+  const rawRow=body?.row&&typeof body.row==="object"?body.row:{};const row=filterRegistrationRow(table,rawRow);const password=String(body?.password||"");const attribution=body?.attribution&&typeof body.attribution==="object"?body.attribution:{};const documents=body?.documents&&typeof body.documents==="object"?body.documents:{};
   const passwordBytes=new TextEncoder().encode(password).length;
   const attemptId=crypto.randomUUID();
   const recordAttempt=async(status:string,userId:any=null,stage:string|null=null,message:string|null=null)=>{
