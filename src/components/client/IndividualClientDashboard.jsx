@@ -127,7 +127,7 @@ export default function IndividualClientDashboard({ client, stats, recentProject
                     <Wallet className="w-6 h-6 text-purple-600" />
                   </div>
                 </div>
-                <p className="text-3xl font-bold text-[#1a1a2e]">{stats.walletBalance?.toLocaleString()}</p>
+                <p className="text-3xl font-bold text-[#1a1a2e]">{Number(stats.walletBalance ?? 0).toLocaleString("ar-SA")}</p>
                 <p className="text-sm text-slate-500">ر.س في المحفظة</p>
               </CardContent>
             </Card>
