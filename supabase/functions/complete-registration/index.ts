@@ -44,15 +44,29 @@ Deno.serve(async(req)=>{
   if(!TABLES.has(table)||ROLE_TO_TABLE[role]!==table){await recordAttempt("failed",null,"validation","Invalid registration type");return json({ok:false,error:"Invalid registration type"},400);}
   if(!email||!fullName||!phone){await recordAttempt("failed",null,"validation","الاسم والبريد والهاتف مطلوبة");return json({ok:false,error:"الاسم والبريد والهاتف مطلوبة"},400);}
   if(table==="engineers"){
-    for(const field of ["graduation_certificate_url","saudi_engineers_council_certificate_url"]){
-      const doc=documents[field];
-      if(!doc?.base64||!doc?.name||!["application/pdf","image/jpeg","image/png","image/webp"].includes(doc.type)){
-        await recordAttempt("failed",null,"document_validation",`مستند التسجيل غير مكتمل: ${field}`);
-        return json({ok:false,error:"يرجى إرفاق شهادة التخرج وشهادة القيد في الهيئة السعودية للمهندسين."},400);
-      }
-      if(Math.floor(String(doc.base64).length*3/4)>10*1024*1024){
-        await recordAttempt("failed",null,"document_validation",`حجم المستند أكبر من الحد: ${field}`);
-        return json({ok:false,error:"حجم كل مستند يجب ألا يتجاوز 10 ميجابايت."},400);
+    const certificateFields=["graduation_certificate_url","saudi_engineers_council_certificate_url"];
+    const hasNewDocuments=certificateFields.some(field=>Boolean(documents[field]?.base64));
+    const hasLegacyCertificates=certificateFields.every(field=>{
+      const value=String(row[field]||"").trim();
+      return value.length>0&&!value.startsWith("pending:");
+    });
+    // Backward compatibility for already-deployed clients that still send certificate URLs
+    // in the role row. New clients must use the secure server-side upload path.
+    if(!hasNewDocuments&&!hasLegacyCertificates){
+      await recordAttempt("failed",null,"document_validation","شهادات التسجيل غير مرفقة");
+      return json({ok:false,error:"يرجى إرفاق شهادة التخرج وشهادة القيد في الهيئة السعودية للمهندسين."},400);
+    }
+    if(hasNewDocuments){
+      for(const field of certificateFields){
+        const doc=documents[field];
+        if(!doc?.base64||!doc?.name||!["application/pdf","image/jpeg","image/png","image/webp"].includes(doc.type)){
+          await recordAttempt("failed",null,"document_validation",`مستند التسجيل غير مكتمل: ${field}`);
+          return json({ok:false,error:"يرجى إرفاق شهادة التخرج وشهادة القيد في الهيئة السعودية للمهندسين."},400);
+        }
+        if(Math.floor(String(doc.base64).length*3/4)>10*1024*1024){
+          await recordAttempt("failed",null,"document_validation",`حجم المستند أكبر من الحد: ${field}`);
+          return json({ok:false,error:"حجم كل مستند يجب ألا يتجاوز 10 ميجابايت."},400);
+        }
       }
     }
   }
@@ -72,7 +86,7 @@ Deno.serve(async(req)=>{
   const {error:profileError}=await admin.from("profiles").upsert({user_id:userId,full_name:fullName,email,phone,role,acquisition_source:attribution.source||null,acquisition_medium:attribution.medium||null,acquisition_campaign:attribution.campaign||null,acquisition_content:attribution.content||null,acquisition_referrer:attribution.referrer||null,acquisition_label:attribution.label||null},{onConflict:"user_id"});
   if(profileError){await recordAttempt("failed",userId,"profile_create",profileError.message);await admin.auth.admin.deleteUser(userId);return json({ok:false,error:`تعذر حفظ ملف المستخدم: ${profileError.message}`},400);}
   const uploadedDocumentPaths:string[]=[];
-  if(table==="engineers"){
+  if(table==="engineers"&&documents.graduation_certificate_url?.base64&&documents.saudi_engineers_council_certificate_url?.base64){
     const extensionForType:Record<string,string>={"application/pdf":"pdf","image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
     for(const field of ["graduation_certificate_url","saudi_engineers_council_certificate_url"]){
       const doc=documents[field];
