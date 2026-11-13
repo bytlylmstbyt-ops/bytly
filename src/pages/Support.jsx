@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,10 +27,18 @@ export default function SupportPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const userData = await base44.auth.me();
-      setUser(userData);
-      const userTickets = await base44.entities.SupportTicket.filter({ user_id: userData.email }, "-created_date");
-      setTickets(userTickets);
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      const authUser = authData?.user;
+      if (!authUser) { setUser(null); setTickets([]); return; }
+      setUser(authUser);
+      const { data: userTickets, error: ticketsError } = await supabase
+        .from("support_tickets")
+        .select("id, subject, description, category, attachments, priority, status, created_at")
+        .eq("user_id", authUser.id)
+        .order("created_at", { ascending: false });
+      if (ticketsError) throw ticketsError;
+      setTickets(userTickets || []);
     } catch (error) { console.error("Error loading data:", error); }
     finally { setLoading(false); }
   };
@@ -48,7 +56,17 @@ export default function SupportPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await base44.entities.SupportTicket.create({ ...formData, user_id: user.email });
+      if (!user?.id) throw new Error("يجب تسجيل الدخول لإرسال تذكرة الدعم.");
+      const { error } = await supabase.from("support_tickets").insert({
+        user_id: user.id,
+        category: formData.category,
+        subject: formData.subject.trim(),
+        description: formData.description.trim(),
+        attachments: formData.attachments,
+        priority: "normal",
+        status: "open"
+      });
+      if (error) throw error;
       alert(t('supportPage.successMsg'));
       setFormData({ category: "", subject: "", description: "", attachments: [] });
       loadData();
@@ -159,17 +177,7 @@ export default function SupportPage() {
                           {getStatusBadge(ticket.status)}
                         </div>
                         <p className="text-sm text-slate-600 mb-2">{ticket.description}</p>
-                        <p className="text-xs text-slate-400">{new Date(ticket.created_date).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</p>
-                        {ticket.support_responses && ticket.support_responses.length > 0 && (
-                          <div className="mt-3 space-y-2">
-                            {ticket.support_responses.map((response, idx) => (
-                              <div key={idx} className="p-3 bg-blue-50 rounded border border-blue-200">
-                                <p className="text-sm font-medium text-blue-900 mb-1">{t('supportPage.responseLabel')}</p>
-                                <p className="text-sm text-blue-800">{response.message}</p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                        <p className="text-xs text-slate-400">{new Date(ticket.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</p>
                       </div>
                     ))}
                   </div>
