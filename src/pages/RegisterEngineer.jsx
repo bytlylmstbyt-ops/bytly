@@ -198,7 +198,9 @@ export default function RegisterEngineer() {
   const isStep2Valid = !!(formData.specialization && formData.country?.trim());
   const missingStep1 = [!formData.full_name?.trim() && "الاسم الكامل", !formData.email?.trim() && "البريد الإلكتروني", password.length < 8 && "كلمة المرور (8 أحرف على الأقل)", password !== confirmPassword && "تأكيد كلمة المرور", !formData.phone?.trim() && "رقم الهاتف", !formData.city?.trim() && "المدينة"].filter(Boolean);
   const missingStep2 = [!formData.specialization && "التخصص", !formData.country?.trim() && "الدولة"].filter(Boolean);
-  const missingStep3 = [!formData.registration_number?.trim() && "رقم القيد المهني", !(formData.graduation_certificate_url || skippedUploads.has("graduation_certificate_url")) && "شهادة التخرج", !(formData.saudi_engineers_council_certificate_url || skippedUploads.has("saudi_engineers_council_certificate_url")) && "شهادة القيد في الهيئة السعودية للمهندسين"].filter(Boolean);
+  const hasGraduationCertificate = Boolean(pendingDocuments.graduation_certificate_url) || Boolean(formData.graduation_certificate_url && !formData.graduation_certificate_url.startsWith("pending:"));
+  const hasCouncilCertificate = Boolean(pendingDocuments.saudi_engineers_council_certificate_url) || Boolean(formData.saudi_engineers_council_certificate_url && !formData.saudi_engineers_council_certificate_url.startsWith("pending:"));
+  const missingStep3 = [!formData.registration_number?.trim() && "رقم القيد المهني", !hasGraduationCertificate && "شهادة التخرج", !hasCouncilCertificate && "شهادة القيد في الهيئة السعودية للمهندسين"].filter(Boolean);
   const isStep3Valid = missingStep3.length === 0;
 
   return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-12"><div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
