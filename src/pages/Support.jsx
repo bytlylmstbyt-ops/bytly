@@ -54,7 +54,7 @@ export default function SupportPage() {
     }
     try {
       const file_url = await uploadScopedFile("support", file);
-      setFormData({ ...formData, attachments: [...formData.attachments, file_url] });
+      setFormData((previous) => ({ ...previous, attachments: [...previous.attachments, file_url] }));
     } catch (error) { console.error("Error uploading file:", error); alert(t('supportPage.uploadError')); }
   };
 
