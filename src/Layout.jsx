@@ -595,6 +595,9 @@ function LayoutContent({ children, currentPageName }) {
                   { to: "/Certificates", label: t('nav.certificates') },
                 ] : [
                   { to: "/About", label: t('footer.about') },
+                  { to: "/FAQ", label: t('home.faq.title') },
+                  { to: "/CostEstimator", label: t('footer.costCalculator') },
+                  { to: "/Certificates", label: t('nav.certificates') },
                   { to: "/ContactUs", label: t('footer.contactUs') },
                   { to: "/Support", label: t('footer.technicalSupport') },
                   { to: "/Complaints", label: t('footer.complaints') },
