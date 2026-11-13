@@ -111,6 +111,32 @@ Deno.serve(async(req)=>{
   if(table==="consultants"){row.status="pending";row.verification_status="pending";}
   if(table==="contractors"||table==="suppliers"||table==="legal_consultants")row.status="pending";const companyTables=new Set(["engineering_firms","contractors","suppliers"]);if(companyTables.has(table)){row.company_name=String(row.company_name||fullName).trim();delete row.full_name;}else{row.full_name=fullName;delete row.company_name;}if(["engineers","clients","engineering_firms"].includes(table)){row.is_real=true;row.source="supabase";}else{delete row.is_real;delete row.source;}
 
+  // Recover legacy client records left behind by older failed registrations.
+  // A role row may still reference a valid Auth user even when its profile was
+  // removed during rollback. Restore only a client/investor profile after
+  // verifying the Auth user's email matches the submitted address.
+  if(table==="clients"){
+    const {data:legacyClient,error:legacyClientError}=await admin.from("clients").select("user_id,full_name,email,phone").eq("email",email).not("user_id","is",null).limit(1).maybeSingle();
+    if(legacyClientError){await recordAttempt("failed",null,"legacy_client_lookup",legacyClientError.message);return json({ok:false,error:"تعذر التحقق من سجل العميل السابق."},500);}
+    if(legacyClient?.user_id){
+      const {data:authLookup,error:authLookupError}=await admin.auth.admin.getUserById(legacyClient.user_id);
+      const legacyAuthUser=authLookup?.user;
+      if(authLookupError){await recordAttempt("failed",legacyClient.user_id,"legacy_auth_lookup",authLookupError.message);return json({ok:false,error:"تعذر التحقق من الحساب السابق."},500);}
+      if(legacyAuthUser?.email&&legacyAuthUser.email.toLowerCase()===email){
+        const {data:legacyProfile,error:legacyProfileError}=await admin.from("profiles").select("user_id").eq("user_id",legacyClient.user_id).maybeSingle();
+        if(legacyProfileError){await recordAttempt("failed",legacyClient.user_id,"legacy_profile_lookup",legacyProfileError.message);return json({ok:false,error:"تعذر التحقق من ملف الحساب السابق."},500);}
+        if(!legacyProfile){
+          const metadataRole=String(legacyAuthUser.user_metadata?.role||"");
+          const safeRole=metadataRole==="investor"?"investor":"client";
+          const {error:restoreError}=await admin.from("profiles").upsert({user_id:legacyClient.user_id,full_name:legacyClient.full_name||fullName,email,phone:legacyClient.phone||phone,role:safeRole},{onConflict:"user_id"});
+          if(restoreError){await recordAttempt("failed",legacyClient.user_id,"legacy_profile_restore",restoreError.message);return json({ok:false,error:"تعذر استعادة ملف الحساب السابق. يرجى التواصل مع الدعم."},500);}
+        }
+        await recordAttempt("failed",legacyClient.user_id,"duplicate_recovered","تمت استعادة ملف الحساب السابق؛ يجب تسجيل الدخول.");
+        return json({ok:false,error:"وجدنا حساباً سابقاً بهذا البريد وتمت استعادة ملفه. سجّل الدخول بدلاً من إنشاء حساب جديد."},409);
+      }
+    }
+  }
+
   const {data:existingProfile,error:profileLookupError}=await admin.from("profiles").select("id,user_id,role").eq("email",email).maybeSingle();
   if(profileLookupError){await recordAttempt("failed",null,"profile_lookup",profileLookupError.message);return json({ok:false,error:`تعذر التحقق من البريد: ${profileLookupError.message}`},500);}
   if(existingProfile?.user_id){await recordAttempt("failed",existingProfile.user_id,"duplicate","هذا البريد مسجل بالفعل");return json({ok:false,error:"هذا البريد مسجل بالفعل. يمكنك تسجيل الدخول."},409);}
