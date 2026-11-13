@@ -24,9 +24,22 @@ export async function saveRegistration(payload) {
     throw new Error("الاسم والبريد الإلكتروني ورقم الهاتف مطلوبة.");
   }
 
+  const documents = {};
+  for (const [field, file] of Object.entries(payload?.documents || {})) {
+    if (!file) continue;
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    let binary = "";
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    }
+    documents[field] = { name: file.name, type: file.type, base64: btoa(binary) };
+  }
+
   const response = await withTimeout(
     supabase.functions.invoke("complete-registration", {
       body: {
+        documents,
         table: payload.table,
         role: payload.role,
         fullName,
