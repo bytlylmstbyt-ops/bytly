@@ -22,7 +22,7 @@ async function getPlatformOwnerId(admin:any){const {data,error}=await admin.from
 const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{...corsHeaders,"Content-Type":"application/json"}});
 
 function b64url(bytes:Uint8Array){let s="";for(const b of bytes)s+=String.fromCharCode(b);return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"");}
-function clean(v:string){return v.replace(/[\\r\\n]/g," ").trim();}
+function clean(v:string){return v.replace(/[\r\n]/g," ").trim();}
 function escapeHtml(value:string){return value.replace(/[&<>"\']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","\'":"&#39;"}[char]||char));}
 function validDocumentBytes(base64:string,type:string){
   if(!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(base64))return false;
