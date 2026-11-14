@@ -49,9 +49,15 @@ export async function uploadRegistrationDocument(file, field, uploadSessionId) {
 
 export async function cleanupRegistrationUploads(paths = []) {
   if (!supabase || !paths.length) return;
-  // The temporary objects are private. Cleanup is performed by the server-side
-  // registration function; this client-side call is intentionally not attempted.
-  return true;
+  const match = String(paths[0] || "").match(/^registration-temp\/([0-9a-f-]{36})\//i);
+  if (!match) return;
+  try {
+    await supabase.functions.invoke("create-engineer-registration-upload", {
+      body: { action: "cleanup", uploadSessionId: match[1], paths }
+    });
+  } catch (error) {
+    console.warn("Temporary registration document cleanup failed:", error);
+  }
 }
 
 /**
