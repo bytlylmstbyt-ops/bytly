@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -25,7 +25,21 @@ export default function AdminAuthenticationSettings() {
   const [emailEnabled, setEmailEnabled] = useState(true);
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {}).finally(() => setLoading(false));
+    const loadAdminSession = async () => {
+      try {
+        const { data: { user: authUser }, error } = await supabase.auth.getUser();
+        if (error) throw error;
+        if (authUser) {
+          const { data: profile } = await supabase.from("profiles").select("role").eq("user_id", authUser.id).maybeSingle();
+          setUser({ email: authUser.email, role: profile?.role || "user" });
+        }
+      } catch (error) {
+        console.error("Unable to load Supabase admin session:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAdminSession();
   }, []);
 
   return (
@@ -50,7 +64,7 @@ export default function AdminAuthenticationSettings() {
           <Info className="w-5 h-5 text-[#C9A66B] shrink-0 mt-0.5" />
           <div className="text-sm text-slate-600 leading-6">
             <p className="font-semibold text-[#4A3F35] mb-1">هذه الصفحة هي مركز التحكم للمصادقة</p>
-            <p>الواجهات الموجودة فعليًا في المنصة مرتبطة هنا كمرجع إداري. عند نقل المصادقة إلى Supabase Auth أو إضافة Google وApple، تكون هذه النقطة هي مكان إدارة مزودي المصادقة وحالة الدخول والصيانة.</p>
+            <p>تسجيل الدخول الفعلي في بيتلي يعمل عبر Supabase Auth. حالة مزودي Google وApple والصيانة في هذه الصفحة معلومات إدارية فقط، ولا تغيّر إعدادات المزودين في Supabase.</p>
           </div>
         </CardContent>
       </Card>
@@ -95,7 +109,7 @@ export default function AdminAuthenticationSettings() {
           <CardContent className="space-y-4">
             <SettingRow icon={Wrench} title="وضع صيانة المصادقة" description="إيقاف محاولات الدخول مؤقتًا عند الحاجة" checked={maintenance} onCheckedChange={setMaintenance} danger />
             <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 text-xs text-slate-500 leading-5">
-              <strong className="text-slate-700">ملاحظة:</strong> الإعدادات الحالية في هذه المرحلة واجهة تحكم وتجهيز للربط. لا يتم تغيير مزود المصادقة الفعلي أو تعطيل المستخدمين من هذه المفاتيح قبل ربط Authentication المركزي.
+              <strong className="text-slate-700">ملاحظة:</strong> مفاتيح هذه الصفحة للعرض فقط ولا تغيّر إعدادات مزودي الدخول في Supabase. يمكنك إدارة استقبال إشعارات دخول المستخدمين من صفحة إعدادات التنبيهات.
             </div>
           </CardContent>
         </Card>
@@ -105,8 +119,11 @@ export default function AdminAuthenticationSettings() {
         <CardHeader><CardTitle className="text-lg text-[#2F2945]">حالة جلسة المدير</CardTitle></CardHeader>
         <CardContent className="flex flex-wrap gap-3 text-sm">
           <Badge variant="outline">{loading ? "جاري التحقق..." : user ? `مسجل كـ ${user.email || "مدير"}` : "غير متاح"}</Badge>
-          <Badge variant="outline">المصادقة الحالية: Base44 Auth</Badge>
-          <Badge variant="outline">الهدف التالي: Supabase Auth</Badge>
+          <Badge variant="outline">المصادقة الفعلية: Supabase Auth</Badge>
+          <Badge variant="outline">نوع الحساب: {user?.role || "غير محدد"}</Badge>
+          <Badge variant="outline" className="text-emerald-700 border-emerald-200">إشعارات دخول المستخدمين: مفعلة افتراضيًا</Badge>
+          <Link to="/NotificationSettings" className="inline-flex items-center rounded-md border px-3 py-1.5 text-sm text-[#8C714E] hover:bg-amber-50">إعدادات التنبيهات</Link>
+          <Link to="/NotificationCenter" className="inline-flex items-center rounded-md border px-3 py-1.5 text-sm text-[#8C714E] hover:bg-amber-50">مركز الإشعارات</Link>
         </CardContent>
       </Card>
     </div>

@@ -36,10 +36,13 @@ export const AuthProvider = ({ children }) => {
             await setSupabaseUser(data.session.user);
           }
 
-          const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+          // Keep the auth callback synchronous: Supabase warns against awaiting
+          // Supabase queries inside onAuthStateChange because it can deadlock the auth lock.
+          const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
             if (!isMounted.current) return;
             if (session?.user) {
-              await setSupabaseUser(session.user, _event === 'SIGNED_IN');
+              const recordLogin = _event === 'SIGNED_IN';
+              Promise.resolve().then(() => setSupabaseUser(session.user, recordLogin));
             } else if (_event === 'SIGNED_OUT') {
               setUser(null);
               setIsAuthenticated(false);
@@ -98,16 +101,29 @@ export const AuthProvider = ({ children }) => {
 
         const patch = { last_seen_at: new Date().toISOString() };
         if (recordLogin) patch.last_login_at = new Date().toISOString();
-        let activityUpdate = await supabase.from('profiles').update(patch).eq('user_id', authUser.id);
+        let activityUpdate = await supabase.from('profiles').update(patch).eq('user_id', authUser.id).select('id');
         if (activityUpdate.error) throw activityUpdate.error;
-        if (activityUpdate.data?.length === 0) {
-          await supabase.from('profiles').update(patch).eq('id', authUser.id);
+        if (!activityUpdate.data?.length) {
+          const fallbackUpdate = await supabase.from('profiles').update(patch).eq('id', authUser.id).select('id');
+          if (fallbackUpdate.error) throw fallbackUpdate.error;
         }
         if (profile) profile = { ...profile, ...patch };
       } catch (error) {
         console.warn('Supabase profile lookup/activity update skipped:', error?.message || error);
       }
     }
+    // Record successful interactive sign-ins for platform administrators.
+    // The database function derives identity from auth.uid(); no client-supplied
+    // user ID, role, or recipient can be forged.
+    if (recordLogin && supabase) {
+      try {
+        const { error: notificationError } = await supabase.rpc('notify_admin_user_login');
+        if (notificationError) throw notificationError;
+      } catch (error) {
+        console.warn('Admin login notification skipped:', error?.message || error);
+      }
+    }
+
     if (isMounted.current) {
       setUser(normalizeSupabaseUser(authUser, profile));
       setIsAuthenticated(true);
