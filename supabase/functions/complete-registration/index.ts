@@ -175,7 +175,7 @@ Deno.serve(async(req)=>{
         : doc.type==="image/jpeg"
           ? header[0]===0xff&&header[1]===0xd8&&header[2]===0xff
           : doc.type==="image/png"
-            ? header[0]===0x89&&new TextDecoder().decode(header.subarray(1,4))==="PNG"
+            ? header[0]===0x89&&new TextDecoder().decode(header.subarray(1,4))==="PNG"&&header[4]===0x0d&&header[5]===0x0a&&header[6]===0x1a&&header[7]===0x0a
             : new TextDecoder().decode(header.subarray(0,4))==="RIFF"&&new TextDecoder().decode(header.subarray(8,12))==="WEBP";
       if(!signatureValid){
         await recordAttempt("failed",null,"document_validation",`محتوى الملف لا يطابق نوعه: ${field}`);
