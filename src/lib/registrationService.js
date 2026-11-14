@@ -17,13 +17,13 @@ async function readFunctionError(error, fallback) {
   return message;
 }
 
-export async function uploadRegistrationDocument(file, field, uploadSessionId) {
+export async function uploadRegistrationDocument(file, field, uploadSessionId, email) {
   if (!supabase) throw new Error("خدمة التسجيل غير مهيأة حالياً.");
   const allowedFields = ["graduation_certificate_url", "saudi_engineers_council_certificate_url", "profile_image"];
   if (!allowedFields.includes(field)) throw new Error("نوع مستند التسجيل غير مسموح.");
   const prepared = await withTimeout(
     supabase.functions.invoke("complete-registration", {
-      body: { action: "prepare_document_upload", field, uploadSessionId, name: file.name, type: file.type, size: file.size }
+      body: { action: "prepare_document_upload", field, uploadSessionId, email, name: file.name, type: file.type, size: file.size }
     }),
     20000,
     "انتهت مهلة تجهيز رفع الشهادة."
