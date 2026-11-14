@@ -153,7 +153,7 @@ export default function RegisterEngineer() {
         password,
         documents,
         row: { full_name: formData.full_name, phone: formData.phone, city: formData.city, country: formData.country, specialization: formData.specialization, registration_number: formData.registration_number, bio: formData.bio, profile_image: "", years_experience: parseInt(formData.years_experience) || 0, completed_projects: parseInt(formData.completed_projects) || 0, status: "pending", is_verified: false, rating: 0, total_reviews: 0, wallet_balance: 0, subscription_type: isFreeEligible ? "free_trial" : "none", is_subscription_active: isFreeEligible, subscription_start_date: isFreeEligible ? localDate(today) : undefined, trial_end_date: isFreeEligible ? localDate(trialEnd) : undefined, is_real: true, source: "supabase" }
-      }), 90000);
+      }), 150000);
       try { localStorage.removeItem(STORAGE_KEY); } catch {}
       setNotice({ type: "success", title: "تم تسجيلك بنجاح", message: "استلمنا طلبك وشهاداتك. سيبقى حسابك قيد المراجعة حتى تتحقق الإدارة من بياناتك وتعتمد حسابك." });
       toast.success("تم تسجيلك بنجاح. طلبك الآن قيد المراجعة.");
