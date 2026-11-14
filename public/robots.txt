@@ -26,6 +26,18 @@ Disallow: /Projects
 Disallow: /Gallery
 Disallow: /ConsultingFirms
 Disallow: /DesignMarketplace
+Disallow: /auth/callback
+Disallow: /mcp-consent
+Disallow: /ClientDashboard
+Disallow: /EngineerDashboard
+Disallow: /FirmDashboard
+Disallow: /ContractorDashboard
+Disallow: /SupplierDashboard
+Disallow: /ConsultantDashboard
+Disallow: /LegalConsultantDashboard
+Disallow: /SurveyClientDashboard
+Disallow: /SurveyorGigs
+Disallow: /AdminControlCenter
 Allow: /
 
 Sitemap: https://www.mybytly.com/sitemap.xml
