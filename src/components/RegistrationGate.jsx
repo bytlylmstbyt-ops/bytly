@@ -8,6 +8,7 @@ const ROLE_ROUTES = {
   client: `${createPageUrl("RegisterClient")}?type=individual`,
   engineer: `${createPageUrl("RegisterEngineer")}?type=engineer`,
   surveyor: `${createPageUrl("RegisterEngineer")}?type=surveyor`,
+  painter: `${createPageUrl("RegisterEngineer")}?type=painter`,
   firm: createPageUrl("RegisterFirm"),
   legal: createPageUrl("RegisterLegalConsultant"),
   consultant: createPageUrl("RegisterConsultant"),
