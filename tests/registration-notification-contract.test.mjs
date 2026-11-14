@@ -13,7 +13,7 @@ const workspace = await readFile(
 
 test("engineer registration requires both certificates and a valid upload session", () => {
   assert.match(registration, /const certificateFields=\["graduation_certificate_url","saudi_engineers_council_certificate_url"\]/);
-  assert.match(registration, /registration-temp\\/\+uploadSessionId/);
+  assert.match(registration, /registration-temp\/\$\{uploadSessionId\}/);
   assert.match(registration, /if\(!expectedPathPattern\?\.test\(path\)\)/);
   assert.match(registration, /if\(!doc\?\.name\)/);
 });
