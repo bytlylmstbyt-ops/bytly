@@ -135,9 +135,9 @@ Deno.serve(async(req)=>{
     for(const field of fieldsToValidate){
       const candidate=documents[field];
       const candidatePath=String(candidate?.path||"");
-      const candidateExtension=mimeExtensions[String(candidate?.type||"")];
-      if(!candidateExtension)continue;
-      const candidatePattern=new RegExp("^registration-temp/"+uploadSessionId+"/"+field+"-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\."+candidateExtension+"$","i");
+      // Track session-owned files independently of caller-declared MIME type,
+      // so a MIME/path mismatch is still cleaned when validation rejects it.
+      const candidatePattern=new RegExp("^registration-temp/"+uploadSessionId+"/"+field+"-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\.(pdf|jpg|png|webp)$","i");
       if(candidatePattern.test(candidatePath)&&!temporaryDocumentPaths.includes(candidatePath))temporaryDocumentPaths.push(candidatePath);
     }
     for(const field of fieldsToValidate){
