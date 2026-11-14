@@ -162,7 +162,7 @@ function PageSpinner() {
 function PublicHomeRoute() {
   const { isAuthenticated, isLoadingPublicSettings } = useAuth();
   if (isLoadingPublicSettings) return <PageSpinner />;
-  if (isAuthenticated) return <Navigate to="/Home" replace />;
+  if (isAuthenticated) return <Navigate to="/Dashboard" replace />;
   // Returning users who have already created/logged into an account should
   // start from the login form when their session is no longer active.
   try {
