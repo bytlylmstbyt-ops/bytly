@@ -83,7 +83,7 @@ Deno.serve(async(req)=>{
     const validType=field==="profile_image"?["image/jpeg","image/png","image/webp"].includes(type):Boolean(mimeExtensions[type]);
     if(!allowedFields.has(field)||!name||!Number.isFinite(size)||size<=0||size>10*1024*1024||!validType)
       return json({ok:false,error:"نوع الملف غير مدعوم أو تجاوز حجمه 10 ميجابايت."},400);
-    if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email))
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
       return json({ok:false,error:"أدخل البريد الإلكتروني الصحيح قبل رفع الشهادات."},400);
     const rateLimit=await enforceUploadRateLimit(req,admin,serviceKey,email,uploadSessionId);
     if(!rateLimit.ok){
@@ -137,7 +137,7 @@ Deno.serve(async(req)=>{
       const candidatePath=String(candidate?.path||"");
       const candidateExtension=mimeExtensions[String(candidate?.type||"")];
       if(!candidateExtension)continue;
-      const candidatePattern=new RegExp("^registration-temp/"+uploadSessionId+"/"+field+"-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\."+candidateExtension+"$","i");
+      const candidatePattern=new RegExp("^registration-temp/"+uploadSessionId+"/"+field+"-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\."+candidateExtension+"$","i");
       if(candidatePattern.test(candidatePath)&&!temporaryDocumentPaths.includes(candidatePath))temporaryDocumentPaths.push(candidatePath);
     }
     for(const field of fieldsToValidate){
@@ -145,7 +145,7 @@ Deno.serve(async(req)=>{
       const path=String(doc?.path||"");
       const extension=mimeExtensions[String(doc?.type||"")];
       const expectedPathPattern=extension
-        ? new RegExp("^registration-temp/" + uploadSessionId + "/" + field + "-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\." + extension + "$","i")
+        ? new RegExp("^registration-temp/" + uploadSessionId + "/" + field + "-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\." + extension + "$","i")
         : null;
       if(!expectedPathPattern?.test(path)){
         await recordAttempt("failed",null,"document_validation",`مسار المستند غير صالح: ${field}`);
