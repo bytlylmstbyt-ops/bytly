@@ -30,7 +30,41 @@ Deno.serve(async(req)=>{
   const url=Deno.env.get("SUPABASE_URL");
   if(!url||!serviceKey)return json({ok:false,error:"Server registration is not configured"},500);
   const admin=createClient(url,serviceKey,{auth:{autoRefreshToken:false,persistSession:false}});
-  const body=await req.json();const table=String(body?.table||"");const role=String(body?.role||"");
+  const body=await req.json();
+  const action=String(body?.action||"");
+  if(action==="prepare_document_upload"||action==="cleanup_document_uploads"){
+    const uploadSessionId=String(body?.uploadSessionId||"");
+    if(!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uploadSessionId))
+      return json({ok:false,error:"جلسة رفع المستند غير صالحة."},400);
+    const allowedFields=new Set(["graduation_certificate_url","saudi_engineers_council_certificate_url"]);
+    const mimeExtensions:Record<string,string>={"application/pdf":"pdf","image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
+    if(action==="cleanup_document_uploads"){
+      const paths=Array.isArray(body?.paths)?body.paths.map((path:unknown)=>String(path)):[];
+      const safePaths=paths.filter((path:string)=>
+        path.startsWith(`registration-temp/${uploadSessionId}/`)&&!path.includes("..")&&
+        /^registration-temp\/[0-9a-f-]{36}\/[a-z_]+-[0-9a-f-]{8}-[0-9a-f-]{4}-4[0-9a-f-]{3}-[89ab][0-9a-f-]{3}-[0-9a-f-]{12}\.(pdf|jpg|png|webp)$/i.test(path)
+      );
+      if(safePaths.length){
+        const {error}=await admin.storage.from("registration-documents").remove(safePaths);
+        if(error)return json({ok:false,error:"تعذر تنظيف الملفات المؤقتة."},400);
+      }
+      return json({ok:true,removed:safePaths.length});
+    }
+    const field=String(body?.field||"");
+    const name=String(body?.name||"");
+    const type=String(body?.type||"");
+    const size=Number(body?.size);
+    if(!allowedFields.has(field)||!name||!Number.isFinite(size)||size<=0||size>10*1024*1024||!mimeExtensions[type])
+      return json({ok:false,error:"ارفع شهادة PDF أو JPG أو PNG أو WEBP لا يتجاوز حجمها 10 ميجابايت."},400);
+    const path=`registration-temp/${uploadSessionId}/${field}-${crypto.randomUUID()}.${mimeExtensions[type]}`;
+    const {data,error}=await admin.storage.from("registration-documents").createSignedUploadUrl(path,{upsert:false});
+    if(error||!data?.token){
+      console.error("registration signed upload URL error",error);
+      return json({ok:false,error:"تعذر تجهيز رابط رفع الشهادة. حاول مرة أخرى."},400);
+    }
+    return json({ok:true,path:data.path||path,token:data.token,expires_in:7200});
+  }
+  const table=String(body?.table||"");const role=String(body?.role||"");
   const email=String(body?.email||"").trim().toLowerCase();const fullName=String(body?.fullName||"").trim();const phone=String(body?.phone||"").trim();
   const row=body?.row&&typeof body.row==="object"?{...body.row}:{};const password=String(body?.password||"");const attribution=body?.attribution&&typeof body.attribution==="object"?body.attribution:{};const documents=body?.documents&&typeof body.documents==="object"?body.documents:{};
   const passwordBytes=new TextEncoder().encode(password).length;
