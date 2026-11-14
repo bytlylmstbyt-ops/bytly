@@ -108,7 +108,7 @@ export default function FilePreview({ attachment, onMarkOfficial, canMarkOfficia
           <div className="overflow-auto max-h-[70vh]">
             {isImage && (
               <img
-                src={attachment.url}
+                src={resolvedUrl || undefined}
                 alt={attachment.name}
                 className="w-full h-auto rounded-lg"
               />
@@ -116,7 +116,7 @@ export default function FilePreview({ attachment, onMarkOfficial, canMarkOfficia
             
             {isPDF && (
               <iframe
-                src={attachment.url}
+                src={resolvedUrl || undefined}
                 className="w-full h-[70vh] rounded-lg border"
                 title={attachment.name}
               />
@@ -126,7 +126,7 @@ export default function FilePreview({ attachment, onMarkOfficial, canMarkOfficia
               <div className="flex flex-col items-center justify-center h-64 bg-slate-50 rounded-lg">
                 <FileText className="w-16 h-16 text-slate-400 mb-4" />
                 <p className="text-sm text-slate-600 mb-2">ملف CAD - {attachment.name}</p>
-                <a href={attachment.url} download>
+                <a href={resolvedUrl || undefined} download>
                   <Button>
                     <Download className="w-4 h-4 ml-2" />
                     تحميل للمعاينة
