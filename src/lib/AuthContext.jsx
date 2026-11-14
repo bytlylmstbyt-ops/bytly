@@ -4,10 +4,13 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabaseClient';
 const AuthContext = createContext();
 
 const normalizeSupabaseUser = (authUser, profile = null) => ({
-  id: authUser.id,
-  email: authUser.email || profile?.email || '',
   ...((authUser.user_metadata || {})),
   ...(profile || {}),
+  // Keep the Supabase Auth UUID authoritative. Legacy profile rows may have a
+  // different primary key; that must never replace the authenticated user ID.
+  id: authUser.id,
+  user_id: profile?.user_id || authUser.id,
+  email: authUser.email || profile?.email || '',
   _authProvider: 'supabase',
   _supabaseUserId: authUser.id,
 });
@@ -36,10 +39,14 @@ export const AuthProvider = ({ children }) => {
             await setSupabaseUser(data.session.user);
           }
 
-          const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
+          const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
             if (!isMounted.current) return;
             if (session?.user) {
-              await setSupabaseUser(session.user, _event === 'SIGNED_IN');
+              // Defer Supabase queries until after the auth callback returns.
+              // Calling Supabase again inside this callback can deadlock auth-js.
+              Promise.resolve().then(() => {
+                if (isMounted.current) return setSupabaseUser(session.user, _event === 'SIGNED_IN');
+              }).catch((error) => console.warn('Supabase auth event handling skipped:', error?.message || error));
             } else if (_event === 'SIGNED_OUT') {
               setUser(null);
               setIsAuthenticated(false);
