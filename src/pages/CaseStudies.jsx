@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import {
   Sparkles, ArrowLeft, TrendingUp, Clock,
   Wallet, Users, MapPin, Building2, Quote
@@ -25,7 +25,8 @@ export default function CaseStudies() {
   useEffect(() => {
     (async () => {
       try {
-        const portfolios = await base44.entities.Portfolio.list("-created_date", 30);
+        const { data: portfolios, error } = await supabase.from("portfolios").select("*").order("created_at", { ascending: false }).limit(30);
+        if (error) throw error;
         const featured = portfolios.filter(p => (p.images?.length || 0) > 0 && p.description);
         setStudies(featured);
       } catch (e) { console.error(e); }
