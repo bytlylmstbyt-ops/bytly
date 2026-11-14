@@ -15,7 +15,7 @@ async function hmacFingerprint(secret:string,value:string){
  return Array.from(new Uint8Array(signature)).map(byte=>byte.toString(16).padStart(2,"0")).join("");
 }
 async function enforceUploadRateLimit(req:Request,admin:any,secret:string,email:string,sessionId:string){
- // Cloudflare supplies this address at the edge; fail closed rather than trust a caller-provided X-Forwarded-For value.
+ // Trust only the edge-injected Cloudflare client IP; never accept a caller-supplied forwarding header.
  const clientIp=req.headers.get("cf-connecting-ip")?.trim();
  if(!clientIp)return {ok:false,reason:"trusted_client_ip_unavailable"};
  const checks=[
