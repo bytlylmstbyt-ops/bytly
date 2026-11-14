@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { supabase } from "@/lib/supabaseClient";
-import { saveRegistration } from "@/lib/registrationService";
+import { saveRegistration, uploadRegistrationDocument, cleanupRegistrationUploads } from "@/lib/registrationService";
 import { motion } from "framer-motion";
 import { Award, ArrowLeft, ArrowRight, CheckCircle, Building2, PenTool, Loader2, Gift, User, Mail } from "lucide-react";
 import PortfolioStep from "@/components/registration/PortfolioStep";
@@ -113,18 +113,6 @@ export default function RegisterEngineer() {
     setNotice({ type: "success", title: "تم اختيار الملف", message: "سيتم رفع الملف والتحقق من حفظه عند إرسال طلب التسجيل." });
   };
 
-  const fileToBase64 = file => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = String(reader.result || "");
-      const comma = result.indexOf(",");
-      if (comma < 0) return reject(new Error("تعذر قراءة الملف."));
-      resolve(result.slice(comma + 1));
-    };
-    reader.onerror = () => reject(new Error("تعذر قراءة الملف."));
-    reader.readAsDataURL(file);
-  });
-
   const handleSubmit = async () => {
     if (new TextEncoder().encode(password).length > 72) { toast.error("كلمة المرور طويلة جداً. الحد الأقصى 72 بايت."); return; }
     if (password.length < 8) { toast.error("كلمة المرور يجب أن تكون 8 أحرف على الأقل."); return; }
@@ -134,6 +122,7 @@ export default function RegisterEngineer() {
     if (!isStep3Valid) { setStep(3); const message = "أرفق شهادة التخرج وشهادة القيد في الهيئة السعودية للمهندسين، وأكمل رقم القيد المهني قبل المتابعة."; setNotice({ type: "error", title: "بيانات الاعتماد غير مكتملة", message }); toast.error(message); return; }
     setIsSubmitting(true);
     setNotice({ type: "info", title: "جارٍ إرسال طلب التسجيل", message: "جارٍ رفع الشهادات والتحقق من حفظها ثم إنشاء حسابك. لا تغلق الصفحة." });
+    const uploadedTempPaths = [];
     try {
       const isFreeEligible = freeOffer.isEligible;
       const today = new Date();
@@ -143,10 +132,13 @@ export default function RegisterEngineer() {
       for (const field of requiredCertificateFields) {
         if (!certificateFiles[field]) throw new Error(field === "graduation_certificate_url" ? "يرجى إرفاق شهادة التخرج." : "يرجى إرفاق شهادة القيد في الهيئة السعودية للمهندسين.");
       }
-      const documents = {};
-      for (const [field, file] of Object.entries(certificateFiles)) {
-        if (!file) continue;
-        documents[field] = { name: file.name, type: file.type, base64: await fileToBase64(file) };
+      const uploadSessionId = crypto.randomUUID();
+      const documents = { uploadSessionId };
+      for (const field of requiredCertificateFields) {
+        const file = certificateFiles[field];
+        const uploaded = await uploadRegistrationDocument(file, field, uploadSessionId);
+        uploadedTempPaths.push(uploaded.path);
+        documents[field] = { path: uploaded.path, name: file.name, type: file.type };
       }
       const engineer = await withTimeout(saveRegistration({
         table: "engineers", role: "engineer", fullName: formData.full_name, email: formData.email, phone: formData.phone,
@@ -188,6 +180,9 @@ export default function RegisterEngineer() {
       try { localStorage.removeItem(STORAGE_KEY); } catch {}
       navigate(createPageUrl("RegistrationSuccess"), { replace: true });
     } catch (error) {
+      if (uploadedTempPaths.length) {
+        await cleanupRegistrationUploads(uploadedTempPaths).catch(() => {});
+      }
       if (error?.message === "EMAIL_CONFIRMATION_REQUIRED") {
         setNotice({ type: "success", title: "تم بدء إنشاء الحساب", message: "أرسلنا رابط التفعيل إلى بريدك الإلكتروني. افتح الرسالة لإكمال إنشاء حسابك ثم العودة إلى بيتلي." });
         toast.success("تحققي من بريدك الإلكتروني لإكمال إنشاء الحساب.");
