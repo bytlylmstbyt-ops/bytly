@@ -34,6 +34,7 @@ export async function saveRegistration(payload) {
         phone,
         password: payload.password,
         row: payload.row || {},
+        documents: payload.documents || {},
         attribution
       }
     }),
