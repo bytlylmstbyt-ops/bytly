@@ -112,7 +112,7 @@ export default function RegisterEngineer() {
       toast.error(message);
       return;
     }
-    if (field === "profile_image" && !file.type.startsWith("image/")) {
+    if (field === "profile_image" && !["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
       toast.error("الصورة الشخصية يجب أن تكون ملف صورة.");
       return;
     }
