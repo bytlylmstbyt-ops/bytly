@@ -36,7 +36,7 @@ Deno.serve(async(req)=>{
     const uploadSessionId=String(body?.uploadSessionId||"");
     if(!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uploadSessionId))
       return json({ok:false,error:"جلسة رفع المستند غير صالحة."},400);
-    const allowedFields=new Set(["graduation_certificate_url","saudi_engineers_council_certificate_url"]);
+    const allowedFields=new Set(["graduation_certificate_url","saudi_engineers_council_certificate_url","profile_image"]);
     const mimeExtensions:Record<string,string>={"application/pdf":"pdf","image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
     if(action==="cleanup_document_uploads"){
       const paths=Array.isArray(body?.paths)?body.paths.map((path:unknown)=>String(path)):[];
@@ -54,8 +54,9 @@ Deno.serve(async(req)=>{
     const name=String(body?.name||"");
     const type=String(body?.type||"");
     const size=Number(body?.size);
-    if(!allowedFields.has(field)||!name||!Number.isFinite(size)||size<=0||size>10*1024*1024||!mimeExtensions[type])
-      return json({ok:false,error:"ارفع شهادة PDF أو JPG أو PNG أو WEBP لا يتجاوز حجمها 10 ميجابايت."},400);
+    const validType=field==="profile_image"?["image/jpeg","image/png","image/webp"].includes(type):Boolean(mimeExtensions[type]);
+    if(!allowedFields.has(field)||!name||!Number.isFinite(size)||size<=0||size>10*1024*1024||!validType)
+      return json({ok:false,error:"نوع الملف غير مدعوم أو تجاوز حجمه 10 ميجابايت."},400);
     const path=`registration-temp/${uploadSessionId}/${field}-${crypto.randomUUID()}.${mimeExtensions[type]}`;
     const {data,error}=await admin.storage.from("registration-documents").createSignedUploadUrl(path,{upsert:false});
     if(error||!data?.token){
@@ -81,13 +82,14 @@ Deno.serve(async(req)=>{
   const temporaryDocumentPaths:string[]=[];
   if(table==="engineers"){
     const certificateFields=["graduation_certificate_url","saudi_engineers_council_certificate_url"];
+    const fieldsToValidate=[...certificateFields,...(documents.profile_image?.path?["profile_image"]:[])];
     const uploadSessionId=String(documents.uploadSessionId||"");
     if(!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uploadSessionId)){
       await recordAttempt("failed",null,"document_validation","جلسة رفع الشهادات غير صالحة");
       return json({ok:false,error:"انتهت جلسة رفع الشهادات. أعد اختيار الشهادتين وحاول مرة أخرى."},400);
     }
     const mimeExtensions:Record<string,string>={"application/pdf":"pdf","image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
-    for(const field of certificateFields){
+    for(const field of fieldsToValidate){
       const doc=documents[field];
       const expectedPrefix=`registration-temp/${uploadSessionId}/${field}-`;
       const path=String(doc?.path||"");
@@ -142,7 +144,7 @@ Deno.serve(async(req)=>{
   if(profileError){await recordAttempt("failed",userId,"profile_create",profileError.message);await admin.auth.admin.deleteUser(userId);return json({ok:false,error:`تعذر حفظ ملف المستخدم: ${profileError.message}`},400);}
   const uploadedDocumentPaths:string[]=[];
   if(table==="engineers"){
-    const fieldsToUpload=["graduation_certificate_url","saudi_engineers_council_certificate_url"];
+    const fieldsToUpload=["graduation_certificate_url","saudi_engineers_council_certificate_url",...(documents.profile_image?.path?["profile_image"]:[])];
     for(const field of fieldsToUpload){
       const doc=validatedDocuments.get(field);
       if(!doc)continue;
