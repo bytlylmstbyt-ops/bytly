@@ -174,7 +174,7 @@ export default function RegisterEngineer() {
         }
       }
       try { localStorage.removeItem(STORAGE_KEY); } catch {}
-      navigate(createPageUrl("Home"), { replace: true });
+      navigate(createPageUrl("RegistrationSuccess"), { replace: true });
     } catch (error) {
       if (error?.message === "EMAIL_CONFIRMATION_REQUIRED") {
         setNotice({ type: "success", title: "تم بدء إنشاء الحساب", message: "أرسلنا رابط التفعيل إلى بريدك الإلكتروني. افتح الرسالة لإكمال إنشاء حسابك ثم العودة إلى بيتلي." });
