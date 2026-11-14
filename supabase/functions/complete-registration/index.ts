@@ -105,7 +105,7 @@ Deno.serve(async(req)=>{
   }
   delete row.user_id;delete row.owner_user_id;delete row.id;delete row.base44_id;delete row.created_at;delete row.updated_at;row.email=email;row.phone=phone;
   // Never let an unauthenticated registration request set privileged account state or balances.
-  if(table==="engineers"){row.user_type=role;row.is_verified=false;row.status="pending";row.rating=0;row.total_reviews=0;row.completed_projects=0;row.wallet_balance=0;row.subscription_type="none";row.is_subscription_active=false;delete row.subscription_start_date;delete row.trial_end_date;}
+  if(table==="engineers"){row.is_verified=false;row.status="pending";row.rating=0;row.total_reviews=0;row.completed_projects=0;row.wallet_balance=0;row.subscription_type="none";row.is_subscription_active=false;delete row.subscription_start_date;delete row.trial_end_date;}
   if(table==="clients"){row.trust_score=0;row.wallet_balance=0;row.total_projects=0;row.subscription_type="none";row.is_subscription_active=false;}
   if(table==="engineering_firms"){row.is_verified=false;row.status="pending";row.verification_status="pending";row.total_projects=0;row.active_projects=0;row.wallet_balance=0;delete row.official_stamp;delete row.authorized_signature;}
   if(table==="consultants"){row.status="pending";row.verification_status="pending";}
@@ -185,6 +185,28 @@ Deno.serve(async(req)=>{
     await admin.from("profiles").delete().eq("user_id",userId);
     await admin.auth.admin.deleteUser(userId);
     return json({ok:false,error:`تعذر حفظ بيانات التسجيل: ${rowError.message}`},400);
+  }
+
+  if(role==="surveyor"){
+    const {error:surveyorProfileError}=await admin.from("surveyor_profiles").insert({
+      user_id:userId,
+      full_name:fullName,
+      email,
+      phone,
+      license_number:String(row.registration_number||""),
+      city:String(row.city||""),
+      bio:String(row.bio||""),
+      years_experience:Number(row.years_experience||0),
+      status:"pending"
+    });
+    if(surveyorProfileError){
+      await admin.from("engineers").delete().eq("user_id",userId);
+      for(const uploadedPath of uploadedDocumentPaths){try{await admin.storage.from("registration-documents").remove([uploadedPath]);}catch(_){}}
+      await recordAttempt("failed",userId,"surveyor_profile_create",surveyorProfileError.message);
+      await admin.from("profiles").delete().eq("user_id",userId);
+      await admin.auth.admin.deleteUser(userId);
+      return json({ok:false,error:"تعذر إنشاء ملف المسّاح. لم يكتمل التسجيل؛ يرجى المحاولة مرة أخرى."},400);
+    }
   }
 
   let platformNotification=false;
