@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import {
   Megaphone, Target, TrendingUp, Shield, Eye,
   Check, ArrowLeft, Sparkles, BarChart3, Users
@@ -41,12 +41,13 @@ const PACKAGES = [
 
 export default function AdvertiseWithUs({ onStart, hasAds }) {
   const navigate = useNavigate();
+  const { isAuthenticated, isLoadingAuth } = useAuth();
 
   const handleStart = async () => {
     if (onStart) { onStart(); return; }
     try {
-      const authed = await base44.auth.isAuthenticated();
-      if (authed) {
+      if (isLoadingAuth) return;
+      if (isAuthenticated) {
         navigate("/AdvertiserPortal");
       } else {
         sessionStorage.setItem('loginReturnUrl', '/AdvertiserPortal');
