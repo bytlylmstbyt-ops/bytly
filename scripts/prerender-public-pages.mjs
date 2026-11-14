@@ -55,14 +55,7 @@ const pages = [
     description: "تعرّف على خدمات بيتلي للفرق والاستشاريين الهندسيين وإدارة فرص العمل والمشاريع في السعودية.",
     heading: "منصة بيتلي للاستشاريين",
     body: "تعرّف على خدمات بيتلي للفرق والاستشاريين الهندسيين وإدارة فرص العمل والتواصل ومتابعة المشاريع."
-  }
-];
-
-const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({
-  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-}[char]));
-
-
+  },
   {
     route: "/Complaints",
     title: "الشكاوى | منصة بيتلي",
@@ -78,7 +71,12 @@ const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({
     heading: "الدعم الفني",
     body: "هذه الصفحة مخصصة لمستخدمي بيتلي المسجلين. سجّل الدخول للوصول إلى خدمات الدعم الفني.",
     indexable: false
-  },
+  }
+];
+
+const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+}[char]));
 
 const original = fs.readFileSync(indexPath, "utf8");
 const appScript = original.match(/<script type="module"[^>]*src="[^"]+"[^>]*><\/script>/i)?.[0];
