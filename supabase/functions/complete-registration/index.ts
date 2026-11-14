@@ -80,12 +80,20 @@ Deno.serve(async(req)=>{
   if(!email||!fullName||!phone){await recordAttempt("failed",null,"validation","الاسم والبريد والهاتف مطلوبة");return json({ok:false,error:"الاسم والبريد والهاتف مطلوبة"},400);}
   const validatedDocuments = new Map<string,{bytes:Uint8Array,type:string,extension:string,path:string}>();
   const temporaryDocumentPaths:string[]=[];
+  const cleanupTemporaryDocuments=async()=>{
+    if(!temporaryDocumentPaths.length)return;
+    const paths=[...temporaryDocumentPaths];
+    temporaryDocumentPaths.length=0;
+    const {error}=await admin.storage.from("registration-documents").remove(paths);
+    if(error)console.error("Temporary registration document cleanup failed",error);
+  };
   if(table==="engineers"){
     const certificateFields=["graduation_certificate_url","saudi_engineers_council_certificate_url"];
     const fieldsToValidate=[...certificateFields,...(documents.profile_image?.path?["profile_image"]:[])];
     const uploadSessionId=String(documents.uploadSessionId||"");
     if(!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uploadSessionId)){
       await recordAttempt("failed",null,"document_validation","جلسة رفع الشهادات غير صالحة");
+      await cleanupTemporaryDocuments();
       return json({ok:false,error:"انتهت جلسة رفع الشهادات. أعد اختيار الشهادتين وحاول مرة أخرى."},400);
     }
     const mimeExtensions:Record<string,string>={"application/pdf":"pdf","image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
@@ -98,16 +106,19 @@ Deno.serve(async(req)=>{
         : null;
       if(!doc?.name||!expectedPathPattern?.test(path)){
         await recordAttempt("failed",null,"document_validation",`مسار أو بيانات المستند غير صالحة: ${field}`);
+        await cleanupTemporaryDocuments();
         return json({ok:false,error:"يرجى رفع شهادة التخرج وشهادة القيد من جديد."},400);
       }
       const {data:blob,error:downloadError}=await admin.storage.from("registration-documents").download(path);
       if(downloadError||!blob){
         await recordAttempt("failed",null,"document_validation",`تعذر العثور على المستند: ${field}`);
+        await cleanupTemporaryDocuments();
         return json({ok:false,error:"لم نتمكن من التحقق من حفظ الشهادتين. أعد رفعهما وحاول مرة أخرى."},400);
       }
       if(blob.size<=0||blob.size>10*1024*1024){
         await admin.storage.from("registration-documents").remove([path]);
         await recordAttempt("failed",null,"document_validation",`حجم المستند غير صالح: ${field}`);
+        await cleanupTemporaryDocuments();
         return json({ok:false,error:"حجم كل شهادة يجب ألا يتجاوز 10 ميجابايت."},400);
       }
       const bytes=new Uint8Array(await blob.arrayBuffer());
@@ -122,6 +133,7 @@ Deno.serve(async(req)=>{
       if(!signatureValid){
         await admin.storage.from("registration-documents").remove([path]);
         await recordAttempt("failed",null,"document_validation",`محتوى الملف لا يطابق نوعه: ${field}`);
+        await cleanupTemporaryDocuments();
         return json({ok:false,error:"نوع أحد الملفات لا يطابق محتواه. تحقق من الملف وأعد رفعه."},400);
       }
       temporaryDocumentPaths.push(path);
@@ -131,19 +143,19 @@ Deno.serve(async(req)=>{
   delete row.user_id;delete row.owner_user_id;delete row.id;row.email=email;row.phone=phone;const companyTables=new Set(["engineering_firms","contractors","suppliers"]);if(companyTables.has(table)){row.company_name=String(row.company_name||fullName).trim();delete row.full_name;}else{row.full_name=fullName;delete row.company_name;}if(["engineers","clients","engineering_firms"].includes(table)){row.is_real=true;row.source="supabase";}else{delete row.is_real;delete row.source;}
 
   const {data:existingProfile,error:profileLookupError}=await admin.from("profiles").select("id,user_id,role").eq("email",email).maybeSingle();
-  if(profileLookupError){await recordAttempt("failed",null,"profile_lookup",profileLookupError.message);return json({ok:false,error:`تعذر التحقق من البريد: ${profileLookupError.message}`},500);}
-  if(existingProfile?.user_id){await recordAttempt("failed",existingProfile.user_id,"duplicate","هذا البريد مسجل بالفعل");return json({ok:false,error:"هذا البريد مسجل بالفعل. يمكنك تسجيل الدخول."},409);}
+  if(profileLookupError){await cleanupTemporaryDocuments();await recordAttempt("failed",null,"profile_lookup",profileLookupError.message);return json({ok:false,error:`تعذر التحقق من البريد: ${profileLookupError.message}`},500);}
+  if(existingProfile?.user_id){await cleanupTemporaryDocuments();await recordAttempt("failed",existingProfile.user_id,"duplicate","هذا البريد مسجل بالفعل");return json({ok:false,error:"هذا البريد مسجل بالفعل. يمكنك تسجيل الدخول."},409);}
 
   const {data:created,error:authError}=await admin.auth.admin.createUser({email,password,email_confirm:true,user_metadata:{full_name:fullName,name:fullName,role,account_type:role,phone}});
   if(authError||!created.user){
    const message=authError?.message||"تعذر إنشاء حساب الدخول";
-   if(/already registered|already exists/i.test(message))return json({ok:false,error:"هذا البريد مسجل بالفعل. يمكنك تسجيل الدخول."},409);
-   await recordAttempt("failed",null,"auth_create",message); return json({ok:false,error:`تعذر إنشاء حساب الدخول: ${message}`},400);
+   if(/already registered|already exists/i.test(message)){await cleanupTemporaryDocuments();return json({ok:false,error:"هذا البريد مسجل بالفعل. يمكنك تسجيل الدخول."},409);}
+   await cleanupTemporaryDocuments();await recordAttempt("failed",null,"auth_create",message); return json({ok:false,error:`تعذر إنشاء حساب الدخول: ${message}`},400);
   }
   const userId=created.user.id;const ownershipField=table==="engineering_firms"?"owner_user_id":"user_id";row[ownershipField]=userId;
   if(table==="engineers"){row.status="pending";row.is_verified=false;}
   const {error:profileError}=await admin.from("profiles").upsert({user_id:userId,full_name:fullName,email,phone,role,acquisition_source:attribution.source||null,acquisition_medium:attribution.medium||null,acquisition_campaign:attribution.campaign||null,acquisition_content:attribution.content||null,acquisition_referrer:attribution.referrer||null,acquisition_label:attribution.label||null},{onConflict:"user_id"});
-  if(profileError){await recordAttempt("failed",userId,"profile_create",profileError.message);await admin.auth.admin.deleteUser(userId);return json({ok:false,error:`تعذر حفظ ملف المستخدم: ${profileError.message}`},400);}
+  if(profileError){await cleanupTemporaryDocuments();await recordAttempt("failed",userId,"profile_create",profileError.message);await admin.auth.admin.deleteUser(userId);return json({ok:false,error:`تعذر حفظ ملف المستخدم: ${profileError.message}`},400);}
   const uploadedDocumentPaths:string[]=[];
   if(table==="engineers"){
     const fieldsToUpload=["graduation_certificate_url","saudi_engineers_council_certificate_url",...(documents.profile_image?.path?["profile_image"]:[])];
