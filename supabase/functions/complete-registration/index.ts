@@ -104,10 +104,18 @@ Deno.serve(async(req)=>{
       const expectedPathPattern=extension
         ? new RegExp("^registration-temp/" + uploadSessionId + "/" + field + "-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\." + extension + "$","i")
         : null;
-      if(!doc?.name||!expectedPathPattern?.test(path)){
-        await recordAttempt("failed",null,"document_validation",`مسار أو بيانات المستند غير صالحة: ${field}`);
+      if(!expectedPathPattern?.test(path)){
+        await recordAttempt("failed",null,"document_validation",`مسار المستند غير صالح: ${field}`);
         await cleanupTemporaryDocuments();
         return json({ok:false,error:"يرجى رفع شهادة التخرج وشهادة القيد من جديد."},400);
+      }
+      // Track the session-scoped path before reading it so every subsequent
+      // validation failure can safely remove the temporary object.
+      temporaryDocumentPaths.push(path);
+      if(!doc?.name){
+        await recordAttempt("failed",null,"document_validation",`اسم المستند مفقود: ${field}`);
+        await cleanupTemporaryDocuments();
+        return json({ok:false,error:"بيانات أحد المستندات غير مكتملة. أعد رفع الشهادتين."},400);
       }
       const {data:blob,error:downloadError}=await admin.storage.from("registration-documents").download(path);
       if(downloadError||!blob){
@@ -116,7 +124,6 @@ Deno.serve(async(req)=>{
         return json({ok:false,error:"لم نتمكن من التحقق من حفظ الشهادتين. أعد رفعهما وحاول مرة أخرى."},400);
       }
       if(blob.size<=0||blob.size>10*1024*1024){
-        await admin.storage.from("registration-documents").remove([path]);
         await recordAttempt("failed",null,"document_validation",`حجم المستند غير صالح: ${field}`);
         await cleanupTemporaryDocuments();
         return json({ok:false,error:"حجم كل شهادة يجب ألا يتجاوز 10 ميجابايت."},400);
@@ -131,12 +138,10 @@ Deno.serve(async(req)=>{
             ? header[0]===0x89&&new TextDecoder().decode(header.subarray(1,4))==="PNG"
             : new TextDecoder().decode(header.subarray(0,4))==="RIFF"&&new TextDecoder().decode(header.subarray(8,12))==="WEBP";
       if(!signatureValid){
-        await admin.storage.from("registration-documents").remove([path]);
         await recordAttempt("failed",null,"document_validation",`محتوى الملف لا يطابق نوعه: ${field}`);
         await cleanupTemporaryDocuments();
         return json({ok:false,error:"نوع أحد الملفات لا يطابق محتواه. تحقق من الملف وأعد رفعه."},400);
       }
-      temporaryDocumentPaths.push(path);
       validatedDocuments.set(field,{bytes,type:doc.type,extension,path});
     }
   }
