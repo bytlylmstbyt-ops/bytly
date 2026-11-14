@@ -27,7 +27,6 @@ const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({
 
 const original = fs.readFileSync(sourcePath, "utf8");
 const appScript = original.match(/<script type="module"[^>]*src="[^"]+"[^>]*><\/script>/i)?.[0];
-const stylesheetLinks = [...original.matchAll(/<link[^>]+rel="stylesheet"[^>]*>/gi)].map((match) => match[0]).join("\n    ");
 if (!appScript) throw new Error("Could not find the built application entry script.");
 
 for (const route of routes) {
@@ -73,7 +72,7 @@ for (const route of routes) {
   html = html.replace(/<body>[\s\S]*?<\/body>/i,
     '<body><noscript><p>بيتلي — المنظومة الهندسية المتكاملة في المملكة العربية السعودية.</p></noscript><div id="root">' +
     fallback + '</div><script type="application/ld+json">' + jsonLd + '</script>' +
-    (stylesheetLinks ? "\\n    " + stylesheetLinks : "") + "\\n    " + appScript + "</body>");
+    appScript + "</body>");
 
   const output = path.join(dist, route.path.replace(/^\//, ""), "index.html");
   fs.mkdirSync(path.dirname(output), { recursive: true });
