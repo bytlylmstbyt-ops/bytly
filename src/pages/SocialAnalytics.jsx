@@ -180,14 +180,28 @@ export default function SocialAnalytics() {
   const fetchAnalytics = async () => {
     setLoading(true);
     setError(null);
-    const res = await base44.functions.invoke("socialAnalytics", {});
-    if (res.data.success) {
-      setData(res.data);
-      setLastFetch(new Date());
-    } else {
-      setError(res.data.error || "فشل تحميل البيانات");
+    try {
+      const res = await base44.functions.invoke("socialAnalytics", {});
+      const result = res?.data;
+      if (result?.success && result?.platforms && result?.summary) {
+        setData(result);
+        setLastFetch(new Date());
+      } else {
+        setData(null);
+        setError(
+          result?.error ||
+          "خدمة تحليلات التواصل الاجتماعي لم تُرحّل إلى Supabase بعد. لم نعرض أرقامًا تقديرية أو بيانات قديمة."
+        );
+      }
+    } catch (err) {
+      setData(null);
+      setError(
+        err?.message ||
+        "تعذر تحميل التحليلات حاليًا؛ خدمة socialAnalytics لم تُرحّل بعد إلى Supabase."
+      );
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => { fetchAnalytics(); }, []);
