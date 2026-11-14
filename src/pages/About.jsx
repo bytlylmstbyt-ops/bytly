@@ -26,7 +26,7 @@ export default function About() {
 
   return (
     <div className="min-h-screen bg-white" dir={isRTL ? 'rtl' : 'ltr'}>
-      <JsonLd data={webPageSchema({ name: "نبذة عنا — بيتلي", description: "ماذا تفعل بيتلي، من تخدم، ولماذا وُجدت في سوق الهندسة، مع بيانات اعتماد الفريق والإنجازات التشغيلية.", path: "/About" })} />
+      <JsonLd data={webPageSchema({ name: "نبذة عنا — بيتلي", description: "ماذا تفعل بيتلي، من تخدم، ولماذا وُجدت في سوق الهندسة، مع بيانات اعتماد الفريق والإنجازات التشغيلية.", path: "/about" })} />
       <JsonLd data={softwareSchema} />
       {/* Hero */}
       <section className="bg-gradient-to-b from-[#F5F0E8] to-white py-20 md:py-28">
