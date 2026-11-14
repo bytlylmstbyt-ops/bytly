@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { base44 } from "@/api/base44Client";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -89,7 +88,8 @@ export default function BuildingProgress() {
     // Load projects for engineer (to link new progress tracking)
     if (role === "engineer") {
       const eng = engineerData[0];
-      const projs = await base44.entities.Project.filter({ assigned_engineer_id: eng.id }, "-created_date", 20);
+      const { data: projs, error: projectsError } = await supabase.from("projects").select("*").eq("assigned_engineer_id", eng.id).order("created_at", { ascending: false }).limit(20);
+      if (projectsError) throw projectsError;
       setProjects(projs);
     }
 
