@@ -46,7 +46,7 @@ export default function EngineerDashboard() {
         supabase.from("project_reviews").select("*").eq("engineer_id",eng.id),
         supabase.from("disputes").select("*").or("raised_by.eq."+currentUser.id+",raised_against.eq."+currentUser.id),
         supabase.from("notifications").select("*").eq("recipient_user_id",currentUser.id).order("created_at",{ascending:false}).limit(5),
-        supabase.from("project_offers").select("*").eq("provider_user_id",currentUser.id)
+        supabase.from("project_offers").select("*").eq("engineer_user_id",currentUser.id)
       ]);
       setProjects(p.data||[]);setPortfolio((port.data||[]).slice(0,6));setReviews(rev.data||[]);setProposals(props.data||[]);setDisputes(disp.data||[]);setNotifications(notifs.data||[]);
     }catch(error){console.error("Error loading engineer dashboard:",error);}finally{setIsLoading(false);}

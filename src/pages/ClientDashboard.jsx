@@ -36,7 +36,8 @@ export default function ClientDashboard() {
       const { data: clientData } = await supabase.from("clients").select("*").eq("user_id", currentUser.id).maybeSingle();
       setClient(clientData);
       if (!clientData) return;
-      const { data: projects = [] } = await supabase.from("projects").select("*").eq("client_id", clientData.id).order("created_at",{ascending:false});
+      const { data: projects = [], error: projectsError } = await supabase.from("projects").select("*").or(`client_id.eq.${clientData.id},client_user_id.eq.${currentUser.id}`).order("created_at", { ascending: false });
+      if (projectsError) throw projectsError;
       const projectIds=projects.map(p=>p.id);
       let myProposals=[];
       if(projectIds.length){
