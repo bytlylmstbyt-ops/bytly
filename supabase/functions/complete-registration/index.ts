@@ -235,8 +235,15 @@ Deno.serve(async(req)=>{
 
   const welcomeHtml=`<div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.8"><h2>مرحباً بك في Bytly</h2><p>أهلاً ${clean(fullName)}،</p><p>شكراً لتسجيلك في <strong>Bytly / بيتلي</strong>. تم استلام طلب تسجيلك وشهاداتك بنجاح. حسابك الآن قيد المراجعة حتى تتحقق الإدارة من بياناتك وتعتمد الحساب.</p><p>سنبلغك عند اكتمال المراجعة.</p><p>مع التحية،<br>فريق Bytly</p></div>`;
   const adminHtml=`<div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.8"><h2>تسجيل مستخدم جديد في Bytly</h2><p><strong>الاسم:</strong> ${clean(fullName)}</p><p><strong>البريد:</strong> ${clean(email)}</p><p><strong>الهاتف:</strong> ${clean(phone)}</p><p><strong>نوع الحساب:</strong> ${clean(role)}</p><p><strong>معرّف المستخدم:</strong> ${clean(userId)}</p></div>`;
-  const welcome=await sendSystemEmail(email,"مرحباً بك في Bytly — تم إنشاء حسابك بنجاح",welcomeHtml);
-  const adminEmail=await sendSystemEmail("bytlylmstbyt@gmail.com",`تسجيل مستخدم جديد في Bytly: ${fullName}`,adminHtml);
+  // Email delivery is best-effort after the account and documents have been saved.
+  // A mail-provider/network failure must not turn a successful registration into a
+  // reported registration failure that encourages the user to retry a duplicate account.
+  const [welcome,adminEmail]=await Promise.all([
+    sendSystemEmail(email,"مرحباً بك في Bytly — تم إنشاء حسابك بنجاح",welcomeHtml)
+      .catch(error=>{console.error("Welcome email delivery failed",error);return {sent:false,reason:"email_delivery_unavailable"};}),
+    sendSystemEmail("bytlylmstbyt@gmail.com",`تسجيل مستخدم جديد في Bytly: ${fullName}`,adminHtml)
+      .catch(error=>{console.error("Admin email delivery failed",error);return {sent:false,reason:"email_delivery_unavailable"};})
+  ]);
 
   await recordAttempt("succeeded",userId,null,null);
   return json({ok:true,user_id:userId,record_id:saved?.id||null,documents_uploaded:uploadedDocumentPaths.length,platform_notification_sent:platformNotification,welcome_email_sent:welcome.sent,admin_email_sent:adminEmail.sent,email_status:{welcome:welcome.reason||"sent",admin:adminEmail.reason||"sent"}});
