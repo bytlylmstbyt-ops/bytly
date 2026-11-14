@@ -157,7 +157,7 @@ export default function BytlyAdvisorChat() {
 
   return (
     <>
-      <div className="fixed left-6 bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-6 z-[9999]">
+      <div className="fixed left-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:left-6 md:bottom-6 z-[9999]">
         <AnimatePresence>
           {showPulse && !isOpen && (
             <motion.div
@@ -176,10 +176,10 @@ export default function BytlyAdvisorChat() {
           onClick={() => setIsOpen((open) => !open)}
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.93 }}
-          className="w-16 h-16 rounded-2xl shadow-2xl flex items-center justify-center relative overflow-visible"
+          className="w-12 h-12 md:w-16 md:h-16 rounded-2xl shadow-2xl flex items-center justify-center relative overflow-visible"
           style={{ background: "linear-gradient(135deg, #4A3F35 0%, #6B5D4F 50%, #C9A66B 100%)" }}
         >
-          {isOpen ? <X className="w-7 h-7 text-white" /> : <Bot className="w-7 h-7 text-white" />}
+          {isOpen ? <X className="w-6 h-6 md:w-7 md:h-7 text-white" /> : <Bot className="w-6 h-6 md:w-7 md:h-7 text-white" />}
         </motion.button>
       </div>
 
@@ -190,7 +190,7 @@ export default function BytlyAdvisorChat() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 28 }}
-            className="fixed left-6 bottom-[calc(10rem+env(safe-area-inset-bottom))] md:bottom-24 z-[9998] flex flex-col rounded-2xl shadow-2xl overflow-hidden"
+            className="fixed left-4 bottom-[calc(9.5rem+env(safe-area-inset-bottom))] md:left-6 md:bottom-24 z-[9998] flex flex-col rounded-2xl shadow-2xl overflow-hidden"
             dir="rtl"
             style={{ width: "360px", maxWidth: "calc(100vw - 48px)", maxHeight: isMinimized ? "60px" : "560px" }}
           >

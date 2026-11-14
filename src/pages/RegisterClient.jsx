@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { supabase } from "@/lib/supabaseClient";
@@ -15,12 +15,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "react-hot-toast";
-
-const directRegistrationInsert = async (table, row) => {
-  const { data, error } = await supabase.from(table).insert(row).select('*').single();
-  if (error) throw new Error(error.message || 'تعذر حفظ التسجيل');
-  return data;
-};
 
 export default function RegisterClient() {
   const navigate = useNavigate();
@@ -39,13 +33,14 @@ export default function RegisterClient() {
   });
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const submitLockRef = useRef(false);
 
   // New registrations always start with empty account fields.
   // Existing users must use the Login flow instead of this registration page.
   useEffect(() => {
     let active = true;
     supabase.auth.getSession().then(({ data }) => {
-      if (active && data?.session?.user) navigate(createPageUrl("Home"), { replace: true });
+      if (active && data?.session?.user) navigate(createPageUrl("Dashboard"), { replace: true });
     }).catch(() => {});
     return () => { active = false; };
   }, [navigate]);
@@ -84,13 +79,14 @@ export default function RegisterClient() {
     if (password.length < 8) { toast.error("كلمة المرور يجب أن تكون 8 أحرف على الأقل."); return; }
     if (password !== confirmPassword) { toast.error("كلمتا المرور غير متطابقتين."); return; }
 
-    if (isLoading) return;
+    if (submitLockRef.current || isLoading) return;
+    submitLockRef.current = true;
     setIsLoading(true);
     try {
     
     const client = await saveRegistration({
       table: "clients",
-      role: "client",
+      role: formData.client_type === "investor" ? "investor" : "client",
       fullName: formData.full_name,
       email: formData.email,
       phone: formData.phone,
@@ -100,7 +96,7 @@ export default function RegisterClient() {
 
     toast.success("تم التسجيل بنجاح");
     // Registration now starts the Supabase session in saveRegistration, so the client can enter the platform immediately.
-    navigate(createPageUrl("Home"), { replace: true });
+    navigate(createPageUrl("Dashboard"), { replace: true });
     } catch (error) {
       if (error?.message === "EMAIL_CONFIRMATION_REQUIRED") {
         setConfirmationEmail(formData.email);
@@ -108,8 +104,14 @@ export default function RegisterClient() {
         return;
       }
       console.error("Client registration error:", error);
-      toast.error(error?.message || "تعذر إكمال التسجيل. حاول مرة أخرى.");
+      const errorMessage = String(error?.message || "");
+      if (errorMessage.includes("clients_user_id_unique") || /duplicate key/i.test(errorMessage)) {
+        toast.error("هذا الحساب مسجل بالفعل. سجّلي الدخول بدلاً من إنشاء حساب جديد.");
+      } else {
+        toast.error(errorMessage || "تعذر إكمال التسجيل. حاول مرة أخرى.");
+      }
     } finally {
+      submitLockRef.current = false;
       setIsLoading(false);
     }
   };

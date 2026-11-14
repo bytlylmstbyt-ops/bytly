@@ -32,6 +32,7 @@ function RoleDashboardRouter({ role }) {
     developer: "/ClientDashboard",
     engineer: "/EngineerDashboard",
     surveyor: "/EngineerDashboard",
+    painter: "/EngineerDashboard",
     firm: "/FirmDashboard",
     engineering_firm: "/FirmDashboard",
     engineeringfirm: "/FirmDashboard",

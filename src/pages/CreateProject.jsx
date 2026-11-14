@@ -232,21 +232,21 @@ export default function CreateProject() {
       throw new Error("لم تكتمل عملية إنشاء المشروع ومراحله. لم يتم اعتماد العملية.");
     }
 
-    // Send project notifications through the authenticated Supabase Edge Function.
-    try {
-      const { data: notificationResult, error: notificationError } = await supabase.functions.invoke("notify-project-engineers", {
-        body: { projectId: newProject.id },
-      });
-      if (notificationError) throw notificationError;
-      if (notificationResult?.ok === false) throw new Error(notificationResult.error || "تعذر إرسال تنبيهات المشروع");
-    } catch (notificationError) {
-      // Notification delivery must not undo a successfully created project.
-      console.error("Project was created, but engineer notifications could not be sent:", notificationError);
-    }
-
+    // Confirm the project to the user immediately. Notification delivery is secondary
+    // and must never keep the submit screen locked after the project is already saved.
     setIsLoading(false);
     alert(preselectedEngineerId ? "تم إرسال طلب الخدمة المباشرة بنجاح!" : "تم إنشاء المشروع بنجاح!");
     navigate(createPageUrl("Projects"));
+
+    void supabase.functions.invoke("notify-project-engineers", {
+      body: { projectId: newProject.id },
+    }).then(({ data, error }) => {
+      if (error || data?.ok === false) {
+        console.error("Project was created, but engineer notifications could not be sent:", error || data?.error);
+      }
+    }).catch((notificationError) => {
+      console.error("Project was created, but engineer notifications could not be sent:", notificationError);
+    });
     } catch (error) {
       console.error("Failed to create project:", error);
       setIsLoading(false);

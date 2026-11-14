@@ -18,6 +18,7 @@ export default function ClientDashboard() {
     inProgressProjects: 0,
     completedProjects: 0,
     totalSpent: 0,
+    walletBalance: 0,
     activeProposals: 0
   });
   const [recentProjects, setRecentProjects] = useState([]);
@@ -47,7 +48,7 @@ export default function ClientDashboard() {
       const inProgressProjects=projects.filter(p=>p.status==="in_progress");
       const completedProjects=projects.filter(p=>p.status==="completed");
       const totalSpent=completedProjects.reduce((sum,p)=>sum+Number(p.escrow_amount||p.budget_max||0),0);
-      setStats({totalProjects:projects.length,openProjects:openProjects.length,inProgressProjects:inProgressProjects.length,completedProjects:completedProjects.length,totalSpent,activeProposals:myProposals.filter(p=>p.status==="pending").length});
+      setStats({totalProjects:projects.length,openProjects:openProjects.length,inProgressProjects:inProgressProjects.length,completedProjects:completedProjects.length,totalSpent,walletBalance:Number(clientData.wallet_balance||0),activeProposals:myProposals.filter(p=>p.status==="pending").length});
       setRecentProjects(projects.slice(0,5)); setRecentProposals(myProposals.slice(0,5));
     } catch(error){ console.error("Error loading dashboard:",error); } finally { setLoading(false); }
   };

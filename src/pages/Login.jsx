@@ -27,7 +27,7 @@ const getPendingRegistrationUrl = () => {
 };
 const getReturnUrl = () => {
   const params = new URLSearchParams(window.location.search);
-  const raw = params.get("from_url") || sessionStorage.getItem("loginReturnUrl") || "/Home";
+  const raw = params.get("from_url") || sessionStorage.getItem("loginReturnUrl") || "/Dashboard";
   try {
     const url = new URL(raw, window.location.origin);
     return AUTH_PATHS.some((path) => url.pathname === path || url.pathname.startsWith(path + "/")) ? "/Home" : url.pathname + url.search;

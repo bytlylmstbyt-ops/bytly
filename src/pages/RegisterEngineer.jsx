@@ -28,6 +28,7 @@ export default function RegisterEngineer() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [portfolioItems, setPortfolioItems] = useState([]);
   const [skippedUploads, setSkippedUploads] = useState(new Set());
+  const [pendingDocuments, setPendingDocuments] = useState({});
   const [formData, setFormData] = useState({
     full_name: "", email: "", phone: "",
     user_type: "engineer",
@@ -40,7 +41,7 @@ export default function RegisterEngineer() {
   useEffect(() => {
     let active = true;
     supabase.auth.getSession().then(({ data }) => {
-      if (active && data?.session?.user) navigate(createPageUrl("Home"), { replace: true });
+      if (active && data?.session?.user) navigate(createPageUrl("Dashboard"), { replace: true });
     }).catch(() => {});
     return () => { active = false; };
   }, [navigate]);
@@ -95,34 +96,40 @@ export default function RegisterEngineer() {
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
   const handleFileUpload = async (e, field) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    if (file.size > MAX_FILE_SIZE) { const message = `حجم الملف ${(file.size / 1024 / 1024).toFixed(1)} ميجابايت. الحد الأقصى 10 ميجابايت.`; setNotice({ type: "error", title: "حجم الملف كبير", message }); toast.error(message); return; }
+    if (file.size > MAX_FILE_SIZE) {
+      const message = `حجم الملف ${(file.size / 1024 / 1024).toFixed(1)} ميجابايت. الحد الأقصى 10 ميجابايت.`;
+      setNotice({ type: "error", title: "حجم الملف كبير", message }); toast.error(message); return;
+    }
+    if (field === "graduation_certificate_url" || field === "saudi_engineers_council_certificate_url") {
+      const allowed = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+      if (!allowed.includes(file.type)) {
+        const message = "الملف يجب أن يكون PDF أو صورة JPG أو PNG أو WEBP.";
+        setNotice({ type: "error", title: "نوع ملف غير مدعوم", message }); toast.error(message); return;
+      }
+      setPendingDocuments(prev => ({ ...prev, [field]: file }));
+      handleInputChange(field, `pending:${file.name}`);
+      setSkippedUploads(prev => { const next = new Set(prev); next.delete(field); return next; });
+      setNotice({ type: "success", title: "تم اختيار المستند", message: "سيتم رفعه بشكل آمن بعد إنشاء حسابك." });
+      toast.success("تم اختيار المستند. سيُرفع عند إتمام التسجيل.");
+      return;
+    }
     setIsFileUploading(true);
     setNotice({ type: "info", title: "جارٍ رفع الملف", message: `جارٍ رفع: ${file.name} — قد يستغرق ذلك قليلًا...` });
     try {
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const path = `engineers/${Date.now()}-${Math.random().toString(36).slice(2)}-${safeName}`;
+      const path = `profiles/${Date.now()}-${Math.random().toString(36).slice(2)}-${safeName}`;
       const { error: uploadError } = await withTimeout(supabase.storage.from("registration-documents").upload(path, file, { upsert: false, contentType: file.type || undefined }), 120000);
       if (uploadError) throw uploadError;
-      const { data: publicUrlData } = supabase.storage.from("registration-documents").getPublicUrl(path);
-      const file_url = publicUrlData?.publicUrl;
-      if (!file_url) throw new Error("تم رفع الملف لكن تعذر الحصول على رابطه.");
-      handleInputChange(field, file_url);
-      setSkippedUploads(prev => { const next = new Set(prev); next.delete(field); return next; });
+      const { data: signedData, error: signedError } = await supabase.storage.from("registration-documents").createSignedUrl(path, 60 * 60 * 24 * 30);
+      if (signedError) throw signedError;
+      handleInputChange(field, signedData?.signedUrl || "");
       setNotice({ type: "success", title: "تم رفع الملف بنجاح", message: "يمكنك المتابعة في إكمال التسجيل." });
     } catch (error) {
-      const responseData = error?.data || error?.response?.data;
-      if (isPlanLimitError(error)) {
-        setSkippedUploads(prev => new Set(prev).add(field));
-        const fieldLabel = field === "graduation_certificate_url" ? "شهادة التخرج" : field === "saudi_engineers_council_certificate_url" ? "شهادة القيد بالهيئة السعودية للمهندسين" : "الصورة الشخصية";
-        const skipMessage = `تعذر رفع ${fieldLabel} بسبب حد التكامل في الخطة. يمكنك إكمال التسجيل الآن وإضافة ${fieldLabel} لاحقًا من إعدادات الملف الشخصي، أو ترقية الخطة.`;
-        setNotice({ type: "warning", title: "تعذر رفع الملف - يمكنك المتابعة", message: skipMessage }); toast(skipMessage, { icon: "⚠️", duration: 8000 });
-      } else {
-        const message = error?.message === "timeout" ? "انتهت مهلة رفع الملف. حاول استخدام ملف أصغر أو إعادة المحاولة لاحقًا." : responseData?.message || responseData?.detail || responseData?.error || "تعذر رفع الملف مؤقتًا. يُرجى التحقق من الاتصال وإعادة المحاولة.";
-        setNotice({ type: "error", title: "تعذر رفع الملف", message }); toast.error(message);
-      }
+      const message = error?.message || "تعذر رفع الملف مؤقتًا. يُرجى إعادة المحاولة.";
+      setNotice({ type: "error", title: "تعذر رفع الملف", message }); toast.error(message);
       console.error("RegisterEngineer upload error:", error);
     } finally { setIsFileUploading(false); }
   };
@@ -142,11 +149,12 @@ export default function RegisterEngineer() {
       const trialEnd = new Date(); trialEnd.setMonth(trialEnd.getMonth() + 3);
       const localDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       const engineer = await withTimeout(saveRegistration({
-        table: "engineers", role: "engineer", fullName: formData.full_name, email: formData.email, phone: formData.phone,
+        table: "engineers", role: userType === "surveyor" ? "surveyor" : userType === "painter" ? "painter" : "engineer", fullName: formData.full_name, email: formData.email, phone: formData.phone,
         password,
+        documents: pendingDocuments,
         row: { full_name: formData.full_name, phone: formData.phone, city: formData.city, country: formData.country, specialization: formData.specialization, registration_number: formData.registration_number, bio: formData.bio, graduation_certificate_url: formData.graduation_certificate_url, saudi_engineers_council_certificate_url: formData.saudi_engineers_council_certificate_url, profile_image: formData.profile_image, years_experience: parseInt(formData.years_experience) || 0, completed_projects: parseInt(formData.completed_projects) || 0, status: "pending", is_verified: false, rating: 0, total_reviews: 0, wallet_balance: 0, subscription_type: isFreeEligible ? "free_trial" : "none", is_subscription_active: isFreeEligible, subscription_start_date: isFreeEligible ? localDate(today) : undefined, trial_end_date: isFreeEligible ? localDate(trialEnd) : undefined, is_real: true, source: "supabase" }
-      }), 15000);
-      // نجاح إنشاء الحساب = الانتقال فورًا للصفحة الرئيسية. أي حفظ إضافي للأعمال/الإشعارات لا يوقف دخول المستخدم.\n      try { localStorage.removeItem(STORAGE_KEY); } catch {}\n      navigate(createPageUrl("Home"), { replace: true });\n\n      const validPortfolioItems = portfolioItems.filter(item => item.title || item.images?.length > 0);
+      }), 90000);
+      // نجاح إنشاء الحساب = الانتقال فورًا للصفحة الرئيسية. أي حفظ إضافي للأعمال/الإشعارات لا يوقف دخول المستخدم.\n      try { localStorage.removeItem(STORAGE_KEY); } catch {}\n      navigate(createPageUrl("Dashboard"), { replace: true });\n\n      const validPortfolioItems = portfolioItems.filter(item => item.title || item.images?.length > 0);
       if (validPortfolioItems.length > 0 && engineer?.id) {
         const portfolioRows = validPortfolioItems.map(item => ({
           engineer_id: engineer.id,
@@ -173,7 +181,7 @@ export default function RegisterEngineer() {
         }
       }
       try { localStorage.removeItem(STORAGE_KEY); } catch {}
-      navigate(createPageUrl("Home"), { replace: true });
+      navigate(createPageUrl("Dashboard"), { replace: true });
     } catch (error) {
       if (error?.message === "EMAIL_CONFIRMATION_REQUIRED") {
         setNotice({ type: "success", title: "تم بدء إنشاء الحساب", message: "أرسلنا رابط التفعيل إلى بريدك الإلكتروني. افتح الرسالة لإكمال إنشاء حسابك ثم العودة إلى بيتلي." });
@@ -190,11 +198,13 @@ export default function RegisterEngineer() {
   const isStep2Valid = !!(formData.specialization && formData.country?.trim());
   const missingStep1 = [!formData.full_name?.trim() && "الاسم الكامل", !formData.email?.trim() && "البريد الإلكتروني", password.length < 8 && "كلمة المرور (8 أحرف على الأقل)", password !== confirmPassword && "تأكيد كلمة المرور", !formData.phone?.trim() && "رقم الهاتف", !formData.city?.trim() && "المدينة"].filter(Boolean);
   const missingStep2 = [!formData.specialization && "التخصص", !formData.country?.trim() && "الدولة"].filter(Boolean);
-  const missingStep3 = [!formData.registration_number?.trim() && "رقم القيد المهني", !(formData.graduation_certificate_url || skippedUploads.has("graduation_certificate_url")) && "شهادة التخرج", !(formData.saudi_engineers_council_certificate_url || skippedUploads.has("saudi_engineers_council_certificate_url")) && "شهادة القيد في الهيئة السعودية للمهندسين"].filter(Boolean);
+  const hasGraduationCertificate = Boolean(pendingDocuments.graduation_certificate_url) || Boolean(formData.graduation_certificate_url && !formData.graduation_certificate_url.startsWith("pending:"));
+  const hasCouncilCertificate = Boolean(pendingDocuments.saudi_engineers_council_certificate_url) || Boolean(formData.saudi_engineers_council_certificate_url && !formData.saudi_engineers_council_certificate_url.startsWith("pending:"));
+  const missingStep3 = [!formData.registration_number?.trim() && "رقم القيد المهني", !hasGraduationCertificate && "شهادة التخرج", !hasCouncilCertificate && "شهادة القيد في الهيئة السعودية للمهندسين"].filter(Boolean);
   const isStep3Valid = missingStep3.length === 0;
 
   return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-12"><div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8"><div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${userType === "painter" ? "from-violet-500 to-purple-500" : "from-blue-500 to-cyan-500"} flex items-center justify-center mb-4`}>{userType === "painter" ? <PenTool className="w-8 h-8 text-white" /> : <Building2 className="w-8 h-8 text-white" />}</div><h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e] mb-2">{userType === "painter" ? "التسجيل كرسام هندسي" : "التسجيل كمهندس"}</h1><p className="text-slate-600">أكمل بياناتك للانضمام إلى منصة بيتلي</p></motion.div>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-8"><div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${userType === "painter" ? "from-violet-500 to-purple-500" : "from-blue-500 to-cyan-500"} flex items-center justify-center mb-4`}>{userType === "painter" ? <PenTool className="w-8 h-8 text-white" /> : <Building2 className="w-8 h-8 text-white" />}</div><h1 className="text-2xl md:text-3xl font-bold text-[#1a1a2e] mb-2">{userType === "surveyor" ? "التسجيل كمسّاح" : userType === "painter" ? "التسجيل كرسام هندسي" : "التسجيل كمهندس"}</h1><p className="text-slate-600">أكمل بياناتك للانضمام إلى منصة بيتلي</p></motion.div>
     {!freeOffer.loading && freeOffer.isEligible && <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="rounded-2xl border border-emerald-300 bg-gradient-to-br from-emerald-50 to-teal-50 p-4 mb-6 flex items-start gap-3"><div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shrink-0"><Gift className="w-5 h-5 text-white" /></div><div><p className="font-bold text-emerald-800">🎉 تسجيل مجاني — أنت ضمن أول 100 مهندس!</p><p className="text-sm text-emerald-700 mt-1">ضمن الفترة التجريبية لقياس المنصة، يتمتع أول 100 مهندس باشتراك مجاني لمدة 3 أشهر. المتاح حالياً: <span className="font-bold">{freeOffer.remaining}</span> مقعد مجاني.</p></div></motion.div>}
     {!freeOffer.loading && !freeOffer.isEligible && <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 mb-6 text-sm text-amber-800">تم اكتمال قائمة أول 100 مهندس المجانيين. التسجيل متاح بالاشتراكات العادية بعد الموافقة.</div>}
     {notice && <div className={`rounded-2xl border p-4 mb-6 ${notice.type === "error" ? "border-red-200 bg-red-50 text-red-700" : notice.type === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : notice.type === "warning" ? "border-amber-300 bg-amber-50 text-amber-800" : "border-blue-200 bg-blue-50 text-blue-700"}`}><p className="font-semibold">{notice.title}</p><p className="text-sm mt-1">{notice.message}</p></div>}

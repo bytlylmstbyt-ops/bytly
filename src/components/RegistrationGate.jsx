@@ -8,6 +8,7 @@ const ROLE_ROUTES = {
   client: `${createPageUrl("RegisterClient")}?type=individual`,
   engineer: `${createPageUrl("RegisterEngineer")}?type=engineer`,
   surveyor: `${createPageUrl("RegisterEngineer")}?type=surveyor`,
+  painter: `${createPageUrl("RegisterEngineer")}?type=painter`,
   firm: createPageUrl("RegisterFirm"),
   legal: createPageUrl("RegisterLegalConsultant"),
   consultant: createPageUrl("RegisterConsultant"),
@@ -22,7 +23,11 @@ const REGISTRATION_PATHS = [
 
 async function hasRoleProfile(userId, role) {
   const checks = [];
-  if (role === "engineer" || role === "surveyor") checks.push(supabase.from("engineers").select("id").eq("user_id", userId).limit(1));
+  if (role === "engineer") checks.push(supabase.from("engineers").select("id").eq("user_id", userId).limit(1));
+  if (role === "surveyor") {
+    checks.push(supabase.from("surveyor_profiles").select("id").eq("user_id", userId).limit(1));
+    checks.push(supabase.from("engineers").select("id").eq("user_id", userId).limit(1));
+  }
   if (role === "client" || role === "investor") checks.push(supabase.from("clients").select("id").eq("user_id", userId).limit(1));
   if (role === "firm") checks.push(supabase.from("engineering_firms").select("id").eq("owner_user_id", userId).limit(1));
   if (!checks.length) return null;

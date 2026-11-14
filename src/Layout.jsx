@@ -131,19 +131,24 @@ function LayoutContent({ children, currentPageName }) {
             {/* Back Button (mobile) + Logo */}
             <div className="flex items-center gap-1">
               <BackButton />
-              <Link to={createPageUrl("Home")} className="flex items-center">
+              <Link to={isAuthenticated ? createPageUrl("Home") : "/"} className="flex items-center">
                 <Logo size="default" />
               </Link>
             </div>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-2">
-              {[
+              {(isAuthenticated ? [
                 { to: createPageUrl("Home"), label: t('nav.home'), name: 'Home' },
                 { to: createPageUrl("Engineers"), label: t('nav.engineers'), name: 'Engineers' },
                 { to: createPageUrl("Projects"), label: t('nav.projects'), name: 'Projects' },
                 { to: createPageUrl("Gallery"), label: t('nav.gallery'), name: 'Gallery' },
-              ].map(({ to, label, name }) => (
+              ] : [
+                { to: "/", label: t('nav.home'), name: 'PublicHome' },
+                { to: "/audiences/engineering-firms", label: "شركات الهندسة", name: 'PublicFirms' },
+                { to: "/audiences/contractors", label: "المقاولون", name: 'PublicContractors' },
+                { to: "/audiences/consulting-teams", label: "الاستشاريون", name: 'PublicConsultants' },
+              ]).map(({ to, label, name }) => (
                 <Link
                   key={name}
                   to={to}
@@ -155,7 +160,7 @@ function LayoutContent({ children, currentPageName }) {
               ))}
 
               {/* Bytly Sections Dropdown */}
-              <DropdownMenu>
+              {isAuthenticated && (<DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className={`flex items-center gap-1 text-sm font-medium transition-colors hover:text-[#C9A66B] focus:outline-none ${['CostEstimator','ConstructionTracker','TechnicalResources','PermitApplication','EngineerMatcher','DesignMarketplace','AIEngineers','SurveyClientDashboard','SurveyorGigs'].includes(currentPageName) ? 'text-[#C9A66B]' : 'text-[#6B5D4F] dark:text-slate-300'}`}>
                     {t('nav.bytlySections')}
@@ -260,15 +265,15 @@ function LayoutContent({ children, currentPageName }) {
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
-              </DropdownMenu>
+              </DropdownMenu>)}
 
-              <Link 
+              {isAuthenticated && <Link 
                 to={createPageUrl("Messages")} 
                 className={`text-sm font-medium transition-colors hover:text-[#C9A66B] flex items-center gap-1.5 ${currentPageName === 'Messages' ? 'text-[#C9A66B]' : 'text-[#6B5D4F] dark:text-slate-300'}`}
               >
                 <MessagesSquare className="w-4 h-4" />
                 {t('nav.chat')}
-              </Link>
+              </Link>}
             </nav>
 
             {/* Actions */}
@@ -387,13 +392,18 @@ function LayoutContent({ children, currentPageName }) {
         {isMenuOpen && (
           <div className="md:hidden glass-effect border-t max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain">
             <div className="px-4 py-2 space-y-0.5">
-              {[
+              {(isAuthenticated ? [
                 { to: createPageUrl("Home"), label: t('nav.home') },
                 { to: createPageUrl("Engineers"), label: t('nav.engineers') },
                 { to: createPageUrl("Projects"), label: t('nav.projects') },
                 { to: createPageUrl("Gallery"), label: t('nav.gallery') },
                 { to: createPageUrl("Messages"), label: t('nav.chat') },
-              ].map(({ to, label }) => (
+              ] : [
+                { to: "/", label: t('nav.home') },
+                { to: "/audiences/engineering-firms", label: "شركات الهندسة" },
+                { to: "/audiences/contractors", label: "المقاولون" },
+                { to: "/audiences/consulting-teams", label: "الاستشاريون" },
+              ]).map(({ to, label }) => (
                 <Link
                   key={to}
                   to={to}
@@ -440,7 +450,7 @@ function LayoutContent({ children, currentPageName }) {
               )}
               {/* Bytly Sections group */}
               <div className="pt-2 pb-1 px-4 text-xs font-semibold text-[#C9A66B] uppercase tracking-wide">{t('nav.bytlySections')}</div>
-              {[
+              {(isAuthenticated ? [
                 { to: "/CostEstimator", label: `🧮 ${t('nav.costCalculator')}` },
                 { to: "/ProjectStages", label: `🛡️ محاكي حوكمة مراحل المشروع` },
                 { to: "/ConstructionTracker", label: `🏗️ ${t('nav.constructionTracker')}` },
@@ -458,7 +468,7 @@ function LayoutContent({ children, currentPageName }) {
                                 { to: "/audiences/engineering-firms", label: `🏢 شركات الهندسة` },
                                 { to: "/audiences/contractors", label: `🏗️ للمقاولين` },
                                 { to: "/audiences/consulting-teams", label: `🧑‍💼 للاستشاريين` },
-                                ].map(({ to, label }) => (
+                                ] : []).map(({ to, label }) => (
                                 <Link
                                   key={to}
                                   to={to}
@@ -531,13 +541,18 @@ function LayoutContent({ children, currentPageName }) {
             <div>
               <h3 className="font-semibold mb-4 text-[#C9A66B]">{t('footer.platform')}</h3>
               <ul className="text-sm text-slate-300">
-                {[
+                {(isAuthenticated ? [
                   { to: createPageUrl("Home"), label: t('nav.home') },
                   { to: createPageUrl("Engineers"), label: t('nav.engineers') },
                   { to: createPageUrl("ConsultingFirms"), label: t('nav.consultingFirms') },
                   { to: createPageUrl("Projects"), label: t('nav.projects') },
                   { to: createPageUrl("Gallery"), label: t('nav.gallery') },
-                ].map(({ to, label }) => (
+                ] : [
+                  { to: "/", label: t('nav.home') },
+                  { to: "/audiences/engineering-firms", label: "شركات الهندسة" },
+                  { to: "/audiences/contractors", label: "المقاولون" },
+                  { to: "/audiences/consulting-teams", label: "الاستشاريون" },
+                ]).map(({ to, label }) => (
                   <li key={to}>
                     <Link to={to} className="flex items-center hover:text-[#C9A66B] transition-colors py-1" style={{ minHeight: 36 }}>{label}</Link>
                   </li>
@@ -549,13 +564,17 @@ function LayoutContent({ children, currentPageName }) {
             <div>
               <h3 className="font-semibold mb-4 text-[#C9A66B]">{t('footer.solutionsAndResources')}</h3>
               <ul className="text-sm text-slate-300">
-                {[
+                {(isAuthenticated ? [
                   { to: "/Solutions", label: t('footer.solutions') },
                   { to: "/CaseStudies", label: t('footer.caseStudies') },
                   { to: "/Resources", label: t('footer.resources') },
                   { to: "/FAQ", label: t('home.faq.title') },
                   { to: "/CostEstimator", label: t('footer.costCalculator') },
-                ].map(({ to, label }) => (
+                ] : [
+                  { to: "/About", label: t('footer.about') },
+                  { to: "/ContactUs", label: t('footer.contactUs') },
+                  { to: "/Support", label: t('footer.technicalSupport') },
+                ]).map(({ to, label }) => (
                   <li key={to}>
                     <Link to={to} className="flex items-center hover:text-[#C9A66B] transition-colors py-1" style={{ minHeight: 36 }}>{label}</Link>
                   </li>
@@ -567,14 +586,22 @@ function LayoutContent({ children, currentPageName }) {
             <div>
               <h3 className="font-semibold mb-4 text-[#C9A66B]">{t('footer.company')}</h3>
               <ul className="text-sm text-slate-300">
-                {[
+                {(isAuthenticated ? [
                   { to: createPageUrl("About"), label: t('footer.about') },
                   { to: createPageUrl("ContactUs"), label: t('footer.contactUs') },
                   { to: "/RequestQuote", label: t('footer.requestQuote') },
                   { to: createPageUrl("Support"), label: t('footer.technicalSupport') },
                   { to: createPageUrl("Complaints"), label: t('footer.complaints') },
                   { to: "/Certificates", label: t('nav.certificates') },
-                ].map(({ to, label }) => (
+                ] : [
+                  { to: "/About", label: t('footer.about') },
+                  { to: "/FAQ", label: t('home.faq.title') },
+                  { to: "/CostEstimator", label: t('footer.costCalculator') },
+                  { to: "/Certificates", label: t('nav.certificates') },
+                  { to: "/ContactUs", label: t('footer.contactUs') },
+                  { to: "/Support", label: t('footer.technicalSupport') },
+                  { to: "/Complaints", label: t('footer.complaints') },
+                ]).map(({ to, label }) => (
                   <li key={to}>
                     <Link to={to} className="flex items-center hover:text-[#C9A66B] transition-colors py-1" style={{ minHeight: 36 }}>{label}</Link>
                   </li>

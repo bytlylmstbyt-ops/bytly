@@ -162,7 +162,7 @@ function PageSpinner() {
 function PublicHomeRoute() {
   const { isAuthenticated, isLoadingPublicSettings } = useAuth();
   if (isLoadingPublicSettings) return <PageSpinner />;
-  if (isAuthenticated) return <Navigate to="/Home" replace />;
+  if (isAuthenticated) return <Navigate to="/Dashboard" replace />;
   // Returning users who have already created/logged into an account should
   // start from the login form when their session is no longer active.
   try {
@@ -179,11 +179,12 @@ const AuthenticatedApp = () => {
   const { isLoadingPublicSettings } = useAuth();
   if (isLoadingPublicSettings) return <PageSpinner />;
   const publicPages = [
-    'ContactUs','Terms','Privacy','Copyright','Complaints','Support','RegisterChoice','RegisterAccount','RegistrationSuccess','About',
+    'ContactUs','Terms','Privacy','Copyright','Complaints','Support','FAQ','Certificates','CostEstimator','RegisterChoice','RegisterAccount','RegistrationSuccess','About',
     'RegisterClient','RegisterEngineer','RegisterFirm','RegisterLegalConsultant','RegisterConsultant','RegisterContractor','RegisterSupplier'
   ];
   return <Routes>
     <Route path="/" element={<PublicHomeRoute />} />
+    <Route path="/About" element={lazyRoute(About, "About")} />
     <Route path="/login" element={<Login />} />
     <Route path="/register" element={<Register />} />
     <Route path="/auth/callback" element={<AuthCallback />} />
