@@ -5,11 +5,64 @@ const withTimeout = (promise, ms, label) => Promise.race([
   new Promise((_, reject) => setTimeout(() => reject(new Error(label || "انتهت مهلة العملية. تحقق من الاتصال وحاول مرة أخرى.")), ms))
 ]);
 
+async function readFunctionError(error, fallback) {
+  let message = error?.message || fallback;
+  try {
+    const context = error?.context;
+    if (context && typeof context.json === "function") {
+      const body = await context.json();
+      if (body?.error) message = body.error;
+    }
+  } catch {}
+  return message;
+}
+
+export async function uploadRegistrationDocument(file, field, uploadSessionId) {
+  if (!supabase) throw new Error("خدمة التسجيل غير مهيأة حالياً.");
+  const allowedFields = ["graduation_certificate_url", "saudi_engineers_council_certificate_url", "profile_image"];
+  if (!allowedFields.includes(field)) throw new Error("نوع مستند التسجيل غير مسموح.");
+  const prepared = await withTimeout(
+    supabase.functions.invoke("complete-registration", {
+      body: { action: "prepare_document_upload", field, uploadSessionId, name: file.name, type: file.type, size: file.size }
+    }),
+    20000,
+    "انتهت مهلة تجهيز رفع الشهادة."
+  );
+  if (prepared.error) throw new Error(await readFunctionError(prepared.error, "تعذر تجهيز رفع الشهادة."));
+  const upload = prepared.data;
+  if (!upload?.ok || !upload?.path || !upload?.token) {
+    throw new Error(upload?.error || "تعذر تجهيز رابط رفع الشهادة.");
+  }
+  const result = await withTimeout(
+    supabase.storage.from("registration-documents").uploadToSignedUrl(
+      upload.path,
+      upload.token,
+      file,
+      { contentType: file.type, cacheControl: "3600", upsert: false }
+    ),
+    120000,
+    "انتهت مهلة رفع الشهادة. حاول مرة أخرى."
+  );
+  if (result.error) throw result.error;
+  return { path: upload.path };
+}
+
+export async function cleanupRegistrationUploads(paths = []) {
+  if (!supabase || !paths.length) return;
+  const match = String(paths[0] || "").match(/^registration-temp\/([0-9a-f-]{36})\//i);
+  if (!match) return;
+  try {
+    await supabase.functions.invoke("complete-registration", {
+      body: { action: "cleanup_document_uploads", uploadSessionId: match[1], paths }
+    });
+  } catch (error) {
+    console.warn("Temporary registration document cleanup failed:", error);
+  }
+}
+
 /**
- * Create a brand-new Bytly account in one submission.
- *
- * The Edge Function owns the privileged Auth + profile/role-row transaction,
- * so the browser never receives or needs the Supabase service-role key.
+ * Complete account creation after both required engineer certificates have
+ * been uploaded to private temporary paths using server-issued upload tokens.
  */
 export async function saveRegistration(payload) {
   if (!supabase) throw new Error("خدمة التسجيل غير مهيأة حالياً.");
@@ -20,9 +73,7 @@ export async function saveRegistration(payload) {
   let attribution = null;
   try { attribution = JSON.parse(localStorage.getItem("bytly_acquisition_attribution") || "null"); } catch {}
 
-  if (!email || !fullName || !phone) {
-    throw new Error("الاسم والبريد الإلكتروني ورقم الهاتف مطلوبة.");
-  }
+  if (!email || !fullName || !phone) throw new Error("الاسم والبريد الإلكتروني ورقم الهاتف مطلوبة.");
 
   const response = await withTimeout(
     supabase.functions.invoke("complete-registration", {
@@ -34,60 +85,29 @@ export async function saveRegistration(payload) {
         phone,
         password: payload.password,
         row: payload.row || {},
+        documents: payload.documents || {},
         attribution
       }
     }),
-    30000,
+    120000,
     "انتهت مهلة إنشاء الحساب. تحقق من الاتصال وحاول مرة أخرى."
   );
 
-  if (response.error) {
-    let message = response.error.message || "تعذر إكمال التسجيل.";
-
-    // Supabase may wrap an Edge Function's JSON error in FunctionsHttpError.
-    // Prefer the server's Arabic/validation message when it is available.
-    try {
-      const context = response.error.context;
-      if (context && typeof context.json === "function") {
-        const body = await context.json();
-        if (body?.error) message = body.error;
-      }
-    } catch {}
-
-    throw new Error(message);
-  }
-
+  if (response.error) throw new Error(await readFunctionError(response.error, "تعذر إكمال التسجيل."));
   const data = response.data;
-  if (!data?.ok) {
-    throw new Error(data?.error || "تعذر إكمال التسجيل.");
-  }
+  if (!data?.ok) throw new Error(data?.error || "تعذر إكمال التسجيل.");
 
-  // The Edge Function creates and confirms the Auth user server-side.
-  // Start the browser session immediately so protected routes recognize the
-  // newly registered user instead of sending them back to registration.
   const signInResult = await withTimeout(
-    supabase.auth.signInWithPassword({
-      email,
-      password: String(payload?.password || "")
-    }),
+    supabase.auth.signInWithPassword({ email, password: String(payload?.password || "") }),
     20000,
     "انتهت مهلة تسجيل الدخول بعد إنشاء الحساب."
   );
-
   if (signInResult.error || !signInResult.data?.session?.user) {
-    throw new Error(
-      signInResult.error?.message || "تم إنشاء الحساب لكن تعذر بدء جلسة الدخول."
-    );
+    throw new Error(signInResult.error?.message || "تم إنشاء الحساب لكن تعذر بدء جلسة الدخول.");
   }
-
   return { ...data, session_started: true };
 }
 
-/**
- * Kept as a compatibility no-op for older callers.
- * New registration no longer waits for an email-confirmation session or
- * stores a pending registration in localStorage.
- */
 export async function resumePendingRegistration() {
   return null;
 }

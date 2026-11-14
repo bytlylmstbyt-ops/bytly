@@ -48,7 +48,30 @@ export default function AdminEngineersPage() {
 
       const { data: engineersData, error: engineersError } = await supabase.from("engineers").select("*").order("created_at", { ascending: false });
       if (engineersError) throw engineersError;
-      setEngineers(engineersData || []);
+      const withDocumentLinks = await Promise.all((engineersData || []).map(async (engineer) => {
+        const resolveDocumentUrl = async (value) => {
+          if (!value) return null;
+          if (value.startsWith("http://") || value.startsWith("https://")) return value;
+          const { data, error } = await supabase.storage
+            .from("registration-documents")
+            .createSignedUrl(value, 3600);
+          if (error) {
+            console.error("Could not create engineer document link:", error);
+            return null;
+          }
+          return data?.signedUrl || null;
+        };
+        const [graduationUrl, councilUrl] = await Promise.all([
+          resolveDocumentUrl(engineer.graduation_certificate_url),
+          resolveDocumentUrl(engineer.saudi_engineers_council_certificate_url)
+        ]);
+        return {
+          ...engineer,
+          graduation_certificate_signed_url: graduationUrl,
+          saudi_engineers_council_certificate_signed_url: councilUrl
+        };
+      }));
+      setEngineers(withDocumentLinks);
     } catch (error) {
       console.error("Error loading data:", error);
       alert("حدث خطأ في تحميل البيانات");
@@ -369,7 +392,7 @@ export default function AdminEngineersPage() {
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-slate-500">شهادة التخرج:</span>
                               <a
-                                href={engineer.graduation_certificate_url}
+                                href={engineer.graduation_certificate_signed_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
@@ -383,7 +406,7 @@ export default function AdminEngineersPage() {
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-slate-500">شهادة القيد (الهيئة السعودية للمهندسين):</span>
                               <a
-                                href={engineer.saudi_engineers_council_certificate_url}
+                                href={engineer.saudi_engineers_council_certificate_signed_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
@@ -512,7 +535,7 @@ export default function AdminEngineersPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{[{l:"المشاريع المكتملة",v:selectedEngineer.completed_projects||0,i:Briefcase},{l:"التقييم",v:selectedEngineer.rating?.toFixed?.(1)||"0.0",i:Star},{l:"المراجعات",v:selectedEngineer.total_reviews||0,i:Award},{l:"رصيد المحفظة",v:`${(selectedEngineer.wallet_balance||0).toLocaleString('ar-SA')} ريال`,i:DollarSign}].map(({l,v,i:Icon})=><Card key={l}><CardContent className="p-4"><Icon className="w-4 h-4 text-[#C9A66B] mb-2"/><p className="font-bold text-lg">{v}</p><p className="text-xs text-slate-500">{l}</p></CardContent></Card>)}</div>
               <div className="grid md:grid-cols-2 gap-4">
                 <Card><CardContent className="p-4"><h4 className="font-bold mb-3 flex items-center gap-2"><ShieldCheck className="w-4 h-4"/> التوثيق والاعتماد</h4><div className="space-y-2 text-sm"><p>رقم القيد: <b>{selectedEngineer.registration_number || "غير متوفر"}</b></p><p>اعتمد بواسطة: <b>{selectedEngineer.certified_by || "—"}</b></p><p>تاريخ الاعتماد: <b>{selectedEngineer.certified_at ? new Date(selectedEngineer.certified_at).toLocaleString('ar-SA') : "—"}</b></p></div></CardContent></Card>
-                <Card><CardContent className="p-4"><h4 className="font-bold mb-3 flex items-center gap-2"><FileText className="w-4 h-4"/> المستندات</h4><div className="space-y-2">{[["شهادة التخرج",selectedEngineer.graduation_certificate_url],["شهادة هيئة المهندسين",selectedEngineer.saudi_engineers_council_certificate_url]].map(([label,url])=><div key={label} className="flex items-center justify-between gap-2 text-sm"><span>{label}</span>{url ? <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline inline-flex items-center gap-1">عرض <ExternalLink className="w-3 h-3"/></a> : <span className="text-red-500">غير مرفوعة</span>}</div>)}</div></CardContent></Card>
+                <Card><CardContent className="p-4"><h4 className="font-bold mb-3 flex items-center gap-2"><FileText className="w-4 h-4"/> المستندات</h4><div className="space-y-2">{[["شهادة التخرج",selectedEngineer.graduation_certificate_signed_url],["شهادة هيئة المهندسين",selectedEngineer.saudi_engineers_council_certificate_signed_url]].map(([label,url])=><div key={label} className="flex items-center justify-between gap-2 text-sm"><span>{label}</span>{url ? <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline inline-flex items-center gap-1">عرض <ExternalLink className="w-3 h-3"/></a> : <span className="text-red-500">غير مرفوعة</span>}</div>)}</div></CardContent></Card>
               </div>
             </div>}
           </DialogContent>
@@ -558,14 +581,14 @@ export default function AdminEngineersPage() {
                     <div className="border rounded-xl p-4 bg-slate-50">
                       {reviewEngineer.graduation_certificate_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
                         <img
-                          src={reviewEngineer.graduation_certificate_url}
+                          src={reviewEngineer.graduation_certificate_signed_url}
                           alt="شهادة التخرج"
                           className="w-full max-h-72 object-contain rounded-lg"
                         />
                       ) : (
                         <div className="flex items-center justify-center py-8">
                           <a
-                            href={reviewEngineer.graduation_certificate_url}
+                            href={reviewEngineer.graduation_certificate_signed_url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 text-blue-600 hover:underline"
@@ -590,14 +613,14 @@ export default function AdminEngineersPage() {
                     <div className="border rounded-xl p-4 bg-slate-50">
                       {reviewEngineer.saudi_engineers_council_certificate_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
                         <img
-                          src={reviewEngineer.saudi_engineers_council_certificate_url}
+                          src={reviewEngineer.saudi_engineers_council_certificate_signed_url}
                           alt="شهادة القيد في الهيئة السعودية للمهندسين"
                           className="w-full max-h-72 object-contain rounded-lg"
                         />
                       ) : (
                         <div className="flex items-center justify-center py-8">
                           <a
-                            href={reviewEngineer.saudi_engineers_council_certificate_url}
+                            href={reviewEngineer.saudi_engineers_council_certificate_signed_url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 text-blue-600 hover:underline"
