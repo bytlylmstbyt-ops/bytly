@@ -184,7 +184,8 @@ const AuthenticatedApp = () => {
   ];
   return <Routes>
     <Route path="/" element={<PublicHomeRoute />} />
-    <Route path="/About" element={lazyRoute(About, "About")} />
+    <Route path="/about" element={lazyRoute(About, "About")} />
+    <Route path="/About" element={<Navigate to="/about" replace />} />
     <Route path="/login" element={<Login />} />
     <Route path="/register" element={<Register />} />
     <Route path="/auth/callback" element={<AuthCallback />} />
