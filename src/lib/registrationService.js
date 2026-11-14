@@ -38,7 +38,7 @@ export async function saveRegistration(payload) {
         attribution
       }
     }),
-    30000,
+    120000,
     "انتهت مهلة إنشاء الحساب. تحقق من الاتصال وحاول مرة أخرى."
   );
 
