@@ -23,6 +23,15 @@
   ],
   "headers": [
     {
+      "source": "/(login|Login|register|Register|RegisterChoice|RegisterEngineer|RegisterClient|RegisterConsultant|RegisterFirm|RegisterLegalConsultant|RegisterContractor|RegisterSupplier|RegistrationSuccess|forgot-password|reset-password|auth/callback|mcp-consent|Dashboard|Home|Wallet|Messages|Settings|Admin[^/]*|Engineers|Projects|Gallery|ConsultingFirms|DesignMarketplace|ClientDashboard|EngineerDashboard|FirmDashboard|ContractorDashboard|SupplierDashboard|ConsultantDashboard|LegalConsultantDashboard|SurveyClientDashboard|SurveyorGigs)(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
       "source": "/assets/(.*)",
       "headers": [
         {
