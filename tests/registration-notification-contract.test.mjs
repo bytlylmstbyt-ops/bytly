@@ -48,7 +48,7 @@ test("upload rate limiting requires the edge IP and fails closed on missing IP o
 });
 
 test("workspace email headers strip CRLF from recipient and subject", () => {
-  assert.match(workspace, /const cleanHeader = \(value: unknown\) => String\(value \?\? ""\)\.replace\(\/[\\r\\n]\/g, " "\)\.trim\(\)/);
+  assert.ok(workspace.includes('const cleanHeader = (value: unknown) => String(value ?? "").replace(/[\\r\\n]/g, " ").trim();'));
   assert.match(workspace, /`To: \$\{cleanHeader\(to\)\}`/);
   assert.match(workspace, /`Subject: \$\{cleanHeader\(subject\)\}`/);
 });
@@ -57,7 +57,7 @@ test("workspace authorization lookup failures stop before notification insertion
   const failed = workspace.indexOf('error: "PARTICIPANT_LOOKUP_FAILED"');
   const insert = workspace.indexOf('admin.from("notifications").insert(rows)');
   assert.ok(failed >= 0 && insert >= 0 && failed < insert);
-  assert.match(workspace, /if\(!isParticipant && !isAdmin\) return json\(\{ ok: false, error: "NOT_A_PROJECT_PARTICIPANT" \}, 403\)/);
+  assert.ok(workspace.includes('if (!isParticipant && !isAdmin) return json({ ok: false, error: "NOT_A_PROJECT_PARTICIPANT" }, 403);'));
 });
 
 test("workspace email delivery is best-effort after notifications are inserted", () => {
