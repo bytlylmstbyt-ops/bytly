@@ -91,7 +91,7 @@ export default function RouteTitleManager() {
 
     document.title = title;
     setMeta('description', description);
-    setMeta('robots', /^(\/login|\/register|\/forgot-password|\/reset-password|\/Dashboard|\/Home|\/Wallet|\/Messages|\/Settings|\/Admin[^/]*|\/Engineers|\/Projects|\/Gallery|\/ConsultingFirms|\/DesignMarketplace|\/ClientDashboard|\/EngineerDashboard|\/FirmDashboard|\/ContractorDashboard|\/SupplierDashboard)/i.test(path) ? 'noindex, nofollow' : 'index, follow, max-image-preview:large');
+    setMeta('robots', /^(\/login|\/register|\/forgot-password|\/reset-password|\/auth\/callback|\/mcp-consent|\/Dashboard|\/Home|\/Wallet|\/Messages|\/Settings|\/Admin[^/]*|\/Engineers|\/Projects|\/Gallery|\/ConsultingFirms|\/DesignMarketplace|\/ClientDashboard|\/EngineerDashboard|\/FirmDashboard|\/ContractorDashboard|\/SupplierDashboard|\/ConsultantDashboard|\/LegalConsultantDashboard|\/SurveyClientDashboard|\/SurveyorGigs|\/RegistrationSuccess|\/RegisterChoice|\/RegisterAccount)/i.test(path) ? 'noindex, nofollow' : 'index, follow, max-image-preview:large');
     setMeta('og:title', title, 'property');
     setMeta('og:description', description, 'property');
     setMeta('og:url', canonicalUrl, 'property');
