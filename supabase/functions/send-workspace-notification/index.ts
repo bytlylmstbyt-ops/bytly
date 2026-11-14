@@ -30,8 +30,8 @@ async function sendSystemEmail(to: string, subject: string, html: string) {
   const rawMessage = [
     "From: Bytly <info@mybytly.com>",
     "Reply-To: info@mybytly.com",
-    `To: ${to}`,
-    `Subject: ${subject}`,
+    `To: ${cleanHeader(to)}`,
+    `Subject: ${cleanHeader(subject)}`,
     "MIME-Version: 1.0",
     "Content-Type: text/html; charset=UTF-8",
     "",
@@ -89,6 +89,18 @@ Deno.serve(async (req: Request) => {
       : Promise.resolve({ data: null }),
   ]);
   const isAdminProfile = await admin.from("profiles").select("role").eq("user_id", actorId).maybeSingle();
+  const relationshipQueries = [member, offer, contracts, members, isAdminProfile];
+  if (relationshipQueries.some((result) => result.error) || assignedEngineer?.error) {
+    console.error("Workspace participant lookup failed", {
+      member: member.error?.message,
+      offer: offer.error?.message,
+      contracts: contracts.error?.message,
+      members: members.error?.message,
+      assignedEngineer: assignedEngineer?.error?.message,
+      profile: isAdminProfile.error?.message,
+    });
+    return json({ ok: false, error: "PARTICIPANT_LOOKUP_FAILED" }, 500);
+  }
   const isAdmin = isAdminProfile.data?.role === "admin" || isAdminProfile.data?.role === "super_admin";
   const assignedEngineerUserId = assignedEngineer.data?.user_id || null;
   const isContractParty = (contracts.data || []).some((row: any) =>
@@ -132,7 +144,12 @@ Deno.serve(async (req: Request) => {
       const { data } = await admin.auth.admin.getUserById(id);
       const to = data?.user?.email;
       if (!to) return { sent: false, reason: "recipient_email_missing" };
-      return sendSystemEmail(to, title, html);
+      try {
+        return await sendSystemEmail(to, title, html);
+      } catch (error) {
+        console.error("Workspace email delivery failed", error);
+        return { sent: false, reason: "email_delivery_unavailable" };
+      }
     }));
     emailed = results.filter((result) => result.sent).length;
     emailUnavailable = results.some((result) => !result.sent);
