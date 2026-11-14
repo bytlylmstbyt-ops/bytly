@@ -38,7 +38,7 @@ export async function uploadRegistrationDocument(file, field, uploadSessionId) {
       upload.path,
       upload.token,
       file,
-      { contentType: file.type, upsert: false }
+      { contentType: file.type, cacheControl: "3600", upsert: false }
     ),
     120000,
     "انتهت مهلة رفع الشهادة. حاول مرة أخرى."
