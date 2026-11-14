@@ -19,7 +19,7 @@ async function readFunctionError(error, fallback) {
 
 export async function uploadRegistrationDocument(file, field, uploadSessionId) {
   if (!supabase) throw new Error("خدمة التسجيل غير مهيأة حالياً.");
-  const allowedFields = ["graduation_certificate_url", "saudi_engineers_council_certificate_url"];
+  const allowedFields = ["graduation_certificate_url", "saudi_engineers_council_certificate_url", "profile_image"];
   if (!allowedFields.includes(field)) throw new Error("نوع مستند التسجيل غير مسموح.");
   const prepared = await withTimeout(
     supabase.functions.invoke("complete-registration", {
