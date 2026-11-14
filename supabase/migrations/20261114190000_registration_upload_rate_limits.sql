@@ -10,13 +10,17 @@ alter table public.registration_upload_rate_limits enable row level security;
 revoke all on table public.registration_upload_rate_limits from anon, authenticated;
 grant all on table public.registration_upload_rate_limits to service_role;
 
+-- Keep retention cleanup bounded by an indexed timestamp lookup.
+create index if not exists registration_upload_rate_limits_updated_at_idx
+  on public.registration_upload_rate_limits (updated_at);
+
 create or replace function public.consume_registration_upload_rate_limit(
   p_fingerprint_hash text,
   p_limit integer,
   p_window_seconds integer
 ) returns boolean
 language plpgsql
-security definer
+security invoker
 set search_path = pg_catalog, public
 as $$
 declare
@@ -24,11 +28,16 @@ declare
   v_count integer;
   v_blocked_until timestamptz;
 begin
-  if p_fingerprint_hash !~ '^[0-9a-f]{64}$'
-     or p_limit < 1 or p_limit > 100
-     or p_window_seconds < 60 or p_window_seconds > 86400 then
+  if p_fingerprint_hash is null
+     or p_fingerprint_hash !~ '^[0-9a-f]{64}$'
+     or p_limit is null or p_limit < 1 or p_limit > 100
+     or p_window_seconds is null or p_window_seconds < 60 or p_window_seconds > 86400 then
     raise exception 'invalid rate limit arguments';
   end if;
+
+  -- Expire old HMAC fingerprints so this private table does not grow forever.
+  delete from public.registration_upload_rate_limits
+  where updated_at < v_now - interval '7 days';
 
   insert into public.registration_upload_rate_limits as limits
     (fingerprint_hash, window_started_at, request_count, blocked_until, updated_at)
