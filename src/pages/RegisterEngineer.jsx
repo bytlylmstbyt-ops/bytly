@@ -137,13 +137,13 @@ export default function RegisterEngineer() {
       const documents = { uploadSessionId };
       for (const field of requiredCertificateFields) {
         const file = certificateFiles[field];
-        const uploaded = await uploadRegistrationDocument(file, field, uploadSessionId);
+        const uploaded = await uploadRegistrationDocument(file, field, uploadSessionId, formData.email);
         uploadedTempPaths.push(uploaded.path);
         documents[field] = { path: uploaded.path, name: file.name, type: file.type };
       }
       if (certificateFiles.profile_image) {
         const file = certificateFiles.profile_image;
-        const uploaded = await uploadRegistrationDocument(file, "profile_image", uploadSessionId);
+        const uploaded = await uploadRegistrationDocument(file, "profile_image", uploadSessionId, formData.email);
         uploadedTempPaths.push(uploaded.path);
         documents.profile_image = { path: uploaded.path, name: file.name, type: file.type };
       }
