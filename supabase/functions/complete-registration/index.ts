@@ -97,6 +97,16 @@ Deno.serve(async(req)=>{
       return json({ok:false,error:"انتهت جلسة رفع الشهادات. أعد اختيار الشهادتين وحاول مرة أخرى."},400);
     }
     const mimeExtensions:Record<string,string>={"application/pdf":"pdf","image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
+    // Register every session-owned candidate path before validating any file.
+    // If the first certificate fails, later already-uploaded files are still cleaned.
+    for(const field of fieldsToValidate){
+      const candidate=documents[field];
+      const candidatePath=String(candidate?.path||"");
+      const candidateExtension=mimeExtensions[String(candidate?.type||"")];
+      if(!candidateExtension)continue;
+      const candidatePattern=new RegExp("^registration-temp/"+uploadSessionId+"/"+field+"-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\."+candidateExtension+"$","i");
+      if(candidatePattern.test(candidatePath)&&!temporaryDocumentPaths.includes(candidatePath))temporaryDocumentPaths.push(candidatePath);
+    }
     for(const field of fieldsToValidate){
       const doc=documents[field];
       const path=String(doc?.path||"");
@@ -109,9 +119,6 @@ Deno.serve(async(req)=>{
         await cleanupTemporaryDocuments();
         return json({ok:false,error:"يرجى رفع شهادة التخرج وشهادة القيد من جديد."},400);
       }
-      // Track the session-scoped path before reading it so every subsequent
-      // validation failure can safely remove the temporary object.
-      temporaryDocumentPaths.push(path);
       if(!doc?.name){
         await recordAttempt("failed",null,"document_validation",`اسم المستند مفقود: ${field}`);
         await cleanupTemporaryDocuments();
