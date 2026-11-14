@@ -1,19 +1,8 @@
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 
 /**
- * يسجل نشاطاً جديداً في مساحة عمل المشروع.
- * @param {Object} params
- * @param {string} params.projectId - معرف المشروع
- * @param {Object} params.user - المستخدم الحالي (من base44.auth.me)
- * @param {string} params.activityType - نوع النشاط (من enum في الكيان)
- * @param {string} params.summary - وصف مختصر
- * @param {string} [params.entityType] - نوع الكيان
- * @param {string} [params.entityId] - معرف الكيان
- * @param {string} [params.entityTitle] - عنوان الكيان
- * @param {string} [params.oldValue] - القيمة القديمة
- * @param {string} [params.newValue] - القيمة الجديدة
- * @param {Object} [params.metadata] - بيانات إضافية
- * @param {string} [params.actorRole] - دور المستخدم
+ * Appends an activity entry for the authenticated project participant.
+ * RLS verifies both actor_user_id and the actor's relationship to the project.
  */
 export async function logWorkspaceActivity({
   projectId,
@@ -29,22 +18,36 @@ export async function logWorkspaceActivity({
   actorRole,
 }) {
   if (!projectId || !activityType || !summary) return;
+
   try {
-    await base44.entities.WorkspaceActivity.create({
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    const actor = authData?.user;
+    if (authError || !actor) return;
+
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const activityMetadata = {
+      ...(metadata && typeof metadata === "object" ? metadata : {}),
+      summary: String(summary),
+      actor_email: user?.email || actor.email || null,
+      actor_name: user?.full_name || user?.name || actor.user_metadata?.full_name || actor.email?.split("@")[0] || "مستخدم",
+      actor_role: actorRole || user?.role || "participant",
+      entity_title: entityTitle || null,
+      old_value: oldValue == null ? null : String(oldValue),
+      new_value: newValue == null ? null : String(newValue),
+    };
+
+    const { error } = await supabase.from("project_activity").insert({
       project_id: projectId,
-      actor_email: user?.email || "system",
-      actor_name: user?.full_name || user?.email?.split("@")[0] || "النظام",
-      actor_role: actorRole || "system",
-      activity_type: activityType,
-      entity_type: entityType,
-      entity_id: entityId,
-      entity_title: entityTitle,
-      summary,
-      old_value: oldValue ? String(oldValue) : undefined,
-      new_value: newValue ? String(newValue) : undefined,
-      metadata,
+      actor_user_id: actor.id,
+      action: String(activityType),
+      entity_type: entityType || null,
+      entity_id: entityId && uuidPattern.test(String(entityId)) ? String(entityId) : null,
+      metadata: activityMetadata,
     });
+
+    if (error) throw error;
   } catch (err) {
-    console.error("WorkspaceActivity log failed (non-blocking):", err);
+    // Activity logging is deliberately non-blocking for the primary project action.
+    console.error("Workspace activity log failed:", err);
   }
 }
