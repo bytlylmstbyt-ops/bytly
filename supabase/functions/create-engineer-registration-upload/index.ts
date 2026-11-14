@@ -52,9 +52,6 @@ Deno.serve(async (req: Request) => {
     const size = Number(body?.size);
 
     if (!fields.has(field)) return json({ ok: false, error: "نوع المستند غير مسموح." }, 400);
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uploadSessionId)) {
-      return json({ ok: false, error: "جلسة رفع المستند غير صالحة." }, 400);
-    }
     if (!name || !Number.isFinite(size) || size <= 0 || size > 10 * 1024 * 1024 || !mimeExtensions[type]) {
       return json({ ok: false, error: "ارفع ملف PDF أو JPG أو PNG أو WEBP لا يتجاوز 10 ميجابايت." }, 400);
     }
