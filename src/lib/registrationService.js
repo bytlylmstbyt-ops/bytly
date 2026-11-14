@@ -52,7 +52,7 @@ export async function cleanupRegistrationUploads(paths = []) {
   const match = String(paths[0] || "").match(/^registration-temp\/([0-9a-f-]{36})\//i);
   if (!match) return;
   try {
-    await supabase.functions.invoke("create-engineer-registration-upload", {
+    await supabase.functions.invoke("complete-registration", {
       body: { action: "cleanup_document_uploads", uploadSessionId: match[1], paths }
     });
   } catch (error) {
