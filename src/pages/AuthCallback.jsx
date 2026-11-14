@@ -123,22 +123,33 @@ export default function AuthCallback() {
         const fullName = draft?.full_name || user.user_metadata?.full_name || user.user_metadata?.name || "";
         const email = user.email || draft?.email || "";
 
-        const { error: profileError } = await supabase.from("profiles").upsert({
-          user_id: user.id,
-          full_name: fullName,
-          email,
-          phone: "",
-          role: role || "client"
-        }, { onConflict: "user_id" });
-        if (profileError) throw profileError;
+        const { data: existingProfile, error: existingProfileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (existingProfileError) throw existingProfileError;
+
+        // Do not overwrite an existing user's role just because an OAuth callback
+        // has no registration draft or metadata role.
+        if (draft || !existingProfile) {
+          const { error: profileError } = await supabase.from("profiles").upsert({
+            user_id: user.id,
+            full_name: fullName || user.user_metadata?.full_name || "",
+            email,
+            phone: "",
+            role: role || existingProfile?.role || "client"
+          }, { onConflict: "user_id" });
+          if (profileError) throw profileError;
+        }
 
         try { await supabase.rpc("claim_migrated_account"); } catch {}
 
         if (active) {
-          if (role && ROLE_ROUTES[role]) navigate(ROLE_ROUTES[role], { replace: true });
+          if (draft && role && ROLE_ROUTES[role]) navigate(ROLE_ROUTES[role], { replace: true });
           else {
             try { sessionStorage.removeItem("bytly_registration_draft"); } catch {}
-            navigate("/Home", { replace: true });
+            navigate("/Dashboard", { replace: true });
           }
         }
       } catch (err) {
