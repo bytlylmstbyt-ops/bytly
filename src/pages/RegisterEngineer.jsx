@@ -40,7 +40,7 @@ export default function RegisterEngineer() {
   useEffect(() => {
     let active = true;
     supabase.auth.getSession().then(({ data }) => {
-      if (active && data?.session?.user) navigate(createPageUrl("Home"), { replace: true });
+      if (active && data?.session?.user) navigate(createPageUrl("RegistrationSuccess"), { replace: true });
     }).catch(() => {});
     return () => { active = false; };
   }, [navigate]);
@@ -139,15 +139,27 @@ export default function RegisterEngineer() {
       const today = new Date();
       const trialEnd = new Date(); trialEnd.setMonth(trialEnd.getMonth() + 3);
       const localDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      const requiredCertificateFields = ["graduation_certificate_url", "saudi_engineers_council_certificate_url"];\n      for (const field of requiredCertificateFields) {\n        if (!certificateFiles[field]) throw new Error(field === "graduation_certificate_url" ? "يرجى إرفاق شهادة التخرج." : "يرجى إرفاق شهادة القيد في الهيئة السعودية للمهندسين.");\n      }\n      const documents = {};\n      for (const [field, file] of Object.entries(certificateFiles)) {\n        if (!file) continue;\n        documents[field] = { name: file.name, type: file.type, base64: await fileToBase64(file) };\n      }\n      const engineer = await withTimeout(saveRegistration({
+      const requiredCertificateFields = ["graduation_certificate_url", "saudi_engineers_council_certificate_url"];
+      for (const field of requiredCertificateFields) {
+        if (!certificateFiles[field]) throw new Error(field === "graduation_certificate_url" ? "يرجى إرفاق شهادة التخرج." : "يرجى إرفاق شهادة القيد في الهيئة السعودية للمهندسين.");
+      }
+      const documents = {};
+      for (const [field, file] of Object.entries(certificateFiles)) {
+        if (!file) continue;
+        documents[field] = { name: file.name, type: file.type, base64: await fileToBase64(file) };
+      }
+      const engineer = await withTimeout(saveRegistration({
         table: "engineers", role: "engineer", fullName: formData.full_name, email: formData.email, phone: formData.phone,
         password,
+        documents,
         row: { full_name: formData.full_name, phone: formData.phone, city: formData.city, country: formData.country, specialization: formData.specialization, registration_number: formData.registration_number, bio: formData.bio, profile_image: "", years_experience: parseInt(formData.years_experience) || 0, completed_projects: parseInt(formData.completed_projects) || 0, status: "pending", is_verified: false, rating: 0, total_reviews: 0, wallet_balance: 0, subscription_type: isFreeEligible ? "free_trial" : "none", is_subscription_active: isFreeEligible, subscription_start_date: isFreeEligible ? localDate(today) : undefined, trial_end_date: isFreeEligible ? localDate(trialEnd) : undefined, is_real: true, source: "supabase" }
-      }), 15000);
+      }), 90000);
       try { localStorage.removeItem(STORAGE_KEY); } catch {}
       setNotice({ type: "success", title: "تم تسجيلك بنجاح", message: "استلمنا طلبك وشهاداتك. سيبقى حسابك قيد المراجعة حتى تتحقق الإدارة من بياناتك وتعتمد حسابك." });
       toast.success("تم تسجيلك بنجاح. طلبك الآن قيد المراجعة.");
-\n\n      const validPortfolioItems = portfolioItems.filter(item => item.title || item.images?.length > 0);
+
+
+      const validPortfolioItems = portfolioItems.filter(item => item.title || item.images?.length > 0);
       if (validPortfolioItems.length > 0 && engineer?.id) {
         const portfolioRows = validPortfolioItems.map(item => ({
           engineer_id: engineer.id,
