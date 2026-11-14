@@ -104,7 +104,8 @@ export default function RegisterEngineer() {
       toast.error(message);
       return;
     }
-    if (field !== "profile_image" && !["application/pdf", "image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    const allowedTypes = field === "profile_image" ? ["image/jpeg", "image/png", "image/webp"] : ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
       toast.error("نوع الملف غير مدعوم. ارفع PDF أو صورة JPG أو PNG أو WEBP.");
       return;
     }
@@ -139,6 +140,12 @@ export default function RegisterEngineer() {
         const uploaded = await uploadRegistrationDocument(file, field, uploadSessionId);
         uploadedTempPaths.push(uploaded.path);
         documents[field] = { path: uploaded.path, name: file.name, type: file.type };
+      }
+      if (certificateFiles.profile_image) {
+        const file = certificateFiles.profile_image;
+        const uploaded = await uploadRegistrationDocument(file, "profile_image", uploadSessionId);
+        uploadedTempPaths.push(uploaded.path);
+        documents.profile_image = { path: uploaded.path, name: file.name, type: file.type };
       }
       const engineer = await withTimeout(saveRegistration({
         table: "engineers", role: "engineer", fullName: formData.full_name, email: formData.email, phone: formData.phone,
