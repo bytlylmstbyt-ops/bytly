@@ -79,25 +79,33 @@ Deno.serve(async (req: Request) => {
   if (!project) return json({ ok: false, error: "PROJECT_NOT_FOUND" }, 404);
 
   const actorId = authData.user.id;
-  const [member, offer, contract] = await Promise.all([
+  const [member, offer, contracts, members, assignedEngineer] = await Promise.all([
     admin.from("project_members").select("user_id").eq("project_id", projectId).eq("user_id", actorId).maybeSingle(),
     admin.from("project_offers").select("engineer_user_id").eq("project_id", projectId).eq("engineer_user_id", actorId).maybeSingle(),
-    admin.from("project_contracts").select("id").eq("project_id", projectId)
-      .or(`client_user_id.eq.${actorId},provider_user_id.eq.${actorId}`).limit(1),
+    admin.from("project_contracts").select("client_user_id,provider_user_id").eq("project_id", projectId),
+    admin.from("project_members").select("user_id").eq("project_id", projectId),
+    project.assigned_engineer_id
+      ? admin.from("engineers").select("user_id").eq("id", project.assigned_engineer_id).maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
   const isAdminProfile = await admin.from("profiles").select("role").eq("user_id", actorId).maybeSingle();
   const isAdmin = isAdminProfile.data?.role === "admin" || isAdminProfile.data?.role === "super_admin";
-  const isParticipant = project.client_user_id === actorId || Boolean(member.data) || Boolean(offer.data) || Boolean(contract.data?.length);
+  const assignedEngineerUserId = assignedEngineer.data?.user_id || null;
+  const isContractParty = (contracts.data || []).some((row: any) =>
+    row.client_user_id === actorId || row.provider_user_id === actorId
+  );
+  const isParticipant = project.client_user_id === actorId ||
+    assignedEngineerUserId === actorId || Boolean(member.data) || Boolean(offer.data) || isContractParty;
   if (!isParticipant && !isAdmin) return json({ ok: false, error: "NOT_A_PROJECT_PARTICIPANT" }, 403);
 
   const recipientIds = new Set<string>();
   if (project.client_user_id && project.client_user_id !== actorId) recipientIds.add(project.client_user_id);
-  if (project.assigned_engineer_id) {
-    const { data: engineer } = await admin.from("engineers").select("user_id").eq("id", project.assigned_engineer_id).maybeSingle();
-    if (engineer?.user_id && engineer.user_id !== actorId) recipientIds.add(engineer.user_id);
+  if (assignedEngineerUserId && assignedEngineerUserId !== actorId) recipientIds.add(assignedEngineerUserId);
+  for (const memberRow of members.data || []) if (memberRow.user_id && memberRow.user_id !== actorId) recipientIds.add(memberRow.user_id);
+  for (const contractRow of contracts.data || []) {
+    if (contractRow.client_user_id && contractRow.client_user_id !== actorId) recipientIds.add(contractRow.client_user_id);
+    if (contractRow.provider_user_id && contractRow.provider_user_id !== actorId) recipientIds.add(contractRow.provider_user_id);
   }
-  const { data: members } = await admin.from("project_members").select("user_id").eq("project_id", projectId);
-  for (const memberRow of members || []) if (memberRow.user_id && memberRow.user_id !== actorId) recipientIds.add(memberRow.user_id);
   if (!recipientIds.size) return json({ ok: true, notified: 0, emailed: 0 });
 
   const typeMap: Record<string, string> = {
