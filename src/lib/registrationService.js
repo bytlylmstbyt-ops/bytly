@@ -22,8 +22,8 @@ export async function uploadRegistrationDocument(file, field, uploadSessionId) {
   const allowedFields = ["graduation_certificate_url", "saudi_engineers_council_certificate_url"];
   if (!allowedFields.includes(field)) throw new Error("نوع مستند التسجيل غير مسموح.");
   const prepared = await withTimeout(
-    supabase.functions.invoke("create-engineer-registration-upload", {
-      body: { field, uploadSessionId, name: file.name, type: file.type, size: file.size }
+    supabase.functions.invoke("complete-registration", {
+      body: { action: "prepare_document_upload", field, uploadSessionId, name: file.name, type: file.type, size: file.size }
     }),
     20000,
     "انتهت مهلة تجهيز رفع الشهادة."
@@ -53,7 +53,7 @@ export async function cleanupRegistrationUploads(paths = []) {
   if (!match) return;
   try {
     await supabase.functions.invoke("create-engineer-registration-upload", {
-      body: { action: "cleanup", uploadSessionId: match[1], paths }
+      body: { action: "cleanup_document_uploads", uploadSessionId: match[1], paths }
     });
   } catch (error) {
     console.warn("Temporary registration document cleanup failed:", error);
