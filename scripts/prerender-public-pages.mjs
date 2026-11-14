@@ -62,6 +62,24 @@ const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
 }[char]));
 
+
+  {
+    route: "/Complaints",
+    title: "الشكاوى | منصة بيتلي",
+    description: "صفحة الشكاوى الخاصة بمستخدمي منصة بيتلي.",
+    heading: "الشكاوى",
+    body: "هذه الصفحة مخصصة لمستخدمي بيتلي المسجلين. سجّل الدخول للوصول إلى خدمات الشكاوى.",
+    indexable: false
+  },
+  {
+    route: "/Support",
+    title: "الدعم الفني | منصة بيتلي",
+    description: "صفحة الدعم الفني الخاصة بمستخدمي منصة بيتلي.",
+    heading: "الدعم الفني",
+    body: "هذه الصفحة مخصصة لمستخدمي بيتلي المسجلين. سجّل الدخول للوصول إلى خدمات الدعم الفني.",
+    indexable: false
+  },
+
 const original = fs.readFileSync(indexPath, "utf8");
 const appScript = original.match(/<script type="module"[^>]*src="[^"]+"[^>]*><\/script>/i)?.[0];
 if (!appScript) throw new Error("Could not find the built application entry script.");
@@ -71,7 +89,7 @@ for (const page of pages) {
   let html = original
     .replace(/<title>[\s\S]*?<\/title>/i, "<title>" + escapeHtml(page.title) + "</title>")
     .replace(/<meta name="description" content="[^"]*"\s*\/>/i, '<meta name="description" content="' + escapeHtml(page.description) + '" />')
-    .replace(/<meta name="robots" content="[^"]*"\s*\/>/i, '<meta name="robots" content="index, follow, max-image-preview:large" />')
+    .replace(/<meta name="robots" content="[^"]*"\s*\/>/i, '<meta name="robots" content="' + (page.indexable === false ? "noindex, nofollow" : "index, follow, max-image-preview:large") + '" />')
     .replace(/<link rel="canonical" href="[^"]*"\s*\/>/i, '<link rel="canonical" href="' + canonical + '" />')
     .replace(/<meta property="og:title" content="[^"]*"\s*\/>/i, '<meta property="og:title" content="' + escapeHtml(page.title) + '" />')
     .replace(/<meta property="og:description" content="[^"]*"\s*\/>/i, '<meta property="og:description" content="' + escapeHtml(page.description) + '" />')
