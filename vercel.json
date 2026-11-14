@@ -17,7 +17,7 @@
       "destination": "/api/mcp-protected-resource"
     },
     {
-      "source": "/((?!about(?:/|$)|About(?:/|$)|ContactUs(?:/|$)|Terms(?:/|$)|Privacy(?:/|$)|Copyright(?:/|$)|audiences(?:/|$)|assets/|favicon\\.ico|manifest\\.json|robots\\.txt|sitemap\\.xml).*)",
+      "source": "/((?!about(?:/|$)|About(?:/|$)|ContactUs(?:/|$)|Terms(?:/|$)|Privacy(?:/|$)|Copyright(?:/|$)|Complaints(?:/|$)|Support(?:/|$)|audiences(?:/|$)|assets/|favicon\\.ico|manifest\\.json|robots\\.txt|sitemap\\.xml).*)",
       "destination": "/index.html"
     }
   ],
