@@ -17,7 +17,9 @@ const patterns = {
   authCalls: /\bbase44\.auth\./g,
   functionCalls: /\bbase44\.functions\./g,
   integrationCalls: /\bbase44\.integrations\./g,
-  base44Domain: /https?:\/\/[^\s"'\x60]*base44\.com/gi,
+  // Static public artwork on Base44's media CDN is not a live Base44 API/service dependency.
+  // Keep auditing other Base44-hosted URLs, while allowing the existing public image asset.
+  base44Domain: /https?:\/\/(?!media\.base44\.com\/images\/public\/)[^\s"'\x60]*base44\.com/gi,
 };
 
 async function walk(dir) {
