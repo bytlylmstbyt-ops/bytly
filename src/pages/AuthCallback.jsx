@@ -8,6 +8,7 @@ const ROLE_ROUTES = {
   client: "/RegisterClient?type=individual",
   engineer: "/RegisterEngineer?type=engineer",
   surveyor: "/RegisterEngineer?type=surveyor",
+  painter: "/RegisterEngineer?type=painter",
   firm: "/RegisterFirm",
   legal: "/RegisterLegalConsultant",
   consultant: "/RegisterConsultant",
