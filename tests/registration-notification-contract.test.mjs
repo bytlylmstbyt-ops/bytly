@@ -37,6 +37,7 @@ test("temporary uploads are tracked for cleanup before document validation", () 
   const validate = registration.indexOf("if(!expectedPathPattern?.test(path))");
   assert.ok(track >= 0 && validate >= 0 && track < validate);
   assert.match(registration, /registration-documents"\)\.remove\(temporaryDocumentPaths\)/);
+  assert.ok(registration.includes("(pdf|jpg|png|webp)$"), "cleanup tracking must not trust the caller-declared MIME type");
 });
 
 test("upload rate limiting requires the edge IP and fails closed on missing IP or RPC errors", () => {
