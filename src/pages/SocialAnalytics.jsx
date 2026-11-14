@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -179,14 +178,11 @@ export default function SocialAnalytics() {
 
   const fetchAnalytics = async () => {
     setLoading(true);
-    setError(null);
-    const res = await base44.functions.invoke("socialAnalytics", {});
-    if (res.data.success) {
-      setData(res.data);
-      setLastFetch(new Date());
-    } else {
-      setError(res.data.error || "فشل تحميل البيانات");
-    }
+    setData(null);
+    setLastFetch(null);
+    setError(
+      "تحليلات التواصل الاجتماعي غير متاحة حاليًا؛ خدمة جلب بيانات Instagram وLinkedIn وX لم تُرحّل إلى Supabase بعد. لن نعرض أرقامًا تقديرية أو بيانات غير موثوقة."
+    );
     setLoading(false);
   };
 

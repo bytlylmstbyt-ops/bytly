@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,13 +31,23 @@ export default function CreateMeetLink() {
         .map((e) => e.trim())
         .filter(Boolean);
 
-      const payload = {
-        topic: topic || "مناقشة عميل — بيتلي",
-        attendee_emails,
-      };
-      if (scheduledTime) payload.scheduled_time = scheduledTime;
-
-      const res = await base44.functions.invoke("createMeetCall", payload);
+      const startDate = scheduledTime ? new Date(scheduledTime) : new Date(Date.now() + 30 * 60 * 1000);
+      if (Number.isNaN(startDate.getTime())) throw new Error("وقت الاجتماع غير صالح.");
+      const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+      const { data: res, error } = await supabase.functions.invoke("google-service", {
+        body: {
+          action: "calendarCreate",
+          data: {
+            summary: topic || "مناقشة عميل — بيتلي",
+            startDateTime: startDate.toISOString(),
+            endDateTime: endDate.toISOString(),
+            attendees: attendee_emails,
+            timeZone: "Asia/Riyadh",
+          },
+        },
+      });
+      if (error) throw error;
+      if (!res?.success || !res?.meet_link) throw new Error(res?.error || "تعذر إنشاء رابط Google Meet. تأكدي من ربط حساب Google أولاً.");
       setResult(res);
       toast({ title: "✅ تم إنشاء رابط Google Meet بنجاح" });
     } catch (err) {

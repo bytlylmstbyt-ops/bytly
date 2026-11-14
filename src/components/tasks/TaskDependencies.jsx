@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, Link2, ChevronRight } from "lucide-react";
@@ -16,7 +16,8 @@ export default function TaskDependencies({ task, projectId, onTaskSelect }) {
   const loadDependencies = async () => {
     try {
       setLoading(true);
-      const allTasks = await base44.entities.ProjectTask.filter({ project_id: projectId });
+      const { data: allTasks, error } = await supabase.from("project_tasks").select("*").eq("project_id", projectId);
+      if (error) throw error;
 
       // Get dependency tasks
       if (task?.dependencies?.length > 0) {

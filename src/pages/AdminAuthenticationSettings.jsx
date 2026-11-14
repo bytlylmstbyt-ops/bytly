@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -17,16 +17,12 @@ const AUTH_PAGES = [
 ];
 
 export default function AdminAuthenticationSettings() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user, isLoadingAuth: loading } = useAuth();
   const [maintenance, setMaintenance] = useState(false);
   const [googleEnabled, setGoogleEnabled] = useState(true);
   const [appleEnabled, setAppleEnabled] = useState(true);
   const [emailEnabled, setEmailEnabled] = useState(true);
 
-  useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {}).finally(() => setLoading(false));
-  }, []);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10" dir="rtl">

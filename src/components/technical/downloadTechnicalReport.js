@@ -1,4 +1,4 @@
-import { base44 } from "@/api/base44Client";
+import { callGemini } from "@/lib/geminiClient";
 
 const STATUS_LABELS = {
   compliant: "مطابق",
@@ -44,9 +44,11 @@ ${review?.technical_notes || "—"}
 اكتب التقرير بصيغة احترافية جاهزة للطباعة، مع عناوين واضحة لكل قسم، وقدم خلاصة وتوصية نهادية في النهاية. لا تضف أي ملاحظات خارج التقرير.`;
 
   try {
-    const result = await base44.integrations.Core.InvokeLLM({
+    const result = await callGemini({
+      agent: "assistant",
       prompt: llmPrompt,
-      model: "gemini_3_flash"
+      context: { project, consultant, review },
+      responseFormat: "text",
     });
     const reportText = typeof result === "string" ? result : result?.response || result?.text || JSON.stringify(result);
     triggerDownload(reportText, `التقرير_الفني_${project?.title || "مشروع"}.txt`);

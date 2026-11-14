@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { supabase } from "@/lib/supabaseClient";
-import { saveRegistration } from "@/lib/registrationService";
+import { saveRegistration, uploadRegistrationDocument, cleanupRegistrationUploads } from "@/lib/registrationService";
 import { motion } from "framer-motion";
-import { Award, ArrowLeft, ArrowRight, CheckCircle, Building2, PenTool, Loader2, Gift, User, Mail } from "lucide-react";
+import { Award, ArrowLeft, ArrowRight, CheckCircle, Building2, PenTool, Loader2, Gift, User, Mail, Eye, EyeOff } from "lucide-react";
 import PortfolioStep from "@/components/registration/PortfolioStep";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,8 +26,10 @@ export default function RegisterEngineer() {
   const [freeOffer, setFreeOffer] = useState({ loading: true, isEligible: false, remaining: 0, registeredCount: 0 });
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [portfolioItems, setPortfolioItems] = useState([]);
-  const [skippedUploads, setSkippedUploads] = useState(new Set());
+  const [certificateFiles, setCertificateFiles] = useState({});
   const [formData, setFormData] = useState({
     full_name: "", email: "", phone: "",
     user_type: "engineer",
@@ -40,7 +42,7 @@ export default function RegisterEngineer() {
   useEffect(() => {
     let active = true;
     supabase.auth.getSession().then(({ data }) => {
-      if (active && data?.session?.user) navigate(createPageUrl("Home"), { replace: true });
+      if (active && data?.session?.user) navigate(createPageUrl("RegistrationSuccess"), { replace: true });
     }).catch(() => {});
     return () => { active = false; };
   }, [navigate]);
@@ -53,13 +55,13 @@ export default function RegisterEngineer() {
       if (parsed.formData) setFormData(prev => ({ ...prev, ...parsed.formData }));
       if (typeof parsed.step === "number") setStep(parsed.step);
       if (Array.isArray(parsed.portfolioItems)) setPortfolioItems(parsed.portfolioItems);
-      if (Array.isArray(parsed.skippedUploads)) setSkippedUploads(new Set(parsed.skippedUploads));
+
     } catch {}
   }, [STORAGE_KEY]);
 
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ formData, step, portfolioItems, skippedUploads: [...skippedUploads] })); } catch {}
-  }, [STORAGE_KEY, formData, step, portfolioItems, skippedUploads]);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ formData, step, portfolioItems })); } catch {}
+  }, [STORAGE_KEY, formData, step, portfolioItems]);
 
   useEffect(() => {
     const checkEligibility = async () => {
@@ -94,37 +96,24 @@ export default function RegisterEngineer() {
   };
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-  const handleFileUpload = async (e, field) => {
-    const file = e.target.files[0];
+  const handleFileUpload = (e, field) => {
+    const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    if (file.size > MAX_FILE_SIZE) { const message = `حجم الملف ${(file.size / 1024 / 1024).toFixed(1)} ميجابايت. الحد الأقصى 10 ميجابايت.`; setNotice({ type: "error", title: "حجم الملف كبير", message }); toast.error(message); return; }
-    setIsFileUploading(true);
-    setNotice({ type: "info", title: "جارٍ رفع الملف", message: `جارٍ رفع: ${file.name} — قد يستغرق ذلك قليلًا...` });
-    try {
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const path = `engineers/${Date.now()}-${Math.random().toString(36).slice(2)}-${safeName}`;
-      const { error: uploadError } = await withTimeout(supabase.storage.from("registration-documents").upload(path, file, { upsert: false, contentType: file.type || undefined }), 120000);
-      if (uploadError) throw uploadError;
-      const { data: publicUrlData } = supabase.storage.from("registration-documents").getPublicUrl(path);
-      const file_url = publicUrlData?.publicUrl;
-      if (!file_url) throw new Error("تم رفع الملف لكن تعذر الحصول على رابطه.");
-      handleInputChange(field, file_url);
-      setSkippedUploads(prev => { const next = new Set(prev); next.delete(field); return next; });
-      setNotice({ type: "success", title: "تم رفع الملف بنجاح", message: "يمكنك المتابعة في إكمال التسجيل." });
-    } catch (error) {
-      const responseData = error?.data || error?.response?.data;
-      if (isPlanLimitError(error)) {
-        setSkippedUploads(prev => new Set(prev).add(field));
-        const fieldLabel = field === "graduation_certificate_url" ? "شهادة التخرج" : field === "saudi_engineers_council_certificate_url" ? "شهادة القيد بالهيئة السعودية للمهندسين" : "الصورة الشخصية";
-        const skipMessage = `تعذر رفع ${fieldLabel} بسبب حد التكامل في الخطة. يمكنك إكمال التسجيل الآن وإضافة ${fieldLabel} لاحقًا من إعدادات الملف الشخصي، أو ترقية الخطة.`;
-        setNotice({ type: "warning", title: "تعذر رفع الملف - يمكنك المتابعة", message: skipMessage }); toast(skipMessage, { icon: "⚠️", duration: 8000 });
-      } else {
-        const message = error?.message === "timeout" ? "انتهت مهلة رفع الملف. حاول استخدام ملف أصغر أو إعادة المحاولة لاحقًا." : responseData?.message || responseData?.detail || responseData?.error || "تعذر رفع الملف مؤقتًا. يُرجى التحقق من الاتصال وإعادة المحاولة.";
-        setNotice({ type: "error", title: "تعذر رفع الملف", message }); toast.error(message);
-      }
-      console.error("RegisterEngineer upload error:", error);
-    } finally { setIsFileUploading(false); }
+    if (file.size > MAX_FILE_SIZE) {
+      const message = `حجم الملف ${(file.size / 1024 / 1024).toFixed(1)} ميجابايت. الحد الأقصى 10 ميجابايت.`;
+      setNotice({ type: "error", title: "حجم الملف كبير", message });
+      toast.error(message);
+      return;
+    }
+    const allowedTypes = field === "profile_image" ? ["image/jpeg", "image/png", "image/webp"] : ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("نوع الملف غير مدعوم. ارفع PDF أو صورة JPG أو PNG أو WEBP.");
+      return;
+    }
+    setCertificateFiles(prev => ({ ...prev, [field]: file }));
+    setFormData(prev => ({ ...prev, [field]: "" }));
+    setNotice({ type: "success", title: "تم اختيار الملف", message: "سيتم رفع الملف والتحقق من حفظه عند إرسال طلب التسجيل." });
   };
 
   const handleSubmit = async () => {
@@ -133,20 +122,45 @@ export default function RegisterEngineer() {
     if (password !== confirmPassword) { toast.error("كلمتا المرور غير متطابقتين."); return; }
 
     if (isSubmitting || isFileUploading) return;
-    if (!isStep3Valid) { setStep(3); const message = "أكمل رقم القيد المهني والوثائق المطلوبة أولاً، ثم تابع لإتمام التسجيل."; setNotice({ type: "error", title: "بيانات الاعتماد غير مكتملة", message }); toast.error(message); return; }
+    if (!isStep3Valid) { setStep(3); const message = "أرفق شهادة التخرج وشهادة القيد في الهيئة السعودية للمهندسين، وأكمل رقم القيد المهني قبل المتابعة."; setNotice({ type: "error", title: "بيانات الاعتماد غير مكتملة", message }); toast.error(message); return; }
     setIsSubmitting(true);
-    setNotice({ type: "info", title: "جارٍ إنشاء الحساب", message: "جارٍ حفظ بياناتك وإنشاء حسابك في بيتلي…" });
+    setNotice({ type: "info", title: "جارٍ إرسال طلب التسجيل", message: "جارٍ رفع الشهادات والتحقق من حفظها ثم إنشاء حسابك. لا تغلق الصفحة." });
+    const uploadedTempPaths = [];
     try {
       const isFreeEligible = freeOffer.isEligible;
       const today = new Date();
       const trialEnd = new Date(); trialEnd.setMonth(trialEnd.getMonth() + 3);
       const localDate = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const requiredCertificateFields = ["graduation_certificate_url", "saudi_engineers_council_certificate_url"];
+      for (const field of requiredCertificateFields) {
+        if (!certificateFiles[field]) throw new Error(field === "graduation_certificate_url" ? "يرجى إرفاق شهادة التخرج." : "يرجى إرفاق شهادة القيد في الهيئة السعودية للمهندسين.");
+      }
+      const uploadSessionId = crypto.randomUUID();
+      const documents = { uploadSessionId };
+      for (const field of requiredCertificateFields) {
+        const file = certificateFiles[field];
+        const uploaded = await uploadRegistrationDocument(file, field, uploadSessionId, formData.email);
+        uploadedTempPaths.push(uploaded.path);
+        documents[field] = { path: uploaded.path, name: file.name, type: file.type };
+      }
+      if (certificateFiles.profile_image) {
+        const file = certificateFiles.profile_image;
+        const uploaded = await uploadRegistrationDocument(file, "profile_image", uploadSessionId, formData.email);
+        uploadedTempPaths.push(uploaded.path);
+        documents.profile_image = { path: uploaded.path, name: file.name, type: file.type };
+      }
       const engineer = await withTimeout(saveRegistration({
         table: "engineers", role: "engineer", fullName: formData.full_name, email: formData.email, phone: formData.phone,
         password,
-        row: { full_name: formData.full_name, phone: formData.phone, city: formData.city, country: formData.country, specialization: formData.specialization, registration_number: formData.registration_number, bio: formData.bio, graduation_certificate_url: formData.graduation_certificate_url, saudi_engineers_council_certificate_url: formData.saudi_engineers_council_certificate_url, profile_image: formData.profile_image, years_experience: parseInt(formData.years_experience) || 0, completed_projects: parseInt(formData.completed_projects) || 0, status: "pending", is_verified: false, rating: 0, total_reviews: 0, wallet_balance: 0, subscription_type: isFreeEligible ? "free_trial" : "none", is_subscription_active: isFreeEligible, subscription_start_date: isFreeEligible ? localDate(today) : undefined, trial_end_date: isFreeEligible ? localDate(trialEnd) : undefined, is_real: true, source: "supabase" }
-      }), 15000);
-      // نجاح إنشاء الحساب = الانتقال فورًا للصفحة الرئيسية. أي حفظ إضافي للأعمال/الإشعارات لا يوقف دخول المستخدم.\n      try { localStorage.removeItem(STORAGE_KEY); } catch {}\n      navigate(createPageUrl("Home"), { replace: true });\n\n      const validPortfolioItems = portfolioItems.filter(item => item.title || item.images?.length > 0);
+        documents,
+        row: { full_name: formData.full_name, phone: formData.phone, city: formData.city, country: formData.country, specialization: formData.specialization, registration_number: formData.registration_number, bio: formData.bio, profile_image: "", years_experience: parseInt(formData.years_experience) || 0, completed_projects: parseInt(formData.completed_projects) || 0, status: "pending", is_verified: false, rating: 0, total_reviews: 0, wallet_balance: 0, subscription_type: isFreeEligible ? "free_trial" : "none", is_subscription_active: isFreeEligible, subscription_start_date: isFreeEligible ? localDate(today) : undefined, trial_end_date: isFreeEligible ? localDate(trialEnd) : undefined, is_real: true, source: "supabase" }
+      }), 300000);
+      try { localStorage.removeItem(STORAGE_KEY); } catch {}
+      setNotice({ type: "success", title: "تم تسجيلك بنجاح", message: "استلمنا طلبك وشهاداتك. سيبقى حسابك قيد المراجعة حتى تتحقق الإدارة من بياناتك وتعتمد حسابك." });
+      toast.success("تم تسجيلك بنجاح. طلبك الآن قيد المراجعة.");
+
+
+      const validPortfolioItems = portfolioItems.filter(item => item.title || item.images?.length > 0);
       if (validPortfolioItems.length > 0 && engineer?.id) {
         const portfolioRows = validPortfolioItems.map(item => ({
           engineer_id: engineer.id,
@@ -173,8 +187,11 @@ export default function RegisterEngineer() {
         }
       }
       try { localStorage.removeItem(STORAGE_KEY); } catch {}
-      navigate(createPageUrl("Home"), { replace: true });
+      navigate(createPageUrl("RegistrationSuccess"), { replace: true });
     } catch (error) {
+      if (uploadedTempPaths.length) {
+        await cleanupRegistrationUploads(uploadedTempPaths).catch(() => {});
+      }
       if (error?.message === "EMAIL_CONFIRMATION_REQUIRED") {
         setNotice({ type: "success", title: "تم بدء إنشاء الحساب", message: "أرسلنا رابط التفعيل إلى بريدك الإلكتروني. افتح الرسالة لإكمال إنشاء حسابك ثم العودة إلى بيتلي." });
         toast.success("تحققي من بريدك الإلكتروني لإكمال إنشاء الحساب.");
@@ -188,9 +205,9 @@ export default function RegisterEngineer() {
 
   const isStep1Valid = !!(formData.full_name?.trim() && formData.email?.trim() && password.length >= 8 && password === confirmPassword && formData.phone?.trim() && formData.city?.trim());
   const isStep2Valid = !!(formData.specialization && formData.country?.trim());
-  const missingStep1 = [!formData.full_name?.trim() && "الاسم الكامل", !formData.email?.trim() && "البريد الإلكتروني", password.length < 8 && "كلمة المرور (8 أحرف على الأقل)", password !== confirmPassword && "تأكيد كلمة المرور", !formData.phone?.trim() && "رقم الهاتف", !formData.city?.trim() && "المدينة"].filter(Boolean);
+  const missingStep1 = [!formData.full_name?.trim() && "الاسم الكامل", !formData.email?.trim() && "البريد الإلكتروني", password.length < 8 && "كلمة المرور (8 خانات على الأقل)", password !== confirmPassword && "تأكيد كلمة المرور", !formData.phone?.trim() && "رقم الهاتف", !formData.city?.trim() && "المدينة"].filter(Boolean);
   const missingStep2 = [!formData.specialization && "التخصص", !formData.country?.trim() && "الدولة"].filter(Boolean);
-  const missingStep3 = [!formData.registration_number?.trim() && "رقم القيد المهني", !(formData.graduation_certificate_url || skippedUploads.has("graduation_certificate_url")) && "شهادة التخرج", !(formData.saudi_engineers_council_certificate_url || skippedUploads.has("saudi_engineers_council_certificate_url")) && "شهادة القيد في الهيئة السعودية للمهندسين"].filter(Boolean);
+  const missingStep3 = [!formData.registration_number?.trim() && "رقم القيد المهني", !certificateFiles.graduation_certificate_url && "شهادة التخرج", !certificateFiles.saudi_engineers_council_certificate_url && "شهادة القيد في الهيئة السعودية للمهندسين"].filter(Boolean);
   const isStep3Valid = missingStep3.length === 0;
 
   return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-12"><div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -204,14 +221,14 @@ export default function RegisterEngineer() {
         <div className="space-y-2"><Label htmlFor="full_name">الاسم الكامل *</Label><div className="relative"><User className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><Input id="full_name" value={formData.full_name} onChange={e => handleInputChange("full_name", e.target.value)} className="pr-10" placeholder="اكتب اسمك الكامل" required /></div></div>
         <div className="space-y-2"><Label htmlFor="email">البريد الإلكتروني *</Label><div className="relative"><Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" /><Input id="email" type="email" value={formData.email} onChange={e => handleInputChange("email", e.target.value)} className="pr-10" placeholder="example@email.com" autoComplete="email" required /></div></div>
         <div className="grid md:grid-cols-2 gap-4">
-          <div className="space-y-2"><Label htmlFor="password">كلمة المرور *</Label><Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} minLength={8} autoComplete="new-password" required /></div>
-          <div className="space-y-2"><Label htmlFor="confirmPassword">إعادة كلمة المرور *</Label><Input id="confirmPassword" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} minLength={8} autoComplete="new-password" required /></div>
+          <div className="space-y-2"><Label htmlFor="password">كلمة المرور *</Label><div className="relative"><Input id="password" type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} minLength={8} autoComplete="new-password" aria-describedby="password-hint" className="pl-11" required /><button type="button" onClick={() => setShowPassword(value => !value)} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] rounded" aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"} aria-pressed={showPassword}>{showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}</button></div><p id="password-hint" className="text-xs text-slate-500">اكتبي 8 خانات على الأقل (حروف أو أرقام)، ولا تستخدمي كلمة مرور حساب آخر.</p>{password.length > 0 && password.length < 8 && <p className="text-xs text-red-600" role="alert">باقي {8 - password.length} خانات لإكمال الحد الأدنى.</p>}</div>
+          <div className="space-y-2"><Label htmlFor="confirmPassword">إعادة كلمة المرور *</Label><div className="relative"><Input id="confirmPassword" type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} minLength={8} autoComplete="new-password" aria-describedby="confirm-password-hint" className="pl-11" required /><button type="button" onClick={() => setShowConfirmPassword(value => !value)} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#C9A66B] rounded" aria-label={showConfirmPassword ? "إخفاء تأكيد كلمة المرور" : "إظهار تأكيد كلمة المرور"} aria-pressed={showConfirmPassword}>{showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}</button></div><p id="confirm-password-hint" className="text-xs text-slate-500">أعيدي كتابة كلمة المرور نفسها تماماً.</p>{confirmPassword.length > 0 && password !== confirmPassword && <p className="text-xs text-red-600" role="alert">كلمتا المرور غير متطابقتين.</p>}</div>
         </div>
         <div className="space-y-2"><Label htmlFor="phone">رقم الهاتف *</Label><Input id="phone" value={formData.phone} onChange={e => handleInputChange("phone", e.target.value)} required /></div>
         <div className="grid md:grid-cols-2 gap-4"><div className="space-y-2"><Label htmlFor="city">المدينة *</Label><Input id="city" value={formData.city} onChange={e => handleInputChange("city", e.target.value)} required /></div><div className="space-y-2"><Label htmlFor="country">الدولة *</Label><Input id="country" value={formData.country} onChange={e => handleInputChange("country", e.target.value)} placeholder="مثال: السعودية" required /></div></div>
       </motion.div>}
       {step === 2 && <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4"><div className="space-y-2"><Label>التخصص *</Label><MobileSelect value={formData.specialization} onValueChange={value => handleInputChange("specialization", value)} placeholder="اختر تخصصك" label="التخصص" options={specializations.map(s => ({ value: s, label: s }))} /></div><div className="space-y-2"><Label htmlFor="country">الدولة *</Label><Input id="country" value={formData.country} onChange={e => handleInputChange("country", e.target.value)} placeholder="مثال: السعودية" /></div><div className="space-y-2"><Label htmlFor="years_experience">سنوات الخبرة</Label><Input id="years_experience" type="number" value={formData.years_experience} onChange={e => handleInputChange("years_experience", e.target.value)} placeholder="عدد السنوات" /></div><div className="space-y-2"><Label htmlFor="completed_projects">عدد المشاريع المنجزة</Label><Input id="completed_projects" type="number" value={formData.completed_projects} onChange={e => handleInputChange("completed_projects", e.target.value)} placeholder="عدد المشاريع" /></div></motion.div>}
-      {step === 3 && <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4"><div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3"><Award className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" /><div className="text-sm text-blue-800"><p className="font-semibold mb-1">نظام الاعتماد المهني</p><p>رفع رقم القيد المهني وشهادة التخرج وشهادة القيد في الهيئة السعودية للمهندسين إلزامي للحصول على شارة "مهندس معتمد".</p></div></div><div className="space-y-2"><Label htmlFor="registration_number">رقم القيد المهني *</Label><Input id="registration_number" value={formData.registration_number} onChange={e => handleInputChange("registration_number", e.target.value)} placeholder="رقم التسجيل المهني" /></div><div className="space-y-2"><Label htmlFor="bio">نبذة تعريفية عنك</Label><Textarea id="bio" value={formData.bio} onChange={e => handleInputChange("bio", e.target.value)} placeholder="اكتب نبذة مختصرة عن خبراتك ومهاراتك..." rows={3} /></div><div className="space-y-2"><Label>صورة شخصية</Label><input type="file" accept="image/*" onChange={e => handleFileUpload(e, "profile_image")} disabled={isFileUploading || isSubmitting} /></div><div className="space-y-2"><Label>شهادة التخرج *</Label><input type="file" accept=".pdf,image/*" onChange={e => handleFileUpload(e, "graduation_certificate_url")} disabled={isFileUploading || isSubmitting} /></div><div className="space-y-2"><Label>شهادة القيد في الهيئة السعودية للمهندسين *</Label><input type="file" accept=".pdf,image/*" onChange={e => handleFileUpload(e, "saudi_engineers_council_certificate_url")} disabled={isFileUploading || isSubmitting} /></div></motion.div>}
+      {step === 3 && <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4"><div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3"><Award className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" /><div className="text-sm text-blue-800"><p className="font-semibold mb-1">نظام الاعتماد المهني</p><p>رفع رقم القيد المهني وشهادة التخرج وشهادة القيد في الهيئة السعودية للمهندسين إلزامي للحصول على شارة "مهندس معتمد".</p></div></div><div className="space-y-2"><Label htmlFor="registration_number">رقم القيد المهني *</Label><Input id="registration_number" value={formData.registration_number} onChange={e => handleInputChange("registration_number", e.target.value)} placeholder="رقم التسجيل المهني" /></div><div className="space-y-2"><Label htmlFor="bio">نبذة تعريفية عنك</Label><Textarea id="bio" value={formData.bio} onChange={e => handleInputChange("bio", e.target.value)} placeholder="اكتب نبذة مختصرة عن خبراتك ومهاراتك..." rows={3} /></div><div className="space-y-2"><Label>صورة شخصية (اختياري)</Label><input type="file" accept="image/*" onChange={e => handleFileUpload(e, "profile_image")} disabled={isFileUploading || isSubmitting} /></div><div className="space-y-2"><Label>شهادة التخرج *</Label><input type="file" accept=".pdf,image/jpeg,image/png,image/webp" onChange={e => handleFileUpload(e, "graduation_certificate_url")} disabled={isFileUploading || isSubmitting} />{certificateFiles.graduation_certificate_url && <p className="text-xs text-emerald-700">تم اختيار: {certificateFiles.graduation_certificate_url.name} — سيتم رفعها مع الطلب</p>}</div><div className="space-y-2"><Label>شهادة القيد في الهيئة السعودية للمهندسين *</Label><input type="file" accept=".pdf,image/jpeg,image/png,image/webp" onChange={e => handleFileUpload(e, "saudi_engineers_council_certificate_url")} disabled={isFileUploading || isSubmitting} />{certificateFiles.saudi_engineers_council_certificate_url && <p className="text-xs text-emerald-700">تم اختيار: {certificateFiles.saudi_engineers_council_certificate_url.name} — سيتم رفعها مع الطلب</p>}</div></motion.div>}
       {step === 4 && <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}><PortfolioStep portfolioItems={portfolioItems} setPortfolioItems={setPortfolioItems} /></motion.div>}
       <div className="flex justify-between pt-6">{step > 1 ? <Button variant="outline" onClick={() => setStep(step - 1)} className="gap-2"><ArrowRight className="w-4 h-4" />السابق</Button> : <div />}{step < 4 ? <Button onClick={() => { if (step === 1 && !isStep1Valid) { toast.error(`أكمل: ${missingStep1.join("، ")}`); return; } if (step === 2 && !isStep2Valid) { toast.error(`أكمل: ${missingStep2.join("، ")}`); return; } if (step === 3 && !isStep3Valid) { toast.error(`أكمل: ${missingStep3.join("، ")}`); return; } setStep(step + 1); }} disabled={(step === 1 && !isStep1Valid) || (step === 2 && !isStep2Valid) || (step === 3 && !isStep3Valid)} className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white gap-2">التالي<ArrowLeft className="w-4 h-4" /></Button> : <Button onClick={handleSubmit} disabled={isSubmitting || isFileUploading} className="bg-gradient-to-r from-[#1a1a2e] to-[#C9A66B] text-white gap-2">{isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" />جاري إنشاء الحساب...</> : <>إنشاء الحساب<CheckCircle className="w-4 h-4" /></>}</Button>}</div>
     </CardContent></Card>
