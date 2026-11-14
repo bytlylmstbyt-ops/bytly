@@ -43,25 +43,51 @@ Deno.serve(async(req)=>{
   if(passwordBytes>72){await recordAttempt("failed",null,"validation","كلمة المرور طويلة");return json({ok:false,error:"كلمة المرور طويلة جداً. الحد الأقصى 72 بايت."},400);}
   if(!TABLES.has(table)||ROLE_TO_TABLE[role]!==table){await recordAttempt("failed",null,"validation","Invalid registration type");return json({ok:false,error:"Invalid registration type"},400);}
   if(!email||!fullName||!phone){await recordAttempt("failed",null,"validation","الاسم والبريد والهاتف مطلوبة");return json({ok:false,error:"الاسم والبريد والهاتف مطلوبة"},400);}
+  const validatedDocuments = new Map<string,{bytes:Uint8Array,type:string,extension:string,path:string}>();
+  const temporaryDocumentPaths:string[]=[];
   if(table==="engineers"){
     const certificateFields=["graduation_certificate_url","saudi_engineers_council_certificate_url"];
+    const uploadSessionId=String(documents.uploadSessionId||"");
+    if(!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uploadSessionId)){
+      await recordAttempt("failed",null,"document_validation","جلسة رفع الشهادات غير صالحة");
+      return json({ok:false,error:"انتهت جلسة رفع الشهادات. أعد اختيار الشهادتين وحاول مرة أخرى."},400);
+    }
+    const mimeExtensions:Record<string,string>={"application/pdf":"pdf","image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
     for(const field of certificateFields){
       const doc=documents[field];
-      if(!doc?.base64||!doc?.name||!["application/pdf","image/jpeg","image/png","image/webp"].includes(doc.type)){
-        await recordAttempt("failed",null,"document_validation",`مستند التسجيل غير مكتمل: ${field}`);
-        return json({ok:false,error:"يرجى إرفاق شهادة التخرج وشهادة القيد في الهيئة السعودية للمهندسين."},400);
+      const expectedPrefix=`registration-temp/${uploadSessionId}/${field}-`;
+      const path=String(doc?.path||"");
+      const extension=mimeExtensions[String(doc?.type||"")];
+      if(!doc?.name||!extension||!path.startsWith(expectedPrefix)||!path.endsWith(`. ${extension}`.replace(" ",""))){
+        await recordAttempt("failed",null,"document_validation",`مسار أو بيانات المستند غير صالحة: ${field}`);
+        return json({ok:false,error:"يرجى رفع شهادة التخرج وشهادة القيد من جديد."},400);
       }
-      if(Math.floor(String(doc.base64).length*3/4)>10*1024*1024){
-        await recordAttempt("failed",null,"document_validation",`حجم المستند أكبر من الحد: ${field}`);
-        return json({ok:false,error:"حجم كل مستند يجب ألا يتجاوز 10 ميجابايت."},400);
+      const {data:blob,error:downloadError}=await admin.storage.from("registration-documents").download(path);
+      if(downloadError||!blob){
+        await recordAttempt("failed",null,"document_validation",`تعذر العثور على المستند: ${field}`);
+        return json({ok:false,error:"لم نتمكن من التحقق من حفظ الشهادتين. أعد رفعهما وحاول مرة أخرى."},400);
       }
-    }
-    if(documents.profile_image?.base64){
-      const photo=documents.profile_image;
-      if(!photo.name||!["image/jpeg","image/png","image/webp"].includes(photo.type)||Math.floor(String(photo.base64).length*3/4)>10*1024*1024){
-        await recordAttempt("failed",null,"document_validation","الصورة الشخصية غير صالحة");
-        return json({ok:false,error:"الصورة الشخصية يجب أن تكون JPG أو PNG أو WEBP وألا تتجاوز 10 ميجابايت."},400);
+      if(blob.size<=0||blob.size>10*1024*1024){
+        await admin.storage.from("registration-documents").remove([path]);
+        await recordAttempt("failed",null,"document_validation",`حجم المستند غير صالح: ${field}`);
+        return json({ok:false,error:"حجم كل شهادة يجب ألا يتجاوز 10 ميجابايت."},400);
       }
+      const bytes=new Uint8Array(await blob.arrayBuffer());
+      const header=bytes.subarray(0,12);
+      const signatureValid=doc.type==="application/pdf"
+        ? new TextDecoder().decode(header.subarray(0,5))==="%PDF-"
+        : doc.type==="image/jpeg"
+          ? header[0]===0xff&&header[1]===0xd8&&header[2]===0xff
+          : doc.type==="image/png"
+            ? header[0]===0x89&&new TextDecoder().decode(header.subarray(1,4))==="PNG"
+            : new TextDecoder().decode(header.subarray(0,4))==="RIFF"&&new TextDecoder().decode(header.subarray(8,12))==="WEBP";
+      if(!signatureValid){
+        await admin.storage.from("registration-documents").remove([path]);
+        await recordAttempt("failed",null,"document_validation",`محتوى الملف لا يطابق نوعه: ${field}`);
+        return json({ok:false,error:"نوع أحد الملفات لا يطابق محتواه. تحقق من الملف وأعد رفعه."},400);
+      }
+      temporaryDocumentPaths.push(path);
+      validatedDocuments.set(field,{bytes,type:doc.type,extension,path});
     }
   }
   delete row.user_id;delete row.owner_user_id;delete row.id;row.email=email;row.phone=phone;const companyTables=new Set(["engineering_firms","contractors","suppliers"]);if(companyTables.has(table)){row.company_name=String(row.company_name||fullName).trim();delete row.full_name;}else{row.full_name=fullName;delete row.company_name;}if(["engineers","clients","engineering_firms"].includes(table)){row.is_real=true;row.source="supabase";}else{delete row.is_real;delete row.source;}
@@ -82,15 +108,15 @@ Deno.serve(async(req)=>{
   if(profileError){await recordAttempt("failed",userId,"profile_create",profileError.message);await admin.auth.admin.deleteUser(userId);return json({ok:false,error:`تعذر حفظ ملف المستخدم: ${profileError.message}`},400);}
   const uploadedDocumentPaths:string[]=[];
   if(table==="engineers"){
-    const extensionForType:Record<string,string>={"application/pdf":"pdf","image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
-    const fieldsToUpload=["graduation_certificate_url","saudi_engineers_council_certificate_url",...(documents.profile_image?.base64?["profile_image"]:[])];
+    const fieldsToUpload=["graduation_certificate_url","saudi_engineers_council_certificate_url"];
     for(const field of fieldsToUpload){
-      const doc=documents[field];
-      const bytes=Uint8Array.from(atob(String(doc.base64)),c=>c.charCodeAt(0));
-      const path=`engineers/${userId}/${field}-${crypto.randomUUID()}.${extensionForType[doc.type]}`;
-      const {error:uploadError}=await admin.storage.from("registration-documents").upload(path,bytes,{upsert:false,contentType:doc.type,cacheControl:"3600"});
+      const doc=validatedDocuments.get(field);
+      if(!doc)continue;
+      const path=`engineers/${userId}/${field}-${crypto.randomUUID()}.${doc.extension}`;
+      const {error:uploadError}=await admin.storage.from("registration-documents").upload(path,doc.bytes,{upsert:false,contentType:doc.type,cacheControl:"3600"});
       if(uploadError){
         for(const uploadedPath of uploadedDocumentPaths){try{await admin.storage.from("registration-documents").remove([uploadedPath]);}catch(_){}}
+        if(temporaryDocumentPaths.length)await admin.storage.from("registration-documents").remove(temporaryDocumentPaths);
         await recordAttempt("failed",userId,"document_upload",uploadError.message);
         await admin.from("profiles").delete().eq("user_id",userId);
         await admin.auth.admin.deleteUser(userId);
@@ -101,7 +127,8 @@ Deno.serve(async(req)=>{
     }
   }
   const {data:saved,error:rowError}=await admin.from(table).insert(row).select("*").single();
-  if(rowError){for(const uploadedPath of uploadedDocumentPaths){try{await admin.storage.from("registration-documents").remove([uploadedPath]);}catch(_){}}await recordAttempt("failed",userId,"role_record_create",rowError.message);await admin.from("profiles").delete().eq("user_id",userId);await admin.auth.admin.deleteUser(userId);return json({ok:false,error:`تعذر حفظ بيانات التسجيل: ${rowError.message}`},400);}
+  if(rowError){for(const uploadedPath of uploadedDocumentPaths){try{await admin.storage.from("registration-documents").remove([uploadedPath]);}catch(_){}}if(temporaryDocumentPaths.length)await admin.storage.from("registration-documents").remove(temporaryDocumentPaths);await recordAttempt("failed",userId,"role_record_create",rowError.message);await admin.from("profiles").delete().eq("user_id",userId);await admin.auth.admin.deleteUser(userId);return json({ok:false,error:`تعذر حفظ بيانات التسجيل: ${rowError.message}`},400);}
+  if(temporaryDocumentPaths.length){const {error:cleanupError}=await admin.storage.from("registration-documents").remove(temporaryDocumentPaths);if(cleanupError)console.error("Temporary certificate cleanup failed",cleanupError);}
 
   let platformNotification=false;
   try{const platformOwnerId=await getPlatformOwnerId(admin);
