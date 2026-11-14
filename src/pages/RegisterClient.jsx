@@ -86,7 +86,7 @@ export default function RegisterClient() {
     
     const client = await saveRegistration({
       table: "clients",
-      role: "client",
+      role: formData.client_type === "investor" ? "investor" : "client",
       fullName: formData.full_name,
       email: formData.email,
       phone: formData.phone,
