@@ -9,6 +9,31 @@ const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:
 
 function b64url(bytes:Uint8Array){let s="";for(const b of bytes)s+=String.fromCharCode(b);return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"");}
 function clean(v:string){return v.replace(/[\r\n]/g," ").trim();}
+async function hmacFingerprint(secret:string,value:string){
+ const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(secret),{name:"HMAC",hash:"SHA-256"},false,["sign"]);
+ const signature=await crypto.subtle.sign("HMAC",key,new TextEncoder().encode(value));
+ return Array.from(new Uint8Array(signature)).map(byte=>byte.toString(16).padStart(2,"0")).join("");
+}
+async function enforceUploadRateLimit(req:Request,admin:any,secret:string,email:string,sessionId:string){
+ // Cloudflare supplies this address at the edge; fail closed rather than trust a caller-provided X-Forwarded-For value.
+ const clientIp=req.headers.get("cf-connecting-ip")?.trim();
+ if(!clientIp)return {ok:false,reason:"trusted_client_ip_unavailable"};
+ const checks=[
+  {value:"ip:"+clientIp,limit:40},
+  {value:"email:"+email.trim().toLowerCase(),limit:12},
+  {value:"session:"+sessionId.toLowerCase(),limit:10}
+ ];
+ for(const check of checks){
+  const fingerprint=await hmacFingerprint(secret,check.value);
+  const {data,error}=await admin.rpc("consume_registration_upload_rate_limit",{
+   p_fingerprint_hash:fingerprint,p_limit:check.limit,p_window_seconds:3600
+  });
+  if(error)return {ok:false,reason:"rate_limit_backend_unavailable"};
+  if(data!==true)return {ok:false,reason:"rate_limit_exceeded"};
+ }
+ return {ok:true};
+}
+
 async function sendSystemEmail(to:string,subject:string,html:string){
  const clientId=Deno.env.get("BYTLY_GMAIL_CLIENT_ID"), clientSecret=Deno.env.get("BYTLY_GMAIL_CLIENT_SECRET"), refreshToken=Deno.env.get("BYTLY_GMAIL_REFRESH_TOKEN");
  if(!clientId||!clientSecret||!refreshToken)return {sent:false,reason:"GMAIL_SYSTEM_SECRETS_NOT_CONFIGURED"};
@@ -54,9 +79,17 @@ Deno.serve(async(req)=>{
     const name=String(body?.name||"");
     const type=String(body?.type||"");
     const size=Number(body?.size);
+    const email=String(body?.email||"").trim().toLowerCase();
     const validType=field==="profile_image"?["image/jpeg","image/png","image/webp"].includes(type):Boolean(mimeExtensions[type]);
     if(!allowedFields.has(field)||!name||!Number.isFinite(size)||size<=0||size>10*1024*1024||!validType)
       return json({ok:false,error:"نوع الملف غير مدعوم أو تجاوز حجمه 10 ميجابايت."},400);
+    if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email))
+      return json({ok:false,error:"أدخل البريد الإلكتروني الصحيح قبل رفع الشهادات."},400);
+    const rateLimit=await enforceUploadRateLimit(req,admin,serviceKey,email,uploadSessionId);
+    if(!rateLimit.ok){
+      const status=rateLimit.reason==="rate_limit_exceeded"?429:503;
+      return json({ok:false,error:status===429?"تم تجاوز عدد محاولات رفع الملفات. انتظر ساعة ثم حاول مرة أخرى.":"تعذر التحقق من حماية الرفع حالياً. حاول مرة أخرى لاحقاً."},status);
+    }
     const path=`registration-temp/${uploadSessionId}/${field}-${crypto.randomUUID()}.${mimeExtensions[type]}`;
     const {data,error}=await admin.storage.from("registration-documents").createSignedUploadUrl(path,{upsert:false});
     if(error||!data?.token){
