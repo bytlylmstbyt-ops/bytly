@@ -83,7 +83,7 @@ export default function RouteTitleManager() {
   const location = useLocation();
 
   useEffect(() => {
-    const path = location.pathname.length > 1 ? location.pathname.replace(/\\/+$/, '') : '/';
+    const path = location.pathname.length > 1 ? location.pathname.replace(/\/+$/, '') : '/';
     const base = PAGE_TITLES[path] || 'منصة الخدمات الهندسية';
     const title = path === '/' ? 'بيتلي | منصة الخدمات وإدارة المشاريع الهندسية في السعودية' : `${base}${SITE_SUFFIX}`;
     const description = DESCRIPTIONS[path] || `استخدم منصة بيتلي للوصول إلى ${base} والخدمات الهندسية وإدارة المشاريع في السعودية.`;
