@@ -21,9 +21,9 @@ export default function RegistrationSuccess() {
               <CheckCircle className="w-12 h-12 text-white" />
             </motion.div>
             <h1 className="text-2xl font-bold text-[#1a1a2e] mb-3">تم التسجيل بنجاح!</h1>
-            <p className="text-slate-600 mb-6">شكراً لانضمامك إلى منصة بيتلي. تم حفظ بيانات التسجيل ويمكنك الآن الدخول إلى المنصة بحسابك.</p>
+            <p className="text-slate-600 mb-6">شكراً لانضمامك إلى منصة بيتلي. تم استلام بياناتك وشهاداتك بنجاح، وطلبك الآن قيد المراجعة من فريق بيتلي.</p>
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
-              <p className="text-amber-800 text-sm">💡 حسابات المهندسين والمكاتب ومقدمي الخدمات قد تبقى بحالة "قيد المراجعة" حتى تعتمدها الإدارة، لكن تسجيل الحساب نفسه مكتمل.</p>
+              <p className="text-amber-800 text-sm">💡 حسابك كمهندس لن يُعتمد ولن يظهر كمهندس موثّق قبل مراجعة شهادة التخرج وشهادة القيد في الهيئة السعودية للمهندسين وموافقة الإدارة.</p>
             </div>
             <div className="space-y-3">
               <Link to={createPageUrl("Home")}>
