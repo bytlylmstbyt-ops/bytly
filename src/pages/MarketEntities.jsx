@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,11 @@ export default function MarketEntitiesPage() {
 
   const { data: entities, isLoading } = useQuery({
     queryKey: ['market-entities'],
-    queryFn: () => base44.entities.MarketEntity.filter({ status: "active" }),
+    queryFn: async () => {
+      const { data, error } = await supabase.from("developer_investor_management").select("*").eq("status", "active");
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
 
