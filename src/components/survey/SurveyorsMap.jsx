@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -258,7 +258,8 @@ export default function SurveyorsMap({ onClose }) {
   const loadData = async () => {
     setLoading(true);
     try {
-      const profiles = await base44.entities.SurveyorProfile.filter({ status: 'approved', is_available: true }, '', 100);
+      const { data: profiles, error: profilesError } = await supabase.from('surveyor_profiles').select('*').eq('status', 'approved').eq('is_available', true).limit(100);
+      if (profilesError) throw profilesError;
       const enriched = profiles
         .filter(s => s.latitude != null && s.longitude != null)
         .map(s => ({
