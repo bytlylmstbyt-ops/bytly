@@ -51,7 +51,7 @@ export default function AdminEngineersPage() {
       const withDocumentLinks = await Promise.all((engineersData || []).map(async (engineer) => {
         const resolveDocumentUrl = async (value) => {
           if (!value) return null;
-          if (/^https?:\\/\\//i.test(value)) return value;
+          if (value.startsWith("http://") || value.startsWith("https://")) return value;
           const { data, error } = await supabase.storage
             .from("registration-documents")
             .createSignedUrl(value, 3600);
