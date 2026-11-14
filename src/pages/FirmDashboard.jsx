@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import AccountQuickAccess from "@/components/dashboard/AccountQuickAccess";
 export default function FirmDashboard() {
   const [loading, setLoading] = useState(true);
   const [firm, setFirm] = useState(null);
@@ -25,6 +26,13 @@ export default function FirmDashboard() {
 
   const loadDashboardData = async () => {
     try {
+      const previewRaw = typeof window !== "undefined" ? window.sessionStorage.getItem("bytly_admin_preview") : null;
+      if (previewRaw && JSON.parse(previewRaw)?.role === "firm") {
+        setFirm({ id: "preview-firm-1", company_name: "مكتب بيتلي الهندسي التجريبي", city: "جدة", specialization: "تصميم وإشراف هندسي", status: "approved", is_verified: true, rating: 4.8, bio: "بيانات تجريبية لمعاينة لوحة المكتب الهندسي." });
+        setTeamMembers([{ id: "preview-team-1", full_name: "م. أحمد محمد", role: "مهندس معماري" }, { id: "preview-team-2", full_name: "م. سارة علي", role: "مهندسة مدنية" }]);
+        setProjects([{ id: "preview-firm-project-1", title: "تصميم مجمع سكني", status: "in_progress", budget_max: 45000 }, { id: "preview-firm-project-2", title: "مخططات فيلا", status: "completed", budget_max: 12000 }]);
+        return;
+      }
       if (!supabase) throw new Error("Supabase غير مهيأ");
       const { data: authData, error: authError } = await supabase.auth.getUser();
       if (authError) throw authError;
@@ -141,6 +149,7 @@ export default function FirmDashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-amber-50/30 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <AccountQuickAccess profile={firm} roleLabel="لوحة المكتب الهندسي" />
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           {/* Header with Company Info */}
           <Card className="border-0 shadow-lg overflow-hidden mb-8">
