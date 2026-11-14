@@ -22,7 +22,7 @@ test("certificate validation checks size and file signatures before account crea
   assert.match(registration, /blob\.size<=0\|\|blob\.size>10\*1024\*1024/);
   assert.match(registration, /const signatureValid=doc\.type==="application\/pdf"/);
   assert.match(registration, /header\[0\]===0xff&&header\[1\]===0xd8&&header\[2\]===0xff/);
-  assert.match(registration, /header\[0\]===0x89/);
+  assert.ok(registration.includes("header[4]===0x0d&&header[5]===0x0a&&header[6]===0x1a&&header[7]===0x0a"), "PNG validation must check the full 8-byte signature");
   assert.match(registration, /"WEBP"/);
   assert.ok(registration.indexOf("validatedDocuments.set(field") < registration.indexOf("admin.auth.admin.createUser("),
     "all submitted documents must be validated before creating an auth user");
