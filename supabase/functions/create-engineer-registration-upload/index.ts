@@ -28,8 +28,25 @@ Deno.serve(async (req: Request) => {
     if (!url || !serviceKey) return json({ ok: false, error: "خدمة رفع الشهادات غير مهيأة." }, 500);
 
     const body = await req.json();
-    const field = String(body?.field || "");
     const uploadSessionId = String(body?.uploadSessionId || "");
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uploadSessionId)) {
+      return json({ ok: false, error: "جلسة رفع المستند غير صالحة." }, 400);
+    }
+    const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
+    if (body?.action === "cleanup") {
+      const paths = Array.isArray(body?.paths) ? body.paths.map((path: unknown) => String(path)) : [];
+      const safePaths = paths.filter((path: string) =>
+        path.startsWith(`registration-temp/${uploadSessionId}/`) &&
+        !path.includes("..") &&
+        /^registration-temp\/[0-9a-f-]{36}\/[a-z_]+-[0-9a-f-]{8}-[0-9a-f-]{4}-4[0-9a-f-]{3}-[89ab][0-9a-f-]{3}-[0-9a-f-]{12}\.(pdf|jpg|png|webp)$/i.test(path)
+      );
+      if (safePaths.length) {
+        const { error } = await admin.storage.from("registration-documents").remove(safePaths);
+        if (error) return json({ ok: false, error: "تعذر تنظيف الملفات المؤقتة." }, 400);
+      }
+      return json({ ok: true, removed: safePaths.length });
+    }
+    const field = String(body?.field || "");
     const name = String(body?.name || "");
     const type = String(body?.type || "");
     const size = Number(body?.size);
@@ -42,7 +59,6 @@ Deno.serve(async (req: Request) => {
       return json({ ok: false, error: "ارفع ملف PDF أو JPG أو PNG أو WEBP لا يتجاوز 10 ميجابايت." }, 400);
     }
 
-    const admin = createClient(url, serviceKey, { auth: { autoRefreshToken: false, persistSession: false } });
     const extension = mimeExtensions[type];
     const path = `registration-temp/${uploadSessionId}/${field}-${crypto.randomUUID()}.${extension}`;
     const { data, error } = await admin.storage.from("registration-documents").createSignedUploadUrl(path, { upsert: false });
