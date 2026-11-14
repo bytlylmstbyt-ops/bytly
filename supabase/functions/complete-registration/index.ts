@@ -58,7 +58,7 @@ Deno.serve(async(req)=>{
       const expectedPrefix=`registration-temp/${uploadSessionId}/${field}-`;
       const path=String(doc?.path||"");
       const extension=mimeExtensions[String(doc?.type||"")];
-      if(!doc?.name||!extension||!path.startsWith(expectedPrefix)||!path.endsWith(`. ${extension}`.replace(" ",""))){
+      if(!doc?.name||!extension||!path.startsWith(expectedPrefix)||!path.endsWith("." + extension)){
         await recordAttempt("failed",null,"document_validation",`مسار أو بيانات المستند غير صالحة: ${field}`);
         return json({ok:false,error:"يرجى رفع شهادة التخرج وشهادة القيد من جديد."},400);
       }
