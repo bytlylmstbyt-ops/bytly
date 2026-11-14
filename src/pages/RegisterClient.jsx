@@ -96,7 +96,7 @@ export default function RegisterClient() {
 
     toast.success("تم التسجيل بنجاح");
     // Registration now starts the Supabase session in saveRegistration, so the client can enter the platform immediately.
-    navigate(createPageUrl("Home"), { replace: true });
+    navigate(createPageUrl("Dashboard"), { replace: true });
     } catch (error) {
       if (error?.message === "EMAIL_CONFIRMATION_REQUIRED") {
         setConfirmationEmail(formData.email);
