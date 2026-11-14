@@ -77,6 +77,7 @@ Deno.serve(async(req)=>{
    await recordAttempt("failed",null,"auth_create",message); return json({ok:false,error:`تعذر إنشاء حساب الدخول: ${message}`},400);
   }
   const userId=created.user.id;const ownershipField=table==="engineering_firms"?"owner_user_id":"user_id";row[ownershipField]=userId;
+  if(table==="engineers"){row.status="pending";row.is_verified=false;}
   const {error:profileError}=await admin.from("profiles").upsert({user_id:userId,full_name:fullName,email,phone,role,acquisition_source:attribution.source||null,acquisition_medium:attribution.medium||null,acquisition_campaign:attribution.campaign||null,acquisition_content:attribution.content||null,acquisition_referrer:attribution.referrer||null,acquisition_label:attribution.label||null},{onConflict:"user_id"});
   if(profileError){await recordAttempt("failed",userId,"profile_create",profileError.message);await admin.auth.admin.deleteUser(userId);return json({ok:false,error:`تعذر حفظ ملف المستخدم: ${profileError.message}`},400);}
   const uploadedDocumentPaths:string[]=[];
