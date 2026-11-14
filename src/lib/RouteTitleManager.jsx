@@ -54,12 +54,13 @@ const PAGE_TITLES = {
 const DESCRIPTIONS = {
   '/': 'منصة بيتلي الهندسية في السعودية تربط أصحاب المشاريع بالمهندسين والاستشاريين ومقدمي الخدمات، وتساعد على طلب الخدمات ومتابعة المشاريع والعقود ومراحل العمل في مكان واحد.',
   '/About': 'تعرّف على بيتلي، المنظومة الهندسية المتكاملة التي تربط أصحاب المشاريع بالمهندسين والاستشاريين ومقدمي الخدمات في السعودية.',
-  '/ContactUs': 'تواصل مع فريق بيتلي للاستفسارات والدعم حول الخدمات الهندسية وإدارة المشاريع في السعودية.',
+  '/ContactUs': 'تواصل مع فريق بيتلي للاستفسارات حول المنصة والخدمات الهندسية وإدارة المشاريع في السعودية.',
   '/audiences/contractors': 'اكتشف كيف تساعد بيتلي المقاولين على الوصول إلى فرص المشاريع والتواصل مع أصحاب المشاريع في السعودية.',
   '/audiences/engineering-firms': 'منصة بيتلي تساعد المكاتب والشركات الهندسية على عرض خدماتها والتواصل مع أصحاب المشاريع في السعودية.',
   '/audiences/consulting-teams': 'تعرّف على خدمات بيتلي للفرق والاستشاريين الهندسيين وإدارة فرص العمل والمشاريع في السعودية.',
   '/Terms': 'اطلع على الشروط والأحكام المنظمة لاستخدام منصة بيتلي وخدماتها الهندسية.',
   '/Privacy': 'تعرف على سياسة الخصوصية وكيفية تعامل منصة بيتلي مع بيانات المستخدمين.',
+  '/Copyright': 'تعرف على سياسة حقوق الملكية الفكرية والمحتوى المنشور عبر منصة بيتلي.',
   '/Support': 'احصل على الدعم والمساعدة عند استخدام منصة بيتلي وخدماتها.',
   '/Complaints': 'قنوات تقديم الشكاوى ومتابعتها لدى منصة بيتلي.',
 };
@@ -87,7 +88,8 @@ export default function RouteTitleManager() {
 
     document.title = title;
     setMeta('description', description);
-    setMeta('robots', /^(\/login|\/register|\/forgot-password|\/reset-password|\/Dashboard|\/Home|\/Wallet|\/Messages|\/Settings|\/AdminControlCenter)/i.test(path) ? 'noindex, nofollow' : 'index, follow, max-image-preview:large');
+    const isPrivatePath = /^(\/login|\/register|\/forgot-password|\/reset-password|\/Dashboard|\/Home|\/Wallet|\/Messages|\/Settings|\/AdminControlCenter|\/Complaints|\/Support)(?:\/|$)/i.test(path);
+    setMeta('robots', isPrivatePath ? 'noindex, nofollow' : 'index, follow, max-image-preview:large');
     setMeta('og:title', title, 'property');
     setMeta('og:description', description, 'property');
     setMeta('og:url', canonicalUrl, 'property');
