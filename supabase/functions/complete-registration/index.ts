@@ -91,10 +91,105 @@ Deno.serve(async(req)=>{
     const mimeExtensions:Record<string,string>={"application/pdf":"pdf","image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
     for(const field of fieldsToValidate){
       const doc=documents[field];
-      const expectedPrefix=`registration-temp/${uploadSessionId}/${field}-`;
       const path=String(doc?.path||"");
       const extension=mimeExtensions[String(doc?.type||"")];
-      if(!doc?.name||!extension||!path.startsWith(expectedPrefix)||!path.endsWith("." + extension)){
+      const expectedPathPattern=extension
+        ? new RegExp(`^registration-temp/${uploadSessionId}/${field}-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\\.${extension}import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const corsHeaders={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"authorization, x-client-info, apikey, content-type","Access-Control-Allow-Methods":"POST, OPTIONS"};
+const TABLES=new Set(["engineers","clients","engineering_firms","consultants","contractors","suppliers","legal_consultants"]);
+const ROLE_TO_TABLE={engineer:"engineers",surveyor:"engineers",painter:"engineers",client:"clients",investor:"clients",firm:"engineering_firms",consultant:"consultants",contractor:"contractors",supplier:"suppliers",legal:"legal_consultants"};
+async function getPlatformOwnerId(admin:any){const {data,error}=await admin.from("profiles").select("user_id").in("role",["admin","super_admin"]).order("created_at",{ascending:true}).limit(1).maybeSingle();if(error)throw new Error(`تعذر تحديد حساب الإدارة: ${error.message}`);return data?.user_id||null;}
+const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{...corsHeaders,"Content-Type":"application/json"}});
+
+function b64url(bytes:Uint8Array){let s="";for(const b of bytes)s+=String.fromCharCode(b);return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"");}
+function clean(v:string){return v.replace(/[\r\n]/g," ").trim();}
+async function sendSystemEmail(to:string,subject:string,html:string){
+ const clientId=Deno.env.get("BYTLY_GMAIL_CLIENT_ID"), clientSecret=Deno.env.get("BYTLY_GMAIL_CLIENT_SECRET"), refreshToken=Deno.env.get("BYTLY_GMAIL_REFRESH_TOKEN");
+ if(!clientId||!clientSecret||!refreshToken)return {sent:false,reason:"GMAIL_SYSTEM_SECRETS_NOT_CONFIGURED"};
+ const tokenRes=await fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({client_id:clientId,client_secret:clientSecret,refresh_token:refreshToken,grant_type:"refresh_token"})});
+ const tokenData=await tokenRes.json().catch(()=>({}));
+ if(!tokenRes.ok||!tokenData.access_token)return {sent:false,reason:"GMAIL_REFRESH_TOKEN_INVALID"};
+ const raw=["From: Bytly <info@mybytly.com>","Reply-To: info@mybytly.com",`To: ${clean(to)}`,`Subject: ${clean(subject)}`,"MIME-Version: 1.0","Content-Type: text/html; charset=UTF-8","",html].join("\r\n");
+ const sendRes=await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send",{method:"POST",headers:{Authorization:`Bearer ${tokenData.access_token}`,"Content-Type":"application/json"},body:JSON.stringify({raw:b64url(new TextEncoder().encode(raw))})});
+ const sendData=await sendRes.json().catch(()=>({}));
+ return sendRes.ok?{sent:true,messageId:sendData.id||null}:{sent:false,reason:"GMAIL_SEND_FAILED"};
+}
+
+Deno.serve(async(req)=>{
+ if(req.method==="OPTIONS")return new Response("ok",{headers:corsHeaders});
+ if(req.method!=="POST")return json({ok:false,error:"Method not allowed"},405);
+ try{
+  const secretKeys=Deno.env.get("SUPABASE_SECRET_KEYS");
+  const serviceKey=secretKeys?JSON.parse(secretKeys)["default"]:Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const url=Deno.env.get("SUPABASE_URL");
+  if(!url||!serviceKey)return json({ok:false,error:"Server registration is not configured"},500);
+  const admin=createClient(url,serviceKey,{auth:{autoRefreshToken:false,persistSession:false}});
+  const body=await req.json();
+  const action=String(body?.action||"");
+  if(action==="prepare_document_upload"||action==="cleanup_document_uploads"){
+    const uploadSessionId=String(body?.uploadSessionId||"");
+    if(!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uploadSessionId))
+      return json({ok:false,error:"جلسة رفع المستند غير صالحة."},400);
+    const allowedFields=new Set(["graduation_certificate_url","saudi_engineers_council_certificate_url","profile_image"]);
+    const mimeExtensions:Record<string,string>={"application/pdf":"pdf","image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
+    if(action==="cleanup_document_uploads"){
+      const paths=Array.isArray(body?.paths)?body.paths.map((path:unknown)=>String(path)):[];
+      const safePaths=paths.filter((path:string)=>
+        path.startsWith(`registration-temp/${uploadSessionId}/`)&&!path.includes("..")&&
+        /^registration-temp\/[0-9a-f-]{36}\/[a-z_]+-[0-9a-f-]{8}-[0-9a-f-]{4}-4[0-9a-f-]{3}-[89ab][0-9a-f-]{3}-[0-9a-f-]{12}\.(pdf|jpg|png|webp)$/i.test(path)
+      );
+      if(safePaths.length){
+        const {error}=await admin.storage.from("registration-documents").remove(safePaths);
+        if(error)return json({ok:false,error:"تعذر تنظيف الملفات المؤقتة."},400);
+      }
+      return json({ok:true,removed:safePaths.length});
+    }
+    const field=String(body?.field||"");
+    const name=String(body?.name||"");
+    const type=String(body?.type||"");
+    const size=Number(body?.size);
+    const validType=field==="profile_image"?["image/jpeg","image/png","image/webp"].includes(type):Boolean(mimeExtensions[type]);
+    if(!allowedFields.has(field)||!name||!Number.isFinite(size)||size<=0||size>10*1024*1024||!validType)
+      return json({ok:false,error:"نوع الملف غير مدعوم أو تجاوز حجمه 10 ميجابايت."},400);
+    const path=`registration-temp/${uploadSessionId}/${field}-${crypto.randomUUID()}.${mimeExtensions[type]}`;
+    const {data,error}=await admin.storage.from("registration-documents").createSignedUploadUrl(path,{upsert:false});
+    if(error||!data?.token){
+      console.error("registration signed upload URL error",error);
+      return json({ok:false,error:"تعذر تجهيز رابط رفع الشهادة. حاول مرة أخرى."},400);
+    }
+    return json({ok:true,path:data.path||path,token:data.token,expires_in:7200});
+  }
+  const table=String(body?.table||"");const role=String(body?.role||"");
+  const email=String(body?.email||"").trim().toLowerCase();const fullName=String(body?.fullName||"").trim();const phone=String(body?.phone||"").trim();
+  const row=body?.row&&typeof body.row==="object"?{...body.row}:{};const password=String(body?.password||"");const attribution=body?.attribution&&typeof body.attribution==="object"?body.attribution:{};const documents=body?.documents&&typeof body.documents==="object"?body.documents:{};
+  const passwordBytes=new TextEncoder().encode(password).length;
+  const attemptId=crypto.randomUUID();
+  const recordAttempt=async(status:string,userId:any=null,stage:string|null=null,message:string|null=null)=>{
+    try{await admin.from("registration_attempts").upsert({id:attemptId,email,status,user_id:userId,error_stage:stage,error_message:message ? `[${role}/${table}] ${message}` : `[${role}/${table}]`},{onConflict:"id"});}catch(_){}
+  };
+  await recordAttempt("started");
+  if(password.length<8){await recordAttempt("failed",null,"validation","كلمة المرور قصيرة");return json({ok:false,error:"كلمة المرور يجب أن تكون 8 أحرف على الأقل."},400);}
+  if(passwordBytes>72){await recordAttempt("failed",null,"validation","كلمة المرور طويلة");return json({ok:false,error:"كلمة المرور طويلة جداً. الحد الأقصى 72 بايت."},400);}
+  if(!TABLES.has(table)||ROLE_TO_TABLE[role]!==table){await recordAttempt("failed",null,"validation","Invalid registration type");return json({ok:false,error:"Invalid registration type"},400);}
+  if(!email||!fullName||!phone){await recordAttempt("failed",null,"validation","الاسم والبريد والهاتف مطلوبة");return json({ok:false,error:"الاسم والبريد والهاتف مطلوبة"},400);}
+  const validatedDocuments = new Map<string,{bytes:Uint8Array,type:string,extension:string,path:string}>();
+  const temporaryDocumentPaths:string[]=[];
+  if(table==="engineers"){
+    const certificateFields=["graduation_certificate_url","saudi_engineers_council_certificate_url"];
+    const fieldsToValidate=[...certificateFields,...(documents.profile_image?.path?["profile_image"]:[])];
+    const uploadSessionId=String(documents.uploadSessionId||"");
+    if(!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uploadSessionId)){
+      await recordAttempt("failed",null,"document_validation","جلسة رفع الشهادات غير صالحة");
+      return json({ok:false,error:"انتهت جلسة رفع الشهادات. أعد اختيار الشهادتين وحاول مرة أخرى."},400);
+    }
+    const mimeExtensions:Record<string,string>={"application/pdf":"pdf","image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
+    for(const field of fieldsToValidate){
+      const doc=documents[field];
+,"i")
+        : null;
+      if(!doc?.name||!expectedPathPattern?.test(path)){
         await recordAttempt("failed",null,"document_validation",`مسار أو بيانات المستند غير صالحة: ${field}`);
         return json({ok:false,error:"يرجى رفع شهادة التخرج وشهادة القيد من جديد."},400);
       }
