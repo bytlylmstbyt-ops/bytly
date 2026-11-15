@@ -34,10 +34,11 @@ export async function saveRegistration(payload) {
         phone,
         password: payload.password,
         row: payload.row || {},
+        documents: payload.documents || {},
         attribution
       }
     }),
-    30000,
+    120000,
     "انتهت مهلة إنشاء الحساب. تحقق من الاتصال وحاول مرة أخرى."
   );
 
