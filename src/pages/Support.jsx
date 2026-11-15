@@ -23,11 +23,6 @@ export default function SupportPage() {
   const [tickets, setTickets] = useState([]);
   const [formData, setFormData] = useState({ category: "", subject: "", description: "", attachments: [] });
 
-  useEffect(() => {
-    if (isAuthenticated && user?.id) loadData();
-    else if (isAuthenticated === false) setLoading(false);
-  }, [isAuthenticated, user?.id, loadData]);
-
   const loadData = useCallback(async () => {
     if (!supabase || !user?.id) { setLoading(false); return; }
     setLoading(true);
@@ -49,6 +44,11 @@ export default function SupportPage() {
       setLoading(false);
     }
   }, [user?.id]);
+
+  useEffect(() => {
+    if (isAuthenticated && user?.id) loadData();
+    else if (isAuthenticated === false) setLoading(false);
+  }, [isAuthenticated, user?.id, loadData]);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
