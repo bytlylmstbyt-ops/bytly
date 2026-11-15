@@ -49,7 +49,7 @@ Deno.serve(async(req)=>{
   const recordAttempt=async(status:string,userId:any=null,stage:string|null=null,message:string|null=null)=>{
     try{await admin.from("registration_attempts").upsert({id:attemptId,email,status,user_id:userId,error_stage:stage,error_message:message ? `[${role}/${table}] ${message}` : `[${role}/${table}]`},{onConflict:"id"});}catch(_){}
   };
-  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)||email.length>254)return json({ok:false,error:"يرجى إدخال بريد إلكتروني صحيح."},400);
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||email.length>254)return json({ok:false,error:"يرجى إدخال بريد إلكتروني صحيح."},400);
   const windowStart=new Date(Date.now()-15*60*1000).toISOString();
   const {count:recentAttempts,error:rateLimitError}=await admin.from("registration_attempts").select("id",{count:"exact",head:true}).eq("email",email).gte("created_at",windowStart);
   if(rateLimitError)return json({ok:false,error:"تعذر التحقق من طلب التسجيل. حاول بعد قليل."},503);
