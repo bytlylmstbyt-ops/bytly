@@ -30,7 +30,7 @@ Deno.serve(async(req)=>{
   const url=Deno.env.get("SUPABASE_URL");
   if(!url||!serviceKey)return json({ok:false,error:"Server registration is not configured"},500);
   const admin=createClient(url,serviceKey,{auth:{autoRefreshToken:false,persistSession:false}});
-  const body=await req.json();const table=String(body?.table||"");const role=String(body?.role||"");
+  const contentLength=Number(req.headers.get("content-length")||0);if(contentLength>45*1024*1024)return json({ok:false,error:"حجم طلب التسجيل كبير جداً. قلّص حجم الملفات وحاول مرة أخرى."},413);\n  const body=await req.json();const table=String(body?.table||"");const role=String(body?.role||"");
   const email=String(body?.email||"").trim().toLowerCase();const fullName=String(body?.fullName||"").trim();const phone=String(body?.phone||"").trim();
   const row=body?.row&&typeof body.row==="object"?{...body.row}:{};const password=String(body?.password||"");const attribution=body?.attribution&&typeof body.attribution==="object"?body.attribution:{};const documents=body?.documents&&typeof body.documents==="object"?body.documents:{};
   const passwordBytes=new TextEncoder().encode(password).length;
@@ -38,6 +38,11 @@ Deno.serve(async(req)=>{
   const recordAttempt=async(status:string,userId:any=null,stage:string|null=null,message:string|null=null)=>{
     try{await admin.from("registration_attempts").upsert({id:attemptId,email,status,user_id:userId,error_stage:stage,error_message:message ? `[${role}/${table}] ${message}` : `[${role}/${table}]`},{onConflict:"id"});}catch(_){}
   };
+  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)||email.length>254)return json({ok:false,error:"يرجى إدخال بريد إلكتروني صحيح."},400);
+  const windowStart=new Date(Date.now()-15*60*1000).toISOString();
+  const {count:recentAttempts,error:rateLimitError}=await admin.from("registration_attempts").select("id",{count:"exact",head:true}).eq("email",email).gte("created_at",windowStart);
+  if(rateLimitError)return json({ok:false,error:"تعذر التحقق من طلب التسجيل. حاول بعد قليل."},503);
+  if((recentAttempts||0)>=5)return json({ok:false,error:"تم تجاوز عدد محاولات التسجيل لهذا البريد. حاول بعد 15 دقيقة."},429);
   await recordAttempt("started");
   if(password.length<8){await recordAttempt("failed",null,"validation","كلمة المرور قصيرة");return json({ok:false,error:"كلمة المرور يجب أن تكون 8 أحرف على الأقل."},400);}
   if(passwordBytes>72){await recordAttempt("failed",null,"validation","كلمة المرور طويلة");return json({ok:false,error:"كلمة المرور طويلة جداً. الحد الأقصى 72 بايت."},400);}
@@ -77,6 +82,13 @@ Deno.serve(async(req)=>{
       }
     }
   }
+  const validatedFiles=new Map<string,Uint8Array>();
+  try{
+    if(table==="engineers"){
+      for(const field of ["graduation_certificate_url","saudi_engineers_council_certificate_url"]){const doc=documents[field];if(doc?.base64)validatedFiles.set(field,decodeRegistrationFile(String(doc.base64),String(doc.type||"")));}
+      if(documents.profile_image?.base64)validatedFiles.set("profile_image",decodeRegistrationFile(String(documents.profile_image.base64),String(documents.profile_image.type||"")));
+    }
+  }catch(fileError){await recordAttempt("failed",null,"document_validation",fileError instanceof Error?fileError.message:"Invalid file");return json({ok:false,error:fileError instanceof Error?fileError.message:"ملف التسجيل غير صالح."},400);}
   delete row.user_id;delete row.owner_user_id;delete row.id;row.email=email;row.phone=phone;const companyTables=new Set(["engineering_firms","contractors","suppliers"]);if(companyTables.has(table)){row.company_name=String(row.company_name||fullName).trim();delete row.full_name;}else{row.full_name=fullName;delete row.company_name;}if(["engineers","clients","engineering_firms"].includes(table)){row.is_real=true;row.source="supabase";}else{delete row.is_real;delete row.source;}
 
   const {data:existingProfile,error:profileLookupError}=await admin.from("profiles").select("id,user_id,role").eq("email",email).maybeSingle();
@@ -97,7 +109,7 @@ Deno.serve(async(req)=>{
     const extensionForType:Record<string,string>={"application/pdf":"pdf","image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
     for(const field of ["graduation_certificate_url","saudi_engineers_council_certificate_url"]){
       const doc=documents[field];
-      const bytes=Uint8Array.from(atob(String(doc.base64)),c=>c.charCodeAt(0));
+      const bytes=validatedFiles.get(field)!;
       const path=`engineers/${userId}/${field}-${crypto.randomUUID()}.${extensionForType[doc.type]}`;
       const {error:uploadError}=await admin.storage.from("registration-documents").upload(path,bytes,{upsert:false,contentType:doc.type,cacheControl:"3600"});
       if(uploadError){
@@ -114,7 +126,7 @@ Deno.serve(async(req)=>{
   if(table==="engineers"&&documents.profile_image?.base64){
     const doc=documents.profile_image;
     const extensionForType:Record<string,string>={"image/jpeg":"jpg","image/png":"png","image/webp":"webp"};
-    const bytes=Uint8Array.from(atob(String(doc.base64)),c=>c.charCodeAt(0));
+    const bytes=validatedFiles.get("profile_image")!;
     const path=`engineers/${userId}/profile-image-${crypto.randomUUID()}.${extensionForType[doc.type]}`;
     const {error:uploadError}=await admin.storage.from("registration-documents").upload(path,bytes,{upsert:false,contentType:doc.type,cacheControl:"3600"});
     if(uploadError){
