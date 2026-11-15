@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useAuth } from "@/lib/AuthContext";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
@@ -26,9 +26,9 @@ export default function SupportPage() {
   useEffect(() => {
     if (isAuthenticated && user?.id) loadData();
     else if (isAuthenticated === false) setLoading(false);
-  }, [isAuthenticated, user?.id]);
+  }, [isAuthenticated, user?.id, loadData]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!supabase || !user?.id) { setLoading(false); return; }
     setLoading(true);
     try {
@@ -48,7 +48,7 @@ export default function SupportPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
