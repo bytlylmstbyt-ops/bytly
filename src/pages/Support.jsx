@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/lib/supabaseClient";
+import { useAuth } from "@/lib/AuthContext";
 import { uploadScopedFile } from "@/lib/projectFileStorage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,23 +17,37 @@ const STATUS_ICONS = { open: AlertCircle, in_progress: Clock, waiting_customer: 
 
 export default function SupportPage() {
   const { t, isRTL, language } = useLanguage();
-  const [user, setUser] = useState(null);
+  const { user, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [tickets, setTickets] = useState([]);
   const [formData, setFormData] = useState({ category: "", subject: "", description: "", attachments: [] });
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    if (isAuthenticated && user?.id) loadData();
+    else if (isAuthenticated === false) setLoading(false);
+  }, [isAuthenticated, user?.id]);
 
   const loadData = async () => {
+    if (!supabase || !user?.id) { setLoading(false); return; }
     setLoading(true);
     try {
-      const userData = await base44.auth.me();
-      setUser(userData);
-      const userTickets = await base44.entities.SupportTicket.filter({ user_id: userData.email }, "-created_date");
-      setTickets(userTickets);
-    } catch (error) { console.error("Error loading data:", error); }
-    finally { setLoading(false); }
+      const request = supabase
+        .from("support_tickets")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      const result = await Promise.race([
+        request,
+        new Promise((_, reject) => setTimeout(() => reject(new Error("انتهت مهلة تحميل تذاكر الدعم")), 12000))
+      ]);
+      if (result.error) throw result.error;
+      setTickets(result.data || []);
+    } catch (error) {
+      console.error("Error loading support tickets:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFileUpload = async (e) => {
@@ -46,14 +61,35 @@ export default function SupportPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!supabase || !user?.id) {
+      alert(t('supportPage.errorMsg'));
+      return;
+    }
     setSubmitting(true);
     try {
-      await base44.entities.SupportTicket.create({ ...formData, user_id: user.email });
+      const request = supabase.from("support_tickets").insert({
+        user_id: user.id,
+        category: formData.category,
+        subject: formData.subject.trim(),
+        description: formData.description.trim(),
+        attachments: formData.attachments,
+        priority: "normal",
+        status: "open"
+      }).select("*").single();
+      const result = await Promise.race([
+        request,
+        new Promise((_, reject) => setTimeout(() => reject(new Error("انتهت مهلة إرسال تذكرة الدعم")), 15000))
+      ]);
+      if (result.error) throw result.error;
       alert(t('supportPage.successMsg'));
       setFormData({ category: "", subject: "", description: "", attachments: [] });
-      loadData();
-    } catch (error) { console.error("Error submitting ticket:", error); alert(t('supportPage.errorMsg')); }
-    finally { setSubmitting(false); }
+      setTickets(prev => [result.data, ...prev]);
+    } catch (error) {
+      console.error("Error submitting ticket:", error);
+      alert(t('supportPage.errorMsg'));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -159,7 +195,7 @@ export default function SupportPage() {
                           {getStatusBadge(ticket.status)}
                         </div>
                         <p className="text-sm text-slate-600 mb-2">{ticket.description}</p>
-                        <p className="text-xs text-slate-400">{new Date(ticket.created_date).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</p>
+                        <p className="text-xs text-slate-400">{new Date(ticket.created_at).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</p>
                         {ticket.support_responses && ticket.support_responses.length > 0 && (
                           <div className="mt-3 space-y-2">
                             {ticket.support_responses.map((response, idx) => (
