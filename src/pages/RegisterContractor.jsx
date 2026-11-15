@@ -352,6 +352,16 @@ export default function RegisterContractor() {
                 </div>
               </div>
 
+              <div>
+                <Label>التخصص الرئيسي *</Label>
+                <Input
+                  value={formData.specialization}
+                  onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+                  placeholder="مثال: مقاولات عامة أو تشطيبات"
+                  required
+                />
+              </div>
+
               {/* Specializations */}
               <div className="space-y-3">
                 <Label>الخدمات المقدمة</Label>
