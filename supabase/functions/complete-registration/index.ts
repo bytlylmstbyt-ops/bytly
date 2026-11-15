@@ -6,6 +6,15 @@ const TABLES=new Set(["engineers","clients","engineering_firms","consultants","c
 const ROLE_TO_TABLE={engineer:"engineers",surveyor:"engineers",painter:"engineers",client:"clients",investor:"clients",firm:"engineering_firms",consultant:"consultants",contractor:"contractors",supplier:"suppliers",legal:"legal_consultants"};
 async function getPlatformOwnerId(admin:any){const {data,error}=await admin.from("profiles").select("user_id").in("role",["admin","super_admin"]).order("created_at",{ascending:true}).limit(1).maybeSingle();if(error)throw new Error(`تعذر تحديد حساب الإدارة: ${error.message}`);return data?.user_id||null;}
 const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:{...corsHeaders,"Content-Type":"application/json"}});
+const MAX_REGISTRATION_BODY_BYTES=45*1024*1024;
+async function readJsonBodyLimited(req:Request){
+  const reader=req.body?.getReader();
+  if(!reader)throw new Error("طلب التسجيل فارغ.");
+  const chunks:Uint8Array[]=[];let total=0;
+  while(true){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;if(total>MAX_REGISTRATION_BODY_BYTES){await reader.cancel();throw new Error("REGISTRATION_BODY_TOO_LARGE");}chunks.push(value);}
+  const bodyBytes=new Uint8Array(total);let offset=0;for(const chunk of chunks){bodyBytes.set(chunk,offset);offset+=chunk.byteLength;}
+  return JSON.parse(new TextDecoder().decode(bodyBytes));
+}
 
 function b64url(bytes:Uint8Array){let s="";for(const b of bytes)s+=String.fromCharCode(b);return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"");}
 function clean(v:string){return v.replace(/[\r\n]/g," ").trim();}
@@ -34,14 +43,15 @@ async function sendSystemEmail(to:string,subject:string,html:string){
 Deno.serve(async(req)=>{
  if(req.method==="OPTIONS")return new Response("ok",{headers:corsHeaders});
  if(req.method!=="POST")return json({ok:false,error:"Method not allowed"},405);
+ let cleanupUserId:string|null=null;let cleanupDocumentPaths:string[]=[];let registrationCommitted=false;
  try{
   const secretKeys=Deno.env.get("SUPABASE_SECRET_KEYS");
   const serviceKey=secretKeys?JSON.parse(secretKeys)["default"]:Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const url=Deno.env.get("SUPABASE_URL");
   if(!url||!serviceKey)return json({ok:false,error:"Server registration is not configured"},500);
   const admin=createClient(url,serviceKey,{auth:{autoRefreshToken:false,persistSession:false}});
-  const contentLength=Number(req.headers.get("content-length")||0);if(contentLength>45*1024*1024)return json({ok:false,error:"حجم طلب التسجيل كبير جداً. قلّص حجم الملفات وحاول مرة أخرى."},413);
-  const body=await req.json();const table=String(body?.table||"");const role=String(body?.role||"");
+  const contentLength=Number(req.headers.get("content-length")||0);if(contentLength>MAX_REGISTRATION_BODY_BYTES)return json({ok:false,error:"حجم طلب التسجيل كبير جداً. قلّص حجم الملفات وحاول مرة أخرى."},413);
+  let body:any;try{body=await readJsonBodyLimited(req);}catch(bodyError){if(bodyError instanceof Error&&bodyError.message==="REGISTRATION_BODY_TOO_LARGE")return json({ok:false,error:"حجم طلب التسجيل كبير جداً. قلّص حجم الملفات وحاول مرة أخرى."},413);return json({ok:false,error:"بيانات طلب التسجيل غير صالحة."},400);}const table=String(body?.table||"");const role=String(body?.role||"");
   const email=String(body?.email||"").trim().toLowerCase();const fullName=String(body?.fullName||"").trim();const phone=String(body?.phone||"").trim();
   const row=body?.row&&typeof body.row==="object"?{...body.row}:{};const password=String(body?.password||"");const attribution=body?.attribution&&typeof body.attribution==="object"?body.attribution:{};const documents=body?.documents&&typeof body.documents==="object"?body.documents:{};
   const passwordBytes=new TextEncoder().encode(password).length;
@@ -112,7 +122,7 @@ Deno.serve(async(req)=>{
    if(/already registered|already exists/i.test(message))return json({ok:false,error:"هذا البريد مسجل بالفعل. يمكنك تسجيل الدخول."},409);
    await recordAttempt("failed",null,"auth_create",message); return json({ok:false,error:`تعذر إنشاء حساب الدخول: ${message}`},400);
   }
-  const userId=created.user.id;const ownershipField=table==="engineering_firms"?"owner_user_id":"user_id";row[ownershipField]=userId;
+  const userId=created.user.id;cleanupUserId=userId;const ownershipField=table==="engineering_firms"?"owner_user_id":"user_id";row[ownershipField]=userId;
   const {error:profileError}=await admin.from("profiles").upsert({user_id:userId,full_name:fullName,email,phone,role,acquisition_source:attribution.source||null,acquisition_medium:attribution.medium||null,acquisition_campaign:attribution.campaign||null,acquisition_content:attribution.content||null,acquisition_referrer:attribution.referrer||null,acquisition_label:attribution.label||null},{onConflict:"user_id"});
   if(profileError){await recordAttempt("failed",userId,"profile_create",profileError.message);await admin.auth.admin.deleteUser(userId);return json({ok:false,error:`تعذر حفظ ملف المستخدم: ${profileError.message}`},400);}
   const uploadedDocumentPaths:string[]=[];
@@ -131,6 +141,7 @@ Deno.serve(async(req)=>{
         return json({ok:false,error:"تعذر حفظ مستندات التسجيل بأمان. لم يتم إكمال إنشاء الحساب؛ يرجى إعادة المحاولة."},400);
       }
       uploadedDocumentPaths.push(path);
+      cleanupDocumentPaths.push(path);
       row[field]=path;
     }
   }
@@ -148,10 +159,12 @@ Deno.serve(async(req)=>{
       return json({ok:false,error:"تعذر حفظ الصورة الشخصية بأمان. لم يتم إكمال إنشاء الحساب؛ يرجى إعادة المحاولة."},400);
     }
     uploadedDocumentPaths.push(path);
+    cleanupDocumentPaths.push(path);
     row.profile_image=path;
   }
   const {data:saved,error:rowError}=await admin.from(table).insert(row).select("*").single();
-  if(rowError){for(const uploadedPath of uploadedDocumentPaths){try{await admin.storage.from("registration-documents").remove([uploadedPath]);}catch(_){}}await recordAttempt("failed",userId,"role_record_create",rowError.message);await admin.from("profiles").delete().eq("user_id",userId);await admin.auth.admin.deleteUser(userId);return json({ok:false,error:`تعذر حفظ بيانات التسجيل: ${rowError.message}`},400);}
+  if(rowError){for(const uploadedPath of uploadedDocumentPaths){try{await admin.storage.from("registration-documents").remove([uploadedPath]);}catch(_){}}await recordAttempt("failed",userId,"role_record_create",rowError.message);await admin.from("profiles").delete().eq("user_id",userId);await admin.auth.admin.deleteUser(userId);cleanupUserId=null;cleanupDocumentPaths=[];return json({ok:false,error:`تعذر حفظ بيانات التسجيل: ${rowError.message}`},400);}
+  registrationCommitted=true;cleanupUserId=null;cleanupDocumentPaths=[];
 
   let platformNotification=false;
   try{const platformOwnerId=await getPlatformOwnerId(admin);
@@ -168,5 +181,9 @@ Deno.serve(async(req)=>{
 
   await recordAttempt("succeeded",userId,null,null);
   return json({ok:true,user_id:userId,record_id:saved?.id||null,documents_uploaded:uploadedDocumentPaths.length,platform_notification_sent:platformNotification,welcome_email_sent:welcome.sent,admin_email_sent:adminEmail.sent,email_status:{welcome:welcome.reason||"sent",admin:adminEmail.reason||"sent"}});
- }catch(error){console.error("complete-registration error",error);return json({ok:false,error:error instanceof Error?error.message:"تعذر إكمال التسجيل"},500);}
+ }catch(error){
+  console.error("complete-registration error",error);
+  if(!registrationCommitted&&cleanupUserId){for(const path of cleanupDocumentPaths){try{await admin.storage.from("registration-documents").remove([path]);}catch(_){}}try{await admin.from("profiles").delete().eq("user_id",cleanupUserId);}catch(_){}try{await admin.auth.admin.deleteUser(cleanupUserId);}catch(_){}}
+  return json({ok:false,error:error instanceof Error?error.message:"تعذر إكمال التسجيل"},500);
+ }
 });
