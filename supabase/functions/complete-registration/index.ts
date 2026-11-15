@@ -43,13 +43,13 @@ async function sendSystemEmail(to:string,subject:string,html:string){
 Deno.serve(async(req)=>{
  if(req.method==="OPTIONS")return new Response("ok",{headers:corsHeaders});
  if(req.method!=="POST")return json({ok:false,error:"Method not allowed"},405);
- let cleanupUserId:string|null=null;let cleanupDocumentPaths:string[]=[];let registrationCommitted=false;
+ let cleanupUserId:string|null=null;let cleanupDocumentPaths:string[]=[];let registrationCommitted=false;let admin:any=null;
  try{
   const secretKeys=Deno.env.get("SUPABASE_SECRET_KEYS");
   const serviceKey=secretKeys?JSON.parse(secretKeys)["default"]:Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const url=Deno.env.get("SUPABASE_URL");
   if(!url||!serviceKey)return json({ok:false,error:"Server registration is not configured"},500);
-  const admin=createClient(url,serviceKey,{auth:{autoRefreshToken:false,persistSession:false}});
+  admin=createClient(url,serviceKey,{auth:{autoRefreshToken:false,persistSession:false}});
   const contentLength=Number(req.headers.get("content-length")||0);if(contentLength>MAX_REGISTRATION_BODY_BYTES)return json({ok:false,error:"حجم طلب التسجيل كبير جداً. قلّص حجم الملفات وحاول مرة أخرى."},413);
   let body:any;try{body=await readJsonBodyLimited(req);}catch(bodyError){if(bodyError instanceof Error&&bodyError.message==="REGISTRATION_BODY_TOO_LARGE")return json({ok:false,error:"حجم طلب التسجيل كبير جداً. قلّص حجم الملفات وحاول مرة أخرى."},413);return json({ok:false,error:"بيانات طلب التسجيل غير صالحة."},400);}const table=String(body?.table||"");const role=String(body?.role||"");
   const email=String(body?.email||"").trim().toLowerCase();const fullName=String(body?.fullName||"").trim();const phone=String(body?.phone||"").trim();
