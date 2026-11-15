@@ -24,6 +24,11 @@ export async function saveRegistration(payload) {
     throw new Error("الاسم والبريد الإلكتروني ورقم الهاتف مطلوبة.");
   }
 
+  // Passwords are sent only to Supabase Auth via the dedicated password
+  // field. Never forward form-only confirmation fields or credentials into
+  // the role profile row.
+  const { password: _rowPassword, confirmPassword: _confirmPassword, ...safeRow } = payload.row || {};
+
   const response = await withTimeout(
     supabase.functions.invoke("complete-registration", {
       body: {
@@ -33,7 +38,7 @@ export async function saveRegistration(payload) {
         email,
         phone,
         password: payload.password,
-        row: payload.row || {},
+        row: safeRow,
         documents: payload.documents || {},
         attribution
       }
