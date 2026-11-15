@@ -9,6 +9,16 @@ const json=(body,status=200)=>new Response(JSON.stringify(body),{status,headers:
 
 function b64url(bytes:Uint8Array){let s="";for(const b of bytes)s+=String.fromCharCode(b);return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"");}
 function clean(v:string){return v.replace(/[\r\n]/g," ").trim();}
+function decodeRegistrationFile(base64:string,type:string){
+  if(typeof base64!=="string"||base64.length===0||base64.length>14*1024*1024||!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(base64))throw new Error("ملف التسجيل غير صالح.");
+  const binary=atob(base64);const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
+  if(bytes.length===0||bytes.length>10*1024*1024)throw new Error("حجم الملف يجب ألا يتجاوز 10 ميجابايت.");
+  const starts=(sig:number[])=>sig.every((v,i)=>bytes[i]===v);
+  const valid=type==="application/pdf"?String.fromCharCode(...bytes.slice(0,5))==="%PDF-":type==="image/jpeg"?starts([0xff,0xd8,0xff]):type==="image/png"?starts([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]):type==="image/webp"?String.fromCharCode(...bytes.slice(0,4))==="RIFF"&&String.fromCharCode(...bytes.slice(8,12))==="WEBP":false;
+  if(!valid)throw new Error("محتوى الملف لا يطابق نوعه المعلن.");
+  return bytes;
+}
+
 async function sendSystemEmail(to:string,subject:string,html:string){
  const clientId=Deno.env.get("BYTLY_GMAIL_CLIENT_ID"), clientSecret=Deno.env.get("BYTLY_GMAIL_CLIENT_SECRET"), refreshToken=Deno.env.get("BYTLY_GMAIL_REFRESH_TOKEN");
  if(!clientId||!clientSecret||!refreshToken)return {sent:false,reason:"GMAIL_SYSTEM_SECRETS_NOT_CONFIGURED"};
@@ -30,7 +40,8 @@ Deno.serve(async(req)=>{
   const url=Deno.env.get("SUPABASE_URL");
   if(!url||!serviceKey)return json({ok:false,error:"Server registration is not configured"},500);
   const admin=createClient(url,serviceKey,{auth:{autoRefreshToken:false,persistSession:false}});
-  const contentLength=Number(req.headers.get("content-length")||0);if(contentLength>45*1024*1024)return json({ok:false,error:"حجم طلب التسجيل كبير جداً. قلّص حجم الملفات وحاول مرة أخرى."},413);\n  const body=await req.json();const table=String(body?.table||"");const role=String(body?.role||"");
+  const contentLength=Number(req.headers.get("content-length")||0);if(contentLength>45*1024*1024)return json({ok:false,error:"حجم طلب التسجيل كبير جداً. قلّص حجم الملفات وحاول مرة أخرى."},413);
+  const body=await req.json();const table=String(body?.table||"");const role=String(body?.role||"");
   const email=String(body?.email||"").trim().toLowerCase();const fullName=String(body?.fullName||"").trim();const phone=String(body?.phone||"").trim();
   const row=body?.row&&typeof body.row==="object"?{...body.row}:{};const password=String(body?.password||"");const attribution=body?.attribution&&typeof body.attribution==="object"?body.attribution:{};const documents=body?.documents&&typeof body.documents==="object"?body.documents:{};
   const passwordBytes=new TextEncoder().encode(password).length;
