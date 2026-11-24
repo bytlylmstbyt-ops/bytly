@@ -458,7 +458,12 @@ const PUBLIC_ENGINEER_COLUMNS = new Set([
 const queryEngineerRows = async (filters = {}, sort = '-created_at', limit = 100) => {
   const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
   const user = authData?.user;
-  const ownProfileRequested = Boolean(user && filters?.user_id === user.id);
+  const ownProfileRequested = Boolean(
+    user && (
+      filters?.user_id === user.id ||
+      (filters?.email && String(filters.email).trim().toLowerCase() === String(user.email || '').trim().toLowerCase())
+    )
+  );
   const privateRowsAllowed = ownProfileRequested || await canReadPrivateEngineerRows();
   if (!privateRowsAllowed && Object.keys(filters || {}).some(key => !PUBLIC_ENGINEER_COLUMNS.has(key))) return [];
   let q = supabase.from(privateRowsAllowed ? 'engineers' : 'engineer_public_directory').select('*').limit(limit);
