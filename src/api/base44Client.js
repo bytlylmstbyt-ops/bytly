@@ -446,7 +446,7 @@ const canReadPrivateEngineerRows = async () => {
     10000,
     'انتهت مهلة التحقق من صلاحيات المهندس'
   );
-  return ['admin', 'owner', 'super_admin'].includes(String(profile?.role || '').toLowerCase());
+  return ['admin', 'administrator', 'owner', 'super_admin'].includes(String(profile?.role || '').toLowerCase());
 };
 const PUBLIC_ENGINEER_COLUMNS = new Set([
   'id', 'full_name', 'city', 'country', 'specialization', 'bio', 'is_verified',
