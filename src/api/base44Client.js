@@ -132,43 +132,7 @@ const bytlyCompat = {
   functions: unmigratedFunctions,
 };
 
-// Client registration must never accept wallet, trust, subscription or ownership fields
-// from the browser. Those values are initialized by trusted server/database workflows.
-const legacyClient = bytlyCompat.entities.Client;
-bytlyCompat.entities.Client = {
-  ...legacyClient,
-  create: async (payload = {}) => {
-    const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000, 'انتهت مهلة التحقق من جلسة الدخول');
-    const user = authData?.user;
-    if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً');
-    const row = {
-      full_name: String(payload.full_name || payload.name || user.user_metadata?.full_name || '').trim(),
-      email: user.email || null,
-      phone: payload.phone || null,
-      city: payload.city || null,
-      country: payload.country || null,
-      client_type: payload.client_type || 'individual',
-      company_name: payload.company_name || null,
-      trust_score: 0,
-      wallet_balance: 0,
-      total_projects: 0,
-      subscription_type: 'none',
-      is_subscription_active: false,
-      is_real: true,
-      user_id: user.id,
-      source: 'supabase',
-      status: 'new',
-    };
-    if (!row.full_name) throw new Error('الاسم مطلوب');
-    const { data, error } = await withHardTimeout(
-      supabase.from('clients').insert(row).select('*').single(),
-      15000,
-      'انتهت مهلة حفظ بيانات العميل'
-    );
-    if (error) throw new Error(error.message || 'تعذر حفظ تسجيل العميل');
-    return data;
-  },
-};
+
 // Ready-made design marketplace: public metadata is separated from private downloadable files.
 const legacyReadyMadeDesign = bytlyCompat.entities.ReadyMadeDesign;
 const signDesignUrls = async urls => Promise.all((Array.isArray(urls) ? urls : []).map(async url => {
@@ -721,6 +685,33 @@ bytlyCompat.entities.Client = {
     const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة العميل');
     if (error) throw new Error(error.message || 'تعذر قراءة العميل من Supabase');
     return data || [];
+  },
+  create: async (payload = {}) => {
+    const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000, 'انتهت مهلة التحقق من جلسة الدخول');
+    const user = authData?.user;
+    if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً');
+    const row = {
+      full_name: String(payload.full_name || payload.name || user.user_metadata?.full_name || '').trim(),
+      email: user.email || null,
+      phone: payload.phone || null,
+      city: payload.city || null,
+      country: payload.country || null,
+      client_type: payload.client_type || 'individual',
+      company_name: payload.company_name || null,
+      trust_score: 0,
+      wallet_balance: 0,
+      total_projects: 0,
+      subscription_type: 'none',
+      is_subscription_active: false,
+      is_real: true,
+      user_id: user.id,
+      source: 'supabase',
+      status: 'new',
+    };
+    if (!row.full_name) throw new Error('الاسم مطلوب');
+    const { data, error } = await withHardTimeout(supabase.from('clients').insert(row).select('*').single(), 15000, 'انتهت مهلة حفظ بيانات العميل');
+    if (error) throw new Error(error.message || 'تعذر حفظ تسجيل العميل');
+    return data;
   }
 };
 
