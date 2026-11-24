@@ -10,7 +10,13 @@ create policy clients_owner_select
   on public.clients
   for select
   to authenticated
-  using (user_id = (select auth.uid()));
+  using (
+    user_id = (select auth.uid())
+    or (
+      user_id is null
+      and lower(coalesce(email, '')) = lower(coalesce((select auth.jwt() ->> 'email'), ''))
+    )
+  );
 
 -- Registration inserts must be authenticated and tied to the signed-in account.
 -- Never allow browser-supplied balances, trust scores, verification or subscriptions.
@@ -57,7 +63,13 @@ create policy engineers_owner_select
   on public.engineers
   for select
   to authenticated
-  using (user_id = (select auth.uid()));
+  using (
+    user_id = (select auth.uid())
+    or (
+      user_id is null
+      and lower(coalesce(email, '')) = lower(coalesce((select auth.jwt() ->> 'email'), ''))
+    )
+  );
 
 -- Public discovery is restricted to approved, verified, real profiles and excludes
 -- email, phone, registration numbers, certificate URLs, wallet and subscription data.
