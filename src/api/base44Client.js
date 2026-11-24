@@ -131,6 +131,8 @@ const bytlyCompat = {
   integrations: { Core: {} },
   functions: unmigratedFunctions,
 };
+
+
 // Ready-made design marketplace: public metadata is separated from private downloadable files.
 const legacyReadyMadeDesign = bytlyCompat.entities.ReadyMadeDesign;
 const signDesignUrls = async urls => Promise.all((Array.isArray(urls) ? urls : []).map(async url => {
@@ -437,22 +439,71 @@ bytlyCompat.entities.SocialPost = {
 };
 
 const legacyEngineer = bytlyCompat.entities.Engineer;
+const canReadPrivateEngineerRows = async () => {
+  const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
+  const user = authData?.user;
+  if (!user) return false;
+  const { data: profile } = await withHardTimeout(
+    supabase.from('profiles').select('role').eq('user_id', user.id).maybeSingle(),
+    10000,
+    'انتهت مهلة التحقق من صلاحيات المهندس'
+  );
+  return ['admin', 'administrator', 'owner', 'super_admin'].includes(String(profile?.role || '').toLowerCase());
+};
+const PUBLIC_ENGINEER_COLUMNS = new Set([
+  'id', 'full_name', 'city', 'country', 'specialization', 'bio', 'is_verified',
+  'status', 'rating', 'years_experience', 'completed_projects', 'profile_image',
+  'total_reviews', 'created_at'
+]);
+const queryEngineerRows = async (filters = {}, sort = '-created_at', limit = 100) => {
+  const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
+  const user = authData?.user;
+  const ownProfileRequested = Boolean(
+    user && (
+      filters?.user_id === user.id ||
+      (filters?.email && String(filters.email).trim().toLowerCase() === String(user.email || '').trim().toLowerCase())
+    )
+  );
+  const privateRowsAllowed = ownProfileRequested || await canReadPrivateEngineerRows();
+  if (!privateRowsAllowed && Object.keys(filters || {}).some(key => !PUBLIC_ENGINEER_COLUMNS.has(key))) return [];
+  let q = supabase.from(privateRowsAllowed ? 'engineers' : 'engineer_public_directory').select('*').limit(limit);
+  Object.entries(filters || {}).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    q = Array.isArray(value) ? q.in(key, value) : q.eq(key, value);
+  });
+  let sortColumn = String(sort || '-created_at').replace(/^-/, '') || 'created_at';
+  if (sortColumn === 'created_date') sortColumn = 'created_at';
+  if (!privateRowsAllowed && !PUBLIC_ENGINEER_COLUMNS.has(sortColumn)) sortColumn = 'created_at';
+  q = q.order(sortColumn, { ascending: !String(sort).startsWith('-') });
+  const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة بيانات المهندس');
+  if (error) throw new Error(error.message || 'تعذر قراءة بيانات المهندس من Supabase');
+  return data || [];
+};
 bytlyCompat.entities.Engineer = {
   ...legacyEngineer,
-  filter: async (filters = {}) => {
-    let q = supabase.from('engineers').select('*');
-    Object.entries(filters || {}).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) q = q.eq(key, value);
-    });
-    const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة بيانات المهندس');
-    if (error) throw new Error(error.message || 'تعذر قراءة بيانات المهندس من Supabase');
-    return data || [];
+  filter: async (filters = {}, sort = '-created_at', limit = 100) => queryEngineerRows(filters, sort, limit),
+  list: async (sort = '-created_at', limit = 100) => queryEngineerRows({}, sort, limit),
+  get: async id => {
+    const { data: ownOrAdminRow, error: privateError } = await withHardTimeout(
+      supabase.from('engineers').select('*').eq('id', id).maybeSingle(),
+      10000,
+      'انتهت مهلة قراءة بيانات المهندس'
+    );
+    if (privateError) throw new Error(privateError.message || 'تعذر قراءة بيانات المهندس');
+    if (ownOrAdminRow) return ownOrAdminRow;
+    const { data, error } = await withHardTimeout(
+      supabase.from('engineer_public_directory').select('*').eq('id', id).maybeSingle(),
+      10000,
+      'انتهت مهلة قراءة الملف المهني العام'
+    );
+    if (error) throw new Error(error.message || 'تعذر قراءة الملف المهني العام');
+    return data;
   },
   create: async payload => {
   const { data: sessionData } = await withHardTimeout(supabase.auth.getSession(), 10000, 'انتهت مهلة جلسة الدخول');
   const authUser = sessionData?.session?.user;
   if (!authUser) throw new Error('يجب تسجيل الدخول أولاً');
-  const row = { full_name: payload.full_name, email: authUser.email || payload.email || null, phone: payload.phone || null, city: payload.city || null, country: payload.country || null, specialization: payload.specialization || null, bio: payload.bio || null, registration_number: payload.registration_number || null, years_experience: Number(payload.years_experience) || 0, completed_projects: Number(payload.completed_projects) || 0, graduation_certificate_url: payload.graduation_certificate_url || null, saudi_engineers_council_certificate_url: payload.saudi_engineers_council_certificate_url || null, profile_image: payload.profile_image || null, is_verified: false, is_real: true, status: 'pending', rating: 0, total_reviews: 0, wallet_balance: 0, subscription_type: payload.subscription_type || 'none', is_subscription_active: Boolean(payload.is_subscription_active), subscription_start_date: payload.subscription_start_date || null, trial_end_date: payload.trial_end_date || null, user_id: authUser.id, source: 'supabase' };
+  const row = { full_name: payload.full_name, email: authUser.email || payload.email || null, phone: payload.phone || null, city: payload.city || null, country: payload.country || null, specialization: payload.specialization || null, bio: payload.bio || null, registration_number: payload.registration_number || null, years_experience: Number(payload.years_experience) || 0, completed_projects: Number(payload.completed_projects) || 0, graduation_certificate_url: payload.graduation_certificate_url || null, saudi_engineers_council_certificate_url: payload.saudi_engineers_council_certificate_url || null, profile_image: payload.profile_image || null, is_verified: false, is_real: true, status: 'pending', rating: 0, total_reviews: 0, wallet_balance: 0, subscription_type: 'none', is_subscription_active: false, subscription_start_date: null, trial_end_date: null, user_id: authUser.id, source: 'supabase' };
   const { data, error } = await withHardTimeout(supabase.from('engineers').insert(row).select('*').single(), 15000, 'انتهت مهلة حفظ بيانات التسجيل');
   if (error) throw new Error(error.message || 'تعذر حفظ تسجيل المهندس');
   return data;
@@ -639,6 +690,33 @@ bytlyCompat.entities.Client = {
     const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة العميل');
     if (error) throw new Error(error.message || 'تعذر قراءة العميل من Supabase');
     return data || [];
+  },
+  create: async (payload = {}) => {
+    const { data: authData, error: authError } = await withHardTimeout(supabase.auth.getUser(), 10000, 'انتهت مهلة التحقق من جلسة الدخول');
+    const user = authData?.user;
+    if (authError || !user) throw new Error('يجب تسجيل الدخول أولاً');
+    const row = {
+      full_name: String(payload.full_name || payload.name || user.user_metadata?.full_name || '').trim(),
+      email: user.email || null,
+      phone: payload.phone || null,
+      city: payload.city || null,
+      country: payload.country || null,
+      client_type: payload.client_type || 'individual',
+      company_name: payload.company_name || null,
+      trust_score: 0,
+      wallet_balance: 0,
+      total_projects: 0,
+      subscription_type: 'none',
+      is_subscription_active: false,
+      is_real: true,
+      user_id: user.id,
+      source: 'supabase',
+      status: 'new',
+    };
+    if (!row.full_name) throw new Error('الاسم مطلوب');
+    const { data, error } = await withHardTimeout(supabase.from('clients').insert(row).select('*').single(), 15000, 'انتهت مهلة حفظ بيانات العميل');
+    if (error) throw new Error(error.message || 'تعذر حفظ تسجيل العميل');
+    return data;
   }
 };
 
