@@ -73,6 +73,114 @@ create policy engineers_admin_select
       and lower(coalesce(p.role, '')) in ('admin', 'administrator', 'super_admin', 'owner')
   ));
 
+-- Prevent any authenticated user from generating or retrieving another user's invoice
+-- by guessing a payment UUID. The payer, payee, or an administrator may create it.
+create or replace function public.create_project_payment_invoice(p_payment_id uuid)
+returns uuid
+language plpgsql
+security definer
+set search_path to 'public', 'pg_temp'
+as $function$
+declare
+  pay record;
+  existing uuid;
+  inv uuid;
+  seller_type text;
+  v_uid uuid := auth.uid();
+  v_is_admin boolean := false;
+begin
+  if v_uid is null then
+    raise exception 'AUTH_REQUIRED';
+  end if;
+
+  select * into pay
+  from public.project_payments
+  where id = p_payment_id
+  for update;
+
+  if not found then
+    raise exception 'PAYMENT_NOT_FOUND';
+  end if;
+
+  v_is_admin := exists (
+    select 1
+    from public.profiles p
+    where p.user_id = v_uid
+      and lower(coalesce(p.role, '')) in ('admin', 'administrator', 'super_admin', 'owner')
+  );
+
+  if not v_is_admin
+     and v_uid is distinct from pay.payer_user_id
+     and v_uid is distinct from pay.payee_user_id then
+    raise exception 'NOT_AUTHORIZED';
+  end if;
+
+  select id into existing
+  from public.invoices
+  where payment_id = pay.id
+  limit 1;
+
+  if existing is not null then
+    return existing;
+  end if;
+
+  if pay.status not in ('paid', 'completed') then
+    raise exception 'PAYMENT_NOT_SETTLED';
+  end if;
+
+  seller_type := case
+    when pay.payee_user_id is null then 'other'
+    else 'other'
+  end;
+
+  insert into public.invoices(
+    project_id, contract_id, milestone_id, payment_id, invoice_type,
+    issuer_user_id, issuer_type, buyer_user_id,
+    service_description, line_items, subtotal, taxable_amount, vat_rate, vat_amount, total_amount,
+    currency, status, paid_at, payment_reference, created_by, metadata
+  )
+  select pay.project_id, pay.contract_id, pay.milestone_id, pay.id, 'tax_invoice',
+         pay.payee_user_id, seller_type, pay.payer_user_id,
+         coalesce(pr.title, 'خدمة هندسية عبر بيتلي'),
+         jsonb_build_array(jsonb_build_object(
+           'description', coalesce(pr.title, 'خدمة المشروع'),
+           'amount', pay.amount,
+           'currency', pay.currency,
+           'milestone_id', pay.milestone_id
+         )),
+         pay.amount, pay.amount, 0, 0, pay.amount,
+         pay.currency, 'paid', coalesce(pay.paid_at, now()), pay.gateway_reference, v_uid,
+         jsonb_build_object('source', 'project_payment', 'escrow_status', pay.escrow_status,
+                            'platform_fee', pay.platform_fee, 'provider_amount', pay.provider_amount)
+  from public.projects pr
+  where pr.id = pay.project_id;
+
+  select id into inv
+  from public.invoices
+  where payment_id = pay.id
+  limit 1;
+
+  if inv is null then
+    raise exception 'INVOICE_CREATE_FAILED';
+  end if;
+
+  update public.project_payments
+  set invoice_id = inv
+  where id = pay.id;
+
+  if pay.milestone_id is not null then
+    update public.project_financial_milestones
+    set invoice_id = inv
+    where id = pay.milestone_id and invoice_id is null;
+  end if;
+
+  return inv;
+end;
+$function$;
+
+revoke all on function public.create_project_payment_invoice(uuid) from public;
+grant execute on function public.create_project_payment_invoice(uuid) to authenticated;
+
 -- Public/anonymous clients must not be able to rewrite another user's pending registration.
 drop policy if exists pending_registrations_public_update on public.pending_registrations;
 drop policy if exists pending_registrations_admin_select on public.pending_registrations;
