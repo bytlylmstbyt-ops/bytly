@@ -12,7 +12,45 @@ create policy clients_owner_select
   to authenticated
   using (user_id = (select auth.uid()));
 
+-- Registration inserts must be authenticated and tied to the signed-in account.
+-- Never allow browser-supplied balances, trust scores, verification or subscriptions.
+drop policy if exists public_registration_insert_clients on public.clients;
+create policy public_registration_insert_clients
+  on public.clients
+  for insert
+  to authenticated
+  with check (
+    user_id = (select auth.uid())
+    and is_real is true
+    and coalesce(wallet_balance, 0) = 0
+    and coalesce(trust_score, 0) = 0
+    and coalesce(total_projects, 0) = 0
+    and coalesce(subscription_type, 'none') = 'none'
+    and coalesce(is_subscription_active, false) is false
+    and coalesce(status, 'new') = 'new'
+  );
+
 -- Engineer records contain private contact, certificate and financial information.
+drop policy if exists public_registration_insert_engineers on public.engineers;
+create policy public_registration_insert_engineers
+  on public.engineers
+  for insert
+  to authenticated
+  with check (
+    user_id = (select auth.uid())
+    and is_real is true
+    and is_verified is false
+    and status = 'pending'
+    and coalesce(wallet_balance, 0) = 0
+    and coalesce(rating, 0) = 0
+    and coalesce(total_reviews, 0) = 0
+    and coalesce(completed_projects, 0) = 0
+    and coalesce(subscription_type, 'none') = 'none'
+    and coalesce(is_subscription_active, false) is false
+    and subscription_start_date is null
+    and trial_end_date is null
+  );
+
 drop policy if exists engineers_public_read on public.engineers;
 drop policy if exists engineers_owner_select on public.engineers;
 create policy engineers_owner_select
