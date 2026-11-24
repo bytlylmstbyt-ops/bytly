@@ -50,8 +50,28 @@ revoke all on public.engineer_public_directory from public;
 grant select on public.engineer_public_directory to anon, authenticated;
 
 -- Public clients are not a searchable directory; access is owner/admin only.
--- Keep the existing clients_admin_select policy for the admin console.
--- Keep the existing engineers_admin_select policy for admin review workflows.
+-- Keep admin access aligned with the roles already recognized by the application.
+drop policy if exists clients_admin_select on public.clients;
+create policy clients_admin_select
+  on public.clients
+  for select
+  to authenticated
+  using (exists (
+    select 1 from public.profiles p
+    where p.user_id = (select auth.uid())
+      and lower(coalesce(p.role, '')) in ('admin', 'administrator', 'super_admin', 'owner')
+  ));
+
+drop policy if exists engineers_admin_select on public.engineers;
+create policy engineers_admin_select
+  on public.engineers
+  for select
+  to authenticated
+  using (exists (
+    select 1 from public.profiles p
+    where p.user_id = (select auth.uid())
+      and lower(coalesce(p.role, '')) in ('admin', 'administrator', 'super_admin', 'owner')
+  ));
 
 -- Public/anonymous clients must not be able to rewrite another user's pending registration.
 drop policy if exists pending_registrations_public_update on public.pending_registrations;
