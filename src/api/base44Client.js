@@ -437,16 +437,53 @@ bytlyCompat.entities.SocialPost = {
 };
 
 const legacyEngineer = bytlyCompat.entities.Engineer;
+const canReadPrivateEngineerRows = async () => {
+  const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
+  const user = authData?.user;
+  if (!user) return false;
+  const { data: profile } = await withHardTimeout(
+    supabase.from('profiles').select('role').eq('user_id', user.id).maybeSingle(),
+    10000,
+    'انتهت مهلة التحقق من صلاحيات المهندس'
+  );
+  return ['admin', 'owner', 'super_admin'].includes(String(profile?.role || '').toLowerCase());
+};
+const queryEngineerRows = async (filters = {}, sort = '-created_at', limit = 100) => {
+  const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
+  const user = authData?.user;
+  const ownProfileRequested = Boolean(user && filters?.user_id === user.id);
+  const privateRowsAllowed = ownProfileRequested || await canReadPrivateEngineerRows();
+  let q = supabase.from(privateRowsAllowed ? 'engineers' : 'engineer_public_directory').select('*').limit(limit);
+  Object.entries(filters || {}).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    if (!privateRowsAllowed && key === 'user_id') { q = q.eq('id', '__no_public_user_id_filter__'); return; }
+    q = Array.isArray(value) ? q.in(key, value) : q.eq(key, value);
+  });
+  const sortColumn = String(sort || '-created_at').replace(/^-/, '') || 'created_at';
+  q = q.order(sortColumn, { ascending: !String(sort).startsWith('-') });
+  const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة بيانات المهندس');
+  if (error) throw new Error(error.message || 'تعذر قراءة بيانات المهندس من Supabase');
+  return data || [];
+};
 bytlyCompat.entities.Engineer = {
   ...legacyEngineer,
-  filter: async (filters = {}) => {
-    let q = supabase.from('engineers').select('*');
-    Object.entries(filters || {}).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) q = q.eq(key, value);
-    });
-    const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة بيانات المهندس');
-    if (error) throw new Error(error.message || 'تعذر قراءة بيانات المهندس من Supabase');
-    return data || [];
+  filter: async (filters = {}, sort = '-created_at', limit = 100) => queryEngineerRows(filters, sort, limit),
+  list: async (sort = '-created_at', limit = 100) => queryEngineerRows({}, sort, limit),
+  get: async id => {
+    const { data: ownOrAdminRow, error: privateError } = await withHardTimeout(
+      supabase.from('engineers').select('*').eq('id', id).maybeSingle(),
+      10000,
+      'انتهت مهلة قراءة بيانات المهندس'
+    );
+    if (privateError) throw new Error(privateError.message || 'تعذر قراءة بيانات المهندس');
+    if (ownOrAdminRow) return ownOrAdminRow;
+    const { data, error } = await withHardTimeout(
+      supabase.from('engineer_public_directory').select('*').eq('id', id).maybeSingle(),
+      10000,
+      'انتهت مهلة قراءة الملف المهني العام'
+    );
+    if (error) throw new Error(error.message || 'تعذر قراءة الملف المهني العام');
+    return data;
   },
   create: async payload => {
   const { data: sessionData } = await withHardTimeout(supabase.auth.getSession(), 10000, 'انتهت مهلة جلسة الدخول');
