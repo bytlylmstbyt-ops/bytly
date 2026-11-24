@@ -55,5 +55,31 @@ grant select on public.engineer_public_directory to anon, authenticated;
 
 -- Public/anonymous clients must not be able to rewrite another user's pending registration.
 drop policy if exists pending_registrations_public_update on public.pending_registrations;
+drop policy if exists pending_registrations_admin_select on public.pending_registrations;
+create policy pending_registrations_admin_select
+  on public.pending_registrations
+  for select
+  to authenticated
+  using (exists (
+    select 1 from public.profiles p
+    where p.user_id = (select auth.uid())
+      and lower(coalesce(p.role, '')) in ('admin', 'administrator', 'super_admin', 'owner')
+  ));
+
+drop policy if exists pending_registrations_admin_update on public.pending_registrations;
+create policy pending_registrations_admin_update
+  on public.pending_registrations
+  for update
+  to authenticated
+  using (exists (
+    select 1 from public.profiles p
+    where p.user_id = (select auth.uid())
+      and lower(coalesce(p.role, '')) in ('admin', 'administrator', 'super_admin', 'owner')
+  ))
+  with check (exists (
+    select 1 from public.profiles p
+    where p.user_id = (select auth.uid())
+      and lower(coalesce(p.role, '')) in ('admin', 'administrator', 'super_admin', 'owner')
+  ));
 
 commit;
