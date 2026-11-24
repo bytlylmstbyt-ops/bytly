@@ -448,18 +448,25 @@ const canReadPrivateEngineerRows = async () => {
   );
   return ['admin', 'owner', 'super_admin'].includes(String(profile?.role || '').toLowerCase());
 };
+const PUBLIC_ENGINEER_COLUMNS = new Set([
+  'id', 'full_name', 'city', 'country', 'specialization', 'bio', 'is_verified',
+  'status', 'rating', 'years_experience', 'completed_projects', 'profile_image',
+  'total_reviews', 'created_at'
+]);
 const queryEngineerRows = async (filters = {}, sort = '-created_at', limit = 100) => {
   const { data: authData } = await withHardTimeout(supabase.auth.getUser(), 10000);
   const user = authData?.user;
   const ownProfileRequested = Boolean(user && filters?.user_id === user.id);
   const privateRowsAllowed = ownProfileRequested || await canReadPrivateEngineerRows();
+  if (!privateRowsAllowed && Object.keys(filters || {}).some(key => !PUBLIC_ENGINEER_COLUMNS.has(key))) return [];
   let q = supabase.from(privateRowsAllowed ? 'engineers' : 'engineer_public_directory').select('*').limit(limit);
   Object.entries(filters || {}).forEach(([key, value]) => {
     if (value === undefined || value === null) return;
-    if (!privateRowsAllowed && key === 'user_id') { q = q.eq('id', '__no_public_user_id_filter__'); return; }
     q = Array.isArray(value) ? q.in(key, value) : q.eq(key, value);
   });
-  const sortColumn = String(sort || '-created_at').replace(/^-/, '') || 'created_at';
+  let sortColumn = String(sort || '-created_at').replace(/^-/, '') || 'created_at';
+  if (sortColumn === 'created_date') sortColumn = 'created_at';
+  if (!privateRowsAllowed && !PUBLIC_ENGINEER_COLUMNS.has(sortColumn)) sortColumn = 'created_at';
   q = q.order(sortColumn, { ascending: !String(sort).startsWith('-') });
   const { data, error } = await withHardTimeout(q, 10000, 'انتهت مهلة قراءة بيانات المهندس');
   if (error) throw new Error(error.message || 'تعذر قراءة بيانات المهندس من Supabase');
