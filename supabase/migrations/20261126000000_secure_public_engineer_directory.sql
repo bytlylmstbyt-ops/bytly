@@ -12,11 +12,11 @@ select
   bio,
   is_verified,
   rating,
-  country,
   years_experience,
   completed_projects,
-  profile_image,
   total_reviews,
+  profile_image,
+  country,
   created_at
 from public.engineers
 where status = 'approved'
