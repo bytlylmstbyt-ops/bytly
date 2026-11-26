@@ -42,5 +42,5 @@ for select
 to authenticated
 using ((select auth.uid()) = user_id);
 
-revoke select on table public.clients from anon;
-revoke select on table public.engineers from anon;
+revoke all privileges on table public.clients, public.engineers from anon;
+revoke truncate on table public.clients, public.engineers from authenticated;
