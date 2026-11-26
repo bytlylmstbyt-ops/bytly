@@ -22,13 +22,17 @@ from public.engineers
 where status = 'approved'
   and is_real = true
   and coalesce(email, '') <> 'test-registration@invalid.example'
-  and coalesce(email, '') not like '%@bytly.com';
+  and coalesce(email, '') not like '%@bytly.com'
+  and coalesce(full_name, '') <> 'TEST_REGISTRATION_DO_NOT_KEEP';
 
 grant select on public.public_engineer_directory to anon, authenticated;
 
 -- Replace broad public table reads with owner/admin access.
 drop policy if exists clients_public_read on public.clients;
 drop policy if exists engineers_public_read on public.engineers;
+
+drop policy if exists clients_owner_select on public.clients;
+drop policy if exists engineers_owner_select on public.engineers;
 
 create policy clients_owner_select
 on public.clients
