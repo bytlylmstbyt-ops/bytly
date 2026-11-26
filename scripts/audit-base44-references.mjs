@@ -5,7 +5,7 @@
  * This reports compatibility references; it does not treat every reference
  * as proof of a live Base44 backend dependency.
  */
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir, readFile, appendFile } from 'node:fs/promises';
 import path from 'node:path';
 
 const roots = ['src', 'api', 'supabase/functions'];
@@ -63,6 +63,61 @@ for (const root of roots) {
   }
 }
 
+// Trace literal function invocations to concrete handlers in the Supabase compatibility layer.
+// This is intentionally diagnostic (not a CI failure) while migration is in progress.
+const invokedFunctions = new Map();
+const dynamicInvokeSites = [];
+const invokePattern = /\bbase44\.functions\.invoke\s*\(\s*(['\"])([^'\"]+)\1/g;
+const dynamicInvokePattern = /\bbase44\.functions\.invoke\s*\(\s*(?!['\"])/g;
+for (const root of roots) {
+  for (const file of await walk(root)) {
+    const source = await readFile(file, 'utf8');
+    let match;
+    while ((match = invokePattern.exec(source))) {
+      const name = match[2].trim();
+      if (!invokedFunctions.has(name)) invokedFunctions.set(name, new Set());
+      invokedFunctions.get(name).add(file.split(path.sep).join('/'));
+    }
+    if (dynamicInvokePattern.test(source)) dynamicInvokeSites.push(file.split(path.sep).join('/'));
+    dynamicInvokePattern.lastIndex = 0;
+  }
+}
+let dispatchSource = '';
+try { dispatchSource = await readFile('src/api/base44Client.js', 'utf8'); }
+catch (error) { if (error.code !== 'ENOENT') throw error; }
+const handledFunctions = new Set([...dispatchSource.matchAll(/\bname\s*===\s*['\"]([^'\"]+)['\"]/g)].map(match => match[1]));
+const invokeCoverage = [...invokedFunctions.entries()].map(([name, files]) => ({
+  name,
+  files: [...files].sort(),
+  hasSupabaseHandler: handledFunctions.has(name),
+})).sort((a, b) => a.name.localeCompare(b.name));
+const uncoveredFunctionInvokes = invokeCoverage.filter(item => !item.hasSupabaseHandler);
+const githubSummaryPath = process.env.GITHUB_STEP_SUMMARY;
+if (githubSummaryPath) {
+  const uncoveredSummary = uncoveredFunctionInvokes.length
+    ? uncoveredFunctionInvokes.map(item => "- " + item.name + ": " + item.files.join(", ")).join("\\n")
+    : "- No uncovered literal function invokes found.";
+  const dynamicSummary = [...new Set(dynamicInvokeSites)].length
+    ? [...new Set(dynamicInvokeSites)].map(file => "- " + file).join("\\n")
+    : "- No dynamic invocation sites found.";
+  await appendFile(githubSummaryPath, [
+    "## Base44 function migration coverage",
+    "- Literal function names invoked: " + invokeCoverage.length,
+    "- Names with named adapter handlers: " + invokeCoverage.filter(item => item.hasSupabaseHandler).length,
+    "- Names without named handlers: " + uncoveredFunctionInvokes.length,
+    "",
+    "### Uncovered function invocations",
+    uncoveredSummary,
+    "",
+    "### Dynamic invocation sites requiring manual review",
+    dynamicSummary,
+    "",
+    "> Handler presence is a static signal only; it does not prove runtime correctness.",
+    "",
+  ].join("\\n"));
+}
+
+
 findings.sort((a, b) =>
   (b.entityCalls + b.authCalls + b.functionCalls + b.integrationCalls + b.compatibilityImport + b.sdkImport) -
   (a.entityCalls + a.authCalls + a.functionCalls + a.integrationCalls + a.compatibilityImport + a.sdkImport)
@@ -75,6 +130,13 @@ console.log(JSON.stringify({
   packageSdkDependency,
   runtimeDependencyGate: (!packageSdkDependency && totals.sdkImport === 0 && totals.base44Domain === 0) ? 'PASS' : 'FAIL',
   totals,
+  functionInvokeCoverage: {
+    literalCalls: invokeCoverage.length,
+    coveredByNamedDispatchHandler: invokeCoverage.filter(item => item.hasSupabaseHandler).length,
+    uncoveredFunctionInvokes,
+    dynamicInvokeSites: [...new Set(dynamicInvokeSites)].sort(),
+    note: 'Static handler presence is not proof of runtime correctness.',
+  },
   files: findings,
 }, null, 2));
 
