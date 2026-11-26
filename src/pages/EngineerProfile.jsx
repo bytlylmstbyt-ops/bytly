@@ -282,7 +282,7 @@ export default function EngineerProfile() {
                         )}
                       </Badge>
                     )}
-                    {engineer.subscription_type !== "none" && (
+                    {Boolean(engineer.subscription_type && engineer.subscription_type !== "none") && (
                       <Badge className="bg-amber-100 text-amber-700 mx-auto md:mx-0">
                         عضو مميز
                       </Badge>
