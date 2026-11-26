@@ -57,7 +57,23 @@ export default function EngineerProfile() {
 
       if (engineerError) throw engineerError;
 
-      const engineerRecord = engineerRows?.[0] || null;
+      let engineerRecord = engineerRows?.[0] || null;
+      let ownerRecord = null;
+
+      // A signed-in engineer may load their own private profile fields without
+      // exposing those fields to visitors or other authenticated users.
+      if (user?.id) {
+        const { data: ownRecord, error: ownRecordError } = await supabase
+          .from("engineers")
+          .select("*")
+          .eq("id", engineerId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (ownRecordError) throw ownRecordError;
+        ownerRecord = ownRecord;
+        if (ownerRecord) engineerRecord = ownerRecord;
+      }
+
       setEngineer(engineerRecord);
 
       if (!engineerRecord) {
@@ -66,7 +82,7 @@ export default function EngineerProfile() {
         return;
       }
 
-      setIsOwner(false); // Public directory records intentionally omit private contact identifiers.
+      setIsOwner(Boolean(ownerRecord));
 
       // Supabase's real portfolio table is the primary source.
       const portfolioResult = await supabase
