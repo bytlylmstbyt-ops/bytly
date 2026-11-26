@@ -49,19 +49,31 @@ export default function EngineerProfile() {
     setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const isEmail = engineerId && engineerId.includes("@");
-
       const { data: engineerRows, error: engineerError } = await supabase
-        .from("engineers")
+        .from("public_engineer_directory")
         .select("*")
-        .eq(isEmail ? "email" : "id", engineerId)
-        .eq("is_real", true)
-        .eq("status", "approved")
+        .eq("id", engineerId)
         .limit(1);
 
       if (engineerError) throw engineerError;
 
-      const engineerRecord = engineerRows?.[0] || null;
+      let engineerRecord = engineerRows?.[0] || null;
+      let ownerRecord = null;
+
+      // A signed-in engineer may load their own private profile fields without
+      // exposing those fields to visitors or other authenticated users.
+      if (user?.id) {
+        const { data: ownRecord, error: ownRecordError } = await supabase
+          .from("engineers")
+          .select("*")
+          .eq("id", engineerId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (ownRecordError) throw ownRecordError;
+        ownerRecord = ownRecord;
+        if (ownerRecord) engineerRecord = ownerRecord;
+      }
+
       setEngineer(engineerRecord);
 
       if (!engineerRecord) {
@@ -70,7 +82,7 @@ export default function EngineerProfile() {
         return;
       }
 
-      setIsOwner(Boolean(user?.email && engineerRecord.email === user.email));
+      setIsOwner(Boolean(ownerRecord));
 
       // Supabase's real portfolio table is the primary source.
       const portfolioResult = await supabase
@@ -270,7 +282,7 @@ export default function EngineerProfile() {
                         )}
                       </Badge>
                     )}
-                    {engineer.subscription_type !== "none" && (
+                    {Boolean(engineer.subscription_type && engineer.subscription_type !== "none") && (
                       <Badge className="bg-amber-100 text-amber-700 mx-auto md:mx-0">
                         عضو مميز
                       </Badge>

@@ -62,10 +62,8 @@ export default function Engineers() {
       const sortField = sortBy.replace(/^-/, "");
 
       const { data, error } = await supabase
-        .from("engineers")
+        .from("public_engineer_directory")
         .select("*")
-        .eq("status", "approved")
-        .eq("is_real", true)
         .order(sortField in { rating: 1, completed_projects: 1, years_experience: 1, created_at: 1 } ? sortField : "created_at", { ascending })
         .limit(50);
 
@@ -74,9 +72,7 @@ export default function Engineers() {
       // Keep test/placeholder records out of the public directory without
       // changing or deleting any underlying data.
       const publicEngineers = (data || []).filter((engineer) =>
-        engineer.email !== "test-registration@invalid.example" &&
-        engineer.full_name !== "TEST_REGISTRATION_DO_NOT_KEEP" &&
-        !String(engineer.email || "").endsWith("@bytly.com")
+        engineer.full_name !== "TEST_REGISTRATION_DO_NOT_KEEP"
       );
 
       setEngineers(publicEngineers);
@@ -148,8 +144,8 @@ export default function Engineers() {
   const handleExport = () => {
     const selected = filteredEngineers.filter(e => selectedIds.has(e.id));
     const csv = [
-      ["الاسم", "التخصص", "المدينة", "التقييم", "المشاريع المنجزة", "البريد الإلكتروني"],
-      ...selected.map(e => [e.full_name, e.specialization, e.city, e.rating?.toFixed(1), e.completed_projects || 0, e.email])
+      ["الاسم", "التخصص", "المدينة", "التقييم", "المشاريع المنجزة"],
+      ...selected.map(e => [e.full_name, e.specialization, e.city, e.rating?.toFixed(1), e.completed_projects || 0])
     ].map(row => row.join(",")).join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -489,7 +485,7 @@ export default function Engineers() {
                             {engineer.cover_image && (
                               <img src={engineer.cover_image} alt="" className="w-full h-full object-cover opacity-50" />
                             )}
-                            {engineer.subscription_type !== "none" && (
+                            {Boolean(engineer.subscription_type && engineer.subscription_type !== "none") && (
                               <Badge className="absolute top-3 left-3 bg-amber-500 text-white">
                                 {t('engineers.featured')}
                               </Badge>
@@ -551,7 +547,7 @@ export default function Engineers() {
                                   مهندس معتمد
                                 </Badge>
                               )}
-                              {engineer.subscription_type !== "none" && (
+                              {Boolean(engineer.subscription_type && engineer.subscription_type !== "none") && (
                                 <Badge className="bg-amber-500 text-white">{t('engineers.featured')}</Badge>
                               )}
                             </div>
