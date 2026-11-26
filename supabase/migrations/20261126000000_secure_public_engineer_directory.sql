@@ -48,4 +48,4 @@ to authenticated
 using ((select auth.uid()) = user_id);
 
 revoke all privileges on table public.clients, public.engineers from anon;
-revoke truncate on table public.clients, public.engineers from authenticated;
+revoke truncate on table public.clients, public.engineers from public, anon, authenticated;
