@@ -49,14 +49,10 @@ export default function EngineerProfile() {
     setIsLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const isEmail = engineerId && engineerId.includes("@");
-
       const { data: engineerRows, error: engineerError } = await supabase
-        .from("engineers")
+        .from("public_engineer_directory")
         .select("*")
-        .eq(isEmail ? "email" : "id", engineerId)
-        .eq("is_real", true)
-        .eq("status", "approved")
+        .eq("id", engineerId)
         .limit(1);
 
       if (engineerError) throw engineerError;
@@ -70,7 +66,7 @@ export default function EngineerProfile() {
         return;
       }
 
-      setIsOwner(Boolean(user?.email && engineerRecord.email === user.email));
+      setIsOwner(false); // Public directory records intentionally omit private contact identifiers.
 
       // Supabase's real portfolio table is the primary source.
       const portfolioResult = await supabase
