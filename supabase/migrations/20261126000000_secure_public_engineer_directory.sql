@@ -21,6 +21,7 @@ select
 from public.engineers
 where status = 'approved'
   and is_real = true
+  and is_verified = true
   and coalesce(email, '') <> 'test-registration@invalid.example'
   and coalesce(email, '') not like '%@bytly.com'
   and coalesce(full_name, '') <> 'TEST_REGISTRATION_DO_NOT_KEEP';
