@@ -485,7 +485,7 @@ export default function Engineers() {
                             {engineer.cover_image && (
                               <img src={engineer.cover_image} alt="" className="w-full h-full object-cover opacity-50" />
                             )}
-                            {engineer.subscription_type !== "none" && (
+                            {Boolean(engineer.subscription_type && engineer.subscription_type !== "none") && (
                               <Badge className="absolute top-3 left-3 bg-amber-500 text-white">
                                 {t('engineers.featured')}
                               </Badge>
@@ -547,7 +547,7 @@ export default function Engineers() {
                                   مهندس معتمد
                                 </Badge>
                               )}
-                              {engineer.subscription_type !== "none" && (
+                              {Boolean(engineer.subscription_type && engineer.subscription_type !== "none") && (
                                 <Badge className="bg-amber-500 text-white">{t('engineers.featured')}</Badge>
                               )}
                             </div>
